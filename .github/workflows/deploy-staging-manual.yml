@@ -1,0 +1,28 @@
+name: Deploy Staging (Manual)
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: "Branch or commit SHA to deploy"
+        required: true
+        default: "staging"
+
+env:
+  # TODO: Configure deployment registry and resource names
+  CONTAINER_REGISTRY: ""
+  CONTAINER_NAME: candystore
+  RESOURCE_GROUP: ""
+
+jobs:
+  build-and-deploy:
+    name: Build and Deploy to Staging
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.ref }}
+
+      - name: Placeholder
+        run: echo "TODO - Configure staging deployment pipeline"

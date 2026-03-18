@@ -1,0 +1,117 @@
+name: Sandbox Release (Promote to Staging)
+
+on:
+  workflow_dispatch:
+    inputs:
+      commit_sha:
+        description: "Specific commit SHA to promote (leave empty for latest develop)"
+        required: false
+        default: ""
+
+jobs:
+  quality-checks:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.commit_sha || 'develop' }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Format check
+        run: pnpm format:check
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Type check
+        run: pnpm typecheck
+
+      - name: Unit tests
+        run: pnpm test
+
+      - name: Build
+        run: pnpm build
+        env:
+          NEXT_PUBLIC_ENABLE_MOCKS: "true"
+
+  promote:
+    needs: [quality-checks]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Determine commit to promote
+        id: resolve
+        run: |
+          if [ -n "${{ inputs.commit_sha }}" ]; then
+            COMMIT="${{ inputs.commit_sha }}"
+          else
+            COMMIT=$(git rev-parse origin/develop)
+          fi
+          echo "commit=$COMMIT" >> "$GITHUB_OUTPUT"
+          echo "Promoting commit: $COMMIT"
+          git log --oneline -1 "$COMMIT"
+
+      - name: Update staging branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Create staging branch if it doesn't exist
+          if git rev-parse origin/staging >/dev/null 2>&1; then
+            echo "Staging branch exists, updating..."
+            git checkout staging
+            git reset --hard ${{ steps.resolve.outputs.commit }}
+          else
+            echo "Creating staging branch..."
+            git checkout -b staging ${{ steps.resolve.outputs.commit }}
+          fi
+
+          git push origin staging --force-with-lease
+
+      - name: Summary
+        run: |
+          echo "## Sandbox Release Complete" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Field | Value |" >> "$GITHUB_STEP_SUMMARY"
+          echo "|-------|-------|" >> "$GITHUB_STEP_SUMMARY"
+          echo "| **Commit** | \`${{ steps.resolve.outputs.commit }}\` |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| **Checks** | Passed |" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "The staging branch has been updated. The deploy workflow will automatically build and deploy the POC version." >> "$GITHUB_STEP_SUMMARY"
+
+  trigger-deploy:
+    needs: [promote]
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+    steps:
+      - name: Trigger deploy workflow on staging
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.actions.createWorkflowDispatch({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: 'deploy-combined.yml',
+              ref: 'staging',
+            });
+            console.log('Deploy workflow triggered on staging branch');

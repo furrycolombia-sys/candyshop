@@ -1,0 +1,26 @@
+STAGED_FILES=$(git diff --cached --name-only)
+
+if [ -z "$STAGED_FILES" ]; then
+  echo "No staged files, skipping pre-commit checks."
+  exit 0
+fi
+
+HAS_WORKSPACE=$(echo "$STAGED_FILES" | grep -E '(^|/)package\.json$|^pnpm-workspace\.yaml$|^pnpm-lock\.yaml$|^\.npmrc$' || true)
+
+echo "Running pre-commit checks..."
+echo "  Staged: $(echo "$STAGED_FILES" | wc -l | tr -d ' ') file(s)"
+[ -n "$HAS_WORKSPACE" ] && echo "  -> Workspace manifest changes detected"
+echo ""
+
+# Fast staged-only checks.
+# Run sequentially to avoid secretlint worker SIGKILL on large staged batches.
+pnpm lint-staged --concurrent false --no-stash --no-revert
+
+# Keep lightweight dependency consistency checks for manifest updates.
+if [ -n "$HAS_WORKSPACE" ]; then
+  echo "Running workspace manifest checks..."
+  pnpm sherif
+  pnpm syncpack:list
+fi
+
+echo "All pre-commit checks passed."
