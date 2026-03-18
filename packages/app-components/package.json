@@ -12,11 +12,11 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "ui": "workspace:*",
-    "shared": "workspace:*",
-    "next-intl": "^4.1.4",
     "clsx": "^2.1.1",
-    "lucide-react": "^0.511.0"
+    "lucide-react": "^0.511.0",
+    "next-intl": "^4.1.4",
+    "shared": "workspace:*",
+    "ui": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5"

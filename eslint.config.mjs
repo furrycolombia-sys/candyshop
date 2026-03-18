@@ -10,7 +10,7 @@ import tsParser from "@typescript-eslint/parser";
 import boundaries from "eslint-plugin-boundaries";
 import sonarjs from "eslint-plugin-sonarjs";
 import testingLibrary from "eslint-plugin-testing-library";
-import vitest from "eslint-plugin-vitest";
+import vitest from "@vitest/eslint-plugin";
 import tanstackQuery from "@tanstack/eslint-plugin-query";
 import unicorn from "eslint-plugin-unicorn";
 import betterTailwindcss from "eslint-plugin-better-tailwindcss";

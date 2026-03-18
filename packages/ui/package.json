@@ -15,10 +15,10 @@
     "test:watch": "vitest"
   },
   "dependencies": {
+    "@radix-ui/react-slot": "^1.2.3",
     "clsx": "^2.1.1",
     "lucide-react": "^0.511.0",
-    "tailwind-merge": "^3.3.0",
-    "@radix-ui/react-slot": "^1.2.3"
+    "tailwind-merge": "^3.3.0"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^6.6.3",
