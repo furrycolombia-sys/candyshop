@@ -5,6 +5,8 @@ import { usePathname, useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { useTransition } from "react";
 
+import { tid } from "../utils/tid";
+
 const LOCALE_MAX_AGE_SECONDS = 31_536_000; // 365 days
 
 interface LocaleSwitcherProps {
@@ -60,6 +62,7 @@ export function LocaleSwitcher({ locales }: LocaleSwitcherProps) {
         return (
           <button
             key={locale}
+            {...tid(`locale-switch-${locale}`)}
             type="button"
             role="radio"
             aria-checked={isActive}

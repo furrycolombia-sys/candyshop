@@ -1,11 +1,8 @@
 "use client";
 
 import { getCookie, setCookie } from "cookies-next";
-import { useEffect, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
 
-/**
- * Theme value constants - single source of truth for theme strings
- */
 export const THEMES = {
   LIGHT: "light",
   DARK: "dark",
@@ -25,7 +22,7 @@ function getSystemTheme(): typeof THEMES.LIGHT | typeof THEMES.DARK {
     : THEMES.LIGHT;
 }
 
-function getStoredTheme(): Theme {
+function readThemeFromCookie(): Theme {
   if (globalThis.window === undefined) return THEMES.SYSTEM;
   try {
     const stored = getCookie(THEME_COOKIE_KEY);
@@ -37,7 +34,7 @@ function getStoredTheme(): Theme {
       return stored;
     }
   } catch {
-    // Silent fail - use default
+    // Silent fail
   }
   return THEMES.SYSTEM;
 }
@@ -50,83 +47,78 @@ function persistTheme(theme: Theme) {
   });
 }
 
-function applyTheme(theme: Theme) {
+function applyThemeToDOM(theme: Theme) {
   if (globalThis.window === undefined) return;
-
-  const root = document.documentElement;
   const effectiveTheme = theme === THEMES.SYSTEM ? getSystemTheme() : theme;
-
-  root.classList.toggle(THEMES.DARK, effectiveTheme === THEMES.DARK);
+  document.documentElement.classList.toggle(
+    THEMES.DARK,
+    effectiveTheme === THEMES.DARK,
+  );
 }
 
-function subscribeToStorage(callback: () => void) {
-  globalThis.addEventListener("storage", callback);
-  return () => globalThis.removeEventListener("storage", callback);
+function resolveEffectiveTheme(
+  theme: Theme,
+  isMounted: boolean,
+): typeof THEMES.LIGHT | typeof THEMES.DARK {
+  if (!isMounted) return THEMES.LIGHT;
+  if (theme === THEMES.SYSTEM) return getSystemTheme();
+  return theme;
 }
 
-function getStoredThemeSnapshot(): Theme {
-  return getStoredTheme();
-}
-
-function getServerSnapshot(): Theme {
-  return THEMES.SYSTEM;
-}
-
-let isMountedGlobal = false;
+// Hydration-safe mounted detection via useSyncExternalStore
+const emptySubscribe = () => () => {};
+const getClientMounted = () => true;
+const getServerMounted = () => false;
 
 export function useTheme() {
-  const storedTheme = useSyncExternalStore(
-    subscribeToStorage,
-    getStoredThemeSnapshot,
-    getServerSnapshot,
+  const mounted = useSyncExternalStore(
+    emptySubscribe,
+    getClientMounted,
+    getServerMounted,
   );
 
-  const [theme, setThemeState] = useState<Theme>(storedTheme);
-  const [mounted, setMountedState] = useState(isMountedGlobal);
+  const [theme, setThemeState] = useState<Theme>(readThemeFromCookie);
 
+  // Apply theme to DOM on mount and whenever theme changes
   useEffect(() => {
-    if (!isMountedGlobal) {
-      isMountedGlobal = true;
-      queueMicrotask(() => setMountedState(true));
-    }
-    applyTheme(theme);
+    applyThemeToDOM(theme);
   }, [theme]);
 
+  // Listen for system theme changes when using "system" preference
   useEffect(() => {
     if (!mounted) return;
 
     const handleSystemThemeChange = () => {
       if (theme === THEMES.SYSTEM) {
-        applyTheme(THEMES.SYSTEM);
+        applyThemeToDOM(THEMES.SYSTEM);
       }
     };
 
     const mediaQuery = globalThis.matchMedia(DARK_SCHEME_MEDIA_QUERY);
     mediaQuery.addEventListener("change", handleSystemThemeChange);
-
-    return () => {
+    return () =>
       mediaQuery.removeEventListener("change", handleSystemThemeChange);
-    };
   }, [theme, mounted]);
 
-  const setTheme = (newTheme: Theme) => {
+  const setTheme = useCallback((newTheme: Theme) => {
     persistTheme(newTheme);
     setThemeState(newTheme);
-    applyTheme(newTheme);
-  };
+    applyThemeToDOM(newTheme);
+  }, []);
 
-  const toggleTheme = () => {
-    const effectiveTheme = theme === THEMES.SYSTEM ? getSystemTheme() : theme;
-    const newTheme =
-      effectiveTheme === THEMES.LIGHT ? THEMES.DARK : THEMES.LIGHT;
-    setTheme(newTheme);
-  };
+  const toggleTheme = useCallback(() => {
+    setThemeState((current) => {
+      const effectiveCurrent =
+        current === THEMES.SYSTEM ? getSystemTheme() : current;
+      const next =
+        effectiveCurrent === THEMES.LIGHT ? THEMES.DARK : THEMES.LIGHT;
+      persistTheme(next);
+      applyThemeToDOM(next);
+      return next;
+    });
+  }, []);
 
-  const resolveTheme = (): typeof THEMES.LIGHT | typeof THEMES.DARK => {
-    if (!mounted) return THEMES.LIGHT;
-    return theme === THEMES.SYSTEM ? getSystemTheme() : theme;
-  };
-  const effectiveTheme = resolveTheme();
+  const effectiveTheme = resolveEffectiveTheme(theme, mounted);
 
   return { theme, effectiveTheme, setTheme, toggleTheme, mounted };
 }

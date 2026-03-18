@@ -2,6 +2,8 @@
 
 import { useLocale, useTranslations } from "next-intl";
 
+import { tid } from "../utils/tid";
+
 import { LocaleSwitcher } from "./LocaleSwitcher";
 import { ThemeToggle } from "./ThemeToggle";
 
@@ -41,7 +43,10 @@ export function AppNavigation({
   }
 
   return (
-    <nav className="flex w-full items-center gap-1 border-b bg-background px-4 py-2">
+    <nav
+      {...tid("app-navigation")}
+      className="flex w-full items-center gap-1 border-b bg-background px-4 py-2"
+    >
       <span className="mr-4 text-sm font-bold tracking-tight">
         {t("brand")}
       </span>
@@ -51,6 +56,7 @@ export function AppNavigation({
           return (
             <a
               key={id}
+              {...tid(`nav-link-${id}`)}
               href={localizedHref(urls[id])}
               className={[
                 "rounded-md px-3 py-1.5 text-sm transition-colors",
