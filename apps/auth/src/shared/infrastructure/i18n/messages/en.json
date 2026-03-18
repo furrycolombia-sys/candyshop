@@ -1,0 +1,10 @@
+{
+  "meta": {
+    "title": "Candy Store - Sign In",
+    "description": "Sign in to your Candy Store account"
+  },
+  "auth": {
+    "title": "Sign In",
+    "subtitle": "Access your account"
+  }
+}

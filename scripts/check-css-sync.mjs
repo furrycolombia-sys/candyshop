@@ -17,7 +17,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, "..");
 
 // Apps to check
-const APPS = ["store", "admin"];
+const APPS = ["store", "landing", "payments", "admin"];
 const CSS_PATH = "src/app/globals.css";
 
 // Lines to ignore when comparing (regex patterns)

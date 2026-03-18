@@ -1,0 +1,20 @@
+{
+  "meta": {
+    "title": "Candy Store - Payments",
+    "description": "Secure payment processing for products, services, and tickets"
+  },
+  "payments": {
+    "title": "Payments",
+    "subtitle": "Secure checkout and payment processing",
+    "cards": {
+      "products": "Product Payments",
+      "productsDesc": "Pay for physical and digital products",
+      "services": "Service Payments",
+      "servicesDesc": "Pay for professional services",
+      "tickets": "Ticket Purchases",
+      "ticketsDesc": "Buy event tickets securely",
+      "coupons": "Redeem Coupons",
+      "couponsDesc": "Apply promo codes and coupons at checkout"
+    }
+  }
+}

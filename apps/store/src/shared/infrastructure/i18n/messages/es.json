@@ -1,0 +1,10 @@
+{
+  "meta": {
+    "title": "Candy Store",
+    "description": "Tu tienda favorita para productos, servicios y boletos"
+  },
+  "store": {
+    "title": "Bienvenido a la Tienda",
+    "subtitle": "Explora productos, servicios, boletos y mucho mas"
+  }
+}

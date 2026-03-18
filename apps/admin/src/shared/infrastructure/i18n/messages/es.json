@@ -1,0 +1,10 @@
+{
+  "meta": {
+    "title": "Candy Store - Admin",
+    "description": "Gestion de inventario, ordenes, promos y cupones"
+  },
+  "admin": {
+    "title": "Panel de Administracion",
+    "subtitle": "Gestiona productos, ordenes, promos, cupones y servicios"
+  }
+}

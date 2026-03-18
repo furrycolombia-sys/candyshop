@@ -1,0 +1,16 @@
+{
+  "meta": {
+    "title": "Candy Store - Tu Mercado",
+    "description": "Productos, servicios, boletos, promos y mucho mas"
+  },
+  "landing": {
+    "hero": {
+      "title": "Bienvenido a Candy Store",
+      "subtitle": "Tu mercado todo-en-uno para productos, servicios, boletos de eventos, promos exclusivas y cupones."
+    },
+    "cta": {
+      "shop": "Empezar a Comprar",
+      "payments": "Realizar un Pago"
+    }
+  }
+}

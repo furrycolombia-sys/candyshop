@@ -1,0 +1,10 @@
+{
+  "meta": {
+    "title": "Candy Store",
+    "description": "Your favorite store for products, services, and tickets"
+  },
+  "store": {
+    "title": "Welcome to the Store",
+    "subtitle": "Browse products, services, tickets, and more"
+  }
+}
