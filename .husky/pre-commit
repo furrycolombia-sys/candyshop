@@ -20,7 +20,7 @@ pnpm lint-staged --concurrent false --no-stash --no-revert
 if [ -n "$HAS_WORKSPACE" ]; then
   echo "Running workspace manifest checks..."
   pnpm sherif
-  pnpm syncpack:list
+  pnpm syncpack:lint
 fi
 
 echo "All pre-commit checks passed."
