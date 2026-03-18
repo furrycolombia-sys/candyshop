@@ -1,0 +1,18 @@
+{
+  "$schema": "https://unpkg.com/syncpack@13/dist/index.json",
+  "versionGroups": [
+    {
+      "label": "Internal workspace packages use workspace:* protocol",
+      "packages": ["**"],
+      "dependencies": ["api", "shared", "ui", "auth"],
+      "dependencyTypes": ["prod", "dev"],
+      "pinVersion": "workspace:*"
+    },
+    {
+      "label": "React peer dependencies in packages can differ from apps",
+      "dependencies": ["react", "react-dom"],
+      "dependencyTypes": ["peer"],
+      "isIgnored": true
+    }
+  ]
+}

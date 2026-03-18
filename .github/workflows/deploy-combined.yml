@@ -1,0 +1,33 @@
+name: Deploy
+
+on:
+  push:
+    branches:
+      - develop
+      - staging
+    paths:
+      - "apps/**"
+      - "packages/**"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - "Dockerfile"
+      - "docker/**"
+      - ".github/**"
+  workflow_dispatch:
+
+env:
+  # TODO: Configure deployment registry and resource names
+  CONTAINER_REGISTRY: ""
+  CONTAINER_NAME: candystore
+  RESOURCE_GROUP: ""
+
+jobs:
+  deploy:
+    name: Build and Deploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Placeholder
+        run: echo "TODO - Configure deployment pipeline for your infrastructure"

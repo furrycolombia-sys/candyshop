@@ -1,0 +1,95 @@
+BASE_BRANCH="origin/develop"
+git show-ref --verify --quiet "refs/remotes/${BASE_BRANCH}" || BASE_BRANCH="@{upstream}"
+
+# Shared change detection (aligned categories for hooks/CI).
+eval "$(bash scripts/detect-changes.sh \"$BASE_BRANCH\" \"HEAD\")"
+
+if [ "$DOCS_ONLY" = "true" ]; then
+  echo "No code/deploy changes detected, skipping pre-push validation."
+  exit 0
+fi
+
+DOCKER_CHECK=false
+if [ "$DEPLOY_CHANGED" = "true" ]; then
+  echo "Deploy-related changes detected. Docker health check will run."
+
+  for docker_path in \
+    "/c/Program Files/Docker/Docker/resources/bin" \
+    "$HOME/AppData/Local/Docker/resources/bin" \
+    "/usr/local/bin"; do
+    if [ -d "$docker_path" ] && ! command -v docker > /dev/null 2>&1; then
+      export PATH="$docker_path:$PATH"
+    fi
+  done
+
+  if ! docker info > /dev/null 2>&1; then
+    echo "ERROR: Docker is not running. Start Docker Desktop and try again."
+    exit 1
+  fi
+
+  DOCKER_CHECK=true
+fi
+
+echo "Running pre-push checks..."
+pnpm format:check || exit 1
+
+SELECT_OUTPUT=$(bash scripts/select-workspaces.sh \
+  "$WEB_CHANGED" \
+  "$ADMIN_CHANGED" \
+  "$LANDING_CHANGED" \
+  "$AUTH_CHANGED" \
+  "$PLAYGROUND_CHANGED" \
+  "$PACKAGES_CHANGED" \
+  "$TOOLING_CHANGED")
+
+RUN_ALL=$(echo "$SELECT_OUTPUT" | grep '^RUN_ALL=' | cut -d= -f2-)
+APPS=$(echo "$SELECT_OUTPUT" | grep '^APPS=' | cut -d= -f2-)
+LINT_TARGETS=$(echo "$SELECT_OUTPUT" | grep '^LINT_TARGETS=' | cut -d= -f2-)
+
+if [ "$RUN_ALL" = "true" ]; then
+  pnpm run lint || exit 1
+  pnpm run typecheck || exit 1
+  pnpm run test || exit 1
+else
+  if [ -n "$LINT_TARGETS" ]; then
+    pnpm exec eslint $LINT_TARGETS || exit 1
+  fi
+
+  if [ -n "$APPS" ]; then
+    for APP in $APPS; do
+      pnpm --filter "$APP" typecheck || exit 1
+      pnpm --filter "$APP" test || exit 1
+    done
+  fi
+fi
+
+# Optional full local gate when explicitly requested.
+if [ "${FULL_PREPUSH:-false}" = "true" ]; then
+  echo "FULL_PREPUSH=true -> running extended checks (coverage/build/e2e)."
+
+  if [ "$RUN_ALL" = "true" ]; then
+    pnpm run test:coverage || exit 1
+    if [ "$DOCKER_CHECK" = "false" ]; then
+      pnpm run build || exit 1
+    fi
+    pnpm run test:e2e || exit 1
+  else
+    if [ -n "$APPS" ]; then
+      for APP in $APPS; do
+        pnpm --filter "$APP" test:coverage || exit 1
+        if [ "$DOCKER_CHECK" = "false" ]; then
+          pnpm --filter "$APP" build || exit 1
+        fi
+        pnpm --filter "$APP" test:e2e || exit 1
+      done
+    fi
+  fi
+fi
+
+if [ "$DOCKER_CHECK" = "true" ]; then
+  echo "Running Docker health check..."
+  bash scripts/docker-health-check.sh || exit 1
+fi
+
+echo "All pre-push checks passed."
+
