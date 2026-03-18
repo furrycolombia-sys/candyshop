@@ -1,6 +1,6 @@
 {
   "meta": {
-    "title": "Candy Store - Payments",
+    "title": "Candy Shop - Payments",
     "description": "Secure payment processing for products, services, and tickets"
   },
   "payments": {
@@ -18,7 +18,7 @@
     }
   },
   "nav": {
-    "brand": "Candy Store",
+    "brand": "Candy Shop",
     "landing": "Home",
     "store": "Store",
     "payments": "Payments",

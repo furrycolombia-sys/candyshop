@@ -1,11 +1,11 @@
 {
   "meta": {
-    "title": "Candy Store - Your Marketplace",
+    "title": "Candy Shop - Your Marketplace",
     "description": "Products, services, tickets, promos and more"
   },
   "landing": {
     "hero": {
-      "title": "Welcome to Candy Store",
+      "title": "Welcome to Candy Shop",
       "subtitle": "Your one-stop marketplace for products, services, event tickets, exclusive promos, and coupons."
     },
     "cta": {
@@ -14,7 +14,7 @@
     }
   },
   "nav": {
-    "brand": "Candy Store",
+    "brand": "Candy Shop",
     "landing": "Home",
     "store": "Store",
     "payments": "Payments",

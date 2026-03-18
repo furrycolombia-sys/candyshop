@@ -1,6 +1,6 @@
 {
   "meta": {
-    "title": "Candy Store - Playground",
+    "title": "Candy Shop - Playground",
     "description": "Experiment with components and features"
   },
   "playground": {
@@ -8,7 +8,7 @@
     "subtitle": "Experiment with components and features"
   },
   "nav": {
-    "brand": "Candy Store",
+    "brand": "Candy Shop",
     "landing": "Home",
     "store": "Store",
     "payments": "Payments",

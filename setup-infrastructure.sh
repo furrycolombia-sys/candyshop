@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Candystore - Infrastructure Setup Script
+# Candyshop - Infrastructure Setup Script
 # TODO: Configure for your deployment infrastructure
 
 set -e

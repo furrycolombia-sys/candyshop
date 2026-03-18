@@ -1,6 +1,6 @@
 {
   "meta": {
-    "title": "Candy Store",
+    "title": "Candy Shop",
     "description": "Tu tienda favorita para productos, servicios y boletos"
   },
   "store": {
@@ -8,7 +8,7 @@
     "subtitle": "Explora productos, servicios, boletos y mucho mas"
   },
   "nav": {
-    "brand": "Candy Store",
+    "brand": "Candy Shop",
     "landing": "Inicio",
     "store": "Tienda",
     "payments": "Pagos",

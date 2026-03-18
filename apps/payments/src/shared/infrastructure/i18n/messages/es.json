@@ -1,6 +1,6 @@
 {
   "meta": {
-    "title": "Candy Store - Pagos",
+    "title": "Candy Shop - Pagos",
     "description": "Procesamiento seguro de pagos para productos, servicios y boletos"
   },
   "payments": {
@@ -18,7 +18,7 @@
     }
   },
   "nav": {
-    "brand": "Candy Store",
+    "brand": "Candy Shop",
     "landing": "Inicio",
     "store": "Tienda",
     "payments": "Pagos",

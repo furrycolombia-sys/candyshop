@@ -20,8 +20,8 @@ if ! command -v docker > /dev/null 2>&1; then
   exit 1
 fi
 
-IMAGE_NAME="candystore-test"
-CONTAINER_NAME="candystore-health-check-$$"
+IMAGE_NAME="candyshop-test"
+CONTAINER_NAME="candyshop-health-check-$$"
 MAX_WAIT=60
 POLL_INTERVAL=2
 
