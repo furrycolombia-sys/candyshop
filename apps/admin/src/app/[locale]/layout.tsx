@@ -46,7 +46,11 @@ export default async function LocaleLayout({
     <ThemeProvider>
       <NextIntlClientProvider messages={messages}>
         <Providers>
-          <AppNavigation currentApp="admin" urls={appUrls} />
+          <AppNavigation
+            currentApp="admin"
+            urls={appUrls}
+            locales={routing.locales}
+          />
           {children}
         </Providers>
       </NextIntlClientProvider>

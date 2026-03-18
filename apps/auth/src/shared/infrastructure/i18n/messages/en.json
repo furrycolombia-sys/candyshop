@@ -21,6 +21,9 @@
       "switchToDark": "Switch to dark mode",
       "switchToLight": "Switch to light mode",
       "toggle": "Toggle theme"
+    },
+    "language": {
+      "select": "Select language"
     }
   }
 }

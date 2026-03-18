@@ -2,6 +2,7 @@
 
 import { useTranslations } from "next-intl";
 
+import { LocaleSwitcher } from "./LocaleSwitcher";
 import { ThemeToggle } from "./ThemeToggle";
 
 type AppId = "store" | "landing" | "payments" | "admin" | "auth" | "playground";
@@ -9,6 +10,7 @@ type AppId = "store" | "landing" | "payments" | "admin" | "auth" | "playground";
 interface AppNavigationProps {
   currentApp: AppId;
   urls: Record<AppId, string>;
+  locales: readonly string[];
 }
 
 const APP_ORDER: { id: AppId; labelKey: string }[] = [
@@ -20,7 +22,11 @@ const APP_ORDER: { id: AppId; labelKey: string }[] = [
   { id: "playground", labelKey: "playground" },
 ];
 
-export function AppNavigation({ currentApp, urls }: AppNavigationProps) {
+export function AppNavigation({
+  currentApp,
+  urls,
+  locales,
+}: AppNavigationProps) {
   const t = useTranslations("nav");
 
   return (
@@ -48,7 +54,8 @@ export function AppNavigation({ currentApp, urls }: AppNavigationProps) {
           );
         })}
       </div>
-      <div className="ml-auto">
+      <div className="ml-auto flex items-center gap-2">
+        <LocaleSwitcher locales={locales} />
         <ThemeToggle />
       </div>
     </nav>
