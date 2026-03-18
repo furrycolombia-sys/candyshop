@@ -1,6 +1,6 @@
 "use client";
 
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 import { LocaleSwitcher } from "./LocaleSwitcher";
 import { ThemeToggle } from "./ThemeToggle";
@@ -28,6 +28,17 @@ export function AppNavigation({
   locales,
 }: AppNavigationProps) {
   const t = useTranslations("nav");
+  const locale = useLocale();
+
+  /** Append current locale to cross-app URL so the target app opens in the same language */
+  function localizedHref(baseUrl: string): string {
+    // For absolute URLs (http://...), append /{locale} path
+    if (/^https?:\/\//.test(baseUrl)) {
+      return `${baseUrl.replace(/\/$/, "")}/${locale}`;
+    }
+    // For relative URLs (/store, /admin), append /{locale}
+    return `${baseUrl.replace(/\/$/, "")}/${locale}`;
+  }
 
   return (
     <nav className="flex w-full items-center gap-1 border-b bg-background px-4 py-2">
@@ -40,7 +51,7 @@ export function AppNavigation({
           return (
             <a
               key={id}
-              href={urls[id]}
+              href={localizedHref(urls[id])}
               className={[
                 "rounded-md px-3 py-1.5 text-sm transition-colors",
                 isActive

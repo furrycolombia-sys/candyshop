@@ -152,6 +152,9 @@ importers:
       clsx:
         specifier: ^2.1.1
         version: 2.1.1
+      cookies-next:
+        specifier: ^6.1.1
+        version: 6.1.1(next@16.2.0(@babel/core@7.29.0)(@playwright/test@1.58.2)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react@19.2.4)
       lucide-react:
         specifier: ^0.511.0
         version: 0.511.0(react@19.2.4)
@@ -428,6 +431,9 @@ importers:
       clsx:
         specifier: ^2.1.1
         version: 2.1.1
+      cookies-next:
+        specifier: ^6.1.1
+        version: 6.1.1(next@16.2.0(@babel/core@7.29.0)(@playwright/test@1.58.2)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react@19.2.4)
       lucide-react:
         specifier: ^0.511.0
         version: 0.511.0(react@19.2.4)
@@ -631,6 +637,9 @@ importers:
       clsx:
         specifier: ^2.1.1
         version: 2.1.1
+      cookies-next:
+        specifier: ^6.1.1
+        version: 6.1.1(next@16.2.0(@babel/core@7.29.0)(@playwright/test@1.58.2)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react@19.2.4)
       lucide-react:
         specifier: ^0.511.0
         version: 0.511.0(react@19.2.4)
@@ -744,6 +753,9 @@ importers:
       clsx:
         specifier: ^2.1.1
         version: 2.1.1
+      cookies-next:
+        specifier: ^6.1.1
+        version: 6.1.1(next@16.2.0(@babel/core@7.29.0)(@playwright/test@1.58.2)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react@19.2.4)
       lucide-react:
         specifier: ^0.511.0
         version: 0.511.0(react@19.2.4)
@@ -806,6 +818,9 @@ importers:
 
   packages/shared:
     dependencies:
+      cookies-next:
+        specifier: ^6.1.1
+        version: 6.1.1(next@16.2.0(@babel/core@7.29.0)(@playwright/test@1.58.2)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react@19.2.4)
       react:
         specifier: ^19.1.0
         version: 19.2.4
@@ -4543,6 +4558,12 @@ packages:
   cookie@1.1.1:
     resolution: {integrity: sha512-ei8Aos7ja0weRpFzJnEA9UHJ/7XQmqglbRwnf2ATjcB9Wq874VKH9kfjjirM6UhU2/E5fFYadylyhFldcqSidQ==}
     engines: {node: '>=18'}
+
+  cookies-next@6.1.1:
+    resolution: {integrity: sha512-8JZBc4IN2m8xqOXyG7uicth6yH3SvynAUGSeV/FQ5lcEclzNGoR0+YCjySdn8r6keZdRyGQr4YJ8qy8F+Jq5uw==}
+    peerDependencies:
+      next: '>=15.0.0'
+      react: '>= 16.8.0'
 
   core-js-compat@3.49.0:
     resolution: {integrity: sha512-VQXt1jr9cBz03b331DFDCCP90b3fanciLkgiOoy8SBHy06gNf+vQ1A3WFLqG7I8TipYIKeYK9wxd0tUrvHcOZA==}
@@ -11893,6 +11914,12 @@ snapshots:
   convert-source-map@2.0.0: {}
 
   cookie@1.1.1: {}
+
+  cookies-next@6.1.1(next@16.2.0(@babel/core@7.29.0)(@playwright/test@1.58.2)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react@19.2.4):
+    dependencies:
+      cookie: 1.1.1
+      next: 16.2.0(@babel/core@7.29.0)(@playwright/test@1.58.2)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      react: 19.2.4
 
   core-js-compat@3.49.0:
     dependencies:
