@@ -15,5 +15,12 @@
     "admin": "Admin",
     "auth": "Account",
     "playground": "Playground"
+  },
+  "common": {
+    "theme": {
+      "switchToDark": "Switch to dark mode",
+      "switchToLight": "Switch to light mode",
+      "toggle": "Toggle theme"
+    }
   }
 }

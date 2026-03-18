@@ -2,6 +2,8 @@
 
 import { useTranslations } from "next-intl";
 
+import { ThemeToggle } from "./ThemeToggle";
+
 type AppId = "store" | "landing" | "payments" | "admin" | "auth" | "playground";
 
 interface AppNavigationProps {
@@ -45,6 +47,9 @@ export function AppNavigation({ currentApp, urls }: AppNavigationProps) {
             </a>
           );
         })}
+      </div>
+      <div className="ml-auto">
+        <ThemeToggle />
       </div>
     </nav>
   );
