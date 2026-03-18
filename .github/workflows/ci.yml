@@ -304,10 +304,10 @@ jobs:
           NEXT_PUBLIC_API_PREFIX: ""
           NEXT_PUBLIC_ENABLE_MOCKS: "true"
           NEXT_PUBLIC_ENABLE_TEST_IDS: "true"
-          NEXT_PUBLIC_AUTH_HOST_URL: "http://localhost:3000"
-          NEXT_PUBLIC_STORE_URL: "http://localhost:3001"
-          NEXT_PUBLIC_ADMIN_URL: "http://localhost:3002"
-          NEXT_PUBLIC_PLAYGROUND_URL: "http://localhost:3003"
+          NEXT_PUBLIC_AUTH_HOST_URL: "http://localhost:5000"
+          NEXT_PUBLIC_STORE_URL: "http://localhost:5001"
+          NEXT_PUBLIC_ADMIN_URL: "http://localhost:5002"
+          NEXT_PUBLIC_PLAYGROUND_URL: "http://localhost:5003"
 
       - name: Upload store build artifacts
         uses: actions/upload-artifact@v4

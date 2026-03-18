@@ -9,17 +9,15 @@ export default defineConfig({
   reporter: [["html", { open: "never" }], ["list"]],
   timeout: 60_000,
   use: {
-    baseURL: "http://localhost:3002",
+    baseURL: "http://localhost:5002",
     trace: "on-first-retry",
     screenshot: "only-on-failure",
     navigationTimeout: 45_000,
   },
-  projects: [
-    { name: "chromium", use: { ...devices["Desktop Chrome"] } },
-  ],
+  projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
   webServer: {
-    command: process.env.CI ? "pnpm start" : "pnpm next dev --port 3002",
-    url: "http://localhost:3002",
+    command: process.env.CI ? "pnpm start" : "pnpm next dev --port 5002",
+    url: "http://localhost:5002",
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
     env: {
