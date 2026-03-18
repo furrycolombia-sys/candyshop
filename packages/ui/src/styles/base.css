@@ -1,0 +1,25 @@
+/**
+ * Shared Base Layer Styles
+ *
+ * Contains default element styles applied via @layer base.
+ */
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+    outline-color: var(--color-ring);
+  }
+
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+  }
+
+  :where(a, button, [role="button"], [data-slot="button"]) {
+    cursor: pointer;
+  }
+
+  :where(button:disabled, [aria-disabled="true"]) {
+    cursor: not-allowed;
+  }
+}

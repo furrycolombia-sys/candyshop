@@ -1,0 +1,339 @@
+/**
+ * Shared Semantic Utility Classes
+ *
+ * Contains semantic typography, color, and status utility classes.
+ * These complement Tailwind's utility classes with project-specific semantics.
+ */
+
+/* ============================================
+   SEMANTIC TYPOGRAPHY UTILITY CLASSES
+   ============================================ */
+@layer utilities {
+  /* === TITLES (Page-level headings) === */
+  .text-title-1 {
+    @apply text-4xl font-bold leading-tight tracking-tight;
+  }
+
+  .text-title-2 {
+    @apply text-3xl font-bold leading-tight tracking-tight;
+  }
+
+  .text-title-3 {
+    @apply text-2xl font-semibold leading-snug tracking-tight;
+  }
+
+  /* === HEADINGS (Section/Card headings) === */
+  .text-heading-large {
+    @apply text-xl font-semibold leading-snug;
+  }
+
+  .text-heading-medium {
+    @apply text-lg font-semibold leading-snug;
+  }
+
+  .text-heading-small {
+    @apply text-base font-semibold leading-normal;
+  }
+
+  /* === BODY TEXT === */
+  .text-body-large {
+    @apply text-lg leading-relaxed;
+  }
+
+  .text-body {
+    @apply text-base leading-normal;
+  }
+
+  .text-body-small {
+    @apply text-sm leading-normal;
+  }
+
+  /* === UI ELEMENTS === */
+  .text-caption {
+    @apply text-xs leading-normal text-muted-foreground;
+  }
+
+  .text-label {
+    @apply text-sm font-medium leading-normal;
+  }
+
+  /* === METRICS (Dashboard values and indicators) === */
+  .text-metric-value {
+    @apply text-3xl font-bold leading-none tracking-tight;
+  }
+
+  .text-metric-label {
+    @apply text-xs leading-normal text-muted-foreground;
+  }
+
+  .text-metric-change {
+    @apply text-xs leading-normal;
+  }
+
+  /* Note: text-tiny is defined in @theme inline as --text-tiny */
+
+  /* === BADGE TEXT === */
+  .text-badge {
+    @apply text-xs font-medium leading-none;
+  }
+
+  /* === CARD ELEMENTS === */
+  .text-card-title {
+    @apply text-base font-semibold leading-normal;
+  }
+
+  .text-card-description {
+    @apply text-sm leading-normal text-muted-foreground;
+  }
+
+  /* === TABLE ELEMENTS === */
+  .text-table-header {
+    @apply text-xs font-medium leading-normal text-muted-foreground uppercase tracking-wide;
+  }
+
+  .text-table-cell {
+    @apply text-sm leading-normal;
+  }
+
+  /* === NAVIGATION === */
+  .text-nav-link {
+    @apply text-sm font-medium leading-normal;
+  }
+
+  .text-nav-label {
+    @apply text-xs leading-normal text-muted-foreground;
+  }
+
+  /* === FORM ELEMENTS === */
+  .text-input-label {
+    @apply text-sm font-medium leading-normal;
+  }
+
+  .text-input-helper {
+    @apply text-xs leading-normal text-muted-foreground;
+  }
+
+  .text-input-error {
+    @apply text-xs leading-normal text-destructive;
+  }
+
+  /* === CODE === */
+  .text-code {
+    @apply text-sm font-mono leading-normal;
+  }
+
+  .text-code-inline {
+    @apply text-xs font-mono bg-muted px-1 py-0.5 rounded;
+  }
+
+  /* ============================================
+     SEMANTIC COLOR UTILITY CLASSES
+     ============================================ */
+
+  /* === STATUS SURFACES (Background + Border for cards/containers) ===
+     Uses color-mix() to produce fully opaque solid tints — same visual
+     result as bg-[color]/10 but with zero transparency. Dark mode adapts
+     automatically because --color-card resolves to the theme's dark card value. */
+  .surface-success {
+    background-color: color-mix(
+      in srgb,
+      var(--color-success) 10%,
+      var(--color-card)
+    );
+    border-color: color-mix(
+      in srgb,
+      var(--color-success) 20%,
+      var(--color-card)
+    );
+  }
+
+  .surface-warning {
+    background-color: color-mix(
+      in srgb,
+      var(--color-warning) 10%,
+      var(--color-card)
+    );
+    border-color: color-mix(
+      in srgb,
+      var(--color-warning) 20%,
+      var(--color-card)
+    );
+  }
+
+  .surface-destructive {
+    background-color: color-mix(
+      in srgb,
+      var(--color-destructive) 10%,
+      var(--color-card)
+    );
+    border-color: color-mix(
+      in srgb,
+      var(--color-destructive) 20%,
+      var(--color-card)
+    );
+  }
+
+  .surface-info {
+    background-color: color-mix(
+      in srgb,
+      var(--color-info) 10%,
+      var(--color-card)
+    );
+    border-color: color-mix(in srgb, var(--color-info) 20%, var(--color-card));
+  }
+
+  .surface-brand {
+    background-color: color-mix(
+      in srgb,
+      var(--color-brand) 10%,
+      var(--color-card)
+    );
+    border-color: color-mix(in srgb, var(--color-brand) 20%, var(--color-card));
+  }
+
+  .surface-muted {
+    @apply bg-muted text-muted-foreground border-border;
+  }
+
+  /* === STATUS FULL (Surface + Text color for complete status styling) === */
+  .status-healthy {
+    @apply bg-success/10 text-success border-success/20 dark:bg-success/20 dark:border-success/30;
+  }
+
+  .status-warning {
+    @apply bg-warning/10 text-warning border-warning/20 dark:bg-warning/20 dark:border-warning/30;
+  }
+
+  .status-critical {
+    @apply bg-destructive/10 text-destructive border-destructive/20 dark:bg-destructive/20 dark:border-destructive/30;
+  }
+
+  .status-info {
+    @apply bg-info/10 text-info border-info/20 dark:bg-info/20 dark:border-info/30;
+  }
+
+  .status-brand {
+    @apply bg-brand/10 text-brand border-brand/20 dark:bg-brand/20 dark:border-brand/30;
+  }
+
+  .status-neutral {
+    @apply bg-muted text-muted-foreground border-border;
+  }
+
+  /* === STATUS INDICATORS (Dots/icons for legends and badges) === */
+  .indicator-success {
+    @apply bg-success;
+  }
+
+  .indicator-warning {
+    @apply bg-warning;
+  }
+
+  .indicator-destructive {
+    @apply bg-destructive;
+  }
+
+  .indicator-brand {
+    @apply bg-brand;
+  }
+
+  .indicator-info {
+    @apply bg-info;
+  }
+
+  .indicator-muted {
+    @apply bg-muted-foreground;
+  }
+
+  /* === ICON COLORS (Semantic colors for icons) === */
+  .icon-success {
+    @apply text-success;
+  }
+
+  .icon-warning {
+    @apply text-warning;
+  }
+
+  .icon-destructive {
+    @apply text-destructive;
+  }
+
+  .icon-brand {
+    @apply text-brand;
+  }
+
+  .icon-info {
+    @apply text-info;
+  }
+
+  .icon-muted {
+    @apply text-muted-foreground;
+  }
+
+  /* === TABLE ROW ALTERNATING (Zebra striping) === */
+  .table-row-alt {
+    @apply bg-muted/30;
+  }
+
+  /* === PULSE EFFECTS (For critical states) === */
+  .pulse-critical {
+    @apply bg-destructive/20 animate-pulse;
+  }
+
+  /* === SHADOWS (Theme-aware shadows) === */
+  .shadow-card {
+    box-shadow: var(--shadow-card);
+  }
+
+  /* === SKELETON SHIMMER (Enhanced loading animation) === */
+  .skeleton-shimmer {
+    background: linear-gradient(
+      90deg,
+      var(--color-muted) 25%,
+      color-mix(in srgb, var(--color-foreground) 6%, var(--color-muted)) 37%,
+      var(--color-muted) 63%
+    );
+    background-size: 400% 100%;
+    animation: skeleton-shimmer 1.8s ease-in-out infinite;
+  }
+
+  /* === INDETERMINATE PROGRESS BAR === */
+  .progress-indeterminate {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .progress-indeterminate::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    width: 30%;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      var(--color-brand),
+      transparent
+    );
+    animation: progress-sweep 1.5s ease-in-out infinite;
+  }
+}
+
+/* Skeleton shimmer keyframes */
+@keyframes skeleton-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Progress bar sweep keyframes */
+@keyframes progress-sweep {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(400%);
+  }
+}

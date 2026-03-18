@@ -1,0 +1,19 @@
+/*
+  Shared UI Styles - Main Entry Point
+
+  Imports all shared styles in the correct order.
+  Use "ui/styles" import in app globals.css.
+  To override specific values, define them AFTER importing this file.
+*/
+
+/* Theme configuration - maps CSS variables to Tailwind utilities */
+@import "./theme.css";
+
+/* Color variables for light and dark modes */
+@import "./colors.css";
+
+/* Base layer styles */
+@import "./base.css";
+
+/* Semantic utility classes */
+@import "./utilities.css";
