@@ -12,5 +12,14 @@
       "shop": "Empezar a Comprar",
       "payments": "Realizar un Pago"
     }
+  },
+  "nav": {
+    "brand": "Candy Store",
+    "landing": "Inicio",
+    "store": "Tienda",
+    "payments": "Pagos",
+    "admin": "Admin",
+    "auth": "Cuenta",
+    "playground": "Playground"
   }
 }
