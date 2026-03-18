@@ -27,6 +27,9 @@
       "switchToDark": "Cambiar a modo oscuro",
       "switchToLight": "Cambiar a modo claro",
       "toggle": "Cambiar tema"
+    },
+    "language": {
+      "select": "Seleccionar idioma"
     }
   }
 }
