@@ -16,5 +16,14 @@
       "coupons": "Redeem Coupons",
       "couponsDesc": "Apply promo codes and coupons at checkout"
     }
+  },
+  "nav": {
+    "brand": "Candy Store",
+    "landing": "Home",
+    "store": "Store",
+    "payments": "Payments",
+    "admin": "Admin",
+    "auth": "Account",
+    "playground": "Playground"
   }
 }

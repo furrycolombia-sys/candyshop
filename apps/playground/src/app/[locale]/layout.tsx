@@ -1,3 +1,4 @@
+import { AppNavigation } from "@monorepo/app-components";
 import type { Metadata } from "next";
 import { NextIntlClientProvider } from "next-intl";
 import {
@@ -7,6 +8,7 @@ import {
 } from "next-intl/server";
 
 import { Providers } from "@/app/[locale]/providers";
+import { appUrls } from "@/shared/infrastructure/config";
 import { routing } from "@/shared/infrastructure/i18n";
 import { ThemeProvider } from "@/shared/infrastructure/providers";
 
@@ -43,7 +45,10 @@ export default async function LocaleLayout({
   return (
     <ThemeProvider>
       <NextIntlClientProvider messages={messages}>
-        <Providers>{children}</Providers>
+        <Providers>
+          <AppNavigation currentApp="playground" urls={appUrls} />
+          {children}
+        </Providers>
       </NextIntlClientProvider>
     </ThemeProvider>
   );

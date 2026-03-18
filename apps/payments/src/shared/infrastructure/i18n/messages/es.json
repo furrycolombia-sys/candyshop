@@ -16,5 +16,14 @@
       "coupons": "Canjear Cupones",
       "couponsDesc": "Aplica codigos de promocion y cupones al pagar"
     }
+  },
+  "nav": {
+    "brand": "Candy Store",
+    "landing": "Inicio",
+    "store": "Tienda",
+    "payments": "Pagos",
+    "admin": "Admin",
+    "auth": "Cuenta",
+    "playground": "Playground"
   }
 }

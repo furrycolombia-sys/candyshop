@@ -12,5 +12,14 @@
       "shop": "Start Shopping",
       "payments": "Make a Payment"
     }
+  },
+  "nav": {
+    "brand": "Candy Store",
+    "landing": "Home",
+    "store": "Store",
+    "payments": "Payments",
+    "admin": "Admin",
+    "auth": "Account",
+    "playground": "Playground"
   }
 }
