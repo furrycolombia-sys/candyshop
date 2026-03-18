@@ -8,11 +8,11 @@ import { test, expect, type Page } from "@playwright/test";
  *
  * These tests run against a live Docker container (no dev server).
  * The container exposes nginx on a single port with:
- *   /           -> landing app (port 3000)
- *   /web        -> web app (port 3001)
- *   /admin      -> admin app (port 3002)
- *   /auth       -> auth app (port 3004)
- *   /playground -> playground app (port 3003)
+ *   /           -> landing app (port 5000)
+ *   /web        -> web app (port 5001)
+ *   /admin      -> admin app (port 5002)
+ *   /auth       -> auth app (port 5004)
+ *   /playground -> playground app (port 5003)
  *   /health     -> nginx 200 OK
  *
  * The Docker image is built with NEXT_PUBLIC_ENABLE_TEST_IDS=true

@@ -250,7 +250,7 @@ changes (5 min)
     |     +-- e2e-tests (30 min) [needs: build]
     |           Uses `next start` (pre-built artifacts, ~2s startup)
     |           All 3 apps run CONCURRENTLY (different ports)
-    |             web: port 3000, admin: port 3001, landing: port 3003
+    |             web: port 5000, admin: port 5001, landing: port 5003
     |           [CONDITIONAL: Playwright cache hit?]
     |             HIT  --> playwright install-deps (all 3 apps)
     |             MISS --> playwright install --with-deps (all 3 apps)

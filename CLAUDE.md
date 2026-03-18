@@ -45,13 +45,13 @@ candystore/
 
 ### Key Principles
 
-| Principle                    | Description                                           |
-| ---------------------------- | ----------------------------------------------------- |
-| **Store is the standard**    | All apps must comply with store's rules                |
-| **Packages are pure**        | No i18n, no business logic, no app config              |
-| **Props injection**          | Apps inject translations into shared components        |
-| **Single ESLint**            | One config enforces rules across all workspaces        |
-| **Playground is permanent**  | Incubation sandbox; iterate there, promote when ready  |
+| Principle                   | Description                                           |
+| --------------------------- | ----------------------------------------------------- |
+| **Store is the standard**   | All apps must comply with store's rules               |
+| **Packages are pure**       | No i18n, no business logic, no app config             |
+| **Props injection**         | Apps inject translations into shared components       |
+| **Single ESLint**           | One config enforces rules across all workspaces       |
+| **Playground is permanent** | Incubation sandbox; iterate there, promote when ready |
 
 > **Full documentation:** See [Monorepo Architecture](.claude/rules/monorepo-architecture.md) for complete monorepo patterns, package rules, and i18n strategy.
 
@@ -167,41 +167,41 @@ Prefer the simplest solution. If DRY and KISS conflict, favor KISS.
 
 The project runs out-of-the-box with **no `.env.local` setup required**:
 
-| File            | Purpose                         | Committed? |
-| --------------- | ------------------------------- | ---------- |
-| `.env.example`  | Safe defaults (mocks enabled)   | Yes        |
-| `.env`          | Local overrides (real backend)  | No         |
+| File           | Purpose                        | Committed? |
+| -------------- | ------------------------------ | ---------- |
+| `.env.example` | Safe defaults (mocks enabled)  | Yes        |
+| `.env`         | Local overrides (real backend) | No         |
 
 - `.env.example` contains non-secret defaults (`ENABLE_MOCKS=true`, localhost API)
 - `.env` overrides `.env.example` (for connecting to real backends, gitignored)
 
 ### Workspace Commands
 
-| Command              | Description                |
-| -------------------- | -------------------------- |
-| `pnpm dev`           | Start all apps             |
-| `pnpm dev:store`     | Start store app            |
-| `pnpm dev:landing`   | Start landing page         |
-| `pnpm dev:payments`  | Start payments app         |
-| `pnpm dev:admin`     | Start admin app            |
-| `pnpm dev:auth`      | Start auth app             |
-| `pnpm build`         | Build all workspaces       |
-| `pnpm lint`          | Lint all workspaces        |
-| `pnpm typecheck`     | Type-check all workspaces  |
-| `pnpm test`          | Run all tests              |
-| `pnpm test:store`    | Run store tests            |
-| `pnpm codegen`       | Generate API clients       |
+| Command             | Description               |
+| ------------------- | ------------------------- |
+| `pnpm dev`          | Start all apps            |
+| `pnpm dev:store`    | Start store app           |
+| `pnpm dev:landing`  | Start landing page        |
+| `pnpm dev:payments` | Start payments app        |
+| `pnpm dev:admin`    | Start admin app           |
+| `pnpm dev:auth`     | Start auth app            |
+| `pnpm build`        | Build all workspaces      |
+| `pnpm lint`         | Lint all workspaces       |
+| `pnpm typecheck`    | Type-check all workspaces |
+| `pnpm test`         | Run all tests             |
+| `pnpm test:store`   | Run store tests           |
+| `pnpm codegen`      | Generate API clients      |
 
 ### App Ports
 
-| App        | Port | Purpose                              |
-| ---------- | ---- | ------------------------------------ |
-| auth       | 3000 | Authentication provider (`/auth`)    |
-| store      | 3001 | Main storefront (`/store`)           |
-| admin      | 3002 | Back-office admin (`/admin`)         |
-| playground | 3003 | Sandbox (`/playground`)              |
-| landing    | 3004 | Public landing page (root `/`)       |
-| payments   | 3005 | Payment processing (`/payments`)     |
+| App        | Port | Purpose                           |
+| ---------- | ---- | --------------------------------- |
+| auth       | 5000 | Authentication provider (`/auth`) |
+| store      | 5001 | Main storefront (`/store`)        |
+| admin      | 5002 | Back-office admin (`/admin`)      |
+| playground | 5003 | Sandbox (`/playground`)           |
+| landing    | 5004 | Public landing page (root `/`)    |
+| payments   | 5005 | Payment processing (`/payments`)  |
 
 ### Creating Features (in apps)
 

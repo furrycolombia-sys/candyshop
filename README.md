@@ -12,12 +12,12 @@ pnpm install
 pnpm dev
 
 # Start individual apps
-pnpm dev:store      # http://localhost:3001
-pnpm dev:landing    # http://localhost:3004
-pnpm dev:payments   # http://localhost:3005
-pnpm dev:admin      # http://localhost:3002
-pnpm dev:auth       # http://localhost:3000
-pnpm dev:playground # http://localhost:3003
+pnpm dev:store      # http://localhost:5001
+pnpm dev:landing    # http://localhost:5004
+pnpm dev:payments   # http://localhost:5005
+pnpm dev:admin      # http://localhost:5002
+pnpm dev:auth       # http://localhost:5000
+pnpm dev:playground # http://localhost:5003
 ```
 
 ## Architecture
@@ -26,24 +26,24 @@ This is a **pnpm workspace monorepo** with multiple Next.js applications sharing
 
 ### Apps
 
-| App          | Port | Description                                    |
-| ------------ | ---- | ---------------------------------------------- |
-| `store`      | 3001 | Main storefront — products, services, tickets  |
-| `landing`    | 3004 | Public landing page                            |
-| `payments`   | 3005 | Payment processing and checkout                |
-| `admin`      | 3002 | Back-office — inventory, orders, promos        |
-| `auth`       | 3000 | Authentication provider (mock/backend/keycloak)|
-| `playground` | 3003 | Incubation sandbox for experiments             |
+| App          | Port | Description                                     |
+| ------------ | ---- | ----------------------------------------------- |
+| `store`      | 5001 | Main storefront — products, services, tickets   |
+| `landing`    | 5004 | Public landing page                             |
+| `payments`   | 5005 | Payment processing and checkout                 |
+| `admin`      | 5002 | Back-office — inventory, orders, promos         |
+| `auth`       | 5000 | Authentication provider (mock/backend/keycloak) |
+| `playground` | 5003 | Incubation sandbox for experiments              |
 
 ### Packages
 
-| Package          | Description                                   |
-| ---------------- | --------------------------------------------- |
-| `api`            | Generated API hooks, types, HTTP client       |
-| `ui`             | Shared UI components (shadcn/ui + Radix)      |
-| `shared`         | Shared utilities, hooks, types                |
-| `auth`           | Authentication domain logic and providers     |
-| `app-components` | App-level shared components (with next-intl)  |
+| Package          | Description                                  |
+| ---------------- | -------------------------------------------- |
+| `api`            | Generated API hooks, types, HTTP client      |
+| `ui`             | Shared UI components (shadcn/ui + Radix)     |
+| `shared`         | Shared utilities, hooks, types               |
+| `auth`           | Authentication domain logic and providers    |
+| `app-components` | App-level shared components (with next-intl) |
 
 ### Tech Stack
 

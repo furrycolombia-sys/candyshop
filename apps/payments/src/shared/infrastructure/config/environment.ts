@@ -8,7 +8,7 @@ type LogLevel = "debug" | "info" | "warn" | "error";
 const DEFAULT_LANDING_URL = process.env.NEXT_PUBLIC_LANDING_URL ?? "/";
 const DEFAULT_AUTH_HOST_URL =
   process.env.NEXT_PUBLIC_AUTH_HOST_URL ??
-  (process.env.NODE_ENV === "development" ? "http://localhost:3000" : "/auth");
+  (process.env.NODE_ENV === "development" ? "http://localhost:5000" : "/auth");
 
 type RuntimeEnv = {
   apiUrl: string;
