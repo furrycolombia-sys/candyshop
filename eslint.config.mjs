@@ -554,13 +554,7 @@ const eslintConfig = defineConfig([
       "sonarjs/fixme-tag": "warn",
       "boundaries/no-unknown": "error",
       "boundaries/no-unknown-files": "error",
-      "boundaries/no-private": [
-        "error",
-        {
-          allowUncles: true,
-        },
-      ],
-      "boundaries/element-types": [
+      "boundaries/dependencies": [
         "error",
         {
           default: "disallow",
@@ -570,10 +564,7 @@ const eslintConfig = defineConfig([
             { from: "feature", allow: ["shared", "feature", "mocks"] },
             { from: "app", allow: ["shared", "shared-layouts", "feature"] },
             { from: "test", allow: ["shared", "feature", "app", "test"] },
-            {
-              from: "mocks",
-              allow: ["shared", "feature", "app", "test", "mocks"],
-            },
+            { from: "mocks", allow: ["shared", "feature", "app", "test", "mocks"] },
             { from: "root", allow: ["shared", "feature", "app", "mocks"] },
           ],
         },
@@ -622,7 +613,7 @@ const eslintConfig = defineConfig([
       `${PKG_SRC}/**/*.spec.{ts,tsx,js,jsx}`,
     ],
     rules: {
-      "boundaries/element-types": "off",
+      "boundaries/dependencies": "off",
       "boundaries/no-unknown": "off",
       "boundaries/no-unknown-files": "off",
       "sonarjs/assertions-in-tests": "off",

@@ -1,0 +1,184 @@
+/**
+ * Shared Color Variables
+ *
+ * Defines CSS custom properties for light (:root) and dark (.dark) modes.
+ * Apps can override specific values by defining them after importing this file.
+ */
+
+:root {
+  --radius: 0.625rem;
+
+  /* Background and foreground - Light gray page background per Figma */
+  --background: oklch(97% 0.005 250deg);
+  --foreground: oklch(15% 0 0deg);
+
+  /* Surfaces - Elevated elements (cards, sidebars, panels) */
+  --surface: oklch(100% 0 0deg);
+  --card: var(--surface);
+  --card-foreground: oklch(15% 0 0deg);
+  --popover: var(--surface);
+  --popover-foreground: oklch(15% 0 0deg);
+
+  /* Brand color */
+  --brand: #251acc;
+  --brand-hover: #1f1499;
+  --brand-text: #251acc;
+  --brand-alpha: rgb(37 26 204 / 12%);
+  --brand-foreground: #fff;
+
+  /* Primary maps to brand — enables bg-primary, text-primary, etc. */
+  --primary: var(--brand);
+  --primary-foreground: var(--brand-foreground);
+
+  /* Secondary - Neutral gray */
+  --secondary: oklch(96% 0 0deg);
+  --secondary-foreground: oklch(20% 0 0deg);
+
+  /* Muted - Subtle backgrounds */
+  --muted: oklch(96% 0.005 180deg);
+  --muted-foreground: oklch(45% 0 0deg);
+
+  /* Surface inset - For nested cards/sections within cards */
+  --surface-inset: oklch(94% 0.005 250deg);
+
+  /* Chip - For neutral badge/chip backgrounds */
+  --chip: oklch(88% 0 0deg);
+
+  /* Accent — brand-tinted for hover/focus states */
+  --accent: oklch(96% 0.02 270deg);
+  --accent-foreground: oklch(20% 0.02 270deg);
+
+  /* Semantic status colors */
+  --destructive: oklch(55% 0.22 25deg);
+  --destructive-foreground: oklch(99% 0 0deg);
+  --success: oklch(58% 0.14 145deg);
+  --success-foreground: oklch(99% 0 0deg);
+  --warning: oklch(72% 0.15 65deg);
+  --warning-foreground: oklch(20% 0 0deg);
+  --info: #0088d1;
+  --info-foreground: oklch(99% 0 0deg);
+
+  /* Process status colors (pills, progress bars) */
+  --status-healthy: oklch(90% 0.08 145deg);
+  --status-attention: oklch(82% 0.12 75deg);
+
+  /* UI elements */
+  --border: oklch(90% 0 0deg);
+  --input: oklch(90% 0 0deg);
+  --ring: var(--brand);
+  --chart-3: oklch(65% 0.22 25deg); /* Vibrant red - stands out clearly */
+  --chart-4: oklch(60% 0.2 145deg); /* Vibrant green - good contrast */
+  --chart-1: oklch(60% 0.2 220deg); /* Vibrant blue */
+  --chart-2: oklch(70% 0.2 65deg); /* Vibrant amber */
+  --chart-5: oklch(55% 0.25 280deg); /* Vibrant purple */
+
+  /* Sidebar (kept from original) */
+  --sidebar: oklch(100% 0 0deg);
+  --sidebar-foreground: oklch(15% 0 0deg);
+  --sidebar-accent: oklch(96% 0.02 270deg);
+  --sidebar-accent-foreground: oklch(20% 0.02 270deg);
+  --sidebar-border: oklch(90% 0 0deg);
+  --sidebar-ring: var(--brand);
+
+  /* Typography */
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+
+  /* Shadows */
+  --shadow-card: 0 4px 12px rgb(0 0 0 / 8%);
+
+  /* Semantic Typography Classes */
+  --text-title-1: 36px / 32px;
+  --text-title-2: 30px / 36px;
+  --text-title-3: 24px / 28px;
+  --text-heading-large: 20px / 24px;
+  --text-heading-medium: 18px / 22px;
+  --text-heading-small: 16px / 20px;
+  --text-body-large: 18px / 28px;
+  --text-body: 16px / 24px;
+  --text-body-small: 14px / 20px;
+  --text-caption: 12px / 16px;
+  --text-label: 14px / 20px;
+  --text-metric-value: 30px / 36px;
+  --text-metric-label: 12px / 16px;
+  --text-metric-change: 12px / 16px;
+}
+
+.dark {
+  /* Background and foreground - Very dark navy per Figma */
+  --background: #171718;
+  --foreground: oklch(95% 0 0deg);
+
+  /* Surfaces - Elevated elements (cards, sidebars, panels) */
+  --surface: #1a1a1a;
+  --card: var(--surface);
+  --card-foreground: oklch(95% 0 0deg);
+  --popover: oklch(18% 0.015 250deg);
+  --popover-foreground: oklch(95% 0 0deg);
+
+  /* Brand color */
+  --brand: #6b67ff;
+  --brand-hover: #5b57e8;
+  --brand-text: #6b67ff;
+  --brand-alpha: rgb(37 26 204 / 24%);
+  --brand-foreground: #fff;
+
+  /* Primary maps to brand */
+  --primary: var(--brand);
+  --primary-foreground: var(--brand-foreground);
+
+  /* Secondary */
+  --secondary: oklch(20% 0.01 250deg);
+  --secondary-foreground: oklch(95% 0 0deg);
+
+  /* Muted */
+  --muted: oklch(18% 0.01 250deg);
+  --muted-foreground: oklch(60% 0 0deg);
+
+  /* Surface inset - For nested cards/sections within cards */
+  --surface-inset: #3a3c3f;
+
+  /* Chip - For neutral badge/chip backgrounds */
+  --chip: oklch(25% 0.01 250deg);
+
+  /* Accent — brand-tinted */
+  --accent: oklch(22% 0.03 270deg);
+  --accent-foreground: oklch(95% 0.01 270deg);
+
+  /* Semantic status colors - Vibrant for dark mode per Figma */
+  --destructive: oklch(60% 0.22 25deg);
+  --destructive-foreground: oklch(98% 0 0deg);
+  --success: oklch(65% 0.18 155deg);
+  --success-foreground: oklch(98% 0 0deg);
+  --warning: #e29a25;
+  --warning-foreground: oklch(98% 0 0deg);
+  --info: #29a3e0;
+  --info-foreground: oklch(98% 0 0deg);
+
+  /* Process status colors (pills, progress bars) */
+  --status-healthy: #313d4f;
+  --status-attention: oklch(75% 0.16 70deg);
+
+  /* UI elements */
+  --border: oklch(100% 0 0deg / 10%);
+  --input: #2b3037;
+  --ring: var(--brand);
+
+  /* Chart colors - Per Figma design */
+  --chart-1: oklch(60% 0.2 250deg); /* Blue - main line */
+  --chart-2: oklch(70% 0.18 280deg); /* Purple - secondary line */
+  --chart-3: oklch(65% 0.2 25deg); /* Red */
+  --chart-4: oklch(75% 0.18 70deg); /* Amber */
+  --chart-5: oklch(65% 0.18 155deg); /* Green */
+
+  /* Shadows */
+  --shadow-card: 0 4px 12px rgb(255 255 255 / 10%);
+
+  /* Sidebar - Navigation sidebar per Figma */
+  --sidebar: #0a1210;
+  --sidebar-foreground: oklch(95% 0 0deg);
+  --sidebar-accent: oklch(18% 0.02 250deg);
+  --sidebar-accent-foreground: oklch(95% 0 0deg);
+  --sidebar-border: oklch(100% 0 0deg / 10%);
+  --sidebar-ring: oklch(60% 0.18 250deg);
+}

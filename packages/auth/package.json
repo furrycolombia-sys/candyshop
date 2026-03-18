@@ -6,9 +6,9 @@
   "types": "./src/index.ts",
   "exports": {
     ".": "./src/index.ts",
+    "./client": "./src/client/index.ts",
     "./domain": "./src/domain/index.ts",
-    "./server": "./src/server/index.ts",
-    "./providers": "./src/providers/index.ts"
+    "./server": "./src/server/index.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",

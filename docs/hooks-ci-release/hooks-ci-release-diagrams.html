@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hooks, CI &amp; Release Flow Diagrams</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --border: #30363d;
+      --text: #e6edf3;
+      --text-muted: #8b949e;
+      --accent: #58a6ff;
+      --accent2: #3fb950;
+      --accent3: #d2a8ff;
+      --accent4: #f0883e;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      padding: 2rem;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 0.5rem;
+      background: linear-gradient(90deg, var(--accent), var(--accent3));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .subtitle {
+      color: var(--text-muted);
+      margin-bottom: 2rem;
+      font-size: 1.1rem;
+    }
+    .toc {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.5rem 2rem;
+      margin-bottom: 3rem;
+    }
+    .toc h2 { font-size: 1.1rem; margin-bottom: 0.75rem; color: var(--accent); }
+    .toc ol { padding-left: 1.5rem; }
+    .toc li { margin-bottom: 0.3rem; }
+    .toc a { color: var(--accent); text-decoration: none; }
+    .toc a:hover { text-decoration: underline; }
+    section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 2rem;
+      margin-bottom: 3rem;
+    }
+    section h2 {
+      font-size: 1.5rem;
+      margin-bottom: 0.5rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid var(--border);
+    }
+    section p.desc {
+      color: var(--text-muted);
+      margin-bottom: 1.5rem;
+      font-size: 0.95rem;
+    }
+    .diagram-container {
+      display: flex;
+      justify-content: center;
+      overflow-x: auto;
+      padding: 1rem 0;
+    }
+    .mermaid { max-width: 100%; }
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-top: 1.5rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--border);
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+    .legend-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .dot-blue { background: #58a6ff; }
+    .dot-green { background: #3fb950; }
+    .dot-orange { background: #f0883e; }
+    .dot-purple { background: #d2a8ff; }
+    .dot-red { background: #f85149; }
+    .dot-gray { background: #8b949e; }
+    .dot-teal { background: #39d2c0; }
+    .dot-yellow { background: #d29922; }
+    .source-ref {
+      margin-top: 1rem;
+      padding: 0.5rem 0.75rem;
+      background: #0d1117;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-family: monospace;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+    .source-ref code { color: var(--accent); }
+    footer {
+      text-align: center;
+      color: var(--text-muted);
+      padding: 2rem 0;
+      font-size: 0.85rem;
+      border-top: 1px solid var(--border);
+    }
+    @media print {
+      body { background: white; color: #1f2328; padding: 1rem; }
+      section { border-color: #d0d7de; break-inside: avoid; }
+      .toc { break-after: page; }
+    }
+  </style>
+</head>
+<body>
+
+<h1>Hooks, CI &amp; Release Flow</h1>
+<p class="subtitle">Visual diagrams of every quality gate from commit to production deployment. Built from actual source files.</p>
+
+<nav class="toc">
+  <h2>Table of Contents</h2>
+  <ol>
+    <li><a href="#overview">End-to-End Overview</a></li>
+    <li><a href="#precommit">Pre-Commit Hook (category-aware, scoped to staged files)</a></li>
+    <li><a href="#prepush">Pre-Push Hook (change detection, sequential execution)</a></li>
+    <li><a href="#ci">CI Pipeline (7 jobs, docs-only skip, cache conditionals)</a></li>
+    <li><a href="#pr">PR Checks (branch rules, conditional jobs, PR summary bot)</a></li>
+    <li><a href="#release">Release &amp; Deployment (3 flows)</a></li>
+    <li><a href="#gates">Quality Gate Summary</a></li>
+  </ol>
+</nav>
+
+<!-- ============================================================ -->
+<!-- 1. END-TO-END OVERVIEW                                        -->
+<!-- ============================================================ -->
+<section id="overview">
+  <h2>1. End-to-End Overview</h2>
+  <p class="desc">The complete journey of code from developer workstation through GitHub to Azure production.</p>
+  <div class="diagram-container">
+    <pre class="mermaid">
+flowchart TB
+  subgraph DEV["Developer Workstation"]
+    direction TB
+    A["Write Code"] --> B["git add"]
+    B --> C["git commit"]
+    C --> D{"Pre-Commit<br/>Hook<br/><i>category-aware</i>"}
+    D -- "FAIL" --> E["Commit<br/>Blocked"]
+    D -- "PASS" --> F["Commit Created"]
+    F --> G["git push"]
+    G --> H{"Pre-Push<br/>Hook<br/><i>change-aware</i>"}
+    H -- "FAIL" --> I["Push<br/>Blocked"]
+    H -- "PASS" --> J["Pushed to Origin"]
+  end
+
+  subgraph GH["GitHub"]
+    direction TB
+    K["Create PR"] --> L{"PR Checks<br/><i>branch rules,<br/>security, a11y</i>"}
+    L -- "FAIL" --> M["Fix Required"]
+    L -- "PASS" --> N{"CI Pipeline<br/><i>quality, tests,<br/>build, e2e</i>"}
+    N -- "FAIL" --> O["Fix Required"]
+    N -- "PASS" --> P["Reviewer Approves"]
+    P --> Q{"Target?"}
+    Q -- "develop" --> R["Merge to<br/>develop"]
+    Q -- "main" --> S["Merge to<br/>main"]
+    S --> T{"release.yml<br/><i>merged == true<br/>AND release/*</i>"}
+    T --> TAG["GitHub Release<br/>+ Version Tag"]
+  end
+
+  subgraph AZ["Azure"]
+    direction TB
+    U["Docker Build<br/>+ Push to ACR"] --> V["Deploy to<br/>Container Apps"]
+  end
+
+  J --> K
+  R --> U
+  S -.-> W["Sync main<br/>back to develop"]
+
+  style DEV fill:#161b22,stroke:#58a6ff,stroke-width:2px,color:#e6edf3
+  style GH fill:#161b22,stroke:#d2a8ff,stroke-width:2px,color:#e6edf3
+  style AZ fill:#161b22,stroke:#3fb950,stroke-width:2px,color:#e6edf3
+  style E fill:#f85149,stroke:#f85149,color:#fff
+  style I fill:#f85149,stroke:#f85149,color:#fff
+  style M fill:#f85149,stroke:#f85149,color:#fff
+  style O fill:#f85149,stroke:#f85149,color:#fff
+  style TAG fill:#3fb950,stroke:#3fb950,color:#fff
+  style V fill:#3fb950,stroke:#3fb950,color:#fff
+    </pre>
+  </div>
+  <div class="legend">
+    <div class="legend-item"><span class="legend-dot dot-blue"></span> Developer Workstation</div>
+    <div class="legend-item"><span class="legend-dot dot-purple"></span> GitHub</div>
+    <div class="legend-item"><span class="legend-dot dot-green"></span> Azure / Success</div>
+    <div class="legend-item"><span class="legend-dot dot-red"></span> Blocked / Fix Required</div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- 2. PRE-COMMIT HOOK                                            -->
+<!-- ============================================================ -->
+<section id="precommit">
+  <h2>2. Pre-Commit Hook</h2>
+  <p class="desc">Runs on every <code>git commit</code>. Detects staged file categories and runs only relevant checks. Skips entirely if no files are staged.</p>
+  <div class="diagram-container">
+    <pre class="mermaid">
+flowchart TD
+  START(["git commit"]) --> DETECT["Detect staged files<br/><code>git diff --cached --name-only</code>"]
+
+  DETECT --> EMPTY{"Any staged<br/>files?"}
+  EMPTY -- "NO" --> SKIP(["Exit 0<br/>Skip all checks"])
+
+  EMPTY -- "YES" --> CATEGORIZE["Categorize staged files"]
+
+  CATEGORIZE --> CAT_CODE["HAS_CODE?<br/><i>.ts, .tsx, .js, .jsx</i>"]
+  CATEGORIZE --> CAT_CSS["HAS_CSS?<br/><i>.css</i>"]
+  CATEGORIZE --> CAT_WS["HAS_WORKSPACE?<br/><i>package.json, pnpm-*,<br/>.npmrc</i>"]
+  CATEGORIZE --> CAT_TEXT["HAS_TEXT?<br/><i>.ts, .tsx, .js, .jsx,<br/>.json, .md, .css,<br/>.yaml, .yml</i>"]
+
+  CAT_CODE --> LINT_STAGED
+  CAT_CSS --> LINT_STAGED
+  CAT_WS --> LINT_STAGED
+  CAT_TEXT --> LINT_STAGED
+
+  subgraph LINT_STAGED["ALWAYS: lint-staged (staged files only)"]
+    direction LR
+    LS1["prettier --write<br/><i>code + json + md + css</i>"]
+    LS2["secretlint<br/><i>code files only</i>"]
+  end
+
+  LINT_STAGED --> WS_CHECK{"HAS_WORKSPACE?"}
+  WS_CHECK -- "YES" --> WS_CHECKS
+  WS_CHECK -- "NO" --> CODE_CHECK
+
+  subgraph WS_CHECKS["Workspace Checks"]
+    direction TB
+    W1["pnpm install --frozen-lockfile"]
+    W2["pnpm sherif<br/><i>monorepo structure</i>"]
+    W3["pnpm syncpack:list<br/><i>dep version mismatches</i>"]
+    W1 --> W2 --> W3
+  end
+
+  WS_CHECKS --> CODE_CHECK
+
+  CODE_CHECK{"HAS_CODE?"}
+  CODE_CHECK -- "YES" --> CODE_CHECKS
+  CODE_CHECK -- "NO" --> CSS_CHECK
+
+  subgraph CODE_CHECKS["Code Quality Checks"]
+    direction TB
+    C1["pnpm lint<br/><i>ESLint all workspaces</i>"]
+    C2["pnpm ls-lint<br/><i>filename conventions</i>"]
+    C3["pnpm knip<br/><i>unused deps/exports</i>"]
+    C4["pnpm jscpd<br/><i>code duplication</i>"]
+    C5["pnpm madge<br/><i>circular deps</i>"]
+    C6{"semgrep<br/>installed?"}
+    C7["pnpm semgrep<br/><i>SAST via Docker</i>"]
+    C1 --> C2 --> C3 --> C4 --> C5 --> C6
+    C6 -- "YES" --> C7
+    C6 -- "NO" --> SEMGREP_FAIL(["EXIT 1<br/>Install semgrep"])
+  end
+
+  CODE_CHECKS --> CSS_CHECK
+
+  CSS_CHECK{"HAS_CSS?"}
+  CSS_CHECK -- "YES" --> CSS_CHECKS
+  CSS_CHECK -- "NO" --> TEXT_CHECK
+
+  subgraph CSS_CHECKS["CSS Checks"]
+    direction TB
+    CS1["pnpm stylelint<br/><i>CSS quality</i>"]
+    CS2["pnpm css-sync<br/><i>globals.css identical<br/>across apps</i>"]
+    CS1 --> CS2
+  end
+
+  CSS_CHECKS --> TEXT_CHECK
+
+  TEXT_CHECK{"HAS_TEXT?"}
+  TEXT_CHECK -- "YES" --> SPELL["pnpm cspell<br/><i>spell check</i>"]
+  TEXT_CHECK -- "NO" --> RESULT
+
+  SPELL --> RESULT
+
+  RESULT{"All passed?"}
+  RESULT -- "YES" --> PASS(["Commit Proceeds"])
+  RESULT -- "NO" --> FAIL(["Commit Blocked"])
+
+  style START fill:#58a6ff,stroke:#58a6ff,color:#fff
+  style SKIP fill:#8b949e,stroke:#8b949e,color:#fff
+  style PASS fill:#3fb950,stroke:#3fb950,color:#fff
+  style FAIL fill:#f85149,stroke:#f85149,color:#fff
+  style SEMGREP_FAIL fill:#f85149,stroke:#f85149,color:#fff
+  style LINT_STAGED fill:#1c2333,stroke:#f0883e,stroke-width:1px,color:#e6edf3
+  style WS_CHECKS fill:#1c2333,stroke:#d2a8ff,stroke-width:1px,color:#e6edf3
+  style CODE_CHECKS fill:#1c2333,stroke:#58a6ff,stroke-width:1px,color:#e6edf3
+  style CSS_CHECKS fill:#1c2333,stroke:#39d2c0,stroke-width:1px,color:#e6edf3
+    </pre>
+  </div>
+  <div class="legend">
+    <div class="legend-item"><span class="legend-dot dot-orange"></span> lint-staged (always, staged files only)</div>
+    <div class="legend-item"><span class="legend-dot dot-purple"></span> Workspace checks (if manifest files staged)</div>
+    <div class="legend-item"><span class="legend-dot dot-blue"></span> Code quality checks (if .ts/.tsx/.js/.jsx staged)</div>
+    <div class="legend-item"><span class="legend-dot dot-teal"></span> CSS checks (if .css files staged)</div>
+    <div class="legend-item"><span class="legend-dot dot-yellow"></span> Category gates (diamond nodes)</div>
+    <div class="legend-item"><span class="legend-dot dot-gray"></span> Skipped (no staged files)</div>
+    <div class="legend-item"><span class="legend-dot dot-red"></span> Blocked / error exit</div>
+  </div>
+  <div class="source-ref">Source: <code>.husky/pre-commit</code></div>
+</section>
+
+<!-- ============================================================ -->
+<!-- 3. PRE-PUSH HOOK                                              -->
+<!-- ============================================================ -->
+<section id="prepush">
+  <h2>3. Pre-Push Hook</h2>
+  <p class="desc">Runs on every <code>git push</code>. Detects change categories, validates Docker availability, and runs checks sequentially to avoid resource contention.</p>
+  <div class="diagram-container">
+    <pre class="mermaid">
+flowchart TD
+  START(["git push"]) --> BASE["Detect base branch<br/><code>origin/develop</code> or <code>@{upstream}</code>"]
+  BASE --> DIFF["git diff --name-only<br/><i>base..HEAD</i>"]
+  DIFF --> CAT["Categorize changes"]
+
+  CAT --> DEPLOY_PAT["Deploy: <code>Dockerfile</code>,<br/><code>docker/*</code>, <code>.dockerignore</code>"]
+  CAT --> CODE_PAT["Code: <code>*.ts, *.tsx,</code><br/><code>*.js, *.jsx</code>"]
+
+  DEPLOY_PAT --> CHECK_BOTH{"Deploy changes?<br/>Code changes?"}
+
+  CHECK_BOTH -- "Neither" --> SKIP(["No relevant changes<br/>Skip all, exit 0"])
+
+  CHECK_BOTH -- "Deploy only" --> DOCKER_PATH_1["Docker PATH discovery<br/><i>Check 3 Windows paths</i>"]
+  DOCKER_PATH_1 --> DOCKER_INFO_1{"docker info<br/>running?"}
+  DOCKER_INFO_1 -- "NO" --> DOCKER_FAIL_1(["EXIT 1<br/>Docker not running"])
+  DOCKER_INFO_1 -- "YES" --> DOCKER_FG["Docker health check<br/><b>FOREGROUND</b><br/><code>bash scripts/docker-health-check.sh</code>"]
+  DOCKER_FG --> DOCKER_FG_EXIT(["Exit with Docker result"])
+
+  CHECK_BOTH -- "Both deploy + code" --> DOCKER_PATH_2["Docker PATH discovery<br/><i>Check 3 Windows paths</i>"]
+  DOCKER_PATH_2 --> DOCKER_INFO_2{"docker info<br/>running?"}
+  DOCKER_INFO_2 -- "NO" --> DOCKER_FAIL_2(["EXIT 1<br/>Docker not running"])
+  DOCKER_INFO_2 -- "YES" --> CODE_BOTH["Step 1: Code checks FIRST"]
+
+  subgraph CODE_BOTH_BOX["Code Checks (no build - Docker covers it)"]
+    direction TB
+    CB1["pnpm typecheck"]
+    CB2["pnpm test:coverage"]
+    CB3["pnpm test:e2e"]
+    CB1 --> CB2 --> CB3
+  end
+  CODE_BOTH --> CODE_BOTH_BOX
+
+  CODE_BOTH_BOX --> CODE_BOTH_RESULT{"Code checks<br/>passed?"}
+  CODE_BOTH_RESULT -- "NO" --> CODE_FAIL(["EXIT 1"])
+
+  CODE_BOTH_RESULT -- "YES" --> DOCKER_SEQ["Step 2: Docker health check<br/><b>AFTER code checks</b><br/><code>bash scripts/docker-health-check.sh</code>"]
+  DOCKER_SEQ --> DOCKER_RESULT{"Docker check<br/>passed?"}
+  DOCKER_RESULT -- "NO" --> DOCKER_BG_FAIL(["EXIT 1<br/>Docker health failed"])
+  DOCKER_RESULT -- "YES" --> BOTH_PASS(["All passed"])
+
+  CHECK_BOTH -- "Code only" --> CODE_ONLY["Code checks + build"]
+  subgraph CODE_ONLY_BOX["Code Checks (includes build)"]
+    direction TB
+    CO1["pnpm typecheck"]
+    CO2["pnpm test:coverage"]
+    CO3["pnpm build"]
+    CO4["pnpm test:e2e"]
+    CO1 --> CO2 --> CO3 --> CO4
+  end
+  CODE_ONLY --> CODE_ONLY_BOX
+
+  CODE_ONLY_BOX --> CODE_ONLY_RESULT{"All passed?"}
+  CODE_ONLY_RESULT -- "YES" --> CODE_PASS(["Push proceeds"])
+  CODE_ONLY_RESULT -- "NO" --> CODE_ONLY_FAIL(["EXIT 1"])
+
+  style START fill:#58a6ff,stroke:#58a6ff,color:#fff
+  style SKIP fill:#8b949e,stroke:#8b949e,color:#fff
+  style BOTH_PASS fill:#3fb950,stroke:#3fb950,color:#fff
+  style CODE_PASS fill:#3fb950,stroke:#3fb950,color:#fff
+  style DOCKER_FG_EXIT fill:#8b949e,stroke:#8b949e,color:#fff
+  style DOCKER_FAIL_1 fill:#f85149,stroke:#f85149,color:#fff
+  style DOCKER_FAIL_2 fill:#f85149,stroke:#f85149,color:#fff
+  style DOCKER_BG_FAIL fill:#f85149,stroke:#f85149,color:#fff
+  style CODE_FAIL fill:#f85149,stroke:#f85149,color:#fff
+  style CODE_ONLY_FAIL fill:#f85149,stroke:#f85149,color:#fff
+  style CODE_BOTH_BOX fill:#1c2333,stroke:#58a6ff,stroke-width:1px,color:#e6edf3
+  style CODE_ONLY_BOX fill:#1c2333,stroke:#d2a8ff,stroke-width:1px,color:#e6edf3
+    </pre>
+  </div>
+  <div class="legend">
+    <div class="legend-item"><span class="legend-dot dot-orange"></span> Docker health check (foreground or background)</div>
+    <div class="legend-item"><span class="legend-dot dot-blue"></span> Code checks without build (Docker covers compilation)</div>
+    <div class="legend-item"><span class="legend-dot dot-purple"></span> Code checks with build (no Docker)</div>
+    <div class="legend-item"><span class="legend-dot dot-gray"></span> Skipped / neutral exit</div>
+    <div class="legend-item"><span class="legend-dot dot-red"></span> Failure + cleanup (kills background Docker PID)</div>
+  </div>
+  <div class="source-ref">Source: <code>.husky/pre-push</code> + <code>scripts/docker-health-check.sh</code></div>
+</section>
+
+<!-- ============================================================ -->
+<!-- 4. CI PIPELINE                                                -->
+<!-- ============================================================ -->
+<section id="ci">
+  <h2>4. CI Pipeline</h2>
+  <p class="desc">Runs on PRs to <code>main</code> or <code>develop</code>. Concurrency group cancels previous runs. Each job has explicit skip conditions.</p>
+  <div class="diagram-container">
+    <pre class="mermaid">
+flowchart TD
+  START(["PR to main or develop<br/><i>Concurrency: cancel previous</i>"]) --> CHANGES["Job 1: CHANGES<br/><i>5 min</i><br/>dorny/paths-filter"]
+
+  CHANGES --> DOCS{"docs-only?<br/><code>code == false</code>"}
+  DOCS -- "YES" --> SKIP_ALL(["All jobs below: SKIPPED<br/><i>if: docs-only == false</i>"])
+
+  DOCS -- "NO" --> QUALITY["Job 2: QUALITY<br/><i>10 min</i><br/><code>if: docs-only == false</code>"]
+
+  subgraph QUALITY_BOX["Quality Checks (sequential steps)"]
+    direction TB
+    QA["pnpm format:check"]
+    QB["pnpm lint"]
+    QC["pnpm typecheck"]
+    QD["pnpm sherif<br/>pnpm syncpack:list"]
+    QA --> QB --> QC --> QD
+  end
+  QUALITY --> QUALITY_BOX
+
+  QUALITY_BOX --> UT["Job 3: UNIT TESTS<br/><i>15 min</i><br/><code>needs: [changes, quality]</code><br/><code>if: docs-only == false</code>"]
+  QUALITY_BOX --> BUILD["Job 4: BUILD<br/><i>15 min</i><br/><code>needs: [changes, quality]</code><br/><code>if: docs-only == false</code>"]
+  QUALITY_BOX --> BUNDLE["Job 6: BUNDLE ANALYSIS<br/><i>10 min</i><br/><code>needs: [changes, quality]</code><br/><code>if: docs-only == false</code><br/><code>AND event == pull_request</code>"]
+
+  UT --> UT_ART["Upload: coverage<br/>web + admin + landing<br/><i>if: always()</i><br/><i>7-day retention</i>"]
+
+  BUILD --> BUILD_ART["Upload: .next/<br/>web + admin + landing<br/><i>if-no-files-found: error</i><br/><i>1-day retention</i>"]
+
+  BUILD --> E2E["Job 5: E2E TESTS<br/><i>30 min</i><br/><code>needs: build</code>"]
+
+  E2E --> PW_CACHE{"Playwright<br/>cache hit?"}
+  PW_CACHE -- "HIT" --> PW_DEPS["Install deps only<br/><code>playwright install-deps</code><br/><i>all 3 apps</i>"]
+  PW_CACHE -- "MISS" --> PW_FULL["Full install<br/><code>playwright install --with-deps</code><br/><i>all 3 apps</i>"]
+  PW_DEPS --> E2E_RUN["pnpm test:e2e"]
+  PW_FULL --> E2E_RUN
+
+  E2E_RUN --> E2E_ART_OK["Upload: Playwright reports<br/>web + admin + landing<br/><i>if: always(), 7-day</i>"]
+  E2E_RUN --> E2E_ART_FAIL["Upload: test results<br/>web + admin + landing<br/><i>if: failure(), 7-day</i>"]
+
+  BUNDLE --> BUNDLE_ART["Upload: bundle report<br/><i>if: always(), 7-day</i>"]
+
+  CHANGES --> DEPLOY_CHG{"deploy == true?<br/><code>Dockerfile, docker/,</code><br/><code>.dockerignore</code>"}
+  DEPLOY_CHG -- "YES" --> DOCKER["Job 7: DOCKER SMOKE<br/><i>20 min</i><br/><code>needs: changes</code><br/><code>if: deploy == true</code>"]
+  DEPLOY_CHG -- "NO" --> DOCKER_SKIP(["Docker: Skipped"])
+
+  DOCKER --> DOCKER_PW{"Playwright<br/>cache hit?"}
+  DOCKER_PW -- "HIT" --> DOCKER_DEPS["install-deps"]
+  DOCKER_PW -- "MISS" --> DOCKER_FULL["install --with-deps"]
+  DOCKER_DEPS --> DOCKER_RUN["Docker health check<br/>+ smoke tests"]
+  DOCKER_FULL --> DOCKER_RUN
+
+  style START fill:#d2a8ff,stroke:#d2a8ff,color:#fff
+  style SKIP_ALL fill:#8b949e,stroke:#8b949e,color:#fff
+  style DOCKER_SKIP fill:#8b949e,stroke:#8b949e,color:#fff
+  style QUALITY_BOX fill:#1c2333,stroke:#58a6ff,stroke-width:1px,color:#e6edf3
+  style UT_ART fill:#1c2333,stroke:#3fb950,stroke-width:1px,color:#e6edf3
+  style BUILD_ART fill:#1c2333,stroke:#3fb950,stroke-width:1px,color:#e6edf3
+  style E2E_ART_OK fill:#1c2333,stroke:#3fb950,stroke-width:1px,color:#e6edf3
+  style E2E_ART_FAIL fill:#1c2333,stroke:#f0883e,stroke-width:1px,color:#e6edf3
+  style BUNDLE_ART fill:#1c2333,stroke:#3fb950,stroke-width:1px,color:#e6edf3
+    </pre>
+  </div>
+  <div class="legend">
+    <div class="legend-item"><span class="legend-dot dot-purple"></span> Trigger</div>
+    <div class="legend-item"><span class="legend-dot dot-blue"></span> Quality checks</div>
+    <div class="legend-item"><span class="legend-dot dot-green"></span> Artifacts (always uploaded)</div>
+    <div class="legend-item"><span class="legend-dot dot-orange"></span> Artifacts (on failure only)</div>
+    <div class="legend-item"><span class="legend-dot dot-gray"></span> Skipped (docs-only or no deploy)</div>
+    <div class="legend-item"><span class="legend-dot dot-yellow"></span> Cache conditional (Playwright browsers)</div>
+  </div>
+  <div class="source-ref">Source: <code>.github/workflows/ci.yml</code></div>
+</section>
+
+<!-- ============================================================ -->
+<!-- 5. PR CHECKS                                                  -->
+<!-- ============================================================ -->
+<section id="pr">
+  <h2>5. PR Checks</h2>
+  <p class="desc">Separate workflow from CI. Concurrency per PR number. Validates metadata, security, and visual/a11y quality.</p>
+  <div class="diagram-container">
+    <pre class="mermaid">
+flowchart TD
+  START(["PR opened / sync / reopened<br/><i>Concurrency: per PR #</i>"]) --> JOBS
+
+  subgraph JOBS["Parallel Immediate Jobs"]
+    direction TB
+    BT["BRANCH TARGET<br/><i>5 min, CRITICAL</i>"]
+    PT["PR TITLE<br/><i>5 min</i>"]
+    CH["CHANGES<br/><i>5 min</i>"]
+  end
+
+  subgraph BT_LOGIC["Branch Target Rules (github-script)"]
+    direction TB
+    BT1{"Base == main?"}
+    BT1 -- "YES" --> BT2{"Head is<br/>release/* or fix/*?"}
+    BT2 -- "NO" --> BT_FAIL(["FAIL: Only release/*<br/>and fix/* can target main"])
+    BT2 -- "release/*" --> BT_OK1(["OK: Release to main"])
+    BT2 -- "fix/*" --> BT_OK2(["OK: Hotfix to main"])
+
+    BT1 -- "Base == develop" --> BT3{"Head is release/*?"}
+    BT3 -- "YES" --> BT_FAIL2(["FAIL: release/* must<br/>target main, not develop"])
+    BT3 -- "NO" --> BT_OK3(["OK: Targeting develop"])
+
+    BT1 -- "Other base" --> BT_OK4(["OK"])
+  end
+  BT --> BT_LOGIC
+
+  subgraph PT_LOGIC["PR Title Rules (semantic-pr)"]
+    direction TB
+    PT1["Conventional commit format"]
+    PT2["Allowed types: feat, fix, docs,<br/>style, refactor, perf,<br/>test, chore, revert"]
+    PT3["Max 80 characters"]
+  end
+  PT --> PT_LOGIC
+
+  subgraph CH_LOGIC["Change Detection (paths-filter)"]
+    direction TB
+    CH1["Outputs: web, admin, landing,<br/>packages, tests, e2e,<br/>docs, deps, code"]
+    CH2["docs-only = code is false"]
+  end
+  CH --> CH_LOGIC
+
+  CH_LOGIC --> SEC_CHECK{"docs-only?"}
+  SEC_CHECK -- "YES" --> SEC_SKIP(["Security: Skipped"])
+  SEC_CHECK -- "NO" --> SEC["SECURITY<br/><i>10 min</i><br/>pnpm audit --audit-level=high<br/>semgrep (Docker)<br/>secretlint"]
+
+  CH_LOGIC --> WEB_CHECK{"web == true OR<br/>packages == true?"}
+  WEB_CHECK -- "YES" --> A11Y["ACCESSIBILITY<br/><i>20 min</i><br/>Build + test:a11y<br/><i>Playwright + axe</i>"]
+  WEB_CHECK -- "YES" --> VIS["VISUAL REGRESSION<br/><i>20 min</i><br/>Build + test:visual<br/><i>Playwright screenshots</i>"]
+  WEB_CHECK -- "NO" --> SKIP_AV(["a11y + visual: Skipped"])
+
+  VIS --> VIS_FAIL{"Failed?"}
+  VIS_FAIL -- "YES" --> VIS_ART["Upload: visual diffs<br/><i>7-day retention</i>"]
+
+  CH_LOGIC --> SUMMARY["SUMMARY<br/><i>if: always()</i>"]
+  subgraph SUMMARY_BOX["PR Comment Bot"]
+    direction TB
+    SUM1["Areas changed table"]
+    SUM2["TDD reminder<br/><i>if code changed<br/>but no tests</i>"]
+    SUM3["Dep change warning<br/><i>if deps changed</i>"]
+    SUM4["Package change note<br/><i>if packages changed</i>"]
+    SUM5["Create or UPDATE<br/>existing bot comment"]
+  end
+  SUMMARY --> SUMMARY_BOX
+
+  style START fill:#d2a8ff,stroke:#d2a8ff,color:#fff
+  style JOBS fill:#1c2333,stroke:#58a6ff,stroke-width:1px,color:#e6edf3
+  style BT_LOGIC fill:#1c2333,stroke:#f85149,stroke-width:1px,color:#e6edf3
+  style PT_LOGIC fill:#1c2333,stroke:#f0883e,stroke-width:1px,color:#e6edf3
+  style CH_LOGIC fill:#1c2333,stroke:#d2a8ff,stroke-width:1px,color:#e6edf3
+  style SUMMARY_BOX fill:#1c2333,stroke:#3fb950,stroke-width:1px,color:#e6edf3
+  style BT_FAIL fill:#f85149,stroke:#f85149,color:#fff
+  style BT_FAIL2 fill:#f85149,stroke:#f85149,color:#fff
+  style SEC_SKIP fill:#8b949e,stroke:#8b949e,color:#fff
+  style SKIP_AV fill:#8b949e,stroke:#8b949e,color:#fff
+  style VIS_ART fill:#1c2333,stroke:#f0883e,stroke-width:1px,color:#e6edf3
+    </pre>
+  </div>
+  <div class="legend">
+    <div class="legend-item"><span class="legend-dot dot-red"></span> Critical / blocks merge (branch-target)</div>
+    <div class="legend-item"><span class="legend-dot dot-orange"></span> Validation rules</div>
+    <div class="legend-item"><span class="legend-dot dot-purple"></span> Change detection outputs</div>
+    <div class="legend-item"><span class="legend-dot dot-green"></span> PR summary bot (always runs)</div>
+    <div class="legend-item"><span class="legend-dot dot-gray"></span> Skipped (docs-only or no web/pkg changes)</div>
+  </div>
+  <div class="source-ref">Source: <code>.github/workflows/pr-checks.yml</code></div>
+</section>
+
+<!-- ============================================================ -->
+<!-- 6. RELEASE & DEPLOYMENT                                       -->
+<!-- ============================================================ -->
+<section id="release">
+  <h2>6. Release &amp; Deployment</h2>
+  <p class="desc">Three distinct flows: release (to main), continuous deploy (from develop), and hotfix (to main, sync to develop).</p>
+  <div class="diagram-container">
+    <pre class="mermaid">
+flowchart TD
+  subgraph RELEASE["Release Flow"]
+    direction TB
+    R1["Create branch<br/><code>release/vYYYY.MM.DD.N</code><br/>from develop"]
+    R2["Create PR<br/>release/* --> main<br/>Title: chore-release: vX.Y.Z"]
+    R3{"CI + PR Checks<br/>branch-target: OK<br/>pr-title: OK<br/>All CI jobs pass"}
+    R4["Manual Review<br/>&amp; Approval<br/><i>required on main</i>"]
+    R5["Merge to main<br/><i>merge commit strategy</i>"]
+    R6{"release.yml<br/><code>merged == true</code><br/><code>AND startsWith</code><br/><code>head, 'release/'</code>"}
+    R7["Extract version<br/>via regex from title<br/><code>v\\d{4}\\.\\d{2}\\.\\d{2}\\.\\d+</code>"]
+    R8{"Version found?"}
+    R8_FAIL(["ERROR: Could not<br/>extract version"])
+    R9["gh release create<br/>--generate-notes<br/>--target main"]
+    R10(["GitHub Release<br/>+ Tag Created"])
+
+    R1 --> R2 --> R3
+    R3 -- "PASS" --> R4 --> R5 --> R6
+    R6 --> R7 --> R8
+    R8 -- "NO" --> R8_FAIL
+    R8 -- "YES" --> R9 --> R10
+    R5 -.-> R11["Sync: merge main<br/>back to develop"]
+  end
+
+  subgraph DEPLOY["Deploy Flow (automatic)"]
+    direction TB
+    D1["Push to develop<br/><i>OR workflow_dispatch</i>"]
+    D2{"Path filter:<br/><code>apps/**, packages/**,</code><br/><code>package.json, pnpm-lock,</code><br/><code>Dockerfile, docker/**</code>"}
+    D2_SKIP(["No matching paths:<br/>Deploy skipped"])
+    D3["Login to ACR<br/><code>dallasregistry.azurecr.io</code>"]
+    D4["Docker build + push<br/>Tags: <code>:sha</code> + <code>:latest</code><br/>Args: API_URL, BUILD_HASH"]
+    D5["Azure Login<br/><i>service principal</i>"]
+    D6["Deploy to Container Apps<br/><code>dallas-frontend-app</code><br/><code>golabs-ntt-coop</code>"]
+    D7(["Live on Azure"])
+
+    D1 --> D2
+    D2 -- "NO match" --> D2_SKIP
+    D2 -- "Match" --> D3 --> D4 --> D5 --> D6 --> D7
+  end
+
+  subgraph HOTFIX["Hotfix Flow"]
+    direction TB
+    H1["Create branch<br/><code>fix/GH-XXX_Title</code><br/>from <b>main</b>"]
+    H2["Create PR<br/>fix/* --> main"]
+    H3{"CI + PR Checks<br/>branch-target:<br/>fix/* to main = OK"}
+    H4["Merge to main"]
+    H5["Cherry-pick or merge<br/>to develop"]
+
+    H1 --> H2 --> H3
+    H3 -- "PASS" --> H4 -.-> H5
+  end
+
+  style RELEASE fill:#161b22,stroke:#d2a8ff,stroke-width:2px,color:#e6edf3
+  style DEPLOY fill:#161b22,stroke:#3fb950,stroke-width:2px,color:#e6edf3
+  style HOTFIX fill:#161b22,stroke:#f0883e,stroke-width:2px,color:#e6edf3
+  style R10 fill:#3fb950,stroke:#3fb950,color:#fff
+  style D7 fill:#3fb950,stroke:#3fb950,color:#fff
+  style R8_FAIL fill:#f85149,stroke:#f85149,color:#fff
+  style D2_SKIP fill:#8b949e,stroke:#8b949e,color:#fff
+    </pre>
+  </div>
+  <div class="legend">
+    <div class="legend-item"><span class="legend-dot dot-purple"></span> Release flow (release/* to main)</div>
+    <div class="legend-item"><span class="legend-dot dot-green"></span> Deploy flow (push to develop -> Azure)</div>
+    <div class="legend-item"><span class="legend-dot dot-orange"></span> Hotfix flow (fix/* to main)</div>
+    <div class="legend-item"><span class="legend-dot dot-red"></span> Error (version extraction failed)</div>
+    <div class="legend-item"><span class="legend-dot dot-gray"></span> Skipped (no matching paths)</div>
+  </div>
+  <div class="source-ref">Source: <code>.github/workflows/release.yml</code> + <code>deploy-combined.yml</code></div>
+</section>
+
+<!-- ============================================================ -->
+<!-- 7. QUALITY GATE SUMMARY                                       -->
+<!-- ============================================================ -->
+<section id="gates">
+  <h2>7. Quality Gate Summary</h2>
+  <p class="desc">All quality gates code passes through. Each gate must pass before the next is reached.</p>
+  <div class="diagram-container">
+    <pre class="mermaid">
+flowchart LR
+  subgraph G1["Pre-Commit<br/>(category-aware)"]
+    direction TB
+    G1A["lint-staged<br/><i>always: prettier<br/>+ secretlint</i>"]
+    G1B["Workspace checks<br/><i>if manifests staged:<br/>frozen-lockfile, sherif,<br/>syncpack</i>"]
+    G1C["Code checks<br/><i>if code staged:<br/>lint, ls-lint, knip,<br/>jscpd, madge, semgrep</i>"]
+    G1D["CSS checks<br/><i>if .css staged:<br/>stylelint, css-sync</i>"]
+    G1E["Spell check<br/><i>if text staged:<br/>cspell</i>"]
+  end
+
+  subgraph G2["Pre-Push<br/>(change-aware)"]
+    direction TB
+    G2A["Change detection<br/><i>deploy vs code</i>"]
+    G2B["Docker health<br/><i>if deploy changes</i>"]
+    G2C["typecheck"]
+    G2D["test:coverage"]
+    G2E["build<br/><i>if no Docker</i>"]
+    G2F["test:e2e"]
+  end
+
+  subgraph G3["PR Checks<br/>(conditional)"]
+    direction TB
+    G3A["branch-target<br/><i>CRITICAL</i>"]
+    G3B["pr-title format"]
+    G3C["security audit<br/><i>skip if docs-only</i>"]
+    G3D["accessibility<br/><i>if web/pkg changed</i>"]
+    G3E["visual regression<br/><i>if web/pkg changed</i>"]
+    G3F["PR summary bot<br/><i>always</i>"]
+  end
+
+  subgraph G4["CI Pipeline<br/>(7 jobs)"]
+    direction TB
+    G4A["format + lint<br/>+ typecheck"]
+    G4B["sherif + syncpack"]
+    G4C["unit tests + coverage"]
+    G4D["build all apps"]
+    G4E["E2E tests<br/><i>Playwright cached</i>"]
+    G4F["bundle analysis<br/><i>PRs only</i>"]
+    G4G["Docker smoke<br/><i>if deploy changes</i>"]
+  end
+
+  subgraph G5["Deploy<br/>(automatic)"]
+    direction TB
+    G5A["Docker build"]
+    G5B["Push to ACR<br/><i>:sha + :latest</i>"]
+    G5C["Azure Container Apps"]
+  end
+
+  G1 ==> G2 ==> G3 & G4 ==> G5
+
+  style G1 fill:#1c2333,stroke:#58a6ff,stroke-width:2px,color:#e6edf3
+  style G2 fill:#1c2333,stroke:#d2a8ff,stroke-width:2px,color:#e6edf3
+  style G3 fill:#1c2333,stroke:#f0883e,stroke-width:2px,color:#e6edf3
+  style G4 fill:#1c2333,stroke:#39d2c0,stroke-width:2px,color:#e6edf3
+  style G5 fill:#1c2333,stroke:#3fb950,stroke-width:2px,color:#e6edf3
+    </pre>
+  </div>
+  <div class="legend">
+    <div class="legend-item"><span class="legend-dot dot-blue"></span> Pre-Commit (local, blocks commit)</div>
+    <div class="legend-item"><span class="legend-dot dot-purple"></span> Pre-Push (local, change-aware, blocks push)</div>
+    <div class="legend-item"><span class="legend-dot dot-orange"></span> PR Checks (GitHub, conditional jobs)</div>
+    <div class="legend-item"><span class="legend-dot dot-teal"></span> CI Pipeline (GitHub, full test suite)</div>
+    <div class="legend-item"><span class="legend-dot dot-green"></span> Deploy (automatic on develop push)</div>
+  </div>
+</section>
+
+<footer>
+  Generated from actual source files &mdash;
+  <code>.husky/pre-commit</code>,
+  <code>.husky/pre-push</code>,
+  <code>.github/workflows/ci.yml</code>,
+  <code>.github/workflows/pr-checks.yml</code>,
+  <code>.github/workflows/release.yml</code>,
+  <code>.github/workflows/deploy-combined.yml</code>,
+  <code>package.json</code>
+</footer>
+
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'dark',
+    themeVariables: {
+      darkMode: true,
+      background: '#0d1117',
+      primaryColor: '#1c2333',
+      primaryBorderColor: '#58a6ff',
+      primaryTextColor: '#e6edf3',
+      secondaryColor: '#161b22',
+      tertiaryColor: '#1c2333',
+      lineColor: '#8b949e',
+      textColor: '#e6edf3',
+      mainBkg: '#1c2333',
+      nodeBorder: '#30363d',
+      clusterBkg: '#0d1117',
+      clusterBorder: '#30363d',
+      fontSize: '14px',
+    },
+    flowchart: {
+      htmlLabels: true,
+      curve: 'basis',
+      rankSpacing: 50,
+      nodeSpacing: 30,
+      padding: 15,
+    },
+  });
+</script>
+
+</body>
+</html>
