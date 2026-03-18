@@ -1,8 +1,11 @@
 "use client";
 
+import { setCookie } from "cookies-next";
 import { usePathname, useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { useTransition } from "react";
+
+const LOCALE_MAX_AGE_SECONDS = 31_536_000; // 365 days
 
 interface LocaleSwitcherProps {
   locales: readonly string[];
@@ -27,9 +30,15 @@ export function LocaleSwitcher({ locales }: LocaleSwitcherProps) {
   const t = useTranslations("common");
 
   function switchLocale(nextLocale: string) {
+    // Persist locale in cookie so all apps and next-intl middleware pick it up
+    setCookie("NEXT_LOCALE", nextLocale, {
+      path: "/",
+      maxAge: LOCALE_MAX_AGE_SECONDS,
+      sameSite: "lax",
+    });
+
     // Replace the locale segment in the pathname
     const segments = pathname.split("/");
-    // segments[0] is "", segments[1] is the locale
     if (segments.length > 1 && locales.includes(segments[1])) {
       segments[1] = nextLocale;
     }

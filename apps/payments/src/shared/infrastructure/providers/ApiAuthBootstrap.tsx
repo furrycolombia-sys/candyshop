@@ -10,6 +10,7 @@ import {
   getAccessTokenFromCookie,
   TOKEN_TTL_SECONDS,
 } from "auth";
+import { setCookie } from "cookies-next";
 import { useEffect } from "react";
 
 const DEFAULT_LOCALE = "en";
@@ -27,14 +28,18 @@ async function doRefresh(authHostUrl: string): Promise<boolean> {
       ? data.accessToken
       : null;
   if (token === null) return false;
-  const maxAge = TOKEN_TTL_SECONDS.access;
-  const value = encodeURIComponent(token);
+
   const secure =
     globalThis.location !== undefined &&
     globalThis.location.protocol === "https:";
-  /* eslint-disable unicorn/no-document-cookie, i18next/no-literal-string */
-  document.cookie = `${AUTH_COOKIE_NAMES.accessToken}=${value}; path=/; max-age=${maxAge}; samesite=lax${secure ? "; secure" : ""}`;
-  /* eslint-enable unicorn/no-document-cookie, i18next/no-literal-string */
+
+  setCookie(AUTH_COOKIE_NAMES.accessToken, token, {
+    path: "/",
+    maxAge: TOKEN_TTL_SECONDS.access,
+    sameSite: "lax",
+    secure,
+  });
+
   return true;
 }
 
