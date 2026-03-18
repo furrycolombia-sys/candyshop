@@ -1,0 +1,10 @@
+{
+  "meta": {
+    "title": "Candy Store - Iniciar Sesion",
+    "description": "Inicia sesion en tu cuenta de Candy Store"
+  },
+  "auth": {
+    "title": "Iniciar Sesion",
+    "subtitle": "Accede a tu cuenta"
+  }
+}

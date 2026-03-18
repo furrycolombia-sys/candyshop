@@ -1,0 +1,20 @@
+{
+  "meta": {
+    "title": "Candy Store - Pagos",
+    "description": "Procesamiento seguro de pagos para productos, servicios y boletos"
+  },
+  "payments": {
+    "title": "Pagos",
+    "subtitle": "Pago seguro y procesamiento de transacciones",
+    "cards": {
+      "products": "Pagos de Productos",
+      "productsDesc": "Paga por productos fisicos y digitales",
+      "services": "Pagos de Servicios",
+      "servicesDesc": "Paga por servicios profesionales",
+      "tickets": "Compra de Boletos",
+      "ticketsDesc": "Compra boletos de eventos de forma segura",
+      "coupons": "Canjear Cupones",
+      "couponsDesc": "Aplica codigos de promocion y cupones al pagar"
+    }
+  }
+}

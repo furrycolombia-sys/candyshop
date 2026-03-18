@@ -1,0 +1,10 @@
+{
+  "meta": {
+    "title": "Candy Store - Admin",
+    "description": "Back-office management for inventory, orders, promos, and coupons"
+  },
+  "admin": {
+    "title": "Admin Dashboard",
+    "subtitle": "Manage products, orders, promos, coupons, and services"
+  }
+}

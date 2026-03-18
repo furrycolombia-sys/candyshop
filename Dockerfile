@@ -1,4 +1,4 @@
-# Combined Dockerfile for store + admin + auth + playground apps
+# Combined Dockerfile for store + landing + payments + admin + auth + playground apps
 # Serves all apps from a single container using nginx as reverse proxy
 
 FROM node:22-alpine AS base
@@ -21,6 +21,8 @@ ARG NEXT_PUBLIC_KEYCLOAK_REALM
 ARG NEXT_PUBLIC_KEYCLOAK_CLIENT_ID
 # Cross-app navigation
 ARG NEXT_PUBLIC_STORE_URL
+ARG NEXT_PUBLIC_LANDING_URL
+ARG NEXT_PUBLIC_PAYMENTS_URL
 ARG NEXT_PUBLIC_ADMIN_URL
 ARG NEXT_PUBLIC_PLAYGROUND_URL
 ARG NEXT_PUBLIC_AUTH_URL
@@ -39,6 +41,8 @@ ENV NEXT_PUBLIC_KEYCLOAK_URL=$NEXT_PUBLIC_KEYCLOAK_URL
 ENV NEXT_PUBLIC_KEYCLOAK_REALM=$NEXT_PUBLIC_KEYCLOAK_REALM
 ENV NEXT_PUBLIC_KEYCLOAK_CLIENT_ID=$NEXT_PUBLIC_KEYCLOAK_CLIENT_ID
 ENV NEXT_PUBLIC_STORE_URL=$NEXT_PUBLIC_STORE_URL
+ENV NEXT_PUBLIC_LANDING_URL=$NEXT_PUBLIC_LANDING_URL
+ENV NEXT_PUBLIC_PAYMENTS_URL=$NEXT_PUBLIC_PAYMENTS_URL
 ENV NEXT_PUBLIC_ADMIN_URL=$NEXT_PUBLIC_ADMIN_URL
 ENV NEXT_PUBLIC_PLAYGROUND_URL=$NEXT_PUBLIC_PLAYGROUND_URL
 ENV NEXT_PUBLIC_AUTH_URL=$NEXT_PUBLIC_AUTH_URL
@@ -49,6 +53,8 @@ ENV BASE_PATH_PREFIX=$BASE_PATH_PREFIX
 # Copy package files
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.base.json .env.example ./
 COPY apps/store/package.json ./apps/store/
+COPY apps/landing/package.json ./apps/landing/
+COPY apps/payments/package.json ./apps/payments/
 COPY apps/admin/package.json ./apps/admin/
 COPY apps/auth/package.json ./apps/auth/
 COPY apps/playground/package.json ./apps/playground/
@@ -66,6 +72,8 @@ COPY scripts ./scripts
 
 # Copy source files
 COPY apps/store ./apps/store
+COPY apps/landing ./apps/landing
+COPY apps/payments ./apps/payments
 COPY apps/admin ./apps/admin
 COPY apps/auth ./apps/auth
 COPY apps/playground ./apps/playground
@@ -78,6 +86,8 @@ COPY packages/shared ./packages/shared
 # Build all apps with standalone output for Docker deployment
 ENV STANDALONE=true
 RUN pnpm --filter store build
+RUN pnpm --filter landing build
+RUN pnpm --filter payments build
 RUN pnpm --filter admin build
 RUN pnpm --filter auth-app build
 RUN pnpm --filter playground build
@@ -97,6 +107,8 @@ ARG NEXT_PUBLIC_KEYCLOAK_URL
 ARG NEXT_PUBLIC_KEYCLOAK_REALM
 ARG NEXT_PUBLIC_KEYCLOAK_CLIENT_ID
 ARG NEXT_PUBLIC_STORE_URL
+ARG NEXT_PUBLIC_LANDING_URL
+ARG NEXT_PUBLIC_PAYMENTS_URL
 ARG NEXT_PUBLIC_ADMIN_URL
 ARG NEXT_PUBLIC_PLAYGROUND_URL
 ARG NEXT_PUBLIC_AUTH_URL
@@ -108,6 +120,8 @@ ENV NEXT_PUBLIC_KEYCLOAK_URL=$NEXT_PUBLIC_KEYCLOAK_URL
 ENV NEXT_PUBLIC_KEYCLOAK_REALM=$NEXT_PUBLIC_KEYCLOAK_REALM
 ENV NEXT_PUBLIC_KEYCLOAK_CLIENT_ID=$NEXT_PUBLIC_KEYCLOAK_CLIENT_ID
 ENV NEXT_PUBLIC_STORE_URL=$NEXT_PUBLIC_STORE_URL
+ENV NEXT_PUBLIC_LANDING_URL=$NEXT_PUBLIC_LANDING_URL
+ENV NEXT_PUBLIC_PAYMENTS_URL=$NEXT_PUBLIC_PAYMENTS_URL
 ENV NEXT_PUBLIC_ADMIN_URL=$NEXT_PUBLIC_ADMIN_URL
 ENV NEXT_PUBLIC_PLAYGROUND_URL=$NEXT_PUBLIC_PLAYGROUND_URL
 ENV NEXT_PUBLIC_AUTH_URL=$NEXT_PUBLIC_AUTH_URL
@@ -123,6 +137,16 @@ RUN addgroup --system --gid 1001 nodejs && \
 COPY --from=builder --chown=nextjs:nodejs /app/apps/store/.next/standalone ./store
 COPY --from=builder --chown=nextjs:nodejs /app/apps/store/.next/static ./store/apps/store/.next/static
 COPY --from=builder --chown=nextjs:nodejs /app/apps/store/public ./store/apps/store/public
+
+# Copy landing app standalone output
+COPY --from=builder --chown=nextjs:nodejs /app/apps/landing/.next/standalone ./landing
+COPY --from=builder --chown=nextjs:nodejs /app/apps/landing/.next/static ./landing/apps/landing/.next/static
+COPY --from=builder --chown=nextjs:nodejs /app/apps/landing/public ./landing/apps/landing/public
+
+# Copy payments app standalone output
+COPY --from=builder --chown=nextjs:nodejs /app/apps/payments/.next/standalone ./payments
+COPY --from=builder --chown=nextjs:nodejs /app/apps/payments/.next/static ./payments/apps/payments/.next/static
+COPY --from=builder --chown=nextjs:nodejs /app/apps/payments/public ./payments/apps/payments/public
 
 # Copy admin app standalone output
 COPY --from=builder --chown=nextjs:nodejs /app/apps/admin/.next/standalone ./admin

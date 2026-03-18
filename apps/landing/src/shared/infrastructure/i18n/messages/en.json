@@ -1,0 +1,16 @@
+{
+  "meta": {
+    "title": "Candy Store - Your Marketplace",
+    "description": "Products, services, tickets, promos and more"
+  },
+  "landing": {
+    "hero": {
+      "title": "Welcome to Candy Store",
+      "subtitle": "Your one-stop marketplace for products, services, event tickets, exclusive promos, and coupons."
+    },
+    "cta": {
+      "shop": "Start Shopping",
+      "payments": "Make a Payment"
+    }
+  }
+}

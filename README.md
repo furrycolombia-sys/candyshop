@@ -13,6 +13,8 @@ pnpm dev
 
 # Start individual apps
 pnpm dev:store      # http://localhost:3001
+pnpm dev:landing    # http://localhost:3004
+pnpm dev:payments   # http://localhost:3005
 pnpm dev:admin      # http://localhost:3002
 pnpm dev:auth       # http://localhost:3000
 pnpm dev:playground # http://localhost:3003
@@ -27,6 +29,8 @@ This is a **pnpm workspace monorepo** with multiple Next.js applications sharing
 | App          | Port | Description                                    |
 | ------------ | ---- | ---------------------------------------------- |
 | `store`      | 3001 | Main storefront — products, services, tickets  |
+| `landing`    | 3004 | Public landing page                            |
+| `payments`   | 3005 | Payment processing and checkout                |
 | `admin`      | 3002 | Back-office — inventory, orders, promos        |
 | `auth`       | 3000 | Authentication provider (mock/backend/keycloak)|
 | `playground` | 3003 | Incubation sandbox for experiments             |

@@ -13,6 +13,7 @@
     "test:e2e": "playwright test"
   },
   "dependencies": {
+    "api": "workspace:*",
     "auth": "workspace:*",
     "ui": "workspace:*",
     "shared": "workspace:*",
