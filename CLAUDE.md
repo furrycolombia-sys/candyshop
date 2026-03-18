@@ -159,6 +159,21 @@ This project strictly follows **DRY**, **SOLID**, and **KISS** principles.
 
 Prefer the simplest solution. If DRY and KISS conflict, favor KISS.
 
+### Libraries Over Manual Code
+
+**Always prefer well-known, community-backed libraries over hand-rolled code.** If a battle-tested package exists for the problem, use it. Do not write custom implementations for solved problems.
+
+| Do                                             | Don't                                    |
+| ---------------------------------------------- | ---------------------------------------- |
+| Use `cookies-next` for cookie management       | Write raw `document.cookie` manipulation |
+| Use `next-intl` for i18n                       | Build a custom translation system        |
+| Use `zod` / `valibot` for validation           | Write manual type guards for form data   |
+| Use `date-fns` / `dayjs` for date manipulation | Write custom date parsing/formatting     |
+| Use `react-hook-form` for forms                | Build custom form state management       |
+| Use established Radix/shadcn primitives        | Build custom accessible UI from scratch  |
+
+**When to write custom code:** Only when no suitable library exists, when the library would be massive overkill for a trivial task, or when the problem is domain-specific business logic that no library could solve.
+
 ---
 
 ## Quick Reference
@@ -232,6 +247,7 @@ If any fail, keep in app's `shared/` folder instead.
 - [SOLID Principles](.claude/rules/solid-principles.md)
 - [DRY Principle](.claude/rules/dry-principle.md)
 - [KISS Principle](.claude/rules/kiss-principle.md)
+- [Libraries Over Manual Code](.claude/rules/libraries-over-manual-code.md)
 
 ### Code Quality
 
