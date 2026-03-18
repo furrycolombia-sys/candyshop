@@ -48,6 +48,8 @@ const eslintConfig = defineConfig([
     "packages/api/src/graphql/generated/**",
     // Tooling
     ".claude/**",
+    // Auto-generated MSW service worker
+    "**/public/mockServiceWorker.js",
   ]),
   // E2E Tests - Playwright specific rules
   // Prevent testing specific translation text - only test element existence
