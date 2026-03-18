@@ -1,6 +1,6 @@
 {
   "meta": {
-    "title": "Candy Store",
+    "title": "Candy Shop",
     "description": "Your favorite store for products, services, and tickets"
   },
   "store": {
@@ -8,7 +8,7 @@
     "subtitle": "Browse products, services, tickets, and more"
   },
   "nav": {
-    "brand": "Candy Store",
+    "brand": "Candy Shop",
     "landing": "Home",
     "store": "Store",
     "payments": "Payments",

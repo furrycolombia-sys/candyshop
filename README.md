@@ -1,4 +1,4 @@
-# Candy Store
+# Candy Shop
 
 A store and payment platform for selling products, services, tickets, promos, coupons, and other goods.
 

@@ -1,6 +1,6 @@
 {
   "meta": {
-    "title": "Candy Store - Admin",
+    "title": "Candy Shop - Admin",
     "description": "Back-office management for inventory, orders, promos, and coupons"
   },
   "admin": {
@@ -8,7 +8,7 @@
     "subtitle": "Manage products, orders, promos, coupons, and services"
   },
   "nav": {
-    "brand": "Candy Store",
+    "brand": "Candy Shop",
     "landing": "Home",
     "store": "Store",
     "payments": "Payments",

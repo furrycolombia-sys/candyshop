@@ -11,7 +11,7 @@ on:
 env:
   # TODO: Configure deployment registry and resource names
   CONTAINER_REGISTRY: ""
-  CONTAINER_NAME: candystore
+  CONTAINER_NAME: candyshop
   RESOURCE_GROUP: ""
 
 jobs:

@@ -1,6 +1,6 @@
 {
   "meta": {
-    "title": "Candy Store - Zona de Pruebas",
+    "title": "Candy Shop - Zona de Pruebas",
     "description": "Experimenta con componentes y funcionalidades"
   },
   "playground": {
@@ -8,7 +8,7 @@
     "subtitle": "Experimenta con componentes y funcionalidades"
   },
   "nav": {
-    "brand": "Candy Store",
+    "brand": "Candy Shop",
     "landing": "Inicio",
     "store": "Tienda",
     "payments": "Pagos",

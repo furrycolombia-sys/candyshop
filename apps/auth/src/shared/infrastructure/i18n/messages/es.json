@@ -1,14 +1,14 @@
 {
   "meta": {
-    "title": "Candy Store - Iniciar Sesion",
-    "description": "Inicia sesion en tu cuenta de Candy Store"
+    "title": "Candy Shop - Iniciar Sesion",
+    "description": "Inicia sesion en tu cuenta de Candy Shop"
   },
   "auth": {
     "title": "Iniciar Sesion",
     "subtitle": "Accede a tu cuenta"
   },
   "nav": {
-    "brand": "Candy Store",
+    "brand": "Candy Shop",
     "landing": "Inicio",
     "store": "Tienda",
     "payments": "Pagos",
