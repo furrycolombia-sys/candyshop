@@ -6,7 +6,9 @@ import {
   setRequestLocale,
 } from "next-intl/server";
 
+import { Providers } from "@/app/[locale]/providers";
 import { routing } from "@/shared/infrastructure/i18n";
+import { ThemeProvider } from "@/shared/infrastructure/providers";
 
 export async function generateMetadata({
   params,
@@ -39,8 +41,10 @@ export default async function LocaleLayout({
   const messages = await getMessages();
 
   return (
-    <NextIntlClientProvider messages={messages}>
-      {children}
-    </NextIntlClientProvider>
+    <ThemeProvider>
+      <NextIntlClientProvider messages={messages}>
+        <Providers>{children}</Providers>
+      </NextIntlClientProvider>
+    </ThemeProvider>
   );
 }
