@@ -27,7 +27,7 @@ export function RolesSection() {
           <div
             role="group"
             aria-labelledby="artists-heading"
-            className="group border-[3px] border-foreground bg-(--pink) p-8 text-(--candy-text) transition-all duration-150 hover:-translate-0.5 lg:p-10"
+            className="group flex flex-col border-[3px] border-foreground bg-(--pink) p-8 text-(--candy-text) transition-all duration-150 hover:-translate-0.5 lg:p-10"
             style={SHADOW_LG}
             {...tid("role-artists")}
           >
@@ -41,7 +41,7 @@ export function RolesSection() {
             >
               {t("artists.title")}
             </h3>
-            <p className="mb-8 text-base/relaxed opacity-80">
+            <p className="mb-8 flex-1 text-base/relaxed opacity-80">
               {t("artists.description")}
             </p>
             <a
@@ -71,7 +71,7 @@ export function RolesSection() {
           <div
             role="group"
             aria-labelledby="fans-heading"
-            className="group border-[3px] border-foreground bg-(--mint) p-8 text-(--candy-text) transition-all duration-150 hover:-translate-0.5 lg:p-10"
+            className="group flex flex-col border-[3px] border-foreground bg-(--mint) p-8 text-(--candy-text) transition-all duration-150 hover:-translate-0.5 lg:p-10"
             style={SHADOW_LG}
             {...tid("role-fans")}
           >
@@ -85,7 +85,7 @@ export function RolesSection() {
             >
               {t("fans.title")}
             </h3>
-            <p className="mb-8 text-base/relaxed opacity-80">
+            <p className="mb-8 flex-1 text-base/relaxed opacity-80">
               {t("fans.description")}
             </p>
             <a
