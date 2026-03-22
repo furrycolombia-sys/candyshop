@@ -41,12 +41,12 @@ export function RolesSection() {
             >
               {t("artists.title")}
             </h3>
-            <p className="mb-8 flex-1 text-base/relaxed opacity-80">
+            <p className="mb-8 text-base/relaxed opacity-80">
               {t("artists.description")}
             </p>
             <a
               href={storeUrl}
-              className="inline-flex items-center gap-2 border-[3px] border-(--candy-text) bg-(--lemon) px-6 py-3 text-sm font-bold uppercase tracking-wider text-(--candy-text-on-lemon) transition-all duration-150 hover:-translate-0.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--candy-text) active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
+              className="mt-auto inline-flex items-center gap-2 self-start border-[3px] border-(--candy-text) bg-(--lemon) px-6 py-3 text-sm font-bold uppercase tracking-wider text-(--candy-text-on-lemon) transition-all duration-150 hover:-translate-0.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--candy-text) active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
               style={SHADOW_SM}
             >
               {t("artists.cta")}
@@ -85,12 +85,12 @@ export function RolesSection() {
             >
               {t("fans.title")}
             </h3>
-            <p className="mb-8 flex-1 text-base/relaxed opacity-80">
+            <p className="mb-8 text-base/relaxed opacity-80">
               {t("fans.description")}
             </p>
             <a
               href={storeUrl}
-              className="inline-flex items-center gap-2 border-[3px] border-(--candy-text) bg-(--pink) px-6 py-3 text-sm font-bold uppercase tracking-wider text-(--candy-text) transition-all duration-150 hover:-translate-0.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--candy-text) active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
+              className="mt-auto inline-flex items-center gap-2 self-start border-[3px] border-(--candy-text) bg-(--pink) px-6 py-3 text-sm font-bold uppercase tracking-wider text-(--candy-text) transition-all duration-150 hover:-translate-0.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--candy-text) active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
               style={SHADOW_SM}
             >
               {t("fans.cta")}
