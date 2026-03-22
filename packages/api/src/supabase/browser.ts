@@ -10,10 +10,8 @@ import type { Database } from "./types";
  * Each call returns a new client instance (cheap, no connection pool).
  */
 export function createBrowserSupabaseClient() {
-  if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-    throw new Error(
-      "Supabase is not configured. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY.",
-    );
-  }
-  return createBrowserClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY);
+  return createBrowserClient<Database>(
+    SUPABASE_URL || "http://localhost:54321",
+    SUPABASE_ANON_KEY || "placeholder",
+  );
 }
