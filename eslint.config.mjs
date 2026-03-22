@@ -46,6 +46,8 @@ const eslintConfig = defineConfig([
     "packages/api/src/rest/types/generated/**",
     // Auto-generated files (GraphQL codegen)
     "packages/api/src/graphql/generated/**",
+    // Auto-generated files (Supabase CLI types)
+    "packages/api/src/supabase/types.ts",
     // Tooling
     ".claude/**",
     // Auto-generated MSW service worker

@@ -17,3 +17,12 @@ export type { ApiError } from "./rest/mutator/types";
 // GraphQL
 export { graphqlFetch } from "./graphql/mutator/graphqlFetch";
 export type { GraphqlApiError } from "./graphql/mutator/types";
+
+// Supabase
+export {
+  createBrowserSupabaseClient,
+  createServerSupabaseClient,
+  updateSupabaseSession,
+  supabase,
+} from "./supabase";
+export type { Database } from "./supabase/types";
