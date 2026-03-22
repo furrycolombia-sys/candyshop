@@ -62,7 +62,7 @@ export function AppNavigation({
                 "px-3 py-1.5 text-sm font-medium transition-colors",
                 isActive
                   ? "border-2 border-foreground bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:text-foreground",
+                  : "text-foreground/60 hover:text-foreground",
               ].join(" ")}
               aria-current={isActive ? "page" : undefined}
             >
