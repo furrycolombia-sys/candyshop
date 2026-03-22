@@ -1,13 +1,8 @@
-import { DM_Sans, Syne } from "next/font/google";
+import { Syne } from "next/font/google";
 import { getLocale } from "next-intl/server";
 import { ThemeScript } from "shared/components";
 
 import "@/app/globals.css";
-
-const dmSans = DM_Sans({
-  variable: "--font-dm-sans",
-  subsets: ["latin"],
-});
 
 const syne = Syne({
   variable: "--font-syne",
@@ -27,9 +22,7 @@ export default async function RootLayout({
       <head>
         <ThemeScript />
       </head>
-      <body className={`${dmSans.variable} ${syne.variable} antialiased`}>
-        {children}
-      </body>
+      <body className={`${syne.variable} antialiased`}>{children}</body>
     </html>
   );
 }

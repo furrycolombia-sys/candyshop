@@ -57,6 +57,32 @@
   --candy-text: #ffffff;
   --candy-text-on-lemon: #1a1a1a;
 
+  /* Shared theme compatibility — used by packages/ui components */
+  --popover: #ffffff;
+  --popover-foreground: #1a1a1a;
+  --destructive: #e11d48;
+  --destructive-foreground: #ffffff;
+  --success: #16a34a;
+  --success-foreground: #ffffff;
+  --warning: #d97706;
+  --warning-foreground: #ffffff;
+  --info: #2563eb;
+  --info-foreground: #ffffff;
+  --chart-1: var(--pink);
+  --chart-2: var(--mint);
+  --chart-3: var(--lilac);
+  --chart-4: var(--lemon);
+  --chart-5: var(--sky);
+  --sidebar: var(--surface);
+  --sidebar-foreground: var(--foreground);
+  --sidebar-accent: var(--accent);
+  --sidebar-accent-foreground: var(--accent-foreground);
+  --sidebar-border: var(--border);
+  --sidebar-ring: var(--ring);
+  --surface-inset: #f5f5f5;
+  --chip: #e8e8e8;
+  --radius: 0.5rem;
+
   /* Neobrutalist tokens */
   --nb-border: 3px solid #1a1a1a;
   --nb-shadow-sm: 3px 3px 0 0 #1a1a1a;
@@ -104,6 +130,31 @@
   --candy-text: #f5f5f5;
   --candy-text-on-lemon: #f5f5f5;
 
+  /* Shared theme compatibility — dark mode */
+  --popover: #1a1a1e;
+  --popover-foreground: #f5f5f5;
+  --destructive: #f43f5e;
+  --destructive-foreground: #0e0e10;
+  --success: #22c55e;
+  --success-foreground: #0e0e10;
+  --warning: #f59e0b;
+  --warning-foreground: #0e0e10;
+  --info: #3b82f6;
+  --info-foreground: #0e0e10;
+  --chart-1: var(--pink);
+  --chart-2: var(--mint);
+  --chart-3: var(--lilac);
+  --chart-4: var(--lemon);
+  --chart-5: var(--sky);
+  --sidebar: var(--surface);
+  --sidebar-foreground: var(--foreground);
+  --sidebar-accent: var(--accent);
+  --sidebar-accent-foreground: var(--accent-foreground);
+  --sidebar-border: var(--border);
+  --sidebar-ring: var(--ring);
+  --surface-inset: #141418;
+  --chip: #2a2a2e;
+
   --nb-border: 3px solid #f5f5f5;
   --nb-shadow-sm: 3px 3px 0 0 #f5f5f5;
   --nb-shadow-md: 5px 5px 0 0 #f5f5f5;
@@ -140,6 +191,37 @@
   }
   .nb-shadow-lg {
     box-shadow: var(--nb-shadow-lg);
+  }
+
+  /* Neobrutalist button — shared press/hover/focus pattern */
+  .nb-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    border: 3px solid var(--border);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    transition: all 150ms;
+  }
+  .nb-btn:hover {
+    translate: -2px -2px;
+  }
+  .nb-btn:focus-visible {
+    outline: 2px solid var(--foreground);
+    outline-offset: 2px;
+  }
+
+  /* Small press — for buttons inside colored cards */
+  .nb-btn-press-sm:active {
+    translate: 2px 2px;
+    box-shadow: none;
+  }
+
+  /* Large press — for standalone CTA buttons */
+  .nb-btn-press-lg:active {
+    translate: 3px 3px;
+    box-shadow: none;
   }
 
   /* Display font (Syne) */

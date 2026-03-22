@@ -41,7 +41,7 @@ export function HeroSection() {
 
           <a
             href={appUrls.store}
-            className="group nb-shadow-md inline-flex items-center gap-3 border-[3px] border-foreground bg-(--pink) px-8 py-4 font-bold uppercase tracking-wide text-(--candy-text) transition-all duration-150 hover:-translate-0.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground active:translate-x-[3px] active:translate-y-[3px] active:shadow-none"
+            className="group nb-btn nb-btn-press-lg nb-shadow-md gap-3 bg-(--pink) px-8 py-4 text-(--candy-text)"
             {...tid("hero-cta")}
           >
             {t("cta")}
