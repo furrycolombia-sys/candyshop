@@ -11,7 +11,8 @@ const getEnvVar = (key: string): string => {
       ? undefined
       : (process.env as Record<string, string | undefined>)[key];
   if (!value) {
-    throw new Error(`Missing environment variable: ${key}`);
+    console.warn(`[supabase] Missing environment variable: ${key}`);
+    return "";
   }
   return value;
 };
