@@ -162,6 +162,11 @@
   --nb-shadow-lg: 8px 8px 0 0 #f5f5f5;
 }
 
+/* Force Syne font on landing (overrides shared theme's Geist Sans) */
+body {
+  font-family: var(--font-syne), ui-sans-serif, system-ui, sans-serif;
+}
+
 /* Respect reduced motion preference */
 @media (prefers-reduced-motion: reduce) {
   *,
