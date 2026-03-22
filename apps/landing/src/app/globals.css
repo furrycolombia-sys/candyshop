@@ -25,12 +25,12 @@
   --card: var(--surface);
   --card-foreground: #1a1a1a;
 
-  /* Brand — bubblegum pink */
-  --brand: #f54d90;
+  /* Brand — bubblegum pink (matches --pink candy fill) */
+  --brand: #ff4890;
   --brand-hover: #e0407e;
-  --brand-text: #f54d90;
-  --brand-alpha: rgb(245 77 144 / 10%);
-  --brand-foreground: #ffffff;
+  --brand-text: #ff4890;
+  --brand-alpha: rgb(255 72 144 / 10%);
+  --brand-foreground: #1a1a1a;
 
   --primary: var(--brand);
   --primary-foreground: var(--brand-foreground);
