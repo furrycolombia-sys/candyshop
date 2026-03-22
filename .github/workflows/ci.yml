@@ -396,7 +396,7 @@ jobs:
     name: E2E Tests
     runs-on: ubuntu-latest
     container:
-      image: mcr.microsoft.com/playwright:v1.57.0-noble
+      image: mcr.microsoft.com/playwright:v1.58.2-noble
     timeout-minutes: 30
     needs: [build, changes]
     defaults:
