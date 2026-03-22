@@ -1,4 +1,8 @@
+import path from "node:path";
+
 import { defineConfig, devices } from "@playwright/test";
+
+const landingDir = path.resolve(__dirname, "../landing");
 
 export default defineConfig({
   testDir: "./e2e",
@@ -31,8 +35,9 @@ export default defineConfig({
     },
     {
       command: process.env.CI
-        ? "pnpm --filter landing next start --port 5004"
-        : "pnpm --filter landing next dev --port 5004",
+        ? "npx next start --port 5004"
+        : "npx next dev --port 5004",
+      cwd: landingDir,
       url: "http://localhost:5004",
       reuseExistingServer: !process.env.CI,
       timeout: 120_000,
