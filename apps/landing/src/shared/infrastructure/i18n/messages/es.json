@@ -1,16 +1,45 @@
 {
   "meta": {
-    "title": "Candy Shop - Tu Mercado",
-    "description": "Productos, servicios, boletos, promos y mucho mas"
+    "title": "Candy Shop — Dónde Vive el Arte Furry",
+    "description": "Un mercado creativo para artistas, makers y coleccionistas furry"
   },
   "landing": {
     "hero": {
-      "title": "Bienvenido a Candy Shop",
-      "subtitle": "Tu mercado todo-en-uno para productos, servicios, boletos de eventos, promos exclusivas y cupones."
+      "above": "Un mercado para el fandom",
+      "title": "Donde vive el arte furry.",
+      "subtitle": "Comisiones. Prints. Fursuits. Arte digital. Construido por artistas, para todos los que aman lo que crean.",
+      "cta": "Entrar a la galería"
+    },
+    "sections": {
+      "categories": "Categorías",
+      "roles": "Para creadores y coleccionistas"
+    },
+    "categories": {
+      "commissions": "Comisiones",
+      "fursuits": "Fursuit crafts",
+      "events": "Eventos & cons",
+      "merch": "Merch & prints",
+      "digital": "Arte digital",
+      "deals": "Drops & ofertas"
+    },
+    "split": {
+      "artists": {
+        "label": "Para creadores",
+        "title": "Tu arte merece un verdadero hogar.",
+        "description": "Vende comisiones, gestiona tu cola, envía merch y crece tu audiencia — sin que las comisiones de plataforma se coman tu trabajo.",
+        "cta": "Empezar a vender"
+      },
+      "fans": {
+        "label": "Para coleccionistas",
+        "title": "Encuentra a tu próximo artista favorito.",
+        "description": "Comisiona tu pieza soñada, colecciona prints, descubre nuevos creadores y apoya a los artistas que hacen el fandom lo que es.",
+        "cta": "Empezar a explorar"
+      }
     },
     "cta": {
-      "shop": "Empezar a Comprar",
-      "payments": "Realizar un Pago"
+      "title": "La galería está abierta.",
+      "cta": "Entrar",
+      "payments": "Realizar un pago"
     }
   },
   "nav": {

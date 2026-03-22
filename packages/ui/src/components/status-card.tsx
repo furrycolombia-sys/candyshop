@@ -60,9 +60,14 @@ function StatusCardContent({
 
 function StatusCardTitle({
   className,
+  children,
   ...props
 }: React.HTMLAttributes<HTMLHeadingElement>) {
-  return <h3 className={cn("font-medium text-sm", className)} {...props} />;
+  return (
+    <h3 className={cn("font-medium text-sm", className)} {...props}>
+      {children}
+    </h3>
+  );
 }
 
 function StatusCardDescription({

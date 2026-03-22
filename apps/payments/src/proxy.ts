@@ -1,9 +1,21 @@
+import { type NextRequest, NextResponse } from "next/server";
 import createMiddleware from "next-intl/middleware";
 
 import { routing } from "@/shared/infrastructure/i18n";
 
-export default createMiddleware(routing);
+const intlMiddleware = createMiddleware(routing);
 
-export const config = {
-  matcher: [String.raw`/((?!api|_next|_vercel|.*\..*).*)`],
-};
+export default function proxy(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+
+  // Skip static assets and internal Next.js requests
+  if (
+    pathname.startsWith("/_next") ||
+    pathname.startsWith("/api") ||
+    pathname.includes(".")
+  ) {
+    return NextResponse.next();
+  }
+
+  return intlMiddleware(request);
+}

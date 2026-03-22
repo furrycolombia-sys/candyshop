@@ -1,16 +1,45 @@
 {
   "meta": {
-    "title": "Candy Shop - Your Marketplace",
-    "description": "Products, services, tickets, promos and more"
+    "title": "Candy Shop — Where Furry Art Lives",
+    "description": "A creative marketplace for furry artists, makers, and collectors"
   },
   "landing": {
     "hero": {
-      "title": "Welcome to Candy Shop",
-      "subtitle": "Your one-stop marketplace for products, services, event tickets, exclusive promos, and coupons."
+      "above": "A marketplace for the fandom",
+      "title": "Where furry art lives.",
+      "subtitle": "Commissions. Prints. Fursuits. Digital art. Built by artists, for everyone who loves what they make.",
+      "cta": "Enter the gallery"
+    },
+    "sections": {
+      "categories": "Categories",
+      "roles": "For creators and collectors"
+    },
+    "categories": {
+      "commissions": "Commissions",
+      "fursuits": "Fursuit crafts",
+      "events": "Events & cons",
+      "merch": "Merch & prints",
+      "digital": "Digital art",
+      "deals": "Drops & deals"
+    },
+    "split": {
+      "artists": {
+        "label": "For creators",
+        "title": "Your art deserves a real home.",
+        "description": "Sell commissions, manage your queue, ship merch, and grow your audience — without platform fees eating your work.",
+        "cta": "Start selling"
+      },
+      "fans": {
+        "label": "For collectors",
+        "title": "Find your next favorite artist.",
+        "description": "Commission your dream piece, collect prints, discover new creators, and support the artists who make the fandom what it is.",
+        "cta": "Start browsing"
+      }
     },
     "cta": {
-      "shop": "Start Shopping",
-      "payments": "Make a Payment"
+      "title": "The gallery is open.",
+      "cta": "Come in",
+      "payments": "Make a payment"
     }
   },
   "nav": {

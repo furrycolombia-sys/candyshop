@@ -1,5 +1,4 @@
-import { useTranslations } from "next-intl";
-import { setRequestLocale } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 
 export default async function PlaygroundPage({
   params,
@@ -8,12 +7,7 @@ export default async function PlaygroundPage({
 }) {
   const { locale } = await params;
   setRequestLocale(locale);
-
-  return <PlaygroundHome />;
-}
-
-function PlaygroundHome() {
-  const t = useTranslations("playground");
+  const t = await getTranslations("playground");
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-8">

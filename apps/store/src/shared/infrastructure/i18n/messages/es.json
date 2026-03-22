@@ -16,6 +16,16 @@
     "auth": "Cuenta",
     "playground": "Playground"
   },
+  "auth": {
+    "login": {
+      "title": "Iniciar sesion",
+      "subtitle": "Elige tu metodo de inicio de sesion preferido",
+      "google": "Continuar con Google",
+      "discord": "Continuar con Discord",
+      "twitter": "Continuar con X"
+    },
+    "signOut": "Cerrar sesion"
+  },
   "common": {
     "theme": {
       "switchToDark": "Cambiar a modo oscuro",

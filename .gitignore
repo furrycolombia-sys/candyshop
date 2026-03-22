@@ -35,8 +35,12 @@ out/
 accounts.md
 tmpclaude-*
 
-# AI context working files (project-specific, not portable)
-.ai-context/
+# AI context reports (keep reviews/reports gitignored, task outputs are committed)
+.ai-context/reports/
+
+# Supabase local
+supabase/.temp/
+supabase/.branches/
 
 # IDE
 .idea/
