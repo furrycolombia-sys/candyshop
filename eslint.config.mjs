@@ -53,6 +53,34 @@ const eslintConfig = defineConfig([
     // Auto-generated MSW service worker
     "**/public/mockServiceWorker.js",
   ]),
+  // Accessibility (jsx-a11y) — WCAG AA compliance
+  // Plugin already registered by next/core-web-vitals, just override rules
+  {
+    files: [
+      `${APP_SRC}/**/*.{tsx,jsx}`,
+      `${PKG_SRC}/**/*.{tsx,jsx}`,
+    ],
+    rules: {
+      // Enforce alt text on images
+      "jsx-a11y/alt-text": "error",
+      // Enforce valid ARIA attributes
+      "jsx-a11y/aria-props": "error",
+      "jsx-a11y/aria-proptypes": "error",
+      "jsx-a11y/aria-role": "error",
+      "jsx-a11y/aria-unsupported-elements": "error",
+      // Enforce heading order
+      "jsx-a11y/heading-has-content": "error",
+      // Enforce labels on form elements
+      "jsx-a11y/label-has-associated-control": "error",
+      // Enforce interactive elements are focusable
+      "jsx-a11y/interactive-supports-focus": "error",
+      // Enforce click events have key events
+      "jsx-a11y/click-events-have-key-events": "error",
+      "jsx-a11y/no-static-element-interactions": "error",
+      // Allow custom components with role/handlers (common in Radix/shadcn)
+      "jsx-a11y/no-noninteractive-element-interactions": "warn",
+    },
+  },
   // E2E Tests - Playwright specific rules
   // Prevent testing specific translation text - only test element existence
   // See: Translation-agnostic E2E tests principle
