@@ -45,9 +45,9 @@ export function AppNavigation({
   return (
     <nav
       {...tid("app-navigation")}
-      className="sticky top-0 z-50 flex w-full items-center gap-1 border-b bg-background px-4 py-2"
+      className="sticky top-0 z-50 flex w-full items-center gap-1 border-b-[3px] border-foreground bg-background px-4 py-2"
     >
-      <span className="mr-4 text-sm font-bold tracking-tight">
+      <span className="mr-4 text-sm font-extrabold tracking-tight">
         {t("brand")}
       </span>
       <div className="flex items-center gap-1">
@@ -59,10 +59,10 @@ export function AppNavigation({
               {...tid(`nav-link-${id}`)}
               href={localizedHref(urls[id])}
               className={[
-                "rounded-md px-3 py-1.5 text-sm transition-colors",
+                "px-3 py-1.5 text-sm font-medium transition-colors",
                 isActive
-                  ? "bg-primary text-primary-foreground font-medium"
-                  : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                  ? "border-2 border-foreground bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:text-foreground",
               ].join(" ")}
               aria-current={isActive ? "page" : undefined}
             >
