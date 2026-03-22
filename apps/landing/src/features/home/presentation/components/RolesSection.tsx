@@ -4,6 +4,7 @@ import { useTranslations } from "next-intl";
 import { tid } from "shared";
 
 const SHADOW_LG = { boxShadow: "var(--nb-shadow-lg)" };
+const SHADOW_SM = { boxShadow: "var(--nb-shadow-sm)" };
 const FONT_DISPLAY = { fontFamily: "var(--font-syne)" };
 
 export function RolesSection() {
@@ -26,11 +27,11 @@ export function RolesSection() {
           <div
             role="group"
             aria-labelledby="artists-heading"
-            className="group border-[3px] border-foreground bg-(--pink) p-8 text-white transition-all duration-150 hover:-translate-0.5 lg:p-10"
+            className="group border-[3px] border-foreground bg-(--pink) p-8 text-foreground transition-all duration-150 hover:-translate-0.5 lg:p-10"
             style={SHADOW_LG}
             {...tid("role-artists")}
           >
-            <p className="mb-3 text-xs font-bold uppercase tracking-[0.2em] text-white/90">
+            <p className="mb-3 text-xs font-bold uppercase tracking-[0.2em] text-foreground/70">
               {t("artists.label")}
             </p>
             <h3
@@ -40,13 +41,13 @@ export function RolesSection() {
             >
               {t("artists.title")}
             </h3>
-            <p className="mb-8 text-base/relaxed text-white/90">
+            <p className="mb-8 text-base/relaxed text-foreground/80">
               {t("artists.description")}
             </p>
             <a
               href={storeUrl}
-              className="inline-flex items-center gap-2 border-[3px] border-white bg-(--lemon) px-6 py-3 text-sm font-bold uppercase tracking-wider text-black transition-all duration-150 hover:-translate-0.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
-              style={{ boxShadow: "3px 3px 0 0 #fff" }}
+              className="inline-flex items-center gap-2 border-[3px] border-foreground bg-(--lemon) px-6 py-3 text-sm font-bold uppercase tracking-wider text-foreground transition-all duration-150 hover:-translate-0.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
+              style={SHADOW_SM}
             >
               {t("artists.cta")}
               <svg
@@ -70,27 +71,27 @@ export function RolesSection() {
           <div
             role="group"
             aria-labelledby="fans-heading"
-            className="group border-[3px] border-foreground bg-(--mint) p-8 transition-all duration-150 hover:-translate-0.5 lg:p-10"
+            className="group border-[3px] border-foreground bg-(--mint) p-8 text-foreground transition-all duration-150 hover:-translate-0.5 lg:p-10"
             style={SHADOW_LG}
             {...tid("role-fans")}
           >
-            <p className="mb-3 text-xs font-bold uppercase tracking-[0.2em] text-black/70">
+            <p className="mb-3 text-xs font-bold uppercase tracking-[0.2em] text-foreground/70">
               {t("fans.label")}
             </p>
             <h3
               id="fans-heading"
-              className="mb-4 text-3xl/tight font-extrabold uppercase text-black lg:text-4xl"
+              className="mb-4 text-3xl/tight font-extrabold uppercase lg:text-4xl"
               style={FONT_DISPLAY}
             >
               {t("fans.title")}
             </h3>
-            <p className="mb-8 text-base/relaxed text-black/80">
+            <p className="mb-8 text-base/relaxed text-foreground/80">
               {t("fans.description")}
             </p>
             <a
               href={storeUrl}
-              className="inline-flex items-center gap-2 border-[3px] border-foreground bg-(--pink) px-6 py-3 text-sm font-bold uppercase tracking-wider text-white transition-all duration-150 hover:-translate-0.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
-              style={{ boxShadow: "var(--nb-shadow-sm)" }}
+              className="inline-flex items-center gap-2 border-[3px] border-foreground bg-(--pink) px-6 py-3 text-sm font-bold uppercase tracking-wider text-foreground transition-all duration-150 hover:-translate-0.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
+              style={SHADOW_SM}
             >
               {t("fans.cta")}
               <svg
