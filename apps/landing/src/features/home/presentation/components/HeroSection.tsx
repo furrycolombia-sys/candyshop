@@ -17,7 +17,7 @@ export function HeroSection() {
         <div className="max-w-3xl">
           {/* Tagline — neobrutalist badge */}
           <div
-            className="mb-8 inline-block border-[3px] border-foreground bg-(--lemon) px-4 py-1.5 text-sm font-extrabold uppercase tracking-wider text-black"
+            className="mb-8 inline-block border-[3px] border-foreground bg-(--lemon) px-4 py-1.5 text-sm font-extrabold uppercase tracking-wider text-foreground"
             style={{ boxShadow: "var(--nb-shadow-sm)" }}
           >
             {t("above")}
