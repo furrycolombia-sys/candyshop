@@ -28,6 +28,8 @@ jobs:
       deploy: ${{ steps.filter.outputs.deploy }}
       store: ${{ steps.filter.outputs.store }}
       admin: ${{ steps.filter.outputs.admin }}
+      landing: ${{ steps.filter.outputs.landing }}
+      payments: ${{ steps.filter.outputs.payments }}
       auth: ${{ steps.filter.outputs.auth }}
       playground: ${{ steps.filter.outputs.playground }}
       packages: ${{ steps.filter.outputs.packages }}
@@ -48,6 +50,10 @@ jobs:
               - 'apps/admin/**'
             auth:
               - 'apps/auth/**'
+            landing:
+              - 'apps/landing/**'
+            payments:
+              - 'apps/payments/**'
             playground:
               - 'apps/playground/**'
             packages:
@@ -119,6 +125,8 @@ jobs:
 
           SELECT_OUTPUT=$(bash scripts/select-workspaces.sh \
             "${{ needs.changes.outputs.store }}" \
+            "${{ needs.changes.outputs.landing }}" \
+            "${{ needs.changes.outputs.payments }}" \
             "${{ needs.changes.outputs.admin }}" \
             "${{ needs.changes.outputs.auth }}" \
             "${{ needs.changes.outputs.playground }}" \
@@ -148,6 +156,8 @@ jobs:
 
           SELECT_OUTPUT=$(bash scripts/select-workspaces.sh \
             "${{ needs.changes.outputs.store }}" \
+            "${{ needs.changes.outputs.landing }}" \
+            "${{ needs.changes.outputs.payments }}" \
             "${{ needs.changes.outputs.admin }}" \
             "${{ needs.changes.outputs.auth }}" \
             "${{ needs.changes.outputs.playground }}" \
@@ -205,6 +215,8 @@ jobs:
 
           SELECT_OUTPUT=$(bash scripts/select-workspaces.sh \
             "${{ needs.changes.outputs.store }}" \
+            "${{ needs.changes.outputs.landing }}" \
+            "${{ needs.changes.outputs.payments }}" \
             "${{ needs.changes.outputs.admin }}" \
             "${{ needs.changes.outputs.auth }}" \
             "${{ needs.changes.outputs.playground }}" \
@@ -249,6 +261,22 @@ jobs:
           path: apps/auth/coverage/
           retention-days: 7
 
+      - name: Upload landing coverage report
+        uses: actions/upload-artifact@v4
+        if: always() && (needs.changes.outputs.landing == 'true' || needs.changes.outputs.packages == 'true' || needs.changes.outputs.tooling == 'true')
+        with:
+          name: coverage-report-landing
+          path: apps/landing/coverage/
+          retention-days: 7
+
+      - name: Upload payments coverage report
+        uses: actions/upload-artifact@v4
+        if: always() && (needs.changes.outputs.payments == 'true' || needs.changes.outputs.packages == 'true' || needs.changes.outputs.tooling == 'true')
+        with:
+          name: coverage-report-payments
+          path: apps/payments/coverage/
+          retention-days: 7
+
   # ============================================
   # Build
   # ============================================
@@ -280,6 +308,8 @@ jobs:
 
           SELECT_OUTPUT=$(bash scripts/select-workspaces.sh \
             "${{ needs.changes.outputs.store }}" \
+            "${{ needs.changes.outputs.landing }}" \
+            "${{ needs.changes.outputs.payments }}" \
             "${{ needs.changes.outputs.admin }}" \
             "${{ needs.changes.outputs.auth }}" \
             "${{ needs.changes.outputs.playground }}" \
@@ -339,6 +369,26 @@ jobs:
           if-no-files-found: error
           include-hidden-files: true
 
+      - name: Upload landing build artifacts
+        uses: actions/upload-artifact@v4
+        if: needs.changes.outputs.landing == 'true' || needs.changes.outputs.packages == 'true' || needs.changes.outputs.tooling == 'true'
+        with:
+          name: build-landing
+          path: apps/landing/.next/
+          retention-days: 1
+          if-no-files-found: error
+          include-hidden-files: true
+
+      - name: Upload payments build artifacts
+        uses: actions/upload-artifact@v4
+        if: needs.changes.outputs.payments == 'true' || needs.changes.outputs.packages == 'true' || needs.changes.outputs.tooling == 'true'
+        with:
+          name: build-payments
+          path: apps/payments/.next/
+          retention-days: 1
+          if-no-files-found: error
+          include-hidden-files: true
+
   # ============================================
   # E2E Tests (Playwright)
   # ============================================
@@ -389,12 +439,28 @@ jobs:
           name: build-auth
           path: apps/auth/.next/
 
+      - name: Download landing build artifacts
+        uses: actions/download-artifact@v4
+        if: needs.changes.outputs.landing == 'true' || needs.changes.outputs.packages == 'true' || needs.changes.outputs.tooling == 'true'
+        with:
+          name: build-landing
+          path: apps/landing/.next/
+
+      - name: Download payments build artifacts
+        uses: actions/download-artifact@v4
+        if: needs.changes.outputs.payments == 'true' || needs.changes.outputs.packages == 'true' || needs.changes.outputs.tooling == 'true'
+        with:
+          name: build-payments
+          path: apps/payments/.next/
+
       - name: Run E2E tests (scoped)
         run: |
           set -euo pipefail
 
           SELECT_OUTPUT=$(bash scripts/select-workspaces.sh \
             "${{ needs.changes.outputs.store }}" \
+            "${{ needs.changes.outputs.landing }}" \
+            "${{ needs.changes.outputs.payments }}" \
             "${{ needs.changes.outputs.admin }}" \
             "${{ needs.changes.outputs.auth }}" \
             "${{ needs.changes.outputs.playground }}" \
@@ -434,6 +500,22 @@ jobs:
         with:
           name: playwright-report-auth
           path: apps/auth/playwright-report/
+          retention-days: 7
+
+      - name: Upload landing Playwright report
+        uses: actions/upload-artifact@v4
+        if: always() && (needs.changes.outputs.landing == 'true' || needs.changes.outputs.packages == 'true' || needs.changes.outputs.tooling == 'true')
+        with:
+          name: playwright-report-landing
+          path: apps/landing/playwright-report/
+          retention-days: 7
+
+      - name: Upload payments Playwright report
+        uses: actions/upload-artifact@v4
+        if: always() && (needs.changes.outputs.payments == 'true' || needs.changes.outputs.packages == 'true' || needs.changes.outputs.tooling == 'true')
+        with:
+          name: playwright-report-payments
+          path: apps/payments/playwright-report/
           retention-days: 7
 
   # ============================================
