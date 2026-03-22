@@ -1,9 +1,7 @@
-"use client";
-
-import { CtaSection } from "../components/CtaSection";
-import { FeaturesSection } from "../components/FeaturesSection";
-import { HeroSection } from "../components/HeroSection";
-import { RolesSection } from "../components/RolesSection";
+import { CtaSection } from "@/features/home/presentation/components/CtaSection";
+import { FeaturesSection } from "@/features/home/presentation/components/FeaturesSection";
+import { HeroSection } from "@/features/home/presentation/components/HeroSection";
+import { RolesSection } from "@/features/home/presentation/components/RolesSection";
 
 export function LandingPage() {
   return (

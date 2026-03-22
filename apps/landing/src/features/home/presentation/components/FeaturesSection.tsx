@@ -30,18 +30,17 @@ export function FeaturesSection() {
         {tSections("categories")}
       </h2>
       <div className="mx-auto max-w-6xl px-6 lg:px-8">
-        <div className="flex flex-wrap gap-4">
+        <ul className="flex flex-wrap gap-4">
           {CATEGORIES.map(({ key, fill }) => (
-            <span
+            <li
               key={key}
-              className={`inline-block border-[3px] border-foreground px-5 py-2.5 text-sm font-bold uppercase tracking-wider ${fill}`}
-              style={{ boxShadow: "var(--nb-shadow-sm)" }}
+              className={`nb-shadow-sm inline-block border-[3px] border-foreground px-5 py-2.5 text-sm font-bold uppercase tracking-wider ${fill}`}
               {...tid(`category-${key}`)}
             >
               {t(key)}
-            </span>
+            </li>
           ))}
-        </div>
+        </ul>
       </div>
     </section>
   );

@@ -1,16 +1,14 @@
 "use client";
 
+import { ArrowRight } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { tid } from "shared";
 
-const SHADOW_LG = { boxShadow: "var(--nb-shadow-lg)" };
-const SHADOW_SM = { boxShadow: "var(--nb-shadow-sm)" };
-const FONT_DISPLAY = { fontFamily: "var(--font-syne)" };
+import { appUrls } from "@/shared/infrastructure/config";
 
 export function RolesSection() {
   const t = useTranslations("landing.split");
   const tSections = useTranslations("landing.sections");
-  const storeUrl = process.env.NEXT_PUBLIC_STORE_URL || "/store";
 
   return (
     <section
@@ -27,43 +25,31 @@ export function RolesSection() {
           <div
             role="group"
             aria-labelledby="artists-heading"
-            className="group flex flex-col border-[3px] border-foreground bg-(--pink) p-8 text-(--candy-text) transition-all duration-150 hover:-translate-0.5 lg:p-10"
-            style={SHADOW_LG}
+            className="group nb-shadow-lg flex flex-col border-[3px] border-foreground bg-(--pink) p-8 text-(--candy-text) transition-all duration-150 hover:-translate-0.5 lg:p-10"
             {...tid("role-artists")}
           >
-            <p className="mb-3 text-xs font-bold uppercase tracking-[0.2em] opacity-80">
+            <p className="mb-3 text-xs font-bold uppercase tracking-[0.2em] text-(--candy-text)">
               {t("artists.label")}
             </p>
             <h3
               id="artists-heading"
-              className="mb-4 text-3xl/tight font-extrabold uppercase lg:text-4xl"
-              style={FONT_DISPLAY}
+              className="mb-4 font-display text-3xl/tight font-extrabold uppercase lg:text-4xl"
             >
               {t("artists.title")}
             </h3>
-            <p className="mb-8 text-base/relaxed opacity-80">
+            <p className="mb-8 text-base/relaxed text-(--candy-text)/90">
               {t("artists.description")}
             </p>
             <a
-              href={storeUrl}
-              className="mt-auto inline-flex items-center gap-2 self-start border-[3px] border-(--candy-text) bg-(--lemon) px-6 py-3 text-sm font-bold uppercase tracking-wider text-(--candy-text-on-lemon) transition-all duration-150 hover:-translate-0.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--candy-text) active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
-              style={SHADOW_SM}
+              href={appUrls.store}
+              className="nb-shadow-sm mt-auto inline-flex items-center gap-2 self-start border-[3px] border-(--candy-text) bg-(--lemon) px-6 py-3 text-sm font-bold uppercase tracking-wider text-(--candy-text-on-lemon) transition-all duration-150 hover:-translate-0.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--candy-text) active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
             >
               {t("artists.cta")}
-              <svg
+              <ArrowRight
                 aria-hidden="true"
                 className="size-4"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
                 strokeWidth={2.5}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"
-                />
-              </svg>
+              />
             </a>
           </div>
 
@@ -71,43 +57,31 @@ export function RolesSection() {
           <div
             role="group"
             aria-labelledby="fans-heading"
-            className="group flex flex-col border-[3px] border-foreground bg-(--mint) p-8 text-(--candy-text) transition-all duration-150 hover:-translate-0.5 lg:p-10"
-            style={SHADOW_LG}
+            className="group nb-shadow-lg flex flex-col border-[3px] border-foreground bg-(--mint) p-8 text-(--candy-text) transition-all duration-150 hover:-translate-0.5 lg:p-10"
             {...tid("role-fans")}
           >
-            <p className="mb-3 text-xs font-bold uppercase tracking-[0.2em] opacity-80">
+            <p className="mb-3 text-xs font-bold uppercase tracking-[0.2em] text-(--candy-text)">
               {t("fans.label")}
             </p>
             <h3
               id="fans-heading"
-              className="mb-4 text-3xl/tight font-extrabold uppercase lg:text-4xl"
-              style={FONT_DISPLAY}
+              className="mb-4 font-display text-3xl/tight font-extrabold uppercase lg:text-4xl"
             >
               {t("fans.title")}
             </h3>
-            <p className="mb-8 text-base/relaxed opacity-80">
+            <p className="mb-8 text-base/relaxed text-(--candy-text)/90">
               {t("fans.description")}
             </p>
             <a
-              href={storeUrl}
-              className="mt-auto inline-flex items-center gap-2 self-start border-[3px] border-(--candy-text) bg-(--pink) px-6 py-3 text-sm font-bold uppercase tracking-wider text-(--candy-text) transition-all duration-150 hover:-translate-0.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--candy-text) active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
-              style={SHADOW_SM}
+              href={appUrls.store}
+              className="nb-shadow-sm mt-auto inline-flex items-center gap-2 self-start border-[3px] border-(--candy-text) bg-(--pink) px-6 py-3 text-sm font-bold uppercase tracking-wider text-(--candy-text) transition-all duration-150 hover:-translate-0.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--candy-text) active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
             >
               {t("fans.cta")}
-              <svg
+              <ArrowRight
                 aria-hidden="true"
                 className="size-4"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
                 strokeWidth={2.5}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"
-                />
-              </svg>
+              />
             </a>
           </div>
         </div>

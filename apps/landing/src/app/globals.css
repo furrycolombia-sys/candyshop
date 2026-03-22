@@ -130,4 +130,20 @@
   .dark .bg-dots {
     background-image: radial-gradient(circle, #2a2a2e 1px, transparent 1px);
   }
+
+  /* Neobrutalist shadow utilities */
+  .nb-shadow-sm {
+    box-shadow: var(--nb-shadow-sm);
+  }
+  .nb-shadow-md {
+    box-shadow: var(--nb-shadow-md);
+  }
+  .nb-shadow-lg {
+    box-shadow: var(--nb-shadow-lg);
+  }
+
+  /* Display font (Syne) */
+  .font-display {
+    font-family: var(--font-syne);
+  }
 }
