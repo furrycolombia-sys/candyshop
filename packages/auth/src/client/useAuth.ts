@@ -3,7 +3,7 @@
 import type { Session, SupabaseClient, User } from "@supabase/supabase-js";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-type AuthProvider = "google" | "facebook";
+type AuthProvider = "google" | "discord" | "twitter";
 
 interface UseAuthReturn {
   user: User | null;
@@ -25,7 +25,7 @@ interface UseAuthOptions {
 /**
  * Hook for authentication state and actions.
  *
- * Uses Supabase Auth for social login (Google, Facebook).
+ * Uses Supabase Auth for social login (Google, Discord, Twitter).
  * Listens to auth state changes and provides sign-in/sign-out actions.
  *
  * @example

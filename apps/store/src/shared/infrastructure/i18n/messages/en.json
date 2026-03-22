@@ -21,7 +21,8 @@
       "title": "Sign in",
       "subtitle": "Choose your preferred sign-in method",
       "google": "Continue with Google",
-      "facebook": "Continue with Facebook"
+      "discord": "Continue with Discord",
+      "twitter": "Continue with X"
     },
     "signOut": "Sign out"
   },

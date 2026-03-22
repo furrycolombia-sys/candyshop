@@ -21,7 +21,8 @@
       "title": "Iniciar sesion",
       "subtitle": "Elige tu metodo de inicio de sesion preferido",
       "google": "Continuar con Google",
-      "facebook": "Continuar con Facebook"
+      "discord": "Continuar con Discord",
+      "twitter": "Continuar con X"
     },
     "signOut": "Cerrar sesion"
   },
