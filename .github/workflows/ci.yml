@@ -182,7 +182,7 @@ jobs:
         if: needs.changes.outputs.packages == 'true' || needs.changes.outputs.tooling == 'true'
         run: |
           pnpm run sherif
-          pnpm run syncpack:list
+          pnpm run syncpack:lint
 
   # ============================================
   # Unit Tests (Vitest) - All Apps
