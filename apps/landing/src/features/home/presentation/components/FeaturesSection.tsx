@@ -3,13 +3,16 @@
 import { useTranslations } from "next-intl";
 import { tid } from "shared";
 
+const CT = "text-(--candy-text)";
+const CTL = "text-(--candy-text-on-lemon)";
+
 const CATEGORIES = [
-  { key: "commissions", fill: "bg-(--pink)" },
-  { key: "fursuits", fill: "bg-(--mint)" },
-  { key: "events", fill: "bg-(--lemon)" },
-  { key: "merch", fill: "bg-(--lilac)" },
-  { key: "digital", fill: "bg-(--sky)" },
-  { key: "deals", fill: "bg-(--peach)" },
+  { key: "commissions", fill: `bg-(--pink) ${CT}` },
+  { key: "fursuits", fill: `bg-(--mint) ${CT}` },
+  { key: "events", fill: `bg-(--lemon) ${CTL}` },
+  { key: "merch", fill: `bg-(--lilac) ${CT}` },
+  { key: "digital", fill: `bg-(--sky) ${CT}` },
+  { key: "deals", fill: `bg-(--peach) ${CT}` },
 ] as const;
 
 export function FeaturesSection() {
@@ -31,7 +34,7 @@ export function FeaturesSection() {
           {CATEGORIES.map(({ key, fill }) => (
             <span
               key={key}
-              className={`inline-block border-[3px] border-foreground px-5 py-2.5 text-sm font-bold uppercase tracking-wider text-foreground ${fill}`}
+              className={`inline-block border-[3px] border-foreground px-5 py-2.5 text-sm font-bold uppercase tracking-wider ${fill}`}
               style={{ boxShadow: "var(--nb-shadow-sm)" }}
               {...tid(`category-${key}`)}
             >

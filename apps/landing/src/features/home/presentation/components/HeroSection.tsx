@@ -17,7 +17,7 @@ export function HeroSection() {
         <div className="max-w-3xl">
           {/* Tagline — neobrutalist badge */}
           <div
-            className="mb-8 inline-block border-[3px] border-foreground bg-(--lemon) px-4 py-1.5 text-sm font-extrabold uppercase tracking-wider text-foreground"
+            className="mb-8 inline-block border-[3px] border-foreground bg-(--lemon) px-4 py-1.5 text-sm font-extrabold uppercase tracking-wider text-(--candy-text-on-lemon)"
             style={{ boxShadow: "var(--nb-shadow-sm)" }}
           >
             {t("above")}
@@ -43,7 +43,7 @@ export function HeroSection() {
 
           <a
             href={storeUrl}
-            className="group inline-flex items-center gap-3 border-[3px] border-foreground bg-(--pink) px-8 py-4 font-bold uppercase tracking-wide text-foreground transition-all duration-150 hover:-translate-0.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground active:translate-x-[3px] active:translate-y-[3px] active:shadow-none"
+            className="group inline-flex items-center gap-3 border-[3px] border-foreground bg-(--pink) px-8 py-4 font-bold uppercase tracking-wide text-(--candy-text) transition-all duration-150 hover:-translate-0.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground active:translate-x-[3px] active:translate-y-[3px] active:shadow-none"
             style={{ boxShadow: "var(--nb-shadow-md)" }}
             {...tid("hero-cta")}
           >

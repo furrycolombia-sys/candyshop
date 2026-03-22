@@ -47,13 +47,15 @@
   --input: #1a1a1a;
   --ring: #f54d90;
 
-  /* Landing palette — light candy fills (dark text passes 4.5:1+) */
-  --pink: #ff80b0;
-  --mint: #60e8b0;
-  --lilac: #c8a8ff;
+  /* Landing palette — saturated fills (white text passes 4.5:1+, except lemon) */
+  --pink: #d82878;
+  --mint: #10884c;
+  --lilac: #7050b8;
   --lemon: #ffe040;
-  --sky: #70c8f0;
-  --peach: #ffaa80;
+  --sky: #2078a8;
+  --peach: #b05820;
+  --candy-text: #ffffff;
+  --candy-text-on-lemon: #1a1a1a;
 
   /* Neobrutalist tokens */
   --nb-border: 3px solid #1a1a1a;
@@ -92,13 +94,15 @@
   --input: #f5f5f5;
   --ring: #ff68a8;
 
-  /* Landing palette — dark candy fills (white text passes 4.5:1+) */
+  /* Landing palette — deep fills for dark mode (white text passes 4.5:1+) */
   --pink: #b83068;
   --mint: #187848;
   --lilac: #6848a8;
-  --lemon: #806810;
+  --lemon: #8a6800;
   --sky: #206088;
   --peach: #a05828;
+  --candy-text: #f5f5f5;
+  --candy-text-on-lemon: #f5f5f5;
 
   --nb-border: 3px solid #f5f5f5;
   --nb-shadow-sm: 3px 3px 0 0 #f5f5f5;

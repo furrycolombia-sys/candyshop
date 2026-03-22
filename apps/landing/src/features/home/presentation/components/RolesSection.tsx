@@ -27,11 +27,11 @@ export function RolesSection() {
           <div
             role="group"
             aria-labelledby="artists-heading"
-            className="group border-[3px] border-foreground bg-(--pink) p-8 text-foreground transition-all duration-150 hover:-translate-0.5 lg:p-10"
+            className="group border-[3px] border-foreground bg-(--pink) p-8 text-(--candy-text) transition-all duration-150 hover:-translate-0.5 lg:p-10"
             style={SHADOW_LG}
             {...tid("role-artists")}
           >
-            <p className="mb-3 text-xs font-bold uppercase tracking-[0.2em] text-foreground/70">
+            <p className="mb-3 text-xs font-bold uppercase tracking-[0.2em] opacity-80">
               {t("artists.label")}
             </p>
             <h3
@@ -41,12 +41,12 @@ export function RolesSection() {
             >
               {t("artists.title")}
             </h3>
-            <p className="mb-8 text-base/relaxed text-foreground/80">
+            <p className="mb-8 text-base/relaxed opacity-80">
               {t("artists.description")}
             </p>
             <a
               href={storeUrl}
-              className="inline-flex items-center gap-2 border-[3px] border-foreground bg-(--lemon) px-6 py-3 text-sm font-bold uppercase tracking-wider text-foreground transition-all duration-150 hover:-translate-0.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
+              className="inline-flex items-center gap-2 border-[3px] border-(--candy-text) bg-(--lemon) px-6 py-3 text-sm font-bold uppercase tracking-wider text-(--candy-text-on-lemon) transition-all duration-150 hover:-translate-0.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--candy-text) active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
               style={SHADOW_SM}
             >
               {t("artists.cta")}
@@ -71,11 +71,11 @@ export function RolesSection() {
           <div
             role="group"
             aria-labelledby="fans-heading"
-            className="group border-[3px] border-foreground bg-(--mint) p-8 text-foreground transition-all duration-150 hover:-translate-0.5 lg:p-10"
+            className="group border-[3px] border-foreground bg-(--mint) p-8 text-(--candy-text) transition-all duration-150 hover:-translate-0.5 lg:p-10"
             style={SHADOW_LG}
             {...tid("role-fans")}
           >
-            <p className="mb-3 text-xs font-bold uppercase tracking-[0.2em] text-foreground/70">
+            <p className="mb-3 text-xs font-bold uppercase tracking-[0.2em] opacity-80">
               {t("fans.label")}
             </p>
             <h3
@@ -85,12 +85,12 @@ export function RolesSection() {
             >
               {t("fans.title")}
             </h3>
-            <p className="mb-8 text-base/relaxed text-foreground/80">
+            <p className="mb-8 text-base/relaxed opacity-80">
               {t("fans.description")}
             </p>
             <a
               href={storeUrl}
-              className="inline-flex items-center gap-2 border-[3px] border-foreground bg-(--pink) px-6 py-3 text-sm font-bold uppercase tracking-wider text-foreground transition-all duration-150 hover:-translate-0.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
+              className="inline-flex items-center gap-2 border-[3px] border-(--candy-text) bg-(--pink) px-6 py-3 text-sm font-bold uppercase tracking-wider text-(--candy-text) transition-all duration-150 hover:-translate-0.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--candy-text) active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
               style={SHADOW_SM}
             >
               {t("fans.cta")}
