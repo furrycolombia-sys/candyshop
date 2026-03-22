@@ -48,13 +48,13 @@
   --input: #1a1a1a;
   --ring: #f54d90;
 
-  /* Landing palette — bright fills (dark text passes 4.5:1+) */
-  --pink: #ff80b0;
-  --mint: #60e8b0;
-  --lilac: #c8a8ff;
+  /* Landing palette — vivid fills (dark text passes 4.5:1+) */
+  --pink: #ff4890;
+  --mint: #20c888;
+  --lilac: #9868f0;
   --lemon: #ffe040;
-  --sky: #70c8f0;
-  --peach: #ffaa80;
+  --sky: #2890c8;
+  --peach: #ff7840;
   --candy-text: #1a1a1a;
   --candy-text-on-lemon: #1a1a1a;
 
