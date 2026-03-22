@@ -99,11 +99,11 @@
   --card: var(--surface);
   --card-foreground: #f5f5f5;
 
-  --brand: #ff68a8;
-  --brand-hover: #f05898;
+  --brand: #b83068;
+  --brand-hover: #a02858;
   --brand-text: #ff68a8;
-  --brand-alpha: rgb(255 104 168 / 12%);
-  --brand-foreground: #0e0e10;
+  --brand-alpha: rgb(184 48 104 / 12%);
+  --brand-foreground: #f5f5f5;
 
   --primary: var(--brand);
   --primary-foreground: var(--brand-foreground);
