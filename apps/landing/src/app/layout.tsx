@@ -1,17 +1,18 @@
-import { Geist, Geist_Mono } from "next/font/google";
+import { DM_Sans, Syne } from "next/font/google";
 import { getLocale } from "next-intl/server";
 import { ThemeScript } from "shared/components";
 
 import "@/app/globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const dmSans = DM_Sans({
+  variable: "--font-dm-sans",
   subsets: ["latin"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const syne = Syne({
+  variable: "--font-syne",
   subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800"],
 });
 
 export default async function RootLayout({
@@ -26,9 +27,7 @@ export default async function RootLayout({
       <head>
         <ThemeScript />
       </head>
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
+      <body className={`${dmSans.variable} ${syne.variable} antialiased`}>
         {children}
       </body>
     </html>

@@ -7,3 +7,86 @@
 @source "../../../../packages/ui/src/**/*.{ts,tsx}";
 
 @custom-variant dark (&:is(.dark *));
+
+/* ============================================================
+   Landing App — Neobrutalist Candy Shop
+   Thick borders, hard shadows, corporate green/gold fills.
+   ============================================================ */
+
+:root {
+  --font-sans: var(--font-syne);
+  --font-display: var(--font-syne);
+
+  --background: #fffdf5;
+  --foreground: #000000;
+
+  --surface: #ffffff;
+  --card: var(--surface);
+  --card-foreground: #000000;
+
+  /* Brand — forest green from mascot */
+  --brand: #1b6b3a;
+  --brand-hover: #155c30;
+  --brand-text: #1b6b3a;
+  --brand-alpha: rgb(27 107 58 / 10%);
+  --brand-foreground: #ffffff;
+
+  --primary: var(--brand);
+  --primary-foreground: var(--brand-foreground);
+
+  --secondary: #f5efe3;
+  --secondary-foreground: #000000;
+
+  --muted: #e8e2d6;
+  --muted-foreground: #555555;
+
+  /* Accent — golden amber from mascot */
+  --accent: #d4a843;
+  --accent-foreground: #000000;
+
+  --border: #000000;
+  --input: #000000;
+  --ring: #1b6b3a;
+
+  /* Neobrutalist tokens */
+  --nb-border: 3px solid #000;
+  --nb-shadow-sm: 3px 3px 0 0 #000;
+  --nb-shadow-md: 5px 5px 0 0 #000;
+  --nb-shadow-lg: 8px 8px 0 0 #000;
+}
+
+.dark {
+  --background: #0a0a08;
+  --foreground: #fffdf5;
+
+  --surface: #1a1916;
+  --card: var(--surface);
+  --card-foreground: #fffdf5;
+
+  --brand: #3da864;
+  --brand-hover: #35965a;
+  --brand-text: #3da864;
+  --brand-alpha: rgb(61 168 100 / 12%);
+  --brand-foreground: #000000;
+
+  --primary: var(--brand);
+  --primary-foreground: var(--brand-foreground);
+
+  --secondary: #1a1916;
+  --secondary-foreground: #fffdf5;
+
+  --muted: #252420;
+  --muted-foreground: #999;
+
+  --accent: #e8b84a;
+  --accent-foreground: #000000;
+
+  --border: #fffdf5;
+  --input: #fffdf5;
+  --ring: #3da864;
+
+  --nb-border: 3px solid #fffdf5;
+  --nb-shadow-sm: 3px 3px 0 0 #fffdf5;
+  --nb-shadow-md: 5px 5px 0 0 #fffdf5;
+  --nb-shadow-lg: 8px 8px 0 0 #fffdf5;
+}
