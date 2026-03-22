@@ -16,6 +16,16 @@
     "auth": "Account",
     "playground": "Playground"
   },
+  "auth": {
+    "login": {
+      "title": "Sign in",
+      "subtitle": "Choose your preferred sign-in method",
+      "google": "Continue with Google",
+      "discord": "Continue with Discord",
+      "twitter": "Continue with X"
+    },
+    "signOut": "Sign out"
+  },
   "common": {
     "theme": {
       "switchToDark": "Switch to dark mode",

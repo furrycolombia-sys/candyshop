@@ -6,5 +6,6 @@
 
 /* Scan the shared ui package for Tailwind classes */
 @source "../../../../packages/ui/src/**/*.{ts,tsx}";
+@source "../../../../packages/app-components/src/**/*.{ts,tsx}";
 
 @custom-variant dark (&:is(.dark *));

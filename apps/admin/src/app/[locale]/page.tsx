@@ -1,5 +1,4 @@
-import { useTranslations } from "next-intl";
-import { setRequestLocale } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 
 export default async function AdminPage({
   params,
@@ -8,12 +7,7 @@ export default async function AdminPage({
 }) {
   const { locale } = await params;
   setRequestLocale(locale);
-
-  return <AdminDashboard />;
-}
-
-function AdminDashboard() {
-  const t = useTranslations("admin");
+  const t = await getTranslations("admin");
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-8">

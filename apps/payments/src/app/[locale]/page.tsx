@@ -1,5 +1,4 @@
-import { useTranslations } from "next-intl";
-import { setRequestLocale } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 
 export default async function PaymentsPage({
   params,
@@ -8,12 +7,7 @@ export default async function PaymentsPage({
 }) {
   const { locale } = await params;
   setRequestLocale(locale);
-
-  return <PaymentsHome />;
-}
-
-function PaymentsHome() {
-  const t = useTranslations("payments");
+  const t = await getTranslations("payments");
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-8">
