@@ -1,4 +1,4 @@
-import { updateSupabaseSession } from "api/supabase";
+import { updateSupabaseSession } from "api/supabase/proxy";
 import { type NextRequest } from "next/server";
 import createMiddleware from "next-intl/middleware";
 

@@ -10,6 +10,8 @@
     "./types/generated": "./src/rest/types/generated/index.ts",
     "./graphql/generated": "./src/graphql/generated/index.ts",
     "./supabase": "./src/supabase/index.ts",
+    "./supabase/server": "./src/supabase/server.ts",
+    "./supabase/proxy": "./src/supabase/proxy.ts",
     "./supabase/types": "./src/supabase/types.ts"
   },
   "scripts": {
