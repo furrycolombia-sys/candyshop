@@ -12,11 +12,13 @@ export function CtaSection() {
 
   return (
     <section
-      className="relative border-t-[3px] border-foreground py-32 lg:py-44"
+      className="relative border-t-[3px] border-foreground bg-dots py-32 lg:py-44"
+      aria-labelledby="cta-heading"
       {...tid("cta-section")}
     >
       <div className="mx-auto max-w-6xl px-6 text-center lg:px-8">
         <h2
+          id="cta-heading"
           className="mb-14 text-[clamp(2.5rem,7vw,6rem)] font-extrabold uppercase leading-[0.9] tracking-tight text-foreground"
           style={{ fontFamily: "var(--font-syne)" }}
         >
@@ -26,12 +28,13 @@ export function CtaSection() {
         <div className="flex flex-wrap justify-center gap-5">
           <a
             href={storeUrl}
-            className="group inline-flex items-center gap-3 border-[3px] border-foreground bg-[#1b6b3a] px-8 py-4 font-bold uppercase tracking-wider text-white transition-all duration-150 hover:-translate-0.5 active:translate-x-[3px] active:translate-y-[3px] active:shadow-none"
+            className="group inline-flex items-center gap-3 border-[3px] border-foreground bg-(--pink) px-8 py-4 font-bold uppercase tracking-wider text-white transition-all duration-150 hover:-translate-0.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground active:translate-x-[3px] active:translate-y-[3px] active:shadow-none"
             style={SHADOW_MD}
             {...tid("final-cta")}
           >
             {t("cta")}
             <svg
+              aria-hidden="true"
               className="size-4 transition-transform duration-150 group-hover:translate-x-1"
               fill="none"
               viewBox="0 0 24 24"
@@ -47,7 +50,7 @@ export function CtaSection() {
           </a>
           <a
             href={paymentsUrl}
-            className="inline-flex items-center gap-2 border-[3px] border-foreground bg-background px-8 py-4 font-bold uppercase tracking-wider text-foreground transition-all duration-150 hover:-translate-0.5 active:translate-x-[3px] active:translate-y-[3px] active:shadow-none"
+            className="inline-flex items-center gap-2 border-[3px] border-foreground bg-background px-8 py-4 font-bold uppercase tracking-wider text-foreground transition-all duration-150 hover:-translate-0.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground active:translate-x-[3px] active:translate-y-[3px] active:shadow-none"
             style={SHADOW_MD}
             {...tid("final-payments")}
           >

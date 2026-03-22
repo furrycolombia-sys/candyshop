@@ -10,83 +10,119 @@
 
 /* ============================================================
    Landing App — Neobrutalist Candy Shop
-   Thick borders, hard shadows, corporate green/gold fills.
+   Bubblegum candy colors + dot grid background.
    ============================================================ */
 
 :root {
   --font-sans: var(--font-syne);
   --font-display: var(--font-syne);
 
-  --background: #fffdf5;
-  --foreground: #000000;
+  --background: #ffffff;
+  --foreground: #1a1a1a;
 
   --surface: #ffffff;
   --card: var(--surface);
-  --card-foreground: #000000;
+  --card-foreground: #1a1a1a;
 
-  /* Brand — forest green from mascot */
-  --brand: #1b6b3a;
-  --brand-hover: #155c30;
-  --brand-text: #1b6b3a;
-  --brand-alpha: rgb(27 107 58 / 10%);
+  /* Brand — bubblegum pink */
+  --brand: #f54d90;
+  --brand-hover: #e0407e;
+  --brand-text: #f54d90;
+  --brand-alpha: rgb(245 77 144 / 10%);
   --brand-foreground: #ffffff;
 
   --primary: var(--brand);
   --primary-foreground: var(--brand-foreground);
 
-  --secondary: #f5efe3;
-  --secondary-foreground: #000000;
+  --secondary: #f8f0ff;
+  --secondary-foreground: #1a1a1a;
 
-  --muted: #e8e2d6;
-  --muted-foreground: #555555;
+  --muted: #f0f0f0;
+  --muted-foreground: #666;
 
-  /* Accent — golden amber from mascot */
-  --accent: #d4a843;
-  --accent-foreground: #000000;
+  --accent: #5ee0a8;
+  --accent-foreground: #1a1a1a;
 
-  --border: #000000;
-  --input: #000000;
-  --ring: #1b6b3a;
+  --border: #1a1a1a;
+  --input: #1a1a1a;
+  --ring: #f54d90;
+
+  /* Landing palette — candy colors (contrast-safe for black text) */
+  --pink: #f54d90;
+  --mint: #5ee0a8;
+  --lilac: #c8a8ff;
+  --lemon: #ffe040;
+  --sky: #70c8f0;
+  --peach: #ffaa80;
 
   /* Neobrutalist tokens */
-  --nb-border: 3px solid #000;
-  --nb-shadow-sm: 3px 3px 0 0 #000;
-  --nb-shadow-md: 5px 5px 0 0 #000;
-  --nb-shadow-lg: 8px 8px 0 0 #000;
+  --nb-border: 3px solid #1a1a1a;
+  --nb-shadow-sm: 3px 3px 0 0 #1a1a1a;
+  --nb-shadow-md: 5px 5px 0 0 #1a1a1a;
+  --nb-shadow-lg: 8px 8px 0 0 #1a1a1a;
 }
 
 .dark {
-  --background: #0a0a08;
-  --foreground: #fffdf5;
+  --background: #0e0e10;
+  --foreground: #f5f5f5;
 
-  --surface: #1a1916;
+  --surface: #1a1a1e;
   --card: var(--surface);
-  --card-foreground: #fffdf5;
+  --card-foreground: #f5f5f5;
 
-  --brand: #3da864;
-  --brand-hover: #35965a;
-  --brand-text: #3da864;
-  --brand-alpha: rgb(61 168 100 / 12%);
-  --brand-foreground: #000000;
+  --brand: #ff68a8;
+  --brand-hover: #f05898;
+  --brand-text: #ff68a8;
+  --brand-alpha: rgb(255 104 168 / 12%);
+  --brand-foreground: #0e0e10;
 
   --primary: var(--brand);
   --primary-foreground: var(--brand-foreground);
 
-  --secondary: #1a1916;
-  --secondary-foreground: #fffdf5;
+  --secondary: #1e1a24;
+  --secondary-foreground: #d0c8d8;
 
-  --muted: #252420;
-  --muted-foreground: #999;
+  --muted: #1a1a1e;
+  --muted-foreground: #888;
 
-  --accent: #e8b84a;
-  --accent-foreground: #000000;
+  --accent: #50e0a0;
+  --accent-foreground: #0e0e10;
 
-  --border: #fffdf5;
-  --input: #fffdf5;
-  --ring: #3da864;
+  --border: #f5f5f5;
+  --input: #f5f5f5;
+  --ring: #ff68a8;
 
-  --nb-border: 3px solid #fffdf5;
-  --nb-shadow-sm: 3px 3px 0 0 #fffdf5;
-  --nb-shadow-md: 5px 5px 0 0 #fffdf5;
-  --nb-shadow-lg: 8px 8px 0 0 #fffdf5;
+  --pink: #ff68a8;
+  --mint: #50e0a0;
+  --lilac: #c0a0ff;
+  --lemon: #ffe860;
+  --sky: #60c8ff;
+  --peach: #ffa080;
+
+  --nb-border: 3px solid #f5f5f5;
+  --nb-shadow-sm: 3px 3px 0 0 #f5f5f5;
+  --nb-shadow-md: 5px 5px 0 0 #f5f5f5;
+  --nb-shadow-lg: 8px 8px 0 0 #f5f5f5;
+}
+
+/* Respect reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Dot grid — applied via utility class, not globally */
+@layer utilities {
+  .bg-dots {
+    background-image: radial-gradient(circle, #d0d0d0 1px, transparent 1px);
+    background-size: 24px 24px;
+  }
+
+  .dark .bg-dots {
+    background-image: radial-gradient(circle, #2a2a2e 1px, transparent 1px);
+  }
 }

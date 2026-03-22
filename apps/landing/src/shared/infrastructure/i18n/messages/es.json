@@ -10,6 +10,10 @@
       "subtitle": "Comisiones. Prints. Fursuits. Arte digital. Construido por artistas, para todos los que aman lo que crean.",
       "cta": "Entrar a la galeria"
     },
+    "sections": {
+      "categories": "Categorias",
+      "roles": "Para creadores y coleccionistas"
+    },
     "categories": {
       "commissions": "Comisiones",
       "fursuits": "Fursuit crafts",
