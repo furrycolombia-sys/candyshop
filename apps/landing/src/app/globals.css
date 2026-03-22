@@ -48,14 +48,14 @@
   --input: #1a1a1a;
   --ring: #f54d90;
 
-  /* Landing palette — saturated fills (white text passes 4.5:1+, except lemon) */
-  --pink: #d82878;
-  --mint: #10884c;
-  --lilac: #7050b8;
+  /* Landing palette — bright fills (dark text passes 4.5:1+) */
+  --pink: #ff80b0;
+  --mint: #60e8b0;
+  --lilac: #c8a8ff;
   --lemon: #ffe040;
-  --sky: #2078a8;
-  --peach: #b05820;
-  --candy-text: #ffffff;
+  --sky: #70c8f0;
+  --peach: #ffaa80;
+  --candy-text: #1a1a1a;
   --candy-text-on-lemon: #1a1a1a;
 
   /* Shared theme compatibility — used by packages/ui components */
