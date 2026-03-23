@@ -4,8 +4,21 @@
     "description": "Inicia sesion en tu cuenta de Candy Shop"
   },
   "auth": {
-    "title": "Iniciar Sesion",
-    "subtitle": "Accede a tu cuenta"
+    "login": {
+      "title": "Iniciar sesion",
+      "subtitle": "Elige tu metodo de inicio de sesion preferido",
+      "google": "Continuar con Google",
+      "discord": "Continuar con Discord",
+      "twitter": "Continuar con X"
+    },
+    "signOut": "Cerrar sesion",
+    "account": {
+      "title": "Tu Cuenta",
+      "subtitle": "Has iniciado sesion",
+      "email": "Correo",
+      "provider": "Metodo de inicio",
+      "goToStore": "Ir a la Tienda"
+    }
   },
   "nav": {
     "brand": "Candy Shop",

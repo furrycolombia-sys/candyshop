@@ -15,6 +15,7 @@
   "dependencies": {
     "@monorepo/app-components": "workspace:*",
     "@tanstack/react-query": "^5.91.0",
+    "api": "workspace:*",
     "auth": "workspace:*",
     "clsx": "^2.1.1",
     "lucide-react": "^0.511.0",
