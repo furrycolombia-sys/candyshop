@@ -1,5 +1,14 @@
+import path from "node:path";
+
 import { test as setup } from "@playwright/test";
 import { createClient } from "@supabase/supabase-js";
+
+// Load root .env files (same as next.config.ts does via loadRootEnv)
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { loadRootEnv } = require(
+  path.resolve(__dirname, "../../../scripts/load-root-env.js"),
+);
+loadRootEnv();
 
 const SUPABASE_URL =
   process.env.NEXT_PUBLIC_SUPABASE_URL || "http://127.0.0.1:54321";
