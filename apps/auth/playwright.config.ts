@@ -15,15 +15,5 @@ export default defineConfig({
     navigationTimeout: 45_000,
   },
   projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
-  webServer: {
-    command: "pnpm next dev --port 5000",
-    url: "http://localhost:5000",
-    reuseExistingServer: !process.env.CI,
-    timeout: 120_000,
-    env: {
-      NEXT_PUBLIC_API_BASE_URL: "/api",
-      NEXT_PUBLIC_API_PREFIX: "",
-      NEXT_PUBLIC_ENABLE_MOCKS: "true",
-    },
-  },
+  // No webServer — start `pnpm dev:auth` and `npx supabase start` manually
 });

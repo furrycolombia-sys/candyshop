@@ -4,8 +4,21 @@
     "description": "Sign in to your Candy Shop account"
   },
   "auth": {
-    "title": "Sign In",
-    "subtitle": "Access your account"
+    "login": {
+      "title": "Sign in",
+      "subtitle": "Choose your preferred sign-in method",
+      "google": "Continue with Google",
+      "discord": "Continue with Discord",
+      "twitter": "Continue with X"
+    },
+    "signOut": "Sign out",
+    "account": {
+      "title": "Your Account",
+      "subtitle": "You are signed in",
+      "email": "Email",
+      "provider": "Sign-in method",
+      "goToStore": "Go to Store"
+    }
   },
   "nav": {
     "brand": "Candy Shop",

@@ -33,7 +33,7 @@ const nextConfig: NextConfig = {
     output: "standalone" as const,
     ...(basePathPrefix && { basePath: basePathPrefix }),
   }),
-  transpilePackages: ["ui", "shared", "@monorepo/app-components"],
+  transpilePackages: ["api", "ui", "shared", "@monorepo/app-components"],
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },

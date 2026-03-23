@@ -1,21 +1,13 @@
 /**
  * Supabase environment configuration.
  *
- * Reads NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY
- * from the environment. These are safe to expose client-side.
+ * Uses STATIC process.env access so Next.js can inline these values
+ * into the client bundle at build time. Dynamic access (process.env[key])
+ * does NOT work with NEXT_PUBLIC_* variables.
  */
 
-const getEnvVar = (key: string): string => {
-  const value =
-    typeof process === "undefined"
-      ? undefined
-      : (process.env as Record<string, string | undefined>)[key];
-  if (!value) {
-    console.warn(`[supabase] Missing environment variable: ${key}`);
-    return "";
-  }
-  return value;
-};
+export const SUPABASE_URL =
+  process.env.NEXT_PUBLIC_SUPABASE_URL || "http://127.0.0.1:54321";
 
-export const SUPABASE_URL = getEnvVar("NEXT_PUBLIC_SUPABASE_URL");
-export const SUPABASE_ANON_KEY = getEnvVar("NEXT_PUBLIC_SUPABASE_ANON_KEY");
+export const SUPABASE_ANON_KEY =
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";

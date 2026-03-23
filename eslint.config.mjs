@@ -87,6 +87,8 @@ const eslintConfig = defineConfig([
   {
     files: ["**/e2e/**/*.{ts,tsx,js,jsx}"],
     rules: {
+      // Playwright's `use()` function triggers react-hooks false positives
+      "react-hooks/rules-of-hooks": "off",
       "no-restricted-syntax": [
         "error",
         {

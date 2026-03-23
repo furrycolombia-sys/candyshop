@@ -1,4 +1,5 @@
 import { AppNavigation } from "@monorepo/app-components";
+import { createServerSupabaseClient } from "api/supabase/server";
 import type { Metadata } from "next";
 import { NextIntlClientProvider } from "next-intl";
 import {
@@ -42,6 +43,15 @@ export default async function LocaleLayout({
 
   const messages = await getMessages();
 
+  let userEmail: string | null = null;
+  try {
+    const supabase = await createServerSupabaseClient();
+    const { data } = await supabase.auth.getUser();
+    userEmail = data.user?.email ?? null;
+  } catch {
+    // Supabase not configured — skip
+  }
+
   return (
     <ThemeProvider>
       <NextIntlClientProvider messages={messages}>
@@ -50,6 +60,7 @@ export default async function LocaleLayout({
             currentApp="admin"
             urls={appUrls}
             locales={routing.locales}
+            userEmail={userEmail}
           />
           {children}
         </Providers>

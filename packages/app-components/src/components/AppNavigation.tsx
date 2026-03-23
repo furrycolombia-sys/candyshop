@@ -13,6 +13,7 @@ interface AppNavigationProps {
   currentApp: AppId;
   urls: Record<AppId, string>;
   locales: readonly string[];
+  userEmail?: string | null;
 }
 
 const APP_ORDER: { id: AppId; labelKey: string }[] = [
@@ -28,6 +29,7 @@ export function AppNavigation({
   currentApp,
   urls,
   locales,
+  userEmail,
 }: AppNavigationProps) {
   const t = useTranslations("nav");
   const locale = useLocale();
@@ -72,6 +74,14 @@ export function AppNavigation({
         })}
       </div>
       <div className="ml-auto flex items-center gap-2">
+        {userEmail ? (
+          <span
+            className="text-xs font-medium text-foreground/70"
+            {...tid("nav-user-email")}
+          >
+            {userEmail}
+          </span>
+        ) : null}
         <LocaleSwitcher locales={locales} />
         <ThemeToggle />
       </div>
