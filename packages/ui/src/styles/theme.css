@@ -65,8 +65,17 @@
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
 
-  /* Typography */
-  --font-sans: var(--font-geist-sans);
+  /* Candy palette */
+  --color-pink: var(--pink);
+  --color-mint: var(--mint);
+  --color-lilac: var(--lilac);
+  --color-lemon: var(--lemon);
+  --color-sky: var(--sky);
+  --color-peach: var(--peach);
+  --color-candy-text: var(--candy-text);
+
+  /* Typography — Syne is the project font */
+  --font-sans: var(--font-syne);
   --font-mono: var(--font-geist-mono);
 
   /* Custom font sizes (generates text-tiny utility) */

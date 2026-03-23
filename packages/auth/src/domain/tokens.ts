@@ -21,6 +21,8 @@ export const AUTH_COOKIE_NAMES = {
   refreshToken: "auth_refresh_token",
 } as const;
 
+export const AUTH_REFRESH_ENDPOINT = "/api/auth/refresh";
+
 export const TOKEN_TTL_SECONDS = {
   access: ACCESS_TOKEN_MINUTES * SECONDS_PER_MINUTE,
   refresh:

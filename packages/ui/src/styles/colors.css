@@ -1,184 +1,169 @@
 /**
- * Shared Color Variables
+ * Shared Color Variables — Neobrutalist Candy Shop
  *
- * Defines CSS custom properties for light (:root) and dark (.dark) modes.
- * Apps can override specific values by defining them after importing this file.
+ * Bubblegum candy colors for light (:root) and dark (.dark) modes.
+ * Single source of truth for ALL apps in the monorepo.
  */
 
 :root {
-  --radius: 0.625rem;
+  --font-sans: var(--font-syne);
+  --font-display: var(--font-syne);
 
-  /* Background and foreground - Light gray page background per Figma */
-  --background: oklch(97% 0.005 250deg);
-  --foreground: oklch(15% 0 0deg);
+  --background: #ffffff;
+  --foreground: #1a1a1a;
 
-  /* Surfaces - Elevated elements (cards, sidebars, panels) */
-  --surface: oklch(100% 0 0deg);
+  --surface: #ffffff;
   --card: var(--surface);
-  --card-foreground: oklch(15% 0 0deg);
-  --popover: var(--surface);
-  --popover-foreground: oklch(15% 0 0deg);
+  --card-foreground: #1a1a1a;
 
-  /* Brand color */
-  --brand: #251acc;
-  --brand-hover: #1f1499;
-  --brand-text: #251acc;
-  --brand-alpha: rgb(37 26 204 / 12%);
-  --brand-foreground: #fff;
+  /* Brand — bubblegum pink */
+  --brand: #ff4890;
+  --brand-hover: #e0407e;
+  --brand-text: #ff4890;
+  --brand-alpha: rgb(255 72 144 / 10%);
+  --brand-foreground: #1a1a1a;
 
-  /* Primary maps to brand — enables bg-primary, text-primary, etc. */
   --primary: var(--brand);
   --primary-foreground: var(--brand-foreground);
 
-  /* Secondary - Neutral gray */
-  --secondary: oklch(96% 0 0deg);
-  --secondary-foreground: oklch(20% 0 0deg);
+  --secondary: #f8f0ff;
+  --secondary-foreground: #1a1a1a;
 
-  /* Muted - Subtle backgrounds */
-  --muted: oklch(96% 0.005 180deg);
-  --muted-foreground: oklch(45% 0 0deg);
+  --muted: #f0f0f0;
+  --muted-foreground: #666;
 
-  /* Surface inset - For nested cards/sections within cards */
-  --surface-inset: oklch(94% 0.005 250deg);
+  --accent: #5ee0a8;
+  --accent-foreground: #1a1a1a;
 
-  /* Chip - For neutral badge/chip backgrounds */
-  --chip: oklch(88% 0 0deg);
+  --border: #1a1a1a;
+  --input: #1a1a1a;
+  --ring: #f54d90;
 
-  /* Accent — brand-tinted for hover/focus states */
-  --accent: oklch(96% 0.02 270deg);
-  --accent-foreground: oklch(20% 0.02 270deg);
+  /* Candy palette — vivid fills (dark text passes WCAG 4.5:1+) */
+  --pink: #ff4890;
+  --mint: #20c888;
+  --lilac: #9868f0;
+  --lemon: #ffe040;
+  --sky: #2890c8;
+  --peach: #ff7840;
+  --candy-text: #1a1a1a;
+  --candy-text-on-lemon: #1a1a1a;
 
-  /* Semantic status colors */
-  --destructive: oklch(55% 0.22 25deg);
-  --destructive-foreground: oklch(99% 0 0deg);
-  --success: oklch(58% 0.14 145deg);
-  --success-foreground: oklch(99% 0 0deg);
-  --warning: oklch(72% 0.15 65deg);
-  --warning-foreground: oklch(20% 0 0deg);
-  --info: #0088d1;
-  --info-foreground: oklch(99% 0 0deg);
+  /* Shared theme compatibility */
+  --popover: #ffffff;
+  --popover-foreground: #1a1a1a;
+  --destructive: #e11d48;
+  --destructive-foreground: #ffffff;
+  --success: #16a34a;
+  --success-foreground: #ffffff;
+  --warning: #d97706;
+  --warning-foreground: #ffffff;
+  --info: #2563eb;
+  --info-foreground: #ffffff;
+  --chart-1: var(--pink);
+  --chart-2: var(--mint);
+  --chart-3: var(--lilac);
+  --chart-4: var(--lemon);
+  --chart-5: var(--sky);
+  --sidebar: var(--surface);
+  --sidebar-foreground: var(--foreground);
+  --sidebar-accent: var(--accent);
+  --sidebar-accent-foreground: var(--accent-foreground);
+  --sidebar-border: var(--border);
+  --sidebar-ring: var(--ring);
+  --surface-inset: #f5f5f5;
+  --chip: #e8e8e8;
+  --radius: 0.5rem;
 
-  /* Process status colors (pills, progress bars) */
-  --status-healthy: oklch(90% 0.08 145deg);
-  --status-attention: oklch(82% 0.12 75deg);
-
-  /* UI elements */
-  --border: oklch(90% 0 0deg);
-  --input: oklch(90% 0 0deg);
-  --ring: var(--brand);
-  --chart-3: oklch(65% 0.22 25deg); /* Vibrant red - stands out clearly */
-  --chart-4: oklch(60% 0.2 145deg); /* Vibrant green - good contrast */
-  --chart-1: oklch(60% 0.2 220deg); /* Vibrant blue */
-  --chart-2: oklch(70% 0.2 65deg); /* Vibrant amber */
-  --chart-5: oklch(55% 0.25 280deg); /* Vibrant purple */
-
-  /* Sidebar (kept from original) */
-  --sidebar: oklch(100% 0 0deg);
-  --sidebar-foreground: oklch(15% 0 0deg);
-  --sidebar-accent: oklch(96% 0.02 270deg);
-  --sidebar-accent-foreground: oklch(20% 0.02 270deg);
-  --sidebar-border: oklch(90% 0 0deg);
-  --sidebar-ring: var(--brand);
-
-  /* Typography */
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  /* Process status colors */
+  --status-healthy: #dcfce7;
+  --status-attention: #fef9c3;
 
   /* Shadows */
-  --shadow-card: 0 4px 12px rgb(0 0 0 / 8%);
+  --shadow-card: 3px 3px 0 0 #1a1a1a;
 
-  /* Semantic Typography Classes */
-  --text-title-1: 36px / 32px;
-  --text-title-2: 30px / 36px;
-  --text-title-3: 24px / 28px;
-  --text-heading-large: 20px / 24px;
-  --text-heading-medium: 18px / 22px;
-  --text-heading-small: 16px / 20px;
-  --text-body-large: 18px / 28px;
-  --text-body: 16px / 24px;
-  --text-body-small: 14px / 20px;
-  --text-caption: 12px / 16px;
-  --text-label: 14px / 20px;
-  --text-metric-value: 30px / 36px;
-  --text-metric-label: 12px / 16px;
-  --text-metric-change: 12px / 16px;
+  /* Neobrutalist tokens */
+  --nb-border: 3px solid #1a1a1a;
+  --nb-shadow-sm: 3px 3px 0 0 #1a1a1a;
+  --nb-shadow-md: 5px 5px 0 0 #1a1a1a;
+  --nb-shadow-lg: 8px 8px 0 0 #1a1a1a;
 }
 
 .dark {
-  /* Background and foreground - Very dark navy per Figma */
-  --background: #171718;
-  --foreground: oklch(95% 0 0deg);
+  --background: #0e0e10;
+  --foreground: #f5f5f5;
 
-  /* Surfaces - Elevated elements (cards, sidebars, panels) */
-  --surface: #1a1a1a;
+  --surface: #1a1a1e;
   --card: var(--surface);
-  --card-foreground: oklch(95% 0 0deg);
-  --popover: oklch(18% 0.015 250deg);
-  --popover-foreground: oklch(95% 0 0deg);
+  --card-foreground: #f5f5f5;
 
-  /* Brand color */
-  --brand: #6b67ff;
-  --brand-hover: #5b57e8;
-  --brand-text: #6b67ff;
-  --brand-alpha: rgb(37 26 204 / 24%);
-  --brand-foreground: #fff;
+  --brand: #b83068;
+  --brand-hover: #a02858;
+  --brand-text: #ff68a8;
+  --brand-alpha: rgb(184 48 104 / 12%);
+  --brand-foreground: #f5f5f5;
 
-  /* Primary maps to brand */
   --primary: var(--brand);
   --primary-foreground: var(--brand-foreground);
 
-  /* Secondary */
-  --secondary: oklch(20% 0.01 250deg);
-  --secondary-foreground: oklch(95% 0 0deg);
+  --secondary: #1e1a24;
+  --secondary-foreground: #d0c8d8;
 
-  /* Muted */
-  --muted: oklch(18% 0.01 250deg);
-  --muted-foreground: oklch(60% 0 0deg);
+  --muted: #1a1a1e;
+  --muted-foreground: #888;
 
-  /* Surface inset - For nested cards/sections within cards */
-  --surface-inset: #3a3c3f;
+  --accent: #50e0a0;
+  --accent-foreground: #0e0e10;
 
-  /* Chip - For neutral badge/chip backgrounds */
-  --chip: oklch(25% 0.01 250deg);
+  --border: #f5f5f5;
+  --input: #f5f5f5;
+  --ring: #ff68a8;
 
-  /* Accent — brand-tinted */
-  --accent: oklch(22% 0.03 270deg);
-  --accent-foreground: oklch(95% 0.01 270deg);
+  /* Candy palette — deep fills for dark mode (white text passes WCAG 4.5:1+) */
+  --pink: #b83068;
+  --mint: #187848;
+  --lilac: #6848a8;
+  --lemon: #8a6800;
+  --sky: #206088;
+  --peach: #a05828;
+  --candy-text: #f5f5f5;
+  --candy-text-on-lemon: #f5f5f5;
 
-  /* Semantic status colors - Vibrant for dark mode per Figma */
-  --destructive: oklch(60% 0.22 25deg);
-  --destructive-foreground: oklch(98% 0 0deg);
-  --success: oklch(65% 0.18 155deg);
-  --success-foreground: oklch(98% 0 0deg);
-  --warning: #e29a25;
-  --warning-foreground: oklch(98% 0 0deg);
-  --info: #29a3e0;
-  --info-foreground: oklch(98% 0 0deg);
+  /* Shared theme compatibility — dark mode */
+  --popover: #1a1a1e;
+  --popover-foreground: #f5f5f5;
+  --destructive: #f43f5e;
+  --destructive-foreground: #0e0e10;
+  --success: #22c55e;
+  --success-foreground: #0e0e10;
+  --warning: #f59e0b;
+  --warning-foreground: #0e0e10;
+  --info: #3b82f6;
+  --info-foreground: #0e0e10;
+  --chart-1: var(--pink);
+  --chart-2: var(--mint);
+  --chart-3: var(--lilac);
+  --chart-4: var(--lemon);
+  --chart-5: var(--sky);
+  --sidebar: var(--surface);
+  --sidebar-foreground: var(--foreground);
+  --sidebar-accent: var(--accent);
+  --sidebar-accent-foreground: var(--accent-foreground);
+  --sidebar-border: var(--border);
+  --sidebar-ring: var(--ring);
+  --surface-inset: #141418;
+  --chip: #2a2a2e;
 
-  /* Process status colors (pills, progress bars) */
+  /* Process status colors */
   --status-healthy: #313d4f;
-  --status-attention: oklch(75% 0.16 70deg);
-
-  /* UI elements */
-  --border: oklch(100% 0 0deg / 10%);
-  --input: #2b3037;
-  --ring: var(--brand);
-
-  /* Chart colors - Per Figma design */
-  --chart-1: oklch(60% 0.2 250deg); /* Blue - main line */
-  --chart-2: oklch(70% 0.18 280deg); /* Purple - secondary line */
-  --chart-3: oklch(65% 0.2 25deg); /* Red */
-  --chart-4: oklch(75% 0.18 70deg); /* Amber */
-  --chart-5: oklch(65% 0.18 155deg); /* Green */
+  --status-attention: #3d3520;
 
   /* Shadows */
-  --shadow-card: 0 4px 12px rgb(255 255 255 / 10%);
+  --shadow-card: 3px 3px 0 0 #f5f5f5;
 
-  /* Sidebar - Navigation sidebar per Figma */
-  --sidebar: #0a1210;
-  --sidebar-foreground: oklch(95% 0 0deg);
-  --sidebar-accent: oklch(18% 0.02 250deg);
-  --sidebar-accent-foreground: oklch(95% 0 0deg);
-  --sidebar-border: oklch(100% 0 0deg / 10%);
-  --sidebar-ring: oklch(60% 0.18 250deg);
+  /* Neobrutalist tokens */
+  --nb-border: 3px solid #f5f5f5;
+  --nb-shadow-sm: 3px 3px 0 0 #f5f5f5;
+  --nb-shadow-md: 5px 5px 0 0 #f5f5f5;
+  --nb-shadow-lg: 8px 8px 0 0 #f5f5f5;
 }

@@ -10,25 +10,47 @@ export default async function PaymentsPage({
   const t = await getTranslations("payments");
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-8">
-      <h1 className="text-4xl font-bold mb-4">{t("title")}</h1>
-      <p className="text-lg text-muted-foreground mb-8">{t("subtitle")}</p>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl w-full">
-        <div className="rounded-xl border p-6">
-          <h2 className="text-xl font-semibold mb-2">{t("cards.products")}</h2>
-          <p className="text-muted-foreground">{t("cards.productsDesc")}</p>
+    <main className="flex flex-1 items-center justify-center bg-dots p-8">
+      <div className="w-full max-w-2xl space-y-8 text-center">
+        <div className="nb-shadow-lg border-[3px] border-foreground bg-background p-10">
+          <h1 className="font-display text-4xl font-extrabold uppercase tracking-tight">
+            {t("title")}
+          </h1>
+          <p className="mt-3 text-sm text-foreground/60">{t("subtitle")}</p>
         </div>
-        <div className="rounded-xl border p-6">
-          <h2 className="text-xl font-semibold mb-2">{t("cards.services")}</h2>
-          <p className="text-muted-foreground">{t("cards.servicesDesc")}</p>
-        </div>
-        <div className="rounded-xl border p-6">
-          <h2 className="text-xl font-semibold mb-2">{t("cards.tickets")}</h2>
-          <p className="text-muted-foreground">{t("cards.ticketsDesc")}</p>
-        </div>
-        <div className="rounded-xl border p-6">
-          <h2 className="text-xl font-semibold mb-2">{t("cards.coupons")}</h2>
-          <p className="text-muted-foreground">{t("cards.couponsDesc")}</p>
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+          <div className="nb-shadow-lg border-[3px] border-foreground bg-background p-6">
+            <h2 className="font-display text-xl font-extrabold uppercase tracking-tight">
+              {t("cards.products")}
+            </h2>
+            <p className="mt-2 text-sm text-foreground/60">
+              {t("cards.productsDesc")}
+            </p>
+          </div>
+          <div className="nb-shadow-lg border-[3px] border-foreground bg-background p-6">
+            <h2 className="font-display text-xl font-extrabold uppercase tracking-tight">
+              {t("cards.services")}
+            </h2>
+            <p className="mt-2 text-sm text-foreground/60">
+              {t("cards.servicesDesc")}
+            </p>
+          </div>
+          <div className="nb-shadow-lg border-[3px] border-foreground bg-background p-6">
+            <h2 className="font-display text-xl font-extrabold uppercase tracking-tight">
+              {t("cards.tickets")}
+            </h2>
+            <p className="mt-2 text-sm text-foreground/60">
+              {t("cards.ticketsDesc")}
+            </p>
+          </div>
+          <div className="nb-shadow-lg border-[3px] border-foreground bg-background p-6">
+            <h2 className="font-display text-xl font-extrabold uppercase tracking-tight">
+              {t("cards.coupons")}
+            </h2>
+            <p className="mt-2 text-sm text-foreground/60">
+              {t("cards.couponsDesc")}
+            </p>
+          </div>
         </div>
       </div>
     </main>

@@ -19,5 +19,5 @@ export { graphqlFetch } from "./graphql/mutator/graphqlFetch";
 export type { GraphqlApiError } from "./graphql/mutator/types";
 
 // Supabase (browser-safe only — server utilities must be imported from "api/supabase")
-export { createBrowserSupabaseClient, supabase } from "./supabase";
+export { createBrowserSupabaseClient } from "./supabase";
 export type { Database } from "./supabase/types";

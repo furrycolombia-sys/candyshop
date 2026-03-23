@@ -13,23 +13,19 @@ interface RoleCard {
   btnText: string;
 }
 
-const CANDY_BORDER = "border-(--candy-text)";
-const CANDY_FOCUS = "focus-visible:outline-(--candy-text)";
-const CANDY_TEXT = "text-(--candy-text)";
-const BG_PINK = "bg-(--pink)";
-
 const ROLES: RoleCard[] = [
   {
     key: "artists",
-    cardBg: BG_PINK,
+    // eslint-disable-next-line sonarjs/no-duplicate-string -- Tailwind classes repeated intentionally
+    cardBg: "bg-(--pink)",
     btnBg: "bg-(--lemon)",
     btnText: "text-(--candy-text-on-lemon)",
   },
   {
     key: "fans",
     cardBg: "bg-(--mint)",
-    btnBg: BG_PINK,
-    btnText: CANDY_TEXT,
+    btnBg: "bg-(--pink)",
+    btnText: "text-(--candy-text)",
   },
 ];
 
@@ -53,12 +49,10 @@ export function RolesSection() {
               key={key}
               role="group"
               aria-labelledby={`${key}-heading`}
-              className={`group nb-shadow-lg flex flex-col border-[3px] border-foreground ${cardBg} p-8 ${CANDY_TEXT} transition-all duration-150 hover:-translate-0.5 lg:p-10`}
+              className={`group nb-shadow-lg flex flex-col border-[3px] border-foreground ${cardBg} p-8 text-(--candy-text) transition-all duration-150 hover:-translate-0.5 lg:p-10`}
               {...tid(`role-${key}`)}
             >
-              <p
-                className={`mb-3 text-xs font-bold uppercase tracking-[0.2em] ${CANDY_TEXT}`}
-              >
+              <p className="mb-3 text-xs font-bold uppercase tracking-[0.2em] text-(--candy-text)">
                 {t(`${key}.label`)}
               </p>
               <h3
@@ -72,7 +66,7 @@ export function RolesSection() {
               </p>
               <a
                 href={appUrls.store}
-                className={`nb-btn nb-btn-press-sm nb-shadow-sm mt-auto self-start ${CANDY_BORDER} ${btnBg} px-6 py-3 text-sm ${btnText} ${CANDY_FOCUS}`}
+                className={`nb-btn nb-btn-press-sm nb-shadow-sm mt-auto self-start border-(--candy-text) ${btnBg} px-6 py-3 text-sm ${btnText} focus-visible:outline-(--candy-text)`}
               >
                 {t(`${key}.cta`)}
                 <ArrowRight

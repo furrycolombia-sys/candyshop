@@ -1,3 +1,1 @@
-export function tid(id: string) {
-  return { "data-testid": id };
-}
+export { tid, TID_ATTR } from "shared";

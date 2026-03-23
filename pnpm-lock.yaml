@@ -817,6 +817,9 @@ importers:
 
   packages/auth:
     dependencies:
+      api:
+        specifier: workspace:*
+        version: link:../api
       react:
         specifier: ^19.1.0
         version: 19.2.4
@@ -848,6 +851,12 @@ importers:
 
   packages/shared:
     dependencies:
+      api:
+        specifier: workspace:*
+        version: link:../api
+      auth:
+        specifier: workspace:*
+        version: link:../auth
       cookies-next:
         specifier: ^6.1.1
         version: 6.1.1(next@16.2.0(@babel/core@7.29.0)(@playwright/test@1.58.2)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react@19.2.4)
@@ -858,6 +867,9 @@ importers:
         specifier: ^19.1.0
         version: 19.2.4(react@19.2.4)
     devDependencies:
+      '@tanstack/react-query':
+        specifier: ^5.91.0
+        version: 5.91.0(react@19.2.4)
       '@testing-library/jest-dom':
         specifier: ^6.6.3
         version: 6.9.1

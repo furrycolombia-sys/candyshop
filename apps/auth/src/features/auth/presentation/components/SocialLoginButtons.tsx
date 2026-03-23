@@ -30,6 +30,7 @@ const PROVIDERS: ProviderConfig[] = [
     id: "discord",
     labelKey: "discord",
     icon: <DiscordIcon />,
+    // Discord brand color — intentional hardcode per brand guidelines
     fill: "bg-[#5865F2] text-white",
   },
   {
