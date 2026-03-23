@@ -16,7 +16,7 @@ interface ProviderConfig {
   id: Provider;
   labelKey: string;
   icon: React.ReactNode;
-  className: string;
+  fill: string;
 }
 
 const PROVIDERS: ProviderConfig[] = [
@@ -24,19 +24,19 @@ const PROVIDERS: ProviderConfig[] = [
     id: "google",
     labelKey: "google",
     icon: <GoogleIcon />,
-    className: "bg-white text-gray-900 border border-gray-300 hover:bg-gray-50",
+    fill: "bg-white text-black",
   },
   {
     id: "discord",
     labelKey: "discord",
     icon: <DiscordIcon />,
-    className: "bg-[#5865F2] text-white hover:bg-[#4752C4] border-transparent",
+    fill: "bg-[#5865F2] text-white",
   },
   {
     id: "twitter",
     labelKey: "twitter",
     icon: <XIcon />,
-    className: "bg-black text-white hover:bg-gray-900 border-transparent",
+    fill: "bg-black text-white",
   },
 ];
 
@@ -55,12 +55,12 @@ export function SocialLoginButtons() {
   };
 
   return (
-    <div className="flex flex-col gap-3 w-full">
-      {PROVIDERS.map(({ id, labelKey, icon, className }) => (
+    <div className="flex flex-col gap-4">
+      {PROVIDERS.map(({ id, labelKey, icon, fill }) => (
         <button
           key={id}
           type="button"
-          className={`flex items-center justify-center gap-3 w-full h-12 rounded-md text-sm font-medium transition-colors cursor-pointer ${className}`}
+          className={`nb-btn nb-btn-press-sm nb-shadow-sm w-full justify-center gap-3 px-6 py-4 text-sm ${fill}`}
           onClick={() => handleSignIn(id)}
           {...tid(`login-${id}`)}
         >

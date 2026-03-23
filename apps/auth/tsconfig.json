@@ -9,7 +9,12 @@
       "@ui/*": ["../../packages/ui/src/*"],
       "shared": ["../../packages/shared/src"],
       "shared/*": ["../../packages/shared/src/*"],
-      "@shared/*": ["../../packages/shared/src/*"]
+      "@shared/*": ["../../packages/shared/src/*"],
+      "api": ["../../packages/api/src"],
+      "api/*": ["../../packages/api/src/*"],
+      "@api/*": ["../../packages/api/src/*"],
+      "auth": ["../../packages/auth/src"],
+      "auth/*": ["../../packages/auth/src/*"]
     },
     "noEmit": true
   },
