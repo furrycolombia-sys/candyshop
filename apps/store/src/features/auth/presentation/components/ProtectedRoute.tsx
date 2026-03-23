@@ -1,9 +1,10 @@
 "use client";
 
-import { usePathname, useRouter } from "next/navigation";
+import { useLocale } from "next-intl";
 import { type ReactNode, useEffect } from "react";
 
 import { useSupabaseAuth } from "@/features/auth/application/hooks/useSupabaseAuth";
+import { usePathname, useRouter } from "@/shared/infrastructure/i18n";
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -19,12 +20,13 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
   const { isAuthenticated, isLoading } = useSupabaseAuth();
   const router = useRouter();
   const pathname = usePathname();
+  const locale = useLocale();
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
-      router.push(`/login?returnTo=${encodeURIComponent(pathname)}`);
+      router.push(`/${locale}/login?returnTo=${encodeURIComponent(pathname)}`);
     }
-  }, [isLoading, isAuthenticated, router, pathname]);
+  }, [isLoading, isAuthenticated, router, pathname, locale]);
 
   if (isLoading) {
     return null;

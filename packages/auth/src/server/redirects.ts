@@ -1,5 +1,7 @@
-﻿function normalizeBase(base: string): string {
-  return base.endsWith("/") ? base.slice(0, -1) : base;
+﻿import { stripTrailingSlash } from "../utils/url";
+
+function normalizeBase(base: string): string {
+  return stripTrailingSlash(base);
 }
 
 function buildBaseUrl(authHostUrl: string, requestOrigin: string): string {

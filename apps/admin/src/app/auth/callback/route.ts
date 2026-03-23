@@ -1,32 +1,10 @@
-import { createServerSupabaseClient } from "api/supabase/server";
-import { NextResponse } from "next/server";
+import { handleOAuthCallback } from "api/supabase/callback";
+import type { NextRequest } from "next/server";
 
-export async function GET(request: Request) {
-  const { searchParams, origin } = new URL(request.url);
-  const code = searchParams.get("code");
-  let next = searchParams.get("next") ?? "/";
-
-  if (!next.startsWith("/")) {
-    next = "/";
-  }
-
-  if (code) {
-    const supabase = await createServerSupabaseClient();
-    const { error } = await supabase.auth.exchangeCodeForSession(code);
-
-    if (!error) {
-      const forwardedHost = request.headers.get("x-forwarded-host");
-      const isLocalEnv = process.env.NODE_ENV === "development";
-
-      if (isLocalEnv) {
-        return NextResponse.redirect(`${origin}${next}`);
-      } else if (forwardedHost) {
-        return NextResponse.redirect(`https://${forwardedHost}${next}`);
-      } else {
-        return NextResponse.redirect(`${origin}${next}`);
-      }
-    }
-  }
-
-  return NextResponse.redirect(`${origin}/auth/auth-code-error`);
+/**
+ * OAuth callback — exchanges the authorization code for a session.
+ * @see https://supabase.com/docs/guides/auth/server-side/nextjs
+ */
+export async function GET(request: NextRequest) {
+  return handleOAuthCallback(request);
 }

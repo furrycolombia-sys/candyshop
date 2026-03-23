@@ -117,6 +117,67 @@
     @apply text-xs leading-normal text-destructive;
   }
 
+  /* ============================================
+     NEOBRUTALIST UTILITIES
+     ============================================ */
+
+  /* Dot grid background */
+  .bg-dots {
+    background-image: radial-gradient(circle, #d0d0d0 1px, transparent 1px);
+    background-size: 24px 24px;
+  }
+
+  .dark .bg-dots {
+    background-image: radial-gradient(circle, #2a2a2e 1px, transparent 1px);
+  }
+
+  /* Hard shadow utilities */
+  .nb-shadow-sm {
+    box-shadow: var(--nb-shadow-sm);
+  }
+  .nb-shadow-md {
+    box-shadow: var(--nb-shadow-md);
+  }
+  .nb-shadow-lg {
+    box-shadow: var(--nb-shadow-lg);
+  }
+
+  /* Neobrutalist button — bold uppercase with press/hover feedback */
+  .nb-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    border: 3px solid var(--border);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    transition: all 150ms;
+  }
+  .nb-btn:hover {
+    translate: -2px -2px;
+  }
+  .nb-btn:focus-visible {
+    outline: 2px solid var(--foreground);
+    outline-offset: 2px;
+  }
+
+  /* Small press — for buttons inside colored cards */
+  .nb-btn-press-sm:active {
+    translate: 2px 2px;
+    box-shadow: none;
+  }
+
+  /* Large press — for standalone CTA buttons */
+  .nb-btn-press-lg:active {
+    translate: 3px 3px;
+    box-shadow: none;
+  }
+
+  /* Display font (Syne) */
+  .font-display {
+    font-family: var(--font-syne);
+  }
+
   /* === CODE === */
   .text-code {
     @apply text-sm font-mono leading-normal;

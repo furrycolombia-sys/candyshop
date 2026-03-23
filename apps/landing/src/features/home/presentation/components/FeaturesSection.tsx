@@ -3,16 +3,13 @@
 import { useTranslations } from "next-intl";
 import { tid } from "shared";
 
-const CT = "text-(--candy-text)";
-const CTL = "text-(--candy-text-on-lemon)";
-
 const CATEGORIES = [
-  { key: "commissions", fill: `bg-(--pink) ${CT}` },
-  { key: "fursuits", fill: `bg-(--mint) ${CT}` },
-  { key: "events", fill: `bg-(--lemon) ${CTL}` },
-  { key: "merch", fill: `bg-(--lilac) ${CT}` },
-  { key: "digital", fill: `bg-(--sky) ${CT}` },
-  { key: "deals", fill: `bg-(--peach) ${CT}` },
+  { key: "commissions", fill: "bg-(--pink) text-(--candy-text)" },
+  { key: "fursuits", fill: "bg-(--mint) text-(--candy-text)" },
+  { key: "events", fill: "bg-(--lemon) text-(--candy-text-on-lemon)" },
+  { key: "merch", fill: "bg-(--lilac) text-(--candy-text)" },
+  { key: "digital", fill: "bg-(--sky) text-(--candy-text)" },
+  { key: "deals", fill: "bg-(--peach) text-(--candy-text)" },
 ] as const;
 
 export function FeaturesSection() {
