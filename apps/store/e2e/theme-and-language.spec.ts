@@ -3,9 +3,31 @@ import { test, expect } from "@playwright/test";
 const STORE_URL = "http://localhost:5001";
 const LANDING_URL = "http://localhost:5004";
 
+/** Clear only theme and locale cookies, preserving auth session */
+async function clearNonAuthCookies(
+  context: import("@playwright/test").BrowserContext,
+) {
+  const cookies = await context.cookies();
+  const nonAuthCookies = cookies.filter(
+    (c) =>
+      c.name === "theme-preference" ||
+      c.name === "NEXT_LOCALE" ||
+      c.name === "theme-preference-expires",
+  );
+  // Clear by setting expired cookies
+  if (nonAuthCookies.length > 0) {
+    await context.addCookies(
+      nonAuthCookies.map((c) => ({
+        ...c,
+        expires: 0,
+      })),
+    );
+  }
+}
+
 test.describe("Theme persistence across apps", () => {
   test.beforeEach(async ({ context }) => {
-    await context.clearCookies();
+    await clearNonAuthCookies(context);
   });
 
   test("dark theme persists from store to landing via cookie", async ({
@@ -63,7 +85,7 @@ test.describe("Theme persistence across apps", () => {
 
 test.describe("Language persistence across apps", () => {
   test.beforeEach(async ({ context }) => {
-    await context.clearCookies();
+    await clearNonAuthCookies(context);
   });
 
   test("switching to Spanish persists from store to landing via cookie", async ({
@@ -111,7 +133,7 @@ test.describe("Theme + Language combined", () => {
     page,
     context,
   }) => {
-    await context.clearCookies();
+    await clearNonAuthCookies(context);
 
     await page.goto(`${STORE_URL}/en`);
     await page.waitForLoadState("networkidle");

@@ -1,5 +1,5 @@
 import { AppNavigation } from "@monorepo/app-components";
-import { createServerSupabaseClient } from "api/supabase/server";
+import { getServerUserEmail } from "api/supabase/server";
 import type { Metadata } from "next";
 import { NextIntlClientProvider } from "next-intl";
 import {
@@ -43,14 +43,7 @@ export default async function LocaleLayout({
 
   const messages = await getMessages();
 
-  let userEmail: string | null = null;
-  try {
-    const supabase = await createServerSupabaseClient();
-    const { data } = await supabase.auth.getUser();
-    userEmail = data.user?.email ?? null;
-  } catch {
-    // Supabase not configured — skip
-  }
+  const userEmail = await getServerUserEmail();
 
   return (
     <ThemeProvider>

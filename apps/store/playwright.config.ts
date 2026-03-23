@@ -18,7 +18,22 @@ export default defineConfig({
     screenshot: "only-on-failure",
     navigationTimeout: 45_000,
   },
-  projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
+  projects: [
+    // Setup: create authenticated session before tests
+    {
+      name: "setup",
+      testMatch: /auth\.setup\.ts/,
+    },
+    // Tests: run with authenticated session
+    {
+      name: "chromium",
+      use: {
+        ...devices["Desktop Chrome"],
+        storageState: "e2e/.auth/session.json",
+      },
+      dependencies: ["setup"],
+    },
+  ],
   webServer: [
     {
       command: process.env.CI

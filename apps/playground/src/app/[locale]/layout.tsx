@@ -1,5 +1,5 @@
 import { AppNavigation } from "@monorepo/app-components";
-import { createServerSupabaseClient } from "api/supabase/server";
+import { getServerUserEmail } from "api/supabase/server";
 import type { Metadata } from "next";
 import { NextIntlClientProvider } from "next-intl";
 import {
@@ -9,6 +9,7 @@ import {
 } from "next-intl/server";
 
 import { Providers } from "@/app/[locale]/providers";
+import { ProtectedRoute } from "@/features/auth";
 import { appUrls } from "@/shared/infrastructure/config";
 import { routing } from "@/shared/infrastructure/i18n";
 import { ThemeProvider } from "@/shared/infrastructure/providers";
@@ -43,26 +44,23 @@ export default async function LocaleLayout({
 
   const messages = await getMessages();
 
-  let userEmail: string | null = null;
-  try {
-    const supabase = await createServerSupabaseClient();
-    const { data } = await supabase.auth.getUser();
-    userEmail = data.user?.email ?? null;
-  } catch {
-    // Supabase not configured — skip
-  }
+  const userEmail = await getServerUserEmail();
 
   return (
     <ThemeProvider>
       <NextIntlClientProvider messages={messages}>
         <Providers>
-          <AppNavigation
-            currentApp="playground"
-            urls={appUrls}
-            locales={routing.locales}
-            userEmail={userEmail}
-          />
-          {children}
+          <div className="flex min-h-screen flex-col">
+            <AppNavigation
+              currentApp="playground"
+              urls={appUrls}
+              locales={routing.locales}
+              userEmail={userEmail}
+            />
+            <ProtectedRoute>
+              <div className="flex flex-1">{children}</div>
+            </ProtectedRoute>
+          </div>
         </Providers>
       </NextIntlClientProvider>
     </ThemeProvider>
