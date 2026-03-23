@@ -10,9 +10,9 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/* Force Syne font (loaded in layout.tsx) */
+/* DM Sans for body text (readable), Syne for display headings via .font-display */
 body {
-  font-family: var(--font-syne), ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--font-dm-sans), ui-sans-serif, system-ui, sans-serif;
 }
 
 /* Respect reduced motion preference */
