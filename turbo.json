@@ -28,6 +28,14 @@
       "outputs": [],
       "cache": false
     },
+    "test:e2e:headed": {
+      "outputs": [],
+      "cache": false
+    },
+    "test:e2e:ui": {
+      "outputs": [],
+      "cache": false
+    },
     "lint": {
       "outputs": []
     }
