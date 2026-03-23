@@ -18,7 +18,7 @@ export function LoginPage() {
           <h1 className="font-display text-3xl font-extrabold uppercase tracking-tight">
             {t("title")}
           </h1>
-          <p className="mt-2 text-sm text-foreground/60">{t("subtitle")}</p>
+          <p className="mt-2 text-sm text-muted-foreground">{t("subtitle")}</p>
         </div>
         <SocialLoginButtons />
       </div>

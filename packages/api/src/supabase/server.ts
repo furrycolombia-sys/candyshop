@@ -31,3 +31,17 @@ export async function createServerSupabaseClient() {
     },
   });
 }
+
+/**
+ * Get the authenticated user's email from the server-side session.
+ * Returns null if not authenticated or Supabase is unavailable.
+ */
+export async function getServerUserEmail(): Promise<string | null> {
+  try {
+    const supabase = await createServerSupabaseClient();
+    const { data } = await supabase.auth.getUser();
+    return data.user?.email ?? null;
+  } catch {
+    return null;
+  }
+}

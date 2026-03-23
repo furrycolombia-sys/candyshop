@@ -43,14 +43,14 @@ export function AccountPage() {
           {fullName ? (
             <p className="mt-1 text-lg font-bold">{fullName}</p>
           ) : null}
-          <p className="mt-1 text-sm text-foreground/60">
+          <p className="mt-1 text-sm text-muted-foreground">
             {t("account.subtitle")}
           </p>
         </div>
 
         <div className="mb-6 space-y-3">
           <div className="flex items-center justify-between border-b border-foreground/10 pb-2">
-            <span className="text-sm font-medium text-foreground/60">
+            <span className="text-sm font-medium text-muted-foreground">
               {t("account.email")}
             </span>
             <span className="text-sm font-bold" {...tid("account-email")}>
@@ -58,7 +58,7 @@ export function AccountPage() {
             </span>
           </div>
           <div className="flex items-center justify-between border-b border-foreground/10 pb-2">
-            <span className="text-sm font-medium text-foreground/60">
+            <span className="text-sm font-medium text-muted-foreground">
               {t("account.provider")}
             </span>
             <span

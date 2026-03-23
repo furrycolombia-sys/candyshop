@@ -695,6 +695,9 @@ importers:
       '@playwright/test':
         specifier: ^1.58.2
         version: 1.58.2
+      '@supabase/supabase-js':
+        specifier: ^2.99.2
+        version: 2.99.2
       '@tailwindcss/postcss':
         specifier: ^4.1.18
         version: 4.2.2

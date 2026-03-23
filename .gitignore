@@ -85,6 +85,8 @@ test-results.xml
 *.zip
 apps/*/playwright-report/
 apps/*/blob-report/
+apps/*/e2e/.auth/chrome-profile*/
+apps/*/e2e/screenshots/
 
 # Misc
 *.log
@@ -92,6 +94,7 @@ apps/*/blob-report/
 *.temp
 .cache/
 nul
+debug-*.mjs
 
 # Specs outputs (examples, overrides, etc.)
 specs/*

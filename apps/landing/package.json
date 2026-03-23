@@ -10,7 +10,9 @@
     "test": "vitest run --passWithNoTests",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
-    "test:e2e": "if ls e2e/*.spec.* >/dev/null 2>&1; then playwright test; else echo No E2E tests yet; fi"
+    "test:e2e": "echo No E2E tests yet",
+    "test:e2e:headed": "echo No E2E tests yet",
+    "test:e2e:ui": "echo No E2E tests yet"
   },
   "dependencies": {
     "@monorepo/app-components": "workspace:*",

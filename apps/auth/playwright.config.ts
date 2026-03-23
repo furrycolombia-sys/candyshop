@@ -1,3 +1,5 @@
+import path from "node:path";
+
 import { defineConfig, devices } from "@playwright/test";
 
 export default defineConfig({
@@ -15,5 +17,23 @@ export default defineConfig({
     navigationTimeout: 45_000,
   },
   projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
-  // No webServer — start `pnpm dev:auth` and `npx supabase start` manually
+  webServer: [
+    {
+      command: process.env.CI
+        ? "npx next start --port 5000"
+        : "npx next dev --port 5000",
+      url: "http://localhost:5000",
+      reuseExistingServer: true,
+      timeout: 120_000,
+    },
+    {
+      command: process.env.CI
+        ? "npx next start --port 5001"
+        : "npx next dev --port 5001",
+      cwd: path.resolve(__dirname, "../store"),
+      url: "http://localhost:5001",
+      reuseExistingServer: true,
+      timeout: 120_000,
+    },
+  ],
 });
