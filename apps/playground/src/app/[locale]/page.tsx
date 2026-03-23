@@ -10,9 +10,13 @@ export default async function PlaygroundPage({
   const t = await getTranslations("playground");
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-8">
-      <h1 className="text-4xl font-bold mb-4">{t("title")}</h1>
-      <p className="text-lg text-muted-foreground">{t("subtitle")}</p>
+    <main className="flex flex-1 items-center justify-center bg-dots p-8">
+      <div className="nb-shadow-lg w-full max-w-lg border-[3px] border-foreground bg-background p-10 text-center">
+        <h1 className="font-display text-4xl font-extrabold uppercase tracking-tight">
+          {t("title")}
+        </h1>
+        <p className="mt-3 text-sm text-foreground/60">{t("subtitle")}</p>
+      </div>
     </main>
   );
 }

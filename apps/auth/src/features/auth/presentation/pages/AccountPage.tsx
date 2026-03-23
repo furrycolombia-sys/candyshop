@@ -1,7 +1,7 @@
 "use client";
 
 /* eslint-disable @next/next/no-img-element */
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { tid } from "shared";
 
 import { useSupabaseAuth } from "@/features/auth/application/hooks/useSupabaseAuth";
@@ -9,6 +9,7 @@ import { appUrls } from "@/shared/infrastructure/config";
 
 export function AccountPage() {
   const t = useTranslations("auth");
+  const locale = useLocale();
   const { user, signOut } = useSupabaseAuth();
 
   const provider = user?.app_metadata?.provider ?? "unknown";
@@ -19,7 +20,7 @@ export function AccountPage() {
 
   const handleSignOut = async () => {
     await signOut();
-    globalThis.location.href = "/en/login";
+    globalThis.location.href = `/${locale}/login`;
   };
 
   return (

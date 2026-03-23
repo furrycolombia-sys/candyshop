@@ -1,6 +1,5 @@
-import { AUTH_COOKIE_NAMES } from "../domain";
-
-const REFRESH_ENDPOINT = "/api/auth/refresh";
+import { AUTH_COOKIE_NAMES, AUTH_REFRESH_ENDPOINT } from "../domain";
+import { stripTrailingSlash } from "../utils/url";
 
 let accessToken: string | null = null;
 
@@ -22,12 +21,8 @@ export function getAccessTokenFromCookie(): string | null {
   return null;
 }
 
-function normalizeAuthHostUrl(authHostUrl: string): string {
-  return authHostUrl.endsWith("/") ? authHostUrl.slice(0, -1) : authHostUrl;
-}
-
 function buildRefreshUrl(authHostUrl: string): string {
-  return `${normalizeAuthHostUrl(authHostUrl)}${REFRESH_ENDPOINT}`;
+  return `${stripTrailingSlash(authHostUrl)}${AUTH_REFRESH_ENDPOINT}`;
 }
 
 export function getAccessToken(): string | null {

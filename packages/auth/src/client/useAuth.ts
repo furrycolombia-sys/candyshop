@@ -1,7 +1,7 @@
 "use client";
 
 import type { Session, SupabaseClient, User } from "@supabase/supabase-js";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 type AuthProvider = "google" | "discord" | "twitter";
 
@@ -76,7 +76,7 @@ export function useAuth({ supabaseClient }: UseAuthOptions): UseAuthReturn {
   }, [supabaseClient]);
 
   const user = session?.user ?? null;
-  const isAuthenticated = useMemo(() => !!session, [session]);
+  const isAuthenticated = !!session;
 
   return {
     user,
