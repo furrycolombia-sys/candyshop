@@ -42,6 +42,8 @@
     "test:e2e:payments": "pnpm --filter payments test:e2e",
     "test:e2e:admin": "pnpm --filter admin test:e2e",
     "test:e2e:auth": "pnpm --filter auth-app test:e2e",
+    "test:e2e:headed": "turbo test:e2e:headed --concurrency=1",
+    "test:e2e:ui": "turbo test:e2e:ui --concurrency=1",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,css,md}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,css,md}\"",
     "fix:staged": "lint-staged --concurrent false",
