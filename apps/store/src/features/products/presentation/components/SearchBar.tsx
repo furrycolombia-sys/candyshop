@@ -2,15 +2,17 @@
 
 import { Search } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { parseAsString, useQueryState } from "nuqs";
+import { useQueryState } from "nuqs";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { tid } from "shared";
+
+import { catalogSearchParams } from "@/features/products/domain/searchParams";
 
 const DEBOUNCE_MS = 300;
 
 export function SearchBar() {
   const t = useTranslations("products");
-  const [query, setQuery] = useQueryState("q", parseAsString.withDefault(""));
+  const [query, setQuery] = useQueryState("q", catalogSearchParams.q);
   const [localValue, setLocalValue] = useState(query);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -18,6 +20,15 @@ export function SearchBar() {
   useEffect(() => {
     setLocalValue(query);
   }, [query]);
+
+  // Cleanup debounce timer on unmount
+  useEffect(() => {
+    return () => {
+      if (timerRef.current !== null) {
+        clearTimeout(timerRef.current);
+      }
+    };
+  }, []);
 
   const commitQuery = useCallback(
     (value: string) => {

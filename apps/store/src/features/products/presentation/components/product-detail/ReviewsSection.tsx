@@ -4,7 +4,7 @@ import { tid } from "shared";
 import type { CategoryTheme } from "@/features/products/domain/constants";
 import type { ProductReview } from "@/features/products/domain/types";
 import { AuthorAvatar } from "@/features/products/presentation/components/product-detail/AuthorAvatar";
-import { StarRow } from "@/features/products/presentation/components/product-detail/StarRow";
+import { RatingStars } from "@/features/products/presentation/components/product-detail/RatingStars";
 
 interface ReviewsSectionProps {
   reviews: ProductReview[];
@@ -45,7 +45,7 @@ export function ReviewsSection({
               {rating.toFixed(1)}
             </span>
             <div className="flex flex-col gap-1">
-              <StarRow rating={rating} />
+              <RatingStars rating={rating} />
               <span className="text-xs text-muted-foreground">
                 {t("detail.reviewsCount", { count: reviewCount })}
               </span>
@@ -70,7 +70,7 @@ export function ReviewsSection({
                   <span className="font-bold text-sm truncate">
                     {review.author}
                   </span>
-                  <StarRow rating={review.rating} />
+                  <RatingStars rating={review.rating} />
                 </div>
                 <time
                   className="ml-auto text-xs text-muted-foreground shrink-0"

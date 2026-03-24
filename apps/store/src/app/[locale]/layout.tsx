@@ -10,6 +10,7 @@ import {
 
 import { Providers } from "@/app/[locale]/providers";
 import { ProtectedRoute } from "@/features/auth";
+import { CartDrawer } from "@/features/cart";
 import { appUrls } from "@/shared/infrastructure/config";
 import { routing } from "@/shared/infrastructure/i18n";
 import { ThemeProvider } from "@/shared/infrastructure/providers";
@@ -60,6 +61,7 @@ export default async function LocaleLayout({
             <ProtectedRoute>
               <div className="flex flex-1">{children}</div>
             </ProtectedRoute>
+            <CartDrawer />
           </div>
         </Providers>
       </NextIntlClientProvider>

@@ -3,8 +3,6 @@ import { tid } from "shared";
 
 import type { CategoryTheme } from "@/features/products/domain/constants";
 
-const PARA_KEY_LENGTH = 40;
-
 interface DescriptionSectionProps {
   description: string;
   theme: CategoryTheme;
@@ -36,7 +34,10 @@ export function DescriptionSection({
           {...tid("description-body")}
         >
           {paragraphs.map((para) => (
-            <p key={para.slice(0, PARA_KEY_LENGTH)} className="text-base/loose">
+            <p
+              key={`${para.length}-${para.codePointAt(0)}-${para.codePointAt(para.length - 1)}`}
+              className="text-base/loose"
+            >
               {para}
             </p>
           ))}

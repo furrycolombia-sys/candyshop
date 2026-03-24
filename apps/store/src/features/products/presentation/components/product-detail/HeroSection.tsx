@@ -1,56 +1,27 @@
 "use client";
 
-import { Star } from "lucide-react";
+import { ShoppingCart } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useState } from "react";
 import { tid } from "shared";
 
 import { ImageGallery } from "./ImageGallery";
+import { PriceBlock } from "./PriceBlock";
+import { RatingStars } from "./RatingStars";
 
-import { useCart } from "@/features/cart";
-import type { CategoryTheme } from "@/features/products/domain/constants";
 import type { Product } from "@/features/products/domain/types";
-
-const ADDED_RESET_MS = 1500;
+import { useAddToCart } from "@/shared/application/hooks/useAddToCart";
+import type { CategoryTheme } from "@/shared/domain/categoryConstants";
 
 interface HeroSectionProps {
   product: Product;
   theme: CategoryTheme;
 }
 
-function renderStars(rating: number, theme: CategoryTheme) {
-  return Array.from({ length: 5 }, (_, i) => {
-    const filled = i < Math.round(rating);
-    const cls = filled
-      ? `size-4 fill-current ${theme.text}`
-      : "size-4 text-muted-foreground";
-    return <Star key={i} className={cls} />;
-  });
-}
-
 export function HeroSection({ product, theme }: HeroSectionProps) {
   const t = useTranslations("products");
   const tCategories = useTranslations("categories");
   const tTypes = useTranslations("productTypes");
-  const { addItem } = useCart();
-  const [added, setAdded] = useState(false);
-
-  function handleAddToCart() {
-    addItem({
-      productId: product.id,
-      name: product.name,
-      price: product.price,
-      currency: product.currency,
-      image: product.images[0]?.url,
-      type: product.type,
-    });
-    setAdded(true);
-    setTimeout(() => setAdded(false), ADDED_RESET_MS);
-  }
-
-  const compareAtPrice = product.compareAtPrice;
-  const hasDiscount =
-    compareAtPrice !== undefined && compareAtPrice > product.price;
+  const { added, quantityInCart, handleAddToCart } = useAddToCart(product);
 
   return (
     <section
@@ -118,7 +89,7 @@ export function HeroSection({ product, theme }: HeroSectionProps) {
                   {...tid("hero-rating")}
                 >
                   <div className="flex items-center gap-0.5">
-                    {renderStars(product.rating, theme)}
+                    <RatingStars rating={product.rating} theme={theme} />
                   </div>
                   <span className="text-sm font-bold">
                     {t("detail.stars", {
@@ -136,33 +107,10 @@ export function HeroSection({ product, theme }: HeroSectionProps) {
               )}
 
             {/* Price block */}
-            <div
-              className="border-[3px] border-foreground bg-background p-4 nb-shadow-sm"
-              {...tid("hero-price")}
-            >
-              <div className="flex items-baseline gap-3 flex-wrap">
-                <span className="font-display text-5xl font-extrabold">
-                  ${product.price.toLocaleString()}
-                </span>
-                <span className="text-sm font-sans text-muted-foreground">
-                  {product.currency}
-                </span>
-                {hasDiscount && compareAtPrice !== undefined && (
-                  <span className="font-display text-2xl font-bold line-through text-muted-foreground">
-                    ${compareAtPrice.toLocaleString()}
-                  </span>
-                )}
-              </div>
-              {hasDiscount && compareAtPrice !== undefined && (
-                <div className="mt-2">
-                  <span className="bg-(--lemon) border-[3px] border-foreground px-2 py-0.5 text-xs font-bold uppercase tracking-widest">
-                    {t("detail.discount", {
-                      amount: `$${(compareAtPrice - product.price).toLocaleString()}`,
-                    })}
-                  </span>
-                </div>
-              )}
-            </div>
+            <PriceBlock
+              product={product}
+              discountLabel={(values) => t("detail.discount", values)}
+            />
 
             {/* Short description */}
             <p
@@ -187,15 +135,25 @@ export function HeroSection({ product, theme }: HeroSectionProps) {
             )}
 
             {/* Add to Cart CTA */}
-            <div className="mt-2">
+            <div className="mt-2 flex flex-col sm:flex-row sm:items-center gap-3">
               <button
                 className={`w-full sm:w-auto nb-btn nb-btn-press-lg nb-shadow-md font-display text-lg font-extrabold uppercase tracking-widest px-10 py-4 disabled:opacity-50 disabled:cursor-not-allowed ${theme.bg}`}
                 onClick={handleAddToCart}
                 disabled={!product.inStock || added}
                 {...tid("hero-add-to-cart")}
               >
+                <ShoppingCart className="size-5" />
                 {added ? t("addedToCart") : t("addToCart")}
               </button>
+              {quantityInCart > 0 && (
+                <span
+                  className="flex items-center gap-1.5 font-display text-sm font-bold uppercase tracking-widest"
+                  {...tid("hero-in-cart")}
+                >
+                  <ShoppingCart className="size-4" />
+                  {t("inCart", { count: quantityInCart })}
+                </span>
+              )}
             </div>
           </div>
         </div>

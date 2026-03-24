@@ -2,30 +2,31 @@
 
 import { Minus, Plus, ShoppingCart, Trash2, X } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { useCallback } from "react";
 import { tid } from "shared";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "ui";
 
-import { useCart } from "@/features/cart";
-import { PRODUCT_CATEGORIES } from "@/features/products/domain/constants";
+import { useCart } from "@/features/cart/application/CartContext";
+import { useFlyToCartContext } from "@/features/cart/application/FlyToCartContext";
+import { getCategoryColor } from "@/shared/domain/categoryConstants";
 
 const BADGE_OVERFLOW_THRESHOLD = 99;
-
-function getItemColor(type: string): string {
-  // Map product types to candy colors for the thumbnail
-  const typeColorMap: Record<string, string> = {
-    physical: PRODUCT_CATEGORIES[0]?.color ?? "bg-(--pink)",
-    digital: PRODUCT_CATEGORIES[4]?.color ?? "bg-(--sky)",
-    commission: PRODUCT_CATEGORIES[2]?.color ?? "bg-(--lilac)",
-    ticket: PRODUCT_CATEGORIES[3]?.color ?? "bg-(--lemon)",
-  };
-  return typeColorMap[type] ?? "bg-(--mint)";
-}
 
 export function CartDrawer() {
   const t = useTranslations("cart");
   const tTypes = useTranslations("productTypes");
   const { items, total, itemCount, removeItem, updateQuantity, clearCart } =
     useCart();
+  const flyCtx = useFlyToCartContext();
+
+  // Merge SheetTrigger's forwarded ref with the fly-to-cart target ref
+  const setCartTarget = flyCtx?.setCartTarget;
+  const triggerRef = useCallback(
+    (node: HTMLButtonElement | null) => {
+      setCartTarget?.(node);
+    },
+    [setCartTarget],
+  );
 
   const badgeLabel =
     itemCount > BADGE_OVERFLOW_THRESHOLD
@@ -36,15 +37,16 @@ export function CartDrawer() {
     <Sheet>
       <SheetTrigger asChild>
         <button
-          className="relative flex items-center gap-1.5 font-display text-xs font-bold uppercase tracking-widest hover:text-foreground transition-colors"
+          ref={triggerRef}
+          className="fixed bottom-6 right-6 z-50 flex items-center gap-2 nb-btn nb-btn-press-sm nb-shadow-md bg-foreground text-background font-display text-xs font-extrabold uppercase tracking-widest px-5 py-3 hover:translate-0 transition-all"
           aria-label={t("title")}
           {...tid("cart-drawer-trigger")}
         >
-          <ShoppingCart size={16} aria-hidden="true" />
+          <ShoppingCart size={18} aria-hidden="true" />
           <span>{t("title")}</span>
           {itemCount > 0 && (
             <span
-              className="flex size-5 items-center justify-center bg-foreground text-background text-[10px] font-extrabold border-2 border-background"
+              className="flex min-w-6 size-6 items-center justify-center rounded-full bg-(--pink) text-foreground font-sans text-xs leading-none font-bold px-1.5 -mr-1"
               aria-hidden="true"
             >
               {badgeLabel}
@@ -101,7 +103,7 @@ export function CartDrawer() {
               {...tid("cart-drawer-items")}
             >
               {items.map((item) => {
-                const itemColor = getItemColor(item.type);
+                const itemColor = getCategoryColor(item.category ?? "");
                 const lineTotal = item.price * item.quantity;
                 return (
                   <li

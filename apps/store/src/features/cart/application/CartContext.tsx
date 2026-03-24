@@ -1,5 +1,6 @@
 "use client";
 
+import { getCookie, setCookie } from "cookies-next";
 import {
   createContext,
   useCallback,
@@ -7,11 +8,35 @@ import {
   useEffect,
   useMemo,
   useReducer,
+  useRef,
 } from "react";
 
 import type { CartItem, CartState } from "@/features/cart/domain/types";
 
-const STORAGE_KEY = "candystore-cart";
+function isValidCartItem(item: unknown): item is CartItem {
+  if (typeof item !== "object" || item === null) return false;
+  const record = item as Record<string, unknown>;
+  return (
+    typeof record.productId === "string" &&
+    typeof record.name === "string" &&
+    typeof record.price === "number" &&
+    typeof record.quantity === "number"
+  );
+}
+
+/** Validates that parsed cookie data is an array of cart items with required fields */
+function isValidCartItems(data: unknown): data is CartItem[] {
+  return Array.isArray(data) && data.every((item) => isValidCartItem(item));
+}
+
+const COOKIE_KEY = "candystore-cart";
+const DAYS = 30;
+const HOURS_PER_DAY = 24;
+const MINUTES_PER_HOUR = 60;
+const SECONDS_PER_MINUTE = 60;
+/** Cookie lives for 30 days */
+const COOKIE_MAX_AGE_S =
+  DAYS * HOURS_PER_DAY * MINUTES_PER_HOUR * SECONDS_PER_MINUTE;
 
 type CartAction =
   | {
@@ -108,24 +133,42 @@ const CartContext = createContext<CartContextValue | null>(null);
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(cartReducer, initialState);
+  const mountedRef = useRef(false);
 
+  // Hydrate from cookie on mount
   useEffect(() => {
     try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        const items: CartItem[] = JSON.parse(stored);
-        dispatch({ type: "HYDRATE", payload: items });
+      const raw = getCookie(COOKIE_KEY);
+      if (raw) {
+        const parsed: unknown = JSON.parse(String(raw));
+        if (isValidCartItems(parsed)) {
+          dispatch({ type: "HYDRATE", payload: parsed });
+        }
       }
     } catch {
       // Ignore invalid stored data
     }
+    // Mark mounted AFTER a tick so the persist effect skips the initial render
+    requestAnimationFrame(() => {
+      mountedRef.current = true;
+    });
   }, []);
 
+  // Persist to cookie — skips the first render (before hydration completes)
   useEffect(() => {
+    if (!mountedRef.current) return;
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state.items));
+      const isSecure =
+        globalThis.window !== undefined &&
+        globalThis.location.protocol === "https:";
+      setCookie(COOKIE_KEY, JSON.stringify(state.items), {
+        maxAge: COOKIE_MAX_AGE_S,
+        path: "/",
+        sameSite: "lax",
+        secure: isSecure,
+      });
     } catch {
-      // Ignore storage errors
+      // Ignore cookie errors
     }
   }, [state.items]);
 

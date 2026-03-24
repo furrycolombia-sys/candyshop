@@ -3,7 +3,7 @@ import { tid } from "shared";
 
 import type { CategoryTheme } from "@/features/products/domain/constants";
 import type { ProductSeller } from "@/features/products/domain/types";
-import { StarRow } from "@/features/products/presentation/components/product-detail/StarRow";
+import { RatingStars } from "@/features/products/presentation/components/product-detail/RatingStars";
 
 interface SellerSectionProps {
   seller: ProductSeller;
@@ -51,7 +51,7 @@ export function SellerSection({ seller, theme }: SellerSectionProps) {
                 </h3>
                 {seller.rating !== undefined && (
                   <div className="flex items-center gap-2">
-                    <StarRow rating={seller.rating} />
+                    <RatingStars rating={seller.rating} />
                     <span className="text-sm font-bold">
                       {t("detail.stars", {
                         rating: seller.rating.toFixed(1),

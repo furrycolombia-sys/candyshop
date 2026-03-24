@@ -1,10 +1,11 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { parseAsString, useQueryState } from "nuqs";
+import { useQueryState } from "nuqs";
 import { tid } from "shared";
 
 import { PRODUCT_CATEGORIES } from "@/features/products/domain/constants";
+import { catalogSearchParams } from "@/features/products/domain/searchParams";
 import type { ProductCategory } from "@/features/products/domain/types";
 
 const PILL_BASE =
@@ -16,7 +17,7 @@ export function CategoryFilter() {
   const tCategories = useTranslations("categories");
   const [category, setCategory] = useQueryState(
     "category",
-    parseAsString.withDefault(""),
+    catalogSearchParams.category,
   );
 
   function handleSelect(value: ProductCategory | "") {

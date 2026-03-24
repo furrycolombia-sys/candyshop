@@ -1,10 +1,11 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { parseAsString, useQueryState } from "nuqs";
+import { useQueryState } from "nuqs";
 import { tid } from "shared";
 
 import { PRODUCT_TYPES } from "@/features/products/domain/constants";
+import { catalogSearchParams } from "@/features/products/domain/searchParams";
 import type { ProductType } from "@/features/products/domain/types";
 
 const TAB_BASE =
@@ -15,7 +16,7 @@ const TAB_INACTIVE = "bg-background text-foreground hover:bg-foreground/10";
 export function TypeFilter() {
   const t = useTranslations("products");
   const tTypes = useTranslations("productTypes");
-  const [type, setType] = useQueryState("type", parseAsString.withDefault(""));
+  const [type, setType] = useQueryState("type", catalogSearchParams.type);
 
   function handleSelect(value: ProductType | "") {
     void setType(value === "" ? null : value, { history: "push" });

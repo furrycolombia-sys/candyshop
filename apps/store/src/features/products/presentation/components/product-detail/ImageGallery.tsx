@@ -7,16 +7,12 @@ import { tid } from "shared";
 import { GalleryOverlays } from "./GalleryOverlays";
 
 import type { CategoryTheme } from "@/features/products/domain/constants";
+import type { GalleryView } from "@/features/products/domain/galleryTypes";
 import type { Product } from "@/features/products/domain/types";
 
 interface ImageGalleryProps {
   product: Product;
   theme: CategoryTheme;
-}
-
-interface GalleryView {
-  label: string;
-  index: number;
 }
 
 /* eslint-disable sonarjs/no-duplicate-string -- i18n translation keys */

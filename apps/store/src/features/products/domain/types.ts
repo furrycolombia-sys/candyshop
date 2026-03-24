@@ -1,12 +1,13 @@
-export type ProductType = "physical" | "digital" | "commission" | "ticket";
+// Re-exported from shared domain — single source of truth
+export type {
+  ProductCategory,
+  ProductType,
+} from "@/shared/domain/categoryTypes";
 
-export type ProductCategory =
-  | "fursuits"
-  | "merch"
-  | "art"
-  | "events"
-  | "digital"
-  | "deals";
+import type {
+  ProductCategory,
+  ProductType,
+} from "@/shared/domain/categoryTypes";
 
 export interface ProductImage {
   url: string;

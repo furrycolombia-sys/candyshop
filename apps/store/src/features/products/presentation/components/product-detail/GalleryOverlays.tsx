@@ -1,12 +1,8 @@
 import { tid } from "shared";
 
 import type { CategoryTheme } from "@/features/products/domain/constants";
+import type { GalleryView } from "@/features/products/domain/galleryTypes";
 import type { Product } from "@/features/products/domain/types";
-
-interface GalleryView {
-  label: string;
-  index: number;
-}
 
 interface GalleryOverlaysProps {
   product: Product;

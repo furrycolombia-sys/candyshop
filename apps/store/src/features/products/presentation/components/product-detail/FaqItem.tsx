@@ -22,7 +22,7 @@ export function FaqItem({ item, index, theme }: FaqItemProps) {
       {...tid(`faq-item-${index}`)}
     >
       <button
-        className={`w-full flex items-center justify-between gap-4 p-5 text-left font-bold text-sm uppercase tracking-wide hover:${theme.bgLight} transition-colors`}
+        className="w-full flex items-center justify-between gap-4 p-5 text-left font-bold text-sm uppercase tracking-wide transition-colors hover:bg-muted"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
         {...tid(`faq-toggle-${index}`)}

@@ -46,6 +46,7 @@
     "noResultsHint": "Intenta ajustar tus filtros",
     "addToCart": "Agregar al carrito",
     "addedToCart": "Agregado!",
+    "inCart": "{count} en carrito",
     "outOfStock": "Agotado",
     "featured": "Destacado",
     "inStock": "En stock",

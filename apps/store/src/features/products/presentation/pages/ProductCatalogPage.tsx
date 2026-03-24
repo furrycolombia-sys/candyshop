@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { parseAsString, useQueryStates } from "nuqs";
+import { useQueryStates } from "nuqs";
 import { useMemo } from "react";
 import { tid } from "shared";
 
@@ -10,21 +10,16 @@ import { ProductGrid } from "../components/ProductGrid";
 import { SearchBar } from "../components/SearchBar";
 import { TypeFilter } from "../components/TypeFilter";
 
+import { catalogSearchParams } from "@/features/products/domain/searchParams";
 import type {
   ProductCategory,
   ProductType,
 } from "@/features/products/domain/types";
 import { mockProducts } from "@/mocks/data/products";
 
-const searchParams = {
-  category: parseAsString.withDefault(""),
-  type: parseAsString.withDefault(""),
-  q: parseAsString.withDefault(""),
-};
-
 export function ProductCatalogPage() {
   const t = useTranslations("products");
-  const [{ category, type, q }] = useQueryStates(searchParams);
+  const [{ category, type, q }] = useQueryStates(catalogSearchParams);
 
   const filteredProducts = useMemo(() => {
     return mockProducts.filter((product) => {
