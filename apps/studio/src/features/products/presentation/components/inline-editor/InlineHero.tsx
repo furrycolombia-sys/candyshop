@@ -29,13 +29,13 @@ export function InlineHero({ control }: InlineHeroProps) {
   const category = useWatch({ control, name: "category" });
   const type = useWatch({ control, name: "type" });
   const maxQuantity = useWatch({ control, name: "max_quantity" });
+  const isActive = useWatch({ control, name: "is_active" });
 
   const theme = getCategoryTheme(category);
   const heroBg = CATEGORY_HERO_BG[category] ?? "bg-muted";
 
   // Stock status — mirrors store logic
-  // In the editor, we treat all products as "active" (is_active is toggled in toolbar)
-  const isAvailable = maxQuantity === null || maxQuantity > 0;
+  const isAvailable = isActive && (maxQuantity === null || maxQuantity > 0);
 
   // Stock quantity controller for inline editing
   const { field: maxQtyField } = useController({
