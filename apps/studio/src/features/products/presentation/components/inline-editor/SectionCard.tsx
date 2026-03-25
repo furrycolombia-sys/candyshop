@@ -3,7 +3,7 @@
 import type { DraggableProvided } from "@hello-pangea/dnd";
 import { ChevronDown, GripVertical } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect } from "react";
 import type { Control, UseFieldArrayReturn } from "react-hook-form";
 import { useController, useFieldArray } from "react-hook-form";
 import { tid } from "shared";
@@ -15,13 +15,18 @@ import { SectionItemsCards } from "./SectionItemsCards";
 import { SectionItemsGallery } from "./SectionItemsGallery";
 import { SectionItemsTwoColumn } from "./SectionItemsTwoColumn";
 
+import { useLangToggle } from "@/features/products/application/useLangToggle";
+import { SECTION_I18N_NAMESPACE } from "@/features/products/domain/constants";
 import type { ProductFormValues } from "@/features/products/domain/validationSchema";
 import type { CategoryTheme } from "@/shared/domain/categoryConstants";
 
-type Lang = "en" | "es";
-
 /** Ref map so parent DragDropContext can call move on any section's items */
 export type ItemMoveRegistry = Map<number, (from: number, to: number) => void>;
+
+/** Narrowed field array interface passed to section item editors.
+ *  Uses UseFieldArrayReturn directly (default generics) to match the dynamic
+ *  `sections.${n}.items` path that requires `as any` for react-hook-form. */
+export type SectionFieldArray = UseFieldArrayReturn;
 
 interface SectionCardProps {
   sectionIndex: number;
@@ -44,8 +49,8 @@ export function SectionCard({
   onRemove,
   itemMoveRegistry,
 }: SectionCardProps) {
-  const t = useTranslations("form.inlineEditor.sections");
-  const [nameLang, setNameLang] = useState<Lang>("en");
+  const t = useTranslations(SECTION_I18N_NAMESPACE);
+  const { lang: nameLang, toggleLang: toggleNameLang } = useLangToggle();
 
   /* eslint-disable @typescript-eslint/no-explicit-any, i18next/no-literal-string -- dynamic nested field paths from useFieldArray */
   const {
@@ -76,10 +81,6 @@ export function SectionCard({
   });
   /* eslint-enable @typescript-eslint/no-explicit-any, i18next/no-literal-string */
 
-  const toggleNameLang = useCallback(() => {
-    setNameLang((prev) => (prev === "en" ? "es" : "en"));
-  }, []);
-
   const handleAddItem = useCallback(() => {
     appendItem({
       title_en: "",
@@ -94,13 +95,14 @@ export function SectionCard({
 
   const typeValue = String(typeField.field.value ?? "cards");
 
-  /* Build the field array object expected by type-specific item components */
+  /* Build the field array subset expected by type-specific item components.
+   * Cast needed because useFieldArray's generic is widened by the dynamic `as any` path. */
   const fieldArray = {
     fields: itemFields,
     append: appendItem,
     remove: removeItem,
     move: moveItem,
-  } as unknown as UseFieldArrayReturn;
+  } as unknown as SectionFieldArray;
 
   function renderItems() {
     const props = {
@@ -149,7 +151,7 @@ export function SectionCard({
         <button
           type="button"
           onClick={toggleNameLang}
-          className="shrink-0 rounded-sm border-2 border-foreground/30 px-1.5 py-0.5 font-display text-[10px] font-extrabold uppercase tracking-widest text-muted-foreground hover:border-foreground hover:text-foreground"
+          className="shrink-0 rounded-sm border-2 border-foreground/30 px-1.5 py-0.5 font-display text-tiny font-extrabold uppercase tracking-widest text-muted-foreground hover:border-foreground hover:text-foreground"
         >
           {nameLang.toUpperCase()}
         </button>
@@ -169,9 +171,7 @@ export function SectionCard({
         {/* Type selector */}
         <select
           value={typeValue}
-          onChange={(e) =>
-            typeField.field.onChange({ target: { value: e.target.value } })
-          }
+          onChange={(e) => typeField.field.onChange(e.target.value)}
           className="h-7 w-32 rounded-sm border-2 border-foreground/30 bg-background px-2 text-xs text-foreground"
           {...tid(`section-type-${sectionIndex}`)}
         >
@@ -197,7 +197,7 @@ export function SectionCard({
         {/* Remove section */}
         <InlineRemoveButton
           onClick={onRemove}
-          ariaLabel={`Remove section ${sectionIndex + 1}`}
+          ariaLabel={t("removeSection", { number: sectionIndex + 1 })}
         />
       </div>
       {/* eslint-enable react-hooks/refs */}

@@ -60,9 +60,12 @@ export function InlineHero({ control }: InlineHeroProps) {
     maxQtyOnChange(raw === "" ? null : Number.parseInt(raw, 10));
   }
 
+  const badgeBase =
+    "border-3 border-foreground px-3 py-1 text-tiny font-bold uppercase tracking-widest text-foreground";
+
   return (
     <section
-      className={`w-full ${heroBg} border-b-[3px] border-foreground`}
+      className={`w-full ${heroBg} border-b-3 border-foreground`}
       {...tid("inline-hero")}
     >
       <div className="max-w-6xl mx-auto px-4 py-10 lg:py-14">
@@ -97,7 +100,7 @@ export function InlineHero({ control }: InlineHeroProps) {
             >
               {/* Category badge — theme bg */}
               <span
-                className={`${theme.badgeBg} border-[3px] border-foreground px-3 py-1 text-xs font-bold text-foreground`}
+                className={`${theme.badgeBg} border-3 border-foreground px-3 py-1 text-xs font-bold text-foreground`}
                 {...tid("hero-category")}
               >
                 {tCategories(category)}
@@ -105,31 +108,27 @@ export function InlineHero({ control }: InlineHeroProps) {
 
               {/* Type badge */}
               <span
-                className="bg-background border-[3px] border-foreground px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground"
+                className={`bg-background ${badgeBase} text-muted-foreground`}
                 {...tid("hero-type")}
               >
                 {tTypes(type)}
               </span>
 
               {/* Stock badge */}
-              {isAvailable ? (
-                <span className="bg-(--mint) border-[3px] border-foreground px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-foreground">
-                  {tProducts("inStock")}
-                </span>
-              ) : (
-                <span className="bg-(--peach) border-[3px] border-foreground px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-foreground">
-                  {tProducts("outOfStock")}
-                </span>
-              )}
+              <span
+                className={`${isAvailable ? "bg-mint" : "bg-peach"} ${badgeBase}`}
+              >
+                {isAvailable ? tProducts("inStock") : tProducts("outOfStock")}
+              </span>
 
               {/* Refundable badge */}
               {refundable === true && (
-                <span className="bg-(--mint) border-[3px] border-foreground px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-foreground">
+                <span className={`bg-mint ${badgeBase}`}>
                   {tProducts("refundable")}
                 </span>
               )}
               {refundable === false && (
-                <span className="bg-(--peach) border-[3px] border-foreground px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-foreground">
+                <span className={`bg-peach ${badgeBase}`}>
                   {tProducts("nonRefundable")}
                 </span>
               )}

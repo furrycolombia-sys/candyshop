@@ -80,14 +80,14 @@ export function EditorToolbar({
       <div className="flex items-center gap-1.5">
         {PRODUCT_TYPES.map((type) => {
           const Icon = TYPE_ICONS[type];
-          const isActive = selectedType === type;
+          const isSelected = selectedType === type;
           return (
             <button
               key={type}
               type="button"
               onClick={() => setValue("type", type)}
-              className={`flex items-center gap-1 rounded-full px-3 py-1 font-display text-[10px] font-bold uppercase tracking-wider transition-colors ${
-                isActive
+              className={`flex items-center gap-1 rounded-full px-3 py-1 font-display text-tiny font-bold uppercase tracking-wider transition-colors ${
+                isSelected
                   ? "bg-background text-foreground"
                   : "text-background/60 hover:text-background"
               }`}
@@ -105,7 +105,7 @@ export function EditorToolbar({
 
       {/* Category select */}
       <select
-        className="rounded-lg border-2 border-background/30 bg-transparent px-2 py-1 font-display text-[10px] font-bold uppercase tracking-wider text-background outline-none"
+        className="rounded-lg border-2 border-background/30 bg-transparent px-2 py-1 font-display text-tiny font-bold uppercase tracking-wider text-background outline-none"
         {...register("category")}
         {...tid("toolbar-category")}
       >
@@ -122,7 +122,7 @@ export function EditorToolbar({
 
       {/* Featured toggle */}
       <label
-        className="flex items-center gap-1.5 font-display text-[10px] font-bold uppercase tracking-wider text-background/70"
+        className="flex items-center gap-1.5 font-display text-tiny font-bold uppercase tracking-wider text-background/70"
         {...tid("toolbar-featured")}
       >
         <input
@@ -141,7 +141,7 @@ export function EditorToolbar({
           const val = e.target.value;
           setValue("refundable", val === "" ? null : val === "true");
         }}
-        className="rounded-lg border-2 border-background/30 bg-transparent px-2 py-1 font-display text-[10px] font-bold uppercase tracking-wider text-background outline-none"
+        className="rounded-lg border-2 border-background/30 bg-transparent px-2 py-1 font-display text-tiny font-bold uppercase tracking-wider text-background outline-none"
         {...tid("toolbar-refundable")}
       >
         <option value="" className="bg-foreground text-background">
@@ -166,7 +166,7 @@ export function EditorToolbar({
           className="data-[state=checked]:bg-background/30"
           {...tid("toolbar-active")}
         />
-        <span className="font-display text-[10px] font-bold uppercase tracking-wider text-background/70">
+        <span className="font-display text-tiny font-bold uppercase tracking-wider text-background/70">
           {t("products.active")}
         </span>
       </div>

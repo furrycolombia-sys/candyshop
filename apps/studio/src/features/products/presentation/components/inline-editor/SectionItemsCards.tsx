@@ -6,8 +6,7 @@ import { Draggable, Droppable } from "@hello-pangea/dnd";
 import type { DraggableProvided } from "@hello-pangea/dnd";
 import { GripVertical } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useCallback, useState } from "react";
-import type { Control, UseFieldArrayReturn } from "react-hook-form";
+import type { Control } from "react-hook-form";
 import { useController } from "react-hook-form";
 import { tid } from "shared";
 
@@ -15,19 +14,21 @@ import { AutoTextarea } from "./AutoTextarea";
 import { IconPicker } from "./IconPicker";
 import { InlineAddButton } from "./InlineAddButton";
 import { InlineRemoveButton } from "./InlineRemoveButton";
+import type { SectionFieldArray } from "./SectionCard";
 
+import { useLangToggle } from "@/features/products/application/useLangToggle";
+import {
+  ITEM_DROPPABLE_PREFIX,
+  SECTION_I18N_NAMESPACE,
+} from "@/features/products/domain/constants";
 import type { ProductFormValues } from "@/features/products/domain/validationSchema";
 import type { CategoryTheme } from "@/shared/domain/categoryConstants";
-
-type Lang = "en" | "es";
-
-const I18N_NAMESPACE = "form.inlineEditor.sections";
 
 interface SectionItemsCardsProps {
   sectionIndex: number;
   control: Control<ProductFormValues>;
   theme: CategoryTheme;
-  fieldArray: UseFieldArrayReturn;
+  fieldArray: SectionFieldArray;
   onAdd: () => void;
 }
 
@@ -48,8 +49,8 @@ function CardItem({
   onRemove: () => void;
   dragProvided: DraggableProvided;
 }) {
-  const t = useTranslations(I18N_NAMESPACE);
-  const [lang, setLang] = useState<Lang>("en");
+  const t = useTranslations(SECTION_I18N_NAMESPACE);
+  const { lang, toggleLang } = useLangToggle();
 
   const titleField = useController({
     control,
@@ -64,16 +65,12 @@ function CardItem({
     name: `sections.${sectionIndex}.items.${itemIndex}.icon` as any,
   });
 
-  const toggleLang = useCallback(() => {
-    setLang((prev) => (prev === "en" ? "es" : "en"));
-  }, []);
-
   /* eslint-disable react-hooks/refs -- useController field refs must be spread during render for react-hook-form binding */
   return (
     <div
       ref={dragProvided.innerRef}
       {...dragProvided.draggableProps}
-      className={`relative flex w-56 shrink-0 flex-col gap-3 border-[3px] ${theme.border} bg-background p-5 nb-shadow-sm lg:w-auto`}
+      className={`relative flex w-56 shrink-0 flex-col gap-3 border-3 ${theme.border} bg-background p-5 nb-shadow-sm lg:w-auto`}
       {...tid(`section-${sectionIndex}-item-${itemIndex}`)}
     >
       {/* Drag handle */}
@@ -88,7 +85,7 @@ function CardItem({
       {/* Remove */}
       <InlineRemoveButton
         onClick={onRemove}
-        ariaLabel={`Remove item ${itemIndex + 1}`}
+        ariaLabel={t("removeItem", { number: itemIndex + 1 })}
       />
 
       {/* Icon picker */}
@@ -102,7 +99,7 @@ function CardItem({
       <button
         type="button"
         onClick={toggleLang}
-        className="w-fit shrink-0 rounded-sm border-2 border-foreground/30 px-1.5 py-0.5 font-display text-[10px] font-extrabold uppercase tracking-widest text-muted-foreground hover:border-foreground hover:text-foreground"
+        className="w-fit shrink-0 rounded-sm border-2 border-foreground/30 px-1.5 py-0.5 font-display text-tiny font-extrabold uppercase tracking-widest text-muted-foreground hover:border-foreground hover:text-foreground"
         {...tid(`section-item-lang-toggle-${sectionIndex}-${itemIndex}`)}
       >
         {lang.toUpperCase()}
@@ -137,8 +134,6 @@ function CardItem({
 }
 /* eslint-enable @typescript-eslint/no-explicit-any, i18next/no-literal-string */
 
-const ITEM_DROPPABLE_PREFIX = "section-items-";
-
 export function SectionItemsCards({
   sectionIndex,
   control,
@@ -146,7 +141,7 @@ export function SectionItemsCards({
   fieldArray,
   onAdd,
 }: SectionItemsCardsProps) {
-  const t = useTranslations(I18N_NAMESPACE);
+  const t = useTranslations(SECTION_I18N_NAMESPACE);
   const { fields, remove } = fieldArray;
 
   return (

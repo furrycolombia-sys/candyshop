@@ -7,7 +7,7 @@ export default function NotFound() {
 
   return (
     <div className="flex-1 bg-dots flex items-center justify-center p-8">
-      <div className="border-[3px] border-foreground nb-shadow-md bg-background p-10 max-w-md w-full text-center">
+      <div className="border-3 border-foreground nb-shadow-md bg-background p-10 max-w-md w-full text-center">
         <p className="font-display text-8xl font-extrabold text-foreground/10 select-none mb-4">
           404
         </p>

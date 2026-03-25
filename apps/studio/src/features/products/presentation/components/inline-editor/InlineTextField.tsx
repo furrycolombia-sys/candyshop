@@ -1,14 +1,12 @@
 "use client";
 
-import { useCallback, useState } from "react";
 import type { Control, FieldPath } from "react-hook-form";
 import { tid } from "shared";
 
 import { LangTextarea } from "./LangTextarea";
 
+import { useLangToggle } from "@/features/products/application/useLangToggle";
 import type { ProductFormValues } from "@/features/products/domain/validationSchema";
-
-type Lang = "en" | "es";
 
 interface InlineTextFieldProps {
   control: Control<ProductFormValues>;
@@ -29,12 +27,8 @@ export function InlineTextField({
   as = "input",
   className = "",
 }: InlineTextFieldProps) {
-  const [lang, setLang] = useState<Lang>("en");
+  const { lang, toggleLang } = useLangToggle();
   const isMultiline = as === "textarea";
-
-  const toggleLang = useCallback(() => {
-    setLang((prev) => (prev === "en" ? "es" : "en"));
-  }, []);
 
   return (
     <div className="group relative" {...tid(`inline-text-${fieldNameEn}`)}>

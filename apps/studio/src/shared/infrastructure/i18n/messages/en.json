@@ -192,7 +192,9 @@
         "typeCards": "Cards",
         "typeAccordion": "Accordion",
         "typeTwoColumn": "Two Column",
-        "typeGallery": "Gallery"
+        "typeGallery": "Gallery",
+        "removeItem": "Remove item {number}",
+        "removeSection": "Remove section {number}"
       }
     },
     "typeDetails": {

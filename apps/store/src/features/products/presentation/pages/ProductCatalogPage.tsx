@@ -57,7 +57,7 @@ export function ProductCatalogPage() {
         {...tid("product-catalog-page")}
       >
         <div className="mx-auto w-full max-w-7xl px-4 py-8 flex flex-col items-center justify-center gap-4 min-h-[50vh]">
-          <div className="size-8 border-[3px] border-foreground border-t-transparent rounded-full animate-spin" />
+          <div className="size-8 border-3 border-foreground border-t-transparent rounded-full animate-spin" />
           <p className="font-display text-sm font-bold uppercase tracking-widest text-muted-foreground">
             {t("loading")}
           </p>

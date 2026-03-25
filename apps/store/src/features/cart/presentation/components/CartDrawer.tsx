@@ -47,7 +47,7 @@ export function CartDrawer() {
           <span>{t("title")}</span>
           {itemCount > 0 && (
             <span
-              className="flex min-w-6 size-6 items-center justify-center rounded-full bg-(--pink) text-foreground font-sans text-xs leading-none font-bold px-1.5 -mr-1"
+              className="flex min-w-6 size-6 items-center justify-center rounded-full bg-pink text-foreground font-sans text-xs leading-none font-bold px-1.5 -mr-1"
               aria-hidden="true"
             >
               {badgeLabel}
@@ -58,12 +58,12 @@ export function CartDrawer() {
 
       <SheetContent
         side="right"
-        className="flex flex-col w-full sm:max-w-md border-l-[3px] border-foreground rounded-none p-0 bg-background"
+        className="flex flex-col w-full sm:max-w-md border-l-3 border-foreground rounded-none p-0 bg-background"
         closeLabel={t("continueShopping")}
         data-testid="cart-drawer"
       >
         {/* Header */}
-        <SheetHeader className="border-b-[3px] border-foreground px-5 py-4 flex flex-row items-center justify-between">
+        <SheetHeader className="border-b-3 border-foreground px-5 py-4 flex flex-row items-center justify-between">
           <SheetTitle className="font-display text-xl font-extrabold uppercase tracking-tight">
             {t("title")}
             {itemCount > 0 && (
@@ -80,7 +80,7 @@ export function CartDrawer() {
             className="flex flex-1 flex-col items-center justify-center gap-4 py-20 px-6"
             {...tid("cart-drawer-empty")}
           >
-            <div className="size-20 border-[3px] border-foreground/20 flex items-center justify-center">
+            <div className="size-20 border-3 border-foreground/20 flex items-center justify-center">
               <ShoppingCart
                 size={32}
                 className="text-muted-foreground"
@@ -110,14 +110,14 @@ export function CartDrawer() {
                 return (
                   <li
                     key={item.id}
-                    className="flex gap-3 border-b-[3px] border-foreground/10 px-5 py-4 group"
+                    className="flex gap-3 border-b-3 border-foreground/10 px-5 py-4 group"
                     {...tid("cart-item")}
                   >
                     {/* Product color thumbnail */}
                     <div
-                      className={`size-20 shrink-0 border-[3px] border-foreground flex items-center justify-center ${itemColor}`}
+                      className={`size-20 shrink-0 border-3 border-foreground flex items-center justify-center ${itemColor}`}
                     >
-                      <span className="font-display text-[10px] font-extrabold uppercase tracking-widest text-foreground/30">
+                      <span className="font-display text-tiny font-extrabold uppercase tracking-widest text-foreground/30">
                         {tTypes(item.type)}
                       </span>
                     </div>
@@ -144,7 +144,7 @@ export function CartDrawer() {
                       <div className="flex items-center justify-between">
                         {/* Quantity controls */}
                         <div
-                          className="flex items-center border-[3px] border-foreground"
+                          className="flex items-center border-3 border-foreground"
                           {...tid("cart-item-qty")}
                         >
                           <button
@@ -194,11 +194,11 @@ export function CartDrawer() {
             </ul>
 
             {/* Footer */}
-            <div className="border-t-[3px] border-foreground px-5 py-4 flex flex-col gap-3 bg-background">
+            <div className="border-t-3 border-foreground px-5 py-4 flex flex-col gap-3 bg-background">
               {/* Clear cart */}
               <div className="flex justify-end">
                 <button
-                  className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
+                  className="text-tiny font-bold uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
                   onClick={clearCart}
                   {...tid("cart-drawer-clear")}
                 >
@@ -208,7 +208,7 @@ export function CartDrawer() {
               </div>
 
               {/* Total */}
-              <div className="flex items-center justify-between border-[3px] border-foreground p-3">
+              <div className="flex items-center justify-between border-3 border-foreground p-3">
                 <span className="font-display text-sm font-extrabold uppercase tracking-tight">
                   {t("total")}
                 </span>
@@ -226,7 +226,7 @@ export function CartDrawer() {
 
               {/* Checkout */}
               <button
-                className="nb-btn nb-btn-press-lg nb-shadow-sm w-full justify-center font-display text-sm font-extrabold uppercase tracking-widest py-3 bg-(--pink) opacity-50 cursor-not-allowed"
+                className="nb-btn nb-btn-press-lg nb-shadow-sm w-full justify-center font-display text-sm font-extrabold uppercase tracking-widest py-3 bg-pink opacity-50 cursor-not-allowed"
                 disabled
                 title={t("checkoutComingSoon")}
                 {...tid("cart-drawer-checkout")}

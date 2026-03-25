@@ -3,6 +3,7 @@ import { createBrowserSupabaseClient } from "api/supabase";
 import type { Json } from "api/types/database";
 import { useMemo } from "react";
 
+import { PRODUCTS_QUERY_KEY } from "@/features/products/domain/constants";
 import type { Product } from "@/features/products/domain/types";
 import type { ProductFormValues } from "@/features/products/domain/validationSchema";
 import {
@@ -11,8 +12,6 @@ import {
   updateProduct,
 } from "@/features/products/infrastructure/productMutations";
 import { useRouter } from "@/shared/infrastructure/i18n";
-
-const PRODUCTS_QUERY_KEY = "products";
 
 /** Generate a URL-safe slug from the product name */
 function generateSlug(name: string): string {
@@ -87,6 +86,33 @@ export function productToFormValues(product: Product): ProductFormValues {
   };
 }
 
+/** Build the shared payload fields from form values */
+function buildProductPayload(values: ProductFormValues) {
+  return {
+    name_en: values.name_en,
+    name_es: values.name_es || values.name_en,
+    description_en: values.description_en,
+    description_es: values.description_es,
+    tagline_en: values.tagline_en,
+    tagline_es: values.tagline_es,
+    long_description_en: values.long_description_en,
+    long_description_es: values.long_description_es,
+    type: values.type,
+    category: values.category,
+    price_cop: values.price_cop,
+    price_usd: typeof values.price_usd === "number" ? values.price_usd : 0,
+    tags: parseTags(values.tags ?? ""),
+    featured: values.featured ?? false,
+    is_active: values.is_active ?? true,
+    images: (values.images ?? []) as Json,
+    sections: (values.sections ?? []) as Json,
+    max_quantity: values.max_quantity ?? null,
+    compare_at_price_cop: values.compare_at_price_cop ?? null,
+    compare_at_price_usd: values.compare_at_price_usd ?? null,
+    refundable: values.refundable ?? null,
+  };
+}
+
 /** Mutation for creating a new product */
 export function useInsertProduct() {
   const supabase = useMemo(() => createBrowserSupabaseClient(), []);
@@ -97,27 +123,7 @@ export function useInsertProduct() {
     mutationFn: (values: ProductFormValues) => {
       const slug = generateSlug(values.name_en);
       return insertProduct(supabase, {
-        name_en: values.name_en,
-        name_es: values.name_es || values.name_en,
-        description_en: values.description_en,
-        description_es: values.description_es,
-        tagline_en: values.tagline_en,
-        tagline_es: values.tagline_es,
-        long_description_en: values.long_description_en,
-        long_description_es: values.long_description_es,
-        type: values.type,
-        category: values.category,
-        price_cop: values.price_cop,
-        price_usd: typeof values.price_usd === "number" ? values.price_usd : 0,
-        tags: parseTags(values.tags ?? ""),
-        featured: values.featured ?? false,
-        is_active: values.is_active ?? true,
-        images: (values.images ?? []) as Json,
-        sections: (values.sections ?? []) as Json,
-        max_quantity: values.max_quantity ?? null,
-        compare_at_price_cop: values.compare_at_price_cop ?? null,
-        compare_at_price_usd: values.compare_at_price_usd ?? null,
-        refundable: values.refundable ?? null,
+        ...buildProductPayload(values),
         slug,
       });
     },
@@ -136,29 +142,7 @@ export function useUpdateProduct(productId: string) {
 
   return useMutation({
     mutationFn: (values: ProductFormValues) =>
-      updateProduct(supabase, productId, {
-        name_en: values.name_en,
-        name_es: values.name_es || values.name_en,
-        description_en: values.description_en,
-        description_es: values.description_es,
-        tagline_en: values.tagline_en,
-        tagline_es: values.tagline_es,
-        long_description_en: values.long_description_en,
-        long_description_es: values.long_description_es,
-        type: values.type,
-        category: values.category,
-        price_cop: values.price_cop,
-        price_usd: typeof values.price_usd === "number" ? values.price_usd : 0,
-        tags: parseTags(values.tags ?? ""),
-        featured: values.featured ?? false,
-        is_active: values.is_active ?? true,
-        images: (values.images ?? []) as Json,
-        sections: (values.sections ?? []) as Json,
-        max_quantity: values.max_quantity ?? null,
-        compare_at_price_cop: values.compare_at_price_cop ?? null,
-        compare_at_price_usd: values.compare_at_price_usd ?? null,
-        refundable: values.refundable ?? null,
-      }),
+      updateProduct(supabase, productId, buildProductPayload(values)),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: [PRODUCTS_QUERY_KEY] });
       router.push("/");

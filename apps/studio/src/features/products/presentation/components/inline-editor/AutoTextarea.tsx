@@ -1,12 +1,8 @@
 "use client";
 
-import {
-  type Ref,
-  type TextareaHTMLAttributes,
-  useCallback,
-  useEffect,
-  useRef,
-} from "react";
+import { type Ref, type TextareaHTMLAttributes, useRef } from "react";
+
+import { useAutoResize } from "@/features/products/application/useAutoResize";
 
 /**
  * Auto-resizing textarea — grows/shrinks to fit content.
@@ -22,17 +18,7 @@ export function AutoTextarea({
   ref?: Ref<HTMLTextAreaElement>;
 }) {
   const localRef = useRef<HTMLTextAreaElement | null>(null);
-
-  const autoResize = useCallback(() => {
-    const el = localRef.current;
-    if (!el) return;
-    el.style.height = "auto";
-    el.style.height = `${el.scrollHeight}px`;
-  }, []);
-
-  useEffect(() => {
-    autoResize();
-  }, [value, autoResize]);
+  const autoResize = useAutoResize(localRef, String(value ?? ""));
 
   return (
     <textarea

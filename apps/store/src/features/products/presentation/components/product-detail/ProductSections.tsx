@@ -26,9 +26,7 @@ export function ProductSections({ product }: ProductSectionsProps) {
     <>
       <HeroSection product={product} theme={theme} />
 
-      {longDescription && (
-        <DescriptionSection description={longDescription} theme={theme} />
-      )}
+      {longDescription && <DescriptionSection description={longDescription} />}
 
       {sections.map((section) => (
         <SectionRenderer

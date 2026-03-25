@@ -23,7 +23,7 @@ export function AccordionItem({
 
   return (
     <div
-      className="border-[3px] border-foreground nb-shadow-sm"
+      className="border-3 border-foreground nb-shadow-sm"
       {...tid(`accordion-item-${index}`)}
     >
       <button
@@ -41,7 +41,7 @@ export function AccordionItem({
       </button>
       {open && (
         <div
-          className={`px-5 pb-5 border-t-[3px] border-foreground pt-4 ${theme.bgLight}`}
+          className={`px-5 pb-5 border-t-3 border-foreground pt-4 ${theme.bgLight}`}
           {...tid(`accordion-answer-${index}`)}
         >
           <p className="text-sm/relaxed text-muted-foreground">{answer}</p>

@@ -6,21 +6,23 @@ import { Draggable, Droppable } from "@hello-pangea/dnd";
 import type { DraggableProvided } from "@hello-pangea/dnd";
 import { GripVertical, Minus, Plus } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useCallback, useState } from "react";
-import type { Control, UseFieldArrayReturn } from "react-hook-form";
+import { useState } from "react";
+import type { Control } from "react-hook-form";
 import { useController } from "react-hook-form";
 import { tid } from "shared";
 
 import { AutoTextarea } from "./AutoTextarea";
 import { InlineAddButton } from "./InlineAddButton";
 import { InlineRemoveButton } from "./InlineRemoveButton";
+import type { SectionFieldArray } from "./SectionCard";
 
+import { useLangToggle } from "@/features/products/application/useLangToggle";
+import {
+  ITEM_DROPPABLE_PREFIX,
+  SECTION_I18N_NAMESPACE,
+} from "@/features/products/domain/constants";
 import type { ProductFormValues } from "@/features/products/domain/validationSchema";
 import type { CategoryTheme } from "@/shared/domain/categoryConstants";
-
-type Lang = "en" | "es";
-
-const I18N_NAMESPACE = "form.inlineEditor.sections";
 
 /* eslint-disable @typescript-eslint/no-explicit-any, i18next/no-literal-string -- dynamic nested field paths from useFieldArray */
 function AccordionItemEditor({
@@ -38,8 +40,8 @@ function AccordionItemEditor({
   onRemove: () => void;
   dragProvided: DraggableProvided;
 }) {
-  const t = useTranslations(I18N_NAMESPACE);
-  const [lang, setLang] = useState<Lang>("en");
+  const t = useTranslations(SECTION_I18N_NAMESPACE);
+  const { lang, toggleLang } = useLangToggle();
   const [open, setOpen] = useState(false);
 
   const titleField = useController({
@@ -51,22 +53,18 @@ function AccordionItemEditor({
     name: `sections.${sectionIndex}.items.${itemIndex}.description_${lang}` as any,
   });
 
-  const toggleLang = useCallback(() => {
-    setLang((prev) => (prev === "en" ? "es" : "en"));
-  }, []);
-
   /* eslint-disable react-hooks/refs -- useController field refs must be spread during render for react-hook-form binding */
   return (
     <div
       ref={dragProvided.innerRef}
       {...dragProvided.draggableProps}
-      className="relative border-[3px] border-foreground nb-shadow-sm"
+      className="relative border-3 border-foreground nb-shadow-sm"
       {...tid(`section-${sectionIndex}-item-${itemIndex}`)}
     >
       {/* Remove */}
       <InlineRemoveButton
         onClick={onRemove}
-        ariaLabel={`Remove item ${itemIndex + 1}`}
+        ariaLabel={t("removeItem", { number: itemIndex + 1 })}
       />
 
       {/* Header row — mirrors store AccordionItem; pr-10 keeps +/- away from absolute X */}
@@ -84,7 +82,7 @@ function AccordionItemEditor({
         <button
           type="button"
           onClick={toggleLang}
-          className="shrink-0 rounded-sm border-2 border-foreground/30 px-1.5 py-0.5 font-display text-[10px] font-extrabold uppercase tracking-widest text-muted-foreground hover:border-foreground hover:text-foreground"
+          className="shrink-0 rounded-sm border-2 border-foreground/30 px-1.5 py-0.5 font-display text-tiny font-extrabold uppercase tracking-widest text-muted-foreground hover:border-foreground hover:text-foreground"
           {...tid(`section-item-lang-toggle-${sectionIndex}-${itemIndex}`)}
         >
           {lang.toUpperCase()}
@@ -120,7 +118,7 @@ function AccordionItemEditor({
       {/* Expanded content — mirrors store AccordionItem answer area */}
       {open && (
         <div
-          className={`border-t-[3px] border-foreground ${theme.bgLight} px-5 pb-5 pt-4`}
+          className={`border-t-3 border-foreground ${theme.bgLight} px-5 pb-5 pt-4`}
         >
           <AutoTextarea
             ref={descField.field.ref}
@@ -140,13 +138,11 @@ function AccordionItemEditor({
 }
 /* eslint-enable @typescript-eslint/no-explicit-any, i18next/no-literal-string */
 
-const ITEM_DROPPABLE_PREFIX = "section-items-";
-
 interface SectionItemsAccordionProps {
   sectionIndex: number;
   control: Control<ProductFormValues>;
   theme: CategoryTheme;
-  fieldArray: UseFieldArrayReturn;
+  fieldArray: SectionFieldArray;
   onAdd: () => void;
 }
 
@@ -157,7 +153,7 @@ export function SectionItemsAccordion({
   fieldArray,
   onAdd,
 }: SectionItemsAccordionProps) {
-  const t = useTranslations(I18N_NAMESPACE);
+  const t = useTranslations(SECTION_I18N_NAMESPACE);
   const { fields, remove } = fieldArray;
 
   return (

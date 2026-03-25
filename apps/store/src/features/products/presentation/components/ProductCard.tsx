@@ -7,7 +7,10 @@ import { i18nField, i18nPrice, tid } from "shared";
 import { ProductCardImage } from "./ProductCardImage";
 import { ProductCardMeta } from "./ProductCardMeta";
 
-import type { Product } from "@/features/products/domain/types";
+import {
+  isProductAvailable,
+  type Product,
+} from "@/features/products/domain/types";
 import { useAddToCart } from "@/shared/application/hooks/useAddToCart";
 import { getCategoryColor } from "@/shared/domain/categoryConstants";
 import { Link } from "@/shared/infrastructure/i18n";
@@ -32,20 +35,19 @@ export function ProductCard({
   const categoryColor = getCategoryColor(product.category);
   const isFeatured = variant === "featured";
   const addToCartLabel = added ? t("addedToCart") : t("addToCart");
-  const isAddToCartDisabled =
-    !product.is_active || product.max_quantity === 0 || added;
+  const isAddToCartDisabled = !isProductAvailable(product) || added;
   const inCartLabel = t("inCart", { count: quantityInCart });
   const name = i18nField(product, "name", locale);
   const description = i18nField(product, "description", locale);
 
   return (
     <article
-      className={`flex border-[3px] border-foreground nb-shadow-md bg-background transition-transform hover:-translate-1 ${
+      className={`flex border-3 border-foreground nb-shadow-md bg-background transition-transform hover:-translate-1 ${
         isFeatured ? "flex-col sm:flex-row" : "flex-col"
       }`}
       {...tid("product-card")}
-      {...({ "data-product-id": product.id } as Record<string, string>)}
-      {...({ "data-variant": variant } as Record<string, string>)}
+      data-product-id={product.id}
+      data-variant={variant}
     >
       <Link
         href={`/products/${product.id}/${product.slug}`}
@@ -80,7 +82,7 @@ export function ProductCard({
               {tCategories(product.category)}
             </span>
             <span
-              className="border-2 border-foreground px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest text-muted-foreground"
+              className="border-2 border-foreground px-2 py-0.5 text-tiny font-bold uppercase tracking-widest text-muted-foreground"
               {...tid("product-card-type")}
             >
               {tTypes(product.type)}

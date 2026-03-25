@@ -16,11 +16,12 @@ import { InlineAddButton } from "./InlineAddButton";
 import { SectionCard } from "./SectionCard";
 import type { ItemMoveRegistry } from "./SectionCard";
 
+import {
+  ITEM_DROPPABLE_PREFIX,
+  SECTION_DROPPABLE_ID,
+} from "@/features/products/domain/constants";
 import type { ProductFormValues } from "@/features/products/domain/validationSchema";
 import type { CategoryTheme } from "@/shared/domain/categoryConstants";
-
-const SECTION_DROPPABLE_ID = "sections";
-const ITEM_DROPPABLE_PREFIX = "section-items-";
 
 interface InlineSectionsProps {
   control: Control<ProductFormValues>;

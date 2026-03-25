@@ -163,6 +163,9 @@
       "editImageUrl": "URL de imagen",
       "editImageAlt": "Texto alternativo",
       "imageNumber": "Imagen {number}",
+      "chooseIcon": "Elegir ícono",
+      "searchIcons": "Buscar íconos...",
+      "noIconsFound": "No se encontraron íconos",
       "stock": {
         "label": "Stock",
         "unlimited": "Stock ilimitado",
@@ -189,7 +192,9 @@
         "typeCards": "Tarjetas",
         "typeAccordion": "Acordeón",
         "typeTwoColumn": "Dos Columnas",
-        "typeGallery": "Galería"
+        "typeGallery": "Galería",
+        "removeItem": "Eliminar item {number}",
+        "removeSection": "Eliminar sección {number}"
       }
     },
     "typeDetails": {

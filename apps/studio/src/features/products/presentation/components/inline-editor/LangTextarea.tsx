@@ -1,10 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useRef } from "react";
+import { useRef } from "react";
 import type { Control, FieldPath } from "react-hook-form";
 import { useController } from "react-hook-form";
 import { tid } from "shared";
 
+import { useAutoResize } from "@/features/products/application/useAutoResize";
 import type { ProductFormValues } from "@/features/products/domain/validationSchema";
 
 const MULTILINE_ROWS = 3;
@@ -36,17 +37,7 @@ export function LangTextarea({
   const isEmpty = value.length === 0;
 
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
-
-  const autoResize = useCallback(() => {
-    const el = textareaRef.current;
-    if (!el) return;
-    el.style.height = "auto";
-    el.style.height = `${el.scrollHeight}px`;
-  }, []);
-
-  useEffect(() => {
-    autoResize();
-  }, [value, autoResize, visible]);
+  const autoResize = useAutoResize(textareaRef, `${value}|${visible}`);
 
   const borderClass = isEmpty
     ? "border-b-2 border-dashed border-foreground/20"

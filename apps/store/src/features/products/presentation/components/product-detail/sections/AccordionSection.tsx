@@ -19,7 +19,7 @@ export function AccordionSection({ section, theme }: AccordionSectionProps) {
 
   return (
     <section
-      className="w-full bg-dots border-b-[3px] border-foreground"
+      className="w-full bg-dots border-b-3 border-foreground"
       {...tid("accordion-section")}
     >
       <div className="max-w-5xl mx-auto px-4 py-12">

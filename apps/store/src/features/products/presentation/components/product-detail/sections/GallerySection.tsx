@@ -19,7 +19,7 @@ export function GallerySection({ section, theme }: GallerySectionProps) {
 
   return (
     <section
-      className={`w-full ${theme.bgLight} border-b-[3px] border-foreground`}
+      className={`w-full ${theme.bgLight} border-b-3 border-foreground`}
       {...tid("gallery-section")}
     >
       <div className="max-w-5xl mx-auto px-4 py-12">
@@ -44,7 +44,7 @@ export function GallerySection({ section, theme }: GallerySectionProps) {
                 {...tid(`gallery-item-${index}`)}
               >
                 <div
-                  className={`${theme.bg} border-[3px] border-foreground nb-shadow-sm flex items-center justify-center h-44 relative overflow-hidden`}
+                  className={`${theme.bg} border-3 border-foreground nb-shadow-sm flex items-center justify-center h-44 relative overflow-hidden`}
                 >
                   {item.image_url ? (
                     <Image

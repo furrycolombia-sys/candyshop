@@ -20,7 +20,7 @@ export function TwoColumnSection({ section, theme }: TwoColumnSectionProps) {
 
   return (
     <section
-      className="w-full bg-background border-b-[3px] border-foreground"
+      className="w-full bg-background border-b-3 border-foreground"
       {...tid("two-column-section")}
     >
       <div className="max-w-5xl mx-auto px-4 py-12">
@@ -33,7 +33,7 @@ export function TwoColumnSection({ section, theme }: TwoColumnSectionProps) {
           </h2>
         )}
         <div
-          className={`border-[3px] ${theme.border} nb-shadow-sm overflow-hidden`}
+          className={`border-3 ${theme.border} nb-shadow-sm overflow-hidden`}
           {...tid("two-column-table")}
         >
           {sorted.map((item, index) => {
@@ -42,10 +42,10 @@ export function TwoColumnSection({ section, theme }: TwoColumnSectionProps) {
             return (
               <div
                 key={label || index}
-                className={`flex items-stretch border-b-[3px] border-foreground last:border-b-0 ${index % MODULO_ZEBRA === 0 ? theme.rowEven : theme.rowOdd}`}
+                className={`flex items-stretch border-b-3 border-foreground last:border-b-0 ${index % MODULO_ZEBRA === 0 ? theme.rowEven : theme.rowOdd}`}
                 {...tid(`two-column-row-${index}`)}
               >
-                <div className="w-1/3 shrink-0 px-5 py-3 border-r-[3px] border-foreground">
+                <div className="w-1/3 shrink-0 px-5 py-3 border-r-3 border-foreground">
                   <span className="text-sm font-bold uppercase tracking-wide">
                     {label}
                   </span>

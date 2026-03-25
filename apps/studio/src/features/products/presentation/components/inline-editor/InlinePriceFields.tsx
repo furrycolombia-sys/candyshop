@@ -9,6 +9,11 @@ import { PriceInput } from "./PriceInput";
 
 import type { ProductFormValues } from "@/features/products/domain/validationSchema";
 
+/** Parse price input: empty string returns fallback, otherwise converts to number */
+function parsePrice(value: string, fallback: number | null): number | null {
+  return value === "" ? fallback : Number(value);
+}
+
 interface InlinePriceFieldsProps {
   control: Control<ProductFormValues>;
 }
@@ -29,7 +34,7 @@ export function InlinePriceFields({ control }: InlinePriceFieldsProps) {
 
   return (
     <div
-      className="border-[3px] border-foreground bg-background p-4 nb-shadow-sm"
+      className="border-3 border-foreground bg-background p-4 nb-shadow-sm"
       {...tid("inline-price-fields")}
     >
       {/* Main prices — big display like store PriceBlock */}
@@ -43,7 +48,7 @@ export function InlinePriceFields({ control }: InlinePriceFieldsProps) {
           <PriceInput
             inputRef={copField.ref}
             value={copField.value}
-            onChange={(v) => copField.onChange(v === "" ? 0 : Number(v))}
+            onChange={(v) => copField.onChange(parsePrice(v, 0))}
             onBlur={copField.onBlur}
             placeholder="0"
             className="font-display text-5xl font-extrabold"
@@ -62,7 +67,7 @@ export function InlinePriceFields({ control }: InlinePriceFieldsProps) {
           <PriceInput
             inputRef={usdField.ref}
             value={usdField.value ?? null}
-            onChange={(v) => usdField.onChange(v === "" ? 0 : Number(v))}
+            onChange={(v) => usdField.onChange(parsePrice(v, 0))}
             onBlur={usdField.onBlur}
             placeholder="0"
             className="font-display text-2xl font-bold text-muted-foreground"
@@ -74,7 +79,7 @@ export function InlinePriceFields({ control }: InlinePriceFieldsProps) {
       {/* Compare-at prices — strikethrough style */}
       <div className="mt-3 flex items-baseline gap-4 flex-wrap">
         <div className="flex items-baseline gap-1">
-          <span className="font-display text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+          <span className="font-display text-tiny font-bold uppercase tracking-wider text-muted-foreground">
             {t("comparePriceCop")}
           </span>
           <span className="font-display text-lg font-bold text-muted-foreground line-through">
@@ -83,9 +88,7 @@ export function InlinePriceFields({ control }: InlinePriceFieldsProps) {
           <PriceInput
             inputRef={compareCopField.ref}
             value={compareCopField.value}
-            onChange={(v) =>
-              compareCopField.onChange(v === "" ? null : Number(v))
-            }
+            onChange={(v) => compareCopField.onChange(parsePrice(v, null))}
             onBlur={compareCopField.onBlur}
             placeholder="—"
             className="font-display text-lg font-bold text-muted-foreground line-through"
@@ -94,7 +97,7 @@ export function InlinePriceFields({ control }: InlinePriceFieldsProps) {
         </div>
 
         <div className="flex items-baseline gap-1">
-          <span className="font-display text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+          <span className="font-display text-tiny font-bold uppercase tracking-wider text-muted-foreground">
             {t("comparePriceUsd")}
           </span>
           <span className="font-display text-lg font-bold text-muted-foreground line-through">
@@ -103,9 +106,7 @@ export function InlinePriceFields({ control }: InlinePriceFieldsProps) {
           <PriceInput
             inputRef={compareUsdField.ref}
             value={compareUsdField.value}
-            onChange={(v) =>
-              compareUsdField.onChange(v === "" ? null : Number(v))
-            }
+            onChange={(v) => compareUsdField.onChange(parsePrice(v, null))}
             onBlur={compareUsdField.onBlur}
             placeholder="—"
             className="font-display text-lg font-bold text-muted-foreground line-through"

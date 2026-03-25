@@ -25,7 +25,7 @@ export function ProductDetailPage({ productId }: ProductDetailPageProps) {
         className="flex-1 flex flex-col items-center justify-center gap-4 min-h-[50vh]"
         {...tid("product-detail-page")}
       >
-        <div className="size-8 border-[3px] border-foreground border-t-transparent rounded-full animate-spin" />
+        <div className="size-8 border-3 border-foreground border-t-transparent rounded-full animate-spin" />
         <p className="font-display text-sm font-bold uppercase tracking-widest text-muted-foreground">
           {t("loading")}
         </p>

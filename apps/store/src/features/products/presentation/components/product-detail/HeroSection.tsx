@@ -8,7 +8,10 @@ import { ImageGallery } from "./ImageGallery";
 import { PriceBlock } from "./PriceBlock";
 import { RatingStars } from "./RatingStars";
 
-import type { Product } from "@/features/products/domain/types";
+import {
+  isProductAvailable,
+  type Product,
+} from "@/features/products/domain/types";
 import { useAddToCart } from "@/shared/application/hooks/useAddToCart";
 import type { CategoryTheme } from "@/shared/domain/categoryConstants";
 
@@ -28,13 +31,11 @@ export function HeroSection({ product, theme }: HeroSectionProps) {
   const tagline = i18nField(product, "tagline", locale);
   const description = i18nField(product, "description", locale);
 
-  const isAvailable =
-    product.is_active &&
-    (product.max_quantity === null || product.max_quantity > 0);
+  const isAvailable = isProductAvailable(product);
 
   return (
     <section
-      className={`w-full ${theme.bg}/15 border-b-[3px] border-foreground`}
+      className={`w-full ${theme.bg}/15 border-b-3 border-foreground`}
       {...tid("hero-section")}
     >
       <div className="max-w-6xl mx-auto px-4 py-10 lg:py-14">
@@ -68,29 +69,29 @@ export function HeroSection({ product, theme }: HeroSectionProps) {
               {...tid("hero-badges")}
             >
               <span
-                className={`${theme.badgeBg} border-[3px] border-foreground px-3 py-1 text-xs font-bold text-foreground`}
+                className={`${theme.badgeBg} border-3 border-foreground px-3 py-1 text-xs font-bold text-foreground`}
                 {...tid("hero-category")}
               >
                 {tCategories(product.category)}
               </span>
               <span
-                className="bg-background border-[3px] border-foreground px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground"
+                className="bg-background border-3 border-foreground px-3 py-1 text-tiny font-bold uppercase tracking-widest text-muted-foreground"
                 {...tid("hero-type")}
               >
                 {tTypes(product.type)}
               </span>
               {isAvailable ? (
-                <span className="bg-(--mint) border-[3px] border-foreground px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-foreground">
+                <span className="bg-mint border-3 border-foreground px-3 py-1 text-tiny font-bold uppercase tracking-widest text-foreground">
                   {t("inStock")}
                 </span>
               ) : (
-                <span className="bg-(--peach) border-[3px] border-foreground px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-foreground">
+                <span className="bg-peach border-3 border-foreground px-3 py-1 text-tiny font-bold uppercase tracking-widest text-foreground">
                   {t("outOfStock")}
                 </span>
               )}
               {product.refundable === true && (
                 <span
-                  className="bg-(--mint) border-[3px] border-foreground px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-foreground"
+                  className="bg-mint border-3 border-foreground px-3 py-1 text-tiny font-bold uppercase tracking-widest text-foreground"
                   {...tid("hero-refundable")}
                 >
                   {t("refundable")}
@@ -98,7 +99,7 @@ export function HeroSection({ product, theme }: HeroSectionProps) {
               )}
               {product.refundable === false && (
                 <span
-                  className="bg-(--peach) border-[3px] border-foreground px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-foreground"
+                  className="bg-peach border-3 border-foreground px-3 py-1 text-tiny font-bold uppercase tracking-widest text-foreground"
                   {...tid("hero-non-refundable")}
                 >
                   {t("nonRefundable")}
@@ -107,7 +108,7 @@ export function HeroSection({ product, theme }: HeroSectionProps) {
             </div>
 
             {/* Rating */}
-            {product.rating != null && product.review_count > 0 && (
+            {product.rating != null && (product.review_count ?? 0) > 0 && (
               <div className="flex items-center gap-2" {...tid("hero-rating")}>
                 <div className="flex items-center gap-0.5">
                   <RatingStars rating={product.rating} theme={theme} />
@@ -147,7 +148,7 @@ export function HeroSection({ product, theme }: HeroSectionProps) {
                 {product.tags.map((tag) => (
                   <span
                     key={tag}
-                    className="bg-muted px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest text-muted-foreground"
+                    className="bg-muted px-2 py-0.5 text-tiny font-bold uppercase tracking-widest text-muted-foreground"
                   >
                     #{tag}
                   </span>

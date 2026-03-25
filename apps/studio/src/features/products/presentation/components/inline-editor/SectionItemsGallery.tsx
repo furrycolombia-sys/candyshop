@@ -6,21 +6,22 @@ import { Draggable, Droppable } from "@hello-pangea/dnd";
 import type { DraggableProvided } from "@hello-pangea/dnd";
 import { GripVertical, ImageIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useCallback, useState } from "react";
-import type { Control, UseFieldArrayReturn } from "react-hook-form";
+import type { Control } from "react-hook-form";
 import { useController } from "react-hook-form";
 import { tid } from "shared";
 
 import { AutoTextarea } from "./AutoTextarea";
 import { InlineAddButton } from "./InlineAddButton";
 import { InlineRemoveButton } from "./InlineRemoveButton";
+import type { SectionFieldArray } from "./SectionCard";
 
+import { useLangToggle } from "@/features/products/application/useLangToggle";
+import {
+  ITEM_DROPPABLE_PREFIX,
+  SECTION_I18N_NAMESPACE,
+} from "@/features/products/domain/constants";
 import type { ProductFormValues } from "@/features/products/domain/validationSchema";
 import type { CategoryTheme } from "@/shared/domain/categoryConstants";
-
-type Lang = "en" | "es";
-
-const I18N_NAMESPACE = "form.inlineEditor.sections";
 
 /* eslint-disable @typescript-eslint/no-explicit-any, i18next/no-literal-string -- dynamic nested field paths from useFieldArray */
 function GalleryItemEditor({
@@ -38,8 +39,8 @@ function GalleryItemEditor({
   onRemove: () => void;
   dragProvided: DraggableProvided;
 }) {
-  const t = useTranslations(I18N_NAMESPACE);
-  const [lang, setLang] = useState<Lang>("en");
+  const t = useTranslations(SECTION_I18N_NAMESPACE);
+  const { lang, toggleLang } = useLangToggle();
 
   const titleField = useController({
     control,
@@ -49,10 +50,6 @@ function GalleryItemEditor({
     control,
     name: `sections.${sectionIndex}.items.${itemIndex}.image_url` as any,
   });
-
-  const toggleLang = useCallback(() => {
-    setLang((prev) => (prev === "en" ? "es" : "en"));
-  }, []);
 
   const imageUrl = String(imageField.field.value ?? "");
 
@@ -67,7 +64,7 @@ function GalleryItemEditor({
       {/* Remove */}
       <InlineRemoveButton
         onClick={onRemove}
-        ariaLabel={`Remove item ${itemIndex + 1}`}
+        ariaLabel={t("removeItem", { number: itemIndex + 1 })}
       />
 
       {/* Drag handle */}
@@ -82,7 +79,7 @@ function GalleryItemEditor({
       {/* eslint-disable @next/next/no-img-element -- studio editor uses raw img for arbitrary user URLs */}
       {/* Image preview / placeholder — mirrors store GallerySection */}
       <div
-        className={`relative flex h-44 items-center justify-center overflow-hidden border-[3px] border-foreground ${theme.bg} nb-shadow-sm`}
+        className={`relative flex h-44 items-center justify-center overflow-hidden border-3 border-foreground ${theme.bg} nb-shadow-sm`}
       >
         {imageUrl ? (
           <img
@@ -104,7 +101,7 @@ function GalleryItemEditor({
         onChange={imageField.field.onChange}
         onBlur={imageField.field.onBlur}
         placeholder={t("imageUrl")}
-        className="border-none bg-transparent p-0 text-[10px] text-muted-foreground shadow-none focus-visible:ring-0"
+        className="border-none bg-transparent p-0 text-tiny text-muted-foreground shadow-none focus-visible:ring-0"
         {...tid(`section-item-image-${sectionIndex}-${itemIndex}`)}
       />
 
@@ -135,13 +132,11 @@ function GalleryItemEditor({
 }
 /* eslint-enable @typescript-eslint/no-explicit-any, i18next/no-literal-string */
 
-const ITEM_DROPPABLE_PREFIX = "section-items-";
-
 interface SectionItemsGalleryProps {
   sectionIndex: number;
   control: Control<ProductFormValues>;
   theme: CategoryTheme;
-  fieldArray: UseFieldArrayReturn;
+  fieldArray: SectionFieldArray;
   onAdd: () => void;
 }
 
@@ -152,7 +147,7 @@ export function SectionItemsGallery({
   fieldArray,
   onAdd,
 }: SectionItemsGalleryProps) {
-  const t = useTranslations(I18N_NAMESPACE);
+  const t = useTranslations(SECTION_I18N_NAMESPACE);
   const { fields, remove } = fieldArray;
 
   return (

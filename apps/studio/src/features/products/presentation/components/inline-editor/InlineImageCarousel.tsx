@@ -131,7 +131,7 @@ export function InlineImageCarousel({ control }: InlineImageCarouselProps) {
         <button
           type="button"
           onClick={() => setActiveIndex(index)}
-          className={`flex items-center justify-center size-16 border-[3px] transition-all overflow-hidden ${activeCls}`}
+          className={`flex items-center justify-center size-16 border-3 transition-all overflow-hidden ${activeCls}`}
           aria-label={t("imageNumber", { number: index + 1 })}
         >
           {hasUrl && !isBroken ? (
@@ -167,7 +167,7 @@ export function InlineImageCarousel({ control }: InlineImageCarouselProps) {
     <button
       type="button"
       onClick={handleAdd}
-      className="flex items-center justify-center size-16 border-[3px] border-dashed border-foreground/40 transition-colors hover:border-foreground/70 text-muted-foreground hover:text-foreground shrink-0"
+      className="flex items-center justify-center size-16 border-3 border-dashed border-foreground/40 transition-colors hover:border-foreground/70 text-muted-foreground hover:text-foreground shrink-0"
       aria-label={t("addImage")}
       {...tid("image-thumb-add")}
     >
@@ -193,7 +193,7 @@ export function InlineImageCarousel({ control }: InlineImageCarouselProps) {
       <button
         type="button"
         onClick={handleAdd}
-        className={`relative flex-1 flex flex-col items-center justify-center gap-3 aspect-square border-[3px] border-dashed border-foreground/40 overflow-hidden ${theme.bg}`}
+        className={`relative flex-1 flex flex-col items-center justify-center gap-3 aspect-square border-3 border-dashed border-foreground/40 overflow-hidden ${theme.bg}`}
         {...tid("image-gallery-main-empty")}
       >
         <Plus className="size-8 text-foreground/30" />
@@ -205,7 +205,7 @@ export function InlineImageCarousel({ control }: InlineImageCarouselProps) {
       <button
         type="button"
         onClick={toggleEditMain}
-        className={`relative flex-1 flex items-center justify-center aspect-square border-[3px] border-foreground nb-shadow-lg overflow-hidden ${theme.bg} cursor-pointer`}
+        className={`relative flex-1 flex items-center justify-center aspect-square border-3 border-foreground nb-shadow-lg overflow-hidden ${theme.bg} cursor-pointer`}
         {...tid("image-gallery-main")}
       >
         {/* Dot texture */}
@@ -233,7 +233,7 @@ export function InlineImageCarousel({ control }: InlineImageCarouselProps) {
         )}
 
         {/* Counter */}
-        <div className="absolute bottom-2 right-2 bg-foreground text-background text-[10px] font-bold px-2 py-0.5 tracking-widest">
+        <div className="absolute bottom-2 right-2 bg-foreground text-background text-tiny font-bold px-2 py-0.5 tracking-widest">
           {safeIndex + 1} / {fields.length}
         </div>
       </button>
@@ -243,7 +243,7 @@ export function InlineImageCarousel({ control }: InlineImageCarouselProps) {
   const editBar =
     editingMain && safeIndex >= 0 ? (
       <div
-        className="flex flex-col gap-2 border-[3px] border-foreground p-3"
+        className="flex flex-col gap-2 border-3 border-foreground p-3"
         {...tid("image-edit-bar")}
       >
         <Input

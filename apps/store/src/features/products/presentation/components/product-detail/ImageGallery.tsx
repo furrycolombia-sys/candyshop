@@ -100,7 +100,7 @@ export function ImageGallery({ product, theme }: ImageGalleryProps) {
                 <button
                   key={view.index}
                   onClick={() => setActiveIndex(view.index)}
-                  className={`flex items-center justify-center size-16 border-[3px] transition-all ${activeCls}`}
+                  className={`flex items-center justify-center size-16 border-3 transition-all ${activeCls}`}
                   aria-label={viewImageLabel(view.label)}
                   {...tid(`image-gallery-thumb-${String(view.index)}`)}
                 >
@@ -115,7 +115,7 @@ export function ImageGallery({ product, theme }: ImageGalleryProps) {
 
         {/* Main image — fills remaining width */}
         <div
-          className={`relative flex-1 flex items-center justify-center aspect-square border-[3px] border-foreground nb-shadow-lg overflow-hidden ${theme.bg}`}
+          className={`relative flex-1 flex items-center justify-center aspect-square border-3 border-foreground nb-shadow-lg overflow-hidden ${theme.bg}`}
           style={{ backgroundImage: gradientStyle }}
           {...tid("image-gallery-main")}
         >
@@ -133,7 +133,7 @@ export function ImageGallery({ product, theme }: ImageGalleryProps) {
       {/* Mobile: image on top, thumbnails below */}
       <div className="flex flex-col gap-3 lg:hidden">
         <div
-          className={`relative flex items-center justify-center aspect-square border-[3px] border-foreground nb-shadow-lg overflow-hidden ${theme.bg}`}
+          className={`relative flex items-center justify-center aspect-square border-3 border-foreground nb-shadow-lg overflow-hidden ${theme.bg}`}
           style={{ backgroundImage: gradientStyle }}
           {...tid("image-gallery-main-mobile")}
         >
@@ -163,7 +163,7 @@ export function ImageGallery({ product, theme }: ImageGalleryProps) {
                 <button
                   key={view.index}
                   onClick={() => setActiveIndex(view.index)}
-                  className={`flex items-center justify-center py-2 border-[3px] transition-all ${activeCls}`}
+                  className={`flex items-center justify-center py-2 border-3 transition-all ${activeCls}`}
                   aria-label={viewImageLabel(view.label)}
                 >
                   <span className="font-display text-[9px] font-extrabold uppercase tracking-wide truncate px-1">

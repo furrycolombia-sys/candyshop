@@ -1,16 +1,16 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createBrowserSupabaseClient } from "api/supabase";
+import { useMemo } from "react";
 
+import { PRODUCTS_QUERY_KEY } from "@/features/products/domain/constants";
 import {
   deleteProduct,
   toggleProductField,
 } from "@/features/products/infrastructure/productQueries";
 
-const PRODUCTS_QUERY_KEY = "products";
-
 export function useToggleProduct() {
   const queryClient = useQueryClient();
-  const supabase = createBrowserSupabaseClient();
+  const supabase = useMemo(() => createBrowserSupabaseClient(), []);
 
   return useMutation({
     mutationFn: ({
@@ -30,7 +30,7 @@ export function useToggleProduct() {
 
 export function useDeleteProduct() {
   const queryClient = useQueryClient();
-  const supabase = createBrowserSupabaseClient();
+  const supabase = useMemo(() => createBrowserSupabaseClient(), []);
 
   return useMutation({
     mutationFn: (id: string) => deleteProduct(supabase, id),

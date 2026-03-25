@@ -26,7 +26,7 @@ export function AccountPage() {
   return (
     <main className="flex flex-1 items-center justify-center bg-dots p-4">
       <div
-        className="nb-shadow-lg w-full max-w-md border-[3px] border-foreground bg-background p-8 sm:p-10"
+        className="nb-shadow-lg w-full max-w-md border-3 border-foreground bg-background p-8 sm:p-10"
         {...tid("account-card")}
       >
         <div className="mb-8 text-center">
@@ -34,7 +34,7 @@ export function AccountPage() {
             <img
               src={avatarUrl}
               alt=""
-              className="mx-auto mb-4 size-20 rounded-full border-[3px] border-foreground"
+              className="mx-auto mb-4 size-20 rounded-full border-3 border-foreground"
             />
           ) : null}
           <h1 className="font-display text-3xl font-extrabold uppercase tracking-tight">

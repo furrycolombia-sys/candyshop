@@ -10,6 +10,7 @@ import { InlineHero } from "./InlineHero";
 import { InlineSections } from "./InlineSections";
 import { InlineTextField } from "./InlineTextField";
 
+import { PRODUCT_FORM_DEFAULTS } from "@/features/products/domain/constants";
 import {
   productFormSchema,
   type ProductFormValues,
@@ -23,30 +24,6 @@ interface InlineEditorProps {
   isEdit: boolean;
 }
 
-const FORM_DEFAULTS: ProductFormValues = {
-  name_en: "",
-  name_es: "",
-  description_en: "",
-  description_es: "",
-  tagline_en: "",
-  tagline_es: "",
-  long_description_en: "",
-  long_description_es: "",
-  type: "merch",
-  category: "merch",
-  price_cop: 0,
-  price_usd: "",
-  compare_at_price_cop: null,
-  compare_at_price_usd: null,
-  tags: "",
-  featured: false,
-  is_active: true,
-  images: [],
-  sections: [],
-  max_quantity: null,
-  refundable: null,
-};
-
 export function InlineEditor({
   defaultValues,
   onSubmit,
@@ -59,7 +36,7 @@ export function InlineEditor({
     useForm<ProductFormValues>({
       // eslint-disable-next-line @typescript-eslint/no-explicit-any -- zodResolver inference mismatch with optional Zod defaults
       resolver: zodResolver(productFormSchema) as any,
-      defaultValues: { ...FORM_DEFAULTS, ...defaultValues },
+      defaultValues: { ...PRODUCT_FORM_DEFAULTS, ...defaultValues },
     });
 
   const category = useWatch({ control, name: "category" });

@@ -55,7 +55,7 @@ export function IconPicker({ value, onChange, themeBg }: IconPickerProps) {
       <PopoverTrigger asChild>
         <button
           type="button"
-          className={`w-fit border-[3px] border-foreground ${themeBg} p-2 nb-shadow-sm cursor-pointer transition-opacity hover:opacity-80`}
+          className={`w-fit border-3 border-foreground ${themeBg} p-2 nb-shadow-sm cursor-pointer transition-opacity hover:opacity-80`}
           aria-label={t("chooseIcon")}
           {...tid("icon-picker-trigger")}
         >

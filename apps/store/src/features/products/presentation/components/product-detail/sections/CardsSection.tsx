@@ -22,7 +22,7 @@ export function CardsSection({ section, theme }: CardsSectionProps) {
 
   return (
     <section
-      className="w-full bg-background border-b-[3px] border-foreground"
+      className="w-full bg-background border-b-3 border-foreground"
       {...tid("cards-section")}
     >
       <div className="max-w-5xl mx-auto px-4 py-12">
@@ -45,11 +45,11 @@ export function CardsSection({ section, theme }: CardsSectionProps) {
             return (
               <div
                 key={title || index}
-                className={`flex flex-col gap-3 p-5 border-[3px] ${theme.border} nb-shadow-sm bg-background shrink-0 w-56 lg:w-auto`}
+                className={`flex flex-col gap-3 p-5 border-3 ${theme.border} nb-shadow-sm bg-background shrink-0 w-56 lg:w-auto`}
                 {...tid(`card-item-${index}`)}
               >
                 <div
-                  className={`p-2 ${theme.bg} border-[3px] border-foreground w-fit nb-shadow-sm`}
+                  className={`p-2 ${theme.bg} border-3 border-foreground w-fit nb-shadow-sm`}
                 >
                   <Icon className="size-6" />
                 </div>

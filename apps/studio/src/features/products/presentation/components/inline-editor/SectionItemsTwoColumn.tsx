@@ -6,21 +6,22 @@ import { Draggable, Droppable } from "@hello-pangea/dnd";
 import type { DraggableProvided } from "@hello-pangea/dnd";
 import { GripVertical } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useCallback, useState } from "react";
-import type { Control, UseFieldArrayReturn } from "react-hook-form";
+import type { Control } from "react-hook-form";
 import { useController } from "react-hook-form";
 import { tid } from "shared";
 
 import { AutoTextarea } from "./AutoTextarea";
 import { InlineAddButton } from "./InlineAddButton";
 import { InlineRemoveButton } from "./InlineRemoveButton";
+import type { SectionFieldArray } from "./SectionCard";
 
+import { useLangToggle } from "@/features/products/application/useLangToggle";
+import {
+  ITEM_DROPPABLE_PREFIX,
+  SECTION_I18N_NAMESPACE,
+} from "@/features/products/domain/constants";
 import type { ProductFormValues } from "@/features/products/domain/validationSchema";
 import type { CategoryTheme } from "@/shared/domain/categoryConstants";
-
-type Lang = "en" | "es";
-
-const I18N_NAMESPACE = "form.inlineEditor.sections";
 const MODULO_ZEBRA = 2;
 
 /* eslint-disable @typescript-eslint/no-explicit-any, i18next/no-literal-string -- dynamic nested field paths from useFieldArray */
@@ -39,8 +40,8 @@ function TwoColumnRow({
   onRemove: () => void;
   dragProvided: DraggableProvided;
 }) {
-  const t = useTranslations(I18N_NAMESPACE);
-  const [lang, setLang] = useState<Lang>("en");
+  const t = useTranslations(SECTION_I18N_NAMESPACE);
+  const { lang, toggleLang } = useLangToggle();
 
   const titleField = useController({
     control,
@@ -51,10 +52,6 @@ function TwoColumnRow({
     name: `sections.${sectionIndex}.items.${itemIndex}.description_${lang}` as any,
   });
 
-  const toggleLang = useCallback(() => {
-    setLang((prev) => (prev === "en" ? "es" : "en"));
-  }, []);
-
   const zebraClass =
     itemIndex % MODULO_ZEBRA === 0 ? theme.rowEven : theme.rowOdd;
 
@@ -63,17 +60,17 @@ function TwoColumnRow({
     <div
       ref={dragProvided.innerRef}
       {...dragProvided.draggableProps}
-      className={`relative flex items-stretch border-b-[3px] border-foreground last:border-b-0 ${zebraClass}`}
+      className={`relative flex items-stretch border-b-3 border-foreground last:border-b-0 ${zebraClass}`}
       {...tid(`section-${sectionIndex}-item-${itemIndex}`)}
     >
       {/* Remove */}
       <InlineRemoveButton
         onClick={onRemove}
-        ariaLabel={`Remove item ${itemIndex + 1}`}
+        ariaLabel={t("removeItem", { number: itemIndex + 1 })}
       />
 
       {/* Drag handle + lang toggle in label column */}
-      <div className="flex w-1/3 shrink-0 items-center gap-1 border-r-[3px] border-foreground p-3">
+      <div className="flex w-1/3 shrink-0 items-center gap-1 border-r-3 border-foreground p-3">
         <div
           {...dragProvided.dragHandleProps}
           className="shrink-0 cursor-grab text-muted-foreground hover:text-foreground"
@@ -123,13 +120,11 @@ function TwoColumnRow({
 }
 /* eslint-enable @typescript-eslint/no-explicit-any, i18next/no-literal-string */
 
-const ITEM_DROPPABLE_PREFIX = "section-items-";
-
 interface SectionItemsTwoColumnProps {
   sectionIndex: number;
   control: Control<ProductFormValues>;
   theme: CategoryTheme;
-  fieldArray: UseFieldArrayReturn;
+  fieldArray: SectionFieldArray;
   onAdd: () => void;
 }
 
@@ -140,7 +135,7 @@ export function SectionItemsTwoColumn({
   fieldArray,
   onAdd,
 }: SectionItemsTwoColumnProps) {
-  const t = useTranslations(I18N_NAMESPACE);
+  const t = useTranslations(SECTION_I18N_NAMESPACE);
   const { fields, remove } = fieldArray;
 
   return (
@@ -154,7 +149,7 @@ export function SectionItemsTwoColumn({
           <div
             ref={provided.innerRef}
             {...provided.droppableProps}
-            className={`overflow-hidden border-[3px] ${theme.border} nb-shadow-sm`}
+            className={`overflow-hidden border-3 ${theme.border} nb-shadow-sm`}
           >
             {fields.map((field, itemIndex) => (
               <Draggable
