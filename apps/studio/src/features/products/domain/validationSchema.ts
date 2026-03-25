@@ -36,6 +36,15 @@ export const ticketDetailsSchema = z.object({
   tickets_remaining: z.coerce.number().int().nonnegative().optional(),
 });
 
+/** Product image schema */
+export const productImageSchema = z.object({
+  url: z.string().url(),
+  alt: z.string().optional().default(""),
+  sort_order: z.number().int().nonnegative(),
+});
+
+export type ProductImage = z.infer<typeof productImageSchema>;
+
 /** Product form validation schema */
 export const productFormSchema = z.object({
   name_en: z.string().min(1),
@@ -52,6 +61,7 @@ export const productFormSchema = z.object({
   price_usd: z.coerce.number().int().positive().optional().or(z.literal("")),
   tags: z.string().optional().default(""),
   featured: z.boolean().optional().default(false),
+  images: z.array(productImageSchema).optional().default([]),
   type_details_merch: merchDetailsSchema.optional(),
   type_details_digital: digitalDetailsSchema.optional(),
   type_details_service: serviceDetailsSchema.optional(),

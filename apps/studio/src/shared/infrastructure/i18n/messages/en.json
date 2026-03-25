@@ -86,14 +86,28 @@
   "form": {
     "subtitleCreate": "Fill in the details to create a new product.",
     "subtitleEdit": "Update the product details below.",
-    "imageUploadPlaceholder": "Image upload coming in Task 7",
     "sections": {
       "productType": "Product Type",
       "basicInfo": "Basic Info",
       "longDescription": "Long Description",
       "pricing": "Category & Pricing",
       "metadata": "Tags & Options",
-      "typeDetails": "Type Details"
+      "typeDetails": "Type Details",
+      "images": "Images"
+    },
+    "images": {
+      "hint": "Add image URLs to show in the product carousel.",
+      "empty": "No images yet. Add image URLs below.",
+      "addImage": "Add Image",
+      "imageUrl": "Image URL",
+      "urlPlaceholder": "https://example.com/image.jpg",
+      "altText": "Alt Text",
+      "altPlaceholder": "A fursuit in the forest",
+      "add": "Add",
+      "remove": "Remove image",
+      "previewAlt": "Product image preview",
+      "urlRequired": "Please enter an image URL",
+      "urlInvalid": "Please enter a valid URL (starting with https://)"
     },
     "fields": {
       "nameEn": "Name (English)",

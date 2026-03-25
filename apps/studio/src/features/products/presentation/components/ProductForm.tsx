@@ -1,14 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  ArrowLeft,
-  ImagePlus,
-  Package,
-  FileDigit,
-  Wrench,
-  Ticket,
-} from "lucide-react";
+import { ArrowLeft, Package, FileDigit, Wrench, Ticket } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useForm } from "react-hook-form";
 import { tid } from "shared";
@@ -23,6 +16,7 @@ import {
   productFormSchema,
   type ProductFormValues,
 } from "@/features/products/domain/validationSchema";
+import { ImageUrlManager } from "@/features/products/presentation/components/ImageUrlManager";
 import { TypeFieldsDigital } from "@/features/products/presentation/components/TypeFieldsDigital";
 import { TypeFieldsMerch } from "@/features/products/presentation/components/TypeFieldsMerch";
 import { TypeFieldsService } from "@/features/products/presentation/components/TypeFieldsService";
@@ -52,6 +46,7 @@ export function ProductForm({
   const t = useTranslations();
 
   const {
+    control,
     register,
     handleSubmit,
     watch,
@@ -75,6 +70,7 @@ export function ProductForm({
       price_usd: "",
       tags: "",
       featured: false,
+      images: [],
     },
   });
 
@@ -306,14 +302,15 @@ export function ProductForm({
         {selectedType === "ticket" && <TypeFieldsTicket register={register} />}
       </section>
 
-      {/* ─── Image Upload Placeholder ─── */}
-      <section className="rounded-xl border-3 border-dashed border-foreground/30 bg-card p-5">
-        <div className="flex flex-col items-center gap-2 py-6 text-center text-muted-foreground">
-          <ImagePlus className="size-10" />
-          <p className="text-sm font-medium">
-            {t("form.imageUploadPlaceholder")}
-          </p>
-        </div>
+      {/* ─── Images ─── */}
+      <section className="rounded-xl border-3 border-foreground bg-card p-5 nb-shadow-sm">
+        <h2 className="mb-4 font-display text-sm font-extrabold uppercase tracking-wider">
+          {t("form.sections.images")}
+        </h2>
+        <p className="mb-4 text-xs text-muted-foreground">
+          {t("form.images.hint")}
+        </p>
+        <ImageUrlManager control={control} />
       </section>
 
       {/* ─── Actions ─── */}

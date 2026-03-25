@@ -1,4 +1,6 @@
-import { getTranslations, setRequestLocale } from "next-intl/server";
+import { setRequestLocale } from "next-intl/server";
+
+import { ProductListPage } from "@/features/products";
 
 export default async function StudioPage({
   params,
@@ -8,14 +10,5 @@ export default async function StudioPage({
   const { locale } = await params;
   setRequestLocale(locale);
 
-  const t = await getTranslations({ locale, namespace: "studio" });
-
-  return (
-    <main className="flex-1 p-8">
-      <h1 className="font-display text-4xl font-extrabold uppercase">
-        {t("title")}
-      </h1>
-      <p className="mt-2 text-muted-foreground">{t("subtitle")}</p>
-    </main>
-  );
+  return <ProductListPage />;
 }

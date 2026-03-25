@@ -86,14 +86,28 @@
   "form": {
     "subtitleCreate": "Completa los datos para crear un nuevo producto.",
     "subtitleEdit": "Actualiza los detalles del producto.",
-    "imageUploadPlaceholder": "Carga de imágenes disponible en Tarea 7",
     "sections": {
       "productType": "Tipo de Producto",
       "basicInfo": "Información Básica",
       "longDescription": "Descripción Larga",
       "pricing": "Categoría y Precios",
       "metadata": "Etiquetas y Opciones",
-      "typeDetails": "Detalles del Tipo"
+      "typeDetails": "Detalles del Tipo",
+      "images": "Imágenes"
+    },
+    "images": {
+      "hint": "Agrega URLs de imágenes para mostrar en el carrusel del producto.",
+      "empty": "Aún no hay imágenes. Agrega URLs de imágenes abajo.",
+      "addImage": "Agregar Imagen",
+      "imageUrl": "URL de Imagen",
+      "urlPlaceholder": "https://ejemplo.com/imagen.jpg",
+      "altText": "Texto Alternativo",
+      "altPlaceholder": "Un fursuit en el bosque",
+      "add": "Agregar",
+      "remove": "Eliminar imagen",
+      "previewAlt": "Vista previa de imagen del producto",
+      "urlRequired": "Por favor ingresa una URL de imagen",
+      "urlInvalid": "Por favor ingresa una URL válida (que comience con https://)"
     },
     "fields": {
       "nameEn": "Nombre (Inglés)",

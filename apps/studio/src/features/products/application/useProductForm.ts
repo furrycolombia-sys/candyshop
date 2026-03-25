@@ -70,6 +70,16 @@ export function useProductById(productId?: string) {
 export function productToFormValues(product: Product): ProductFormValues {
   const typeDetails = (product.type_details ?? {}) as Record<string, unknown>;
 
+  const rawImages = product.images as
+    | Array<{ url: string; alt?: string; sort_order?: number }>
+    | null
+    | undefined;
+  const images = (rawImages ?? []).map((img, idx) => ({
+    url: img.url ?? "",
+    alt: img.alt ?? "",
+    sort_order: img.sort_order ?? idx,
+  }));
+
   return {
     name_en: product.name_en,
     name_es: product.name_es,
@@ -85,6 +95,7 @@ export function productToFormValues(product: Product): ProductFormValues {
     price_usd: product.price_usd || "",
     tags: product.tags?.join(", ") ?? "",
     featured: product.featured,
+    images,
     type_details_merch:
       product.type === "merch"
         ? (typeDetails as ProductFormValues["type_details_merch"])
@@ -128,6 +139,7 @@ export function useInsertProduct() {
         price_usd: typeof values.price_usd === "number" ? values.price_usd : 0,
         tags: parseTags(values.tags ?? ""),
         featured: values.featured ?? false,
+        images: (values.images ?? []) as Json,
         type_details: buildTypeDetails(values),
         slug,
       });
@@ -162,6 +174,7 @@ export function useUpdateProduct(productId: string) {
         price_usd: typeof values.price_usd === "number" ? values.price_usd : 0,
         tags: parseTags(values.tags ?? ""),
         featured: values.featured ?? false,
+        images: (values.images ?? []) as Json,
         type_details: buildTypeDetails(values),
       }),
     onSuccess: async () => {
