@@ -197,7 +197,7 @@ export function ProductTableRow({ product, isOddRow }: ProductTableRowProps) {
       {/* Actions */}
       <td className={`${CELL_CLASS} text-right`}>
         <div className="flex items-center justify-end gap-2">
-          <Link href={`/products/${product.id}/edit`}>
+          <Link href={`/products/${product.id}`}>
             <Button
               variant="outline"
               size="sm"
