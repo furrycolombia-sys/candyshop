@@ -141,6 +141,7 @@
       "taglinePlaceholder": "Haz clic para agregar un eslogan...",
       "namePlaceholder": "Nombre del producto...",
       "descriptionPlaceholder": "Escribe una descripción corta...",
+      "longDescriptionPlaceholder": "Cuenta la historia completa de este producto…",
       "priceCop": "COP",
       "priceUsd": "USD",
       "comparePriceCop": "Comparar COP",

@@ -1,4 +1,5 @@
 export { EditorToolbar } from "./EditorToolbar";
+export { InlineEditor } from "./InlineEditor";
 export { InlineAddButton } from "./InlineAddButton";
 export { InlineFaq } from "./InlineFaq";
 export { InlineHero } from "./InlineHero";

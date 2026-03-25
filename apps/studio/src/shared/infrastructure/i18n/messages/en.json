@@ -141,6 +141,7 @@
       "taglinePlaceholder": "Click to add a tagline...",
       "namePlaceholder": "Product name...",
       "descriptionPlaceholder": "Write a short description...",
+      "longDescriptionPlaceholder": "Tell the full story of this product…",
       "priceCop": "COP",
       "priceUsd": "USD",
       "comparePriceCop": "Compare COP",
