@@ -25,9 +25,8 @@ export function DescriptionSection({ description }: DescriptionSectionProps) {
           className="max-w-prose flex flex-col gap-5"
           {...tid("description-body")}
         >
-          {paragraphs.map((para, idx) => (
-            // eslint-disable-next-line react/no-array-index-key -- paragraphs from static split text, never reorder
-            <p key={idx} className="text-base/loose">
+          {paragraphs.map((para) => (
+            <p key={para} className="text-base/loose">
               {para}
             </p>
           ))}
