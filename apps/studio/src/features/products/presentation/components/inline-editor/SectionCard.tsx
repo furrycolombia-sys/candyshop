@@ -1,22 +1,21 @@
 "use client";
 
-import { Draggable, Droppable } from "@hello-pangea/dnd";
 import type { DraggableProvided } from "@hello-pangea/dnd";
 import { ChevronDown, GripVertical } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useState } from "react";
-import type { Control } from "react-hook-form";
+import type { Control, UseFieldArrayReturn } from "react-hook-form";
 import { useController, useFieldArray } from "react-hook-form";
 import { tid } from "shared";
 import { Input } from "ui";
 
-import { InlineAddButton } from "./InlineAddButton";
 import { InlineRemoveButton } from "./InlineRemoveButton";
-import { SectionItemEditor } from "./SectionItemEditor";
+import { SectionItemsAccordion } from "./SectionItemsAccordion";
+import { SectionItemsCards } from "./SectionItemsCards";
+import { SectionItemsGallery } from "./SectionItemsGallery";
+import { SectionItemsTwoColumn } from "./SectionItemsTwoColumn";
 
 import type { ProductFormValues } from "@/features/products/domain/validationSchema";
-
-const ITEM_DROPPABLE_PREFIX = "section-items-";
 
 type Lang = "en" | "es";
 
@@ -91,6 +90,37 @@ export function SectionCard({
   }, [appendItem, itemFields.length]);
 
   const typeValue = String(typeField.field.value ?? "cards");
+
+  /* Build the field array object expected by type-specific item components */
+  const fieldArray = {
+    fields: itemFields,
+    append: appendItem,
+    remove: removeItem,
+    move: moveItem,
+  } as unknown as UseFieldArrayReturn;
+
+  function renderItems() {
+    const props = {
+      sectionIndex,
+      control,
+      fieldArray,
+      onAdd: handleAddItem,
+    };
+    switch (typeValue) {
+      case "accordion": {
+        return <SectionItemsAccordion {...props} />;
+      }
+      case "two-column": {
+        return <SectionItemsTwoColumn {...props} />;
+      }
+      case "gallery": {
+        return <SectionItemsGallery {...props} />;
+      }
+      default: {
+        return <SectionItemsCards {...props} />;
+      }
+    }
+  }
 
   /* eslint-disable react-hooks/refs -- useController field refs must be spread during render for react-hook-form binding */
   return (
@@ -168,52 +198,8 @@ export function SectionCard({
       </div>
       {/* eslint-enable react-hooks/refs */}
 
-      {/* Section items (collapsible) */}
-      {!isCollapsed && (
-        <div className="flex flex-col gap-3 p-4">
-          <Droppable
-            droppableId={`${ITEM_DROPPABLE_PREFIX}${sectionIndex}`}
-            type="ITEM"
-          >
-            {/* eslint-disable sonarjs/no-nested-functions -- @hello-pangea/dnd requires render-prop pattern */}
-            {(itemProvided) => (
-              <div
-                ref={itemProvided.innerRef}
-                {...itemProvided.droppableProps}
-                className="flex flex-col gap-2"
-              >
-                {itemFields.map((itemField, itemIndex) => (
-                  <Draggable
-                    key={itemField.id}
-                    draggableId={itemField.id}
-                    index={itemIndex}
-                  >
-                    {(itemDragProvided) => (
-                      <SectionItemEditor
-                        sectionIndex={sectionIndex}
-                        itemIndex={itemIndex}
-                        control={control}
-                        onRemove={() => removeItem(itemIndex)}
-                        dragProvided={itemDragProvided}
-                      />
-                    )}
-                  </Draggable>
-                ))}
-                {itemProvided.placeholder}
-              </div>
-            )}
-            {/* eslint-enable sonarjs/no-nested-functions */}
-          </Droppable>
-
-          {itemFields.length === 0 && (
-            <p className="py-4 text-center text-xs text-muted-foreground">
-              {t("emptySection")}
-            </p>
-          )}
-
-          <InlineAddButton label={t("addItem")} onClick={handleAddItem} />
-        </div>
-      )}
+      {/* Section items (collapsible) — type-specific rendering */}
+      {!isCollapsed && renderItems()}
     </div>
   );
 }
