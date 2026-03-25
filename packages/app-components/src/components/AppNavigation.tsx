@@ -7,7 +7,14 @@ import { tid } from "../utils/tid";
 import { LocaleSwitcher } from "./LocaleSwitcher";
 import { ThemeToggle } from "./ThemeToggle";
 
-type AppId = "store" | "landing" | "payments" | "admin" | "auth" | "playground";
+type AppId =
+  | "store"
+  | "studio"
+  | "landing"
+  | "payments"
+  | "admin"
+  | "auth"
+  | "playground";
 
 interface AppNavigationProps {
   currentApp: AppId;
@@ -19,6 +26,7 @@ interface AppNavigationProps {
 const APP_ORDER: { id: AppId; labelKey: string }[] = [
   { id: "landing", labelKey: "landing" },
   { id: "store", labelKey: "store" },
+  { id: "studio", labelKey: "studio" },
   { id: "payments", labelKey: "payments" },
   { id: "admin", labelKey: "admin" },
   { id: "auth", labelKey: "auth" },

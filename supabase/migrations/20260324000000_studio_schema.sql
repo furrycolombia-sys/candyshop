@@ -32,6 +32,9 @@ alter table public.products
   add column screenshots jsonb not null default '[]',
   add column highlights jsonb not null default '[]',
   add column faq jsonb not null default '[]',
+  -- NOTE: type_details is an untyped JSONB column. Validation that its shape
+  -- matches the product type (merch/digital/service/ticket) happens at the
+  -- application layer via Zod schemas in the studio app, not at the DB level.
   add column type_details jsonb not null default '{}',
   add column updated_at timestamptz not null default now();
 
@@ -40,7 +43,7 @@ alter table public.products
   add constraint products_rating_range check (rating between 1.00 and 5.00);
 
 -- Auto-update updated_at on every UPDATE
-create or replace function update_updated_at()
+create or replace function trigger_set_updated_at()
 returns trigger as $$
 begin
   NEW.updated_at = now();
@@ -50,7 +53,7 @@ $$ language plpgsql;
 
 create trigger products_updated_at
   before update on public.products
-  for each row execute function update_updated_at();
+  for each row execute function trigger_set_updated_at();
 
 -- -----------------------------------------------------------------------------
 -- Product Reviews
@@ -79,8 +82,11 @@ create index idx_product_reviews_product_id on public.product_reviews(product_id
 -- -----------------------------------------------------------------------------
 -- RLS: Product Write Policies (for Studio app)
 -- -----------------------------------------------------------------------------
--- Authenticated users can manage products
--- (restrict to sellers via permissions table later)
+-- MVP NOTE: These policies intentionally allow ANY authenticated user to write.
+-- There is no seller_id column yet — seller ownership and role-based permissions
+-- will be enforced once the admin app introduces a sellers/permissions model.
+-- Until then, product management is open to all logged-in users.
+-- TODO(GH-11): Scope write policies to seller_id when permissions table exists.
 create policy "products_auth_insert" on public.products
   for insert with check (auth.role() = 'authenticated');
 
@@ -98,6 +104,13 @@ create policy "reviews_public_read" on public.product_reviews
 create policy "reviews_own_insert" on public.product_reviews
   for insert with check (auth.uid() = user_id);
 
+create policy "reviews_own_update" on public.product_reviews
+  for update using (auth.uid() = user_id)
+  with check (auth.uid() = user_id);
+
+create policy "reviews_own_delete" on public.product_reviews
+  for delete using (auth.uid() = user_id);
+
 -- -----------------------------------------------------------------------------
 -- Storage: Product Images Bucket
 -- -----------------------------------------------------------------------------
@@ -114,6 +127,10 @@ create policy "product_images_auth_upload"
   on storage.objects for insert
   with check (bucket_id = 'product-images' and auth.role() = 'authenticated');
 
+-- MVP NOTE: Delete policy intentionally allows any authenticated user to delete
+-- any image. Ownership scoping (auth.uid() = owner) will be added when the
+-- seller permissions model is in place.
+-- TODO(GH-11): Scope to object owner when seller_id / permissions exist.
 create policy "product_images_auth_delete"
   on storage.objects for delete
   using (bucket_id = 'product-images' and auth.role() = 'authenticated');

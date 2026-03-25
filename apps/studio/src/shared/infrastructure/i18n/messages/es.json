@@ -1,0 +1,85 @@
+{
+  "meta": {
+    "title": "Candy Shop - Estudio",
+    "description": "Gestiona tus productos y catálogo"
+  },
+  "studio": {
+    "title": "Estudio",
+    "subtitle": "Gestión de productos próximamente."
+  },
+  "nav": {
+    "brand": "Candy Shop",
+    "landing": "Inicio",
+    "store": "Tienda",
+    "studio": "Estudio",
+    "payments": "Pagos",
+    "admin": "Admin",
+    "auth": "Cuenta",
+    "playground": "Playground"
+  },
+  "auth": {
+    "login": {
+      "title": "Iniciar sesión",
+      "subtitle": "Elige tu método de inicio de sesión preferido",
+      "google": "Continuar con Google",
+      "discord": "Continuar con Discord",
+      "twitter": "Continuar con X"
+    },
+    "signOut": "Cerrar sesión"
+  },
+  "common": {
+    "loading": "Cargando...",
+    "error": "Ocurrió un error",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "create": "Crear",
+    "search": "Buscar",
+    "noResults": "No se encontraron resultados",
+    "confirm": "¿Estás seguro?",
+    "back": "Volver",
+    "theme": {
+      "switchToDark": "Cambiar a modo oscuro",
+      "switchToLight": "Cambiar a modo claro",
+      "toggle": "Cambiar tema"
+    },
+    "language": {
+      "select": "Seleccionar idioma"
+    }
+  },
+  "products": {
+    "title": "Productos",
+    "subtitle": "Gestiona tu catálogo",
+    "newProduct": "Nuevo Producto",
+    "editProduct": "Editar Producto",
+    "name": "Nombre",
+    "type": "Tipo",
+    "category": "Categoría",
+    "price": "Precio",
+    "status": "Estado",
+    "featured": "Destacado",
+    "active": "Activo",
+    "inactive": "Inactivo",
+    "actions": "Acciones",
+    "noProducts": "Aún no hay productos",
+    "createFirst": "Crea tu primer producto para comenzar",
+    "deleteConfirm": "Esto eliminará permanentemente este producto.",
+    "saved": "Producto guardado exitosamente",
+    "deleted": "Producto eliminado"
+  },
+  "productTypes": {
+    "merch": "Merch",
+    "digital": "Digital",
+    "service": "Servicio",
+    "ticket": "Boleto"
+  },
+  "categories": {
+    "fursuits": "Fursuits",
+    "merch": "Merch",
+    "art": "Arte",
+    "events": "Eventos",
+    "digital": "Digital",
+    "deals": "Ofertas"
+  }
+}

@@ -1,0 +1,85 @@
+{
+  "meta": {
+    "title": "Candy Shop - Studio",
+    "description": "Manage your products and catalog"
+  },
+  "studio": {
+    "title": "Studio",
+    "subtitle": "Product management coming soon."
+  },
+  "nav": {
+    "brand": "Candy Shop",
+    "landing": "Home",
+    "store": "Store",
+    "studio": "Studio",
+    "payments": "Payments",
+    "admin": "Admin",
+    "auth": "Account",
+    "playground": "Playground"
+  },
+  "auth": {
+    "login": {
+      "title": "Sign in",
+      "subtitle": "Choose your preferred sign-in method",
+      "google": "Continue with Google",
+      "discord": "Continue with Discord",
+      "twitter": "Continue with X"
+    },
+    "signOut": "Sign out"
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "create": "Create",
+    "search": "Search",
+    "noResults": "No results found",
+    "confirm": "Are you sure?",
+    "back": "Back",
+    "theme": {
+      "switchToDark": "Switch to dark mode",
+      "switchToLight": "Switch to light mode",
+      "toggle": "Toggle theme"
+    },
+    "language": {
+      "select": "Select language"
+    }
+  },
+  "products": {
+    "title": "Products",
+    "subtitle": "Manage your catalog",
+    "newProduct": "New Product",
+    "editProduct": "Edit Product",
+    "name": "Name",
+    "type": "Type",
+    "category": "Category",
+    "price": "Price",
+    "status": "Status",
+    "featured": "Featured",
+    "active": "Active",
+    "inactive": "Inactive",
+    "actions": "Actions",
+    "noProducts": "No products yet",
+    "createFirst": "Create your first product to get started",
+    "deleteConfirm": "This will permanently delete this product.",
+    "saved": "Product saved successfully",
+    "deleted": "Product deleted"
+  },
+  "productTypes": {
+    "merch": "Merch",
+    "digital": "Digital",
+    "service": "Service",
+    "ticket": "Ticket"
+  },
+  "categories": {
+    "fursuits": "Fursuits",
+    "merch": "Merch",
+    "art": "Art",
+    "events": "Events",
+    "digital": "Digital",
+    "deals": "Deals"
+  }
+}

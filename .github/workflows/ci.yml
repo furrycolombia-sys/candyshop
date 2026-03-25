@@ -27,6 +27,7 @@ jobs:
       code: ${{ steps.filter.outputs.code }}
       deploy: ${{ steps.filter.outputs.deploy }}
       store: ${{ steps.filter.outputs.store }}
+      studio: ${{ steps.filter.outputs.studio }}
       admin: ${{ steps.filter.outputs.admin }}
       landing: ${{ steps.filter.outputs.landing }}
       payments: ${{ steps.filter.outputs.payments }}
@@ -46,6 +47,8 @@ jobs:
           filters: |
             store:
               - 'apps/store/**'
+            studio:
+              - 'apps/studio/**'
             admin:
               - 'apps/admin/**'
             auth:
@@ -131,7 +134,8 @@ jobs:
             "${{ needs.changes.outputs.auth }}" \
             "${{ needs.changes.outputs.playground }}" \
             "${{ needs.changes.outputs.packages }}" \
-            "${{ needs.changes.outputs.tooling }}")
+            "${{ needs.changes.outputs.tooling }}" \
+            "${{ needs.changes.outputs.studio }}")
 
           RUN_ALL=$(echo "$SELECT_OUTPUT" | grep '^RUN_ALL=' | cut -d= -f2-)
           LINT_TARGETS=$(echo "$SELECT_OUTPUT" | grep '^LINT_TARGETS=' | cut -d= -f2-)
@@ -162,7 +166,8 @@ jobs:
             "${{ needs.changes.outputs.auth }}" \
             "${{ needs.changes.outputs.playground }}" \
             "${{ needs.changes.outputs.packages }}" \
-            "${{ needs.changes.outputs.tooling }}")
+            "${{ needs.changes.outputs.tooling }}" \
+            "${{ needs.changes.outputs.studio }}")
 
           RUN_ALL=$(echo "$SELECT_OUTPUT" | grep '^RUN_ALL=' | cut -d= -f2-)
           APPS=$(echo "$SELECT_OUTPUT" | grep '^APPS=' | cut -d= -f2-)
@@ -221,7 +226,8 @@ jobs:
             "${{ needs.changes.outputs.auth }}" \
             "${{ needs.changes.outputs.playground }}" \
             "${{ needs.changes.outputs.packages }}" \
-            "${{ needs.changes.outputs.tooling }}")
+            "${{ needs.changes.outputs.tooling }}" \
+            "${{ needs.changes.outputs.studio }}")
 
           RUN_ALL=$(echo "$SELECT_OUTPUT" | grep '^RUN_ALL=' | cut -d= -f2-)
           APPS=$(echo "$SELECT_OUTPUT" | grep '^APPS=' | cut -d= -f2-)
@@ -314,7 +320,8 @@ jobs:
             "${{ needs.changes.outputs.auth }}" \
             "${{ needs.changes.outputs.playground }}" \
             "${{ needs.changes.outputs.packages }}" \
-            "${{ needs.changes.outputs.tooling }}")
+            "${{ needs.changes.outputs.tooling }}" \
+            "${{ needs.changes.outputs.studio }}")
 
           RUN_ALL=$(echo "$SELECT_OUTPUT" | grep '^RUN_ALL=' | cut -d= -f2-)
           APPS=$(echo "$SELECT_OUTPUT" | grep '^APPS=' | cut -d= -f2-)
@@ -338,6 +345,7 @@ jobs:
           NEXT_PUBLIC_STORE_URL: "http://localhost:5001"
           NEXT_PUBLIC_ADMIN_URL: "http://localhost:5002"
           NEXT_PUBLIC_PLAYGROUND_URL: "http://localhost:5003"
+          NEXT_PUBLIC_STUDIO_URL: "http://localhost:5006"
 
       - name: Upload store build artifacts
         uses: actions/upload-artifact@v4
@@ -465,7 +473,8 @@ jobs:
             "${{ needs.changes.outputs.auth }}" \
             "${{ needs.changes.outputs.playground }}" \
             "${{ needs.changes.outputs.packages }}" \
-            "${{ needs.changes.outputs.tooling }}")
+            "${{ needs.changes.outputs.tooling }}" \
+            "${{ needs.changes.outputs.studio }}")
 
           APPS=$(echo "$SELECT_OUTPUT" | grep '^APPS=' | cut -d= -f2-)
           [ -z "$APPS" ] && echo "No workspace apps selected for E2E tests." && exit 0
