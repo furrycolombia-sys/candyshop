@@ -54,6 +54,8 @@
     "stockLeft": "{count} left",
     "featured": "Featured",
     "inStock": "In Stock",
+    "refundable": "Refundable",
+    "nonRefundable": "Non-refundable",
     "price": "Price",
     "category": "Category",
     "type": "Type",

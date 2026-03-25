@@ -88,6 +88,22 @@ export function HeroSection({ product, theme }: HeroSectionProps) {
                   {t("outOfStock")}
                 </span>
               )}
+              {product.refundable === true && (
+                <span
+                  className="bg-(--mint) border-[3px] border-foreground px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-foreground"
+                  {...tid("hero-refundable")}
+                >
+                  {t("refundable")}
+                </span>
+              )}
+              {product.refundable === false && (
+                <span
+                  className="bg-(--peach) border-[3px] border-foreground px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-foreground"
+                  {...tid("hero-non-refundable")}
+                >
+                  {t("nonRefundable")}
+                </span>
+              )}
             </div>
 
             {/* Rating */}

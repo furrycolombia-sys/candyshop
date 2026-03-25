@@ -42,6 +42,7 @@ const FORM_DEFAULTS: ProductFormValues = {
   images: [],
   sections: [],
   max_quantity: null,
+  refundable: null,
 };
 
 export function InlineEditor({

@@ -55,6 +55,7 @@ export function EditorToolbar({
 
   const selectedType = useWatch({ control, name: "type" });
   const featured = useWatch({ control, name: "featured" });
+  const refundable = useWatch({ control, name: "refundable" });
 
   return (
     <div
@@ -131,6 +132,27 @@ export function EditorToolbar({
         />
         {t("products.featured")}
       </label>
+
+      {/* Refundable select */}
+      <select
+        value={refundable === null ? "" : String(refundable)}
+        onChange={(e) => {
+          const val = e.target.value;
+          setValue("refundable", val === "" ? null : val === "true");
+        }}
+        className="rounded-lg border-2 border-background/30 bg-transparent px-2 py-1 font-display text-[10px] font-bold uppercase tracking-wider text-background outline-none"
+        {...tid("toolbar-refundable")}
+      >
+        <option value="" className="bg-foreground text-background">
+          {tEditor("refundable.notSpecified")}
+        </option>
+        <option value="true" className="bg-foreground text-background">
+          {tEditor("refundable.refundable")}
+        </option>
+        <option value="false" className="bg-foreground text-background">
+          {tEditor("refundable.nonRefundable")}
+        </option>
+      </select>
 
       {/* Spacer */}
       <div className="flex-1" />

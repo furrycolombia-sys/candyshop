@@ -162,6 +162,12 @@
         "unlimited": "Unlimited stock",
         "quantity": "Available quantity"
       },
+      "refundable": {
+        "label": "Refund Policy",
+        "notSpecified": "Not specified",
+        "refundable": "Refundable",
+        "nonRefundable": "Non-refundable"
+      },
       "sections": {
         "title": "Sections",
         "addSection": "Add Section",

@@ -82,6 +82,7 @@ export function productToFormValues(product: Product): ProductFormValues {
     max_quantity: product.max_quantity ?? null,
     compare_at_price_cop: product.compare_at_price_cop ?? null,
     compare_at_price_usd: product.compare_at_price_usd ?? null,
+    refundable: product.refundable ?? null,
   };
 }
 
@@ -114,6 +115,7 @@ export function useInsertProduct() {
         max_quantity: values.max_quantity ?? null,
         compare_at_price_cop: values.compare_at_price_cop ?? null,
         compare_at_price_usd: values.compare_at_price_usd ?? null,
+        refundable: values.refundable ?? null,
         slug,
       });
     },
@@ -152,6 +154,7 @@ export function useUpdateProduct(productId: string) {
         max_quantity: values.max_quantity ?? null,
         compare_at_price_cop: values.compare_at_price_cop ?? null,
         compare_at_price_usd: values.compare_at_price_usd ?? null,
+        refundable: values.refundable ?? null,
       }),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: [PRODUCTS_QUERY_KEY] });
