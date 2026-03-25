@@ -69,7 +69,9 @@
     "saved": "Product saved successfully",
     "deleted": "Product deleted",
     "inStock": "In Stock",
-    "outOfStock": "Out of Stock"
+    "outOfStock": "Out of Stock",
+    "refundable": "Refundable",
+    "nonRefundable": "Non-refundable"
   },
   "productTypes": {
     "merch": "Merch",

@@ -55,6 +55,7 @@ export function EditorToolbar({
 
   const selectedType = useWatch({ control, name: "type" });
   const featured = useWatch({ control, name: "featured" });
+  const isActive = useWatch({ control, name: "is_active" });
   const refundable = useWatch({ control, name: "refundable" });
 
   return (
@@ -160,11 +161,10 @@ export function EditorToolbar({
       {/* Active switch */}
       <div className="flex items-center gap-1.5">
         <Switch
-          checked={true}
-          onCheckedChange={() => {
-            /* active toggle — wired to is_active later */
-          }}
+          checked={isActive ?? true}
+          onCheckedChange={(checked) => setValue("is_active", checked)}
           className="data-[state=checked]:bg-background/30"
+          {...tid("toolbar-active")}
         />
         <span className="font-display text-[10px] font-bold uppercase tracking-wider text-background/70">
           {t("products.active")}

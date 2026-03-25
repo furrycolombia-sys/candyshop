@@ -30,6 +30,7 @@ export function InlineHero({ control }: InlineHeroProps) {
   const type = useWatch({ control, name: "type" });
   const maxQuantity = useWatch({ control, name: "max_quantity" });
   const isActive = useWatch({ control, name: "is_active" });
+  const refundable = useWatch({ control, name: "refundable" });
 
   const theme = getCategoryTheme(category);
   const heroBg = CATEGORY_HERO_BG[category] ?? "bg-muted";
@@ -118,6 +119,18 @@ export function InlineHero({ control }: InlineHeroProps) {
               ) : (
                 <span className="bg-(--peach) border-[3px] border-foreground px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-foreground">
                   {tProducts("outOfStock")}
+                </span>
+              )}
+
+              {/* Refundable badge */}
+              {refundable === true && (
+                <span className="bg-(--mint) border-[3px] border-foreground px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-foreground">
+                  {tProducts("refundable")}
+                </span>
+              )}
+              {refundable === false && (
+                <span className="bg-(--peach) border-[3px] border-foreground px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-foreground">
+                  {tProducts("nonRefundable")}
                 </span>
               )}
             </div>
