@@ -13,6 +13,7 @@
     "test:e2e": "echo 'No E2E tests yet'"
   },
   "dependencies": {
+    "@hello-pangea/dnd": "^18.0.1",
     "@hookform/resolvers": "^5.2.2",
     "@monorepo/app-components": "workspace:*",
     "@tanstack/react-query": "^5.91.0",

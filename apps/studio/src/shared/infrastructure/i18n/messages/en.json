@@ -133,6 +133,28 @@
       "required": "This field is required",
       "positiveNumber": "Must be a positive number"
     },
+    "inlineEditor": {
+      "backToProducts": "Products",
+      "saving": "Saving...",
+      "saveProduct": "Save",
+      "createProduct": "Create",
+      "taglinePlaceholder": "Click to add a tagline...",
+      "namePlaceholder": "Product name...",
+      "descriptionPlaceholder": "Write a short description...",
+      "priceCop": "COP",
+      "priceUsd": "USD",
+      "comparePriceCop": "Compare COP",
+      "comparePriceUsd": "Compare USD",
+      "addTag": "Add tag",
+      "tagPlaceholder": "New tag...",
+      "removeTag": "Remove tag",
+      "addImage": "Add image",
+      "imageUrlPlaceholder": "https://example.com/image.jpg",
+      "imageAltPlaceholder": "Image description",
+      "removeImage": "Remove image",
+      "dragImage": "Drag to reorder",
+      "noImages": "No images yet"
+    },
     "typeDetails": {
       "merch": {
         "weight": "Weight",
