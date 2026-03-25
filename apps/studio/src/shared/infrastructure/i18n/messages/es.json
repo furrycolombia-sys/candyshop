@@ -156,37 +156,21 @@
       "dragImage": "Arrastra para reordenar",
       "noImages": "Sin imágenes aún",
       "sections": {
-        "highlights": "✨ Destacados",
-        "faq": "❓ Preguntas Frecuentes",
-        "typeDetails": "📋 Detalles del Tipo"
-      },
-      "highlights": {
-        "add": "Agregar destacado",
-        "remove": "Eliminar destacado",
-        "drag": "Arrastra para reordenar",
-        "icon": "Nombre del ícono",
-        "iconPlaceholder": "ej. Bus, Gift, Star",
-        "titleEn": "Título (EN)",
-        "titleEs": "Título (ES)",
-        "titleEnPlaceholder": "Título en Inglés",
-        "titleEsPlaceholder": "Título en Español",
-        "descriptionEn": "Descripción (EN)",
-        "descriptionEs": "Descripción (ES)",
-        "descEnPlaceholder": "Descripción en Inglés",
-        "descEsPlaceholder": "Descripción en Español"
-      },
-      "faq": {
-        "add": "Agregar pregunta",
-        "remove": "Eliminar pregunta",
-        "drag": "Arrastra para reordenar",
-        "questionEn": "Pregunta (EN)",
-        "questionEs": "Pregunta (ES)",
-        "questionEnPlaceholder": "Pregunta en Inglés",
-        "questionEsPlaceholder": "Pregunta en Español",
-        "answerEn": "Respuesta (EN)",
-        "answerEs": "Respuesta (ES)",
-        "answerEnPlaceholder": "Respuesta en Inglés",
-        "answerEsPlaceholder": "Respuesta en Español"
+        "title": "Secciones",
+        "addSection": "Agregar Sección",
+        "addItem": "Agregar Item",
+        "sectionName": "Nombre de Sección",
+        "sectionType": "Tipo de Sección",
+        "itemTitle": "Título",
+        "itemDescription": "Descripción",
+        "icon": "Ícono",
+        "imageUrl": "URL de Imagen",
+        "dragToReorder": "Arrastra para reordenar",
+        "emptySection": "Sin items aún. Agrega tu primer item.",
+        "typeCards": "Tarjetas",
+        "typeAccordion": "Acordeón",
+        "typeTwoColumn": "Dos Columnas",
+        "typeGallery": "Galería"
       }
     },
     "typeDetails": {

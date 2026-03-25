@@ -156,37 +156,21 @@
       "dragImage": "Drag to reorder",
       "noImages": "No images yet",
       "sections": {
-        "highlights": "✨ Highlights",
-        "faq": "❓ FAQ",
-        "typeDetails": "📋 Type Details"
-      },
-      "highlights": {
-        "add": "Add highlight",
-        "remove": "Remove highlight",
-        "drag": "Drag to reorder",
-        "icon": "Icon name",
-        "iconPlaceholder": "e.g. Bus, Gift, Star",
-        "titleEn": "Title (EN)",
-        "titleEs": "Title (ES)",
-        "titleEnPlaceholder": "Title in English",
-        "titleEsPlaceholder": "Título en Español",
-        "descriptionEn": "Description (EN)",
-        "descriptionEs": "Description (ES)",
-        "descEnPlaceholder": "Description in English",
-        "descEsPlaceholder": "Descripción en Español"
-      },
-      "faq": {
-        "add": "Add FAQ",
-        "remove": "Remove FAQ",
-        "drag": "Drag to reorder",
-        "questionEn": "Question (EN)",
-        "questionEs": "Question (ES)",
-        "questionEnPlaceholder": "Question in English",
-        "questionEsPlaceholder": "Pregunta en Español",
-        "answerEn": "Answer (EN)",
-        "answerEs": "Answer (ES)",
-        "answerEnPlaceholder": "Answer in English",
-        "answerEsPlaceholder": "Respuesta en Español"
+        "title": "Sections",
+        "addSection": "Add Section",
+        "addItem": "Add Item",
+        "sectionName": "Section Name",
+        "sectionType": "Section Type",
+        "itemTitle": "Title",
+        "itemDescription": "Description",
+        "icon": "Icon",
+        "imageUrl": "Image URL",
+        "dragToReorder": "Drag to reorder",
+        "emptySection": "No items yet. Add your first item.",
+        "typeCards": "Cards",
+        "typeAccordion": "Accordion",
+        "typeTwoColumn": "Two Column",
+        "typeGallery": "Gallery"
       }
     },
     "typeDetails": {

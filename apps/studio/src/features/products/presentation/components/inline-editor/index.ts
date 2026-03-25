@@ -1,12 +1,12 @@
 export { EditorToolbar } from "./EditorToolbar";
 export { InlineEditor } from "./InlineEditor";
 export { InlineAddButton } from "./InlineAddButton";
-export { InlineFaq } from "./InlineFaq";
 export { InlineHero } from "./InlineHero";
-export { InlineHighlights } from "./InlineHighlights";
 export { InlineImageCarousel } from "./InlineImageCarousel";
 export { InlinePriceFields } from "./InlinePriceFields";
 export { InlineRemoveButton } from "./InlineRemoveButton";
+export { InlineSections } from "./InlineSections";
+export { SectionCard } from "./SectionCard";
 export { InlineTagEditor } from "./InlineTagEditor";
 export { InlineTextField } from "./InlineTextField";
-export { InlineTypeDetails } from "./InlineTypeDetails";
+export { SectionItemEditor } from "./SectionItemEditor";

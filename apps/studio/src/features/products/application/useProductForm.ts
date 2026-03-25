@@ -22,27 +22,6 @@ function generateSlug(name: string): string {
     .replaceAll(/^-|-$/g, "");
 }
 
-/** Build type_details JSONB from form values based on selected type */
-function buildTypeDetails(values: ProductFormValues): Json {
-  switch (values.type) {
-    case "merch": {
-      return (values.type_details_merch ?? {}) as Json;
-    }
-    case "digital": {
-      return (values.type_details_digital ?? {}) as Json;
-    }
-    case "service": {
-      return (values.type_details_service ?? {}) as Json;
-    }
-    case "ticket": {
-      return (values.type_details_ticket ?? {}) as Json;
-    }
-    default: {
-      return {};
-    }
-  }
-}
-
 /** Parse tags from comma-separated string */
 function parseTags(tagsString: string): string[] {
   return tagsString
@@ -68,8 +47,6 @@ export function useProductById(productId?: string) {
 
 /** Convert a Product row to form values for editing */
 export function productToFormValues(product: Product): ProductFormValues {
-  const typeDetails = (product.type_details ?? {}) as Record<string, unknown>;
-
   const rawImages = product.images as
     | Array<{ url: string; alt?: string; sort_order?: number }>
     | null
@@ -79,6 +56,11 @@ export function productToFormValues(product: Product): ProductFormValues {
     alt: img.alt ?? "",
     sort_order: img.sort_order ?? idx,
   }));
+
+  const rawSections = product.sections as
+    | ProductFormValues["sections"]
+    | null
+    | undefined;
 
   return {
     name_en: product.name_en,
@@ -96,28 +78,7 @@ export function productToFormValues(product: Product): ProductFormValues {
     tags: product.tags?.join(", ") ?? "",
     featured: product.featured,
     images,
-    highlights:
-      ((product as Record<string, unknown>)
-        .highlights as ProductFormValues["highlights"]) ?? [],
-    faq:
-      ((product as Record<string, unknown>).faq as ProductFormValues["faq"]) ??
-      [],
-    type_details_merch:
-      product.type === "merch"
-        ? (typeDetails as ProductFormValues["type_details_merch"])
-        : undefined,
-    type_details_digital:
-      product.type === "digital"
-        ? (typeDetails as ProductFormValues["type_details_digital"])
-        : undefined,
-    type_details_service:
-      product.type === "service"
-        ? (typeDetails as ProductFormValues["type_details_service"])
-        : undefined,
-    type_details_ticket:
-      product.type === "ticket"
-        ? (typeDetails as ProductFormValues["type_details_ticket"])
-        : undefined,
+    sections: rawSections ?? [],
   };
 }
 
@@ -146,7 +107,7 @@ export function useInsertProduct() {
         tags: parseTags(values.tags ?? ""),
         featured: values.featured ?? false,
         images: (values.images ?? []) as Json,
-        type_details: buildTypeDetails(values),
+        sections: (values.sections ?? []) as Json,
         slug,
       });
     },
@@ -181,7 +142,7 @@ export function useUpdateProduct(productId: string) {
         tags: parseTags(values.tags ?? ""),
         featured: values.featured ?? false,
         images: (values.images ?? []) as Json,
-        type_details: buildTypeDetails(values),
+        sections: (values.sections ?? []) as Json,
       }),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: [PRODUCTS_QUERY_KEY] });

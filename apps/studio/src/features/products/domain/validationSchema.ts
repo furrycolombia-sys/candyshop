@@ -1,61 +1,31 @@
 import { z } from "zod";
 
-/** Merch type_details schema */
-export const merchDetailsSchema = z.object({
-  weight: z.string().optional().default(""),
-  dimensions: z.string().optional().default(""),
-  ships_from: z.string().optional().default(""),
-  material: z.string().optional().default(""),
-  care_instructions: z.string().optional().default(""),
-});
-
-/** Digital type_details schema */
-export const digitalDetailsSchema = z.object({
-  file_size: z.string().optional().default(""),
-  format: z.string().optional().default(""),
-  resolution: z.string().optional().default(""),
-  license_type: z.string().optional().default(""),
-});
-
-/** Service type_details schema */
-export const serviceDetailsSchema = z.object({
-  total_slots: z.coerce.number().int().positive().optional(),
-  slots_available: z.coerce.number().int().nonnegative().optional(),
-  turnaround_days: z.coerce.number().int().positive().optional(),
-  revisions_included: z.coerce.number().int().nonnegative().optional(),
-  commercial_use: z.boolean().optional().default(false),
-});
-
-/** Ticket type_details schema */
-export const ticketDetailsSchema = z.object({
-  venue: z.string().optional().default(""),
-  location: z.string().optional().default(""),
-  doors_open: z.string().optional().default(""),
-  age_restriction: z.string().optional().default(""),
-  capacity: z.coerce.number().int().positive().optional(),
-  tickets_remaining: z.coerce.number().int().nonnegative().optional(),
-});
-
-/** Highlight schema */
-export const highlightSchema = z.object({
+/** Section item schema */
+export const sectionItemSchema = z.object({
+  title_en: z.string().default(""),
+  title_es: z.string().default(""),
+  description_en: z.string().default(""),
+  description_es: z.string().default(""),
   icon: z.string().optional().default(""),
-  title_en: z.string().min(1),
-  title_es: z.string().optional().default(""),
-  description_en: z.string().optional().default(""),
-  description_es: z.string().optional().default(""),
+  image_url: z.string().optional().default(""),
+  sort_order: z.number().default(0),
 });
 
-export type Highlight = z.infer<typeof highlightSchema>;
+export type SectionItem = z.infer<typeof sectionItemSchema>;
 
-/** FAQ item schema */
-export const faqItemSchema = z.object({
-  question_en: z.string().min(1),
-  question_es: z.string().optional().default(""),
-  answer_en: z.string().optional().default(""),
-  answer_es: z.string().optional().default(""),
+/** Section schema */
+export const sectionSchema = z.object({
+  // eslint-disable-next-line i18next/no-literal-string -- validation message, not user-facing
+  name_en: z.string().min(1, "Section name required"),
+  name_es: z.string().default(""),
+  type: z
+    .enum(["cards", "accordion", "two-column", "gallery"])
+    .default("cards"),
+  sort_order: z.number().default(0),
+  items: z.array(sectionItemSchema).default([]),
 });
 
-export type FaqItem = z.infer<typeof faqItemSchema>;
+export type Section = z.infer<typeof sectionSchema>;
 
 /** Product image schema */
 export const productImageSchema = z.object({
@@ -83,12 +53,7 @@ export const productFormSchema = z.object({
   tags: z.string().optional().default(""),
   featured: z.boolean().optional().default(false),
   images: z.array(productImageSchema).optional().default([]),
-  highlights: z.array(highlightSchema).optional().default([]),
-  faq: z.array(faqItemSchema).optional().default([]),
-  type_details_merch: merchDetailsSchema.optional(),
-  type_details_digital: digitalDetailsSchema.optional(),
-  type_details_service: serviceDetailsSchema.optional(),
-  type_details_ticket: ticketDetailsSchema.optional(),
+  sections: z.array(sectionSchema).optional().default([]),
 });
 
 export type ProductFormValues = z.infer<typeof productFormSchema>;

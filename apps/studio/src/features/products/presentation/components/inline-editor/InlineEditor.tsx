@@ -2,15 +2,13 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslations } from "next-intl";
-import { useForm, useWatch } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { tid } from "shared";
 
 import { EditorToolbar } from "./EditorToolbar";
-import { InlineFaq } from "./InlineFaq";
 import { InlineHero } from "./InlineHero";
-import { InlineHighlights } from "./InlineHighlights";
+import { InlineSections } from "./InlineSections";
 import { InlineTextField } from "./InlineTextField";
-import { InlineTypeDetails } from "./InlineTypeDetails";
 
 import {
   productFormSchema,
@@ -40,8 +38,7 @@ const FORM_DEFAULTS: ProductFormValues = {
   tags: "",
   featured: false,
   images: [],
-  highlights: [],
-  faq: [],
+  sections: [],
 };
 
 export function InlineEditor({
@@ -58,8 +55,6 @@ export function InlineEditor({
       resolver: zodResolver(productFormSchema) as any,
       defaultValues: { ...FORM_DEFAULTS, ...defaultValues },
     });
-
-  const productType = useWatch({ control, name: "type" });
 
   return (
     <form
@@ -92,11 +87,7 @@ export function InlineEditor({
         </div>
       </section>
 
-      <InlineHighlights control={control} />
-
-      <InlineFaq control={control} />
-
-      <InlineTypeDetails control={control} productType={productType} />
+      <InlineSections control={control} />
     </form>
   );
 }
