@@ -1,9 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useState } from "react";
 import type { Control, FieldPath } from "react-hook-form";
-import { useController } from "react-hook-form";
 import { tid } from "shared";
+
+import { LangTextarea } from "./LangTextarea";
 
 import type { ProductFormValues } from "@/features/products/domain/validationSchema";
 
@@ -14,6 +15,7 @@ interface InlineTextFieldProps {
   fieldNameEn: FieldPath<ProductFormValues>;
   fieldNameEs: FieldPath<ProductFormValues>;
   placeholder: string;
+  placeholderEs?: string;
   as?: "input" | "textarea";
   className?: string;
 }
@@ -23,51 +25,16 @@ export function InlineTextField({
   fieldNameEn,
   fieldNameEs,
   placeholder,
+  placeholderEs,
   as = "input",
   className = "",
 }: InlineTextFieldProps) {
   const [lang, setLang] = useState<Lang>("en");
-
-  const activeField = lang === "en" ? fieldNameEn : fieldNameEs;
-
-  const { field } = useController({
-    control,
-    name: activeField,
-  });
+  const isMultiline = as === "textarea";
 
   const toggleLang = useCallback(() => {
     setLang((prev) => (prev === "en" ? "es" : "en"));
   }, []);
-
-  const value = (field.value as string) ?? "";
-  const isEmpty = value.length === 0;
-
-  const baseClasses = `w-full bg-transparent outline-none placeholder:text-muted-foreground/50 transition-colors ${
-    isEmpty
-      ? "border-b-2 border-dashed border-foreground/20"
-      : "border-b-2 border-transparent"
-  } focus:border-b-2 focus:border-solid focus:border-foreground/40 ${className}`;
-
-  // Destructure field to avoid react-hooks/refs lint errors with react-hook-form
-  const { ref: fieldRef, name, onChange, onBlur } = field;
-
-  // Auto-resize textarea to fit content
-  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
-
-  const autoResize = useCallback(() => {
-    const el = textareaRef.current;
-    if (!el) return;
-    el.style.height = "auto";
-    el.style.height = `${el.scrollHeight}px`;
-  }, []);
-
-  useEffect(() => {
-    autoResize();
-  }, [value, autoResize]);
-
-  // Use textarea for all modes — input can't wrap text (titles need wrapping)
-  const isMultiline = as === "textarea";
-  const MULTILINE_ROWS = 3;
 
   return (
     <div className="group relative" {...tid(`inline-text-${fieldNameEn}`)}>
@@ -81,21 +48,24 @@ export function InlineTextField({
         {lang}
       </button>
 
-      <textarea
-        ref={(el) => {
-          fieldRef(el);
-          textareaRef.current = el;
-        }}
-        name={name}
-        value={value}
-        onChange={(e) => {
-          onChange(e);
-          autoResize();
-        }}
-        onBlur={onBlur}
+      {/* Both textareas always mounted — show/hide via CSS */}
+      <LangTextarea
+        control={control}
+        fieldName={fieldNameEn}
         placeholder={placeholder}
-        rows={isMultiline ? MULTILINE_ROWS : 1}
-        className={`${baseClasses} resize-none overflow-hidden`}
+        isMultiline={isMultiline}
+        className={className}
+        visible={lang === "en"}
+        testId={`inline-text-en-${fieldNameEn}`}
+      />
+      <LangTextarea
+        control={control}
+        fieldName={fieldNameEs}
+        placeholder={placeholderEs ?? placeholder}
+        isMultiline={isMultiline}
+        className={className}
+        visible={lang === "es"}
+        testId={`inline-text-es-${fieldNameEs}`}
       />
     </div>
   );
