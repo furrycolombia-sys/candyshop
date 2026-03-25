@@ -16,12 +16,8 @@ interface UseAddToCartReturn {
 }
 
 /**
- * Encapsulates the add-to-cart logic shared by ProductCard, HeroSection,
- * and ProductDetailPage:
- * - Builds the cart item payload from a Product
- * - Manages the "added" feedback state with timeout cleanup
- * - Fires the fly-to-cart animation
- * - Returns the current quantity in cart
+ * Shared add-to-cart hook. Passes the full product to the cart
+ * (CartItem = Product + quantity — same shape, no mapping).
  */
 export function useAddToCart(product: Product): UseAddToCartReturn {
   const { addItem, items: cartItems } = useCart();
@@ -29,10 +25,6 @@ export function useAddToCart(product: Product): UseAddToCartReturn {
   const [added, setAdded] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout>>(null);
 
-  const { id, name, price, currency, images, type, category } = product;
-  const firstImageUrl = images[0]?.url;
-
-  // Cleanup timeout on unmount
   useEffect(() => {
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
@@ -40,34 +32,27 @@ export function useAddToCart(product: Product): UseAddToCartReturn {
   }, []);
 
   const quantityInCart = useMemo(
-    () => cartItems.find((i) => i.productId === id)?.quantity ?? 0,
-    [cartItems, id],
+    () => cartItems.find((i) => i.id === product.id)?.quantity ?? 0,
+    [cartItems, product.id],
   );
 
   const handleAddToCart = useCallback(
     (e: React.MouseEvent<HTMLButtonElement>) => {
       e.preventDefault();
       e.stopPropagation();
-      addItem({
-        productId: id,
-        name,
-        price,
-        currency,
-        image: firstImageUrl,
-        type,
-        category,
-      });
-      setAdded(true);
 
+      // Pass the full product — CartItem extends Product with quantity
+      addItem(product);
+
+      setAdded(true);
       if (timerRef.current) clearTimeout(timerRef.current);
       timerRef.current = setTimeout(() => setAdded(false), ADDED_RESET_MS);
 
-      // Fire fly-to-cart animation
+      // Fly-to-cart animation
       const rect = e.currentTarget.getBoundingClientRect();
-      const color = getCategoryColor(category);
-      flyCtx?.fire(rect, color);
+      flyCtx?.fire(rect, getCategoryColor(product.category));
     },
-    [addItem, id, name, price, currency, firstImageUrl, type, category, flyCtx],
+    [addItem, product, flyCtx],
   );
 
   return { added, quantityInCart, handleAddToCart };

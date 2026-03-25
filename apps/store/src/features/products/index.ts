@@ -1,13 +1,4 @@
-export type {
-  ServiceDetails,
-  DigitalDetails,
-  MerchDetails,
-  Product,
-  ProductCategory,
-  ProductImage,
-  ProductType,
-  TicketDetails,
-} from "./domain";
+export type { Product } from "./domain";
 
 export { PRODUCT_CATEGORIES, PRODUCT_TYPES } from "./domain";
 
