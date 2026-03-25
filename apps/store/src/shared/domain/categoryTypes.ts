@@ -1,9 +1,2 @@
-export type ProductType = "merch" | "digital" | "service" | "ticket";
-
-export type ProductCategory =
-  | "fursuits"
-  | "merch"
-  | "art"
-  | "events"
-  | "digital"
-  | "deals";
+// Re-exported from packages/shared — single source of truth
+export type { ProductCategory, ProductType } from "shared/types";
