@@ -5,15 +5,15 @@ import { useState } from "react";
 import { tid } from "shared";
 
 import type { CategoryTheme } from "@/features/products/domain/constants";
-import type { ProductFaq } from "@/features/products/domain/types";
 
 interface FaqItemProps {
-  item: ProductFaq;
+  question: string;
+  answer: string;
   index: number;
   theme: CategoryTheme;
 }
 
-export function FaqItem({ item, index, theme }: FaqItemProps) {
+export function FaqItem({ question, answer, index, theme }: FaqItemProps) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -27,7 +27,7 @@ export function FaqItem({ item, index, theme }: FaqItemProps) {
         aria-expanded={open}
         {...tid(`faq-toggle-${index}`)}
       >
-        <span>{item.question}</span>
+        <span>{question}</span>
         {open ? (
           <Minus className="size-5 shrink-0" />
         ) : (
@@ -39,7 +39,7 @@ export function FaqItem({ item, index, theme }: FaqItemProps) {
           className={`px-5 pb-5 border-t-[3px] border-foreground pt-4 ${theme.bgLight}`}
           {...tid(`faq-answer-${index}`)}
         >
-          <p className="text-sm/relaxed text-muted-foreground">{item.answer}</p>
+          <p className="text-sm/relaxed text-muted-foreground">{answer}</p>
         </div>
       )}
     </div>

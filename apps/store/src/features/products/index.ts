@@ -2,6 +2,12 @@ export type { Product } from "./domain";
 
 export { PRODUCT_CATEGORIES, PRODUCT_TYPES } from "./domain";
 
+// Application hooks
+export {
+  useStoreProducts,
+  useStoreProduct,
+} from "./application/useStoreProducts";
+
 // Presentation
 export { ProductCard } from "./presentation/components/ProductCard";
 export { CategoryFilter } from "./presentation/components/CategoryFilter";

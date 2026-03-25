@@ -1,4 +1,4 @@
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { tid } from "shared";
 
 import type { CategoryTheme } from "@/features/products/domain/constants";
@@ -14,6 +14,7 @@ export function ScreenshotsSection({
   theme,
 }: ScreenshotsSectionProps) {
   const t = useTranslations("products");
+  const locale = useLocale();
 
   if (screenshots.length === 0) return null;
 
@@ -35,26 +36,32 @@ export function ScreenshotsSection({
           className="flex lg:grid lg:grid-cols-3 gap-4 overflow-x-auto pb-4 lg:pb-0 snap-x snap-mandatory lg:snap-none"
           {...tid("screenshots-gallery")}
         >
-          {screenshots.map((screenshot, index) => (
-            <div
-              key={screenshot.caption ?? screenshot.url ?? index}
-              className="flex flex-col gap-2 shrink-0 w-64 lg:w-auto snap-start"
-              {...tid(`screenshot-${index}`)}
-            >
+          {screenshots.map((screenshot, index) => {
+            const caption =
+              locale === "es"
+                ? (screenshot.caption_es ?? screenshot.caption_en)
+                : (screenshot.caption_en ?? screenshot.caption_es);
+            return (
               <div
-                className={`${theme.bg} border-[3px] border-foreground nb-shadow-sm flex items-center justify-center h-44`}
+                key={caption ?? screenshot.url ?? index}
+                className="flex flex-col gap-2 shrink-0 w-64 lg:w-auto snap-start"
+                {...tid(`screenshot-${index}`)}
               >
-                <span className="font-display text-sm font-extrabold uppercase tracking-widest text-foreground/30 select-none">
-                  {index + 1}
-                </span>
+                <div
+                  className={`${theme.bg} border-[3px] border-foreground nb-shadow-sm flex items-center justify-center h-44`}
+                >
+                  <span className="font-display text-sm font-extrabold uppercase tracking-widest text-foreground/30 select-none">
+                    {index + 1}
+                  </span>
+                </div>
+                {caption && (
+                  <p className="text-xs text-muted-foreground font-medium px-1">
+                    {caption}
+                  </p>
+                )}
               </div>
-              {screenshot.caption && (
-                <p className="text-xs text-muted-foreground font-medium px-1">
-                  {screenshot.caption}
-                </p>
-              )}
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </section>

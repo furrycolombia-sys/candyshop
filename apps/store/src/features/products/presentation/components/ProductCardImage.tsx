@@ -62,7 +62,7 @@ export function ProductCardImage({
         </span>
       )}
 
-      {!product.inStock && (
+      {!product.is_active && (
         <span className="absolute inset-0 flex items-center justify-center bg-foreground/60">
           <span className="font-display text-base font-extrabold uppercase tracking-widest text-background">
             {outOfStockLabel}

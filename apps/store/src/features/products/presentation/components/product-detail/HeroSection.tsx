@@ -1,8 +1,8 @@
 "use client";
 
 import { ShoppingCart } from "lucide-react";
-import { useTranslations } from "next-intl";
-import { tid } from "shared";
+import { useLocale, useTranslations } from "next-intl";
+import { i18nField, tid } from "shared";
 
 import { ImageGallery } from "./ImageGallery";
 import { PriceBlock } from "./PriceBlock";
@@ -21,7 +21,12 @@ export function HeroSection({ product, theme }: HeroSectionProps) {
   const t = useTranslations("products");
   const tCategories = useTranslations("categories");
   const tTypes = useTranslations("productTypes");
+  const locale = useLocale();
   const { added, quantityInCart, handleAddToCart } = useAddToCart(product);
+
+  const name = i18nField(product, "name", locale);
+  const tagline = i18nField(product, "tagline", locale);
+  const description = i18nField(product, "description", locale);
 
   return (
     <section
@@ -36,12 +41,12 @@ export function HeroSection({ product, theme }: HeroSectionProps) {
           {/* Right: Product Info */}
           <div className="flex flex-col flex-1 gap-4 min-w-0">
             {/* Tagline */}
-            {product.tagline && (
+            {tagline && (
               <p
                 className={`text-xs font-bold uppercase tracking-[0.2em] ${theme.text}`}
                 {...tid("hero-tagline")}
               >
-                {product.tagline}
+                {tagline}
               </p>
             )}
 
@@ -50,7 +55,7 @@ export function HeroSection({ product, theme }: HeroSectionProps) {
               className="font-display text-4xl/tight lg:text-5xl/tight font-extrabold uppercase"
               {...tid("hero-name")}
             >
-              {product.name}
+              {name}
             </h1>
 
             {/* Badges */}
@@ -70,7 +75,7 @@ export function HeroSection({ product, theme }: HeroSectionProps) {
               >
                 {tTypes(product.type)}
               </span>
-              {product.inStock ? (
+              {product.is_active ? (
                 <span className="bg-(--mint) border-[3px] border-foreground px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-foreground">
                   {t("inStock")}
                 </span>
@@ -82,29 +87,25 @@ export function HeroSection({ product, theme }: HeroSectionProps) {
             </div>
 
             {/* Rating */}
-            {product.rating !== undefined &&
-              product.reviewCount !== undefined && (
-                <div
-                  className="flex items-center gap-2"
-                  {...tid("hero-rating")}
-                >
-                  <div className="flex items-center gap-0.5">
-                    <RatingStars rating={product.rating} theme={theme} />
-                  </div>
-                  <span className="text-sm font-bold">
-                    {t("detail.stars", {
-                      rating: product.rating.toFixed(1),
-                    })}
-                  </span>
-                  <span className="text-sm text-muted-foreground">
-                    (
-                    {t("detail.reviewsCount", {
-                      count: product.reviewCount,
-                    })}
-                    )
-                  </span>
+            {product.rating != null && product.review_count > 0 && (
+              <div className="flex items-center gap-2" {...tid("hero-rating")}>
+                <div className="flex items-center gap-0.5">
+                  <RatingStars rating={product.rating} theme={theme} />
                 </div>
-              )}
+                <span className="text-sm font-bold">
+                  {t("detail.stars", {
+                    rating: product.rating.toFixed(1),
+                  })}
+                </span>
+                <span className="text-sm text-muted-foreground">
+                  (
+                  {t("detail.reviewsCount", {
+                    count: product.review_count,
+                  })}
+                  )
+                </span>
+              </div>
+            )}
 
             {/* Price block */}
             <PriceBlock
@@ -117,7 +118,7 @@ export function HeroSection({ product, theme }: HeroSectionProps) {
               className="text-sm/relaxed text-muted-foreground max-w-prose"
               {...tid("hero-description")}
             >
-              {product.description}
+              {description}
             </p>
 
             {/* Tags */}
@@ -139,7 +140,7 @@ export function HeroSection({ product, theme }: HeroSectionProps) {
               <button
                 className={`w-full sm:w-auto nb-btn nb-btn-press-lg nb-shadow-md font-display text-lg font-extrabold uppercase tracking-widest px-10 py-4 disabled:opacity-50 disabled:cursor-not-allowed ${theme.bg}`}
                 onClick={handleAddToCart}
-                disabled={!product.inStock || added}
+                disabled={!product.is_active || added}
                 {...tid("hero-add-to-cart")}
               >
                 <ShoppingCart className="size-5" />

@@ -40,6 +40,8 @@
   "products": {
     "title": "Productos",
     "subtitle": "Explora nuestra colección",
+    "loading": "Cargando productos...",
+    "loadError": "Error al cargar productos",
     "search": "Buscar productos...",
     "allCategories": "Todos",
     "allTypes": "Todos los tipos",

@@ -1,58 +1,147 @@
 import { useTranslations } from "next-intl";
+import {
+  typeDetails,
+  type DigitalDetails,
+  type MerchDetails,
+  type ServiceDetails,
+  type TicketDetails,
+} from "shared";
 import { tid } from "shared";
 
-import {
-  buildServiceRows,
-  buildDigitalRows,
-  buildMerchRows,
-  buildTicketRows,
-} from "@/features/products/domain/buildSpecRows";
 import type { CategoryTheme } from "@/features/products/domain/constants";
 import type { Product, ProductSpec } from "@/features/products/domain/types";
 
 const MODULO_ZEBRA = 2;
 
+type TFn = ReturnType<typeof useTranslations<"products">>;
+
 interface SpecsSectionProps {
-  specs: ProductSpec[];
   product: Product;
   theme: CategoryTheme;
 }
 
-function getTypeRows(
-  product: Product,
-  t: ReturnType<typeof useTranslations<"products">>,
-): ProductSpec[] {
-  if (product.type === "service" && product.service) {
-    return buildServiceRows(
-      (key, values) => t(key as Parameters<typeof t>[0], values),
-      product.service,
-    );
+function buildServiceRows(t: TFn, product: Product): ProductSpec[] {
+  const d = typeDetails<ServiceDetails>(product);
+  const rows: ProductSpec[] = [];
+  if (d.total_slots != null) {
+    rows.push({
+      label: t("detail.slots"),
+      value: t("slotsAvailable", {
+        available: d.slots_available ?? 0,
+        total: d.total_slots,
+      }),
+    });
   }
-  if (product.type === "ticket" && product.ticket) {
-    return buildTicketRows(
-      (key, values) => t(key as Parameters<typeof t>[0], values),
-      product.ticket,
-    );
+  if (d.turnaround_days != null) {
+    rows.push({
+      label: t("detail.turnaround"),
+      value: t("turnaround", { days: d.turnaround_days }),
+    });
   }
-  if (product.type === "digital" && product.digital) {
-    return buildDigitalRows(
-      (key, values) => t(key as Parameters<typeof t>[0], values),
-      product.digital,
-    );
+  if (d.revisions_included != null) {
+    rows.push({
+      label: t("detail.revisions"),
+      value: String(d.revisions_included),
+    });
   }
-  if (product.type === "merch" && product.merch) {
-    return buildMerchRows(
-      (key, values) => t(key as Parameters<typeof t>[0], values),
-      product.merch,
-    );
+  if (d.commercial_use != null) {
+    rows.push({
+      label: t("detail.commercialUse"),
+      value: d.commercial_use
+        ? t("detail.commercialUseYes")
+        : t("detail.commercialUseNo"),
+    });
   }
-  return [];
+  return rows;
 }
 
-export function SpecsSection({ specs, product, theme }: SpecsSectionProps) {
+function buildTicketRows(t: TFn, product: Product): ProductSpec[] {
+  const d = typeDetails<TicketDetails>(product);
+  const rows: ProductSpec[] = [];
+  if (d.venue) rows.push({ label: t("detail.venue"), value: d.venue });
+  if (d.location) {
+    rows.push({ label: t("detail.location"), value: d.location });
+  }
+  if (d.tickets_remaining != null) {
+    rows.push({
+      label: t("detail.ticketsLeft"),
+      value: t("ticketsRemaining", { remaining: d.tickets_remaining }),
+    });
+  }
+  if (d.doors_open) {
+    rows.push({ label: t("detail.doorsOpen"), value: d.doors_open });
+  }
+  if (d.age_restriction) {
+    rows.push({
+      label: t("detail.ageRestriction"),
+      value: d.age_restriction,
+    });
+  }
+  return rows;
+}
+
+function buildDigitalRows(t: TFn, product: Product): ProductSpec[] {
+  const d = typeDetails<DigitalDetails>(product);
+  const rows: ProductSpec[] = [];
+  if (d.format) rows.push({ label: t("detail.format"), value: d.format });
+  if (d.file_size) {
+    rows.push({ label: t("detail.fileSize"), value: d.file_size });
+  }
+  if (d.resolution) {
+    rows.push({ label: t("detail.resolution"), value: d.resolution });
+  }
+  if (d.license_type) {
+    rows.push({ label: t("detail.license"), value: d.license_type });
+  }
+  rows.push({ label: t("detail.delivery"), value: t("digital") });
+  return rows;
+}
+
+function buildMerchRows(t: TFn, product: Product): ProductSpec[] {
+  const d = typeDetails<MerchDetails>(product);
+  const rows: ProductSpec[] = [];
+  if (d.weight) rows.push({ label: t("detail.weight"), value: d.weight });
+  if (d.dimensions) {
+    rows.push({ label: t("detail.dimensions"), value: d.dimensions });
+  }
+  if (d.material) {
+    rows.push({ label: t("detail.material"), value: d.material });
+  }
+  if (d.ships_from) {
+    rows.push({ label: t("detail.shipsFrom"), value: d.ships_from });
+  }
+  if (d.care_instructions) {
+    rows.push({
+      label: t("detail.careInstructions"),
+      value: d.care_instructions,
+    });
+  }
+  return rows;
+}
+
+function getTypeRows(product: Product, t: TFn): ProductSpec[] {
+  switch (product.type) {
+    case "service": {
+      return buildServiceRows(t, product);
+    }
+    case "ticket": {
+      return buildTicketRows(t, product);
+    }
+    case "digital": {
+      return buildDigitalRows(t, product);
+    }
+    case "merch": {
+      return buildMerchRows(t, product);
+    }
+    default: {
+      return [];
+    }
+  }
+}
+
+export function SpecsSection({ product, theme }: SpecsSectionProps) {
   const t = useTranslations("products");
-  const typeRows = getTypeRows(product, t);
-  const allRows = [...specs, ...typeRows];
+  const allRows = getTypeRows(product, t);
 
   if (allRows.length === 0) return null;
 

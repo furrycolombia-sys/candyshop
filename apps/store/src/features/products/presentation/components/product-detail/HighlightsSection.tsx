@@ -1,5 +1,5 @@
-import { useTranslations } from "next-intl";
-import { tid } from "shared";
+import { useLocale, useTranslations } from "next-intl";
+import { i18nField, tid } from "shared";
 
 import type { CategoryTheme } from "@/features/products/domain/constants";
 import type { ProductHighlight } from "@/features/products/domain/types";
@@ -15,6 +15,7 @@ export function HighlightsSection({
   theme,
 }: HighlightsSectionProps) {
   const t = useTranslations("products");
+  const locale = useLocale();
 
   if (highlights.length === 0) return null;
 
@@ -36,9 +37,11 @@ export function HighlightsSection({
         >
           {highlights.map((highlight, index) => {
             const Icon = getIcon(highlight.icon);
+            const title = i18nField(highlight, "title", locale);
+            const description = i18nField(highlight, "description", locale);
             return (
               <div
-                key={highlight.title}
+                key={title}
                 className={`flex flex-col gap-3 p-5 border-[3px] ${theme.border} nb-shadow-sm bg-background`}
                 {...tid(`highlight-card-${index}`)}
               >
@@ -48,10 +51,10 @@ export function HighlightsSection({
                   <Icon className="size-6" />
                 </div>
                 <p className="font-display text-sm/tight font-extrabold uppercase tracking-wide">
-                  {highlight.title}
+                  {title}
                 </p>
                 <p className="text-xs/relaxed text-muted-foreground">
-                  {highlight.description}
+                  {description}
                 </p>
               </div>
             );

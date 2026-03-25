@@ -55,7 +55,7 @@ export function GalleryOverlays({
       )}
 
       {/* Out of stock */}
-      {!product.inStock && (
+      {!product.is_active && (
         <div className="absolute inset-0 flex items-center justify-center bg-foreground/70 z-10">
           <span className="font-display text-xl font-extrabold uppercase tracking-widest text-background">
             {t("outOfStock")}

@@ -7,24 +7,48 @@ import type { Product } from "@/features/products/domain/types";
 // Helpers
 // ---------------------------------------------------------------------------
 
-const STUB: Omit<Product, "id" | "name" | "featured"> = {
-  slug: "s",
-  description: "",
-  price: 10,
-  currency: "USD",
-  type: "merch",
-  category: "merch",
-  images: [],
-  inStock: true,
-  createdAt: "2025-01-01",
-};
+function makeProduct(
+  overrides: Partial<Product> & { id: string; featured: boolean },
+): Product {
+  return {
+    slug: "s",
+    name_en: "test",
+    name_es: "test",
+    description_en: "",
+    description_es: "",
+    type: "merch",
+    category: "merch",
+    price_cop: 0,
+    price_usd: 0,
+    max_quantity: null,
+    is_active: true,
+    created_at: "2025-01-01",
+    event_id: null,
+    long_description_en: "",
+    long_description_es: "",
+    tagline_en: "",
+    tagline_es: "",
+    compare_at_price_cop: null,
+    compare_at_price_usd: null,
+    tags: [],
+    rating: null,
+    review_count: 0,
+    images: [],
+    screenshots: [],
+    highlights: [],
+    faq: [],
+    type_details: {},
+    updated_at: "2025-01-01",
+    ...overrides,
+  } as Product;
+}
 
 function r(id: string): Product {
-  return { ...STUB, id, name: id, slug: id, featured: false };
+  return makeProduct({ id, featured: false });
 }
 
 function f(id: string): Product {
-  return { ...STUB, id, name: id, slug: id, featured: true };
+  return makeProduct({ id, featured: true });
 }
 
 function ids(products: Product[]): string[] {

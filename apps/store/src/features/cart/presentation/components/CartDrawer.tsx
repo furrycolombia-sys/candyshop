@@ -1,9 +1,9 @@
 "use client";
 
 import { Minus, Plus, ShoppingCart, Trash2, X } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useCallback } from "react";
-import { tid } from "shared";
+import { i18nField, i18nPrice, tid } from "shared";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "ui";
 
 import { useCart } from "@/features/cart/application/CartContext";
@@ -15,6 +15,7 @@ const BADGE_OVERFLOW_THRESHOLD = 99;
 export function CartDrawer() {
   const t = useTranslations("cart");
   const tTypes = useTranslations("productTypes");
+  const locale = useLocale();
   const { items, total, itemCount, removeItem, updateQuantity, clearCart } =
     useCart();
   const flyCtx = useFlyToCartContext();
@@ -104,10 +105,11 @@ export function CartDrawer() {
             >
               {items.map((item) => {
                 const itemColor = getCategoryColor(item.category ?? "");
-                const lineTotal = item.price * item.quantity;
+                const name = i18nField(item, "name", locale);
+                const lineTotal = item.price_usd * item.quantity;
                 return (
                   <li
-                    key={item.productId}
+                    key={item.id}
                     className="flex gap-3 border-b-[3px] border-foreground/10 px-5 py-4 group"
                     {...tid("cart-item")}
                   >
@@ -127,12 +129,12 @@ export function CartDrawer() {
                           className="font-display text-sm/tight font-bold"
                           {...tid("cart-item-name")}
                         >
-                          {item.name}
+                          {name}
                         </p>
                         <button
                           className="shrink-0 text-muted-foreground/50 hover:text-foreground transition-colors opacity-0 group-hover:opacity-100"
-                          onClick={() => removeItem(item.productId)}
-                          aria-label={t("removeItem", { name: item.name })}
+                          onClick={() => removeItem(item.id)}
+                          aria-label={t("removeItem", { name })}
                           {...tid("cart-item-remove")}
                         >
                           <X size={14} aria-hidden="true" />
@@ -148,9 +150,9 @@ export function CartDrawer() {
                           <button
                             className="flex size-7 items-center justify-center hover:bg-foreground hover:text-background transition-colors"
                             onClick={() =>
-                              updateQuantity(item.productId, item.quantity - 1)
+                              updateQuantity(item.id, item.quantity - 1)
                             }
-                            aria-label={t("decreaseQty", { name: item.name })}
+                            aria-label={t("decreaseQty", { name })}
                             {...tid("cart-item-qty-decrease")}
                           >
                             <Minus size={12} aria-hidden="true" />
@@ -161,9 +163,9 @@ export function CartDrawer() {
                           <button
                             className="flex size-7 items-center justify-center hover:bg-foreground hover:text-background transition-colors"
                             onClick={() =>
-                              updateQuantity(item.productId, item.quantity + 1)
+                              updateQuantity(item.id, item.quantity + 1)
                             }
-                            aria-label={t("increaseQty", { name: item.name })}
+                            aria-label={t("increaseQty", { name })}
                             {...tid("cart-item-qty-increase")}
                           >
                             <Plus size={12} aria-hidden="true" />
@@ -175,7 +177,14 @@ export function CartDrawer() {
                           className="font-display text-sm font-extrabold"
                           {...tid("cart-item-price")}
                         >
-                          ${lineTotal.toLocaleString()}
+                          {i18nPrice(
+                            {
+                              ...item,
+                              price_usd: lineTotal,
+                              price_cop: item.price_cop * item.quantity,
+                            },
+                            locale,
+                          )}
                         </span>
                       </div>
                     </div>

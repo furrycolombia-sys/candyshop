@@ -1,5 +1,5 @@
-import { useTranslations } from "next-intl";
-import { tid } from "shared";
+import { useLocale, useTranslations } from "next-intl";
+import { i18nField, tid } from "shared";
 
 import type { CategoryTheme } from "@/features/products/domain/constants";
 import type { ProductFaq } from "@/features/products/domain/types";
@@ -12,6 +12,7 @@ interface FaqSectionProps {
 
 export function FaqSection({ faq, theme }: FaqSectionProps) {
   const t = useTranslations("products");
+  const locale = useLocale();
 
   if (faq.length === 0) return null;
 
@@ -30,8 +31,9 @@ export function FaqSection({ faq, theme }: FaqSectionProps) {
         <div className="flex flex-col gap-3" {...tid("faq-list")}>
           {faq.map((item, index) => (
             <FaqItem
-              key={item.question}
-              item={item}
+              key={i18nField(item, "question", locale)}
+              question={i18nField(item, "question", locale)}
+              answer={i18nField(item, "answer", locale)}
               index={index}
               theme={theme}
             />
