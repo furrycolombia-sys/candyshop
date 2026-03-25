@@ -1,6 +1,7 @@
 "use client";
 
-import { Pencil, Trash2 } from "lucide-react";
+import type { DraggableProvided } from "@hello-pangea/dnd";
+import { GripVertical, Pencil, Trash2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
@@ -32,6 +33,9 @@ const SWITCH_OFF_POSITION = "translate-x-0.5";
 interface ProductTableRowProps {
   product: Product;
   isOddRow: boolean;
+  canReorder: boolean;
+  dragProvided: DraggableProvided;
+  isDragging: boolean;
 }
 
 function formatCOP(value: number): string {
@@ -54,7 +58,13 @@ function getFirstImage(images: unknown): string | null {
   return null;
 }
 
-export function ProductTableRow({ product, isOddRow }: ProductTableRowProps) {
+export function ProductTableRow({
+  product,
+  isOddRow,
+  canReorder,
+  dragProvided,
+  isDragging,
+}: ProductTableRowProps) {
   const t = useTranslations();
   const locale = useLocale();
   const toggleMutation = useToggleProduct();
@@ -85,14 +95,31 @@ export function ProductTableRow({ product, isOddRow }: ProductTableRowProps) {
     });
   }, [deleteMutation, product.id]);
 
+  /* eslint-disable react-hooks/refs -- @hello-pangea/dnd requires ref access during render for drag-and-drop binding */
   return (
     <tr
+      ref={dragProvided.innerRef}
+      {...dragProvided.draggableProps}
       className={cn(
         "border-b border-border/50 transition-colors hover:bg-muted/30",
         isOddRow && "bg-muted/10",
+        isDragging && "bg-muted shadow-lg",
       )}
       {...tid(`product-row-${product.id}`)}
     >
+      {/* Drag handle */}
+      {canReorder && (
+        <td className={`${CELL_CLASS} w-10`}>
+          <div
+            {...dragProvided.dragHandleProps}
+            className="cursor-grab text-muted-foreground hover:text-foreground"
+            aria-label={t("products.dragToReorder")}
+          >
+            <GripVertical className="size-4" />
+          </div>
+        </td>
+      )}
+
       {/* Thumbnail */}
       <td className={CELL_CLASS}>
         <div className="size-10 overflow-hidden rounded-lg border-2 border-border bg-muted">
@@ -247,4 +274,5 @@ export function ProductTableRow({ product, isOddRow }: ProductTableRowProps) {
       </td>
     </tr>
   );
+  /* eslint-enable react-hooks/refs */
 }

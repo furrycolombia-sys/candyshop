@@ -63,6 +63,7 @@
     "active": "Activo",
     "inactive": "Inactivo",
     "actions": "Acciones",
+    "dragToReorder": "Arrastra para reordenar",
     "noProducts": "Aún no hay productos",
     "createFirst": "Crea tu primer producto para comenzar",
     "deleteConfirm": "Esto eliminará permanentemente este producto.",
@@ -135,7 +136,10 @@
     },
     "validation": {
       "required": "Este campo es obligatorio",
-      "positiveNumber": "Debe ser un número positivo"
+      "positiveNumber": "Debe ser un número positivo",
+      "sectionNameRequired": "Nombre de sección requerido en al menos un idioma",
+      "sectionItemsRequired": "La sección debe tener al menos un item",
+      "itemTitleRequired": "Título del item requerido en al menos un idioma"
     },
     "inlineEditor": {
       "backToProducts": "Productos",

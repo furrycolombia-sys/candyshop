@@ -6,6 +6,7 @@ export type { TidOptionProps } from "./tid";
 export { stripTrailingSlash } from "./url";
 export { i18nField } from "./i18nField";
 export { i18nPrice } from "./i18nPrice";
+export { slugify } from "./slugify";
 export { typeDetails } from "./typeDetails";
 export type {
   MerchDetails,

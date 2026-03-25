@@ -5,15 +5,20 @@ import type { ProductFilters } from "@/features/products/domain/types";
 
 type SupabaseDB = SupabaseClient<Database>;
 
-/** Fetch products with optional filters */
+/** Fetch products owned by the current user, with optional filters */
 export async function fetchProducts(
   supabase: SupabaseDB,
   filters?: Partial<ProductFilters>,
 ) {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   let query = supabase
     .from("products")
     .select("*")
-    .order("created_at", { ascending: false });
+    .eq("seller_id", user?.id ?? "")
+    .order("sort_order", { ascending: true })
+    .order("id", { ascending: true });
 
   if (filters?.type) {
     query = query.eq(
@@ -60,4 +65,21 @@ export async function deleteProduct(supabase: SupabaseDB, id: string) {
   const { error } = await supabase.from("products").delete().eq("id", id);
 
   if (error) throw error;
+}
+
+/** Batch-update sort_order for a list of products */
+export async function reorderProducts(
+  supabase: SupabaseDB,
+  items: Array<{ id: string; sortOrder: number }>,
+) {
+  const updates = items.map((item) =>
+    supabase
+      .from("products")
+      .update({ sort_order: item.sortOrder })
+      .eq("id", item.id),
+  );
+
+  const results = await Promise.all(updates);
+  const failed = results.find((r) => r.error);
+  if (failed?.error) throw failed.error;
 }

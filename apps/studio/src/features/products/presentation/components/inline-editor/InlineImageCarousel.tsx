@@ -208,23 +208,13 @@ export function InlineImageCarousel({ control }: InlineImageCarouselProps) {
         className={`relative flex-1 flex items-center justify-center aspect-square border-3 border-foreground nb-shadow-lg overflow-hidden ${theme.bg} cursor-pointer`}
         {...tid("image-gallery-main")}
       >
-        {/* Dot texture */}
-        <div
-          className="absolute inset-0 opacity-[0.07]"
-          style={{
-            backgroundImage:
-              "radial-gradient(circle, currentColor 1px, transparent 1px)",
-            backgroundSize: "20px 20px",
-          }}
-        />
-
         {(activeField?.url.trim().length ?? 0) > 0 &&
         !brokenImages.has(safeIndex) ? (
           // eslint-disable-next-line @next/next/no-img-element, jsx-a11y/no-noninteractive-element-interactions -- user-supplied URLs; onError/onLoad are load events
           <img
             src={activeField?.url}
             alt={activeField?.alt ?? ""}
-            className="relative size-full object-contain"
+            className="relative size-full object-cover"
             onError={() => handleImageError(safeIndex)}
             onLoad={() => handleImageLoad(safeIndex)}
           />
@@ -232,9 +222,20 @@ export function InlineImageCarousel({ control }: InlineImageCarouselProps) {
           mainPlaceholder()
         )}
 
-        {/* Counter */}
-        <div className="absolute bottom-2 right-2 bg-foreground text-background text-tiny font-bold px-2 py-0.5 tracking-widest">
-          {safeIndex + 1} / {fields.length}
+        {/* Bottom bar: caption + counter */}
+        <div className="absolute bottom-0 inset-x-0 flex items-center justify-between bg-foreground/70 px-3 py-1.5">
+          {activeField?.alt ? (
+            <span className="text-tiny font-bold uppercase tracking-widest text-background truncate">
+              {activeField.alt}
+            </span>
+          ) : (
+            <span />
+          )}
+          {fields.length > 1 && (
+            <span className="text-tiny font-bold text-background tracking-widest shrink-0 ml-2">
+              {safeIndex + 1} / {fields.length}
+            </span>
+          )}
         </div>
       </button>
     );

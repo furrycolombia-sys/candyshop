@@ -2,6 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslations } from "next-intl";
+import { useMemo } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { tid } from "shared";
 
@@ -12,7 +13,7 @@ import { InlineTextField } from "./InlineTextField";
 
 import { PRODUCT_FORM_DEFAULTS } from "@/features/products/domain/constants";
 import {
-  productFormSchema,
+  createProductFormSchema,
   type ProductFormValues,
 } from "@/features/products/domain/validationSchema";
 import { getCategoryTheme } from "@/shared/domain/categoryConstants";
@@ -31,11 +32,17 @@ export function InlineEditor({
   isEdit,
 }: InlineEditorProps) {
   const t = useTranslations("form.inlineEditor");
+  const tValidation = useTranslations("form.validation");
+
+  const schema = useMemo(
+    () => createProductFormSchema(tValidation),
+    [tValidation],
+  );
 
   const { control, register, setValue, handleSubmit } =
     useForm<ProductFormValues>({
       // eslint-disable-next-line @typescript-eslint/no-explicit-any -- zodResolver inference mismatch with optional Zod defaults
-      resolver: zodResolver(productFormSchema) as any,
+      resolver: zodResolver(schema) as any,
       defaultValues: { ...PRODUCT_FORM_DEFAULTS, ...defaultValues },
     });
 

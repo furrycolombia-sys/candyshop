@@ -2,8 +2,9 @@
 
 import { ShoppingCart } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
-import { i18nField, i18nPrice, tid } from "shared";
+import { i18nField, i18nPrice, slugify, tid } from "shared";
 
+import { ProductBadges } from "./ProductBadges";
 import { ProductCardImage } from "./ProductCardImage";
 import { ProductCardMeta } from "./ProductCardMeta";
 
@@ -50,7 +51,7 @@ export function ProductCard({
       data-variant={variant}
     >
       <Link
-        href={`/products/${product.id}/${product.slug}`}
+        href={`/products/${product.id}/${slugify(name)}`}
         className={`flex flex-1 no-underline text-foreground ${
           isFeatured ? "flex-col sm:flex-row" : "flex-col"
         }`}
@@ -74,20 +75,13 @@ export function ProductCard({
           }`}
         >
           {/* Badges row */}
-          <div className="flex items-center gap-2 flex-wrap">
-            <span
-              className={`${categoryColor} border-2 border-foreground px-2 py-0.5 text-xs font-bold text-foreground`}
-              {...tid("product-card-category")}
-            >
-              {tCategories(product.category)}
-            </span>
-            <span
-              className="border-2 border-foreground px-2 py-0.5 text-tiny font-bold uppercase tracking-widest text-muted-foreground"
-              {...tid("product-card-type")}
-            >
-              {tTypes(product.type)}
-            </span>
-          </div>
+          <ProductBadges
+            product={product}
+            categoryColor={categoryColor}
+            tCategories={tCategories}
+            tTypes={tTypes}
+            t={t}
+          />
 
           {/* Name */}
           <h3
@@ -131,6 +125,9 @@ export function ProductCard({
               }`}
               {...tid("product-card-price")}
             >
+              <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground mr-1">
+                {locale === "en" ? "USD" : "COP"}
+              </span>
               {i18nPrice(product, locale)}
             </span>
 

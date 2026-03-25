@@ -16,6 +16,7 @@ export function ProductListPage() {
   const t = useTranslations();
   const [filters] = useQueryStates(productsSearchParams);
   const { data: products, isLoading } = useProducts(filters);
+  const isFiltered = !!(filters.type || filters.category || filters.q);
 
   return (
     <main
@@ -51,7 +52,11 @@ export function ProductListPage() {
         <ProductFilters />
 
         {/* Table */}
-        <ProductTable products={products ?? []} isLoading={isLoading} />
+        <ProductTable
+          products={products ?? []}
+          isLoading={isLoading}
+          isFiltered={isFiltered}
+        />
       </div>
     </main>
   );

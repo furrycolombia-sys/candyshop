@@ -63,6 +63,7 @@
     "active": "Active",
     "inactive": "Inactive",
     "actions": "Actions",
+    "dragToReorder": "Drag to reorder",
     "noProducts": "No products yet",
     "createFirst": "Create your first product to get started",
     "deleteConfirm": "This will permanently delete this product.",
@@ -135,7 +136,10 @@
     },
     "validation": {
       "required": "This field is required",
-      "positiveNumber": "Must be a positive number"
+      "positiveNumber": "Must be a positive number",
+      "sectionNameRequired": "Section name required in at least one language",
+      "sectionItemsRequired": "Section must have at least one item",
+      "itemTitleRequired": "Item title required in at least one language"
     },
     "inlineEditor": {
       "backToProducts": "Products",

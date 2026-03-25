@@ -7,6 +7,7 @@ describe("i18nField", () => {
     name_en: "Fursuit Head",
     name_es: "Cabeza de Fursuit",
     description_en: "A custom fursuit head",
+    tagline_es: "Solo en español",
   };
 
   it("returns the field for the requested locale", () => {
@@ -21,8 +22,16 @@ describe("i18nField", () => {
     expect(i18nField(row, "description", "es")).toBe("A custom fursuit head");
   });
 
-  it("returns empty string when both locale and English fields are missing", () => {
-    expect(i18nField(row, "tagline", "es")).toBe("");
+  it("falls back to Spanish when English is missing", () => {
+    expect(i18nField(row, "tagline", "en")).toBe("Solo en español");
+  });
+
+  it("returns Spanish field when requested in Spanish", () => {
+    expect(i18nField(row, "tagline", "es")).toBe("Solo en español");
+  });
+
+  it("returns empty string when both locale fields are missing", () => {
+    expect(i18nField(row, "rating", "es")).toBe("");
   });
 
   it("returns empty string for null object", () => {

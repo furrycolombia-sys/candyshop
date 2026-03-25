@@ -17,11 +17,27 @@ export async function fetchProductById(supabase: SupabaseDB, id: string) {
   return data;
 }
 
-/** Insert a new product */
+/** Get the next sort_order value (max + 1) */
+async function getNextSortOrder(supabase: SupabaseDB): Promise<number> {
+  const { data } = await supabase
+    .from("products")
+    .select("sort_order")
+    .order("sort_order", { ascending: false })
+    .limit(1)
+    .single();
+
+  return (data?.sort_order ?? 0) + 1;
+}
+
+/** Insert a new product (auto-assigns sort_order and seller_id) */
 export async function insertProduct(supabase: SupabaseDB, data: ProductInsert) {
+  const sortOrder = await getNextSortOrder(supabase);
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   const { data: product, error } = await supabase
     .from("products")
-    .insert(data)
+    .insert({ ...data, sort_order: sortOrder, seller_id: user?.id ?? null })
     .select()
     .single();
 

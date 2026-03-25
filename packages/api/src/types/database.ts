@@ -367,7 +367,9 @@ export type Database = {
           refundable: boolean | null;
           review_count: number;
           sections: Json;
+          seller_id: string | null;
           slug: string;
+          sort_order: number;
           tagline_en: string;
           tagline_es: string;
           tags: string[];
@@ -397,7 +399,9 @@ export type Database = {
           refundable?: boolean | null;
           review_count?: number;
           sections?: Json;
+          seller_id?: string | null;
           slug: string;
+          sort_order?: number;
           tagline_en?: string;
           tagline_es?: string;
           tags?: string[];
@@ -427,7 +431,9 @@ export type Database = {
           refundable?: boolean | null;
           review_count?: number;
           sections?: Json;
+          seller_id?: string | null;
           slug?: string;
+          sort_order?: number;
           tagline_en?: string;
           tagline_es?: string;
           tags?: string[];
