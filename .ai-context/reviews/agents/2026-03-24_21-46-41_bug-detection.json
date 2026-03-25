@@ -1,0 +1,134 @@
+{
+  "agent": "bug-detection",
+  "review_id": "2026-03-24_21-46-41",
+  "outputFile": ".ai-context/reviews/agents/2026-03-24_21-46-41_bug-detection.json",
+  "scope": "apps/store/src/",
+  "issues": [
+    {
+      "id": "BUG-001",
+      "severity": "warning",
+      "file": "apps/store/src/features/cart/application/CartContext.tsx",
+      "line": 134,
+      "title": "Race condition: requestAnimationFrame-based mount guard may fire before hydration dispatch completes",
+      "description": "The mount guard uses `requestAnimationFrame` to set `mountedRef.current = true` after the hydration effect runs. However, `requestAnimationFrame` timing is not guaranteed relative to React's commit phase. If the HYDRATE dispatch triggers a synchronous re-render that fires the persist effect before the rAF callback, the guard works correctly. But if React batches the state update and the rAF fires before the next render cycle's effect, the persist effect could still skip a legitimate user-triggered update. In practice this is unlikely to cause visible bugs because the hydration effect and the rAF callback both run in the same task/microtask frame, but the approach is fragile.",
+      "rule": "State race conditions",
+      "fix": "Consider using a `useRef(false)` that is set to `true` inside the hydration effect itself (after dispatch), or use a dedicated `hydrated` state flag that the persist effect checks. A simpler pattern: set `mountedRef.current = true` at the end of the hydration useEffect (after the dispatch), which guarantees ordering since effects run sequentially."
+    },
+    {
+      "id": "BUG-002",
+      "severity": "warning",
+      "file": "apps/store/src/features/cart/application/CartContext.tsx",
+      "line": 127,
+      "title": "No validation of cookie-parsed cart items shape",
+      "description": "The hydration effect parses `JSON.parse(String(raw))` and directly dispatches the result as `CartItem[]`. If the cookie data has been tampered with or has a stale schema (e.g., missing `quantity` field, or `price` is a string instead of number), `deriveState` will produce NaN values for `itemCount` and `total`, and the UI will display 'NaN' or '$NaN' without any error feedback.",
+      "rule": "API response handling / data validation",
+      "fix": "Add runtime validation (e.g., with zod or a simple shape check) before dispatching HYDRATE. Filter out items with invalid types or missing required fields. At minimum, verify each item has `productId` (string), `price` (number), and `quantity` (number)."
+    },
+    {
+      "id": "BUG-003",
+      "severity": "warning",
+      "file": "apps/store/src/features/products/presentation/pages/ProductDetailPage.tsx",
+      "line": 48,
+      "title": "setTimeout not cleaned up on unmount — potential setState on unmounted component",
+      "description": "The `handleAddToCart` function calls `setTimeout(() => setAdded(false), ADDED_RESET_MS)` but there is no cleanup. If the user navigates away from the product detail page within 1.5 seconds of clicking 'Add to Cart', the timeout fires and calls `setAdded(false)` on an unmounted component. While React 18+ suppresses the console warning, it is still a memory leak pattern and can cause subtle issues.",
+      "rule": "Memory leaks / Effect cleanup",
+      "fix": "Store the timeout ID in a `useRef` and clear it in a `useEffect` cleanup, or use `useEffect` with a dependency on `added` to manage the auto-reset timer with proper cleanup."
+    },
+    {
+      "id": "BUG-004",
+      "severity": "warning",
+      "file": "apps/store/src/features/products/presentation/components/product-detail/HeroSection.tsx",
+      "line": 44,
+      "title": "setTimeout not cleaned up on unmount — same pattern as ProductDetailPage",
+      "description": "Same issue as BUG-003. The `setTimeout` in `handleAddToCart` at line 44 is not cleaned up. If the component unmounts before the timeout fires, `setAdded(false)` will be called on an unmounted component.",
+      "rule": "Memory leaks / Effect cleanup",
+      "fix": "Same fix as BUG-003 — store timeout ID in a ref and clear on unmount."
+    },
+    {
+      "id": "BUG-005",
+      "severity": "warning",
+      "file": "apps/store/src/features/products/presentation/components/ProductCard.tsx",
+      "line": 60,
+      "title": "setTimeout not cleaned up on unmount — same pattern repeated in ProductCard",
+      "description": "Same uncleaned `setTimeout` pattern. ProductCards can be rapidly mounted/unmounted as the user filters the catalog, making this more likely to trigger than the detail page variants.",
+      "rule": "Memory leaks / Effect cleanup",
+      "fix": "Same fix — use a ref to track the timeout and clear it on unmount via useEffect cleanup."
+    },
+    {
+      "id": "BUG-006",
+      "severity": "suggestion",
+      "file": "apps/store/src/features/products/presentation/components/SearchBar.tsx",
+      "line": 15,
+      "title": "Debounce timer ref not cleaned up on unmount",
+      "description": "The `timerRef` used for debouncing the search input is never cleared when the component unmounts. If the user navigates away while a debounce timer is pending, `commitQuery` will execute after unmount, calling `setQuery` on a potentially stale nuqs state setter.",
+      "rule": "Memory leaks / Effect cleanup",
+      "fix": "Add a useEffect cleanup that clears `timerRef.current` on unmount: `useEffect(() => () => { if (timerRef.current) clearTimeout(timerRef.current); }, []);`"
+    },
+    {
+      "id": "BUG-007",
+      "severity": "suggestion",
+      "file": "apps/store/src/features/products/presentation/components/product-detail/FaqItem.tsx",
+      "line": 25,
+      "title": "Dynamic Tailwind class in template literal will not be generated",
+      "description": "The hover class `hover:${theme.bgLight}` at line 25 is constructed dynamically via string interpolation. Tailwind v4's JIT compiler cannot detect dynamically constructed class names. The hover effect on FAQ items will silently not work — no visual feedback on hover.",
+      "rule": "Render bugs / CSS generation",
+      "fix": "Use a static mapping or the `cn()` utility with the full class string. For example, add a `hoverBgLight` property to `CategoryTheme` that contains the full `hover:bg-(--pink)/15` string, or apply the hover style via inline styles or a data-attribute-based CSS rule."
+    },
+    {
+      "id": "BUG-008",
+      "severity": "suggestion",
+      "file": "apps/store/src/features/products/presentation/components/product-detail/ImageGallery.tsx",
+      "line": 78,
+      "title": "activeView can be undefined if activeIndex is out of bounds",
+      "description": "If the views array changes (e.g., due to a re-render with different product data) while `activeIndex` is still set to a previously valid value, `views[activeIndex]` could be `undefined`. The `GalleryOverlays` component receives `activeView` typed as `GalleryView | undefined`, and the label renders `activeView?.label` safely, but the counter at line 48 of GalleryOverlays would still show an incorrect index.",
+      "rule": "Null/undefined handling",
+      "fix": "Clamp `activeIndex` to `Math.min(activeIndex, views.length - 1)` or reset it to 0 when `views` changes (e.g., via a useEffect)."
+    },
+    {
+      "id": "BUG-009",
+      "severity": "info",
+      "file": "apps/store/src/features/products/presentation/components/product-detail/ReviewsSection.tsx",
+      "line": 79,
+      "title": "Date parsing with new Date(string) can produce Invalid Date",
+      "description": "The review date is parsed with `new Date(review.date).toLocaleDateString()`. If `review.date` is not a valid ISO date string, this will produce 'Invalid Date' in the UI. The mock data currently uses valid dates, but if real API data arrives with unexpected formats, the display will break silently.",
+      "rule": "Data flow bugs / edge cases",
+      "fix": "Add a guard or use a date library (date-fns, dayjs) that can handle validation. At minimum, check `isNaN(date.getTime())` before calling `toLocaleDateString()`."
+    },
+    {
+      "id": "BUG-010",
+      "severity": "info",
+      "file": "apps/store/src/features/products/presentation/components/product-detail/SellerSection.tsx",
+      "line": 39,
+      "title": "Potential empty string indexing: seller.name[0] on empty string",
+      "description": "If `seller.name` is an empty string, `seller.name[0]` returns `undefined`, and the fallback `?? '?'` handles it correctly. However, the `h3` at line 50 would display an empty name. This is a minor edge case since seller names are unlikely to be empty in practice.",
+      "rule": "Null/undefined handling / edge cases",
+      "fix": "No action needed — the fallback handles it. Consider adding a guard if seller data comes from an external API."
+    },
+    {
+      "id": "BUG-011",
+      "severity": "info",
+      "file": "apps/store/src/features/cart/application/useFlyToCart.ts",
+      "line": 67,
+      "title": "DOM element created but only removed on animation finish — if animation is cancelled, element leaks",
+      "description": "The `fire` function creates a `div` element and appends it to `document.body`. It is only removed in the `onfinish` callback. If the page navigates away or the animation is otherwise cancelled (e.g., by browser tab becoming inactive), the element remains in the DOM as a leak. The Web Animations API does fire `onfinish` when `cancel()` is called, but if the element's parent is removed (SPA navigation), the orphaned element may persist.",
+      "rule": "Memory leaks",
+      "fix": "Consider also setting an `oncancel` handler on the animation, or using a cleanup mechanism tied to the component lifecycle."
+    },
+    {
+      "id": "BUG-012",
+      "severity": "info",
+      "file": "apps/store/src/features/products/presentation/pages/ProductDetailPage.tsx",
+      "line": 43,
+      "title": "product.images[0]?.url may be undefined when passed as cart item image",
+      "description": "When adding to cart, `image: product.images[0]?.url` can be `undefined` if the product has an empty `images` array. The `CartItem.image` field is typed as optional (`image?: string`), so this doesn't crash, but cart items without images may render incorrectly in the CartDrawer (currently the drawer shows a colored placeholder, so this is handled). This is informational only.",
+      "rule": "Null/undefined handling",
+      "fix": "No action needed — the cart drawer handles missing images with a colored placeholder."
+    }
+  ],
+  "summary": {
+    "critical": 0,
+    "warning": 5,
+    "suggestion": 3,
+    "info": 4
+  }
+}

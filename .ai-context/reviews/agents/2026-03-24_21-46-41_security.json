@@ -1,0 +1,104 @@
+{
+  "agent": "security",
+  "review_id": "2026-03-24_21-46-41",
+  "outputFile": ".ai-context/reviews/agents/2026-03-24_21-46-41_security.json",
+  "scope": "apps/store/src/",
+  "issues": [
+    {
+      "id": "SEC-001",
+      "severity": "warning",
+      "file": "apps/store/src/features/cart/application/CartContext.tsx",
+      "line": 143,
+      "title": "Cart cookie missing httpOnly and secure flags",
+      "description": "The cart cookie is set via cookies-next with sameSite:'lax' and maxAge, but does NOT set httpOnly:true or secure:true. Since the cart is read client-side this is expected for httpOnly, but the 'secure' flag should be set in production to prevent cookie transmission over plain HTTP. Consider adding secure:true (or conditionally for production).",
+      "rule": "Cookie security (secure flag)",
+      "fix": "Add `secure: process.env.NODE_ENV === 'production'` to the setCookie options object at line 143."
+    },
+    {
+      "id": "SEC-002",
+      "severity": "warning",
+      "file": "apps/store/src/features/cart/application/CartContext.tsx",
+      "line": 127,
+      "title": "JSON.parse of cookie data without schema validation",
+      "description": "The cart hydration reads a cookie value and calls JSON.parse(String(raw)) then casts the result directly to CartItem[]. While there is a try/catch around it, any tampered or malformed cookie data is accepted without shape validation. A user (or attacker) could craft a cookie with unexpected fields or types that propagate through the app. This is low risk since cart data is non-sensitive, but schema validation (e.g., with zod) would harden the input.",
+      "rule": "Input validation (user-controlled data)",
+      "fix": "Add a zod schema to validate the parsed JSON matches CartItem[] before dispatching HYDRATE. Reject invalid data gracefully."
+    },
+    {
+      "id": "SEC-003",
+      "severity": "suggestion",
+      "file": "apps/store/next.config.ts",
+      "line": 13,
+      "title": "No Content-Security-Policy header configured",
+      "description": "The security headers include HSTS, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, and Permissions-Policy, but no Content-Security-Policy (CSP) header is set. A CSP header is the strongest defense against XSS attacks, restricting which scripts, styles, and other resources can load. This is a significant hardening opportunity.",
+      "rule": "XSS prevention (Content-Security-Policy)",
+      "fix": "Add a Content-Security-Policy header to the securityHeaders array. Start with a report-only policy to identify violations, then enforce. Example: \"default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self' <supabase-url>;\""
+    },
+    {
+      "id": "SEC-004",
+      "severity": "info",
+      "file": "apps/store/next.config.ts",
+      "line": 21,
+      "title": "X-XSS-Protection header is deprecated",
+      "description": "The X-XSS-Protection:1;mode=block header is included but is deprecated by modern browsers and may cause issues in some edge cases. Modern security guidance recommends removing it in favor of a proper CSP. Chrome removed XSS Auditor in version 78.",
+      "rule": "Security best practices",
+      "fix": "Consider removing the X-XSS-Protection header and relying on CSP instead. If keeping for legacy browser support, this is low priority."
+    },
+    {
+      "id": "SEC-005",
+      "severity": "info",
+      "file": "apps/store/src/features/products/presentation/pages/ProductCatalogPage.tsx",
+      "line": 34,
+      "title": "URL query params cast without validation",
+      "description": "The category and type URL params are cast as ProductCategory and ProductType respectively (lines 34, 37) without validation that the string value is actually a valid enum member. While this is safe because the values are only used for filtering mock data (no database queries or HTML injection), adding parseAsStringEnum would provide type safety and reject invalid values at the URL parsing level.",
+      "rule": "Input validation (URL parameters)",
+      "fix": "Replace parseAsString with parseAsStringEnum using the valid ProductCategory and ProductType values from the domain types."
+    },
+    {
+      "id": "SEC-006",
+      "severity": "info",
+      "file": "apps/store/src/",
+      "line": 0,
+      "title": "No secrets or API keys found in source code",
+      "description": "Good: No hardcoded secrets, API keys, tokens, or credentials were found anywhere in the store app source code. Environment variables are properly used for configuration. Supabase auth is delegated to the shared packages/api layer.",
+      "rule": "No secrets in code",
+      "fix": "No action needed. This is a positive finding."
+    },
+    {
+      "id": "SEC-007",
+      "severity": "info",
+      "file": "apps/store/src/",
+      "line": 0,
+      "title": "No dangerouslySetInnerHTML, eval, or innerHTML usage found",
+      "description": "Good: No XSS-prone patterns (dangerouslySetInnerHTML, eval(), new Function(), innerHTML assignment) were found in the store app. All user-facing content is rendered through React's safe JSX rendering.",
+      "rule": "XSS prevention",
+      "fix": "No action needed. This is a positive finding."
+    },
+    {
+      "id": "SEC-008",
+      "severity": "info",
+      "file": "apps/store/src/",
+      "line": 0,
+      "title": "No localStorage/sessionStorage usage - cookie-based state only",
+      "description": "Good: The store app does not use localStorage or sessionStorage, avoiding potential XSS data exfiltration vectors. Cart state uses cookies via cookies-next library, and auth state is managed by Supabase's server-side cookie mechanism.",
+      "rule": "Secure storage practices",
+      "fix": "No action needed. This is a positive finding."
+    },
+    {
+      "id": "SEC-009",
+      "severity": "info",
+      "file": "apps/store/src/proxy.ts",
+      "line": 1,
+      "title": "Auth session refresh handled in proxy (middleware) layer",
+      "description": "Good: Supabase session refresh is handled at the proxy/middleware level using updateSupabaseSession(), which refreshes auth cookies on every request. This is the recommended server-side auth pattern for Next.js + Supabase.",
+      "rule": "Authentication best practices",
+      "fix": "No action needed. This is a positive finding."
+    }
+  ],
+  "summary": {
+    "critical": 0,
+    "warning": 2,
+    "suggestion": 1,
+    "info": 5
+  }
+}

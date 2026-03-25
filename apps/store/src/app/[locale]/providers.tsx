@@ -4,6 +4,7 @@ import { AuthSessionBootstrap } from "auth";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { Suspense, type ReactNode } from "react";
 
+import { CartProvider, FlyToCartProvider } from "@/features/cart";
 import { ErrorProvider } from "@/shared/application/context/ErrorContext";
 import { runtimeEnv } from "@/shared/infrastructure/config/environment";
 import {
@@ -28,7 +29,11 @@ export function Providers({ children }: ProvidersProps) {
           <MSWProvider>
             <AuthSessionBootstrap authHostUrl={runtimeEnv.authHostUrl} />
             <ApiAuthBootstrap authHostUrl={runtimeEnv.authHostUrl} />
-            <ErrorProvider>{children}</ErrorProvider>
+            <CartProvider>
+              <FlyToCartProvider>
+                <ErrorProvider>{children}</ErrorProvider>
+              </FlyToCartProvider>
+            </CartProvider>
           </MSWProvider>
         </QueryProvider>
       </NuqsAdapter>

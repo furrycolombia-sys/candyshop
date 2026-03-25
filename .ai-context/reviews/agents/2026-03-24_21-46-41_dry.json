@@ -1,0 +1,94 @@
+{
+  "agent": "dry",
+  "review_id": "2026-03-24_21-46-41",
+  "outputFile": ".ai-context/reviews/agents/2026-03-24_21-46-41_dry.json",
+  "scope": "apps/store/src/",
+  "issues": [
+    {
+      "id": "DRY-001",
+      "severity": "warning",
+      "file": "apps/store/src/features/products/presentation/components/ProductCard.tsx",
+      "line": 33,
+      "title": "Duplicated add-to-cart logic across 3 components",
+      "description": "The add-to-cart handler (building the cart item payload from a Product, setting 'added' state, resetting after ADDED_RESET_MS) is duplicated in ProductCard.tsx (line 47-64), HeroSection.tsx (line 33-48), and ProductDetailPage.tsx (line 37-49). All three construct the same cart item shape from a Product and manage identical added/timeout state. The ADDED_RESET_MS constant is also duplicated (ProductCard line 17, HeroSection line 16, ProductDetailPage line 16).",
+      "rule": "Knowledge duplication — same business logic in 3 places",
+      "fix": "Extract a shared hook (e.g., useAddToCart) in features/cart/application/ that accepts a Product and returns { handleAddToCart, added }. The hook encapsulates the payload construction, addItem call, added state, and timeout reset. All three components import and use this hook."
+    },
+    {
+      "id": "DRY-002",
+      "severity": "warning",
+      "file": "apps/store/src/features/products/presentation/components/ProductCard.tsx",
+      "line": 26,
+      "title": "getCategoryColor duplicated between ProductCard and CartDrawer",
+      "description": "ProductCard.tsx (line 26-29) defines getCategoryColor() that looks up a category's color from PRODUCT_CATEGORIES. CartDrawer.tsx (line 17-21) defines getItemColor() with identical logic. Both search PRODUCT_CATEGORIES.find(c => c.value === category) and fall back to a default color.",
+      "rule": "Knowledge duplication — same lookup logic in 2 places",
+      "fix": "Extract a single getCategoryColor(category: string): string function into features/products/domain/constants.ts (next to PRODUCT_CATEGORIES) and import it in both components."
+    },
+    {
+      "id": "DRY-003",
+      "severity": "suggestion",
+      "file": "apps/store/src/features/products/presentation/components/product-detail/RatingStars.tsx",
+      "line": 1,
+      "title": "Star rating rendering duplicated between RatingStars and StarRow",
+      "description": "RatingStars.tsx and StarRow.tsx both render the exact same pattern: Array.from({length: 5}) mapping to Star icons, filled vs unfilled based on Math.round(rating). The only differences are: (1) RatingStars uses theme.text for the filled color while StarRow uses text-foreground, (2) slightly different icon sizes (size-4 vs size-3.5). These are 2 components doing the same thing with minor styling variations.",
+      "rule": "Rule of two — similar pattern in 2 places, approaching the abstraction threshold",
+      "fix": "Consolidate into a single StarRating component that accepts size and filledClassName props with sensible defaults. RatingStars can be replaced by <StarRating rating={rating} filledClassName={theme.text} /> and StarRow by <StarRating rating={rating} size='sm' />."
+    },
+    {
+      "id": "DRY-004",
+      "severity": "warning",
+      "file": "apps/store/src/features/products/domain/constants.ts",
+      "line": 22,
+      "title": "Color values duplicated between CATEGORY_THEMES and PRODUCT_CATEGORIES",
+      "description": "CATEGORY_THEMES[category].bg (line 22-83) and PRODUCT_CATEGORIES[n].color (line 85-96) both define the same bg color per category. For example, fursuits has bg='bg-(--pink)' in CATEGORY_THEMES and color='bg-(--pink)' in PRODUCT_CATEGORIES. If a category color changes, both must be updated.",
+      "rule": "Knowledge duplication — same color mapping in two data structures",
+      "fix": "Derive PRODUCT_CATEGORIES.color from CATEGORY_THEMES to establish a single source of truth. E.g., PRODUCT_CATEGORIES can be built programmatically: { value: 'fursuits', label: 'Fursuits', color: CATEGORY_THEMES.fursuits.bg }."
+    },
+    {
+      "id": "DRY-005",
+      "severity": "suggestion",
+      "file": "apps/store/src/features/products/presentation/components/product-detail/ImageGallery.tsx",
+      "line": 6,
+      "title": "GalleryView interface duplicated between ImageGallery and GalleryOverlays",
+      "description": "The GalleryView interface ({ label: string; index: number }) is defined identically in ImageGallery.tsx (line 17-20) and GalleryOverlays.tsx (line 6-9).",
+      "rule": "Type duplication — same interface defined in two files",
+      "fix": "Define GalleryView once in a shared types file (e.g., features/products/domain/types.ts or a local types file in the product-detail folder) and import it in both components."
+    },
+    {
+      "id": "DRY-006",
+      "severity": "suggestion",
+      "file": "apps/store/src/features/products/presentation/components/product-detail/ImageGallery.tsx",
+      "line": 88,
+      "title": "Thumbnail button rendering duplicated for desktop and mobile in ImageGallery",
+      "description": "ImageGallery.tsx renders thumbnail buttons twice: once for desktop (line 98-116) and once for mobile (line 161-178). Both loops iterate over views and render nearly identical button markup with the same onClick, aria-label, and active/inactive class logic. The only differences are minor size/layout classes.",
+      "rule": "Structural duplication within same component",
+      "fix": "Extract a ThumbnailButton sub-component (or an inline helper) that accepts view, isActive, theme, onClick, and a size/variant prop. The desktop and mobile sections both render <ThumbnailButton /> with different variant props."
+    },
+    {
+      "id": "DRY-007",
+      "severity": "info",
+      "file": "apps/store/src/features/products/domain/constants.ts",
+      "line": 22,
+      "title": "CATEGORY_THEMES follows a mechanical pattern that could be generated",
+      "description": "Each entry in CATEGORY_THEMES follows an identical pattern: bg='bg-(--X)', bgLight='bg-(--X)/15', border='border-(--X)', text='text-(--X)', badgeBg='bg-(--X)', rowEven='bg-(--X)/5', rowOdd='bg-(--X)/15', accent='--X'. The only variable is the CSS custom property name. This is a codegen-friendly pattern that could be generated from a simple category-to-color mapping.",
+      "rule": "Mechanical repetition — same template applied 6 times with one variable",
+      "fix": "Create a buildCategoryTheme(cssVar: string): CategoryTheme helper function, then define CATEGORY_THEMES as: { fursuits: buildCategoryTheme('--pink'), merch: buildCategoryTheme('--mint'), ... }. This reduces 60 lines to ~10 and ensures any structural change to the theme shape is made in one place."
+    },
+    {
+      "id": "DRY-008",
+      "severity": "info",
+      "file": "apps/store/src/features/products/presentation/components/product-detail/HeroSection.tsx",
+      "line": 30,
+      "title": "Cart quantity lookup pattern repeated across components",
+      "description": "The pattern `cartItems.find(i => i.productId === product.id)?.quantity ?? 0` appears in ProductCard.tsx (line 43-44), HeroSection.tsx (line 30-31), and ProductDetailPage.tsx (line 74-75). This is a minor knowledge duplication.",
+      "rule": "Knowledge duplication — same cart lookup logic in 3 places",
+      "fix": "Could be addressed by the useAddToCart hook suggested in DRY-001 (which would also expose quantityInCart), or by adding a getQuantity(productId) helper to the cart context."
+    }
+  ],
+  "summary": {
+    "critical": 0,
+    "warning": 3,
+    "suggestion": 3,
+    "info": 2
+  }
+}
