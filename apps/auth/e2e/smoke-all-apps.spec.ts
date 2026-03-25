@@ -1,12 +1,14 @@
 import { test, expect } from "./fixtures/auth.fixture";
 
 /**
- * Smoke test across ALL apps in the monorepo.
+ * SMOKE TEST — Cross-app health check for the entire monorepo.
+ *
+ * Run with: pnpm smoke
  *
  * Uses Supabase admin API to create a test session (no Discord needed).
  * Verifies each app loads and shows the authenticated user in the navbar.
  *
- * Requires: all apps running, Supabase running
+ * Requires: all apps running (`pnpm dev`), Supabase running
  */
 
 const APPS = {
@@ -16,6 +18,7 @@ const APPS = {
   playground: "http://localhost:5003",
   landing: "http://localhost:5004",
   payments: "http://localhost:5005",
+  studio: "http://localhost:5006",
 } as const;
 
 test.describe("Smoke test — all apps", () => {

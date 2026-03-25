@@ -1,24 +1,11 @@
-export type {
-  CommissionDetails,
-  DigitalDetails,
-  PhysicalDetails,
-  Product,
-  ProductCategory,
-  ProductFaq,
-  ProductHighlight,
-  ProductImage,
-  ProductReview,
-  ProductScreenshot,
-  ProductSeller,
-  ProductSpec,
-  ProductType,
-  TicketDetails,
-} from "./types";
+export type { Product } from "./types";
 
+export type { CategoryTheme } from "@/shared/domain/categoryConstants";
 export {
   CATEGORY_THEMES,
-  getCategoryTheme,
   PRODUCT_CATEGORIES,
-  PRODUCT_TYPES,
-} from "./constants";
-export type { CategoryTheme } from "./constants";
+  getCategoryColor,
+  getCategoryTheme,
+} from "@/shared/domain/categoryConstants";
+
+export { PRODUCT_TYPES } from "./constants";

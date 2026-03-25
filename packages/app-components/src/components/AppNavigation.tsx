@@ -7,7 +7,14 @@ import { tid } from "../utils/tid";
 import { LocaleSwitcher } from "./LocaleSwitcher";
 import { ThemeToggle } from "./ThemeToggle";
 
-type AppId = "store" | "landing" | "payments" | "admin" | "auth" | "playground";
+type AppId =
+  | "store"
+  | "studio"
+  | "landing"
+  | "payments"
+  | "admin"
+  | "auth"
+  | "playground";
 
 interface AppNavigationProps {
   currentApp: AppId;
@@ -19,6 +26,7 @@ interface AppNavigationProps {
 const APP_ORDER: { id: AppId; labelKey: string }[] = [
   { id: "landing", labelKey: "landing" },
   { id: "store", labelKey: "store" },
+  { id: "studio", labelKey: "studio" },
   { id: "payments", labelKey: "payments" },
   { id: "admin", labelKey: "admin" },
   { id: "auth", labelKey: "auth" },
@@ -47,9 +55,9 @@ export function AppNavigation({
   return (
     <nav
       {...tid("app-navigation")}
-      className="sticky top-0 z-50 flex w-full items-center gap-1 border-b-[3px] border-foreground bg-background px-4 py-2"
+      className="sticky top-0 z-50 flex w-full items-center gap-1 border-b-3 border-foreground bg-background px-4 py-2"
     >
-      <span className="mr-4 text-sm font-extrabold tracking-tight">
+      <span className="mr-4 font-display text-sm font-extrabold tracking-tight">
         {t("brand")}
       </span>
       <div className="flex items-center gap-1">

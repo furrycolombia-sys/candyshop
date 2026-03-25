@@ -1,14 +1,17 @@
 "use client";
 
 import { ShoppingCart } from "lucide-react";
-import { useTranslations } from "next-intl";
-import { tid } from "shared";
+import { useLocale, useTranslations } from "next-intl";
+import { i18nField, tid } from "shared";
 
 import { ImageGallery } from "./ImageGallery";
 import { PriceBlock } from "./PriceBlock";
 import { RatingStars } from "./RatingStars";
 
-import type { Product } from "@/features/products/domain/types";
+import {
+  isProductAvailable,
+  type Product,
+} from "@/features/products/domain/types";
 import { useAddToCart } from "@/shared/application/hooks/useAddToCart";
 import type { CategoryTheme } from "@/shared/domain/categoryConstants";
 
@@ -21,11 +24,18 @@ export function HeroSection({ product, theme }: HeroSectionProps) {
   const t = useTranslations("products");
   const tCategories = useTranslations("categories");
   const tTypes = useTranslations("productTypes");
+  const locale = useLocale();
   const { added, quantityInCart, handleAddToCart } = useAddToCart(product);
+
+  const name = i18nField(product, "name", locale);
+  const tagline = i18nField(product, "tagline", locale);
+  const description = i18nField(product, "description", locale);
+
+  const isAvailable = isProductAvailable(product);
 
   return (
     <section
-      className={`w-full ${theme.bg}/15 border-b-[3px] border-foreground`}
+      className={`w-full ${theme.bg}/15 border-b-3 border-foreground`}
       {...tid("hero-section")}
     >
       <div className="max-w-6xl mx-auto px-4 py-10 lg:py-14">
@@ -36,12 +46,12 @@ export function HeroSection({ product, theme }: HeroSectionProps) {
           {/* Right: Product Info */}
           <div className="flex flex-col flex-1 gap-4 min-w-0">
             {/* Tagline */}
-            {product.tagline && (
+            {tagline && (
               <p
                 className={`text-xs font-bold uppercase tracking-[0.2em] ${theme.text}`}
                 {...tid("hero-tagline")}
               >
-                {product.tagline}
+                {tagline}
               </p>
             )}
 
@@ -50,7 +60,7 @@ export function HeroSection({ product, theme }: HeroSectionProps) {
               className="font-display text-4xl/tight lg:text-5xl/tight font-extrabold uppercase"
               {...tid("hero-name")}
             >
-              {product.name}
+              {name}
             </h1>
 
             {/* Badges */}
@@ -59,52 +69,64 @@ export function HeroSection({ product, theme }: HeroSectionProps) {
               {...tid("hero-badges")}
             >
               <span
-                className={`${theme.badgeBg} border-[3px] border-foreground px-3 py-1 text-xs font-bold text-foreground`}
+                className={`${theme.badgeBg} border-3 border-foreground px-3 py-1 text-xs font-bold text-foreground`}
                 {...tid("hero-category")}
               >
                 {tCategories(product.category)}
               </span>
               <span
-                className="bg-background border-[3px] border-foreground px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground"
+                className="bg-background border-3 border-foreground px-3 py-1 text-tiny font-bold uppercase tracking-widest text-muted-foreground"
                 {...tid("hero-type")}
               >
                 {tTypes(product.type)}
               </span>
-              {product.inStock ? (
-                <span className="bg-(--mint) border-[3px] border-foreground px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-foreground">
+              {isAvailable ? (
+                <span className="bg-mint border-3 border-foreground px-3 py-1 text-tiny font-bold uppercase tracking-widest text-foreground">
                   {t("inStock")}
                 </span>
               ) : (
-                <span className="bg-(--peach) border-[3px] border-foreground px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-foreground">
+                <span className="bg-peach border-3 border-foreground px-3 py-1 text-tiny font-bold uppercase tracking-widest text-foreground">
                   {t("outOfStock")}
+                </span>
+              )}
+              {product.refundable === true && (
+                <span
+                  className="bg-mint border-3 border-foreground px-3 py-1 text-tiny font-bold uppercase tracking-widest text-foreground"
+                  {...tid("hero-refundable")}
+                >
+                  {t("refundable")}
+                </span>
+              )}
+              {product.refundable === false && (
+                <span
+                  className="bg-peach border-3 border-foreground px-3 py-1 text-tiny font-bold uppercase tracking-widest text-foreground"
+                  {...tid("hero-non-refundable")}
+                >
+                  {t("nonRefundable")}
                 </span>
               )}
             </div>
 
             {/* Rating */}
-            {product.rating !== undefined &&
-              product.reviewCount !== undefined && (
-                <div
-                  className="flex items-center gap-2"
-                  {...tid("hero-rating")}
-                >
-                  <div className="flex items-center gap-0.5">
-                    <RatingStars rating={product.rating} theme={theme} />
-                  </div>
-                  <span className="text-sm font-bold">
-                    {t("detail.stars", {
-                      rating: product.rating.toFixed(1),
-                    })}
-                  </span>
-                  <span className="text-sm text-muted-foreground">
-                    (
-                    {t("detail.reviewsCount", {
-                      count: product.reviewCount,
-                    })}
-                    )
-                  </span>
+            {product.rating != null && (product.review_count ?? 0) > 0 && (
+              <div className="flex items-center gap-2" {...tid("hero-rating")}>
+                <div className="flex items-center gap-0.5">
+                  <RatingStars rating={product.rating} theme={theme} />
                 </div>
-              )}
+                <span className="text-sm font-bold">
+                  {t("detail.stars", {
+                    rating: product.rating.toFixed(1),
+                  })}
+                </span>
+                <span className="text-sm text-muted-foreground">
+                  (
+                  {t("detail.reviewsCount", {
+                    count: product.review_count,
+                  })}
+                  )
+                </span>
+              </div>
+            )}
 
             {/* Price block */}
             <PriceBlock
@@ -117,7 +139,7 @@ export function HeroSection({ product, theme }: HeroSectionProps) {
               className="text-sm/relaxed text-muted-foreground max-w-prose"
               {...tid("hero-description")}
             >
-              {product.description}
+              {description}
             </p>
 
             {/* Tags */}
@@ -126,7 +148,7 @@ export function HeroSection({ product, theme }: HeroSectionProps) {
                 {product.tags.map((tag) => (
                   <span
                     key={tag}
-                    className="bg-muted px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest text-muted-foreground"
+                    className="bg-muted px-2 py-0.5 text-tiny font-bold uppercase tracking-widest text-muted-foreground"
                   >
                     #{tag}
                   </span>
@@ -139,7 +161,7 @@ export function HeroSection({ product, theme }: HeroSectionProps) {
               <button
                 className={`w-full sm:w-auto nb-btn nb-btn-press-lg nb-shadow-md font-display text-lg font-extrabold uppercase tracking-widest px-10 py-4 disabled:opacity-50 disabled:cursor-not-allowed ${theme.bg}`}
                 onClick={handleAddToCart}
-                disabled={!product.inStock || added}
+                disabled={!isAvailable || added}
                 {...tid("hero-add-to-cart")}
               >
                 <ShoppingCart className="size-5" />

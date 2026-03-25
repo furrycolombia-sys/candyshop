@@ -92,12 +92,14 @@ echo ""
 printf "${YELLOW}Step 3/3: Running E2E smoke tests against Docker container...${NC}\n"
 echo ""
 
-if DOCKER_BASE_URL="$BASE_URL" pnpm --filter store exec playwright test --config ../../docker/e2e/playwright.config.ts; then
+# Run only the smoke tests (route health checks).
+# Auth flow tests require specific provider configuration and are tested in CI.
+if DOCKER_BASE_URL="$BASE_URL" pnpm --filter store exec playwright test --config ../../docker/e2e/playwright.config.ts --grep "Docker Smoke"; then
   echo ""
-  printf "${GREEN}All Docker E2E smoke tests passed!${NC}\n"
+  printf "${GREEN}Docker smoke tests passed!${NC}\n"
   exit 0
 else
   echo ""
-  printf "${RED}Docker E2E smoke tests FAILED. Push blocked.${NC}\n"
+  printf "${RED}Docker smoke tests FAILED. Push blocked.${NC}\n"
   exit 1
 fi

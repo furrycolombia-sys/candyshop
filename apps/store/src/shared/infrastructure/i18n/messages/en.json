@@ -11,6 +11,7 @@
     "brand": "Candy Shop",
     "landing": "Home",
     "store": "Store",
+    "studio": "Studio",
     "payments": "Payments",
     "admin": "Admin",
     "auth": "Account",
@@ -39,6 +40,8 @@
   "products": {
     "title": "Products",
     "subtitle": "Browse our collection",
+    "loading": "Loading products...",
+    "loadError": "Failed to load products",
     "search": "Search products...",
     "allCategories": "All",
     "allTypes": "All Types",
@@ -48,8 +51,11 @@
     "addedToCart": "Added!",
     "inCart": "{count} in cart",
     "outOfStock": "Out of Stock",
+    "stockLeft": "{count} left",
     "featured": "Featured",
     "inStock": "In Stock",
+    "refundable": "Refundable",
+    "nonRefundable": "Non-refundable",
     "price": "Price",
     "category": "Category",
     "type": "Type",
@@ -160,9 +166,9 @@
     "deals": "Deals"
   },
   "productTypes": {
-    "physical": "Physical",
+    "merch": "Merch",
     "digital": "Digital",
-    "commission": "Commission",
+    "service": "Service",
     "ticket": "Ticket"
   }
 }

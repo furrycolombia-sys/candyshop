@@ -10,6 +10,7 @@ AUTH_CHANGED="${5:-false}"
 PLAYGROUND_CHANGED="${6:-false}"
 PACKAGES_CHANGED="${7:-false}"
 TOOLING_CHANGED="${8:-false}"
+STUDIO_CHANGED="${9:-false}"
 
 RUN_ALL="false"
 if [ "$PACKAGES_CHANGED" = "true" ] || [ "$TOOLING_CHANGED" = "true" ]; then
@@ -35,6 +36,7 @@ append_app() {
 
 if [ "$RUN_ALL" = "true" ]; then
   append_app "store" "apps/store/src"
+  append_app "studio" "apps/studio/src"
   append_app "landing" "apps/landing/src"
   append_app "payments" "apps/payments/src"
   append_app "admin" "apps/admin/src"
@@ -42,6 +44,7 @@ if [ "$RUN_ALL" = "true" ]; then
   append_app "playground" "apps/playground/src" "apps/playground"
 else
   [ "$STORE_CHANGED" = "true" ] && append_app "store" "apps/store/src"
+  [ "$STUDIO_CHANGED" = "true" ] && append_app "studio" "apps/studio/src"
   [ "$LANDING_CHANGED" = "true" ] && append_app "landing" "apps/landing/src"
   [ "$PAYMENTS_CHANGED" = "true" ] && append_app "payments" "apps/payments/src"
   [ "$ADMIN_CHANGED" = "true" ] && append_app "admin" "apps/admin/src"
