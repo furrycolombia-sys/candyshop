@@ -308,51 +308,137 @@ export type Database = {
           },
         ];
       };
+      product_reviews: {
+        Row: {
+          created_at: string;
+          id: string;
+          product_id: string;
+          rating: number;
+          text: string;
+          user_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          id?: string;
+          product_id: string;
+          rating: number;
+          text?: string;
+          user_id: string;
+        };
+        Update: {
+          created_at?: string;
+          id?: string;
+          product_id?: string;
+          rating?: number;
+          text?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "product_reviews_product_id_fkey";
+            columns: ["product_id"];
+            isOneToOne: false;
+            referencedRelation: "products";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       products: {
         Row: {
+          category: Database["public"]["Enums"]["product_category"];
+          compare_at_price_cop: number | null;
+          compare_at_price_usd: number | null;
           created_at: string;
           description_en: string;
           description_es: string;
           event_id: string | null;
+          faq: Json;
+          featured: boolean;
+          highlights: Json;
           id: string;
+          images: Json;
           is_active: boolean;
+          long_description_en: string;
+          long_description_es: string;
           max_quantity: number | null;
           name_en: string;
           name_es: string;
           price_cop: number;
           price_usd: number;
+          rating: number | null;
+          review_count: number;
+          screenshots: Json;
           slug: string;
+          tagline_en: string;
+          tagline_es: string;
+          tags: string[];
           type: Database["public"]["Enums"]["product_type"];
+          type_details: Json;
+          updated_at: string;
         };
         Insert: {
+          category?: Database["public"]["Enums"]["product_category"];
+          compare_at_price_cop?: number | null;
+          compare_at_price_usd?: number | null;
           created_at?: string;
           description_en?: string;
           description_es?: string;
           event_id?: string | null;
+          faq?: Json;
+          featured?: boolean;
+          highlights?: Json;
           id?: string;
+          images?: Json;
           is_active?: boolean;
+          long_description_en?: string;
+          long_description_es?: string;
           max_quantity?: number | null;
           name_en: string;
           name_es: string;
           price_cop: number;
           price_usd?: number;
+          rating?: number | null;
+          review_count?: number;
+          screenshots?: Json;
           slug: string;
+          tagline_en?: string;
+          tagline_es?: string;
+          tags?: string[];
           type: Database["public"]["Enums"]["product_type"];
+          type_details?: Json;
+          updated_at?: string;
         };
         Update: {
+          category?: Database["public"]["Enums"]["product_category"];
+          compare_at_price_cop?: number | null;
+          compare_at_price_usd?: number | null;
           created_at?: string;
           description_en?: string;
           description_es?: string;
           event_id?: string | null;
+          faq?: Json;
+          featured?: boolean;
+          highlights?: Json;
           id?: string;
+          images?: Json;
           is_active?: boolean;
+          long_description_en?: string;
+          long_description_es?: string;
           max_quantity?: number | null;
           name_en?: string;
           name_es?: string;
           price_cop?: number;
           price_usd?: number;
+          rating?: number | null;
+          review_count?: number;
+          screenshots?: Json;
           slug?: string;
+          tagline_en?: string;
+          tagline_es?: string;
+          tags?: string[];
           type?: Database["public"]["Enums"]["product_type"];
+          type_details?: Json;
+          updated_at?: string;
         };
         Relationships: [
           {
@@ -499,6 +585,13 @@ export type Database = {
         | "other";
       payment_status: "pending" | "paid";
       permission_mode: "grant" | "deny";
+      product_category:
+        | "fursuits"
+        | "merch"
+        | "art"
+        | "events"
+        | "digital"
+        | "deals";
       product_type: "ticket" | "merch" | "digital" | "service";
       transfer_status: "pending" | "claimed" | "expired";
     };
@@ -645,6 +738,14 @@ export const Constants = {
       ],
       payment_status: ["pending", "paid"],
       permission_mode: ["grant", "deny"],
+      product_category: [
+        "fursuits",
+        "merch",
+        "art",
+        "events",
+        "digital",
+        "deals",
+      ],
       product_type: ["ticket", "merch", "digital", "service"],
       transfer_status: ["pending", "claimed", "expired"],
     },

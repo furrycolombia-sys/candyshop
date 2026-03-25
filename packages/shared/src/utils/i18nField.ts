@@ -3,7 +3,8 @@
  * Falls back to English if the locale field is missing.
  */
 export function i18nField(
-  obj: Record<string, unknown> | null | undefined,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- accepts any DB row or JSONB object
+  obj: Record<string, any> | null | undefined,
   field: string,
   locale: string,
 ): string {
