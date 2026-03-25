@@ -67,7 +67,9 @@
     "createFirst": "Crea tu primer producto para comenzar",
     "deleteConfirm": "Esto eliminará permanentemente este producto.",
     "saved": "Producto guardado exitosamente",
-    "deleted": "Producto eliminado"
+    "deleted": "Producto eliminado",
+    "inStock": "En Stock",
+    "outOfStock": "Agotado"
   },
   "productTypes": {
     "merch": "Merch",

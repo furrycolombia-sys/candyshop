@@ -35,6 +35,8 @@ const FORM_DEFAULTS: ProductFormValues = {
   category: "merch",
   price_cop: 0,
   price_usd: "",
+  compare_at_price_cop: null,
+  compare_at_price_usd: null,
   tags: "",
   featured: false,
   images: [],

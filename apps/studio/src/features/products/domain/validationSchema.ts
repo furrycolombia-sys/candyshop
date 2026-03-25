@@ -50,6 +50,20 @@ export const productFormSchema = z.object({
   category: z.enum(["fursuits", "merch", "art", "events", "digital", "deals"]),
   price_cop: z.coerce.number().int().positive(),
   price_usd: z.coerce.number().int().positive().optional().or(z.literal("")),
+  compare_at_price_cop: z.coerce
+    .number()
+    .int()
+    .nonnegative()
+    .nullable()
+    .optional()
+    .default(null),
+  compare_at_price_usd: z.coerce
+    .number()
+    .int()
+    .nonnegative()
+    .nullable()
+    .optional()
+    .default(null),
   tags: z.string().optional().default(""),
   featured: z.boolean().optional().default(false),
   images: z.array(productImageSchema).optional().default([]),
