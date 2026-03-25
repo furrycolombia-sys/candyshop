@@ -8,34 +8,24 @@ interface ProductCardMetaProps {
   product: Product;
 }
 
-/** Renders type-specific metadata (slots, tickets, digital label, ships-from). */
+/**
+ * Renders type-specific metadata label for product cards.
+ * Note: detailed type metadata (slots, tickets, etc.) now lives in product sections.
+ * This component shows a simple type label for the card grid.
+ */
 export function ProductCardMeta({ product }: ProductCardMetaProps) {
   const t = useTranslations("products");
 
-  if (product.type === "commission" && product.commission) {
-    return (
-      <p>
-        {t("slotsAvailable", {
-          available: product.commission.slotsAvailable,
-          total: product.commission.totalSlots,
-        })}
-      </p>
-    );
-  }
-  if (product.type === "ticket" && product.ticket) {
-    return (
-      <p>
-        {t("ticketsRemaining", {
-          remaining: product.ticket.ticketsRemaining,
-        })}
-      </p>
-    );
-  }
-  if (product.type === "digital") {
-    return <p>{t("digital")}</p>;
-  }
-  if (product.type === "physical" && product.physical?.shipsFrom) {
-    return <p>{t("shipsFrom", { location: product.physical.shipsFrom })}</p>;
-  }
-  return null;
+  const stockLabel = (() => {
+    if (product.max_quantity === null) return null;
+    if (product.max_quantity === 0) return t("outOfStock");
+    return t("stockLeft", { count: product.max_quantity });
+  })();
+
+  return (
+    <>
+      {product.type === "digital" && <p>{t("digital")}</p>}
+      {stockLabel && <p>{stockLabel}</p>}
+    </>
+  );
 }

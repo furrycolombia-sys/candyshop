@@ -1,102 +1,40 @@
+import { useLocale } from "next-intl";
+import { i18nField } from "shared";
+import type { ProductSection } from "shared/types";
+
 import { getCategoryTheme } from "@/features/products/domain/constants";
-import type {
-  Product,
-  ProductFaq,
-  ProductHighlight,
-  ProductReview,
-  ProductScreenshot,
-  ProductSeller,
-} from "@/features/products/domain/types";
+import type { Product } from "@/features/products/domain/types";
 import { DescriptionSection } from "@/features/products/presentation/components/product-detail/DescriptionSection";
-import { FaqSection } from "@/features/products/presentation/components/product-detail/FaqSection";
 import { HeroSection } from "@/features/products/presentation/components/product-detail/HeroSection";
-import { HighlightsSection } from "@/features/products/presentation/components/product-detail/HighlightsSection";
-import { ReviewsSection } from "@/features/products/presentation/components/product-detail/ReviewsSection";
-import { ScreenshotsSection } from "@/features/products/presentation/components/product-detail/ScreenshotsSection";
-import { SellerSection } from "@/features/products/presentation/components/product-detail/SellerSection";
-import { SpecsSection } from "@/features/products/presentation/components/product-detail/SpecsSection";
+import { SectionRenderer } from "@/features/products/presentation/components/product-detail/sections";
 
 interface ProductSectionsProps {
   product: Product;
 }
 
-interface NarrowedProduct extends Product {
-  highlights: ProductHighlight[];
-  longDescription: string;
-  screenshots: ProductScreenshot[];
-  seller: ProductSeller;
-  reviews: ProductReview[];
-  faq: ProductFaq[];
-  rating: number;
-  reviewCount: number;
-}
-
-function hasTypeDetails(product: Product): boolean {
-  return Boolean(
-    product.commission ?? product.ticket ?? product.digital ?? product.physical,
-  );
-}
-
-function toNarrowed(product: Product): Partial<NarrowedProduct> {
-  const reviews = product.reviews ?? [];
-  const hasReviews =
-    reviews.length > 0 &&
-    product.rating !== undefined &&
-    product.reviewCount !== undefined;
-
-  return {
-    highlights: product.highlights?.length ? product.highlights : undefined,
-    longDescription: product.longDescription ?? undefined,
-    screenshots: product.screenshots?.length ? product.screenshots : undefined,
-    seller: product.seller ?? undefined,
-    reviews: hasReviews ? reviews : undefined,
-    rating: hasReviews ? product.rating : undefined,
-    reviewCount: hasReviews ? product.reviewCount : undefined,
-    faq: product.faq?.length ? product.faq : undefined,
-  };
-}
-
 export function ProductSections({ product }: ProductSectionsProps) {
-  const n = toNarrowed(product);
-  const hasSpecs = Boolean(product.specs?.length) || hasTypeDetails(product);
+  const locale = useLocale();
   const theme = getCategoryTheme(product.category);
+
+  const longDescription = i18nField(product, "long_description", locale);
+
+  const sections = [
+    ...((product.sections as ProductSection[] | null) ?? []),
+  ].sort((a, b) => a.sort_order - b.sort_order);
 
   return (
     <>
       <HeroSection product={product} theme={theme} />
 
-      {n.highlights && (
-        <HighlightsSection highlights={n.highlights} theme={theme} />
-      )}
+      {longDescription && <DescriptionSection description={longDescription} />}
 
-      {n.longDescription && (
-        <DescriptionSection description={n.longDescription} theme={theme} />
-      )}
-
-      {n.screenshots && (
-        <ScreenshotsSection screenshots={n.screenshots} theme={theme} />
-      )}
-
-      {hasSpecs && (
-        <SpecsSection
-          specs={product.specs ?? []}
-          product={product}
+      {sections.map((section) => (
+        <SectionRenderer
+          key={`${section.type}-${section.sort_order}`}
+          section={section}
           theme={theme}
         />
-      )}
-
-      {n.seller && <SellerSection seller={n.seller} theme={theme} />}
-
-      {n.reviews && n.rating !== undefined && n.reviewCount !== undefined && (
-        <ReviewsSection
-          reviews={n.reviews}
-          rating={n.rating}
-          reviewCount={n.reviewCount}
-          theme={theme}
-        />
-      )}
-
-      {n.faq && <FaqSection faq={n.faq} theme={theme} />}
+      ))}
     </>
   );
 }

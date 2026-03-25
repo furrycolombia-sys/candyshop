@@ -50,6 +50,11 @@ test.describe("Docker Smoke", () => {
     const response = await request.get("/playground", { maxRedirects: 0 });
     expect([307, 308]).toContain(response.status());
   });
+
+  test("/studio returns redirect", async ({ request }) => {
+    const response = await request.get("/studio", { maxRedirects: 0 });
+    expect([307, 308]).toContain(response.status());
+  });
 });
 
 test.describe("Docker Auth Flow", () => {

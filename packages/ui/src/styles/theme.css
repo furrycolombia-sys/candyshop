@@ -73,9 +73,10 @@
   --color-sky: var(--sky);
   --color-peach: var(--peach);
   --color-candy-text: var(--candy-text);
+  --color-candy-text-on-lemon: var(--candy-text-on-lemon);
 
   /* Typography — Syne is the project font */
-  --font-sans: var(--font-syne);
+  --font-sans: var(--font-dm-sans);
   --font-mono: var(--font-geist-mono);
 
   /* Custom font sizes (generates text-tiny utility) */

@@ -1,13 +1,17 @@
 "use client";
 
 import { ShoppingCart } from "lucide-react";
-import { useTranslations } from "next-intl";
-import { tid } from "shared";
+import { useLocale, useTranslations } from "next-intl";
+import { i18nField, i18nPrice, slugify, tid } from "shared";
 
+import { ProductBadges } from "./ProductBadges";
 import { ProductCardImage } from "./ProductCardImage";
 import { ProductCardMeta } from "./ProductCardMeta";
 
-import type { Product } from "@/features/products/domain/types";
+import {
+  isProductAvailable,
+  type Product,
+} from "@/features/products/domain/types";
 import { useAddToCart } from "@/shared/application/hooks/useAddToCart";
 import { getCategoryColor } from "@/shared/domain/categoryConstants";
 import { Link } from "@/shared/infrastructure/i18n";
@@ -26,24 +30,28 @@ export function ProductCard({
   const t = useTranslations("products");
   const tCategories = useTranslations("categories");
   const tTypes = useTranslations("productTypes");
+  const locale = useLocale();
   const { added, quantityInCart, handleAddToCart } = useAddToCart(product);
 
   const categoryColor = getCategoryColor(product.category);
   const isFeatured = variant === "featured";
   const addToCartLabel = added ? t("addedToCart") : t("addToCart");
+  const isAddToCartDisabled = !isProductAvailable(product) || added;
   const inCartLabel = t("inCart", { count: quantityInCart });
+  const name = i18nField(product, "name", locale);
+  const description = i18nField(product, "description", locale);
 
   return (
     <article
-      className={`flex border-[3px] border-foreground nb-shadow-md bg-background transition-transform hover:-translate-1 ${
+      className={`flex border-3 border-foreground nb-shadow-md bg-background transition-transform hover:-translate-1 ${
         isFeatured ? "flex-col sm:flex-row" : "flex-col"
       }`}
       {...tid("product-card")}
-      {...({ "data-product-id": product.id } as Record<string, string>)}
-      {...({ "data-variant": variant } as Record<string, string>)}
+      data-product-id={product.id}
+      data-variant={variant}
     >
       <Link
-        href={`/products/${product.id}/${product.slug}`}
+        href={`/products/${product.id}/${slugify(name)}`}
         className={`flex flex-1 no-underline text-foreground ${
           isFeatured ? "flex-col sm:flex-row" : "flex-col"
         }`}
@@ -67,20 +75,13 @@ export function ProductCard({
           }`}
         >
           {/* Badges row */}
-          <div className="flex items-center gap-2 flex-wrap">
-            <span
-              className={`${categoryColor} border-2 border-foreground px-2 py-0.5 text-xs font-bold text-foreground`}
-              {...tid("product-card-category")}
-            >
-              {tCategories(product.category)}
-            </span>
-            <span
-              className="border-2 border-foreground px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest text-muted-foreground"
-              {...tid("product-card-type")}
-            >
-              {tTypes(product.type)}
-            </span>
-          </div>
+          <ProductBadges
+            product={product}
+            categoryColor={categoryColor}
+            tCategories={tCategories}
+            tTypes={tTypes}
+            t={t}
+          />
 
           {/* Name */}
           <h3
@@ -89,16 +90,16 @@ export function ProductCard({
             }`}
             {...tid("product-card-name")}
           >
-            {product.name}
+            {name}
           </h3>
 
           {/* Description — only on featured */}
-          {isFeatured && product.description && (
+          {isFeatured && description && (
             <p
               className="text-sm text-muted-foreground line-clamp-2 sm:line-clamp-3"
               {...tid("product-card-description")}
             >
-              {product.description}
+              {description}
             </p>
           )}
 
@@ -124,14 +125,17 @@ export function ProductCard({
               }`}
               {...tid("product-card-price")}
             >
-              ${product.price.toLocaleString()}
+              <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground mr-1">
+                {locale === "en" ? "USD" : "COP"}
+              </span>
+              {i18nPrice(product, locale)}
             </span>
 
             {isFeatured && (
               <button
                 className="sm:ml-auto nb-btn nb-btn-press-sm nb-shadow-md font-display font-extrabold uppercase tracking-widest px-8 py-3 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                 onClick={handleAddToCart}
-                disabled={!product.inStock || added}
+                disabled={isAddToCartDisabled}
                 {...tid("product-card-add-to-cart")}
               >
                 <ShoppingCart className="size-4" />
@@ -148,7 +152,7 @@ export function ProductCard({
           <button
             className="w-full justify-center nb-btn nb-btn-press-sm nb-shadow-md font-display text-xs font-extrabold uppercase tracking-widest px-6 py-2.5 disabled:opacity-50 disabled:cursor-not-allowed"
             onClick={handleAddToCart}
-            disabled={!product.inStock || added}
+            disabled={isAddToCartDisabled}
             {...tid("product-card-add-to-cart")}
           >
             <ShoppingCart className="size-3.5" />

@@ -1,0 +1,254 @@
+{
+  "meta": {
+    "title": "Candy Shop - Estudio",
+    "description": "Gestiona tus productos y catálogo"
+  },
+  "studio": {
+    "title": "Estudio",
+    "subtitle": "Gestión de productos próximamente."
+  },
+  "nav": {
+    "brand": "Candy Shop",
+    "landing": "Inicio",
+    "store": "Tienda",
+    "studio": "Estudio",
+    "payments": "Pagos",
+    "admin": "Admin",
+    "auth": "Cuenta",
+    "playground": "Playground"
+  },
+  "auth": {
+    "login": {
+      "title": "Iniciar sesión",
+      "subtitle": "Elige tu método de inicio de sesión preferido",
+      "google": "Continuar con Google",
+      "discord": "Continuar con Discord",
+      "twitter": "Continuar con X"
+    },
+    "signOut": "Cerrar sesión"
+  },
+  "common": {
+    "loading": "Cargando...",
+    "error": "Ocurrió un error",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "create": "Crear",
+    "search": "Buscar",
+    "noResults": "No se encontraron resultados",
+    "confirm": "¿Estás seguro?",
+    "all": "Todos",
+    "back": "Volver",
+    "theme": {
+      "switchToDark": "Cambiar a modo oscuro",
+      "switchToLight": "Cambiar a modo claro",
+      "toggle": "Cambiar tema"
+    },
+    "language": {
+      "select": "Seleccionar idioma"
+    }
+  },
+  "products": {
+    "title": "Productos",
+    "subtitle": "Gestiona tu catálogo",
+    "newProduct": "Nuevo Producto",
+    "editProduct": "Editar Producto",
+    "name": "Nombre",
+    "type": "Tipo",
+    "category": "Categoría",
+    "price": "Precio",
+    "status": "Estado",
+    "featured": "Destacado",
+    "active": "Activo",
+    "inactive": "Inactivo",
+    "actions": "Acciones",
+    "dragToReorder": "Arrastra para reordenar",
+    "noProducts": "Aún no hay productos",
+    "createFirst": "Crea tu primer producto para comenzar",
+    "deleteConfirm": "Esto eliminará permanentemente este producto.",
+    "saved": "Producto guardado exitosamente",
+    "deleted": "Producto eliminado",
+    "inStock": "En Stock",
+    "outOfStock": "Agotado",
+    "refundable": "Reembolsable",
+    "nonRefundable": "No reembolsable"
+  },
+  "productTypes": {
+    "merch": "Merch",
+    "digital": "Digital",
+    "service": "Servicio",
+    "ticket": "Boleto"
+  },
+  "categories": {
+    "fursuits": "Fursuits",
+    "merch": "Merch",
+    "art": "Arte",
+    "events": "Eventos",
+    "digital": "Digital",
+    "deals": "Ofertas"
+  },
+  "form": {
+    "subtitleCreate": "Completa los datos para crear un nuevo producto.",
+    "subtitleEdit": "Actualiza los detalles del producto.",
+    "sections": {
+      "productType": "Tipo de Producto",
+      "basicInfo": "Información Básica",
+      "longDescription": "Descripción Larga",
+      "pricing": "Categoría y Precios",
+      "metadata": "Etiquetas y Opciones",
+      "typeDetails": "Detalles del Tipo",
+      "images": "Imágenes"
+    },
+    "images": {
+      "hint": "Agrega URLs de imágenes para mostrar en el carrusel del producto.",
+      "empty": "Aún no hay imágenes. Agrega URLs de imágenes abajo.",
+      "addImage": "Agregar Imagen",
+      "imageUrl": "URL de Imagen",
+      "urlPlaceholder": "https://ejemplo.com/imagen.jpg",
+      "altText": "Texto Alternativo",
+      "altPlaceholder": "Un fursuit en el bosque",
+      "add": "Agregar",
+      "remove": "Eliminar imagen",
+      "previewAlt": "Vista previa de imagen del producto",
+      "urlRequired": "Por favor ingresa una URL de imagen",
+      "urlInvalid": "Por favor ingresa una URL válida (que comience con https://)"
+    },
+    "fields": {
+      "nameEn": "Nombre (Inglés)",
+      "nameEs": "Nombre (Español)",
+      "descriptionEn": "Descripción Corta (Inglés)",
+      "descriptionEs": "Descripción Corta (Español)",
+      "taglineEn": "Eslogan (Inglés)",
+      "taglineEs": "Eslogan (Español)",
+      "longDescriptionEn": "Descripción Larga (Inglés)",
+      "longDescriptionEs": "Descripción Larga (Español)",
+      "category": "Categoría",
+      "priceCop": "Precio (COP)",
+      "priceUsd": "Precio (USD)",
+      "tags": "Etiquetas",
+      "tagsPlaceholder": "fursuit, personalizado, artesanal",
+      "tagsHint": "Separa las etiquetas con comas"
+    },
+    "actions": {
+      "create": "Crear Producto",
+      "save": "Guardar Cambios"
+    },
+    "validation": {
+      "required": "Este campo es obligatorio",
+      "positiveNumber": "Debe ser un número positivo",
+      "sectionNameRequired": "Nombre de sección requerido en al menos un idioma",
+      "sectionItemsRequired": "La sección debe tener al menos un item",
+      "itemTitleRequired": "Título del item requerido en al menos un idioma"
+    },
+    "inlineEditor": {
+      "backToProducts": "Productos",
+      "saving": "Guardando...",
+      "saveProduct": "Guardar",
+      "createProduct": "Crear",
+      "taglinePlaceholder": "Haz clic para agregar un eslogan...",
+      "namePlaceholder": "Nombre del producto...",
+      "descriptionPlaceholder": "Escribe una descripción corta...",
+      "longDescriptionPlaceholder": "Cuenta la historia completa de este producto…",
+      "priceCop": "COP",
+      "priceUsd": "USD",
+      "comparePriceCop": "Comparar COP",
+      "comparePriceUsd": "Comparar USD",
+      "addTag": "Agregar etiqueta",
+      "tagPlaceholder": "Nueva etiqueta...",
+      "removeTag": "Eliminar etiqueta",
+      "addImage": "Agregar imagen",
+      "imageUrlPlaceholder": "https://ejemplo.com/imagen.jpg",
+      "imageAltPlaceholder": "Descripción de la imagen",
+      "removeImage": "Eliminar imagen",
+      "dragImage": "Arrastra para reordenar",
+      "noImages": "Sin imágenes aún",
+      "addFirstImage": "Agrega tu primera imagen",
+      "editImageUrl": "URL de imagen",
+      "editImageAlt": "Texto alternativo",
+      "imageNumber": "Imagen {number}",
+      "chooseIcon": "Elegir ícono",
+      "searchIcons": "Buscar íconos...",
+      "noIconsFound": "No se encontraron íconos",
+      "stock": {
+        "label": "Stock",
+        "unlimited": "Stock ilimitado",
+        "quantity": "Cantidad disponible"
+      },
+      "refundable": {
+        "label": "Política de reembolso",
+        "notSpecified": "No especificado",
+        "refundable": "Reembolsable",
+        "nonRefundable": "No reembolsable"
+      },
+      "sections": {
+        "title": "Secciones",
+        "addSection": "Agregar Sección",
+        "addItem": "Agregar Item",
+        "sectionName": "Nombre de Sección",
+        "sectionType": "Tipo de Sección",
+        "itemTitle": "Título",
+        "itemDescription": "Descripción",
+        "icon": "Ícono",
+        "imageUrl": "URL de Imagen",
+        "dragToReorder": "Arrastra para reordenar",
+        "emptySection": "Sin items aún. Agrega tu primer item.",
+        "typeCards": "Tarjetas",
+        "typeAccordion": "Acordeón",
+        "typeTwoColumn": "Dos Columnas",
+        "typeGallery": "Galería",
+        "removeItem": "Eliminar item {number}",
+        "removeSection": "Eliminar sección {number}"
+      }
+    },
+    "typeDetails": {
+      "merch": {
+        "weight": "Peso",
+        "weightPlaceholder": "500g",
+        "dimensions": "Dimensiones",
+        "dimensionsPlaceholder": "10x20x5cm",
+        "shipsFrom": "Envío Desde",
+        "shipsFromPlaceholder": "Portland, OR",
+        "material": "Material",
+        "materialPlaceholder": "Poliéster",
+        "careInstructions": "Instrucciones de Cuidado",
+        "careInstructionsPlaceholder": "Lavar a máquina con agua fría"
+      },
+      "digital": {
+        "fileSize": "Tamaño del Archivo",
+        "fileSizePlaceholder": "45MB",
+        "format": "Formato",
+        "formatPlaceholder": "PSD",
+        "resolution": "Resolución",
+        "resolutionPlaceholder": "4000x3000",
+        "licenseType": "Tipo de Licencia",
+        "licenseTypePlaceholder": "Uso personal"
+      },
+      "service": {
+        "totalSlots": "Cupos Totales",
+        "totalSlotsPlaceholder": "5",
+        "slotsAvailable": "Cupos Disponibles",
+        "slotsAvailablePlaceholder": "3",
+        "turnaroundDays": "Días de Entrega",
+        "turnaroundDaysPlaceholder": "14",
+        "revisionsIncluded": "Revisiones Incluidas",
+        "revisionsIncludedPlaceholder": "3",
+        "commercialUse": "Uso Comercial Permitido"
+      },
+      "ticket": {
+        "venue": "Lugar",
+        "venuePlaceholder": "Centro de Convenciones",
+        "location": "Ubicación",
+        "locationPlaceholder": "Bogotá, Colombia",
+        "doorsOpen": "Apertura de Puertas",
+        "doorsOpenPlaceholder": "9:00 AM",
+        "ageRestriction": "Restricción de Edad",
+        "ageRestrictionPlaceholder": "18+",
+        "capacity": "Capacidad",
+        "capacityPlaceholder": "500",
+        "ticketsRemaining": "Boletos Restantes",
+        "ticketsRemainingPlaceholder": "340"
+      }
+    }
+  }
+}

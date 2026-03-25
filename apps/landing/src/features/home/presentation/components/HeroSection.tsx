@@ -18,7 +18,7 @@ export function HeroSection() {
       <div className="mx-auto w-full max-w-6xl px-6 py-24 lg:px-8">
         <div className="max-w-3xl">
           {/* Tagline — neobrutalist badge */}
-          <div className="nb-shadow-sm mb-8 inline-block border-[3px] border-foreground bg-(--lemon) px-4 py-1.5 text-sm font-extrabold uppercase tracking-wider text-(--candy-text-on-lemon)">
+          <div className="nb-shadow-sm mb-8 inline-block border-3 border-foreground bg-lemon px-4 py-1.5 text-sm font-extrabold uppercase tracking-wider text-candy-text-on-lemon">
             {t("above")}
           </div>
 
@@ -41,7 +41,7 @@ export function HeroSection() {
 
           <a
             href={appUrls.store}
-            className="group nb-btn nb-btn-press-lg nb-shadow-md gap-3 bg-(--pink) px-8 py-4 text-(--candy-text)"
+            className="group nb-btn nb-btn-press-lg nb-shadow-md gap-3 bg-pink px-8 py-4 text-candy-text"
             {...tid("hero-cta")}
           >
             {t("cta")}

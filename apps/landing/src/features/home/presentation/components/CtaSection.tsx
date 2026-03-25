@@ -26,7 +26,7 @@ export function CtaSection() {
         <div className="flex flex-wrap justify-center gap-5">
           <a
             href={appUrls.store}
-            className="group nb-btn nb-btn-press-lg nb-shadow-md gap-3 bg-(--pink) px-8 py-4 text-(--candy-text)"
+            className="group nb-btn nb-btn-press-lg nb-shadow-md gap-3 bg-pink px-8 py-4 text-candy-text"
             {...tid("final-cta")}
           >
             {t("cta")}

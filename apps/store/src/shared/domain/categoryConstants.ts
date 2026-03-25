@@ -12,28 +12,31 @@ export interface CategoryTheme {
   accent: string;
 }
 
-/** Build a complete theme from a single CSS variable name */
-function buildTheme(cssVar: string): CategoryTheme {
-  const bg = `bg-(${cssVar})`;
+/**
+ * Build a theme using Tailwind theme color names (registered in theme.css via
+ * --color-pink, --color-mint, etc.). Using `bg-pink` instead of `bg-(--pink)`
+ * ensures Tailwind v4 JIT can detect and generate the utility classes.
+ */
+function buildTheme(color: string): CategoryTheme {
   return {
-    bg,
-    bgLight: `${bg}/15`,
-    border: `border-(${cssVar})`,
-    text: `text-(${cssVar})`,
-    badgeBg: bg,
-    rowEven: `${bg}/5`,
-    rowOdd: `${bg}/15`,
-    accent: cssVar,
+    bg: `bg-${color}`,
+    bgLight: `bg-${color}/15`,
+    border: `border-${color}`,
+    text: `text-${color}`,
+    badgeBg: `bg-${color}`,
+    rowEven: `bg-${color}/5`,
+    rowOdd: `bg-${color}/15`,
+    accent: `--${color}`,
   };
 }
 
 export const CATEGORY_THEMES: Record<ProductCategory, CategoryTheme> = {
-  fursuits: buildTheme("--pink"),
-  merch: buildTheme("--mint"),
-  art: buildTheme("--lilac"),
-  events: buildTheme("--lemon"),
-  digital: buildTheme("--sky"),
-  deals: buildTheme("--peach"),
+  fursuits: buildTheme("pink"),
+  merch: buildTheme("mint"),
+  art: buildTheme("lilac"),
+  events: buildTheme("lemon"),
+  digital: buildTheme("sky"),
+  deals: buildTheme("peach"),
 };
 
 /** Category list with colors derived from CATEGORY_THEMES (single source of truth) */

@@ -2,7 +2,10 @@ import { tid } from "shared";
 
 import type { CategoryTheme } from "@/features/products/domain/constants";
 import type { GalleryView } from "@/features/products/domain/galleryTypes";
-import type { Product } from "@/features/products/domain/types";
+import {
+  isProductAvailable,
+  type Product,
+} from "@/features/products/domain/types";
 
 interface GalleryOverlaysProps {
   product: Product;
@@ -40,14 +43,14 @@ export function GalleryOverlays({
       </span>
 
       {/* Counter */}
-      <div className="absolute bottom-2 right-2 bg-foreground text-background text-[10px] font-bold px-2 py-0.5 tracking-widest">
+      <div className="absolute bottom-2 right-2 bg-foreground text-background text-tiny font-bold px-2 py-0.5 tracking-widest">
         {activeIndex + 1} / {totalViews}
       </div>
 
       {/* Featured */}
       {product.featured && (
         <span
-          className={`absolute top-2 left-2 ${theme.bg} border-[3px] border-foreground text-foreground text-[10px] font-bold uppercase tracking-widest px-2 py-0.5`}
+          className={`absolute top-2 left-2 ${theme.bg} border-3 border-foreground text-foreground text-tiny font-bold uppercase tracking-widest px-2 py-0.5`}
           {...tid("hero-featured-badge")}
         >
           {t("featured")}
@@ -55,7 +58,7 @@ export function GalleryOverlays({
       )}
 
       {/* Out of stock */}
-      {!product.inStock && (
+      {!isProductAvailable(product) && (
         <div className="absolute inset-0 flex items-center justify-center bg-foreground/70 z-10">
           <span className="font-display text-xl font-extrabold uppercase tracking-widest text-background">
             {t("outOfStock")}

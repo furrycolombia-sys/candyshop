@@ -16,10 +16,10 @@ import type { CartItem, CartState } from "@/features/cart/domain/types";
 function isValidCartItem(item: unknown): item is CartItem {
   if (typeof item !== "object" || item === null) return false;
   const record = item as Record<string, unknown>;
+  // Check the essential fields — the rest comes from the full product row
   return (
-    typeof record.productId === "string" &&
-    typeof record.name === "string" &&
-    typeof record.price === "number" &&
+    typeof record.id === "string" &&
+    typeof record.price_usd === "number" &&
     typeof record.quantity === "number"
   );
 }
@@ -43,18 +43,20 @@ type CartAction =
       type: "ADD_ITEM";
       payload: Omit<CartItem, "quantity"> & { quantity?: number };
     }
-  | { type: "REMOVE_ITEM"; payload: { productId: string } }
+  | { type: "REMOVE_ITEM"; payload: { id: string } }
   | {
       type: "UPDATE_QUANTITY";
-      payload: { productId: string; quantity: number };
+      payload: { id: string; quantity: number };
     }
   | { type: "CLEAR_CART" }
   | { type: "HYDRATE"; payload: CartItem[] };
 
 interface CartContextValue extends CartState {
-  addItem: (item: Omit<CartItem, "quantity"> & { quantity?: number }) => void;
-  removeItem: (productId: string) => void;
-  updateQuantity: (productId: string, quantity: number) => void;
+  addItem: (
+    product: Omit<CartItem, "quantity"> & { quantity?: number },
+  ) => void;
+  removeItem: (id: string) => void;
+  updateQuantity: (id: string, quantity: number) => void;
   clearCart: () => void;
 }
 
@@ -62,7 +64,7 @@ function deriveState(items: CartItem[]): CartState {
   return {
     items,
     itemCount: items.reduce((sum, item) => sum + item.quantity, 0),
-    total: items.reduce((sum, item) => sum + item.price * item.quantity, 0),
+    total: items.reduce((sum, item) => sum + item.price_usd * item.quantity, 0),
   };
 }
 
@@ -77,7 +79,7 @@ function cartReducer(state: CartState, action: CartAction): CartState {
     case "ADD_ITEM": {
       const { quantity = 1, ...rest } = action.payload;
       const existingIndex = state.items.findIndex(
-        (item) => item.productId === rest.productId,
+        (item) => item.id === rest.id,
       );
 
       if (existingIndex !== -1) {
@@ -94,23 +96,21 @@ function cartReducer(state: CartState, action: CartAction): CartState {
 
     case "REMOVE_ITEM": {
       const filtered = state.items.filter(
-        (item) => item.productId !== action.payload.productId,
+        (item) => item.id !== action.payload.id,
       );
       return deriveState(filtered);
     }
 
     case "UPDATE_QUANTITY": {
-      const { productId, quantity } = action.payload;
+      const { id, quantity } = action.payload;
 
       if (quantity <= 0) {
-        const filtered = state.items.filter(
-          (item) => item.productId !== productId,
-        );
+        const filtered = state.items.filter((item) => item.id !== id);
         return deriveState(filtered);
       }
 
       const updatedItems = state.items.map((item) =>
-        item.productId === productId ? { ...item, quantity } : item,
+        item.id === id ? { ...item, quantity } : item,
       );
       return deriveState(updatedItems);
     }
@@ -179,12 +179,12 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     [],
   );
 
-  const removeItem = useCallback((productId: string) => {
-    dispatch({ type: "REMOVE_ITEM", payload: { productId } });
+  const removeItem = useCallback((id: string) => {
+    dispatch({ type: "REMOVE_ITEM", payload: { id } });
   }, []);
 
-  const updateQuantity = useCallback((productId: string, quantity: number) => {
-    dispatch({ type: "UPDATE_QUANTITY", payload: { productId, quantity } });
+  const updateQuantity = useCallback((id: string, quantity: number) => {
+    dispatch({ type: "UPDATE_QUANTITY", payload: { id, quantity } });
   }, []);
 
   const clearCart = useCallback(() => {

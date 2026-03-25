@@ -4,12 +4,12 @@ import { useTranslations } from "next-intl";
 import { tid } from "shared";
 
 const CATEGORIES = [
-  { key: "commissions", fill: "bg-(--pink) text-(--candy-text)" },
-  { key: "fursuits", fill: "bg-(--mint) text-(--candy-text)" },
-  { key: "events", fill: "bg-(--lemon) text-(--candy-text-on-lemon)" },
-  { key: "merch", fill: "bg-(--lilac) text-(--candy-text)" },
-  { key: "digital", fill: "bg-(--sky) text-(--candy-text)" },
-  { key: "deals", fill: "bg-(--peach) text-(--candy-text)" },
+  { key: "commissions", fill: "bg-pink text-candy-text" },
+  { key: "fursuits", fill: "bg-mint text-candy-text" },
+  { key: "events", fill: "bg-lemon text-candy-text-on-lemon" },
+  { key: "merch", fill: "bg-lilac text-candy-text" },
+  { key: "digital", fill: "bg-sky text-candy-text" },
+  { key: "deals", fill: "bg-peach text-candy-text" },
 ] as const;
 
 export function FeaturesSection() {
@@ -31,7 +31,7 @@ export function FeaturesSection() {
           {CATEGORIES.map(({ key, fill }) => (
             <li
               key={key}
-              className={`nb-shadow-sm inline-block border-[3px] border-foreground px-5 py-2.5 text-sm font-bold uppercase tracking-wider ${fill}`}
+              className={`nb-shadow-sm inline-block border-3 border-foreground px-5 py-2.5 text-sm font-bold uppercase tracking-wider ${fill}`}
               {...tid(`category-${key}`)}
             >
               {t(key)}

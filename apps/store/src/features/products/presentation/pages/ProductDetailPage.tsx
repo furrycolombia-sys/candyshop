@@ -1,14 +1,12 @@
 "use client";
 
-import { notFound } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { tid } from "shared";
 
 import { CartDrawer } from "@/features/cart/presentation/components/CartDrawer";
-import type { Product } from "@/features/products/domain/types";
+import { useStoreProduct } from "@/features/products/application/useStoreProducts";
 import { MobileBarWithCart } from "@/features/products/presentation/components/product-detail/MobileBarWithCart";
 import { ProductSections } from "@/features/products/presentation/components/product-detail/ProductSections";
-import { mockProducts } from "@/mocks/data/products";
 import { getCategoryTheme } from "@/shared/domain/categoryConstants";
 import { Link } from "@/shared/infrastructure/i18n";
 
@@ -16,17 +14,44 @@ interface ProductDetailPageProps {
   productId: string;
 }
 
+/* eslint-disable sonarjs/no-duplicate-string -- Tailwind class strings are not DRY violations */
 export function ProductDetailPage({ productId }: ProductDetailPageProps) {
   const t = useTranslations("products");
+  const { data: product, isLoading, isError } = useStoreProduct(productId);
 
-  const maybeProduct = mockProducts.find((p) => p.id === productId);
-
-  if (!maybeProduct) {
-    notFound();
-    return null;
+  if (isLoading) {
+    return (
+      <div
+        className="flex-1 flex flex-col items-center justify-center gap-4 min-h-[50vh]"
+        {...tid("product-detail-page")}
+      >
+        <div className="size-8 border-3 border-foreground border-t-transparent rounded-full animate-spin" />
+        <p className="font-display text-sm font-bold uppercase tracking-widest text-muted-foreground">
+          {t("loading")}
+        </p>
+      </div>
+    );
   }
 
-  const product: Product = maybeProduct;
+  if (isError || !product) {
+    return (
+      <div
+        className="flex-1 flex flex-col items-center justify-center gap-4 min-h-[50vh]"
+        {...tid("product-detail-page")}
+      >
+        <p className="font-display text-lg font-extrabold uppercase tracking-tight text-destructive">
+          {t("loadError")}
+        </p>
+        <Link
+          href="/"
+          className="font-display text-xs font-bold uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors"
+        >
+          {t("detail.backToProducts")}
+        </Link>
+      </div>
+    );
+  }
+
   const theme = getCategoryTheme(product.category);
 
   return (

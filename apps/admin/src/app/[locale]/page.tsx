@@ -15,7 +15,7 @@ export default async function AdminPage({
       className="flex flex-1 items-center justify-center bg-dots p-4"
       {...tid("admin-page")}
     >
-      <div className="nb-shadow-lg w-full max-w-md border-[3px] border-foreground bg-background p-8 sm:p-10 text-center">
+      <div className="nb-shadow-lg w-full max-w-md border-3 border-foreground bg-background p-8 sm:p-10 text-center">
         <h1
           className="font-display text-3xl font-extrabold uppercase tracking-tight"
           {...tid("admin-title")}

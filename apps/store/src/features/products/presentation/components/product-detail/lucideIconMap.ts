@@ -41,6 +41,8 @@ export const ICON_MAP: Record<string, LucideIcon> = {
   Truck,
 };
 
+export const DEFAULT_ICON_NAME = "Sparkles";
+
 export function getIcon(name: string): LucideIcon {
   return ICON_MAP[name] ?? Sparkles;
 }

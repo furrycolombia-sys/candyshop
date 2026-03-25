@@ -30,10 +30,20 @@ const isStandalone = process.env.STANDALONE === "true";
 const basePathPrefix = process.env.BASE_PATH_PREFIX || "";
 
 const nextConfig: NextConfig = {
+  // lucide-react v1.x ESM dist uses .ts imports — Turbopack needs explicit extensions
+  turbopack: {
+    resolveExtensions: [".ts", ".tsx", ".js", ".jsx", ".mjs", ".json"],
+  },
   ...(isStandalone && {
     output: "standalone" as const,
     basePath: `${basePathPrefix}/store`,
   }),
+  images: {
+    remotePatterns: [
+      // Product images are user-provided URLs — allow all HTTPS hosts
+      { protocol: "https", hostname: "**" },
+    ],
+  },
   transpilePackages: [
     "ui",
     "shared",

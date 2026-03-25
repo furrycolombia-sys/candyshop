@@ -1,0 +1,28 @@
+/*
+  Shared Global Styles — Monorepo-wide Tailwind configuration.
+
+  Each app's globals.css should contain ONLY:
+    @import "tailwindcss";
+    @import "tw-animate-css";
+    @import "ui/globals";
+
+  This file handles theme, colors, base, utilities, plugins, source scanning,
+  and dark mode variant — all in one place.
+*/
+
+/* Theme + Colors + Base + Utilities */
+@import "./theme.css";
+@import "./colors.css";
+@import "./base.css";
+@import "./utilities.css";
+
+/* Plugins */
+@plugin "@tailwindcss/typography";
+
+/* Source scanning for shared packages */
+@source "../../../../packages/ui/src/**/*.{ts,tsx}";
+@source "../../../../packages/app-components/src/**/*.{ts,tsx}";
+@source "../../../../packages/ui/src/styles/candy-safelist.txt";
+
+/* Dark mode variant */
+@custom-variant dark (&:is(.dark *));

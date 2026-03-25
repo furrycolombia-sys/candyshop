@@ -1,0 +1,50 @@
+"use client";
+
+import { tid } from "shared";
+import { Skeleton } from "ui";
+
+import {
+  productToFormValues,
+  useInsertProduct,
+  useProductById,
+  useUpdateProduct,
+} from "@/features/products/application/useProductForm";
+import { InlineEditor } from "@/features/products/presentation/components/inline-editor";
+
+interface ProductFormPageProps {
+  productId?: string;
+}
+
+export function ProductFormPage({ productId }: ProductFormPageProps) {
+  const isEdit = !!productId;
+
+  const { data: product, isLoading } = useProductById(productId);
+  const insertMutation = useInsertProduct();
+  const updateMutation = useUpdateProduct(productId ?? "");
+
+  if (isEdit && isLoading) {
+    return (
+      <main className="flex flex-1 flex-col bg-dots">
+        <div className="mx-auto flex w-full max-w-4xl flex-col gap-6 px-4 py-8">
+          <Skeleton className="h-10 w-48" />
+          <Skeleton className="h-64 w-full rounded-xl" />
+          <Skeleton className="h-48 w-full rounded-xl" />
+          <Skeleton className="h-48 w-full rounded-xl" />
+        </div>
+      </main>
+    );
+  }
+
+  const defaultValues = product ? productToFormValues(product) : undefined;
+
+  return (
+    <main className="flex flex-1 flex-col" {...tid("product-form-page")}>
+      <InlineEditor
+        defaultValues={defaultValues}
+        onSubmit={isEdit ? updateMutation.mutate : insertMutation.mutate}
+        isSubmitting={insertMutation.isPending || updateMutation.isPending}
+        isEdit={isEdit}
+      />
+    </main>
+  );
+}
