@@ -39,6 +39,7 @@ const FORM_DEFAULTS: ProductFormValues = {
   compare_at_price_usd: null,
   tags: "",
   featured: false,
+  is_active: true,
   images: [],
   sections: [],
   max_quantity: null,

@@ -66,6 +66,7 @@ export const productFormSchema = z.object({
     .default(null),
   tags: z.string().optional().default(""),
   featured: z.boolean().optional().default(false),
+  is_active: z.boolean().optional().default(true),
   images: z.array(productImageSchema).optional().default([]),
   sections: z.array(sectionSchema).optional().default([]),
   max_quantity: z.number().int().nonnegative().nullable().default(null),
