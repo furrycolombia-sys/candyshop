@@ -14,7 +14,7 @@ export interface ProductImage {
   alt: string;
 }
 
-export interface PhysicalDetails {
+export interface MerchDetails {
   weight?: string;
   dimensions?: string;
   shipsFrom?: string;
@@ -29,7 +29,7 @@ export interface DigitalDetails {
   licenseType?: string;
 }
 
-export interface CommissionDetails {
+export interface ServiceDetails {
   totalSlots: number;
   slotsAvailable: number;
   turnaroundDays: number;
@@ -126,8 +126,8 @@ export interface Product {
   /** Total number of reviews */
   reviewCount?: number;
   // Type-specific details (only one populated based on type)
-  physical?: PhysicalDetails;
+  merch?: MerchDetails;
   digital?: DigitalDetails;
-  commission?: CommissionDetails;
+  service?: ServiceDetails;
   ticket?: TicketDetails;
 }

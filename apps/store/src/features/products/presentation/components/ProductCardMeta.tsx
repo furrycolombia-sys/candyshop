@@ -12,12 +12,12 @@ interface ProductCardMetaProps {
 export function ProductCardMeta({ product }: ProductCardMetaProps) {
   const t = useTranslations("products");
 
-  if (product.type === "commission" && product.commission) {
+  if (product.type === "service" && product.service) {
     return (
       <p>
         {t("slotsAvailable", {
-          available: product.commission.slotsAvailable,
-          total: product.commission.totalSlots,
+          available: product.service.slotsAvailable,
+          total: product.service.totalSlots,
         })}
       </p>
     );
@@ -34,8 +34,8 @@ export function ProductCardMeta({ product }: ProductCardMetaProps) {
   if (product.type === "digital") {
     return <p>{t("digital")}</p>;
   }
-  if (product.type === "physical" && product.physical?.shipsFrom) {
-    return <p>{t("shipsFrom", { location: product.physical.shipsFrom })}</p>;
+  if (product.type === "merch" && product.merch?.shipsFrom) {
+    return <p>{t("shipsFrom", { location: product.merch.shipsFrom })}</p>;
   }
   return null;
 }

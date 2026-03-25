@@ -160,9 +160,9 @@
     "deals": "Deals"
   },
   "productTypes": {
-    "physical": "Physical",
+    "merch": "Merch",
     "digital": "Digital",
-    "commission": "Commission",
+    "service": "Service",
     "ticket": "Ticket"
   }
 }

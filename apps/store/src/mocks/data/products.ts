@@ -13,7 +13,7 @@ export const mockProducts: Product[] = [
       "This toony fox head base is the perfect starting point for your next fursuit build. Hand-carved from high-density upholstery foam and reinforced with a 3D-printed jaw hinge, it gives you a rock-solid foundation that looks amazing even before the fur goes on.\n\nThe follow-me eyes are pre-installed with a magnetic mounting system so you can swap between eye styles in seconds. The moving jaw is balanced with elastic tension bands for natural-looking movement without hand fatigue. Ventilation channels are carved into the interior so you can breathe easy at your next con.\n\nWhether you're a first-time builder or a seasoned maker, this base saves you dozens of hours of carving and gives you consistent, professional results every time.",
     price: 280,
     currency: "USD",
-    type: "physical",
+    type: "merch",
     category: "fursuits",
     images: [
       { url: "/images/products/placeholder.svg", alt: "Toony fox head base" },
@@ -103,7 +103,7 @@ export const mockProducts: Product[] = [
         date: "2026-03-10T18:00:00Z",
       },
     ],
-    physical: {
+    merch: {
       weight: "1.2 kg",
       dimensions: "35 x 30 x 30 cm",
       shipsFrom: "Portland, OR",
@@ -124,7 +124,7 @@ export const mockProducts: Product[] = [
     price: 18,
     compareAtPrice: 24,
     currency: "USD",
-    type: "physical",
+    type: "merch",
     category: "merch",
     images: [
       {
@@ -199,7 +199,7 @@ export const mockProducts: Product[] = [
         date: "2026-03-14T16:45:00Z",
       },
     ],
-    physical: {
+    merch: {
       weight: "50 g",
       shipsFrom: "Austin, TX",
       material: "Zinc alloy, hard enamel, gold plating",
@@ -216,7 +216,7 @@ export const mockProducts: Product[] = [
       "These kemono-style handpaw sleeves are the comfiest paws you'll ever wear. Made from premium custom-dyed faux fur with a buttery-soft inner lining, they keep your hands cool and comfortable even after hours of suiting.\n\nThe silicone paw pads are hand-poured in our studio using a proprietary mold for that perfect squishy feel. They're grippy enough to hold drinks and phones but smooth enough to give the best paw-shakes. Each pad is heat-bonded (not glued) to the fur for maximum durability.\n\nAvailable in Arctic White, Sunset Orange, Berry Purple, Forest Green, Cotton Candy Pink, and Midnight Blue. Can't decide? Mix and match for a unique look!",
     price: 95,
     currency: "USD",
-    type: "physical",
+    type: "merch",
     category: "fursuits",
     images: [
       {
@@ -309,7 +309,7 @@ export const mockProducts: Product[] = [
         date: "2026-03-12T13:30:00Z",
       },
     ],
-    physical: {
+    merch: {
       weight: "300 g",
       dimensions: "40 x 15 x 10 cm",
       shipsFrom: "Seattle, WA",
@@ -643,7 +643,7 @@ export const mockProducts: Product[] = [
       "Bring your character to life with a stunning full-body illustration rendered in a painterly semi-realistic style. Each commission includes a detailed background tailored to your character's story - whether that's a cozy forest den, a neon-lit cityscape, or a fantastical dreamworld.\n\nThe process starts with a detailed consultation where we nail down your vision, followed by a rough sketch for your approval. From there, I refine the lineart, build up colors and lighting, and deliver a polished piece you'll be proud to show off. Three revision rounds are included at each major stage so we get it perfect.\n\nFinal delivery includes a high-res PNG (4000px+), a web-optimized version, and a version without the watermark for personal printing.",
     price: 150,
     currency: "USD",
-    type: "commission",
+    type: "service",
     category: "art",
     images: [
       {
@@ -739,7 +739,7 @@ export const mockProducts: Product[] = [
         date: "2026-03-10T14:00:00Z",
       },
     ],
-    commission: {
+    service: {
       totalSlots: 5,
       slotsAvailable: 2,
       turnaroundDays: 21,
@@ -759,7 +759,7 @@ export const mockProducts: Product[] = [
     price: 3000,
     compareAtPrice: 3500,
     currency: "USD",
-    type: "commission",
+    type: "service",
     category: "fursuits",
     images: [
       {
@@ -852,7 +852,7 @@ export const mockProducts: Product[] = [
         date: "2026-03-15T22:00:00Z",
       },
     ],
-    commission: {
+    service: {
       totalSlots: 3,
       slotsAvailable: 1,
       turnaroundDays: 90,
@@ -871,7 +871,7 @@ export const mockProducts: Product[] = [
       "Nothing says 'I'm here and I'm adorable' quite like a custom chibi badge swinging from your lanyard. These badges are drawn in a bouncy, round chibi style that makes every character look impossibly cute, whether they're a fierce dragon or a fluffy bunny.\n\nEach badge is digitally illustrated, professionally printed on premium cardstock, and laminated for durability. The front features your character with your name and pronouns, while the back has a smaller character pose with social media handles. A sturdy lanyard clip is attached so you're con-ready right out of the envelope.\n\nTurnaround is lightning-fast at just 7 days, making these perfect for last-minute con prep. I always have plenty of slots open, so don't hesitate to grab one!",
     price: 35,
     currency: "USD",
-    type: "commission",
+    type: "service",
     category: "art",
     images: [
       {
@@ -957,7 +957,7 @@ export const mockProducts: Product[] = [
         date: "2026-03-18T10:00:00Z",
       },
     ],
-    commission: {
+    service: {
       totalSlots: 10,
       slotsAvailable: 7,
       turnaroundDays: 7,
@@ -1297,7 +1297,7 @@ export function createMockProduct(overrides?: Partial<Product>): Product {
       "This is a longer description of the mock product used for testing purposes. It contains enough text to simulate a realistic product detail page.",
     price: 25,
     currency: "USD",
-    type: "physical",
+    type: "merch",
     category: "merch",
     images: [{ url: "/images/products/placeholder.svg", alt: "Mock product" }],
     inStock: true,

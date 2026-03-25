@@ -1,4 +1,4 @@
-export type ProductType = "physical" | "digital" | "commission" | "ticket";
+export type ProductType = "merch" | "digital" | "service" | "ticket";
 
 export type ProductCategory =
   | "fursuits"

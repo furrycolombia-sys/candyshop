@@ -2,9 +2,9 @@ import { useTranslations } from "next-intl";
 import { tid } from "shared";
 
 import {
-  buildCommissionRows,
+  buildServiceRows,
   buildDigitalRows,
-  buildPhysicalRows,
+  buildMerchRows,
   buildTicketRows,
 } from "@/features/products/domain/buildSpecRows";
 import type { CategoryTheme } from "@/features/products/domain/constants";
@@ -22,10 +22,10 @@ function getTypeRows(
   product: Product,
   t: ReturnType<typeof useTranslations<"products">>,
 ): ProductSpec[] {
-  if (product.type === "commission" && product.commission) {
-    return buildCommissionRows(
+  if (product.type === "service" && product.service) {
+    return buildServiceRows(
       (key, values) => t(key as Parameters<typeof t>[0], values),
-      product.commission,
+      product.service,
     );
   }
   if (product.type === "ticket" && product.ticket) {
@@ -40,10 +40,10 @@ function getTypeRows(
       product.digital,
     );
   }
-  if (product.type === "physical" && product.physical) {
-    return buildPhysicalRows(
+  if (product.type === "merch" && product.merch) {
+    return buildMerchRows(
       (key, values) => t(key as Parameters<typeof t>[0], values),
-      product.physical,
+      product.merch,
     );
   }
   return [];

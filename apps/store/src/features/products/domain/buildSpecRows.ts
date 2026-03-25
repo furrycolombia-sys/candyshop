@@ -5,9 +5,9 @@ type TFn = (
   values?: Record<string, string | number | Date>,
 ) => string;
 
-export function buildCommissionRows(
+export function buildServiceRows(
   t: TFn,
-  commission: {
+  service: {
     totalSlots: number;
     slotsAvailable: number;
     turnaroundDays: number;
@@ -19,25 +19,25 @@ export function buildCommissionRows(
     {
       label: t("detail.slots"),
       value: t("slotsAvailable", {
-        available: commission.slotsAvailable,
-        total: commission.totalSlots,
+        available: service.slotsAvailable,
+        total: service.totalSlots,
       }),
     },
     {
       label: t("detail.turnaround"),
-      value: t("turnaround", { days: commission.turnaroundDays }),
+      value: t("turnaround", { days: service.turnaroundDays }),
     },
   ];
-  if (commission.revisionsIncluded !== undefined) {
+  if (service.revisionsIncluded !== undefined) {
     rows.push({
       label: t("detail.revisions"),
-      value: String(commission.revisionsIncluded),
+      value: String(service.revisionsIncluded),
     });
   }
-  if (commission.commercialUse !== undefined) {
+  if (service.commercialUse !== undefined) {
     rows.push({
       label: t("detail.commercialUse"),
-      value: commission.commercialUse
+      value: service.commercialUse
         ? t("detail.commercialUseYes")
         : t("detail.commercialUseNo"),
     });
@@ -102,9 +102,9 @@ export function buildDigitalRows(
   return rows;
 }
 
-export function buildPhysicalRows(
+export function buildMerchRows(
   t: TFn,
-  physical: {
+  merch: {
     weight?: string;
     dimensions?: string;
     material?: string;
@@ -113,22 +113,22 @@ export function buildPhysicalRows(
   },
 ): ProductSpec[] {
   const rows: ProductSpec[] = [];
-  if (physical.weight) {
-    rows.push({ label: t("detail.weight"), value: physical.weight });
+  if (merch.weight) {
+    rows.push({ label: t("detail.weight"), value: merch.weight });
   }
-  if (physical.dimensions) {
-    rows.push({ label: t("detail.dimensions"), value: physical.dimensions });
+  if (merch.dimensions) {
+    rows.push({ label: t("detail.dimensions"), value: merch.dimensions });
   }
-  if (physical.material) {
-    rows.push({ label: t("detail.material"), value: physical.material });
+  if (merch.material) {
+    rows.push({ label: t("detail.material"), value: merch.material });
   }
-  if (physical.shipsFrom) {
-    rows.push({ label: t("detail.shipsFrom"), value: physical.shipsFrom });
+  if (merch.shipsFrom) {
+    rows.push({ label: t("detail.shipsFrom"), value: merch.shipsFrom });
   }
-  if (physical.careInstructions) {
+  if (merch.careInstructions) {
     rows.push({
       label: t("detail.careInstructions"),
-      value: physical.careInstructions,
+      value: merch.careInstructions,
     });
   }
   return rows;

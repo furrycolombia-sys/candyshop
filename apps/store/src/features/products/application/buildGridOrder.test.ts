@@ -12,7 +12,7 @@ const STUB: Omit<Product, "id" | "name" | "featured"> = {
   description: "",
   price: 10,
   currency: "USD",
-  type: "physical",
+  type: "merch",
   category: "merch",
   images: [],
   inStock: true,

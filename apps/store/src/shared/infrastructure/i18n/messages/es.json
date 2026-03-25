@@ -160,9 +160,9 @@
     "deals": "Ofertas"
   },
   "productTypes": {
-    "physical": "Fisico",
+    "merch": "Merch",
     "digital": "Digital",
-    "commission": "Comision",
+    "service": "Servicio",
     "ticket": "Boleto"
   }
 }

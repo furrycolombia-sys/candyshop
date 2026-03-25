@@ -10,8 +10,8 @@ export {
 } from "@/shared/domain/categoryConstants";
 
 export const PRODUCT_TYPES: { value: ProductType }[] = [
-  { value: "physical" },
+  { value: "merch" },
   { value: "digital" },
-  { value: "commission" },
+  { value: "service" },
   { value: "ticket" },
 ];

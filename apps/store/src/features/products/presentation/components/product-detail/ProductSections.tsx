@@ -33,7 +33,7 @@ interface NarrowedProduct extends Product {
 
 function hasTypeDetails(product: Product): boolean {
   return Boolean(
-    product.commission ?? product.ticket ?? product.digital ?? product.physical,
+    product.service ?? product.ticket ?? product.digital ?? product.merch,
   );
 }
 

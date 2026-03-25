@@ -21,7 +21,7 @@ function getProductViews(
   tTypes: (key: string) => string,
   tGallery: (key: string) => string,
 ): GalleryView[] {
-  if (product.type === "physical") {
+  if (product.type === "merch") {
     return [
       { label: tTypes(product.type), index: 0 },
       { label: tGallery("views.detail"), index: 1 },
@@ -30,7 +30,7 @@ function getProductViews(
       { label: tGallery("views.package"), index: 4 },
     ];
   }
-  if (product.type === "commission") {
+  if (product.type === "service") {
     return [
       { label: tGallery("views.example"), index: 0 },
       { label: tGallery("views.process"), index: 1 },
