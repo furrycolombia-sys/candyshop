@@ -107,3 +107,4 @@ specs/*
 /.claude/tmp
 .claude/version.json
 coverage-report.json
+.superpowers/
