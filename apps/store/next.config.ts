@@ -34,6 +34,12 @@ const nextConfig: NextConfig = {
     output: "standalone" as const,
     basePath: `${basePathPrefix}/store`,
   }),
+  images: {
+    remotePatterns: [
+      // Product images are user-provided URLs — allow all HTTPS hosts
+      { protocol: "https", hostname: "**" },
+    ],
+  },
   transpilePackages: [
     "ui",
     "shared",
