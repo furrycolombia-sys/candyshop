@@ -159,6 +159,10 @@
       "removeImage": "Eliminar imagen",
       "dragImage": "Arrastra para reordenar",
       "noImages": "Sin imágenes aún",
+      "addFirstImage": "Agrega tu primera imagen",
+      "editImageUrl": "URL de imagen",
+      "editImageAlt": "Texto alternativo",
+      "imageNumber": "Imagen {number}",
       "stock": {
         "label": "Stock",
         "unlimited": "Stock ilimitado",

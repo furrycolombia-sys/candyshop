@@ -7,6 +7,7 @@ export interface CategoryTheme {
   border: string;
   text: string;
   badgeBg: string;
+  accent: string;
 }
 
 /** Build a complete theme from a single CSS variable name */
@@ -18,6 +19,7 @@ function buildTheme(cssVar: string): CategoryTheme {
     border: `border-(${cssVar})`,
     text: `text-(${cssVar})`,
     badgeBg: bg,
+    accent: cssVar,
   };
 }
 
