@@ -11,6 +11,8 @@ import { CartItemRow } from "./CartItemRow";
 import { useCart } from "@/features/cart/application/CartContext";
 import { useFlyToCartContext } from "@/features/cart/application/FlyToCartContext";
 
+const BADGE_OVERFLOW_THRESHOLD = 99;
+
 export function CartDrawer() {
   const t = useTranslations("cart");
   const tProducts = useTranslations("products");

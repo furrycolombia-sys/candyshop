@@ -5,13 +5,16 @@ import { i18nField, i18nPrice, tid } from "shared";
 import type { CartItem } from "@/features/cart/domain/types";
 import { getCategoryColor } from "@/shared/domain/categoryConstants";
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- next-intl Translator type is complex; accepting any callable
+type TranslatorFn = (...args: any[]) => string;
+
 interface CartItemRowProps {
   item: CartItem;
   locale: string;
-  tProducts: (key: string) => string;
-  tTypes: (key: string) => string;
-  tCategories: (key: string) => string;
-  t: (key: string, values?: Record<string, unknown>) => string;
+  tProducts: TranslatorFn;
+  tTypes: TranslatorFn;
+  tCategories: TranslatorFn;
+  t: TranslatorFn;
   removeItem: (id: string) => void;
   updateQuantity: (id: string, qty: number) => void;
 }
