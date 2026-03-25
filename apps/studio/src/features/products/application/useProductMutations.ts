@@ -1,0 +1,41 @@
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { createBrowserSupabaseClient } from "api/supabase";
+
+import {
+  deleteProduct,
+  toggleProductField,
+} from "@/features/products/infrastructure/productQueries";
+
+const PRODUCTS_QUERY_KEY = "products";
+
+export function useToggleProduct() {
+  const queryClient = useQueryClient();
+  const supabase = createBrowserSupabaseClient();
+
+  return useMutation({
+    mutationFn: ({
+      id,
+      field,
+      value,
+    }: {
+      id: string;
+      field: "is_active" | "featured";
+      value: boolean;
+    }) => toggleProductField(supabase, id, field, value),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [PRODUCTS_QUERY_KEY] });
+    },
+  });
+}
+
+export function useDeleteProduct() {
+  const queryClient = useQueryClient();
+  const supabase = createBrowserSupabaseClient();
+
+  return useMutation({
+    mutationFn: (id: string) => deleteProduct(supabase, id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [PRODUCTS_QUERY_KEY] });
+    },
+  });
+}

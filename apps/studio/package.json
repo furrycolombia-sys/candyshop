@@ -15,6 +15,7 @@
     "test:e2e:ui": "playwright test --ui"
   },
   "dependencies": {
+    "@hookform/resolvers": "^5.2.2",
     "@monorepo/app-components": "workspace:*",
     "@tanstack/react-query": "^5.91.0",
     "@tanstack/react-table": "^8.21.3",
@@ -29,10 +30,12 @@
     "nuqs": "^2.4.5",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
+    "react-hook-form": "^7.72.0",
     "shared": "workspace:*",
     "tailwind-merge": "^3.3.0",
     "tw-animate-css": "^1.3.4",
-    "ui": "workspace:*"
+    "ui": "workspace:*",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@faker-js/faker": "^9.8.0",

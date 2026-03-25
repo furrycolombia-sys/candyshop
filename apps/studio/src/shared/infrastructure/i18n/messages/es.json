@@ -38,6 +38,7 @@
     "search": "Buscar",
     "noResults": "No se encontraron resultados",
     "confirm": "¿Estás seguro?",
+    "all": "Todos",
     "back": "Volver",
     "theme": {
       "switchToDark": "Cambiar a modo oscuro",
@@ -81,5 +82,91 @@
     "events": "Eventos",
     "digital": "Digital",
     "deals": "Ofertas"
+  },
+  "form": {
+    "subtitleCreate": "Completa los datos para crear un nuevo producto.",
+    "subtitleEdit": "Actualiza los detalles del producto.",
+    "imageUploadPlaceholder": "Carga de imágenes disponible en Tarea 7",
+    "sections": {
+      "productType": "Tipo de Producto",
+      "basicInfo": "Información Básica",
+      "longDescription": "Descripción Larga",
+      "pricing": "Categoría y Precios",
+      "metadata": "Etiquetas y Opciones",
+      "typeDetails": "Detalles del Tipo"
+    },
+    "fields": {
+      "nameEn": "Nombre (Inglés)",
+      "nameEs": "Nombre (Español)",
+      "descriptionEn": "Descripción Corta (Inglés)",
+      "descriptionEs": "Descripción Corta (Español)",
+      "taglineEn": "Eslogan (Inglés)",
+      "taglineEs": "Eslogan (Español)",
+      "longDescriptionEn": "Descripción Larga (Inglés)",
+      "longDescriptionEs": "Descripción Larga (Español)",
+      "category": "Categoría",
+      "priceCop": "Precio (COP)",
+      "priceUsd": "Precio (USD)",
+      "tags": "Etiquetas",
+      "tagsPlaceholder": "fursuit, personalizado, artesanal",
+      "tagsHint": "Separa las etiquetas con comas"
+    },
+    "actions": {
+      "create": "Crear Producto",
+      "save": "Guardar Cambios"
+    },
+    "validation": {
+      "required": "Este campo es obligatorio",
+      "positiveNumber": "Debe ser un número positivo"
+    },
+    "typeDetails": {
+      "merch": {
+        "weight": "Peso",
+        "weightPlaceholder": "500g",
+        "dimensions": "Dimensiones",
+        "dimensionsPlaceholder": "10x20x5cm",
+        "shipsFrom": "Envío Desde",
+        "shipsFromPlaceholder": "Portland, OR",
+        "material": "Material",
+        "materialPlaceholder": "Poliéster",
+        "careInstructions": "Instrucciones de Cuidado",
+        "careInstructionsPlaceholder": "Lavar a máquina con agua fría"
+      },
+      "digital": {
+        "fileSize": "Tamaño del Archivo",
+        "fileSizePlaceholder": "45MB",
+        "format": "Formato",
+        "formatPlaceholder": "PSD",
+        "resolution": "Resolución",
+        "resolutionPlaceholder": "4000x3000",
+        "licenseType": "Tipo de Licencia",
+        "licenseTypePlaceholder": "Uso personal"
+      },
+      "service": {
+        "totalSlots": "Cupos Totales",
+        "totalSlotsPlaceholder": "5",
+        "slotsAvailable": "Cupos Disponibles",
+        "slotsAvailablePlaceholder": "3",
+        "turnaroundDays": "Días de Entrega",
+        "turnaroundDaysPlaceholder": "14",
+        "revisionsIncluded": "Revisiones Incluidas",
+        "revisionsIncludedPlaceholder": "3",
+        "commercialUse": "Uso Comercial Permitido"
+      },
+      "ticket": {
+        "venue": "Lugar",
+        "venuePlaceholder": "Centro de Convenciones",
+        "location": "Ubicación",
+        "locationPlaceholder": "Bogotá, Colombia",
+        "doorsOpen": "Apertura de Puertas",
+        "doorsOpenPlaceholder": "9:00 AM",
+        "ageRestriction": "Restricción de Edad",
+        "ageRestrictionPlaceholder": "18+",
+        "capacity": "Capacidad",
+        "capacityPlaceholder": "500",
+        "ticketsRemaining": "Boletos Restantes",
+        "ticketsRemainingPlaceholder": "340"
+      }
+    }
   }
 }

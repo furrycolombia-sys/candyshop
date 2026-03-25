@@ -27,5 +27,7 @@ export * from "./components/sheet";
 export * from "./components/slider";
 export * from "./components/sparkline";
 export * from "./components/status-card";
+export * from "./components/switch";
 export * from "./components/tabs";
+export * from "./components/textarea";
 export * from "./components/theme-toggle";

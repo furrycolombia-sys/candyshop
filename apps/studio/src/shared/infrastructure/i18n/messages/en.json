@@ -38,6 +38,7 @@
     "search": "Search",
     "noResults": "No results found",
     "confirm": "Are you sure?",
+    "all": "All",
     "back": "Back",
     "theme": {
       "switchToDark": "Switch to dark mode",
@@ -81,5 +82,91 @@
     "events": "Events",
     "digital": "Digital",
     "deals": "Deals"
+  },
+  "form": {
+    "subtitleCreate": "Fill in the details to create a new product.",
+    "subtitleEdit": "Update the product details below.",
+    "imageUploadPlaceholder": "Image upload coming in Task 7",
+    "sections": {
+      "productType": "Product Type",
+      "basicInfo": "Basic Info",
+      "longDescription": "Long Description",
+      "pricing": "Category & Pricing",
+      "metadata": "Tags & Options",
+      "typeDetails": "Type Details"
+    },
+    "fields": {
+      "nameEn": "Name (English)",
+      "nameEs": "Name (Spanish)",
+      "descriptionEn": "Short Description (English)",
+      "descriptionEs": "Short Description (Spanish)",
+      "taglineEn": "Tagline (English)",
+      "taglineEs": "Tagline (Spanish)",
+      "longDescriptionEn": "Long Description (English)",
+      "longDescriptionEs": "Long Description (Spanish)",
+      "category": "Category",
+      "priceCop": "Price (COP)",
+      "priceUsd": "Price (USD)",
+      "tags": "Tags",
+      "tagsPlaceholder": "fursuit, custom, handmade",
+      "tagsHint": "Separate tags with commas"
+    },
+    "actions": {
+      "create": "Create Product",
+      "save": "Save Changes"
+    },
+    "validation": {
+      "required": "This field is required",
+      "positiveNumber": "Must be a positive number"
+    },
+    "typeDetails": {
+      "merch": {
+        "weight": "Weight",
+        "weightPlaceholder": "500g",
+        "dimensions": "Dimensions",
+        "dimensionsPlaceholder": "10x20x5cm",
+        "shipsFrom": "Ships From",
+        "shipsFromPlaceholder": "Portland, OR",
+        "material": "Material",
+        "materialPlaceholder": "Polyester",
+        "careInstructions": "Care Instructions",
+        "careInstructionsPlaceholder": "Machine wash cold"
+      },
+      "digital": {
+        "fileSize": "File Size",
+        "fileSizePlaceholder": "45MB",
+        "format": "Format",
+        "formatPlaceholder": "PSD",
+        "resolution": "Resolution",
+        "resolutionPlaceholder": "4000x3000",
+        "licenseType": "License Type",
+        "licenseTypePlaceholder": "Personal use"
+      },
+      "service": {
+        "totalSlots": "Total Slots",
+        "totalSlotsPlaceholder": "5",
+        "slotsAvailable": "Slots Available",
+        "slotsAvailablePlaceholder": "3",
+        "turnaroundDays": "Turnaround Days",
+        "turnaroundDaysPlaceholder": "14",
+        "revisionsIncluded": "Revisions Included",
+        "revisionsIncludedPlaceholder": "3",
+        "commercialUse": "Commercial Use Allowed"
+      },
+      "ticket": {
+        "venue": "Venue",
+        "venuePlaceholder": "Convention Center",
+        "location": "Location",
+        "locationPlaceholder": "Bogota, Colombia",
+        "doorsOpen": "Doors Open",
+        "doorsOpenPlaceholder": "9:00 AM",
+        "ageRestriction": "Age Restriction",
+        "ageRestrictionPlaceholder": "18+",
+        "capacity": "Capacity",
+        "capacityPlaceholder": "500",
+        "ticketsRemaining": "Tickets Remaining",
+        "ticketsRemainingPlaceholder": "340"
+      }
+    }
   }
 }
