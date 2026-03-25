@@ -7,53 +7,60 @@ export interface CategoryTheme {
   border: string;
   text: string;
   badgeBg: string;
+  rowEven: string;
+  rowOdd: string;
   accent: string;
 }
 
-/** Build a complete theme from a single CSS variable name */
-function buildTheme(cssVar: string): CategoryTheme {
-  const bg = `bg-(${cssVar})`;
+/**
+ * Build a theme using Tailwind theme color names (registered in theme.css via
+ * --color-pink, --color-mint, etc.). Using `bg-pink` instead of `bg-(--pink)`
+ * ensures Tailwind v4 JIT can detect and generate the utility classes.
+ */
+function buildTheme(color: string): CategoryTheme {
   return {
-    bg,
-    bgLight: `${bg}/15`,
-    border: `border-(${cssVar})`,
-    text: `text-(${cssVar})`,
-    badgeBg: bg,
-    accent: cssVar,
+    bg: `bg-${color}`,
+    bgLight: `bg-${color}/15`,
+    border: `border-${color}`,
+    text: `text-${color}`,
+    badgeBg: `bg-${color}`,
+    rowEven: `bg-${color}/5`,
+    rowOdd: `bg-${color}/15`,
+    accent: `--${color}`,
   };
 }
 
 export const CATEGORY_THEMES: Record<ProductCategory, CategoryTheme> = {
-  fursuits: buildTheme("--pink"),
-  merch: buildTheme("--mint"),
-  art: buildTheme("--lilac"),
-  events: buildTheme("--lemon"),
-  digital: buildTheme("--sky"),
-  deals: buildTheme("--peach"),
+  fursuits: buildTheme("pink"),
+  merch: buildTheme("mint"),
+  art: buildTheme("lilac"),
+  events: buildTheme("lemon"),
+  digital: buildTheme("sky"),
+  deals: buildTheme("peach"),
 };
 
 export function getCategoryTheme(category: ProductCategory): CategoryTheme {
   return CATEGORY_THEMES[category] ?? CATEGORY_THEMES.merch;
 }
 
-/** Category → hero background color mapping using candy CSS vars */
+/** Category → hero background color mapping (dimmed 15% opacity) */
 export const CATEGORY_HERO_BG: Record<ProductCategory, string> = {
-  fursuits: "bg-(--pink)/15",
-  merch: "bg-(--mint)/15",
-  art: "bg-(--lilac)/15",
-  events: "bg-(--lemon)/15",
-  digital: "bg-(--sky)/15",
-  deals: "bg-(--peach)/15",
+  fursuits: "bg-pink/15",
+  merch: "bg-mint/15",
+  art: "bg-lilac/15",
+  events: "bg-lemon/15",
+  digital: "bg-sky/15",
+  deals: "bg-peach/15",
 };
 
 /** Category badge style mapping for neobrutalist badges */
 export const CATEGORY_BADGE_STYLES: Record<ProductCategory, string> = {
-  fursuits: "bg-(--pink)/15 text-(--pink) border-(--pink)/30",
-  merch: "bg-(--mint)/15 text-(--mint) border-(--mint)/30",
-  art: "bg-(--lilac)/15 text-(--lilac) border-(--lilac)/30",
-  events: "bg-(--lemon)/15 text-(--candy-text-on-lemon) border-(--lemon)/30",
-  digital: "bg-(--sky)/15 text-(--sky) border-(--sky)/30",
-  deals: "bg-(--peach)/15 text-(--peach) border-(--peach)/30",
+  fursuits: "bg-pink/15 text-pink border-pink/30",
+  merch: "bg-mint/15 text-mint border-mint/30",
+  art: "bg-lilac/15 text-lilac border-lilac/30",
+  events: "bg-lemon/15 text-candy-text border-lemon/30",
+  digital: "bg-sky/15 text-sky border-sky/30",
+  deals: "bg-peach/15 text-peach border-peach/30",
 };
 
 export function getCategoryBadgeStyle(category: ProductCategory): string {

@@ -16,6 +16,7 @@ import { InlineAddButton } from "./InlineAddButton";
 import { InlineRemoveButton } from "./InlineRemoveButton";
 
 import type { ProductFormValues } from "@/features/products/domain/validationSchema";
+import type { CategoryTheme } from "@/shared/domain/categoryConstants";
 
 type Lang = "en" | "es";
 
@@ -27,12 +28,14 @@ function TwoColumnRow({
   sectionIndex,
   itemIndex,
   control,
+  theme,
   onRemove,
   dragProvided,
 }: {
   sectionIndex: number;
   itemIndex: number;
   control: Control<ProductFormValues>;
+  theme: CategoryTheme;
   onRemove: () => void;
   dragProvided: DraggableProvided;
 }) {
@@ -53,7 +56,7 @@ function TwoColumnRow({
   }, []);
 
   const zebraClass =
-    itemIndex % MODULO_ZEBRA === 0 ? "bg-muted/30" : "bg-background";
+    itemIndex % MODULO_ZEBRA === 0 ? theme.rowEven : theme.rowOdd;
 
   /* eslint-disable react-hooks/refs -- useController field refs must be spread during render for react-hook-form binding */
   return (
@@ -125,6 +128,7 @@ const ITEM_DROPPABLE_PREFIX = "section-items-";
 interface SectionItemsTwoColumnProps {
   sectionIndex: number;
   control: Control<ProductFormValues>;
+  theme: CategoryTheme;
   fieldArray: UseFieldArrayReturn;
   onAdd: () => void;
 }
@@ -132,6 +136,7 @@ interface SectionItemsTwoColumnProps {
 export function SectionItemsTwoColumn({
   sectionIndex,
   control,
+  theme,
   fieldArray,
   onAdd,
 }: SectionItemsTwoColumnProps) {
@@ -149,7 +154,7 @@ export function SectionItemsTwoColumn({
           <div
             ref={provided.innerRef}
             {...provided.droppableProps}
-            className="overflow-hidden border-[3px] border-foreground nb-shadow-sm"
+            className={`overflow-hidden border-[3px] ${theme.border} nb-shadow-sm`}
           >
             {fields.map((field, itemIndex) => (
               <Draggable
@@ -162,6 +167,7 @@ export function SectionItemsTwoColumn({
                     sectionIndex={sectionIndex}
                     itemIndex={itemIndex}
                     control={control}
+                    theme={theme}
                     onRemove={() => remove(itemIndex)}
                     dragProvided={dragProvided}
                   />

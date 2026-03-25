@@ -2,7 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslations } from "next-intl";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { tid } from "shared";
 
 import { EditorToolbar } from "./EditorToolbar";
@@ -14,6 +14,7 @@ import {
   productFormSchema,
   type ProductFormValues,
 } from "@/features/products/domain/validationSchema";
+import { getCategoryTheme } from "@/shared/domain/categoryConstants";
 
 interface InlineEditorProps {
   defaultValues?: Partial<ProductFormValues>;
@@ -61,6 +62,9 @@ export function InlineEditor({
       defaultValues: { ...FORM_DEFAULTS, ...defaultValues },
     });
 
+  const category = useWatch({ control, name: "category" });
+  const theme = getCategoryTheme(category);
+
   return (
     <form
       onSubmit={handleSubmit(onSubmit)}
@@ -92,7 +96,7 @@ export function InlineEditor({
         </div>
       </section>
 
-      <InlineSections control={control} />
+      <InlineSections control={control} theme={theme} />
     </form>
   );
 }

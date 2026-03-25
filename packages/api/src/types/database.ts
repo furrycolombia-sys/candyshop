@@ -364,6 +364,7 @@ export type Database = {
           price_cop: number;
           price_usd: number;
           rating: number | null;
+          refundable: boolean | null;
           review_count: number;
           sections: Json;
           slug: string;
@@ -393,6 +394,7 @@ export type Database = {
           price_cop: number;
           price_usd?: number;
           rating?: number | null;
+          refundable?: boolean | null;
           review_count?: number;
           sections?: Json;
           slug: string;
@@ -422,6 +424,7 @@ export type Database = {
           price_cop?: number;
           price_usd?: number;
           rating?: number | null;
+          refundable?: boolean | null;
           review_count?: number;
           sections?: Json;
           slug?: string;

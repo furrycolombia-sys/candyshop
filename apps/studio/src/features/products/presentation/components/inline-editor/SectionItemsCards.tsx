@@ -37,6 +37,7 @@ import { InlineAddButton } from "./InlineAddButton";
 import { InlineRemoveButton } from "./InlineRemoveButton";
 
 import type { ProductFormValues } from "@/features/products/domain/validationSchema";
+import type { CategoryTheme } from "@/shared/domain/categoryConstants";
 
 const ICON_MAP: Record<string, LucideIcon> = {
   Sparkles,
@@ -70,6 +71,7 @@ const I18N_NAMESPACE = "form.inlineEditor.sections";
 interface SectionItemsCardsProps {
   sectionIndex: number;
   control: Control<ProductFormValues>;
+  theme: CategoryTheme;
   fieldArray: UseFieldArrayReturn;
   onAdd: () => void;
 }
@@ -79,12 +81,14 @@ function CardItem({
   sectionIndex,
   itemIndex,
   control,
+  theme,
   onRemove,
   dragProvided,
 }: {
   sectionIndex: number;
   itemIndex: number;
   control: Control<ProductFormValues>;
+  theme: CategoryTheme;
   onRemove: () => void;
   dragProvided: DraggableProvided;
 }) {
@@ -115,7 +119,7 @@ function CardItem({
     <div
       ref={dragProvided.innerRef}
       {...dragProvided.draggableProps}
-      className="relative flex w-56 shrink-0 flex-col gap-3 border-[3px] border-foreground bg-background p-5 nb-shadow-sm lg:w-auto"
+      className={`relative flex w-56 shrink-0 flex-col gap-3 border-[3px] ${theme.border} bg-background p-5 nb-shadow-sm lg:w-auto`}
       {...tid(`section-${sectionIndex}-item-${itemIndex}`)}
     >
       {/* Drag handle */}
@@ -135,7 +139,9 @@ function CardItem({
 
       {/* Icon badge */}
       <div className="flex items-center gap-2">
-        <div className="w-fit border-[3px] border-foreground bg-muted p-2 nb-shadow-sm">
+        <div
+          className={`w-fit border-[3px] border-foreground ${theme.bg} p-2 nb-shadow-sm`}
+        >
           <Icon className="size-6" />
         </div>
         <Input
@@ -195,6 +201,7 @@ const ITEM_DROPPABLE_PREFIX = "section-items-";
 export function SectionItemsCards({
   sectionIndex,
   control,
+  theme,
   fieldArray,
   onAdd,
 }: SectionItemsCardsProps) {
@@ -226,6 +233,7 @@ export function SectionItemsCards({
                     sectionIndex={sectionIndex}
                     itemIndex={itemIndex}
                     control={control}
+                    theme={theme}
                     onRemove={() => remove(itemIndex)}
                     dragProvided={dragProvided}
                   />

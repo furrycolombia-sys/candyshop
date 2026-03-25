@@ -17,15 +17,17 @@ import { SectionCard } from "./SectionCard";
 import type { ItemMoveRegistry } from "./SectionCard";
 
 import type { ProductFormValues } from "@/features/products/domain/validationSchema";
+import type { CategoryTheme } from "@/shared/domain/categoryConstants";
 
 const SECTION_DROPPABLE_ID = "sections";
 const ITEM_DROPPABLE_PREFIX = "section-items-";
 
 interface InlineSectionsProps {
   control: Control<ProductFormValues>;
+  theme: CategoryTheme;
 }
 
-export function InlineSections({ control }: InlineSectionsProps) {
+export function InlineSections({ control, theme }: InlineSectionsProps) {
   const t = useTranslations("form.inlineEditor.sections");
 
   const {
@@ -110,6 +112,7 @@ export function InlineSections({ control }: InlineSectionsProps) {
                       <SectionCard
                         sectionIndex={sectionIndex}
                         control={control}
+                        theme={theme}
                         dragProvided={dragProvided}
                         isCollapsed={!!collapsedSections[sectionIndex]}
                         onToggleCollapse={() => toggleCollapse(sectionIndex)}

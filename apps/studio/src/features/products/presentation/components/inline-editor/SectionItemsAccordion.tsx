@@ -16,6 +16,7 @@ import { InlineAddButton } from "./InlineAddButton";
 import { InlineRemoveButton } from "./InlineRemoveButton";
 
 import type { ProductFormValues } from "@/features/products/domain/validationSchema";
+import type { CategoryTheme } from "@/shared/domain/categoryConstants";
 
 type Lang = "en" | "es";
 
@@ -26,12 +27,14 @@ function AccordionItemEditor({
   sectionIndex,
   itemIndex,
   control,
+  theme,
   onRemove,
   dragProvided,
 }: {
   sectionIndex: number;
   itemIndex: number;
   control: Control<ProductFormValues>;
+  theme: CategoryTheme;
   onRemove: () => void;
   dragProvided: DraggableProvided;
 }) {
@@ -66,8 +69,8 @@ function AccordionItemEditor({
         ariaLabel={`Remove item ${itemIndex + 1}`}
       />
 
-      {/* Header row — mirrors store AccordionItem */}
-      <div className="flex w-full items-center gap-2 p-5">
+      {/* Header row — mirrors store AccordionItem; pr-10 keeps +/- away from absolute X */}
+      <div className="flex w-full items-center gap-2 p-5 pr-10">
         {/* Drag handle */}
         <div
           {...dragProvided.dragHandleProps}
@@ -116,7 +119,9 @@ function AccordionItemEditor({
 
       {/* Expanded content — mirrors store AccordionItem answer area */}
       {open && (
-        <div className="border-t-[3px] border-foreground bg-muted/30 px-5 pb-5 pt-4">
+        <div
+          className={`border-t-[3px] border-foreground ${theme.bgLight} px-5 pb-5 pt-4`}
+        >
           <Textarea
             ref={descField.field.ref}
             name={descField.field.name}
@@ -141,6 +146,7 @@ const ITEM_DROPPABLE_PREFIX = "section-items-";
 interface SectionItemsAccordionProps {
   sectionIndex: number;
   control: Control<ProductFormValues>;
+  theme: CategoryTheme;
   fieldArray: UseFieldArrayReturn;
   onAdd: () => void;
 }
@@ -148,6 +154,7 @@ interface SectionItemsAccordionProps {
 export function SectionItemsAccordion({
   sectionIndex,
   control,
+  theme,
   fieldArray,
   onAdd,
 }: SectionItemsAccordionProps) {
@@ -178,6 +185,7 @@ export function SectionItemsAccordion({
                     sectionIndex={sectionIndex}
                     itemIndex={itemIndex}
                     control={control}
+                    theme={theme}
                     onRemove={() => remove(itemIndex)}
                     dragProvided={dragProvided}
                   />

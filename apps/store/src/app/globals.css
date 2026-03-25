@@ -7,6 +7,8 @@
 /* Scan the shared ui package for Tailwind classes */
 @source "../../../../packages/ui/src/**/*.{ts,tsx}";
 @source "../../../../packages/app-components/src/**/*.{ts,tsx}";
+/* Candy palette safelist for dynamically-built theme classes (single source in ui package) */
+@source "../../../../packages/ui/src/styles/candy-safelist.txt";
 
 @custom-variant dark (&:is(.dark *));
 

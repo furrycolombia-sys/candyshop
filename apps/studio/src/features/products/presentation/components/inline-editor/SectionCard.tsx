@@ -16,6 +16,7 @@ import { SectionItemsGallery } from "./SectionItemsGallery";
 import { SectionItemsTwoColumn } from "./SectionItemsTwoColumn";
 
 import type { ProductFormValues } from "@/features/products/domain/validationSchema";
+import type { CategoryTheme } from "@/shared/domain/categoryConstants";
 
 type Lang = "en" | "es";
 
@@ -25,6 +26,7 @@ export type ItemMoveRegistry = Map<number, (from: number, to: number) => void>;
 interface SectionCardProps {
   sectionIndex: number;
   control: Control<ProductFormValues>;
+  theme: CategoryTheme;
   dragProvided: DraggableProvided;
   isCollapsed: boolean;
   onToggleCollapse: () => void;
@@ -35,6 +37,7 @@ interface SectionCardProps {
 export function SectionCard({
   sectionIndex,
   control,
+  theme,
   dragProvided,
   isCollapsed,
   onToggleCollapse,
@@ -103,6 +106,7 @@ export function SectionCard({
     const props = {
       sectionIndex,
       control,
+      theme,
       fieldArray,
       onAdd: handleAddItem,
     };

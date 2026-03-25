@@ -17,10 +17,6 @@ import { Input } from "ui";
 import type { ProductFormValues } from "@/features/products/domain/validationSchema";
 import { getCategoryTheme } from "@/shared/domain/categoryConstants";
 
-/** Rotation angles for placeholder gradient variety */
-// eslint-disable-next-line @typescript-eslint/no-magic-numbers -- CSS rotation values
-const GRADIENT_ANGLES = [135, 225, 315, 45, 180] as const;
-
 interface InlineImageCarouselProps {
   control: Control<ProductFormValues>;
 }
@@ -46,9 +42,7 @@ export function InlineImageCarousel({ control }: InlineImageCarouselProps) {
     fields.length === 0 ? -1 : Math.min(activeIndex, fields.length - 1);
   const activeField = safeIndex >= 0 ? fields[safeIndex] : undefined;
 
-  const angle =
-    GRADIENT_ANGLES[safeIndex >= 0 ? safeIndex % GRADIENT_ANGLES.length : 0];
-  const gradientStyle = `linear-gradient(${String(angle)}deg, var(${theme.accent}), var(${theme.accent}) 60%, transparent)`;
+  // Use solid category background — no gradient, matches store display
 
   const thumbInactive =
     "border-foreground/20 bg-background hover:border-foreground";
@@ -200,7 +194,6 @@ export function InlineImageCarousel({ control }: InlineImageCarouselProps) {
         type="button"
         onClick={handleAdd}
         className={`relative flex-1 flex flex-col items-center justify-center gap-3 aspect-square border-[3px] border-dashed border-foreground/40 overflow-hidden ${theme.bg}`}
-        style={{ backgroundImage: gradientStyle }}
         {...tid("image-gallery-main-empty")}
       >
         <Plus className="size-8 text-foreground/30" />
@@ -213,7 +206,6 @@ export function InlineImageCarousel({ control }: InlineImageCarouselProps) {
         type="button"
         onClick={toggleEditMain}
         className={`relative flex-1 flex items-center justify-center aspect-square border-[3px] border-foreground nb-shadow-lg overflow-hidden ${theme.bg} cursor-pointer`}
-        style={{ backgroundImage: gradientStyle }}
         {...tid("image-gallery-main")}
       >
         {/* Dot texture */}

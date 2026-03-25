@@ -16,6 +16,7 @@ import { InlineAddButton } from "./InlineAddButton";
 import { InlineRemoveButton } from "./InlineRemoveButton";
 
 import type { ProductFormValues } from "@/features/products/domain/validationSchema";
+import type { CategoryTheme } from "@/shared/domain/categoryConstants";
 
 type Lang = "en" | "es";
 
@@ -26,12 +27,14 @@ function GalleryItemEditor({
   sectionIndex,
   itemIndex,
   control,
+  theme,
   onRemove,
   dragProvided,
 }: {
   sectionIndex: number;
   itemIndex: number;
   control: Control<ProductFormValues>;
+  theme: CategoryTheme;
   onRemove: () => void;
   dragProvided: DraggableProvided;
 }) {
@@ -78,7 +81,9 @@ function GalleryItemEditor({
 
       {/* eslint-disable @next/next/no-img-element -- studio editor uses raw img for arbitrary user URLs */}
       {/* Image preview / placeholder — mirrors store GallerySection */}
-      <div className="relative flex h-44 items-center justify-center overflow-hidden border-[3px] border-foreground bg-muted nb-shadow-sm">
+      <div
+        className={`relative flex h-44 items-center justify-center overflow-hidden border-[3px] border-foreground ${theme.bg} nb-shadow-sm`}
+      >
         {imageUrl ? (
           <img
             src={imageUrl}
@@ -135,6 +140,7 @@ const ITEM_DROPPABLE_PREFIX = "section-items-";
 interface SectionItemsGalleryProps {
   sectionIndex: number;
   control: Control<ProductFormValues>;
+  theme: CategoryTheme;
   fieldArray: UseFieldArrayReturn;
   onAdd: () => void;
 }
@@ -142,6 +148,7 @@ interface SectionItemsGalleryProps {
 export function SectionItemsGallery({
   sectionIndex,
   control,
+  theme,
   fieldArray,
   onAdd,
 }: SectionItemsGalleryProps) {
@@ -172,6 +179,7 @@ export function SectionItemsGallery({
                     sectionIndex={sectionIndex}
                     itemIndex={itemIndex}
                     control={control}
+                    theme={theme}
                     onRemove={() => remove(itemIndex)}
                     dragProvided={dragProvided}
                   />
