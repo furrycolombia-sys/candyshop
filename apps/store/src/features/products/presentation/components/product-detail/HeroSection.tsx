@@ -28,6 +28,10 @@ export function HeroSection({ product, theme }: HeroSectionProps) {
   const tagline = i18nField(product, "tagline", locale);
   const description = i18nField(product, "description", locale);
 
+  const isAvailable =
+    product.is_active &&
+    (product.max_quantity === null || product.max_quantity > 0);
+
   return (
     <section
       className={`w-full ${theme.bg}/15 border-b-[3px] border-foreground`}
@@ -75,7 +79,7 @@ export function HeroSection({ product, theme }: HeroSectionProps) {
               >
                 {tTypes(product.type)}
               </span>
-              {product.is_active ? (
+              {isAvailable ? (
                 <span className="bg-(--mint) border-[3px] border-foreground px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-foreground">
                   {t("inStock")}
                 </span>
@@ -140,7 +144,7 @@ export function HeroSection({ product, theme }: HeroSectionProps) {
               <button
                 className={`w-full sm:w-auto nb-btn nb-btn-press-lg nb-shadow-md font-display text-lg font-extrabold uppercase tracking-widest px-10 py-4 disabled:opacity-50 disabled:cursor-not-allowed ${theme.bg}`}
                 onClick={handleAddToCart}
-                disabled={!product.is_active || added}
+                disabled={!isAvailable || added}
                 {...tid("hero-add-to-cart")}
               >
                 <ShoppingCart className="size-5" />

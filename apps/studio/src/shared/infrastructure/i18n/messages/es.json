@@ -155,6 +155,11 @@
       "removeImage": "Eliminar imagen",
       "dragImage": "Arrastra para reordenar",
       "noImages": "Sin imágenes aún",
+      "stock": {
+        "label": "Stock",
+        "unlimited": "Stock ilimitado",
+        "quantity": "Cantidad disponible"
+      },
       "sections": {
         "title": "Secciones",
         "addSection": "Agregar Sección",

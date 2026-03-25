@@ -79,6 +79,7 @@ export function productToFormValues(product: Product): ProductFormValues {
     featured: product.featured,
     images,
     sections: rawSections ?? [],
+    max_quantity: product.max_quantity ?? null,
   };
 }
 
@@ -108,6 +109,7 @@ export function useInsertProduct() {
         featured: values.featured ?? false,
         images: (values.images ?? []) as Json,
         sections: (values.sections ?? []) as Json,
+        max_quantity: values.max_quantity ?? null,
         slug,
       });
     },
@@ -143,6 +145,7 @@ export function useUpdateProduct(productId: string) {
         featured: values.featured ?? false,
         images: (values.images ?? []) as Json,
         sections: (values.sections ?? []) as Json,
+        max_quantity: values.max_quantity ?? null,
       }),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: [PRODUCTS_QUERY_KEY] });

@@ -16,9 +16,16 @@ interface ProductCardMetaProps {
 export function ProductCardMeta({ product }: ProductCardMetaProps) {
   const t = useTranslations("products");
 
-  if (product.type === "digital") {
-    return <p>{t("digital")}</p>;
-  }
+  const stockLabel = (() => {
+    if (product.max_quantity === null) return null;
+    if (product.max_quantity === 0) return t("outOfStock");
+    return t("stockLeft", { count: product.max_quantity });
+  })();
 
-  return null;
+  return (
+    <>
+      {product.type === "digital" && <p>{t("digital")}</p>}
+      {stockLabel && <p>{stockLabel}</p>}
+    </>
+  );
 }

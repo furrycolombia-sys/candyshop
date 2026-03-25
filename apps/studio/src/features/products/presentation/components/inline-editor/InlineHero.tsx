@@ -2,7 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import type { Control } from "react-hook-form";
-import { useWatch } from "react-hook-form";
+import { useController, useWatch } from "react-hook-form";
 import { tid } from "shared";
 import type { ProductCategory } from "shared/types";
 
@@ -32,6 +32,27 @@ export function InlineHero({ control }: InlineHeroProps) {
 
   const category = useWatch({ control, name: "category" });
   const heroBg = CATEGORY_HERO_BG[category] ?? "bg-muted";
+
+  const { field: maxQtyField } = useController({
+    control,
+    name: "max_quantity",
+  });
+  const {
+    ref: maxQtyRef,
+    value: maxQtyValue,
+    onChange: maxQtyOnChange,
+    onBlur: maxQtyOnBlur,
+  } = maxQtyField;
+  const isUnlimited = maxQtyValue === null;
+
+  function handleUnlimitedToggle(checked: boolean) {
+    maxQtyOnChange(checked ? null : 0);
+  }
+
+  function handleQuantityChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const raw = e.target.value;
+    maxQtyOnChange(raw === "" ? null : Number.parseInt(raw, 10));
+  }
 
   return (
     <section
@@ -75,6 +96,52 @@ export function InlineHero({ control }: InlineHeroProps) {
 
             {/* Price */}
             <InlinePriceFields control={control} />
+
+            {/* Stock */}
+            <div
+              className="rounded-xl border-3 border-foreground bg-card p-4 nb-shadow-sm"
+              {...tid("inline-stock-fields")}
+            >
+              <div className="flex flex-col gap-3">
+                <span className="font-display text-sm font-bold uppercase tracking-wider text-muted-foreground">
+                  {t("stock.label")}
+                </span>
+
+                {/* Unlimited toggle */}
+                <label className="flex cursor-pointer items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={isUnlimited}
+                    onChange={(e) => handleUnlimitedToggle(e.target.checked)}
+                    className="size-4 cursor-pointer accent-foreground"
+                    {...tid("inline-stock-unlimited")}
+                  />
+                  <span className="font-display text-sm font-bold uppercase tracking-wider">
+                    {t("stock.unlimited")}
+                  </span>
+                </label>
+
+                {/* Quantity input — visible when not unlimited */}
+                {!isUnlimited && (
+                  <div className="flex items-baseline gap-2">
+                    <span className="font-display text-sm font-bold uppercase tracking-wider text-muted-foreground">
+                      {t("stock.quantity")}
+                    </span>
+                    <input
+                      ref={maxQtyRef}
+                      type="number"
+                      min={0}
+                      value={maxQtyValue ?? ""}
+                      onChange={handleQuantityChange}
+                      onBlur={maxQtyOnBlur}
+                      placeholder="0"
+                      className="w-24 bg-transparent font-display text-2xl font-extrabold outline-none placeholder:text-muted-foreground/30"
+                      {...tid("inline-stock-quantity")}
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
 
             {/* Tags */}
             <InlineTagEditor control={control} />

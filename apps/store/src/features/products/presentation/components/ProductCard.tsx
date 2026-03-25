@@ -32,6 +32,8 @@ export function ProductCard({
   const categoryColor = getCategoryColor(product.category);
   const isFeatured = variant === "featured";
   const addToCartLabel = added ? t("addedToCart") : t("addToCart");
+  const isAddToCartDisabled =
+    !product.is_active || product.max_quantity === 0 || added;
   const inCartLabel = t("inCart", { count: quantityInCart });
   const name = i18nField(product, "name", locale);
   const description = i18nField(product, "description", locale);
@@ -134,7 +136,7 @@ export function ProductCard({
               <button
                 className="sm:ml-auto nb-btn nb-btn-press-sm nb-shadow-md font-display font-extrabold uppercase tracking-widest px-8 py-3 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                 onClick={handleAddToCart}
-                disabled={!product.is_active || added}
+                disabled={isAddToCartDisabled}
                 {...tid("product-card-add-to-cart")}
               >
                 <ShoppingCart className="size-4" />
@@ -151,7 +153,7 @@ export function ProductCard({
           <button
             className="w-full justify-center nb-btn nb-btn-press-sm nb-shadow-md font-display text-xs font-extrabold uppercase tracking-widest px-6 py-2.5 disabled:opacity-50 disabled:cursor-not-allowed"
             onClick={handleAddToCart}
-            disabled={!product.is_active || added}
+            disabled={isAddToCartDisabled}
             {...tid("product-card-add-to-cart")}
           >
             <ShoppingCart className="size-3.5" />

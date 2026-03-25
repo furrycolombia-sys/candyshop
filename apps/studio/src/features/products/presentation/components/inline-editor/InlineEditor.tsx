@@ -39,6 +39,7 @@ const FORM_DEFAULTS: ProductFormValues = {
   featured: false,
   images: [],
   sections: [],
+  max_quantity: null,
 };
 
 export function InlineEditor({

@@ -51,6 +51,7 @@
     "addedToCart": "Agregado!",
     "inCart": "{count} en carrito",
     "outOfStock": "Agotado",
+    "stockLeft": "{count} disponibles",
     "featured": "Destacado",
     "inStock": "En stock",
     "price": "Precio",

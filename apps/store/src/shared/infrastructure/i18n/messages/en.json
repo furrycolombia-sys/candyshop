@@ -51,6 +51,7 @@
     "addedToCart": "Added!",
     "inCart": "{count} in cart",
     "outOfStock": "Out of Stock",
+    "stockLeft": "{count} left",
     "featured": "Featured",
     "inStock": "In Stock",
     "price": "Price",

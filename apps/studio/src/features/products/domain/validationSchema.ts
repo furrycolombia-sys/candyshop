@@ -54,6 +54,7 @@ export const productFormSchema = z.object({
   featured: z.boolean().optional().default(false),
   images: z.array(productImageSchema).optional().default([]),
   sections: z.array(sectionSchema).optional().default([]),
+  max_quantity: z.number().int().nonnegative().nullable().default(null),
 });
 
 export type ProductFormValues = z.infer<typeof productFormSchema>;
