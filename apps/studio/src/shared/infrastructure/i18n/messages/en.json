@@ -162,6 +162,9 @@
       "addFirstImage": "Add your first image",
       "editImageUrl": "Image URL",
       "editImageAlt": "Alt text",
+      "chooseIcon": "Choose icon",
+      "searchIcons": "Search icons...",
+      "noIconsFound": "No icons found",
       "imageNumber": "Image {number}",
       "stock": {
         "label": "Stock",

@@ -57,7 +57,7 @@ export function AppNavigation({
       {...tid("app-navigation")}
       className="sticky top-0 z-50 flex w-full items-center gap-1 border-b-[3px] border-foreground bg-background px-4 py-2"
     >
-      <span className="mr-4 text-sm font-extrabold tracking-tight">
+      <span className="mr-4 font-display text-sm font-extrabold tracking-tight">
         {t("brand")}
       </span>
       <div className="flex items-center gap-1">

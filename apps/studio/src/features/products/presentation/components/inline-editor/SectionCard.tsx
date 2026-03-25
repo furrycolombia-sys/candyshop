@@ -7,8 +7,8 @@ import { useCallback, useEffect, useState } from "react";
 import type { Control, UseFieldArrayReturn } from "react-hook-form";
 import { useController, useFieldArray } from "react-hook-form";
 import { tid } from "shared";
-import { Input } from "ui";
 
+import { AutoTextarea } from "./AutoTextarea";
 import { InlineRemoveButton } from "./InlineRemoveButton";
 import { SectionItemsAccordion } from "./SectionItemsAccordion";
 import { SectionItemsCards } from "./SectionItemsCards";
@@ -86,7 +86,7 @@ export function SectionCard({
       title_es: "",
       description_en: "",
       description_es: "",
-      icon: "",
+      icon: "sparkles",
       image_url: "",
       sort_order: itemFields.length,
     });
@@ -155,14 +155,14 @@ export function SectionCard({
         </button>
 
         {/* Section name input */}
-        <Input
+        <AutoTextarea
           ref={nameField.field.ref}
           name={nameField.field.name}
           value={String(nameField.field.value ?? "")}
           onChange={nameField.field.onChange}
           onBlur={nameField.field.onBlur}
           placeholder={`${t("sectionName")} (${nameLang.toUpperCase()})`}
-          className="h-8 flex-1 border-none bg-transparent p-0 font-display text-sm font-extrabold uppercase tracking-wider shadow-none focus-visible:ring-0"
+          className="flex-1 border-none bg-transparent p-0 font-display text-sm font-extrabold uppercase tracking-wider shadow-none focus-visible:ring-0"
           {...tid(`section-name-${sectionIndex}`)}
         />
 

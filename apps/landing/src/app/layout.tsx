@@ -1,4 +1,4 @@
-import { Syne } from "next/font/google";
+import { DM_Sans, Syne } from "next/font/google";
 import { getLocale } from "next-intl/server";
 import { ThemeScript } from "shared/components";
 
@@ -8,6 +8,12 @@ const syne = Syne({
   variable: "--font-syne",
   subsets: ["latin"],
   weight: ["400", "500", "600", "700", "800"],
+});
+
+const dmSans = DM_Sans({
+  variable: "--font-dm-sans",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
 });
 
 export default async function RootLayout({
@@ -22,7 +28,9 @@ export default async function RootLayout({
       <head>
         <ThemeScript />
       </head>
-      <body className={`${syne.variable} antialiased`}>{children}</body>
+      <body className={`${syne.variable} ${dmSans.variable} antialiased`}>
+        {children}
+      </body>
     </html>
   );
 }

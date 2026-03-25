@@ -18,6 +18,7 @@ export * from "./components/info-badge";
 export * from "./components/input";
 export * from "./components/label";
 export * from "./components/mini-area-chart";
+export * from "./components/popover";
 export * from "./components/progress-bar";
 export * from "./components/resizable";
 export * from "./components/scroll-area";

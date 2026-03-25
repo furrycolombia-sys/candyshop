@@ -6,7 +6,7 @@
  */
 
 :root {
-  --font-sans: var(--font-syne);
+  --font-sans: var(--font-dm-sans);
   --font-display: var(--font-syne);
 
   --background: #ffffff;

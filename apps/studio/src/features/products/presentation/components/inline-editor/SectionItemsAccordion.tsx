@@ -10,8 +10,8 @@ import { useCallback, useState } from "react";
 import type { Control, UseFieldArrayReturn } from "react-hook-form";
 import { useController } from "react-hook-form";
 import { tid } from "shared";
-import { Input, Textarea } from "ui";
 
+import { AutoTextarea } from "./AutoTextarea";
 import { InlineAddButton } from "./InlineAddButton";
 import { InlineRemoveButton } from "./InlineRemoveButton";
 
@@ -91,14 +91,14 @@ function AccordionItemEditor({
         </button>
 
         {/* Title input styled like the accordion question */}
-        <Input
+        <AutoTextarea
           ref={titleField.field.ref}
           name={titleField.field.name}
           value={String(titleField.field.value ?? "")}
           onChange={titleField.field.onChange}
           onBlur={titleField.field.onBlur}
           placeholder={`${t("itemTitle")} (${lang.toUpperCase()})`}
-          className="h-auto flex-1 border-none bg-transparent p-0 text-sm font-bold uppercase tracking-wide shadow-none focus-visible:ring-0"
+          className="flex-1 border-none bg-transparent p-0 text-sm font-bold uppercase tracking-wide shadow-none focus-visible:ring-0"
           {...tid(`section-item-title-${sectionIndex}-${itemIndex}`)}
         />
 
@@ -122,15 +122,14 @@ function AccordionItemEditor({
         <div
           className={`border-t-[3px] border-foreground ${theme.bgLight} px-5 pb-5 pt-4`}
         >
-          <Textarea
+          <AutoTextarea
             ref={descField.field.ref}
             name={descField.field.name}
             value={String(descField.field.value ?? "")}
             onChange={descField.field.onChange}
             onBlur={descField.field.onBlur}
             placeholder={`${t("itemDescription")} (${lang.toUpperCase()})`}
-            rows={3}
-            className="min-h-0 resize-none border-none bg-transparent p-0 text-sm/relaxed text-muted-foreground shadow-none focus-visible:ring-0"
+            className="resize-none border-none bg-transparent p-0 text-sm/relaxed text-muted-foreground shadow-none focus-visible:ring-0"
             {...tid(`section-item-desc-${sectionIndex}-${itemIndex}`)}
           />
         </div>

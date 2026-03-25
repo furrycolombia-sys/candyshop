@@ -38,6 +38,11 @@ const nextConfig: NextConfig = {
     output: "standalone" as const,
     basePath: `${basePathPrefix}/studio`,
   }),
+  // lucide-react v1.x ESM dist uses .ts imports in .js files — Turbopack
+  // can't resolve those by default. This alias fixes it.
+  turbopack: {
+    resolveExtensions: [".ts", ".tsx", ".js", ".jsx", ".mjs", ".json"],
+  },
   images: {
     remotePatterns: [
       {

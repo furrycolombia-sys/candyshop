@@ -193,21 +193,22 @@ The project runs out-of-the-box with **no `.env.local` setup required**:
 
 ### Workspace Commands
 
-| Command             | Description               |
-| ------------------- | ------------------------- |
-| `pnpm dev`          | Start all apps            |
-| `pnpm dev:store`    | Start store app           |
-| `pnpm dev:landing`  | Start landing page        |
-| `pnpm dev:payments` | Start payments app        |
-| `pnpm dev:admin`    | Start admin app           |
-| `pnpm dev:auth`     | Start auth app            |
-| `pnpm dev:studio`   | Start studio app          |
-| `pnpm build`        | Build all workspaces      |
-| `pnpm lint`         | Lint all workspaces       |
-| `pnpm typecheck`    | Type-check all workspaces |
-| `pnpm test`         | Run all tests             |
-| `pnpm test:store`   | Run store tests           |
-| `pnpm codegen`      | Generate API clients      |
+| Command             | Description                                          |
+| ------------------- | ---------------------------------------------------- |
+| `pnpm dev`          | Start all apps                                       |
+| `pnpm dev:store`    | Start store app                                      |
+| `pnpm dev:landing`  | Start landing page                                   |
+| `pnpm dev:payments` | Start payments app                                   |
+| `pnpm dev:admin`    | Start admin app                                      |
+| `pnpm dev:auth`     | Start auth app                                       |
+| `pnpm dev:studio`   | Start studio app                                     |
+| `pnpm build`        | Build all workspaces                                 |
+| `pnpm lint`         | Lint all workspaces                                  |
+| `pnpm typecheck`    | Type-check all workspaces                            |
+| `pnpm test`         | Run all tests                                        |
+| `pnpm test:store`   | Run store tests                                      |
+| `pnpm smoke`        | Smoke test all apps (requires `pnpm dev` + Supabase) |
+| `pnpm codegen`      | Generate API clients                                 |
 
 ### App Ports
 

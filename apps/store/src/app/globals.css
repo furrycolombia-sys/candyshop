@@ -11,18 +11,3 @@
 @source "../../../../packages/ui/src/styles/candy-safelist.txt";
 
 @custom-variant dark (&:is(.dark *));
-
-/* DM Sans for body text (readable), Syne for display headings via .font-display */
-body {
-  font-family: var(--font-dm-sans), ui-sans-serif, system-ui, sans-serif;
-}
-
-/* Respect reduced motion preference */
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    transition-duration: 0.01ms !important;
-  }
-}

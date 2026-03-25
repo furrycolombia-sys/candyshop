@@ -28,6 +28,10 @@ const securityHeaders = [
 const basePathPrefix = process.env.BASE_PATH_PREFIX || "";
 
 const nextConfig: NextConfig = {
+  // lucide-react v1.x ESM dist uses .ts imports — Turbopack needs explicit extensions
+  turbopack: {
+    resolveExtensions: [".ts", ".tsx", ".js", ".jsx", ".mjs", ".json"],
+  },
   // Landing serves at root "/" — no basePath for standard builds
   ...(process.env.STANDALONE === "true" && {
     output: "standalone" as const,

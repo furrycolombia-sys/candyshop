@@ -10,8 +10,8 @@ import { useCallback, useState } from "react";
 import type { Control, UseFieldArrayReturn } from "react-hook-form";
 import { useController } from "react-hook-form";
 import { tid } from "shared";
-import { Input } from "ui";
 
+import { AutoTextarea } from "./AutoTextarea";
 import { InlineAddButton } from "./InlineAddButton";
 import { InlineRemoveButton } from "./InlineRemoveButton";
 
@@ -97,14 +97,14 @@ function GalleryItemEditor({
       {/* eslint-enable @next/next/no-img-element */}
 
       {/* Image URL input */}
-      <Input
+      <AutoTextarea
         ref={imageField.field.ref}
         name={imageField.field.name}
         value={imageUrl}
         onChange={imageField.field.onChange}
         onBlur={imageField.field.onBlur}
         placeholder={t("imageUrl")}
-        className="h-6 border-none bg-transparent p-0 text-[10px] text-muted-foreground shadow-none focus-visible:ring-0"
+        className="border-none bg-transparent p-0 text-[10px] text-muted-foreground shadow-none focus-visible:ring-0"
         {...tid(`section-item-image-${sectionIndex}-${itemIndex}`)}
       />
 
@@ -118,14 +118,14 @@ function GalleryItemEditor({
         >
           {lang.toUpperCase()}
         </button>
-        <Input
+        <AutoTextarea
           ref={titleField.field.ref}
           name={titleField.field.name}
           value={String(titleField.field.value ?? "")}
           onChange={titleField.field.onChange}
           onBlur={titleField.field.onBlur}
           placeholder={`${t("itemTitle")} (${lang.toUpperCase()})`}
-          className="h-auto flex-1 border-none bg-transparent p-0 text-xs font-medium text-muted-foreground shadow-none focus-visible:ring-0"
+          className="flex-1 border-none bg-transparent p-0 text-xs font-medium text-muted-foreground shadow-none focus-visible:ring-0"
           {...tid(`section-item-title-${sectionIndex}-${itemIndex}`)}
         />
       </div>

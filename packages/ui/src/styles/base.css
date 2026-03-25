@@ -13,6 +13,7 @@
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
+    font-family: var(--font-dm-sans), ui-sans-serif, system-ui, sans-serif;
   }
 
   :where(a, button, [role="button"], [data-slot="button"]) {
@@ -21,5 +22,15 @@
 
   :where(button:disabled, [aria-disabled="true"]) {
     cursor: not-allowed;
+  }
+}
+
+/* Respect reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
   }
 }

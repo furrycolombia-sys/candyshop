@@ -4,65 +4,20 @@
 
 import { Draggable, Droppable } from "@hello-pangea/dnd";
 import type { DraggableProvided } from "@hello-pangea/dnd";
-import {
-  Sparkles,
-  Shield,
-  Clock,
-  Star,
-  Heart,
-  Zap,
-  Palette,
-  Music,
-  Download,
-  MapPin,
-  Users,
-  Award,
-  Wind,
-  Package,
-  Brush,
-  Image,
-  FileText,
-  Truck,
-  GripVertical,
-  type LucideIcon,
-} from "lucide-react";
+import { GripVertical } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useCallback, useState } from "react";
 import type { Control, UseFieldArrayReturn } from "react-hook-form";
 import { useController } from "react-hook-form";
 import { tid } from "shared";
-import { Input, Textarea } from "ui";
 
+import { AutoTextarea } from "./AutoTextarea";
+import { IconPicker } from "./IconPicker";
 import { InlineAddButton } from "./InlineAddButton";
 import { InlineRemoveButton } from "./InlineRemoveButton";
 
 import type { ProductFormValues } from "@/features/products/domain/validationSchema";
 import type { CategoryTheme } from "@/shared/domain/categoryConstants";
-
-const ICON_MAP: Record<string, LucideIcon> = {
-  Sparkles,
-  Shield,
-  Clock,
-  Star,
-  Heart,
-  Zap,
-  Palette,
-  Music,
-  Download,
-  MapPin,
-  Users,
-  Award,
-  Wind,
-  Package,
-  Brush,
-  Image,
-  FileText,
-  Truck,
-};
-
-function getIcon(name: string): LucideIcon {
-  return ICON_MAP[name] ?? Sparkles;
-}
 
 type Lang = "en" | "es";
 
@@ -77,6 +32,7 @@ interface SectionItemsCardsProps {
 }
 
 /* eslint-disable @typescript-eslint/no-explicit-any, i18next/no-literal-string -- dynamic nested field paths from useFieldArray */
+
 function CardItem({
   sectionIndex,
   itemIndex,
@@ -112,8 +68,6 @@ function CardItem({
     setLang((prev) => (prev === "en" ? "es" : "en"));
   }, []);
 
-  const Icon = getIcon(String(iconField.field.value ?? ""));
-
   /* eslint-disable react-hooks/refs -- useController field refs must be spread during render for react-hook-form binding */
   return (
     <div
@@ -137,24 +91,12 @@ function CardItem({
         ariaLabel={`Remove item ${itemIndex + 1}`}
       />
 
-      {/* Icon badge */}
-      <div className="flex items-center gap-2">
-        <div
-          className={`w-fit border-[3px] border-foreground ${theme.bg} p-2 nb-shadow-sm`}
-        >
-          <Icon className="size-6" />
-        </div>
-        <Input
-          ref={iconField.field.ref}
-          name={iconField.field.name}
-          value={String(iconField.field.value ?? "")}
-          onChange={iconField.field.onChange}
-          onBlur={iconField.field.onBlur}
-          placeholder={t("icon")}
-          className="h-6 w-20 border-none bg-transparent p-0 text-[10px] text-muted-foreground shadow-none focus-visible:ring-0"
-          {...tid(`section-item-icon-${sectionIndex}-${itemIndex}`)}
-        />
-      </div>
+      {/* Icon picker */}
+      <IconPicker
+        value={String(iconField.field.value ?? "")}
+        onChange={(name) => iconField.field.onChange(name)}
+        themeBg={theme.bg}
+      />
 
       {/* Lang toggle */}
       <button
@@ -167,27 +109,26 @@ function CardItem({
       </button>
 
       {/* Title */}
-      <Input
+      <AutoTextarea
         ref={titleField.field.ref}
         name={titleField.field.name}
         value={String(titleField.field.value ?? "")}
         onChange={titleField.field.onChange}
         onBlur={titleField.field.onBlur}
         placeholder={`${t("itemTitle")} (${lang.toUpperCase()})`}
-        className="h-auto border-none bg-transparent p-0 font-display text-sm/tight font-extrabold uppercase tracking-wide shadow-none focus-visible:ring-0 hover:border-dashed hover:border-foreground/30"
+        className="border-none bg-transparent p-0 font-display text-sm/tight font-extrabold uppercase tracking-wide shadow-none focus-visible:ring-0 hover:border-dashed hover:border-foreground/30"
         {...tid(`section-item-title-${sectionIndex}-${itemIndex}`)}
       />
 
       {/* Description */}
-      <Textarea
+      <AutoTextarea
         ref={descField.field.ref}
         name={descField.field.name}
         value={String(descField.field.value ?? "")}
         onChange={descField.field.onChange}
         onBlur={descField.field.onBlur}
         placeholder={`${t("itemDescription")} (${lang.toUpperCase()})`}
-        rows={2}
-        className="min-h-0 resize-none border-none bg-transparent p-0 text-xs/relaxed text-muted-foreground shadow-none focus-visible:ring-0"
+        className="resize-none border-none bg-transparent p-0 text-xs/relaxed text-muted-foreground shadow-none focus-visible:ring-0"
         {...tid(`section-item-desc-${sectionIndex}-${itemIndex}`)}
       />
     </div>
