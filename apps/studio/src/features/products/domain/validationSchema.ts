@@ -36,6 +36,27 @@ export const ticketDetailsSchema = z.object({
   tickets_remaining: z.coerce.number().int().nonnegative().optional(),
 });
 
+/** Highlight schema */
+export const highlightSchema = z.object({
+  icon: z.string().optional().default(""),
+  title_en: z.string().min(1),
+  title_es: z.string().optional().default(""),
+  description_en: z.string().optional().default(""),
+  description_es: z.string().optional().default(""),
+});
+
+export type Highlight = z.infer<typeof highlightSchema>;
+
+/** FAQ item schema */
+export const faqItemSchema = z.object({
+  question_en: z.string().min(1),
+  question_es: z.string().optional().default(""),
+  answer_en: z.string().optional().default(""),
+  answer_es: z.string().optional().default(""),
+});
+
+export type FaqItem = z.infer<typeof faqItemSchema>;
+
 /** Product image schema */
 export const productImageSchema = z.object({
   url: z.string().url(),
@@ -62,6 +83,8 @@ export const productFormSchema = z.object({
   tags: z.string().optional().default(""),
   featured: z.boolean().optional().default(false),
   images: z.array(productImageSchema).optional().default([]),
+  highlights: z.array(highlightSchema).optional().default([]),
+  faq: z.array(faqItemSchema).optional().default([]),
   type_details_merch: merchDetailsSchema.optional(),
   type_details_digital: digitalDetailsSchema.optional(),
   type_details_service: serviceDetailsSchema.optional(),

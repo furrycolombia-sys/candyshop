@@ -96,6 +96,12 @@ export function productToFormValues(product: Product): ProductFormValues {
     tags: product.tags?.join(", ") ?? "",
     featured: product.featured,
     images,
+    highlights:
+      ((product as Record<string, unknown>)
+        .highlights as ProductFormValues["highlights"]) ?? [],
+    faq:
+      ((product as Record<string, unknown>).faq as ProductFormValues["faq"]) ??
+      [],
     type_details_merch:
       product.type === "merch"
         ? (typeDetails as ProductFormValues["type_details_merch"])

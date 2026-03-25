@@ -1,8 +1,11 @@
 export { EditorToolbar } from "./EditorToolbar";
 export { InlineAddButton } from "./InlineAddButton";
+export { InlineFaq } from "./InlineFaq";
 export { InlineHero } from "./InlineHero";
+export { InlineHighlights } from "./InlineHighlights";
 export { InlineImageCarousel } from "./InlineImageCarousel";
 export { InlinePriceFields } from "./InlinePriceFields";
 export { InlineRemoveButton } from "./InlineRemoveButton";
 export { InlineTagEditor } from "./InlineTagEditor";
 export { InlineTextField } from "./InlineTextField";
+export { InlineTypeDetails } from "./InlineTypeDetails";
