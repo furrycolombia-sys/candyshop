@@ -352,9 +352,7 @@ export type Database = {
           description_en: string;
           description_es: string;
           event_id: string | null;
-          faq: Json;
           featured: boolean;
-          highlights: Json;
           id: string;
           images: Json;
           is_active: boolean;
@@ -367,13 +365,12 @@ export type Database = {
           price_usd: number;
           rating: number | null;
           review_count: number;
-          screenshots: Json;
+          sections: Json;
           slug: string;
           tagline_en: string;
           tagline_es: string;
           tags: string[];
           type: Database["public"]["Enums"]["product_type"];
-          type_details: Json;
           updated_at: string;
         };
         Insert: {
@@ -384,9 +381,7 @@ export type Database = {
           description_en?: string;
           description_es?: string;
           event_id?: string | null;
-          faq?: Json;
           featured?: boolean;
-          highlights?: Json;
           id?: string;
           images?: Json;
           is_active?: boolean;
@@ -399,13 +394,12 @@ export type Database = {
           price_usd?: number;
           rating?: number | null;
           review_count?: number;
-          screenshots?: Json;
+          sections?: Json;
           slug: string;
           tagline_en?: string;
           tagline_es?: string;
           tags?: string[];
           type: Database["public"]["Enums"]["product_type"];
-          type_details?: Json;
           updated_at?: string;
         };
         Update: {
@@ -416,9 +410,7 @@ export type Database = {
           description_en?: string;
           description_es?: string;
           event_id?: string | null;
-          faq?: Json;
           featured?: boolean;
-          highlights?: Json;
           id?: string;
           images?: Json;
           is_active?: boolean;
@@ -431,13 +423,12 @@ export type Database = {
           price_usd?: number;
           rating?: number | null;
           review_count?: number;
-          screenshots?: Json;
+          sections?: Json;
           slug?: string;
           tagline_en?: string;
           tagline_es?: string;
           tags?: string[];
           type?: Database["public"]["Enums"]["product_type"];
-          type_details?: Json;
           updated_at?: string;
         };
         Relationships: [
