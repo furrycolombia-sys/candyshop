@@ -1,0 +1,144 @@
+{
+  "agent": "architecture",
+  "review_id": "2026-03-24_21-46-41",
+  "outputFile": ".ai-context/reviews/agents/2026-03-24_21-46-41_architecture.json",
+  "scope": "apps/store/src/",
+  "issues": [
+    {
+      "id": "ARCH-001",
+      "severity": "critical",
+      "file": "apps/store/src/features/cart/presentation/components/CartDrawer.tsx",
+      "line": 11,
+      "title": "Cross-feature import: cart imports from products",
+      "description": "CartDrawer.tsx imports `PRODUCT_CATEGORIES` from `@/features/products/domain/constants`. This violates feature isolation — the cart feature must NOT import directly from the products feature. Cross-feature data should be shared via the shared layer or passed as props.",
+      "rule": "Features MUST NOT import directly from other features",
+      "fix": "Move PRODUCT_CATEGORIES (or the category-to-color mapping) to `@/shared/domain/constants.ts` since both cart and products need it, or pass the color as a prop from the parent that already has access to product data."
+    },
+    {
+      "id": "ARCH-002",
+      "severity": "critical",
+      "file": "apps/store/src/features/products/presentation/components/ProductCard.tsx",
+      "line": 11,
+      "title": "Cross-feature import: products imports from cart",
+      "description": "ProductCard.tsx imports `useCart` and `useFlyToCartContext` from `@/features/cart`. This violates feature isolation — presentation components in the products feature depend directly on the cart feature's application layer.",
+      "rule": "Features MUST NOT import directly from other features",
+      "fix": "Invert the dependency: pass `onAddToCart` callback and `quantityInCart` as props from a parent that composes both features. The ProductCard should be a pure presentational component that doesn't know about the cart."
+    },
+    {
+      "id": "ARCH-003",
+      "severity": "critical",
+      "file": "apps/store/src/features/products/presentation/pages/ProductDetailPage.tsx",
+      "line": 8,
+      "title": "Cross-feature import: ProductDetailPage imports from cart",
+      "description": "ProductDetailPage.tsx imports `CartDrawer` and `useCart` from `@/features/cart`. The products feature page directly depends on the cart feature for rendering and state.",
+      "rule": "Features MUST NOT import directly from other features",
+      "fix": "CartDrawer is already rendered in the locale layout. Remove the duplicate CartDrawer from ProductDetailPage. For useCart, pass addItem/cartItems as props from a composition layer, or use a shared context/store."
+    },
+    {
+      "id": "ARCH-004",
+      "severity": "critical",
+      "file": "apps/store/src/features/products/presentation/components/product-detail/HeroSection.tsx",
+      "line": 12,
+      "title": "Cross-feature import: HeroSection imports from cart",
+      "description": "HeroSection.tsx imports `useCart` and `useFlyToCartContext` from `@/features/cart`. Another instance of the products feature's presentation layer directly depending on the cart feature.",
+      "rule": "Features MUST NOT import directly from other features",
+      "fix": "Pass `onAddToCart` handler and `quantityInCart` as props from the ProductDetailPage, which should orchestrate both features."
+    },
+    {
+      "id": "ARCH-005",
+      "severity": "warning",
+      "file": "apps/store/src/features/products/presentation/pages/ProductCatalogPage.tsx",
+      "line": 8,
+      "title": "Relative imports crossing presentation layers",
+      "description": "ProductCatalogPage.tsx uses relative imports like `../components/CategoryFilter`, `../components/ProductGrid`, `../components/SearchBar`, `../components/TypeFilter`. While these stay within the same feature and layer (presentation), the convention requires absolute imports for cross-directory references within features.",
+      "rule": "Cross-layer in features MUST use absolute imports",
+      "fix": "Replace with absolute imports: `@/features/products/presentation/components/CategoryFilter`, etc."
+    },
+    {
+      "id": "ARCH-006",
+      "severity": "warning",
+      "file": "apps/store/src/features/products/presentation/pages/ProductCatalogPage.tsx",
+      "line": 19,
+      "title": "Search params defined in presentation layer instead of domain",
+      "description": "The `searchParams` object using nuqs parsers is defined inline in ProductCatalogPage.tsx (presentation layer). Per URL state management rules, parsers should be defined in the domain layer at `features/products/domain/searchParams.ts`.",
+      "rule": "URL search param parsers belong in domain/searchParams.ts",
+      "fix": "Extract `searchParams` to `@/features/products/domain/searchParams.ts` and import it from there."
+    },
+    {
+      "id": "ARCH-007",
+      "severity": "warning",
+      "file": "apps/store/src/app/[locale]/products/[id]/[slug]/not-found.tsx",
+      "line": 1,
+      "title": "Not-found page contains UI logic instead of being a thin wrapper",
+      "description": "The not-found.tsx route file contains full component UI, translations, and styling. Per App Router rules, route files should be thin wrappers that import and render feature pages. However, Next.js not-found.tsx files are a special case — they cannot easily delegate to feature pages since they are framework-specific. This is a minor concern.",
+      "rule": "Route files (page.tsx) MUST only import and render feature pages",
+      "fix": "Consider extracting the not-found UI to `@/features/products/presentation/pages/ProductNotFoundPage.tsx` and importing it from the route file, or accept this as an acceptable exception for Next.js not-found pages."
+    },
+    {
+      "id": "ARCH-008",
+      "severity": "warning",
+      "file": "apps/store/src/features/products/domain/constants.ts",
+      "line": 3,
+      "title": "Hardcoded English labels in domain constants",
+      "description": "PRODUCT_TYPES and PRODUCT_CATEGORIES contain hardcoded English labels like `\"Physical\"`, `\"Digital\"`, `\"Fursuits\"`, `\"Merch\"`, etc. Domain constants should contain values/keys only; display labels should come from i18n translations. Note: The ProductCard and other components already use `useTranslations` for category/type labels, so these hardcoded labels in constants appear to be dead code or used elsewhere without i18n.",
+      "rule": "No hardcoded user-facing strings — use i18n",
+      "fix": "Remove the `label` field from PRODUCT_TYPES and PRODUCT_CATEGORIES, or replace with translation keys. Components already use `tCategories(product.category)` and `tTypes(product.type)` for display."
+    },
+    {
+      "id": "ARCH-009",
+      "severity": "suggestion",
+      "file": "apps/store/src/features/products/presentation/pages/ProductDetailPage.tsx",
+      "line": 27,
+      "title": "Direct mock data import in presentation page",
+      "description": "ProductDetailPage.tsx imports `mockProducts` from `@/mocks/data/products` and uses it to find a product by ID. This couples the page directly to mock data. In a real application, this should come from an API/infrastructure layer.",
+      "rule": "Data fetching belongs in infrastructure layer, not presentation",
+      "fix": "Create a `useProduct(id)` hook in the application layer that currently wraps the mock data, making it easy to swap for real API calls later."
+    },
+    {
+      "id": "ARCH-010",
+      "severity": "suggestion",
+      "file": "apps/store/src/features/products/presentation/pages/ProductCatalogPage.tsx",
+      "line": 17,
+      "title": "Direct mock data import in presentation page",
+      "description": "ProductCatalogPage.tsx imports `mockProducts` from `@/mocks/data/products`. Same issue as ARCH-009 — mock data is consumed directly in the presentation layer instead of being abstracted through an application/infrastructure layer.",
+      "rule": "Data fetching belongs in infrastructure layer, not presentation",
+      "fix": "Create a `useProducts()` hook in the application layer that wraps the mock data source."
+    },
+    {
+      "id": "ARCH-011",
+      "severity": "info",
+      "file": "apps/store/src/app/[locale]/layout.tsx",
+      "line": 1,
+      "title": "Layout file properly orchestrates cross-feature concerns",
+      "description": "The locale layout correctly imports from multiple features (auth, cart) and shared packages. This is the proper composition point for cross-feature integration, following Clean Architecture. The layout acts as a thin orchestrator.",
+      "rule": "Layout files MAY contain providers and shell components from /shared",
+      "fix": "No fix needed — this is correct."
+    },
+    {
+      "id": "ARCH-012",
+      "severity": "info",
+      "file": "apps/store/src/features/products/index.ts",
+      "line": 1,
+      "title": "Feature barrel exports properly defined",
+      "description": "Both products and cart features have proper `index.ts` barrel exports exposing their public API. This follows the feature isolation pattern correctly.",
+      "rule": "Each feature MUST have an index.ts exporting its public API",
+      "fix": "No fix needed — this is correct."
+    },
+    {
+      "id": "ARCH-013",
+      "severity": "info",
+      "file": "apps/store/src/app/[locale]/page.tsx",
+      "line": 1,
+      "title": "Route pages are proper thin wrappers",
+      "description": "Both `[locale]/page.tsx` and `products/[id]/[slug]/page.tsx` correctly import feature pages and render them as thin wrappers. Only locale setup (setRequestLocale) and param extraction happen in route files.",
+      "rule": "Route files MUST only import and render feature pages",
+      "fix": "No fix needed — this is correct."
+    }
+  ],
+  "summary": {
+    "critical": 4,
+    "warning": 4,
+    "suggestion": 2,
+    "info": 3
+  }
+}

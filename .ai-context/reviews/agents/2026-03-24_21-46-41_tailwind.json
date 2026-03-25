@@ -1,0 +1,114 @@
+{
+  "agent": "tailwind",
+  "review_id": "2026-03-24_21-46-41",
+  "outputFile": ".ai-context/reviews/agents/2026-03-24_21-46-41_tailwind.json",
+  "scope": "apps/store/src/",
+  "issues": [
+    {
+      "id": "STYLE-001",
+      "severity": "warning",
+      "file": "apps/store/src/features/products/presentation/components/product-detail/MobileBar.tsx",
+      "line": 48,
+      "title": "Undefined utility class `nb-btn-press-md`",
+      "description": "The class `nb-btn-press-md` is used but never defined in utilities.css. Only `nb-btn-press-sm` and `nb-btn-press-lg` exist. This means the active press animation does not apply on the mobile bar CTA button.",
+      "rule": "tailwind.md - Use defined utility classes",
+      "fix": "Either add an `nb-btn-press-md` definition to `packages/ui/src/styles/utilities.css` (e.g., `translate: 2.5px 2.5px; box-shadow: none;`) or use one of the existing press variants (`nb-btn-press-sm` or `nb-btn-press-lg`)."
+    },
+    {
+      "id": "STYLE-002",
+      "severity": "warning",
+      "file": "apps/store/src/features/products/presentation/components/product-detail/FaqItem.tsx",
+      "line": 25,
+      "title": "Dynamic Tailwind class via string interpolation in `hover:` prefix will not work",
+      "description": "The className uses `hover:${theme.bgLight}` which produces a string like `hover:bg-(--pink)/15`. Tailwind CSS cannot detect dynamic class names constructed via template literals at build time. This hover effect is silently broken and the FAQ button has no hover background.",
+      "rule": "tailwind.md - Tailwind JIT requires classes to appear as complete strings",
+      "fix": "Use inline style for the hover effect via a CSS custom property or use `onMouseEnter`/`onMouseLeave` with state, or pre-generate the hover classes in the CATEGORY_THEMES constant (e.g., `hoverBg: 'hover:bg-(--pink)/15'`) so the full string is statically scannable."
+    },
+    {
+      "id": "STYLE-003",
+      "severity": "suggestion",
+      "file": "packages/ui/src/styles/colors.css",
+      "line": 1,
+      "title": "Colors use hex format instead of OKLCH",
+      "description": "The tailwind.md rule states colors should use OKLCH format (`oklch(...)`) but all CSS variables in colors.css use hex values (e.g., `--pink: #ff4890`). While this is functional, it does not follow the project's stated OKLCH preference. This is a shared package file affecting all apps.",
+      "rule": "tailwind.md - Use OKLCH Colors",
+      "fix": "Consider migrating color definitions to OKLCH format for wider gamut support and perceptual uniformity. This is a low-priority suggestion since hex values work correctly."
+    },
+    {
+      "id": "STYLE-004",
+      "severity": "info",
+      "file": "apps/store/src/features/products/presentation/components/product-detail/ImageGallery.tsx",
+      "line": 123,
+      "title": "Inline style for dynamic gradient background is justified",
+      "description": "ImageGallery and GalleryOverlays use inline `style={{ backgroundImage: ... }}` for dynamic CSS gradients and dot patterns. These are computed at runtime from theme variables and rotation angles, making inline styles the correct approach since Tailwind cannot handle fully dynamic gradient values.",
+      "rule": "tailwind.md - No inline styles (exception: dynamic computed values)",
+      "fix": "No action needed. Inline styles are appropriate here for dynamic computed values."
+    },
+    {
+      "id": "STYLE-005",
+      "severity": "info",
+      "file": "apps/store/src/features/products/presentation/components/product-detail/AuthorAvatar.tsx",
+      "line": 10,
+      "title": "Hardcoded candy color `bg-(--lilac)` for all author avatars",
+      "description": "The AuthorAvatar component always uses `bg-(--lilac)` regardless of the product category or review context. While not a bug, it could be more consistent if it used the section's category theme color like other components do.",
+      "rule": "single-source-of-truth.md - Semantic color usage",
+      "fix": "Consider accepting a `theme` prop and using `theme.bg` for consistency with the rest of the product detail page. Low priority since the current approach is intentional design."
+    },
+    {
+      "id": "STYLE-006",
+      "severity": "info",
+      "file": "apps/store/src/app/globals.css",
+      "line": 14,
+      "title": "Store app uses different body font than other apps",
+      "description": "The store uses `var(--font-dm-sans)` for body text while all other apps use `var(--font-syne)`. This is documented in the CSS comment ('DM Sans for body text (readable), Syne for display headings via .font-display') and appears intentional for the store's e-commerce readability needs.",
+      "rule": "css-consistency.md - CSS must be consistent across apps",
+      "fix": "No action needed if this is an intentional design decision. The font difference is documented and justified for the store's readability requirements."
+    },
+    {
+      "id": "STYLE-007",
+      "severity": "info",
+      "file": "apps/store/src/app/globals.css",
+      "line": 1,
+      "title": "globals.css is properly synchronized across all apps",
+      "description": "The store's globals.css follows the same structure as all other apps: imports tailwindcss, tw-animate-css, ui/styles, includes @source directives for both ui and app-components packages, defines @custom-variant dark, and includes reduced-motion media query. CSS consistency is maintained.",
+      "rule": "css-consistency.md - All apps must have identical theme and styling",
+      "fix": "No action needed."
+    },
+    {
+      "id": "STYLE-008",
+      "severity": "suggestion",
+      "file": "apps/store/src/features/products/presentation/components/ProductCard.tsx",
+      "line": 72,
+      "title": "Long className strings without cn() utility",
+      "description": "Multiple components (ProductCard, HeroSection, CartDrawer, etc.) use template literal string concatenation for conditional classes instead of the cn() utility. While functional, cn() provides cleaner conditional class handling and handles class conflicts via tailwind-merge.",
+      "rule": "tailwind.md - Use cn() for conditional classes",
+      "fix": "Consider using cn() from the shared package for conditional class composition. Example: `cn('flex border-[3px] border-foreground nb-shadow-md bg-background transition-transform hover:-translate-1', isFeatured ? 'flex-col sm:flex-row' : 'flex-col')`. Low priority since the current approach works correctly."
+    },
+    {
+      "id": "STYLE-009",
+      "severity": "info",
+      "file": "apps/store/src/features/products/presentation/components/ProductGrid.tsx",
+      "line": 48,
+      "title": "Mobile-first responsive design correctly applied",
+      "description": "The ProductGrid and all product detail components consistently follow mobile-first responsive design. Base styles target mobile (e.g., `grid-cols-1`, `flex-col`), with breakpoint prefixes adding tablet/desktop layouts (`sm:grid-cols-2`, `lg:grid-cols-3`, `lg:flex-row`). This is correct usage.",
+      "rule": "tailwind.md - Mobile-first approach",
+      "fix": "No action needed."
+    },
+    {
+      "id": "STYLE-010",
+      "severity": "info",
+      "file": "apps/store/src/features/products/domain/constants.ts",
+      "line": 22,
+      "title": "Category theme system uses custom CSS variable colors correctly",
+      "description": "The CATEGORY_THEMES constant maps product categories to Tailwind v4 CSS variable syntax (`bg-(--pink)`, `text-(--lilac)`, etc.). These variables are properly defined in the shared ui package's colors.css and mapped in theme.css. The approach is sound and theme-aware.",
+      "rule": "tailwind.md - Semantic colors from theme",
+      "fix": "No action needed."
+    }
+  ],
+  "summary": {
+    "critical": 0,
+    "warning": 2,
+    "suggestion": 2,
+    "info": 6
+  }
+}

@@ -1,0 +1,104 @@
+{
+  "agent": "component-patterns",
+  "review_id": "2026-03-24_21-46-41",
+  "outputFile": ".ai-context/reviews/agents/2026-03-24_21-46-41_component-patterns.json",
+  "scope": "apps/store/src/",
+  "issues": [
+    {
+      "id": "COMP-001",
+      "severity": "warning",
+      "file": "apps/store/src/features/cart/application/CartContext.tsx",
+      "line": 118,
+      "title": "CartProvider and useCart hook exported from same file as reducer, types, and helper functions",
+      "description": "CartContext.tsx contains the CartProvider component, the useCart hook, the cartReducer function, the deriveState helper, CartAction type, CartContextValue interface, and initialState constant all in a single file. While context files often co-locate provider + hook, the reducer logic (60+ lines) and multiple type definitions could be extracted to separate files for better SRP compliance. The reducer could live in a dedicated file like cartReducer.ts and the types in a types.ts file.",
+      "rule": "component-patterns.md - Standard Component Template / SRP",
+      "fix": "Extract cartReducer to features/cart/application/cartReducer.ts, and CartAction/CartContextValue types to features/cart/domain/types.ts (CartState is already there). Keep CartProvider + useCart in CartContext.tsx."
+    },
+    {
+      "id": "COMP-002",
+      "severity": "suggestion",
+      "file": "apps/store/src/features/products/presentation/components/ProductCard.tsx",
+      "line": 31,
+      "title": "ProductCard component is 197 lines with dense JSX mixing both featured and default variants",
+      "description": "ProductCard handles two distinct variant layouts (default and featured) through conditional rendering scattered across the JSX. The component has hooks, derived state, event handlers, and two different layout branches interleaved with conditionals. At 197 lines, it approaches God component territory. The isFeatured branching occurs at 5+ points in the JSX tree.",
+      "rule": "component-patterns.md - Anti-Patterns: God Components",
+      "fix": "Consider extracting the featured variant into a separate FeaturedProductCard component, or at minimum extracting the content/body section into a ProductCardContent sub-component to reduce the JSX complexity."
+    },
+    {
+      "id": "COMP-003",
+      "severity": "suggestion",
+      "file": "apps/store/src/features/products/presentation/components/product-detail/HeroSection.tsx",
+      "line": 23,
+      "title": "HeroSection is 187 lines with add-to-cart logic duplicated from ProductCard",
+      "description": "HeroSection contains the same add-to-cart pattern (useState for added, handleAddToCart with addItem + setTimeout + flyCtx.fire) that appears in ProductCard.tsx and ProductDetailPage.tsx. The ADDED_RESET_MS constant is also duplicated across all three files. This is both a component size concern and a knowledge duplication issue.",
+      "rule": "component-patterns.md - Standard Component Template; dry-principle.md - Knowledge Duplication",
+      "fix": "Extract the add-to-cart logic into a custom hook like useAddToCart(product) that returns { added, handleAddToCart, quantityInCart }. This would reduce all three components and eliminate the ADDED_RESET_MS duplication across 3 files."
+    },
+    {
+      "id": "COMP-004",
+      "severity": "suggestion",
+      "file": "apps/store/src/features/cart/presentation/components/CartDrawer.tsx",
+      "line": 23,
+      "title": "CartDrawer is 241 lines combining trigger button, empty state, item list, and footer in one component",
+      "description": "CartDrawer renders the trigger button, empty state, cart item list with quantity controls, clear button, total display, and checkout button all in a single component. This is a moderately large component that could benefit from extraction of at least the cart item row (the inline li rendering from lines 116-192) into a dedicated CartItem component.",
+      "rule": "component-patterns.md - Anti-Patterns: God Components; one-component-per-file.md",
+      "fix": "Extract the cart item row (lines 116-192) into a CartItem.tsx component. Optionally extract the footer section (lines 196-236) into a CartFooter.tsx component."
+    },
+    {
+      "id": "COMP-005",
+      "severity": "info",
+      "file": "apps/store/src/features/products/presentation/components/product-detail/GalleryOverlays.tsx",
+      "line": 17,
+      "title": "GalleryView interface duplicated between GalleryOverlays.tsx and ImageGallery.tsx",
+      "description": "The GalleryView interface ({ label: string; index: number }) is defined in both GalleryOverlays.tsx (line 6-9) and ImageGallery.tsx (line 17-20). This is a minor type duplication.",
+      "rule": "component-patterns.md - Props Interface Co-location; dry-principle.md",
+      "fix": "Extract GalleryView to the domain types or to a shared local types file, or have GalleryOverlays import it from ImageGallery."
+    },
+    {
+      "id": "COMP-006",
+      "severity": "info",
+      "file": "apps/store/src/features/products/presentation/components/product-detail/DescriptionSection.tsx",
+      "line": 17,
+      "title": "Unused theme prop accepted for API consistency",
+      "description": "DescriptionSection accepts a theme prop but explicitly ignores it with an eslint-disable comment for unused-vars. While the comment explains the rationale (API consistency), this violates the Interface Segregation Principle - the component depends on an interface it does not use.",
+      "rule": "solid-principles.md - Interface Segregation Principle",
+      "fix": "Consider making theme optional in DescriptionSectionProps or removing it if no future use is planned. If API consistency with other sections is important, document this decision more formally."
+    },
+    {
+      "id": "COMP-007",
+      "severity": "info",
+      "file": "apps/store/src/features/products\u0010presentation/components/product-detail/ProductSections.tsx",
+      "line": 23,
+      "title": "NarrowedProduct interface and toNarrowed helper co-located with ProductSections component",
+      "description": "ProductSections.tsx contains a NarrowedProduct interface and two helper functions (hasTypeDetails, toNarrowed) that handle product data narrowing logic. This is domain-level logic co-located in a presentation file. The component itself follows good structure (hooks -> derived -> render).",
+      "rule": "architecture.md - Layer Dependencies; component-patterns.md",
+      "fix": "Consider moving NarrowedProduct and toNarrowed to the domain layer (e.g., features/products/domain/narrowProduct.ts) since they represent business logic about what product data is available."
+    },
+    {
+      "id": "COMP-008",
+      "severity": "info",
+      "file": "apps/store/src/app/[locale]/layout.tsx",
+      "line": 36,
+      "title": "Layout file properly delegates to features with thin orchestration",
+      "description": "The locale layout correctly acts as a thin wrapper, composing providers (ThemeProvider, NextIntlClientProvider, Providers), navigation (AppNavigation), auth (ProtectedRoute), and cart (CartButton) without containing business logic. This is a good pattern.",
+      "rule": "architecture.md - App Router Usage",
+      "fix": "No fix needed - this is a positive finding."
+    },
+    {
+      "id": "COMP-009",
+      "severity": "info",
+      "file": "apps/store/src/features/products/presentation/pages/ProductCatalogPage.tsx",
+      "line": 19,
+      "title": "Search params defined inline instead of in domain/searchParams.ts",
+      "description": "ProductCatalogPage defines its nuqs search params object (searchParams with category, type, q) inline at the top of the component file (line 19-23) rather than in the domain layer as recommended by url-state.md.",
+      "rule": "url-state.md - Parser Location",
+      "fix": "Move searchParams definition to features/products/domain/searchParams.ts to follow the established pattern for URL state parsers."
+    }
+  ],
+  "summary": {
+    "critical": 0,
+    "warning": 1,
+    "suggestion": 3,
+    "info": 5
+  }
+}

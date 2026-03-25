@@ -1,0 +1,249 @@
+{
+  "agent": "pattern-discovery",
+  "review_id": "2026-03-24_21-46-41",
+  "outputFile": ".ai-context/reviews/agents/2026-03-24_21-46-41_pattern-discovery.json",
+  "scope": "apps/store/src/",
+  "issues": [
+    {
+      "id": "PAT-001",
+      "severity": "warning",
+      "file": "apps/store/src/features/products/presentation/components/ProductCard.tsx, apps/store/src/features/products/presentation/components/product-detail/HeroSection.tsx, apps/store/src/features/products/presentation/pages/ProductDetailPage.tsx",
+      "line": 0,
+      "title": "Duplicated add-to-cart logic across 3 files",
+      "description": "The exact same add-to-cart pattern is repeated in ProductCard.tsx (line 47-65), HeroSection.tsx (line 33-48), and ProductDetailPage.tsx (line 37-49). Each copies: (1) ADDED_RESET_MS = 1500 constant, (2) useState for 'added' state, (3) identical addItem call with the same product-to-CartItem mapping, (4) setTimeout to reset 'added' state, (5) optional fly-to-cart animation fire. This is a textbook DRY violation — the same 'knowledge' of how to add a product to the cart is expressed 3 times.",
+      "rule": "DRY Principle — Rule of Three exceeded",
+      "fix": "Extract a custom hook: useAddToCart(product) that encapsulates the addItem mapping, added state, timeout reset, and optional fly-to-cart fire. Each component would call const { added, handleAddToCart } = useAddToCart(product). Place it at features/cart/application/hooks/useAddToCart.ts since it bridges the product and cart features."
+    },
+    {
+      "id": "PAT-002",
+      "severity": "warning",
+      "file": "apps/store/src/features/products/presentation/components/ProductCard.tsx",
+      "line": 26,
+      "title": "Duplicated getCategoryColor helper — same logic as getCategoryTheme",
+      "description": "ProductCard.tsx defines a local getCategoryColor() that searches PRODUCT_CATEGORIES for a color. This duplicates the pattern already solved by getCategoryTheme() in domain/constants.ts (which returns the full theme including the bg color). The PRODUCT_CATEGORIES array's 'color' field is a redundant parallel to CATEGORY_THEMES[category].bg — both map categories to the same bg-* class.",
+      "rule": "DRY / Single Source of Truth",
+      "fix": "Use getCategoryTheme(product.category).bg instead of the local getCategoryColor(). Alternatively, add a simple getCategoryColor() to domain/constants.ts that derives from CATEGORY_THEMES so there's one source of truth."
+    },
+    {
+      "id": "PAT-003",
+      "severity": "warning",
+      "file": "apps/store/src/features/products/presentation/pages/ProductCatalogPage.tsx",
+      "line": 19,
+      "title": "Search params defined inline in page component instead of domain/searchParams.ts",
+      "description": "The URL search params parsers are defined inline inside ProductCatalogPage.tsx (lines 19-23) as a const at module scope. The project's url-state.md rule explicitly states: 'Each feature defines its URL search params in the domain layer: features/[feature]/domain/searchParams.ts'. CategoryFilter, TypeFilter, and SearchBar each independently call useQueryState with their own parsers, duplicating the param definitions.",
+      "rule": "URL State Management — parser location rule",
+      "fix": "Create features/products/domain/searchParams.ts exporting a single productsSearchParams object with category, type, and q parsers. Import it from the page and from each filter component to ensure a single source of truth."
+    },
+    {
+      "id": "PAT-004",
+      "severity": "suggestion",
+      "file": "apps/store/src/features/products/presentation/components/product-detail/RatingStars.tsx, apps/store/src/features/products/presentation/components/product-detail/StarRow.tsx",
+      "line": 0,
+      "title": "Two nearly identical star-rating components",
+      "description": "RatingStars (themed, used in HeroSection) and StarRow (unthemed, used in ReviewsSection/SellerSection) both render 5 Star icons based on a rounded rating. They differ only in: (1) size class (size-4 vs size-3.5), (2) active color (theme.text vs fill-foreground), and (3) StarRow wraps in a flex div while RatingStars uses a fragment. This is minor duplication but worth consolidating.",
+      "rule": "DRY — Rule of Three (2 occurrences, borderline)",
+      "fix": "Consider merging into a single StarRating component with optional theme, size, and wrapper props. Or keep both if they're expected to diverge."
+    },
+    {
+      "id": "PAT-005",
+      "severity": "warning",
+      "file": "apps/store/src/features/products/presentation/components/ProductCard.tsx, apps/store/src/features/products/presentation/components/product-detail/HeroSection.tsx, apps/store/src/features/products/presentation/pages/ProductDetailPage.tsx",
+      "line": 0,
+      "title": "Cross-feature imports from products into cart (architecture violation)",
+      "description": "Three files inside the products feature directly import from the cart feature: ProductCard.tsx imports useCart and useFlyToCartContext, HeroSection.tsx imports the same, ProductDetailPage.tsx imports CartDrawer and useCart. According to architecture.md: 'Features MUST NOT import directly from other features'. Cross-feature communication should go through shared interfaces, global stores, or event-based patterns.",
+      "rule": "Architecture — Feature Isolation",
+      "fix": "The add-to-cart concern should be injected into product components via props or context at a higher level. For example: (1) The addToCart callback and cartQuantity could be passed as props from the page that composes both features, or (2) Extract the cart interaction to a shared hook in shared/application/hooks/ that both features can use. The CartDrawer rendering in ProductDetailPage should move to the layout level."
+    },
+    {
+      "id": "PAT-006",
+      "severity": "info",
+      "file": "apps/store/src/features/products/domain/constants.ts",
+      "line": 85,
+      "title": "Good pattern: Category theme system with typed record and accessor function",
+      "description": "CATEGORY_THEMES provides a well-structured theming system where each ProductCategory maps to a full theme object (CategoryTheme). The getCategoryTheme() accessor provides safe access. This pattern is threaded consistently through all product-detail section components (HeroSection, HighlightsSection, SpecsSection, ReviewsSection, FaqSection, etc.). This is an excellent, well-documented pattern worth preserving.",
+      "rule": "Pattern worth documenting",
+      "fix": "No fix needed. Consider documenting this as a 'Category Theming Pattern' rule for reference when new features need similar per-category styling."
+    },
+    {
+      "id": "PAT-007",
+      "severity": "info",
+      "file": "apps/store/src/features/products/presentation/components/product-detail/ProductSections.tsx",
+      "line": 40,
+      "title": "Good pattern: Narrowing/guard layer for optional product fields",
+      "description": "ProductSections.tsx uses a toNarrowed() function to pre-check which optional sections of a Product have meaningful data, returning a Partial<NarrowedProduct>. This cleanly separates the 'should we render this section?' logic from the render tree, making the JSX concise and readable. Each section only renders when its narrowed data exists.",
+      "rule": "Pattern worth documenting",
+      "fix": "No fix needed. This is a good pattern for detail pages with many optional sections."
+    },
+    {
+      "id": "PAT-008",
+      "severity": "info",
+      "file": "apps/store/src/features/products/domain/buildSpecRows.ts",
+      "line": 0,
+      "title": "Good pattern: Translation function injection for domain-layer data builders",
+      "description": "The buildSpecRows functions (buildCommissionRows, buildTicketRows, etc.) accept a translation function (TFn) as a parameter rather than importing i18n directly. This keeps the domain layer free of i18n dependencies while still allowing localized labels. The translation function is injected by the presentation layer (SpecsSection.tsx). This follows the Props Injection Pattern described in monorepo-architecture.md.",
+      "rule": "Pattern worth documenting — i18n injection into domain builders",
+      "fix": "No fix needed. This is an excellent implementation of the Props Injection Pattern for data-building functions."
+    },
+    {
+      "id": "PAT-009",
+      "severity": "suggestion",
+      "file": "apps/store/src/features/products/domain/constants.ts",
+      "line": 85,
+      "title": "PRODUCT_CATEGORIES color field is redundant with CATEGORY_THEMES",
+      "description": "PRODUCT_CATEGORIES has a 'color' field (e.g., 'bg-(--pink)') that exactly duplicates CATEGORY_THEMES[category].bg. Two parallel data structures describe the same mapping (category -> background color class). When a color changes, both must be updated.",
+      "rule": "Single Source of Truth",
+      "fix": "Remove the 'color' field from PRODUCT_CATEGORIES and derive it from CATEGORY_THEMES instead. For example: PRODUCT_CATEGORIES.map(c => ({ ...c, color: CATEGORY_THEMES[c.value].bg })). Or add a getCategoryColor() helper that reads from CATEGORY_THEMES."
+    },
+    {
+      "id": "PAT-010",
+      "severity": "suggestion",
+      "file": "apps/store/src/features/products/domain/constants.ts",
+      "line": 3,
+      "title": "Hardcoded English labels in PRODUCT_TYPES and PRODUCT_CATEGORIES",
+      "description": "PRODUCT_TYPES contains English labels (e.g., { label: 'Physical' }) and PRODUCT_CATEGORIES contains English labels (e.g., { label: 'Fursuits' }). However, these labels are NOT used anywhere in the codebase — all components use useTranslations('productTypes') and useTranslations('categories') instead. The 'label' fields are dead data.",
+      "rule": "No Hardcoding / i18n completeness",
+      "fix": "Remove the 'label' field from both PRODUCT_TYPES and PRODUCT_CATEGORIES since they're unused. This eliminates misleading dead data and removes hardcoded English strings from the domain."
+    },
+    {
+      "id": "PAT-011",
+      "severity": "suggestion",
+      "file": "apps/store/src/features/products/presentation/components/product-detail/AuthorAvatar.tsx",
+      "line": 10,
+      "title": "Hardcoded color in AuthorAvatar vs themed approach elsewhere",
+      "description": "AuthorAvatar uses a hardcoded 'bg-(--lilac)' for all avatars regardless of product category. Every other component in the product-detail directory accepts and uses a CategoryTheme, but AuthorAvatar does not. This is inconsistent with the pattern used throughout the rest of the detail page.",
+      "rule": "Pattern Consistency",
+      "fix": "Accept a theme or accent color prop in AuthorAvatar and pass it from ReviewsSection, which already has access to the CategoryTheme."
+    },
+    {
+      "id": "PAT-012",
+      "severity": "info",
+      "file": "apps/store/src/features/cart/application/CartContext.tsx",
+      "line": 0,
+      "title": "Good pattern: Cookie-persisted reducer with hydration guard",
+      "description": "CartContext uses a clean pattern: useReducer for state management, cookie hydration on mount, and a mountedRef guard to prevent the persist effect from firing before hydration completes. The HYDRATE action type and the requestAnimationFrame trick for marking mounted status are well-thought-out. Constants like COOKIE_KEY and COOKIE_MAX_AGE_S are properly named.",
+      "rule": "Pattern worth documenting — cookie-persisted context",
+      "fix": "No fix needed. Consider documenting this as a reference pattern for any feature needing client-side persistence."
+    },
+    {
+      "id": "PAT-013",
+      "severity": "info",
+      "file": "apps/store/src/features/cart/application/useFlyToCart.ts",
+      "line": 0,
+      "title": "Good pattern: Web Animations API hook with no dependencies",
+      "description": "useFlyToCart uses the native Web Animations API (element.animate()) instead of a library like framer-motion. All animation constants are properly named at the top. The hook returns a clean API: { cartRef, setCartTarget, fire }. The projectile is created/destroyed with raw DOM, which is appropriate for ephemeral effects. No third-party animation dependencies needed.",
+      "rule": "Pattern worth documenting — using Web Animations API for ephemeral effects",
+      "fix": "No fix needed. This follows the KISS principle well — raw DOM for ephemeral animations is appropriate."
+    },
+    {
+      "id": "PAT-014",
+      "severity": "warning",
+      "file": "apps/store/src/",
+      "line": 0,
+      "title": "Minimal test coverage — only 1 test file in entire store app",
+      "description": "Only one test file exists: features/products/application/buildGridOrder.test.ts. No tests exist for: CartContext (reducer logic, hydration, persistence), ProductCard, HeroSection, ProductCatalogPage, CartDrawer, CategoryFilter, TypeFilter, SearchBar, useFlyToCart, useGridCols, buildSpecRows, or any other component/hook. The testing.md rule requires TDD and 80% coverage.",
+      "rule": "Testing Rules — coverage expectations",
+      "fix": "Prioritize testing: (1) CartContext reducer (pure function, easy to test), (2) buildSpecRows (pure functions), (3) ProductCatalogPage filtering logic, (4) Component rendering tests for ProductCard, CartDrawer."
+    },
+    {
+      "id": "PAT-015",
+      "severity": "info",
+      "file": "apps/store/src/app/[locale]/page.tsx, apps/store/src/app/[locale]/products/[id]/[slug]/page.tsx",
+      "line": 0,
+      "title": "Good pattern: Thin route wrappers in app directory",
+      "description": "Both page.tsx files are thin wrappers that only call setRequestLocale() and render the feature page component. No business logic, no data fetching, no styling. This perfectly follows the architecture.md rule: 'Route files (page.tsx) MUST only import and render feature pages.'",
+      "rule": "Pattern consistency — confirmed compliance",
+      "fix": "No fix needed."
+    },
+    {
+      "id": "PAT-016",
+      "severity": "info",
+      "file": "apps/store/src/features/products/presentation/components/product-detail/DescriptionSection.tsx",
+      "line": 17,
+      "title": "Anti-pattern: Accepting theme prop but explicitly ignoring it",
+      "description": "DescriptionSection accepts a 'theme' prop (CategoryTheme) but immediately discards it with an eslint-disable for unused-vars and an underscore rename. The comment says 'theme is accepted for API consistency'. While maintaining a consistent prop interface across sections is reasonable, accepting and ignoring a prop adds confusion. This is a borderline ISP (Interface Segregation Principle) consideration.",
+      "rule": "SOLID — Interface Segregation vs API consistency trade-off",
+      "fix": "This is a judgment call. Either: (1) Keep as-is for API consistency (all sections accept theme), or (2) Make theme optional: theme?: CategoryTheme, which is more honest about usage. The current approach is acceptable but the eslint-disable is a code smell."
+    },
+    {
+      "id": "PAT-017",
+      "severity": "suggestion",
+      "file": "apps/store/src/features/products/presentation/components/ProductCard.tsx",
+      "line": 76,
+      "title": "Unsafe type casts for data attributes",
+      "description": "ProductCard uses `{...({ 'data-product-id': product.id } as Record<string, string>)}` and `{...({ 'data-variant': variant } as Record<string, string>)}` to work around TypeScript's JSX type checking for data-* attributes. This pattern is repeated and looks like a workaround. In React 19 / Next.js 16, data-* attributes should be natively supported on HTML elements without casting.",
+      "rule": "Pattern consistency / TypeScript best practices",
+      "fix": "Use data-* attributes directly: data-product-id={product.id} data-variant={variant}. If TypeScript complains, check if the component's type definition restricts extra HTML attributes. These should work natively in JSX."
+    },
+    {
+      "id": "PAT-018",
+      "severity": "suggestion",
+      "file": "apps/store/src/features/auth/",
+      "line": 0,
+      "title": "Auth feature missing domain layer",
+      "description": "The auth feature has application/ and presentation/ layers but no domain/ directory (empty). While the current auth implementation is a thin wrapper around the shared 'auth' package (useSupabaseAuth is just a re-export), the feature structure is incomplete. If auth grows to include store-specific logic (user roles, permissions, etc.), the domain layer will be needed.",
+      "rule": "Architecture — feature structure completeness",
+      "fix": "Minor issue. Create domain/ with types.ts when auth-specific domain types are needed. No action required now."
+    },
+    {
+      "id": "PAT-019",
+      "severity": "info",
+      "file": "apps/store/src/features/products/presentation/components/product-detail/",
+      "line": 0,
+      "title": "Good pattern: Section-based product detail architecture",
+      "description": "The product detail page is decomposed into independent section components (HeroSection, HighlightsSection, DescriptionSection, ScreenshotsSection, SpecsSection, SellerSection, ReviewsSection, FaqSection), each receiving only the data it needs plus a shared CategoryTheme. ProductSections orchestrates which sections render based on available data. This pattern is highly extensible — adding a new section requires only creating the component and adding a conditional render in ProductSections.",
+      "rule": "Pattern worth documenting — section-based detail page composition",
+      "fix": "No fix needed. This is an excellent pattern that should be documented as the standard for detail pages."
+    },
+    {
+      "id": "PAT-020",
+      "severity": "suggestion",
+      "file": "apps/store/src/features/products/presentation/components/ProductCard.tsx",
+      "line": 72,
+      "title": "Neobrutalism styling conventions could be documented as a design system rule",
+      "description": "The codebase uses a consistent neobrutalism design language: border-[3px] border-foreground, nb-shadow-*, nb-btn, nb-btn-press-*, font-display uppercase tracking-widest, bg-(--color-name) for category accents. These patterns are used consistently across 15+ files with 30+ occurrences of border-[3px]. This is an undocumented but well-maintained design system.",
+      "rule": "New rule suggestion: document neobrutalism design tokens",
+      "fix": "Create a .claude/rules/neobrutalism-design-system.md documenting: (1) The nb-* utility classes and when to use each (nb-btn, nb-btn-press-sm/md/lg, nb-shadow-sm/md/lg), (2) Standard border weight: border-[3px] border-foreground, (3) Typography pattern: font-display font-extrabold uppercase tracking-widest, (4) Category color system: bg-(--color) with the 6 named colors (pink, mint, lilac, lemon, sky, peach), (5) Background patterns: bg-dots. This would help any new contributor maintain the design language."
+    },
+    {
+      "id": "PAT-021",
+      "severity": "suggestion",
+      "file": "apps/store/src/",
+      "line": 0,
+      "title": "Price formatting logic duplicated — no shared currency formatter",
+      "description": "Price is formatted as `$${product.price.toLocaleString()}` in 3 places (ProductCard, MobileBar, PriceBlock) and as `$${total.toLocaleString(undefined, { minimumFractionDigits: 2 })}` in CartDrawer. The dollar sign is hardcoded despite the Product model having a 'currency' field. There is no shared formatPrice utility.",
+      "rule": "DRY / No Hardcoding — currency formatting",
+      "fix": "Create a shared utility: formatPrice(amount: number, currency: string) in shared/application/utils/ or features/products/domain/. This centralizes currency symbol lookup, decimal formatting, and locale-aware display."
+    }
+  ],
+  "summary": {
+    "critical": 0,
+    "warning": 4,
+    "suggestion": 6,
+    "info": 7
+  },
+  "patterns_discovered": {
+    "good_patterns": [
+      "Category theming system (CategoryTheme record + getCategoryTheme accessor) threaded through all sections",
+      "Section-based detail page composition with narrowing guard (ProductSections + toNarrowed)",
+      "Translation function injection into domain-layer builders (buildSpecRows pattern)",
+      "Cookie-persisted reducer with hydration guard (CartContext)",
+      "Web Animations API for ephemeral effects (useFlyToCart — zero deps, GPU-accelerated)",
+      "Thin app/page.tsx route wrappers (no business logic in routing layer)",
+      "Barrel exports at feature level (index.ts re-exports public API)",
+      "Consistent neobrutalism design system (nb-*, border-[3px], font-display uppercase)"
+    ],
+    "anti_patterns": [
+      "Add-to-cart logic duplicated 3x (constant, state, mapping, timeout, animation)",
+      "Cross-feature imports (products -> cart) violating feature isolation",
+      "URL search params defined inline instead of domain/searchParams.ts",
+      "Parallel color data in PRODUCT_CATEGORIES.color vs CATEGORY_THEMES[].bg",
+      "Hardcoded $ currency symbol despite currency field on Product model",
+      "Dead 'label' fields in PRODUCT_TYPES and PRODUCT_CATEGORIES (English, unused)"
+    ],
+    "rule_suggestions": [
+      "Create .claude/rules/neobrutalism-design-system.md documenting the nb-* classes, border weight, typography pattern, category color names, and background patterns",
+      "Create .claude/rules/add-to-cart-pattern.md documenting how product-to-cart mapping should be centralized",
+      "Add currency formatting rule to no-hardcoding.md — never hardcode currency symbols"
+    ]
+  }
+}
