@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { Control, FieldPath } from "react-hook-form";
 import { useController } from "react-hook-form";
 import { tid } from "shared";
@@ -49,7 +49,25 @@ export function InlineTextField({
   } focus:border-b-2 focus:border-solid focus:border-foreground/40 ${className}`;
 
   // Destructure field to avoid react-hooks/refs lint errors with react-hook-form
-  const { ref, name, onChange, onBlur } = field;
+  const { ref: fieldRef, name, onChange, onBlur } = field;
+
+  // Auto-resize textarea to fit content
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+
+  const autoResize = useCallback(() => {
+    const el = textareaRef.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${el.scrollHeight}px`;
+  }, []);
+
+  useEffect(() => {
+    autoResize();
+  }, [value, autoResize]);
+
+  // Use textarea for all modes — input can't wrap text (titles need wrapping)
+  const isMultiline = as === "textarea";
+  const MULTILINE_ROWS = 3;
 
   return (
     <div className="group relative" {...tid(`inline-text-${fieldNameEn}`)}>
@@ -63,28 +81,22 @@ export function InlineTextField({
         {lang}
       </button>
 
-      {as === "textarea" ? (
-        <textarea
-          ref={ref}
-          name={name}
-          value={value}
-          onChange={onChange}
-          onBlur={onBlur}
-          placeholder={placeholder}
-          rows={3}
-          className={`${baseClasses} resize-none`}
-        />
-      ) : (
-        <input
-          ref={ref}
-          name={name}
-          value={value}
-          onChange={onChange}
-          onBlur={onBlur}
-          placeholder={placeholder}
-          className={baseClasses}
-        />
-      )}
+      <textarea
+        ref={(el) => {
+          fieldRef(el);
+          textareaRef.current = el;
+        }}
+        name={name}
+        value={value}
+        onChange={(e) => {
+          onChange(e);
+          autoResize();
+        }}
+        onBlur={onBlur}
+        placeholder={placeholder}
+        rows={isMultiline ? MULTILINE_ROWS : 1}
+        className={`${baseClasses} resize-none overflow-hidden`}
+      />
     </div>
   );
 }
