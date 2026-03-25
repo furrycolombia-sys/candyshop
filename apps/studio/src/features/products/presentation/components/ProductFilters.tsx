@@ -63,7 +63,7 @@ export function ProductFilters() {
           placeholder={t("common.search")}
           value={searchInput}
           onChange={(e) => setSearchInput(e.target.value)}
-          className="border-3 border-border bg-background text-foreground pl-10 font-medium"
+          className="border-3 border-border pl-10 font-medium"
           {...tid("product-search")}
         />
       </div>

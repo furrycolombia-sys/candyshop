@@ -208,7 +208,7 @@ export function ProductForm({
               {t("form.fields.category")} *
             </label>
             <select
-              className="h-8 w-full rounded-md border-0 bg-input px-3 text-xs shadow-xs outline-none ring-0 focus-visible:ring-1 focus-visible:ring-border"
+              className="h-8 w-full rounded-md border border-border bg-background text-foreground px-3 text-xs shadow-xs outline-none ring-0 focus-visible:ring-1 focus-visible:ring-border"
               {...register("category")}
               {...tid("select-category")}
             >
