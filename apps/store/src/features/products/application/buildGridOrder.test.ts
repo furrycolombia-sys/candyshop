@@ -34,10 +34,7 @@ function makeProduct(
     rating: null,
     review_count: 0,
     images: [],
-    screenshots: [],
-    highlights: [],
-    faq: [],
-    type_details: {},
+    sections: [],
     updated_at: "2025-01-01",
     ...overrides,
   } as Product;

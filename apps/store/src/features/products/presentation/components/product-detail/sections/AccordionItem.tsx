@@ -6,26 +6,31 @@ import { tid } from "shared";
 
 import type { CategoryTheme } from "@/features/products/domain/constants";
 
-interface FaqItemProps {
+interface AccordionItemProps {
   question: string;
   answer: string;
   index: number;
   theme: CategoryTheme;
 }
 
-export function FaqItem({ question, answer, index, theme }: FaqItemProps) {
+export function AccordionItem({
+  question,
+  answer,
+  index,
+  theme,
+}: AccordionItemProps) {
   const [open, setOpen] = useState(false);
 
   return (
     <div
       className="border-[3px] border-foreground nb-shadow-sm"
-      {...tid(`faq-item-${index}`)}
+      {...tid(`accordion-item-${index}`)}
     >
       <button
         className="w-full flex items-center justify-between gap-4 p-5 text-left font-bold text-sm uppercase tracking-wide transition-colors hover:bg-muted"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
-        {...tid(`faq-toggle-${index}`)}
+        {...tid(`accordion-toggle-${index}`)}
       >
         <span>{question}</span>
         {open ? (
@@ -37,7 +42,7 @@ export function FaqItem({ question, answer, index, theme }: FaqItemProps) {
       {open && (
         <div
           className={`px-5 pb-5 border-t-[3px] border-foreground pt-4 ${theme.bgLight}`}
-          {...tid(`faq-answer-${index}`)}
+          {...tid(`accordion-answer-${index}`)}
         >
           <p className="text-sm/relaxed text-muted-foreground">{answer}</p>
         </div>
