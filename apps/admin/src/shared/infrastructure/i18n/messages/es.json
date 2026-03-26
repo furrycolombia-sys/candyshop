@@ -74,7 +74,10 @@
       "summary": "Cambios",
       "loading": "Cargando...",
       "noResults": "No se encontraron entradas de auditoría",
-      "loadMore": "Cargar Más"
+      "loadMore": "Cargar Más",
+      "summaryNew": "Nuevo: {name}",
+      "summaryDeleted": "Eliminado: {name}",
+      "summaryMore": "{fields} +{count} más"
     },
     "detail": {
       "changedFields": "Campos Modificados",

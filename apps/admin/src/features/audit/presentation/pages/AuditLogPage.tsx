@@ -13,23 +13,25 @@ import { AuditTable } from "@/features/audit/presentation/components/AuditTable"
 
 export function AuditLogPage() {
   const t = useTranslations("audit");
-  const [filters, setFilters] = useQueryStates(auditSearchParams);
+  const [params, setParams] = useQueryStates(auditSearchParams);
 
-  const {
-    data: entries,
-    isLoading,
-    offset,
-    loadMore,
-    resetOffset,
-  } = useAuditLog({
-    tableName: filters.table,
-    actionType: filters.action,
+  const { data: entries, isLoading } = useAuditLog({
+    filters: {
+      tableName: params.table,
+      actionType: params.action,
+    },
+    offset: params.offset,
   });
 
   // Reset pagination when filters change
   useEffect(() => {
-    resetOffset();
-  }, [filters.table, filters.action, resetOffset]);
+    setParams({ offset: 0 }, { history: "replace" });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only reset on filter changes
+  }, [params.table, params.action]);
+
+  const handleLoadMore = () => {
+    setParams({ offset: params.offset + AUDIT_PAGE_SIZE }, { history: "push" });
+  };
 
   return (
     <main className="flex flex-1 flex-col bg-dots" {...tid("audit-log-page")}>
@@ -47,13 +49,13 @@ export function AuditLogPage() {
 
         {/* Filters */}
         <AuditFilters
-          tableName={filters.table}
-          actionType={filters.action}
+          tableName={params.table}
+          actionType={params.action}
           onTableChange={(value) =>
-            setFilters({ table: value, action: filters.action })
+            setParams({ table: value, action: params.action, offset: 0 })
           }
           onActionChange={(value) =>
-            setFilters({ table: filters.table, action: value })
+            setParams({ table: params.table, action: value, offset: 0 })
           }
         />
 
@@ -61,8 +63,8 @@ export function AuditLogPage() {
         <AuditTable
           entries={entries ?? []}
           isLoading={isLoading}
-          hasMore={(entries?.length ?? 0) >= offset + AUDIT_PAGE_SIZE}
-          onLoadMore={loadMore}
+          hasMore={(entries?.length ?? 0) >= params.offset + AUDIT_PAGE_SIZE}
+          onLoadMore={handleLoadMore}
         />
       </div>
     </main>

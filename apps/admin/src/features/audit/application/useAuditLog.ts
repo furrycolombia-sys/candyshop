@@ -1,9 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
 
-import { AUDIT_PAGE_SIZE } from "@/features/audit/domain/constants";
 import type { AuditFilters } from "@/features/audit/domain/types";
 import {
   fetchAuditLog,
@@ -13,23 +11,18 @@ import {
 const AUDIT_QUERY_KEY = "audit-log";
 const TABLE_NAMES_KEY = "audit-table-names";
 
-export function useAuditLog(filters?: Partial<AuditFilters>) {
-  const [offset, setOffset] = useState(0);
+interface UseAuditLogOptions {
+  filters?: Partial<AuditFilters>;
+  offset: number;
+}
 
+export function useAuditLog({ filters, offset }: UseAuditLogOptions) {
   const { data, isLoading } = useQuery({
     queryKey: [AUDIT_QUERY_KEY, filters, offset],
     queryFn: () => fetchAuditLog(filters, offset),
   });
 
-  return {
-    data,
-    isLoading,
-    offset,
-    setOffset,
-    pageSize: AUDIT_PAGE_SIZE,
-    loadMore: () => setOffset((prev) => prev + AUDIT_PAGE_SIZE),
-    resetOffset: () => setOffset(0),
-  };
+  return { data, isLoading };
 }
 
 export function useAuditTableNames() {

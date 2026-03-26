@@ -74,7 +74,10 @@
       "summary": "Changes",
       "loading": "Loading...",
       "noResults": "No audit entries found",
-      "loadMore": "Load More"
+      "loadMore": "Load More",
+      "summaryNew": "New: {name}",
+      "summaryDeleted": "Deleted: {name}",
+      "summaryMore": "{fields} +{count} more"
     },
     "detail": {
       "changedFields": "Changed Fields",

@@ -8,6 +8,7 @@ import { tid } from "shared";
 import { AuditRowDetail } from "./AuditRowDetail";
 
 import type { AuditEntry } from "@/features/audit/domain/types";
+import { AUDIT_ACTION_COLORS } from "@/shared/domain/constants";
 import { appUrls } from "@/shared/infrastructure/config";
 
 /** Max fields to show before collapsing into "+N more" */
@@ -15,16 +16,6 @@ const MAX_VISIBLE_FIELDS = 3;
 
 /** Number of characters to show for UUID previews */
 const UUID_PREVIEW_LENGTH = 8;
-
-/** Prefixes for summarizing INSERT / DELETE actions */
-const SUMMARY_PREFIX_NEW = "New:";
-const SUMMARY_PREFIX_DELETED = "Deleted:";
-
-const ACTION_COLORS: Record<string, string> = {
-  INSERT: "bg-mint/20 text-mint border-mint",
-  UPDATE: "bg-sky/20 text-sky border-sky",
-  DELETE: "bg-peach/20 text-peach border-peach",
-};
 
 /**
  * Grid template for the audit log columns.
@@ -39,27 +30,46 @@ interface AuditTableProps {
   onLoadMore: () => void;
 }
 
-/** Summarize what changed in an entry */
-function summarize(entry: AuditEntry): string {
+/** Extract a human-readable name from row_data */
+function extractName(rowData: Record<string, unknown> | null): string | null {
+  if (!rowData) return null;
+  const name = rowData.name_en ?? rowData.name ?? rowData.slug;
+  return name ? String(name) : null;
+}
+
+/** Summarize what changed in an entry (returns key + params for i18n) */
+function getSummary(entry: AuditEntry): {
+  key: string;
+  values?: Record<string, string | number>;
+} | null {
+  if (entry.action_type === "UPDATE" && entry.changed_fields) {
+    const keys = Object.keys(entry.changed_fields);
+    if (keys.length <= MAX_VISIBLE_FIELDS) return null; // plain join, no i18n needed
+    return {
+      key: "summaryMore",
+      values: {
+        fields: keys.slice(0, MAX_VISIBLE_FIELDS).join(", "),
+        count: keys.length - MAX_VISIBLE_FIELDS,
+      },
+    };
+  }
+  const name = extractName(entry.row_data);
+  if (entry.action_type === "INSERT" && name) {
+    return { key: "summaryNew", values: { name } };
+  }
+  if (entry.action_type === "DELETE" && name) {
+    return { key: "summaryDeleted", values: { name } };
+  }
+  return null;
+}
+
+/** Plain text summary for UPDATE field lists */
+function getUpdateFieldsSummary(entry: AuditEntry): string | null {
   if (entry.action_type === "UPDATE" && entry.changed_fields) {
     const keys = Object.keys(entry.changed_fields);
     if (keys.length <= MAX_VISIBLE_FIELDS) return keys.join(", ");
-    return `${keys.slice(0, MAX_VISIBLE_FIELDS).join(", ")} +${String(keys.length - MAX_VISIBLE_FIELDS)} more`;
   }
-  if (entry.action_type === "INSERT" && entry.row_data) {
-    const name =
-      (entry.row_data as Record<string, unknown>).name_en ??
-      (entry.row_data as Record<string, unknown>).name ??
-      (entry.row_data as Record<string, unknown>).slug;
-    if (name) return `${SUMMARY_PREFIX_NEW} ${String(name)}`;
-  }
-  if (entry.action_type === "DELETE" && entry.row_data) {
-    const name =
-      (entry.row_data as Record<string, unknown>).name_en ??
-      (entry.row_data as Record<string, unknown>).name;
-    if (name) return `${SUMMARY_PREFIX_DELETED} ${String(name)}`;
-  }
-  return "—";
+  return null;
 }
 
 function formatTimestamp(ts: string): string {
@@ -136,7 +146,7 @@ export function AuditTable({
         <div className="divide-y divide-foreground/8">
           {entries.map((entry) => {
             const isExpanded = expandedId === entry.event_id;
-            const colorClass = ACTION_COLORS[entry.action_type] ?? "";
+            const colorClass = AUDIT_ACTION_COLORS[entry.action_type] ?? "";
 
             return (
               <div
@@ -187,7 +197,13 @@ export function AuditTable({
 
                   {/* Summary */}
                   <span className="truncate px-4 py-2.5 text-xs text-muted-foreground">
-                    {summarize(entry)}
+                    {(() => {
+                      const plain = getUpdateFieldsSummary(entry);
+                      if (plain) return plain;
+                      const summary = getSummary(entry);
+                      if (summary) return t(summary.key, summary.values);
+                      return "—";
+                    })()}
                   </span>
 
                   {/* Chevron */}
