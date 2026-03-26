@@ -145,6 +145,15 @@
       "backToProducts": "Products",
       "saving": "Saving...",
       "saveProduct": "Save",
+      "errors": {
+        "title": "Fix {count} {count, plural, one {issue} other {issues}} before saving",
+        "fieldName": "Name is required",
+        "fieldPrice": "Price must be a positive number",
+        "dismiss": "Dismiss"
+      },
+      "langEnglish": "English",
+      "langEspanol": "Español",
+      "saveFailed": "Failed to save — check your connection and try again",
       "createProduct": "Create",
       "taglinePlaceholder": "Click to add a tagline...",
       "namePlaceholder": "Product name...",
@@ -166,6 +175,7 @@
       "addFirstImage": "Add your first image",
       "editImageUrl": "Image URL",
       "editImageAlt": "Alt text",
+      "doneEditing": "Done",
       "chooseIcon": "Choose icon",
       "searchIcons": "Search icons...",
       "noIconsFound": "No icons found",

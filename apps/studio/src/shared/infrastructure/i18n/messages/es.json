@@ -145,6 +145,15 @@
       "backToProducts": "Productos",
       "saving": "Guardando...",
       "saveProduct": "Guardar",
+      "errors": {
+        "title": "Corrige {count} {count, plural, one {problema} other {problemas}} antes de guardar",
+        "fieldName": "El nombre es obligatorio",
+        "fieldPrice": "El precio debe ser un número positivo",
+        "dismiss": "Cerrar"
+      },
+      "langEnglish": "English",
+      "langEspanol": "Español",
+      "saveFailed": "Error al guardar — verifica tu conexión e intenta de nuevo",
       "createProduct": "Crear",
       "taglinePlaceholder": "Haz clic para agregar un eslogan...",
       "namePlaceholder": "Nombre del producto...",
@@ -166,6 +175,7 @@
       "addFirstImage": "Agrega tu primera imagen",
       "editImageUrl": "URL de imagen",
       "editImageAlt": "Texto alternativo",
+      "doneEditing": "Listo",
       "imageNumber": "Imagen {number}",
       "chooseIcon": "Elegir ícono",
       "searchIcons": "Buscar íconos...",

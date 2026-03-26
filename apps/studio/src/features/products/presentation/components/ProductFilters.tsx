@@ -71,6 +71,7 @@ export function ProductFilters() {
       {/* Type filter pills */}
       <div className="flex flex-wrap gap-2" {...tid("type-filters")}>
         <button
+          type="button"
           onClick={() => handleTypeChange("")}
           className={cn(PILL_BASE, type === "" ? PILL_ACTIVE : PILL_INACTIVE)}
           {...tid("type-filter-all")}
@@ -79,6 +80,7 @@ export function ProductFilters() {
         </button>
         {PRODUCT_TYPES.map((pt) => (
           <button
+            type="button"
             key={pt}
             onClick={() => handleTypeChange(pt)}
             className={cn(PILL_BASE, type === pt ? PILL_ACTIVE : PILL_INACTIVE)}
@@ -92,6 +94,7 @@ export function ProductFilters() {
       {/* Category filter pills */}
       <div className="flex flex-wrap gap-2" {...tid("category-filters")}>
         <button
+          type="button"
           onClick={() => handleCategoryChange("")}
           className={cn(
             PILL_BASE,
@@ -103,6 +106,7 @@ export function ProductFilters() {
         </button>
         {PRODUCT_CATEGORIES.map((cat) => (
           <button
+            type="button"
             key={cat}
             onClick={() => handleCategoryChange(cat)}
             className={cn(

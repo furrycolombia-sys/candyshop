@@ -133,6 +133,7 @@ export function ProductCard({
 
             {isFeatured && (
               <button
+                type="button"
                 className="sm:ml-auto nb-btn nb-btn-press-sm nb-shadow-md font-display font-extrabold uppercase tracking-widest px-8 py-3 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                 onClick={handleAddToCart}
                 disabled={isAddToCartDisabled}
@@ -150,6 +151,7 @@ export function ProductCard({
       {!isFeatured && (
         <div className="px-4 pb-4">
           <button
+            type="button"
             className="w-full justify-center nb-btn nb-btn-press-sm nb-shadow-md font-display text-xs font-extrabold uppercase tracking-widest px-6 py-2.5 disabled:opacity-50 disabled:cursor-not-allowed"
             onClick={handleAddToCart}
             disabled={isAddToCartDisabled}

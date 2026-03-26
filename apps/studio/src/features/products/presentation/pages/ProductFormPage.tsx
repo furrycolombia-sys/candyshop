@@ -36,14 +36,16 @@ export function ProductFormPage({ productId }: ProductFormPageProps) {
   }
 
   const defaultValues = product ? productToFormValues(product) : undefined;
+  const activeMutation = isEdit ? updateMutation : insertMutation;
 
   return (
     <main className="flex flex-1 flex-col" {...tid("product-form-page")}>
       <InlineEditor
         defaultValues={defaultValues}
-        onSubmit={isEdit ? updateMutation.mutate : insertMutation.mutate}
-        isSubmitting={insertMutation.isPending || updateMutation.isPending}
+        onSubmit={activeMutation.mutate}
+        isSubmitting={activeMutation.isPending}
         isEdit={isEdit}
+        mutationError={activeMutation.error}
       />
     </main>
   );

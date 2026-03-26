@@ -495,6 +495,10 @@ const eslintConfig = defineConfig([
       "react/no-unstable-nested-components": "error",
 
       // --- Bug Prevention ---
+      // Buttons must have an explicit type (button, submit, reset) to prevent
+      // accidental form submissions when type defaults to "submit"
+      "react/button-has-type": "error",
+
       // Catches array index used as key (causes bugs on reorder/filter)
       "react/no-array-index-key": "error",
 

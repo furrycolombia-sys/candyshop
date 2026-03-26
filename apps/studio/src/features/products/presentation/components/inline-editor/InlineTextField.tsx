@@ -32,14 +32,14 @@ export function InlineTextField({
 
   return (
     <div className="group relative" {...tid(`inline-text-${fieldNameEn}`)}>
-      {/* Language toggle pill */}
+      {/* Language pill — matches section editor siblings */}
       <button
         type="button"
         onClick={toggleLang}
-        className="absolute -top-2.5 left-0 z-10 rounded-full border-2 border-foreground bg-background px-1.5 py-px font-display text-[9px] font-extrabold uppercase tracking-widest opacity-60 transition-opacity hover:opacity-100 group-focus-within:opacity-100"
+        className="absolute -top-3 right-0 z-10 rounded-sm border-2 border-foreground/30 bg-background px-1.5 py-0.5 font-display text-tiny font-extrabold uppercase tracking-widest text-muted-foreground transition-colors hover:border-foreground hover:text-foreground"
         {...tid(`lang-toggle-${fieldNameEn}`)}
       >
-        {lang}
+        {lang.toUpperCase()}
       </button>
 
       {/* Both textareas always mounted — show/hide via CSS */}

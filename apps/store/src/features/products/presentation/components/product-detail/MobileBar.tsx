@@ -45,6 +45,7 @@ export function MobileBar({
         )}
       </div>
       <button
+        type="button"
         className={`flex-1 nb-btn nb-btn-press-sm nb-shadow-md font-display text-sm font-extrabold uppercase tracking-widest py-3 disabled:opacity-50 disabled:cursor-not-allowed ${theme.bg}`}
         onClick={onAddToCart}
         disabled={!isProductAvailable(product) || added}

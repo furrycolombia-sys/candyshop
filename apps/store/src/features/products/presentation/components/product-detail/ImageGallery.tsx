@@ -91,6 +91,7 @@ export function ImageGallery({ product, theme }: ImageGalleryProps) {
                 : thumbInactive;
               return (
                 <button
+                  type="button"
                   key={img.url}
                   onClick={() => setActiveIndex(idx)}
                   className={`relative size-16 border-3 transition-all overflow-hidden ${activeCls}`}
@@ -205,6 +206,7 @@ export function ImageGallery({ product, theme }: ImageGalleryProps) {
                 : thumbInactive;
               return (
                 <button
+                  type="button"
                   key={img.url}
                   onClick={() => setActiveIndex(idx)}
                   className={`relative py-2 h-16 border-3 transition-all overflow-hidden ${activeCls}`}

@@ -159,6 +159,7 @@ export function HeroSection({ product, theme }: HeroSectionProps) {
             {/* Add to Cart CTA */}
             <div className="mt-2 flex flex-col sm:flex-row sm:items-center gap-3">
               <button
+                type="button"
                 className={`w-full sm:w-auto nb-btn nb-btn-press-lg nb-shadow-md font-display text-lg font-extrabold uppercase tracking-widest px-10 py-4 disabled:opacity-50 disabled:cursor-not-allowed ${theme.bg}`}
                 onClick={handleAddToCart}
                 disabled={!isAvailable || added}

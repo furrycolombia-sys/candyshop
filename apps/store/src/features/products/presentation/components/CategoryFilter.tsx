@@ -32,6 +32,7 @@ export function CategoryFilter() {
       {...tid("category-filter")}
     >
       <button
+        type="button"
         className={`${PILL_BASE} ${category === "" ? "bg-foreground text-background" : PILL_INACTIVE}`}
         onClick={() => handleSelect("")}
         aria-pressed={category === ""}
@@ -45,6 +46,7 @@ export function CategoryFilter() {
         const activeClass = `${color} text-foreground`;
         return (
           <button
+            type="button"
             key={value}
             className={`${PILL_BASE} ${isActive ? activeClass : PILL_INACTIVE}`}
             onClick={() => handleSelect(value)}
