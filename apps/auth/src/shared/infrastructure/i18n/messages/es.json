@@ -18,6 +18,32 @@
       "email": "Correo",
       "provider": "Metodo de inicio",
       "goToStore": "Ir a la Tienda"
+    },
+    "accountSettings": {
+      "title": "Configuración de Cuenta",
+      "subtitle": "Administra tu perfil público",
+      "authInfo": "Datos de Acceso",
+      "loginEmail": "Email de Acceso",
+      "provider": "Método de Acceso",
+      "memberSince": "Miembro Desde",
+      "publicProfile": "Perfil Público",
+      "displayName": "Nombre Público",
+      "displayNamePlaceholder": "Cómo otros ven tu nombre",
+      "contactEmail": "Email de Contacto",
+      "contactEmailPlaceholder": "Email público para consultas",
+      "customAvatar": "Avatar Personalizado",
+      "customAvatarPlaceholder": "https://example.com/avatar.jpg",
+      "save": "Guardar Cambios",
+      "saving": "Guardando...",
+      "saved": "Perfil actualizado",
+      "error": "Error al guardar el perfil"
+    },
+    "profile": {
+      "title": "Perfil",
+      "contactEmail": "Contacto",
+      "memberSince": "Miembro desde",
+      "notFound": "Usuario no encontrado",
+      "notFoundSubtitle": "Este perfil no existe o ha sido eliminado"
     }
   },
   "nav": {

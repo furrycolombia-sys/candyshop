@@ -18,6 +18,32 @@
       "email": "Email",
       "provider": "Sign-in method",
       "goToStore": "Go to Store"
+    },
+    "accountSettings": {
+      "title": "Account Settings",
+      "subtitle": "Manage your public profile",
+      "authInfo": "Login Info",
+      "loginEmail": "Login Email",
+      "provider": "Sign-in Method",
+      "memberSince": "Member Since",
+      "publicProfile": "Public Profile",
+      "displayName": "Display Name",
+      "displayNamePlaceholder": "How others see your name",
+      "contactEmail": "Contact Email",
+      "contactEmailPlaceholder": "Public email for inquiries",
+      "customAvatar": "Custom Avatar",
+      "customAvatarPlaceholder": "https://example.com/avatar.jpg",
+      "save": "Save Changes",
+      "saving": "Saving...",
+      "saved": "Profile updated",
+      "error": "Failed to save profile"
+    },
+    "profile": {
+      "title": "Profile",
+      "contactEmail": "Contact",
+      "memberSince": "Member since",
+      "notFound": "User not found",
+      "notFoundSubtitle": "This profile doesn't exist or has been removed"
     }
   },
   "nav": {

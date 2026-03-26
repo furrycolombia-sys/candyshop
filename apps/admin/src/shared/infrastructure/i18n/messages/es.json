@@ -1,11 +1,11 @@
 {
   "meta": {
     "title": "Candy Shop - Admin",
-    "description": "Gestion de inventario, ordenes, promos y cupones"
+    "description": "Gestión de inventario, órdenes, promos y cupones"
   },
   "admin": {
-    "title": "Panel de Administracion",
-    "subtitle": "Gestiona productos, ordenes, promos, cupones y servicios"
+    "title": "Centro de Comando",
+    "subtitle": "Operaciones y monitoreo del back-office"
   },
   "nav": {
     "brand": "Candy Shop",
@@ -17,7 +17,79 @@
     "auth": "Cuenta",
     "playground": "Playground"
   },
+  "sidebar": {
+    "auditLog": "Registro de Auditoría",
+    "dashboard": "Panel",
+    "collapse": "Colapsar barra lateral",
+    "expand": "Expandir barra lateral",
+    "operations": "Operaciones",
+    "monitoring": "Monitoreo",
+    "system": "Sistema",
+    "version": "v0.1.0",
+    "status": "Todos los sistemas nominales"
+  },
+  "dashboard": {
+    "welcome": "Buen día, operador.",
+    "overview": "Resumen del Sistema",
+    "recentActivity": "Actividad Reciente",
+    "quickActions": "Acciones Rápidas",
+    "viewAuditLog": "Ver Registro de Auditoría",
+    "stats": {
+      "totalEvents": "Eventos Totales",
+      "tablesMonitored": "Tablas Monitoreadas",
+      "activeUsers": "Usuarios Activos",
+      "uptime": "Tiempo Activo"
+    },
+    "activity": {
+      "noActivity": "No hay actividad reciente registrada",
+      "inserted": "insertó en",
+      "updated": "actualizó",
+      "deleted": "eliminó de"
+    },
+    "systemStatus": {
+      "database": "Base de Datos",
+      "auth": "Autenticación",
+      "storage": "Almacenamiento",
+      "realtime": "Tiempo Real",
+      "operational": "operacional",
+      "degraded": "degradado",
+      "down": "caído"
+    }
+  },
+  "audit": {
+    "title": "Registro de Auditoría",
+    "subtitle": "Seguimiento de todos los cambios en la plataforma",
+    "filters": {
+      "allTables": "Todas las Tablas",
+      "allActions": "Todas las Acciones",
+      "insert": "Inserción",
+      "update": "Actualización",
+      "delete": "Eliminación"
+    },
+    "table": {
+      "timestamp": "Cuándo",
+      "user": "Quién",
+      "tableName": "Tabla",
+      "action": "Acción",
+      "summary": "Cambios",
+      "noResults": "No se encontraron entradas de auditoría",
+      "loadMore": "Cargar Más"
+    },
+    "detail": {
+      "changedFields": "Campos Modificados",
+      "fullRecord": "Registro Completo",
+      "oldValue": "Antes",
+      "newValue": "Después",
+      "field": "Campo",
+      "transactionId": "Transacción",
+      "user": "Usuario",
+      "copyUserId": "Copiar ID de Usuario",
+      "ip": "IP"
+    }
+  },
   "common": {
+    "loading": "Cargando...",
+    "error": "Ocurrió un error",
     "theme": {
       "switchToDark": "Cambiar a modo oscuro",
       "switchToLight": "Cambiar a modo claro",
