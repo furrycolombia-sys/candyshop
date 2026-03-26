@@ -72,6 +72,7 @@
       "tableName": "Table",
       "action": "Action",
       "summary": "Changes",
+      "loading": "Loading...",
       "noResults": "No audit entries found",
       "loadMore": "Load More"
     },

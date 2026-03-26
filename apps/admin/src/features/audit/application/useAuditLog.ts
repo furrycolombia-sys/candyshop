@@ -3,6 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 
+import { AUDIT_PAGE_SIZE } from "@/features/audit/domain/constants";
 import type { AuditFilters } from "@/features/audit/domain/types";
 import {
   fetchAuditLog,
@@ -11,7 +12,6 @@ import {
 
 const AUDIT_QUERY_KEY = "audit-log";
 const TABLE_NAMES_KEY = "audit-table-names";
-const PAGE_SIZE = 50;
 
 export function useAuditLog(filters?: Partial<AuditFilters>) {
   const [offset, setOffset] = useState(0);
@@ -26,8 +26,8 @@ export function useAuditLog(filters?: Partial<AuditFilters>) {
     isLoading,
     offset,
     setOffset,
-    pageSize: PAGE_SIZE,
-    loadMore: () => setOffset((prev) => prev + PAGE_SIZE),
+    pageSize: AUDIT_PAGE_SIZE,
+    loadMore: () => setOffset((prev) => prev + AUDIT_PAGE_SIZE),
     resetOffset: () => setOffset(0),
   };
 }

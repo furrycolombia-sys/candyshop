@@ -1,7 +1,7 @@
 "use client";
 
 import { ChevronDown } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 import { tid } from "shared";
 
@@ -80,12 +80,13 @@ export function AuditTable({
   onLoadMore,
 }: AuditTableProps) {
   const t = useTranslations("audit.table");
+  const locale = useLocale();
   const [expandedId, setExpandedId] = useState<number | null>(null);
 
   if (isLoading && entries.length === 0) {
     return (
       <div className="flex items-center justify-center py-16 text-muted-foreground">
-        {t("timestamp")}...
+        {t("loading")}
       </div>
     );
   }
@@ -157,7 +158,7 @@ export function AuditTable({
                   <span className="truncate px-4 py-2.5 font-mono text-xs">
                     {entry.user_id ? (
                       <a
-                        href={`${appUrls.auth}/en/profile/${entry.user_id}`}
+                        href={`${appUrls.auth}/${locale}/profile/${entry.user_id}`}
                         onClick={(e) => e.stopPropagation()}
                         className="underline decoration-dotted underline-offset-2 transition-colors hover:text-foreground"
                         title={entry.user_email ?? entry.user_id}

@@ -100,7 +100,7 @@ from audit.logged_actions la
 left join public.user_profiles up on up.id = la.user_id;
 
 -- Grant access to view (replacing old grants)
-grant select on audit.logged_actions_with_user to anon, authenticated;
+grant select on audit.logged_actions_with_user to authenticated;
 
 -- Clean up old function
 drop function if exists audit.get_user_email(uuid);

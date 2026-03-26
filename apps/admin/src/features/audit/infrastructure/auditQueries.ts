@@ -1,6 +1,5 @@
+import { AUDIT_PAGE_SIZE } from "@/features/audit/domain/constants";
 import type { AuditEntry, AuditFilters } from "@/features/audit/domain/types";
-
-const PAGE_SIZE = 50;
 
 /* PostgREST query parameter keys & values */
 const PARAM_ORDER = "order";
@@ -53,7 +52,7 @@ export async function fetchAuditLog(
   const params = new URLSearchParams();
   params.set(PARAM_ORDER, ORDER_BY_TIMESTAMP_DESC);
   params.set("offset", String(offset));
-  params.set("limit", String(PAGE_SIZE));
+  params.set("limit", String(AUDIT_PAGE_SIZE));
 
   if (filters?.tableName) {
     params.set(PARAM_TABLE_NAME, POSTGREST_EQ_PREFIX + filters.tableName);

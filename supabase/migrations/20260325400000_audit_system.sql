@@ -8,9 +8,10 @@
 -- Schema
 create schema if not exists audit;
 
--- Grant read access to API roles (needed for PostgREST to query via Accept-Profile: audit)
-grant usage on schema audit to anon, authenticated;
-grant select on all tables in schema audit to anon, authenticated;
+-- Grant read access to authenticated roles only (needed for PostgREST to query via Accept-Profile: audit)
+-- NOTE: anon is deliberately excluded — audit data is admin-only
+grant usage on schema audit to authenticated;
+grant select on all tables in schema audit to authenticated;
 
 -- -----------------------------------------------------------------------------
 -- Audit log table

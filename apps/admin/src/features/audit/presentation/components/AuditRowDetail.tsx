@@ -1,7 +1,7 @@
 "use client";
 
 import { Copy } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { tid } from "shared";
 
 import type { AuditEntry } from "@/features/audit/domain/types";
@@ -23,6 +23,7 @@ function formatValue(value: unknown): string {
 
 export function AuditRowDetail({ entry }: AuditRowDetailProps) {
   const t = useTranslations("audit.detail");
+  const locale = useLocale();
 
   const handleCopyUserId = () => {
     if (entry.user_id) {
@@ -51,7 +52,7 @@ export function AuditRowDetail({ entry }: AuditRowDetailProps) {
               {t("user")}
             </span>
             <a
-              href={`${appUrls.auth}/en/profile/${entry.user_id}`}
+              href={`${appUrls.auth}/${locale}/profile/${entry.user_id}`}
               className="text-foreground underline decoration-dotted underline-offset-2 hover:text-foreground/80"
             >
               {entry.user_display_name ?? entry.user_email ?? entry.user_id}

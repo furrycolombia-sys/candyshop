@@ -6,11 +6,10 @@ import { useEffect } from "react";
 import { tid } from "shared";
 
 import { useAuditLog } from "@/features/audit/application/useAuditLog";
+import { AUDIT_PAGE_SIZE } from "@/features/audit/domain/constants";
 import { auditSearchParams } from "@/features/audit/domain/searchParams";
 import { AuditFilters } from "@/features/audit/presentation/components/AuditFilters";
 import { AuditTable } from "@/features/audit/presentation/components/AuditTable";
-
-const PAGE_SIZE = 50;
 
 export function AuditLogPage() {
   const t = useTranslations("audit");
@@ -62,7 +61,7 @@ export function AuditLogPage() {
         <AuditTable
           entries={entries ?? []}
           isLoading={isLoading}
-          hasMore={(entries?.length ?? 0) >= offset + PAGE_SIZE}
+          hasMore={(entries?.length ?? 0) >= offset + AUDIT_PAGE_SIZE}
           onLoadMore={loadMore}
         />
       </div>
