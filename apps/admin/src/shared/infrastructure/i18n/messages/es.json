@@ -74,6 +74,7 @@
       "summary": "Cambios",
       "loading": "Cargando...",
       "noResults": "No se encontraron entradas de auditoría",
+      "error": "Error al cargar el registro de auditoría",
       "loadMore": "Cargar Más",
       "summaryNew": "Nuevo: {name}",
       "summaryDeleted": "Eliminado: {name}",

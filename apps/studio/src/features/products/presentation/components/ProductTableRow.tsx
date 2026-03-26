@@ -180,6 +180,7 @@ export function ProductTableRow({
       {/* Active toggle */}
       <td className={`${CELL_CLASS} text-center`}>
         <button
+          type="button"
           onClick={() => handleToggle("is_active", product.is_active)}
           disabled={toggleMutation.isPending}
           className={cn(
@@ -202,6 +203,7 @@ export function ProductTableRow({
       {/* Featured toggle */}
       <td className={`${CELL_CLASS} text-center`}>
         <button
+          type="button"
           onClick={() => handleToggle("featured", product.featured)}
           disabled={toggleMutation.isPending}
           className={cn(

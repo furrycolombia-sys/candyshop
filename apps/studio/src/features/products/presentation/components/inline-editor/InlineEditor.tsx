@@ -1,7 +1,6 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { AlertTriangle } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useMemo } from "react";
 import { useForm, useWatch } from "react-hook-form";
@@ -12,6 +11,7 @@ import { FormErrorBanner } from "./FormErrorBanner";
 import { InlineHero } from "./InlineHero";
 import { InlineSections } from "./InlineSections";
 import { InlineTextField } from "./InlineTextField";
+import { MutationErrorBanner } from "./MutationErrorBanner";
 
 import { PRODUCT_FORM_DEFAULTS } from "@/features/products/domain/constants";
 import {
@@ -71,20 +71,7 @@ export function InlineEditor({
 
       <FormErrorBanner key={formState.submitCount} errors={formState.errors} />
 
-      {mutationError && (
-        <div
-          className="sticky top-[61px] z-30 border-b border-destructive/30 bg-destructive/8 px-4 py-2.5 backdrop-blur-xl backdrop-saturate-150"
-          role="alert"
-          {...tid("mutation-error-banner")}
-        >
-          <div className="mx-auto flex max-w-6xl items-center gap-3">
-            <AlertTriangle className="size-4 shrink-0 text-destructive" />
-            <span className="font-mono text-xs text-destructive">
-              {mutationError.message}
-            </span>
-          </div>
-        </div>
-      )}
+      {mutationError && <MutationErrorBanner message={mutationError.message} />}
 
       <InlineHero control={control} errors={formState.errors} />
 

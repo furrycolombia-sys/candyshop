@@ -2,7 +2,6 @@
 
 import { useTranslations } from "next-intl";
 import { useQueryStates } from "nuqs";
-import { useEffect } from "react";
 import { tid } from "shared";
 
 import { useAuditLog } from "@/features/audit/application/useAuditLog";
@@ -15,19 +14,17 @@ export function AuditLogPage() {
   const t = useTranslations("audit");
   const [params, setParams] = useQueryStates(auditSearchParams);
 
-  const { data: entries, isLoading } = useAuditLog({
+  const {
+    data: entries,
+    isLoading,
+    isError,
+  } = useAuditLog({
     filters: {
       tableName: params.table,
       actionType: params.action,
     },
     offset: params.offset,
   });
-
-  // Reset pagination when filters change
-  useEffect(() => {
-    setParams({ offset: 0 }, { history: "replace" });
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- only reset on filter changes
-  }, [params.table, params.action]);
 
   const handleLoadMore = () => {
     setParams({ offset: params.offset + AUDIT_PAGE_SIZE }, { history: "push" });
@@ -63,7 +60,8 @@ export function AuditLogPage() {
         <AuditTable
           entries={entries ?? []}
           isLoading={isLoading}
-          hasMore={(entries?.length ?? 0) >= params.offset + AUDIT_PAGE_SIZE}
+          isError={isError}
+          hasMore={(entries?.length ?? 0) >= AUDIT_PAGE_SIZE}
           onLoadMore={handleLoadMore}
         />
       </div>

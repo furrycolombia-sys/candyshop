@@ -79,11 +79,13 @@ create trigger on_auth_user_change
 -- Enable audit tracking
 select audit.enable_tracking('public.user_profiles'::regclass);
 
--- Backfill existing users
-insert into public.user_profiles (id, email, first_seen_at, last_seen_at)
+-- Backfill existing users (include avatar and provider from metadata)
+insert into public.user_profiles (id, email, avatar_url, provider, first_seen_at, last_seen_at)
 select
   id,
   email,
+  raw_user_meta_data->>'avatar_url',
+  raw_app_meta_data->>'provider',
   created_at,
   coalesce(last_sign_in_at, created_at)
 from auth.users

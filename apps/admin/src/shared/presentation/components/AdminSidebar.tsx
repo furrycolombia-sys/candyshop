@@ -41,6 +41,7 @@ export function AdminSidebar() {
     >
       {/* Collapse toggle */}
       <button
+        type="button"
         onClick={() => setCollapsed((prev) => !prev)}
         className="absolute -right-3.5 top-5 z-10 flex size-7 items-center justify-center border-2 border-foreground bg-background text-foreground transition-colors hover:bg-foreground hover:text-background"
         aria-label={collapsed ? t("expand") : t("collapse")}

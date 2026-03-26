@@ -1,6 +1,7 @@
 "use client";
 
-import { useTranslations } from "next-intl";
+import { useSupabaseAuth } from "auth/client";
+import { useLocale, useTranslations } from "next-intl";
 import { tid } from "shared";
 import { Skeleton } from "ui";
 
@@ -8,21 +9,33 @@ import { useProfile } from "@/features/account/application/hooks/useProfile";
 import { useUpdateProfile } from "@/features/account/application/hooks/useUpdateProfile";
 import { ProfileCard } from "@/features/account/presentation/components/ProfileCard";
 import { ProfileForm } from "@/features/account/presentation/components/ProfileForm";
-import { useSupabaseAuth } from "@/features/auth/application/hooks/useSupabaseAuth";
 
 export function AccountSettingsPage() {
   const t = useTranslations("auth.accountSettings");
   const tAuth = useTranslations("auth");
+  const locale = useLocale();
   const { user, signOut } = useSupabaseAuth();
-  const { data: profile, isLoading } = useProfile(user?.id);
+  const { data: profile, isLoading, isError } = useProfile(user?.id);
   const updateMutation = useUpdateProfile(user?.id ?? "");
 
-  if (isLoading || !profile) {
+  if (isLoading || (!profile && !isError)) {
     return (
       <main className="flex flex-1 items-center justify-center bg-dots p-4">
         <div className="w-full max-w-lg space-y-4">
           <Skeleton className="h-32 w-full" />
           <Skeleton className="h-64 w-full" />
+        </div>
+      </main>
+    );
+  }
+
+  if (isError || !profile) {
+    return (
+      <main className="flex flex-1 items-center justify-center bg-dots p-4">
+        <div className="w-full max-w-lg border-3 border-foreground bg-background p-8 text-center nb-shadow-sm">
+          <p className="font-display text-lg font-bold uppercase text-destructive">
+            {t("error")}
+          </p>
         </div>
       </main>
     );
@@ -57,7 +70,7 @@ export function AccountSettingsPage() {
             type="button"
             onClick={async () => {
               await signOut();
-              globalThis.location.replace("/login");
+              globalThis.location.replace(`/${locale}/login`);
             }}
             className="nb-btn nb-btn-press-sm w-full justify-center border-2 border-foreground px-6 py-3 text-sm"
             {...tid("sign-out")}

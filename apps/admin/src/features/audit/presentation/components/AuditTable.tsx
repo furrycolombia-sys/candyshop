@@ -26,6 +26,7 @@ const GRID_COLS = "grid-cols-[160px_100px_1fr_90px_1fr_40px]";
 interface AuditTableProps {
   entries: AuditEntry[];
   isLoading: boolean;
+  isError: boolean;
   hasMore: boolean;
   onLoadMore: () => void;
 }
@@ -37,9 +38,12 @@ function extractName(rowData: Record<string, unknown> | null): string | null {
   return name ? String(name) : null;
 }
 
+/** Valid i18n keys for summary messages */
+type SummaryKey = "summaryMore" | "summaryNew" | "summaryDeleted";
+
 /** Summarize what changed in an entry (returns key + params for i18n) */
 function getSummary(entry: AuditEntry): {
-  key: string;
+  key: SummaryKey;
   values?: Record<string, string | number>;
 } | null {
   if (entry.action_type === "UPDATE" && entry.changed_fields) {
@@ -72,9 +76,9 @@ function getUpdateFieldsSummary(entry: AuditEntry): string | null {
   return null;
 }
 
-function formatTimestamp(ts: string): string {
+function formatTimestamp(ts: string, locale: string): string {
   const d = new Date(ts);
-  return d.toLocaleString(undefined, {
+  return d.toLocaleString(locale, {
     month: "short",
     day: "numeric",
     hour: "2-digit",
@@ -86,6 +90,7 @@ function formatTimestamp(ts: string): string {
 export function AuditTable({
   entries,
   isLoading,
+  isError,
   hasMore,
   onLoadMore,
 }: AuditTableProps) {
@@ -97,6 +102,19 @@ export function AuditTable({
     return (
       <div className="flex items-center justify-center py-16 text-muted-foreground">
         {t("loading")}
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div
+        className="flex flex-col items-center justify-center gap-2 rounded-xl border-3 border-dashed border-destructive/30 bg-destructive/5 py-16"
+        {...tid("audit-error")}
+      >
+        <p className="font-display text-lg font-bold uppercase text-destructive">
+          {t("error")}
+        </p>
       </div>
     );
   }
@@ -153,15 +171,23 @@ export function AuditTable({
                 key={entry.event_id}
                 {...tid(`audit-row-${String(entry.event_id)}`)}
               >
-                <button
+                <div
+                  role="button"
+                  tabIndex={0}
                   onClick={() =>
                     setExpandedId(isExpanded ? null : entry.event_id)
                   }
-                  className={`grid w-full ${GRID_COLS} items-center text-left transition-colors hover:bg-muted/30`}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      setExpandedId(isExpanded ? null : entry.event_id);
+                    }
+                  }}
+                  className={`grid w-full ${GRID_COLS} cursor-pointer items-center text-left transition-colors hover:bg-muted/30`}
                 >
                   {/* Timestamp */}
                   <span className="truncate px-4 py-2.5 font-mono text-xs text-muted-foreground">
-                    {formatTimestamp(entry.action_timestamp)}
+                    {formatTimestamp(entry.action_timestamp, locale)}
                   </span>
 
                   {/* User */}
@@ -212,7 +238,7 @@ export function AuditTable({
                       className={`size-3.5 text-muted-foreground transition-transform duration-200 ${isExpanded ? "rotate-180" : ""}`}
                     />
                   </span>
-                </button>
+                </div>
 
                 {/* Expanded detail */}
                 {isExpanded && <AuditRowDetail entry={entry} />}
@@ -225,6 +251,7 @@ export function AuditTable({
       {/* Load more */}
       {hasMore && (
         <button
+          type="button"
           onClick={onLoadMore}
           disabled={isLoading}
           className="nb-btn nb-btn-press-sm mx-auto border-3 border-foreground px-6 py-2 font-display text-xs font-bold uppercase tracking-widest"

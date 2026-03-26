@@ -1,12 +1,16 @@
 "use client";
 
 import { Activity, ArrowRight, Database, Shield, Users } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { tid } from "shared";
 
+import { useAuditLog } from "@/features/audit/application/useAuditLog";
 import { ActivityRow } from "@/features/dashboard/presentation/components/ActivityRow";
 import { StatusRow } from "@/features/dashboard/presentation/components/StatusRow";
 import { Link } from "@/shared/infrastructure/i18n";
+
+/** Number of recent activity entries to show on the dashboard */
+const RECENT_ACTIVITY_LIMIT = 5;
 
 const STAT_CARDS = [
   {
@@ -44,6 +48,11 @@ const SYSTEM_STATUS_KEYS = ["database", "auth", "storage", "realtime"] as const;
 export function DashboardPage() {
   const t = useTranslations("dashboard");
   const tSidebar = useTranslations("sidebar");
+  const locale = useLocale();
+  const { data: recentEntries } = useAuditLog({
+    filters: {},
+    offset: 0,
+  });
 
   return (
     <main className="flex flex-1 flex-col bg-dots" {...tid("admin-page")}>
@@ -100,36 +109,34 @@ export function DashboardPage() {
                 </h2>
               </div>
               <div className="divide-y divide-foreground/10">
-                <ActivityRow
-                  action="INSERT"
-                  table="products"
-                  time="2 min ago"
-                  user="operator-1"
-                />
-                <ActivityRow
-                  action="UPDATE"
-                  table="orders"
-                  time="8 min ago"
-                  user="operator-2"
-                />
-                <ActivityRow
-                  action="DELETE"
-                  table="coupons"
-                  time="14 min ago"
-                  user="operator-1"
-                />
-                <ActivityRow
-                  action="INSERT"
-                  table="categories"
-                  time="31 min ago"
-                  user="operator-3"
-                />
-                <ActivityRow
-                  action="UPDATE"
-                  table="products"
-                  time="1h ago"
-                  user="operator-2"
-                />
+                {(recentEntries ?? [])
+                  .slice(0, RECENT_ACTIVITY_LIMIT)
+                  .map((entry) => (
+                    <ActivityRow
+                      key={entry.event_id}
+                      action={entry.action_type}
+                      table={entry.table_name}
+                      time={new Date(entry.action_timestamp).toLocaleString(
+                        locale,
+                        {
+                          month: "short",
+                          day: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        },
+                      )}
+                      user={
+                        entry.user_display_name ??
+                        entry.user_email ??
+                        entry.db_user
+                      }
+                    />
+                  ))}
+                {recentEntries?.length === 0 && (
+                  <div className="px-5 py-6 text-center font-mono text-xs text-muted-foreground">
+                    {t("activity.noActivity")}
+                  </div>
+                )}
               </div>
             </div>
           </section>

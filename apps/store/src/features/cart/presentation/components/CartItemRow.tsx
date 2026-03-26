@@ -91,6 +91,7 @@ export function CartItemRow({
             </div>
           </div>
           <button
+            type="button"
             className="shrink-0 text-muted-foreground/50 hover:text-foreground transition-colors opacity-0 group-hover:opacity-100"
             onClick={() => removeItem(item.id)}
             aria-label={t("removeItem", { name })}
@@ -107,6 +108,7 @@ export function CartItemRow({
             {...tid("cart-item-qty")}
           >
             <button
+              type="button"
               className="flex size-7 items-center justify-center hover:bg-foreground hover:text-background transition-colors"
               onClick={() => updateQuantity(item.id, item.quantity - 1)}
               aria-label={t("decreaseQty", { name })}
@@ -118,6 +120,7 @@ export function CartItemRow({
               {item.quantity}
             </span>
             <button
+              type="button"
               className="flex size-7 items-center justify-center hover:bg-foreground hover:text-background transition-colors"
               onClick={() => updateQuantity(item.id, item.quantity + 1)}
               aria-label={t("increaseQty", { name })}

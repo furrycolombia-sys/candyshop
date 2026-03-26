@@ -25,9 +25,9 @@ export function AuditRowDetail({ entry }: AuditRowDetailProps) {
   const t = useTranslations("audit.detail");
   const locale = useLocale();
 
-  const handleCopyUserId = () => {
+  const handleCopyUserId = async () => {
     if (entry.user_id) {
-      navigator.clipboard.writeText(entry.user_id);
+      await navigator.clipboard.writeText(entry.user_id);
     }
   };
 
@@ -64,8 +64,10 @@ export function AuditRowDetail({ entry }: AuditRowDetailProps) {
             )}
             {entry.user_id && (
               <button
+                type="button"
                 onClick={handleCopyUserId}
                 className="transition-colors hover:text-foreground"
+                aria-label={t("copyUserId")}
                 {...tid("audit-copy-user-id")}
               >
                 <Copy className="size-3" />
@@ -96,9 +98,6 @@ export function AuditRowDetail({ entry }: AuditRowDetailProps) {
                   <th className="px-3 py-2 text-left font-display font-bold uppercase tracking-wider">
                     {t("field")}
                   </th>
-                  <th className="px-3 py-2 text-left font-display font-bold uppercase tracking-wider text-destructive">
-                    {t("oldValue")}
-                  </th>
                   <th className="px-3 py-2 text-left font-display font-bold uppercase tracking-wider text-success">
                     {t("newValue")}
                   </th>
@@ -109,9 +108,6 @@ export function AuditRowDetail({ entry }: AuditRowDetailProps) {
                   return (
                     <tr key={key} className="border-b border-foreground/5">
                       <td className="px-3 py-2 font-mono font-bold">{key}</td>
-                      <td className="px-3 py-2 font-mono text-muted-foreground">
-                        {"—"}
-                      </td>
                       <td className="px-3 py-2 font-mono">
                         {formatValue(newVal)}
                       </td>

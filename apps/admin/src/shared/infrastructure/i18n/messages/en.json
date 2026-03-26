@@ -74,6 +74,7 @@
       "summary": "Changes",
       "loading": "Loading...",
       "noResults": "No audit entries found",
+      "error": "Failed to load audit log",
       "loadMore": "Load More",
       "summaryNew": "New: {name}",
       "summaryDeleted": "Deleted: {name}",

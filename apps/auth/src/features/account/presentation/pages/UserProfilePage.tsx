@@ -1,7 +1,6 @@
 "use client";
 
-/* eslint-disable @next/next/no-img-element */
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { tid } from "shared";
 import { Skeleton } from "ui";
 
@@ -13,6 +12,7 @@ interface UserProfilePageProps {
 
 export function UserProfilePage({ userId }: UserProfilePageProps) {
   const t = useTranslations("auth.profile");
+  const locale = useLocale();
   const { data: profile, isLoading, isError } = useProfile(userId);
 
   if (isLoading) {
@@ -49,7 +49,7 @@ export function UserProfilePage({ userId }: UserProfilePageProps) {
   const avatarUrl = profile.display_avatar_url ?? profile.avatar_url;
   const contactEmail = profile.display_email ?? profile.email;
   const memberSince = new Date(profile.first_seen_at).toLocaleDateString(
-    undefined,
+    locale,
     { year: "numeric", month: "long" },
   );
 
@@ -62,6 +62,7 @@ export function UserProfilePage({ userId }: UserProfilePageProps) {
         {/* Avatar + Name */}
         <div className="mb-6 text-center">
           {avatarUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element -- external OAuth avatar URL
             <img
               src={avatarUrl}
               alt=""

@@ -41,6 +41,7 @@ export function CartDrawer() {
     <Sheet>
       <SheetTrigger asChild>
         <button
+          type="button"
           ref={triggerRef}
           className="fixed bottom-6 right-6 z-50 flex items-center gap-2 nb-btn nb-btn-press-sm nb-shadow-md bg-foreground text-background font-display text-xs font-extrabold uppercase tracking-widest px-5 py-3 hover:translate-0 transition-all"
           aria-label={t("title")}
@@ -126,6 +127,7 @@ export function CartDrawer() {
               {/* Clear cart */}
               <div className="flex justify-end">
                 <button
+                  type="button"
                   className="text-tiny font-bold uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
                   onClick={clearCart}
                   {...tid("cart-drawer-clear")}
@@ -155,6 +157,7 @@ export function CartDrawer() {
 
               {/* Checkout */}
               <button
+                type="button"
                 className="nb-btn nb-btn-press-lg nb-shadow-sm w-full justify-center font-display text-sm font-extrabold uppercase tracking-widest py-3 bg-pink opacity-50 cursor-not-allowed"
                 disabled
                 title={t("checkoutComingSoon")}

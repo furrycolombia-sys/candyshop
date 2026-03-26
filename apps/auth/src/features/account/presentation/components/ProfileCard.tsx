@@ -1,7 +1,6 @@
 "use client";
 
-/* eslint-disable @next/next/no-img-element */
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { tid } from "shared";
 
 import type { UserProfile } from "@/features/account/domain/types";
@@ -12,9 +11,10 @@ interface ProfileCardProps {
 
 export function ProfileCard({ profile }: ProfileCardProps) {
   const t = useTranslations("auth.accountSettings");
+  const locale = useLocale();
 
   const memberSince = new Date(profile.first_seen_at).toLocaleDateString(
-    undefined,
+    locale,
     { year: "numeric", month: "long" },
   );
 
@@ -29,6 +29,7 @@ export function ProfileCard({ profile }: ProfileCardProps) {
 
       <div className="flex items-center gap-4">
         {profile.avatar_url && (
+          // eslint-disable-next-line @next/next/no-img-element -- external OAuth avatar, no next/image optimization needed
           <img
             src={profile.avatar_url}
             alt=""
@@ -52,7 +53,7 @@ export function ProfileCard({ profile }: ProfileCardProps) {
               className="font-mono text-sm capitalize"
               {...tid("profile-provider")}
             >
-              {profile.provider ?? "email"}
+              {profile.provider ?? t("emailProvider")}
             </span>
           </div>
           <div className="flex items-baseline gap-2">

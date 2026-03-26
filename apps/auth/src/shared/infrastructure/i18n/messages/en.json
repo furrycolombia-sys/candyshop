@@ -25,7 +25,7 @@
       "authInfo": "Login Info",
       "loginEmail": "Login Email",
       "provider": "Sign-in Method",
-      "memberSince": "Member Since",
+      "memberSince": "Member since",
       "publicProfile": "Public Profile",
       "displayName": "Display Name",
       "displayNamePlaceholder": "How others see your name",
@@ -36,7 +36,8 @@
       "save": "Save Changes",
       "saving": "Saving...",
       "saved": "Profile updated",
-      "error": "Failed to save profile"
+      "error": "Failed to save profile",
+      "emailProvider": "email"
     },
     "profile": {
       "title": "Profile",

@@ -36,7 +36,8 @@
       "save": "Guardar Cambios",
       "saving": "Guardando...",
       "saved": "Perfil actualizado",
-      "error": "Error al guardar el perfil"
+      "error": "Error al guardar el perfil",
+      "emailProvider": "correo"
     },
     "profile": {
       "title": "Perfil",

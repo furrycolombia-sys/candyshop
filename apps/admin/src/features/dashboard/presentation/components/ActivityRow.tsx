@@ -1,8 +1,4 @@
-const ACTION_COLORS = {
-  INSERT: "bg-mint/20 text-mint border-mint/40",
-  UPDATE: "bg-sky/20 text-sky border-sky/40",
-  DELETE: "bg-peach/20 text-peach border-peach/40",
-} as const;
+import { AUDIT_ACTION_COLORS } from "@/shared/domain/constants";
 
 interface ActivityRowProps {
   action: "INSERT" | "UPDATE" | "DELETE";
@@ -15,7 +11,7 @@ export function ActivityRow({ action, table, time, user }: ActivityRowProps) {
   return (
     <div className="flex items-center gap-3 px-5 py-3">
       <span
-        className={`inline-flex rounded-sm border px-2 py-0.5 font-mono text-[10px] font-bold uppercase ${ACTION_COLORS[action]}`}
+        className={`inline-flex rounded-sm border px-2 py-0.5 font-mono text-[10px] font-bold uppercase ${AUDIT_ACTION_COLORS[action] ?? ""}`}
       >
         {action}
       </span>

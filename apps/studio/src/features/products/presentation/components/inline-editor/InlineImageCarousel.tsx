@@ -75,8 +75,11 @@ export function InlineImageCarousel({ control }: InlineImageCarouselProps) {
     (index: number) => {
       remove(index);
       setBrokenImages((prev) => {
-        const next = new Set(prev);
-        next.delete(index);
+        const next = new Set<number>();
+        for (const i of prev) {
+          if (i < index) next.add(i);
+          else if (i > index) next.add(i - 1);
+        }
         return next;
       });
       if (index <= safeIndex && safeIndex > 0) {

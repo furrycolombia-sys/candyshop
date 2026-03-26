@@ -30,6 +30,7 @@ export function TypeFilter() {
       {...tid("type-filter")}
     >
       <button
+        type="button"
         role="tab"
         aria-selected={type === ""}
         className={`${TAB_BASE} ${type === "" ? TAB_ACTIVE : TAB_INACTIVE}`}
@@ -43,6 +44,7 @@ export function TypeFilter() {
         const isActive = type === value;
         return (
           <button
+            type="button"
             key={value}
             role="tab"
             aria-selected={isActive}

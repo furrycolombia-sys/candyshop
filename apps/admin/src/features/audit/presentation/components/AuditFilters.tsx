@@ -4,8 +4,7 @@ import { useTranslations } from "next-intl";
 import { tid } from "shared";
 
 import { useAuditTableNames } from "@/features/audit/application/useAuditLog";
-
-const ACTION_TYPES = ["INSERT", "UPDATE", "DELETE"] as const;
+import { AUDIT_ACTION_TYPES } from "@/features/audit/domain/constants";
 
 const PILL_BASE =
   "rounded-lg border-3 border-foreground px-3 py-1 font-display text-xs font-bold uppercase tracking-wider transition-colors";
@@ -51,14 +50,16 @@ export function AuditFilters({
       {/* Action type pills */}
       <div className="flex items-center gap-1">
         <button
+          type="button"
           onClick={() => onActionChange("")}
           className={`${PILL_BASE} ${actionType === "" ? PILL_ACTIVE : PILL_INACTIVE}`}
           {...tid("audit-filter-all")}
         >
           {t("allActions")}
         </button>
-        {ACTION_TYPES.map((type) => (
+        {AUDIT_ACTION_TYPES.map((type) => (
           <button
+            type="button"
             key={type}
             onClick={() => onActionChange(type)}
             className={`${PILL_BASE} ${actionType === type ? PILL_ACTIVE : PILL_INACTIVE}`}
