@@ -502,10 +502,29 @@ const eslintConfig = defineConfig([
       // Catches array index used as key (causes bugs on reorder/filter)
       "react/no-array-index-key": "error",
 
+      // Forbid direct DOM queries — use refs, Radix primitives, or test IDs instead.
+      // querySelector bypasses React's rendering model and breaks with SSR/concurrent mode.
+      "no-restricted-properties": [
+        "error",
+        {
+          object: "document",
+          property: "querySelector",
+          message:
+            "Avoid document.querySelector — use React refs or Radix UI primitives.",
+        },
+        {
+          object: "document",
+          property: "querySelectorAll",
+          message:
+            "Avoid document.querySelectorAll — use React refs or Radix UI primitives.",
+        },
+      ],
+
       // Catches console.log left in production code (debug leaks)
       "no-console": ["error", { allow: ["warn", "error"] }],
 
       "security/detect-object-injection": "off",
+      "unicorn/prefer-query-selector": "off", // we ban querySelector via no-restricted-properties
       "unicorn/no-array-reduce": "off",
       "unicorn/no-array-sort": "off",
       "unicorn/no-await-expression-member": "off",

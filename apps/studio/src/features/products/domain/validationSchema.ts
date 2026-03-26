@@ -1,9 +1,8 @@
+import { SECTION_TYPES } from "shared/types";
 import { z } from "zod";
 
 /** Translator function for validation messages */
 type ValidationT = (key: string) => string;
-
-const SECTION_TYPES = ["cards", "accordion", "two-column", "gallery"] as const;
 
 /** Create section item schema with translated messages */
 function createSectionItemSchema(t: ValidationT) {
