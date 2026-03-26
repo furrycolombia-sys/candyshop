@@ -75,8 +75,11 @@ export function InlineImageCarousel({ control }: InlineImageCarouselProps) {
     (index: number) => {
       remove(index);
       setBrokenImages((prev) => {
-        const next = new Set(prev);
-        next.delete(index);
+        const next = new Set<number>();
+        for (const i of prev) {
+          if (i < index) next.add(i);
+          else if (i > index) next.add(i - 1);
+        }
         return next;
       });
       if (index <= safeIndex && safeIndex > 0) {
@@ -244,21 +247,41 @@ export function InlineImageCarousel({ control }: InlineImageCarouselProps) {
   const editBar =
     editingMain && safeIndex >= 0 ? (
       <div
-        className="flex flex-col gap-2 border-3 border-foreground p-3"
+        className="border-3 border-foreground bg-background p-3"
         {...tid("image-edit-bar")}
       >
-        <Input
-          placeholder={t("imageUrlPlaceholder")}
-          aria-label={t("editImageUrl")}
-          {...tid("image-edit-url")}
-          {...control.register(`images.${safeIndex}.url`)}
-        />
-        <Input
-          placeholder={t("imageAltPlaceholder")}
-          aria-label={t("editImageAlt")}
-          {...tid("image-edit-alt")}
-          {...control.register(`images.${safeIndex}.alt`)}
-        />
+        <div className="flex flex-col gap-2">
+          <label className="flex flex-col gap-1">
+            <span className="font-display text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+              {t("editImageUrl")}
+            </span>
+            <Input
+              placeholder={t("imageUrlPlaceholder")}
+              aria-label={t("editImageUrl")}
+              {...tid("image-edit-url")}
+              {...control.register(`images.${safeIndex}.url`)}
+            />
+          </label>
+          <label className="flex flex-col gap-1">
+            <span className="font-display text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+              {t("editImageAlt")}
+            </span>
+            <Input
+              placeholder={t("imageAltPlaceholder")}
+              aria-label={t("editImageAlt")}
+              {...tid("image-edit-alt")}
+              {...control.register(`images.${safeIndex}.alt`)}
+            />
+          </label>
+        </div>
+        <button
+          type="button"
+          onClick={() => setEditingMain(false)}
+          className="nb-btn nb-btn-press-sm mt-3 w-full justify-center border-3 border-foreground bg-foreground py-1.5 font-display text-xs font-bold uppercase tracking-widest text-background"
+          {...tid("image-edit-done")}
+        >
+          {t("doneEditing")}
+        </button>
       </div>
     ) : null;
 

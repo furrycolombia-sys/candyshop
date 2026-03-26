@@ -4,8 +4,8 @@
     "description": "Back-office management for inventory, orders, promos, and coupons"
   },
   "admin": {
-    "title": "Admin Dashboard",
-    "subtitle": "Manage products, orders, promos, coupons, and services"
+    "title": "Command Center",
+    "subtitle": "Back-office operations & monitoring"
   },
   "nav": {
     "brand": "Candy Shop",
@@ -17,7 +17,84 @@
     "auth": "Account",
     "playground": "Playground"
   },
+  "sidebar": {
+    "auditLog": "Audit Log",
+    "dashboard": "Dashboard",
+    "collapse": "Collapse sidebar",
+    "expand": "Expand sidebar",
+    "operations": "Operations",
+    "monitoring": "Monitoring",
+    "system": "System",
+    "version": "v0.1.0",
+    "status": "All systems nominal"
+  },
+  "dashboard": {
+    "welcome": "Good to see you, operator.",
+    "overview": "System Overview",
+    "recentActivity": "Recent Activity",
+    "quickActions": "Quick Actions",
+    "viewAuditLog": "View Audit Log",
+    "stats": {
+      "totalEvents": "Total Events",
+      "tablesMonitored": "Tables Monitored",
+      "activeUsers": "Active Users",
+      "uptime": "Uptime"
+    },
+    "activity": {
+      "noActivity": "No recent activity recorded",
+      "inserted": "inserted into",
+      "updated": "updated",
+      "deleted": "deleted from"
+    },
+    "systemStatus": {
+      "database": "Database",
+      "auth": "Auth",
+      "storage": "Storage",
+      "realtime": "Realtime",
+      "operational": "operational",
+      "degraded": "degraded",
+      "down": "down"
+    }
+  },
+  "audit": {
+    "title": "Audit Log",
+    "subtitle": "Track all changes across the platform",
+    "filters": {
+      "allTables": "All Tables",
+      "allActions": "All Actions",
+      "insert": "Insert",
+      "update": "Update",
+      "delete": "Delete"
+    },
+    "table": {
+      "timestamp": "When",
+      "user": "Who",
+      "tableName": "Table",
+      "action": "Action",
+      "summary": "Changes",
+      "loading": "Loading...",
+      "noResults": "No audit entries found",
+      "error": "Failed to load audit log",
+      "loadMore": "Load More",
+      "summaryNew": "New: {name}",
+      "summaryDeleted": "Deleted: {name}",
+      "summaryMore": "{fields} +{count} more"
+    },
+    "detail": {
+      "changedFields": "Changed Fields",
+      "fullRecord": "Full Record",
+      "oldValue": "Before",
+      "newValue": "After",
+      "field": "Field",
+      "transactionId": "Transaction",
+      "user": "User",
+      "copyUserId": "Copy User ID",
+      "ip": "IP"
+    }
+  },
   "common": {
+    "loading": "Loading...",
+    "error": "An error occurred",
     "theme": {
       "switchToDark": "Switch to dark mode",
       "switchToLight": "Switch to light mode",

@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import type { Control } from "react-hook-form";
+import type { Control, FieldErrors } from "react-hook-form";
 import { useController, useWatch } from "react-hook-form";
 import { tid } from "shared";
 
@@ -18,9 +18,10 @@ import {
 
 interface InlineHeroProps {
   control: Control<ProductFormValues>;
+  errors?: FieldErrors<ProductFormValues>;
 }
 
-export function InlineHero({ control }: InlineHeroProps) {
+export function InlineHero({ control, errors }: InlineHeroProps) {
   const t = useTranslations("form.inlineEditor");
   const tProducts = useTranslations("products");
   const tCategories = useTranslations("categories");
@@ -62,6 +63,8 @@ export function InlineHero({ control }: InlineHeroProps) {
 
   const badgeBase =
     "border-3 border-foreground px-3 py-1 text-tiny font-bold uppercase tracking-widest text-foreground";
+  const errorRing =
+    "rounded-md ring-2 ring-destructive ring-offset-2 ring-offset-transparent";
 
   return (
     <section
@@ -85,13 +88,20 @@ export function InlineHero({ control }: InlineHeroProps) {
             />
 
             {/* 2. Name */}
-            <InlineTextField
-              control={control}
-              fieldNameEn="name_en"
-              fieldNameEs="name_es"
-              placeholder={t("namePlaceholder")}
-              className="font-display text-4xl/tight lg:text-5xl/tight font-extrabold uppercase"
-            />
+            <div className={errors?.name_en ? errorRing : ""}>
+              <InlineTextField
+                control={control}
+                fieldNameEn="name_en"
+                fieldNameEs="name_es"
+                placeholder={t("namePlaceholder")}
+                className="font-display text-4xl/tight lg:text-5xl/tight font-extrabold uppercase"
+              />
+              {errors?.name_en && (
+                <p className="mt-1 font-mono text-xs text-destructive">
+                  {errors.name_en.message}
+                </p>
+              )}
+            </div>
 
             {/* 3. Badges row — category, type, stock status */}
             <div
@@ -135,7 +145,14 @@ export function InlineHero({ control }: InlineHeroProps) {
             </div>
 
             {/* 4. Price block — bordered card matching store PriceBlock */}
-            <InlinePriceFields control={control} />
+            <div className={errors?.price_cop ? errorRing : ""}>
+              <InlinePriceFields control={control} />
+              {errors?.price_cop && (
+                <p className="mt-1 font-mono text-xs text-destructive">
+                  {errors.price_cop.message}
+                </p>
+              )}
+            </div>
 
             {/* 5. Description */}
             <InlineTextField

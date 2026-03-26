@@ -27,6 +27,7 @@ export function AccordionItem({
       {...tid(`accordion-item-${index}`)}
     >
       <button
+        type="button"
         className="w-full flex items-center justify-between gap-4 p-5 text-left font-bold text-sm uppercase tracking-wide transition-colors hover:bg-muted"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}

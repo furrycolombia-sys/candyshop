@@ -8,6 +8,11 @@
 -- Schema
 create schema if not exists audit;
 
+-- Grant read access to authenticated roles only (needed for PostgREST to query via Accept-Profile: audit)
+-- NOTE: anon is deliberately excluded — audit data is admin-only
+grant usage on schema audit to authenticated;
+grant select on all tables in schema audit to authenticated;
+
 -- -----------------------------------------------------------------------------
 -- Audit log table
 -- -----------------------------------------------------------------------------
@@ -41,12 +46,22 @@ create index logged_actions_action_type on audit.logged_actions
 create index logged_actions_row_data on audit.logged_actions
   using gin(row_data);
 
--- RLS: only admins can read audit logs (no public access)
+-- RLS: restrict audit access to admin users only
 alter table audit.logged_actions enable row level security;
 
-create policy "Audit: read own actions"
+-- Only users with 'audit-view' or 'manage' permission can read audit entries
+create policy "Audit: admin read only"
   on audit.logged_actions for select
-  using (auth.uid() = user_id);
+  using (
+    auth.uid() in (
+      select up.user_id from public.user_permissions up
+      inner join public.resource_permissions rp on rp.id = up.resource_permission_id
+      inner join public.permissions p on p.id = rp.permission_id
+      where p.key in ('audit-view', 'manage')
+        and up.mode = 'grant'
+        and (up.expires_at is null or up.expires_at > now())
+    )
+  );
 
 -- -----------------------------------------------------------------------------
 -- Trigger function: captures INSERT/UPDATE/DELETE

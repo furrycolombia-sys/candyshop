@@ -35,7 +35,9 @@ export function ProtectedRoute({
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
       const returnTo = globalThis.location.href;
-      globalThis.location.href = `${authUrl}/${locale}/login?returnTo=${encodeURIComponent(returnTo)}`;
+      globalThis.location.replace(
+        `${authUrl}/${locale}/login?returnTo=${encodeURIComponent(returnTo)}`,
+      );
     }
   }, [isLoading, isAuthenticated, authUrl, locale]);
 

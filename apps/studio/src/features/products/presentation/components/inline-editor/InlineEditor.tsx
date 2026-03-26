@@ -7,9 +7,11 @@ import { useForm, useWatch } from "react-hook-form";
 import { tid } from "shared";
 
 import { EditorToolbar } from "./EditorToolbar";
+import { FormErrorBanner } from "./FormErrorBanner";
 import { InlineHero } from "./InlineHero";
 import { InlineSections } from "./InlineSections";
 import { InlineTextField } from "./InlineTextField";
+import { MutationErrorBanner } from "./MutationErrorBanner";
 
 import { PRODUCT_FORM_DEFAULTS } from "@/features/products/domain/constants";
 import {
@@ -23,6 +25,8 @@ interface InlineEditorProps {
   onSubmit: (data: ProductFormValues) => void;
   isSubmitting: boolean;
   isEdit: boolean;
+  /** API/mutation error to display */
+  mutationError?: Error | null;
 }
 
 export function InlineEditor({
@@ -30,6 +34,7 @@ export function InlineEditor({
   onSubmit,
   isSubmitting,
   isEdit,
+  mutationError,
 }: InlineEditorProps) {
   const t = useTranslations("form.inlineEditor");
   const tValidation = useTranslations("form.validation");
@@ -39,7 +44,7 @@ export function InlineEditor({
     [tValidation],
   );
 
-  const { control, register, setValue, handleSubmit } =
+  const { control, register, setValue, handleSubmit, formState } =
     useForm<ProductFormValues>({
       // eslint-disable-next-line @typescript-eslint/no-explicit-any -- zodResolver inference mismatch with optional Zod defaults
       resolver: zodResolver(schema) as any,
@@ -64,7 +69,11 @@ export function InlineEditor({
         isEdit={isEdit}
       />
 
-      <InlineHero control={control} />
+      <FormErrorBanner key={formState.submitCount} errors={formState.errors} />
+
+      {mutationError && <MutationErrorBanner message={mutationError.message} />}
+
+      <InlineHero control={control} errors={formState.errors} />
 
       {/* Long description between hero and highlights */}
       <section className="w-full">
