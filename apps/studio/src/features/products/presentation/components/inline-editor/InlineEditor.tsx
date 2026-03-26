@@ -53,6 +53,7 @@ export function InlineEditor({
 
   const category = useWatch({ control, name: "category" });
   const theme = getCategoryTheme(category);
+  const sections = useWatch({ control, name: "sections" });
 
   return (
     <form
@@ -67,6 +68,26 @@ export function InlineEditor({
         onSave={handleSubmit(onSubmit)}
         isSaving={isSubmitting}
         isEdit={isEdit}
+        onApplyTemplate={(newSections) =>
+          setValue(
+            "sections",
+            newSections.map((s) => ({
+              ...s,
+              items: s.items.map((item) => ({
+                ...item,
+                icon: item.icon ?? "",
+                image_url: item.image_url ?? "",
+              })),
+            })),
+          )
+        }
+        onReset={() => {
+          const resetValues = { ...PRODUCT_FORM_DEFAULTS, ...defaultValues };
+          for (const [key, value] of Object.entries(resetValues)) {
+            setValue(key as keyof ProductFormValues, value);
+          }
+        }}
+        hasSections={(sections?.length ?? 0) > 0}
       />
 
       <FormErrorBanner key={formState.submitCount} errors={formState.errors} />

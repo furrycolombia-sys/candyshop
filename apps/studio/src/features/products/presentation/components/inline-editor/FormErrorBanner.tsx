@@ -48,15 +48,12 @@ export function FormErrorBanner({ errors }: FormErrorBannerProps) {
   if (errorCount === 0 || dismissed) return null;
 
   const handleScrollToField = (fieldKey: string) => {
-    const el =
-      document.querySelector(`[name="${fieldKey}"]`) ??
-      document.querySelector(`[data-testid="inline-price-fields"]`);
+    // Use getElementsByName (semantic DOM API for form fields) instead of querySelector
+    const el = document.getElementsByName(fieldKey)[0];
 
     if (el) {
       el.scrollIntoView({ behavior: "smooth", block: "center" });
-      if (el instanceof HTMLElement) {
-        el.focus();
-      }
+      el.focus();
     }
   };
 

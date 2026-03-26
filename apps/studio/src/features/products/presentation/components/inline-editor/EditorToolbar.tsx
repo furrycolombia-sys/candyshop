@@ -5,6 +5,7 @@ import {
   FileDigit,
   Loader2,
   Package,
+  RotateCcw,
   Ticket,
   Wrench,
 } from "lucide-react";
@@ -16,8 +17,10 @@ import type {
 } from "react-hook-form";
 import { useWatch } from "react-hook-form";
 import { tid } from "shared";
-import type { ProductType } from "shared/types";
+import type { ProductSection, ProductType } from "shared/types";
 import { Switch } from "ui";
+
+import { TemplatePicker } from "./TemplatePicker";
 
 import {
   PRODUCT_CATEGORIES,
@@ -40,6 +43,9 @@ interface EditorToolbarProps {
   onSave: () => void;
   isSaving: boolean;
   isEdit: boolean;
+  onApplyTemplate: (sections: ProductSection[]) => void;
+  onReset: () => void;
+  hasSections: boolean;
 }
 
 export function EditorToolbar({
@@ -49,6 +55,9 @@ export function EditorToolbar({
   onSave,
   isSaving,
   isEdit,
+  onApplyTemplate,
+  onReset,
+  hasSections,
 }: EditorToolbarProps) {
   const t = useTranslations();
   const tEditor = useTranslations("form.inlineEditor");
@@ -154,6 +163,23 @@ export function EditorToolbar({
           {tEditor("refundable.nonRefundable")}
         </option>
       </select>
+
+      {/* Template + Reset */}
+      <div className="h-6 w-px bg-background/20" />
+      <TemplatePicker onApply={onApplyTemplate} hasSections={hasSections} />
+      <button
+        type="button"
+        onClick={() => {
+          if (globalThis.confirm(tEditor("resetConfirm"))) {
+            onReset();
+          }
+        }}
+        className="flex items-center gap-1.5 rounded-lg border-2 border-background/30 px-2.5 py-1 font-display text-tiny font-bold uppercase tracking-wider text-background/70 transition-colors hover:border-background hover:text-background"
+        {...tid("toolbar-reset")}
+      >
+        <RotateCcw className="size-3.5" />
+        {tEditor("resetForm")}
+      </button>
 
       {/* Spacer */}
       <div className="flex-1" />

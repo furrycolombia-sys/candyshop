@@ -41,9 +41,9 @@ test.describe("Smoke test — all apps", () => {
     await page.goto(`${APPS.auth}/en`);
     await page.waitForLoadState("networkidle");
 
-    await expect(page.getByTestId("account-card")).toBeVisible();
-    await expect(page.getByTestId("account-email")).not.toBeEmpty();
-    await expect(page.getByTestId("account-provider")).not.toBeEmpty();
+    await expect(page.getByTestId("account-settings-page")).toBeVisible();
+    await expect(page.getByTestId("profile-email")).not.toBeEmpty();
+    await expect(page.getByTestId("profile-provider")).not.toBeEmpty();
     console.log("[smoke] ✓ Auth account page shows user data");
 
     await expect(page.getByTestId("nav-user-email")).toBeVisible();
@@ -55,7 +55,7 @@ test.describe("Smoke test — all apps", () => {
     await page.goto(`${APPS.auth}/en`);
     await page.waitForLoadState("networkidle");
 
-    await expect(page.getByTestId("account-card")).toBeVisible();
+    await expect(page.getByTestId("account-settings-page")).toBeVisible();
 
     await page.getByTestId("sign-out").click();
     await page.waitForURL(/\/login/, { timeout: 10000 });

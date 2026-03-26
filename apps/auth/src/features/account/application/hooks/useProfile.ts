@@ -16,5 +16,6 @@ export function useProfile(userId: string | undefined) {
       return fetchProfile(supabase, userId);
     },
     enabled: !!userId,
+    staleTime: 30_000,
   });
 }
