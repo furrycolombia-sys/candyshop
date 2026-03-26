@@ -4,6 +4,7 @@ import {
   ChevronLeft,
   ChevronRight,
   FileText,
+  Layers,
   LayoutDashboard,
   Radio,
 } from "lucide-react";
@@ -17,7 +18,10 @@ import { Link } from "@/shared/infrastructure/i18n";
 const NAV_SECTIONS = [
   {
     labelKey: "operations" as const,
-    items: [{ key: "dashboard" as const, href: "/", icon: LayoutDashboard }],
+    items: [
+      { key: "dashboard" as const, href: "/", icon: LayoutDashboard },
+      { key: "templates" as const, href: "/templates", icon: Layers },
+    ],
   },
   {
     labelKey: "monitoring" as const,

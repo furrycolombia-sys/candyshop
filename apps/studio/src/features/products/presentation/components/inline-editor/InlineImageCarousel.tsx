@@ -33,6 +33,9 @@ export function InlineImageCarousel({ control }: InlineImageCarouselProps) {
   const category = useWatch({ control, name: "category" });
   const theme = getCategoryTheme(category);
 
+  // fields holds IDs + initial values; watchedImages holds LIVE form values
+  const watchedImages = useWatch({ control, name: "images" });
+
   const [activeIndex, setActiveIndex] = useState(0);
   const [editingMain, setEditingMain] = useState(false);
   const [brokenImages, setBrokenImages] = useState<Set<number>>(new Set());
@@ -126,7 +129,10 @@ export function InlineImageCarousel({ control }: InlineImageCarouselProps) {
     const activeCls = isActive
       ? `border-foreground ${theme.bg} nb-shadow-sm`
       : thumbInactive;
-    const hasUrl = field.url.trim().length > 0;
+    // Use live form value (watchedImages) instead of stale fields snapshot
+    const liveUrl = watchedImages?.[index]?.url ?? field.url;
+    const liveAlt = watchedImages?.[index]?.alt ?? field.alt;
+    const hasUrl = liveUrl.trim().length > 0;
     const isBroken = brokenImages.has(index);
 
     return (
@@ -140,8 +146,8 @@ export function InlineImageCarousel({ control }: InlineImageCarouselProps) {
           {hasUrl && !isBroken ? (
             // eslint-disable-next-line @next/next/no-img-element, jsx-a11y/no-noninteractive-element-interactions -- user-supplied URLs; onError/onLoad are load events
             <img
-              src={field.url}
-              alt={field.alt || t("imageNumber", { number: index + 1 })}
+              src={liveUrl}
+              alt={liveAlt || t("imageNumber", { number: index + 1 })}
               className="size-full object-cover"
               onError={() => handleImageError(index)}
               onLoad={() => handleImageLoad(index)}
@@ -211,25 +217,31 @@ export function InlineImageCarousel({ control }: InlineImageCarouselProps) {
         className={`relative flex-1 flex items-center justify-center aspect-square border-3 border-foreground nb-shadow-lg overflow-hidden ${theme.bg} cursor-pointer`}
         {...tid("image-gallery-main")}
       >
-        {(activeField?.url.trim().length ?? 0) > 0 &&
-        !brokenImages.has(safeIndex) ? (
-          // eslint-disable-next-line @next/next/no-img-element, jsx-a11y/no-noninteractive-element-interactions -- user-supplied URLs; onError/onLoad are load events
-          <img
-            src={activeField?.url}
-            alt={activeField?.alt ?? ""}
-            className="relative size-full object-cover"
-            onError={() => handleImageError(safeIndex)}
-            onLoad={() => handleImageLoad(safeIndex)}
-          />
-        ) : (
-          mainPlaceholder()
-        )}
+        {(() => {
+          const liveUrl =
+            watchedImages?.[safeIndex]?.url ?? activeField?.url ?? "";
+          const liveAlt =
+            watchedImages?.[safeIndex]?.alt ?? activeField?.alt ?? "";
+          return (liveUrl.trim().length ?? 0) > 0 &&
+            !brokenImages.has(safeIndex) ? (
+            // eslint-disable-next-line @next/next/no-img-element, jsx-a11y/no-noninteractive-element-interactions -- user-supplied URLs; onError/onLoad are load events
+            <img
+              src={liveUrl}
+              alt={liveAlt}
+              className="relative size-full object-cover"
+              onError={() => handleImageError(safeIndex)}
+              onLoad={() => handleImageLoad(safeIndex)}
+            />
+          ) : (
+            mainPlaceholder()
+          );
+        })()}
 
         {/* Bottom bar: caption + counter */}
         <div className="absolute bottom-0 inset-x-0 flex items-center justify-between bg-foreground/70 px-3 py-1.5">
-          {activeField?.alt ? (
+          {(watchedImages?.[safeIndex]?.alt ?? activeField?.alt) ? (
             <span className="text-tiny font-bold uppercase tracking-widest text-background truncate">
-              {activeField.alt}
+              {watchedImages?.[safeIndex]?.alt ?? activeField?.alt}
             </span>
           ) : (
             <span />
@@ -244,10 +256,12 @@ export function InlineImageCarousel({ control }: InlineImageCarouselProps) {
     );
 
   /* ---- Inline edit bar ---- */
+  // Always render inputs so react-hook-form keeps values registered;
+  // hide visually when not editing to prevent unmount clearing values.
   const editBar =
-    editingMain && safeIndex >= 0 ? (
+    safeIndex >= 0 ? (
       <div
-        className="border-3 border-foreground bg-background p-3"
+        className={`border-3 border-foreground bg-background p-3 ${editingMain ? "" : "hidden"}`}
         {...tid("image-edit-bar")}
       >
         <div className="flex flex-col gap-2">
@@ -331,9 +345,6 @@ export function InlineImageCarousel({ control }: InlineImageCarouselProps) {
           {mainImage}
         </div>
 
-        {/* Desktop: edit bar below */}
-        <div className="hidden lg:block mt-3">{editBar}</div>
-
         {/* Mobile: image on top, thumbnails below */}
         <div className="flex flex-col gap-3 lg:hidden">
           {mainImage}
@@ -354,10 +365,10 @@ export function InlineImageCarousel({ control }: InlineImageCarouselProps) {
             ))}
             {addButton}
           </div>
-
-          {/* Mobile: edit bar below thumbnails */}
-          {editBar}
         </div>
+
+        {/* Edit bar — single instance, responsive (avoids duplicate register) */}
+        <div className="mt-3">{editBar}</div>
       </div>
     </DragDropContext>
   );
