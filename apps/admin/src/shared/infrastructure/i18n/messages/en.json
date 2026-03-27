@@ -28,7 +28,10 @@
     "monitoring": "Monitoring",
     "system": "System",
     "version": "v0.1.0",
-    "status": "All systems nominal"
+    "status": "All systems nominal",
+    "paymentMethods": "Payment Methods",
+    "settings": "Settings",
+    "configuration": "Configuration"
   },
   "dashboard": {
     "welcome": "Good to see you, operator.",
@@ -130,6 +133,43 @@
     "removeItem": "Remove item",
     "removeSection": "Remove section",
     "deleteTemplate": "Delete template"
+  },
+  "paymentMethodTypes": {
+    "title": "Payment Method Types",
+    "subtitle": "Manage payment options available to sellers",
+    "addType": "Add Type",
+    "editType": "Edit Type",
+    "name": "Name",
+    "description": "Description",
+    "icon": "Icon",
+    "requiresReceipt": "Requires Receipt",
+    "requiresTransferNumber": "Requires Transfer Number",
+    "active": "Active",
+    "noTypes": "No payment method types yet",
+    "deleteConfirm": "Deactivate this payment method type? Sellers using it will no longer be able to accept new payments with it.",
+    "save": "Save",
+    "saving": "Saving...",
+    "cancel": "Cancel",
+    "editPaymentType": "Edit payment type",
+    "deletePaymentType": "Delete payment type"
+  },
+  "settings": {
+    "title": "Platform Settings",
+    "subtitle": "Global configuration for the platform",
+    "timeouts": {
+      "title": "Payment Timeouts",
+      "awaitingPayment": "Awaiting Payment",
+      "awaitingPaymentHint": "Hours before unpaid order expires",
+      "pendingVerification": "Pending Verification",
+      "pendingVerificationHint": "Hours seller has to verify receipt",
+      "evidenceRequested": "Evidence Requested",
+      "evidenceRequestedHint": "Hours buyer has to re-upload evidence",
+      "hours": "hours"
+    },
+    "save": "Save Settings",
+    "saving": "Saving...",
+    "saved": "Settings updated",
+    "error": "Failed to save settings"
   },
   "common": {
     "loading": "Loading...",

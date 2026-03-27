@@ -28,7 +28,10 @@
     "monitoring": "Monitoreo",
     "system": "Sistema",
     "version": "v0.1.0",
-    "status": "Todos los sistemas nominales"
+    "status": "Todos los sistemas nominales",
+    "paymentMethods": "Metodos de Pago",
+    "settings": "Configuracion",
+    "configuration": "Configuracion"
   },
   "dashboard": {
     "welcome": "Buen día, operador.",
@@ -130,6 +133,43 @@
     "removeItem": "Eliminar elemento",
     "removeSection": "Eliminar seccion",
     "deleteTemplate": "Eliminar plantilla"
+  },
+  "paymentMethodTypes": {
+    "title": "Tipos de Metodo de Pago",
+    "subtitle": "Administra las opciones de pago disponibles para vendedores",
+    "addType": "Agregar Tipo",
+    "editType": "Editar Tipo",
+    "name": "Nombre",
+    "description": "Descripcion",
+    "icon": "Icono",
+    "requiresReceipt": "Requiere Comprobante",
+    "requiresTransferNumber": "Requiere Numero de Transferencia",
+    "active": "Activo",
+    "noTypes": "Sin tipos de metodo de pago aun",
+    "deleteConfirm": "Desactivar este tipo de metodo de pago? Los vendedores que lo usen ya no podran aceptar nuevos pagos con el.",
+    "save": "Guardar",
+    "saving": "Guardando...",
+    "cancel": "Cancelar",
+    "editPaymentType": "Editar tipo de pago",
+    "deletePaymentType": "Eliminar tipo de pago"
+  },
+  "settings": {
+    "title": "Configuracion de Plataforma",
+    "subtitle": "Configuracion global de la plataforma",
+    "timeouts": {
+      "title": "Tiempos de Pago",
+      "awaitingPayment": "Esperando Pago",
+      "awaitingPaymentHint": "Horas antes de que expire una orden sin pagar",
+      "pendingVerification": "Verificacion Pendiente",
+      "pendingVerificationHint": "Horas que el vendedor tiene para verificar el comprobante",
+      "evidenceRequested": "Evidencia Solicitada",
+      "evidenceRequestedHint": "Horas que el comprador tiene para reenviar la evidencia",
+      "hours": "horas"
+    },
+    "save": "Guardar Configuracion",
+    "saving": "Guardando...",
+    "saved": "Configuracion actualizada",
+    "error": "Error al guardar configuracion"
   },
   "common": {
     "loading": "Cargando...",
