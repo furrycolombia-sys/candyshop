@@ -1,5 +1,3 @@
-import type { createBrowserSupabaseClient } from "api/supabase";
-
 import {
   FALLBACK_SELLER_NAME,
   MINUTES_PER_HOUR,
@@ -10,9 +8,8 @@ import {
 import type {
   CartItem,
   SellerPaymentMethodWithType,
+  SupabaseClient,
 } from "@/features/checkout/domain/types";
-
-type SupabaseClient = ReturnType<typeof createBrowserSupabaseClient>;
 
 /**
  * The generated Supabase types don't include tables added in recent migrations

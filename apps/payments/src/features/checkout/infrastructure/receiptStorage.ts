@@ -1,8 +1,5 @@
-import type { createBrowserSupabaseClient } from "api/supabase";
-
 import { RECEIPTS_BUCKET } from "@/features/checkout/domain/constants";
-
-type SupabaseClient = ReturnType<typeof createBrowserSupabaseClient>;
+import type { SupabaseClient } from "@/features/checkout/domain/types";
 
 /**
  * Upload a receipt image to Supabase Storage.

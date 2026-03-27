@@ -12,6 +12,7 @@ import { useSubmitPayment } from "@/features/checkout/application/hooks/useSubmi
 import type { CheckoutSellerStatus } from "@/features/checkout/domain/types";
 import { clearCartCookie } from "@/features/checkout/infrastructure/cartCookie";
 import { SellerCheckoutCard } from "@/features/checkout/presentation/components/SellerCheckoutCard";
+import { appUrls } from "@/shared/infrastructure/config";
 
 export function CheckoutPage() {
   const t = useTranslations("checkout");
@@ -116,7 +117,7 @@ export function CheckoutPage() {
             {t("emptyCart")}
           </h1>
           <a
-            href="/store"
+            href={appUrls.store}
             className="nb-btn nb-btn-press-sm nb-shadow-sm mt-6 inline-flex items-center gap-2 border-3 border-foreground bg-foreground px-6 py-3 font-display text-sm font-extrabold uppercase tracking-widest text-background"
             {...tid("checkout-go-to-store")}
           >
@@ -165,7 +166,7 @@ export function CheckoutPage() {
             {t("title")}
           </h1>
           <a
-            href="/store"
+            href={appUrls.store}
             className="flex items-center gap-1 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
             {...tid("checkout-back-to-store")}
           >

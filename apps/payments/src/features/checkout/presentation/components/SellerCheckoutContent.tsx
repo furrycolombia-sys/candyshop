@@ -2,6 +2,7 @@
 
 import { CheckCircle, Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { useId } from "react";
 import { tid } from "shared";
 import { Input } from "ui";
 
@@ -58,6 +59,7 @@ export function SellerCheckoutContent({
   onSubmit,
 }: SellerCheckoutContentProps) {
   const t = useTranslations("checkout");
+  const transferInputId = useId();
 
   const showForm = !isSubmitted && !isLoadingMethods;
   const showLoading = !isSubmitted && isLoadingMethods;
@@ -116,10 +118,14 @@ export function SellerCheckoutContent({
 
           {selectedMethod?.requires_transfer_number && (
             <div className="space-y-1">
-              <label className="font-display text-xs font-extrabold uppercase tracking-widest">
+              <label
+                htmlFor={transferInputId}
+                className="font-display text-xs font-extrabold uppercase tracking-widest"
+              >
                 {t("transferNumber")}
               </label>
               <Input
+                id={transferInputId}
                 value={transferNumber}
                 onChange={(e) => onTransferNumberChange(e.target.value)}
                 placeholder={t("transferNumberHint")}

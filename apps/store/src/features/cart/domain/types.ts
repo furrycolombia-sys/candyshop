@@ -10,3 +10,17 @@ export interface CartState {
   itemCount: number;
   total: number;
 }
+
+/** A group of cart items belonging to the same seller */
+export interface SellerGroup {
+  sellerId: string;
+  items: CartItem[];
+  subtotal: number;
+}
+
+/** A seller profile row from user_profiles (not yet in generated DB types) */
+export interface SellerProfile {
+  id: string;
+  display_name: string | null;
+  email: string;
+}

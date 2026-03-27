@@ -3,7 +3,7 @@
 
 import { Upload, X } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { tid } from "shared";
 
 import {
@@ -26,6 +26,14 @@ export function ReceiptUpload({
   const inputRef = useRef<HTMLInputElement>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
+  // Revoke object URL on unmount to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only revoke on unmount
+  }, []);
+
   const handleSelect = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const selected = e.target.files?.[0] ?? null;
@@ -37,8 +45,12 @@ export function ReceiptUpload({
         return;
       }
 
+      // Revoke existing preview URL before creating a new one
+      setPreviewUrl((prev) => {
+        if (prev) URL.revokeObjectURL(prev);
+        return URL.createObjectURL(selected);
+      });
       onFileChange(selected);
-      setPreviewUrl(URL.createObjectURL(selected));
     },
     [onFileChange],
   );

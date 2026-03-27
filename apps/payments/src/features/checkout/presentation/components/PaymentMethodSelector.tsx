@@ -1,6 +1,7 @@
 "use client";
 
 import { useLocale, useTranslations } from "next-intl";
+import { useId } from "react";
 import { tid } from "shared";
 
 import type { SellerPaymentMethodWithType } from "@/features/checkout/domain/types";
@@ -20,6 +21,7 @@ export function PaymentMethodSelector({
 }: PaymentMethodSelectorProps) {
   const t = useTranslations("checkout");
   const locale = useLocale();
+  const selectId = useId();
 
   const getTypeName = (method: SellerPaymentMethodWithType) =>
     locale === "es" ? method.type_name_es : method.type_name_en;
@@ -34,10 +36,14 @@ export function PaymentMethodSelector({
 
   return (
     <div className="space-y-3" {...tid("payment-method-selector")}>
-      <label className="font-display text-xs font-extrabold uppercase tracking-widest">
+      <label
+        htmlFor={selectId}
+        className="font-display text-xs font-extrabold uppercase tracking-widest"
+      >
         {t("selectPaymentMethod")}
       </label>
       <select
+        id={selectId}
         value={selectedId ?? ""}
         onChange={(e) => onSelect(e.target.value)}
         disabled={disabled}

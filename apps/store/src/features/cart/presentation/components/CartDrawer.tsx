@@ -3,7 +3,7 @@
 import { ShoppingCart, Trash2 } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useMemo } from "react";
-import { tid } from "shared";
+import { i18nPrice, tid } from "shared";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "ui";
 
 import { CartItemRow } from "./CartItemRow";
@@ -48,14 +48,9 @@ export function CartDrawer() {
       ? t("itemCountBadge", { count: BADGE_OVERFLOW_THRESHOLD })
       : String(itemCount);
 
-  const formatSubtotal = (subtotal: number) => {
-    if (locale === "en") {
-      // eslint-disable-next-line i18next/no-literal-string -- currency format, not translatable prose
-      return `USD $${subtotal.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-    }
-    // eslint-disable-next-line i18next/no-literal-string -- currency format, not translatable prose
-    return `COP $${subtotal.toLocaleString("es-CO", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
-  };
+  /** Format a raw currency amount using the shared i18nPrice utility */
+  const formatAmount = (amount: number) =>
+    i18nPrice({ price_cop: amount, price_usd: amount }, locale);
 
   return (
     <Sheet>
@@ -169,7 +164,7 @@ export function CartDrawer() {
                           className="font-display text-xs font-bold text-muted-foreground"
                           {...tid("cart-seller-subtotal")}
                         >
-                          {formatSubtotal(group.subtotal)}
+                          {formatAmount(group.subtotal)}
                         </span>
                       </div>
                     )}
@@ -202,12 +197,7 @@ export function CartDrawer() {
                   className="font-display text-2xl font-extrabold"
                   {...tid("cart-drawer-total")}
                 >
-                  <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground mr-1">
-                    {locale === "en" ? "USD" : "COP"}
-                  </span>
-                  {locale === "en"
-                    ? `$${total.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-                    : `$${total.toLocaleString("es-CO", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`}
+                  {formatAmount(total)}
                 </span>
               </div>
 

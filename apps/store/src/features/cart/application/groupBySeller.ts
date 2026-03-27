@@ -1,10 +1,4 @@
-import type { CartItem } from "@/features/cart/domain/types";
-
-export interface SellerGroup {
-  sellerId: string;
-  items: CartItem[];
-  subtotal: number;
-}
+import type { CartItem, SellerGroup } from "@/features/cart/domain/types";
 
 /** Group cart items by seller_id, calculating subtotal per group */
 export function groupCartBySeller(items: CartItem[]): SellerGroup[] {

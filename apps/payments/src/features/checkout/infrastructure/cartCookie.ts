@@ -1,4 +1,4 @@
-import { getCookie } from "cookies-next";
+import { deleteCookie, getCookie } from "cookies-next";
 
 import { CART_COOKIE_KEY } from "@/features/checkout/domain/constants";
 import type { CartItem } from "@/features/checkout/domain/types";
@@ -29,6 +29,5 @@ export function readCartFromCookie(): CartItem[] {
 
 /** Clear the cart cookie by expiring it. */
 export function clearCartCookie(): void {
-  // eslint-disable-next-line unicorn/no-document-cookie, i18next/no-literal-string -- cookie manipulation requires document.cookie
-  document.cookie = `${CART_COOKIE_KEY}=; path=/; max-age=0`;
+  deleteCookie(CART_COOKIE_KEY, { path: "/" });
 }
