@@ -155,7 +155,10 @@
     "decreaseQty": "Disminuir cantidad de {name}",
     "increaseQty": "Aumentar cantidad de {name}",
     "itemCountBadge": "{count}+",
-    "removeItem": "Eliminar {name}"
+    "removeItem": "Eliminar {name}",
+    "sellerGroup": "{sellerName}",
+    "unknownSeller": "Vendedor desconocido",
+    "subtotal": "Subtotal"
   },
   "categories": {
     "fursuits": "Fursuits",
