@@ -13,7 +13,8 @@ export function useSellerPaymentMethods(sellerId: string) {
   const supabase = useMemo(() => createBrowserSupabaseClient(), []);
 
   return useQuery({
-    queryKey: ["seller-payment-methods", sellerId, supabase],
+    // eslint-disable-next-line @tanstack/query/exhaustive-deps -- supabase is not serializable (circular refs)
+    queryKey: ["seller-payment-methods", sellerId],
     queryFn: () => fetchSellerPaymentMethods(supabase, sellerId),
     enabled: !!sellerId,
   });
