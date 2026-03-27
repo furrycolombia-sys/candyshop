@@ -88,6 +88,10 @@
     "digital": "Digital",
     "deals": "Ofertas"
   },
+  "orders": {
+    "pendingOrders": "{count} pendientes",
+    "viewOrders": "Ver Ordenes"
+  },
   "paymentMethods": {
     "title": "Mis Metodos de Pago",
     "subtitle": "Configura como los compradores pueden pagarte",

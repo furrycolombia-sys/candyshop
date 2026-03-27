@@ -5,9 +5,9 @@ import { useMemo, useSyncExternalStore } from "react";
 
 import { useSellerProfiles } from "./useSellerProfiles";
 
-import { FALLBACK_SELLER_NAME } from "@/features/checkout/domain/constants";
 import type { CartItem, SellerGroup } from "@/features/checkout/domain/types";
 import { readCartFromCookie } from "@/features/checkout/infrastructure/cartCookie";
+import { FALLBACK_SELLER_NAME } from "@/shared/domain/constants";
 
 /** Stable empty array so the server snapshot reference never changes. */
 const EMPTY: CartItem[] = [];

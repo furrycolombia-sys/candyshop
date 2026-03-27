@@ -8,12 +8,12 @@ import { tid } from "shared";
 import { SellerCheckoutContent } from "./SellerCheckoutContent";
 
 import { useSellerPaymentMethods } from "@/features/checkout/application/hooks/useSellerPaymentMethods";
-import { formatCop } from "@/features/checkout/domain/constants";
 import type {
   CartItem,
   CheckoutSellerStatus,
   SellerPaymentMethodWithType,
 } from "@/features/checkout/domain/types";
+import { formatCop } from "@/shared/application/utils/formatCop";
 
 interface SellerCheckoutCardProps {
   sellerId: string;

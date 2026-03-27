@@ -1,8 +1,3 @@
-import type { createBrowserSupabaseClient } from "api/supabase";
-
-/** Supabase client type alias used across checkout infrastructure. */
-export type SupabaseClient = ReturnType<typeof createBrowserSupabaseClient>;
-
 /**
  * Checkout feature domain types.
  *
