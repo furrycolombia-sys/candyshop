@@ -25,13 +25,18 @@ export function ReceiptUpload({
   const t = useTranslations("checkout");
   const inputRef = useRef<HTMLInputElement>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const previewUrlRef = useRef<string | null>(null);
+
+  // Keep ref in sync with state for unmount cleanup
+  useEffect(() => {
+    previewUrlRef.current = previewUrl;
+  }, [previewUrl]);
 
   // Revoke object URL on unmount to prevent memory leaks
   useEffect(() => {
     return () => {
-      if (previewUrl) URL.revokeObjectURL(previewUrl);
+      if (previewUrlRef.current) URL.revokeObjectURL(previewUrlRef.current);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- only revoke on unmount
   }, []);
 
   const handleSelect = useCallback(

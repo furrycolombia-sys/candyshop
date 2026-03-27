@@ -11,17 +11,6 @@ import type {
   SupabaseClient,
 } from "@/features/checkout/domain/types";
 
-/**
- * The generated Supabase types don't include tables added in recent migrations
- * (seller_payment_methods, payment_method_types, user_profiles, new order columns,
- * reserve_stock / release_stock RPCs).
- *
- * We use a loosely-typed cast for those specific queries until `pnpm codegen`
- * regenerates the types with the latest schema.
- */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any, sonarjs/redundant-type-aliases -- intentional alias for untyped Supabase tables
-type UntypedClient = any;
-
 interface PaymentMethodRow {
   id: string;
   account_details_en: string | null;
@@ -37,12 +26,6 @@ interface PaymentMethodRow {
   };
 }
 
-interface ProfileRow {
-  id: string;
-  display_name: string | null;
-  email: string | null;
-}
-
 /**
  * Fetch a seller's active payment methods joined with their type info.
  */
@@ -50,10 +33,8 @@ export async function fetchSellerPaymentMethods(
   supabase: SupabaseClient,
   sellerId: string,
 ): Promise<SellerPaymentMethodWithType[]> {
-  const client = supabase as UntypedClient;
-
   /* eslint-disable i18next/no-literal-string -- Supabase query DSL, not user-facing text */
-  const { data, error } = await client
+  const { data, error } = await supabase
     .from("seller_payment_methods")
     .select(
       `
@@ -109,7 +90,6 @@ export async function createOrder(
   supabase: SupabaseClient,
   params: CreateOrderParams,
 ): Promise<string> {
-  const client = supabase as UntypedClient;
   const {
     userId,
     sellerId,
@@ -123,7 +103,7 @@ export async function createOrder(
   const reserved: Array<{ productId: string; quantity: number }> = [];
 
   for (const item of items) {
-    const { data: success, error } = await client.rpc("reserve_stock", {
+    const { data: success, error } = await supabase.rpc("reserve_stock", {
       p_product_id: item.id,
       p_quantity: item.quantity,
     });
@@ -131,7 +111,7 @@ export async function createOrder(
     if (error || !success) {
       // Release already-reserved items
       for (const r of reserved) {
-        await client.rpc("release_stock", {
+        await supabase.rpc("release_stock", {
           p_product_id: r.productId,
           p_quantity: r.quantity,
         });
@@ -151,8 +131,8 @@ export async function createOrder(
         MS_PER_SECOND,
   ).toISOString();
 
-  // Insert order (uses new columns not yet in generated types)
-  const { data: order, error: orderError } = await client
+  // Insert order
+  const { data: order, error: orderError } = await supabase
     .from("orders")
     .insert({
       user_id: userId,
@@ -169,7 +149,7 @@ export async function createOrder(
   if (orderError || !order) {
     // Release stock on order insert failure
     for (const r of reserved) {
-      await client.rpc("release_stock", {
+      await supabase.rpc("release_stock", {
         p_product_id: r.productId,
         p_quantity: r.quantity,
       });
@@ -177,7 +157,7 @@ export async function createOrder(
     throw orderError ?? new Error("Failed to create order");
   }
 
-  const orderId = (order as { id: string }).id;
+  const orderId = order.id;
 
   // Insert order items
   const orderItems = items.map((item) => ({
@@ -206,9 +186,7 @@ export async function submitReceipt(
   transferNumber: string | null,
   receiptUrl: string | null,
 ): Promise<void> {
-  const client = supabase as UntypedClient;
-
-  const { error } = await client
+  const { error } = await supabase
     .from("orders")
     .update({
       transfer_number: transferNumber,
@@ -229,10 +207,8 @@ export async function fetchSellerProfiles(
 ): Promise<Record<string, string>> {
   if (sellerIds.length === 0) return {};
 
-  const client = supabase as UntypedClient;
-
   /* eslint-disable i18next/no-literal-string -- Supabase query DSL, not user-facing text */
-  const { data, error } = await client
+  const { data, error } = await supabase
     .from("user_profiles")
     .select("id, display_name, email")
     .in("id", sellerIds);
@@ -241,7 +217,7 @@ export async function fetchSellerProfiles(
   if (error) throw error;
 
   const map: Record<string, string> = {};
-  for (const profile of (data ?? []) as ProfileRow[]) {
+  for (const profile of data ?? []) {
     map[profile.id] =
       profile.display_name ?? profile.email ?? FALLBACK_SELLER_NAME;
   }

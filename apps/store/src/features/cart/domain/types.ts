@@ -18,7 +18,7 @@ export interface SellerGroup {
   subtotal: number;
 }
 
-/** A seller profile row from user_profiles (not yet in generated DB types) */
+/** A seller profile subset used for cart seller display names. */
 export interface SellerProfile {
   id: string;
   display_name: string | null;

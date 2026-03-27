@@ -12,11 +12,9 @@ import { fetchSellerProfiles } from "@/features/checkout/infrastructure/checkout
  */
 export function useSellerProfiles(sellerIds: string[]) {
   const supabase = useMemo(() => createBrowserSupabaseClient(), []);
-  const key = [...sellerIds].sort().join(",");
 
   return useQuery({
-    // eslint-disable-next-line @tanstack/query/exhaustive-deps -- supabase client is stable (memoized), sellerIds represented by `key`
-    queryKey: ["seller-profiles", key],
+    queryKey: ["seller-profiles", sellerIds, supabase],
     queryFn: () => fetchSellerProfiles(supabase, sellerIds),
     enabled: sellerIds.length > 0,
   });

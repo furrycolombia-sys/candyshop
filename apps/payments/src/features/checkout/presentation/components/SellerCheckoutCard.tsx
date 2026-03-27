@@ -8,6 +8,7 @@ import { tid } from "shared";
 import { SellerCheckoutContent } from "./SellerCheckoutContent";
 
 import { useSellerPaymentMethods } from "@/features/checkout/application/hooks/useSellerPaymentMethods";
+import { formatCop } from "@/features/checkout/domain/constants";
 import type {
   CartItem,
   CheckoutSellerStatus,
@@ -108,9 +109,8 @@ export function SellerCheckoutCard({
               {sellerName}
             </h3>
             <p className="text-xs text-muted-foreground">
-              {/* eslint-disable-next-line i18next/no-literal-string -- currency format, not translatable prose */}
-              {t("items", { count: items.length })} &middot; $
-              {subtotalCop.toLocaleString()} COP
+              {t("items", { count: items.length })} &middot;{" "}
+              {formatCop(subtotalCop)}
             </p>
           </div>
         </div>
