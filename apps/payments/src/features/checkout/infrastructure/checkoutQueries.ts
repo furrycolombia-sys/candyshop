@@ -1,3 +1,4 @@
+/* eslint-disable i18next/no-literal-string -- infrastructure file: Supabase table/column names are SQL identifiers, not user-facing text */
 import {
   FALLBACK_SELLER_NAME,
   MINUTES_PER_HOUR,
@@ -33,7 +34,6 @@ export async function fetchSellerPaymentMethods(
   supabase: SupabaseClient,
   sellerId: string,
 ): Promise<SellerPaymentMethodWithType[]> {
-  /* eslint-disable i18next/no-literal-string -- Supabase query DSL, not user-facing text */
   const { data, error } = await supabase
     .from("seller_payment_methods")
     .select(
@@ -55,7 +55,6 @@ export async function fetchSellerPaymentMethods(
     .eq("seller_id", sellerId)
     .eq("is_active", true)
     .order("sort_order");
-  /* eslint-enable i18next/no-literal-string */
 
   if (error) throw error;
 
@@ -207,12 +206,10 @@ export async function fetchSellerProfiles(
 ): Promise<Record<string, string>> {
   if (sellerIds.length === 0) return {};
 
-  /* eslint-disable i18next/no-literal-string -- Supabase query DSL, not user-facing text */
   const { data, error } = await supabase
     .from("user_profiles")
     .select("id, display_name, email")
     .in("id", sellerIds);
-  /* eslint-enable i18next/no-literal-string */
 
   if (error) throw error;
 
