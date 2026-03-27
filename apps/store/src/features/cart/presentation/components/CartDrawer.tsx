@@ -2,14 +2,17 @@
 
 import { ShoppingCart, Trash2 } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
-import { useCallback } from "react";
-import { tid } from "shared";
+import { useCallback, useMemo } from "react";
+import { i18nPrice, tid } from "shared";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "ui";
 
 import { CartItemRow } from "./CartItemRow";
 
 import { useCart } from "@/features/cart/application/CartContext";
 import { useFlyToCartContext } from "@/features/cart/application/FlyToCartContext";
+import { groupCartBySeller } from "@/features/cart/application/groupBySeller";
+import { useSellerProfiles } from "@/features/cart/application/useSellerProfiles";
+import { appUrls } from "@/shared/infrastructure/config";
 
 const BADGE_OVERFLOW_THRESHOLD = 99;
 
@@ -22,6 +25,14 @@ export function CartDrawer() {
   const { items, total, itemCount, removeItem, updateQuantity, clearCart } =
     useCart();
   const flyCtx = useFlyToCartContext();
+
+  // Group items by seller
+  const sellerGroups = useMemo(() => groupCartBySeller(items), [items]);
+  const sellerIds = useMemo(
+    () => sellerGroups.map((g) => g.sellerId),
+    [sellerGroups],
+  );
+  const { data: sellerNames } = useSellerProfiles(sellerIds);
 
   // Merge SheetTrigger's forwarded ref with the fly-to-cart target ref
   const setCartTarget = flyCtx?.setCartTarget;
@@ -36,6 +47,10 @@ export function CartDrawer() {
     itemCount > BADGE_OVERFLOW_THRESHOLD
       ? t("itemCountBadge", { count: BADGE_OVERFLOW_THRESHOLD })
       : String(itemCount);
+
+  /** Format a raw currency amount using the shared i18nPrice utility */
+  const formatAmount = (amount: number) =>
+    i18nPrice({ price_cop: amount, price_usd: amount }, locale);
 
   return (
     <Sheet>
@@ -100,27 +115,63 @@ export function CartDrawer() {
           </div>
         )}
 
-        {/* Cart items */}
+        {/* Cart items grouped by seller */}
         {items.length > 0 && (
           <>
-            <ul
+            <div
               className="flex flex-1 flex-col overflow-y-auto"
               {...tid("cart-drawer-items")}
             >
-              {items.map((item) => (
-                <CartItemRow
-                  key={item.id}
-                  item={item}
-                  locale={locale}
-                  tProducts={tProducts}
-                  tTypes={tTypes}
-                  tCategories={tCategories}
-                  t={t}
-                  removeItem={removeItem}
-                  updateQuantity={updateQuantity}
-                />
-              ))}
-            </ul>
+              {sellerGroups.map((group) => {
+                const sellerName =
+                  group.sellerId === "unknown"
+                    ? t("unknownSeller")
+                    : (sellerNames?.[group.sellerId] ?? t("unknownSeller"));
+
+                return (
+                  <div key={group.sellerId} {...tid("cart-seller-group")}>
+                    {/* Seller header */}
+                    <div className="border-b border-foreground/10 px-5 pt-4 pb-2">
+                      <span className="font-display text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                        {t("sellerGroup", { sellerName })}
+                      </span>
+                    </div>
+
+                    {/* Seller items */}
+                    <ul>
+                      {group.items.map((item) => (
+                        <CartItemRow
+                          key={item.id}
+                          item={item}
+                          locale={locale}
+                          tProducts={tProducts}
+                          tTypes={tTypes}
+                          tCategories={tCategories}
+                          t={t}
+                          removeItem={removeItem}
+                          updateQuantity={updateQuantity}
+                        />
+                      ))}
+                    </ul>
+
+                    {/* Seller subtotal */}
+                    {sellerGroups.length > 1 && (
+                      <div className="flex items-center justify-between px-5 py-2 border-b border-foreground/10">
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                          {t("subtotal")}
+                        </span>
+                        <span
+                          className="font-display text-xs font-bold text-muted-foreground"
+                          {...tid("cart-seller-subtotal")}
+                        >
+                          {formatAmount(group.subtotal)}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
 
             {/* Footer */}
             <div className="border-t-3 border-foreground px-5 py-4 flex flex-col gap-3 bg-background">
@@ -146,25 +197,18 @@ export function CartDrawer() {
                   className="font-display text-2xl font-extrabold"
                   {...tid("cart-drawer-total")}
                 >
-                  <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground mr-1">
-                    {locale === "en" ? "USD" : "COP"}
-                  </span>
-                  {locale === "en"
-                    ? `$${total.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-                    : `$${total.toLocaleString("es-CO", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`}
+                  {formatAmount(total)}
                 </span>
               </div>
 
               {/* Checkout */}
-              <button
-                type="button"
-                className="nb-btn nb-btn-press-lg nb-shadow-sm w-full justify-center font-display text-sm font-extrabold uppercase tracking-widest py-3 bg-pink opacity-50 cursor-not-allowed"
-                disabled
-                title={t("checkoutComingSoon")}
-                {...tid("cart-drawer-checkout")}
+              <a
+                href={`${appUrls.payments}/${locale}/checkout`}
+                className="nb-btn nb-btn-press-sm flex w-full items-center justify-center gap-2 border-3 border-foreground bg-foreground px-6 py-3 text-sm font-bold uppercase tracking-wider text-background"
+                {...tid("cart-checkout")}
               >
                 {t("checkout")}
-              </button>
+              </a>
             </div>
           </>
         )}

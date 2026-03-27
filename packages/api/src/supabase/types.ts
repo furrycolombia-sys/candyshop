@@ -7,6 +7,87 @@ export type Json =
   | Json[];
 
 export type Database = {
+  audit: {
+    Tables: {
+      logged_actions: {
+        Row: {
+          action_timestamp: string;
+          action_type: string;
+          changed_fields: Json | null;
+          client_ip: unknown;
+          db_user: string;
+          event_id: number;
+          row_data: Json | null;
+          schema_name: string;
+          table_name: string;
+          transaction_id: number | null;
+          user_id: string | null;
+        };
+        Insert: {
+          action_timestamp?: string;
+          action_type: string;
+          changed_fields?: Json | null;
+          client_ip?: unknown;
+          db_user?: string;
+          event_id?: number;
+          row_data?: Json | null;
+          schema_name: string;
+          table_name: string;
+          transaction_id?: number | null;
+          user_id?: string | null;
+        };
+        Update: {
+          action_timestamp?: string;
+          action_type?: string;
+          changed_fields?: Json | null;
+          client_ip?: unknown;
+          db_user?: string;
+          event_id?: number;
+          row_data?: Json | null;
+          schema_name?: string;
+          table_name?: string;
+          transaction_id?: number | null;
+          user_id?: string | null;
+        };
+        Relationships: [];
+      };
+    };
+    Views: {
+      logged_actions_with_user: {
+        Row: {
+          action_timestamp: string | null;
+          action_type: string | null;
+          changed_fields: Json | null;
+          client_ip: unknown;
+          db_user: string | null;
+          event_id: number | null;
+          row_data: Json | null;
+          schema_name: string | null;
+          table_name: string | null;
+          transaction_id: number | null;
+          user_avatar: string | null;
+          user_display_name: string | null;
+          user_email: string | null;
+          user_id: string | null;
+        };
+        Relationships: [];
+      };
+    };
+    Functions: {
+      archive_old_logs: {
+        Args: { batch_size?: number; retention_days?: number };
+        Returns: number;
+      };
+      disable_tracking: { Args: { target_table: unknown }; Returns: undefined };
+      enable_tracking: { Args: { target_table: unknown }; Returns: undefined };
+    };
+    Enums: {
+      [_ in never]: never;
+    };
+    CompositeTypes: {
+      [_ in never]: never;
+    };
+  };
   graphql_public: {
     Tables: {
       [_ in never]: never;
@@ -215,28 +296,120 @@ export type Database = {
       };
       orders: {
         Row: {
+          checkout_session_id: string | null;
           created_at: string;
+          expires_at: string | null;
           id: string;
+          payment_method_id: string | null;
           payment_status: Database["public"]["Enums"]["payment_status"];
+          receipt_url: string | null;
+          seller_id: string | null;
+          seller_note: string | null;
           stripe_session_id: string | null;
           total_cop: number;
+          transfer_number: string | null;
           user_id: string;
         };
         Insert: {
+          checkout_session_id?: string | null;
           created_at?: string;
+          expires_at?: string | null;
           id?: string;
+          payment_method_id?: string | null;
           payment_status?: Database["public"]["Enums"]["payment_status"];
+          receipt_url?: string | null;
+          seller_id?: string | null;
+          seller_note?: string | null;
           stripe_session_id?: string | null;
           total_cop: number;
+          transfer_number?: string | null;
           user_id: string;
         };
         Update: {
+          checkout_session_id?: string | null;
           created_at?: string;
+          expires_at?: string | null;
           id?: string;
+          payment_method_id?: string | null;
           payment_status?: Database["public"]["Enums"]["payment_status"];
+          receipt_url?: string | null;
+          seller_id?: string | null;
+          seller_note?: string | null;
           stripe_session_id?: string | null;
           total_cop?: number;
+          transfer_number?: string | null;
           user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "orders_payment_method_id_fkey";
+            columns: ["payment_method_id"];
+            isOneToOne: false;
+            referencedRelation: "seller_payment_methods";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      payment_method_types: {
+        Row: {
+          created_at: string;
+          description_en: string | null;
+          description_es: string | null;
+          icon: string | null;
+          id: string;
+          is_active: boolean;
+          name_en: string;
+          name_es: string;
+          requires_receipt: boolean;
+          requires_transfer_number: boolean;
+          sort_order: number;
+          updated_at: string;
+        };
+        Insert: {
+          created_at?: string;
+          description_en?: string | null;
+          description_es?: string | null;
+          icon?: string | null;
+          id?: string;
+          is_active?: boolean;
+          name_en: string;
+          name_es: string;
+          requires_receipt?: boolean;
+          requires_transfer_number?: boolean;
+          sort_order?: number;
+          updated_at?: string;
+        };
+        Update: {
+          created_at?: string;
+          description_en?: string | null;
+          description_es?: string | null;
+          icon?: string | null;
+          id?: string;
+          is_active?: boolean;
+          name_en?: string;
+          name_es?: string;
+          requires_receipt?: boolean;
+          requires_transfer_number?: boolean;
+          sort_order?: number;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      payment_settings: {
+        Row: {
+          key: string;
+          updated_at: string;
+          value: string;
+        };
+        Insert: {
+          key: string;
+          updated_at?: string;
+          value: string;
+        };
+        Update: {
+          key?: string;
+          updated_at?: string;
+          value?: string;
         };
         Relationships: [];
       };
@@ -342,6 +515,45 @@ export type Database = {
             referencedColumns: ["id"];
           },
         ];
+      };
+      product_templates: {
+        Row: {
+          created_at: string;
+          description_en: string | null;
+          description_es: string | null;
+          id: string;
+          is_active: boolean;
+          name_en: string;
+          name_es: string;
+          sections: Json;
+          sort_order: number;
+          updated_at: string;
+        };
+        Insert: {
+          created_at?: string;
+          description_en?: string | null;
+          description_es?: string | null;
+          id?: string;
+          is_active?: boolean;
+          name_en: string;
+          name_es: string;
+          sections?: Json;
+          sort_order?: number;
+          updated_at?: string;
+        };
+        Update: {
+          created_at?: string;
+          description_en?: string | null;
+          description_es?: string | null;
+          id?: string;
+          is_active?: boolean;
+          name_en?: string;
+          name_es?: string;
+          sections?: Json;
+          sort_order?: number;
+          updated_at?: string;
+        };
+        Relationships: [];
       };
       products: {
         Row: {
@@ -482,6 +694,56 @@ export type Database = {
           },
         ];
       };
+      seller_payment_methods: {
+        Row: {
+          account_details_en: string | null;
+          account_details_es: string | null;
+          created_at: string;
+          id: string;
+          is_active: boolean;
+          seller_id: string;
+          seller_note_en: string | null;
+          seller_note_es: string | null;
+          sort_order: number;
+          type_id: string;
+          updated_at: string;
+        };
+        Insert: {
+          account_details_en?: string | null;
+          account_details_es?: string | null;
+          created_at?: string;
+          id?: string;
+          is_active?: boolean;
+          seller_id: string;
+          seller_note_en?: string | null;
+          seller_note_es?: string | null;
+          sort_order?: number;
+          type_id: string;
+          updated_at?: string;
+        };
+        Update: {
+          account_details_en?: string | null;
+          account_details_es?: string | null;
+          created_at?: string;
+          id?: string;
+          is_active?: boolean;
+          seller_id?: string;
+          seller_note_en?: string | null;
+          seller_note_es?: string | null;
+          sort_order?: number;
+          type_id?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "seller_payment_methods_type_id_fkey";
+            columns: ["type_id"];
+            isOneToOne: false;
+            referencedRelation: "payment_method_types";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       ticket_transfers: {
         Row: {
           claimed_at: string | null;
@@ -567,12 +829,61 @@ export type Database = {
           },
         ];
       };
+      user_profiles: {
+        Row: {
+          avatar_url: string | null;
+          created_at: string;
+          display_avatar_url: string | null;
+          display_email: string | null;
+          display_name: string | null;
+          email: string;
+          first_seen_at: string;
+          id: string;
+          last_seen_at: string;
+          provider: string | null;
+          updated_at: string;
+        };
+        Insert: {
+          avatar_url?: string | null;
+          created_at?: string;
+          display_avatar_url?: string | null;
+          display_email?: string | null;
+          display_name?: string | null;
+          email: string;
+          first_seen_at?: string;
+          id: string;
+          last_seen_at?: string;
+          provider?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          avatar_url?: string | null;
+          created_at?: string;
+          display_avatar_url?: string | null;
+          display_email?: string | null;
+          display_name?: string | null;
+          email?: string;
+          first_seen_at?: string;
+          id?: string;
+          last_seen_at?: string;
+          provider?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: {
       [_ in never]: never;
     };
     Functions: {
-      [_ in never]: never;
+      release_stock: {
+        Args: { p_product_id: string; p_quantity: number };
+        Returns: undefined;
+      };
+      reserve_stock: {
+        Args: { p_product_id: string; p_quantity: number };
+        Returns: boolean;
+      };
     };
     Enums: {
       audit_action: "check-in" | "uncheck" | "transfer";
@@ -583,7 +894,15 @@ export type Database = {
         | "merch"
         | "party"
         | "other";
-      payment_status: "pending" | "paid";
+      payment_status:
+        | "pending"
+        | "paid"
+        | "awaiting_payment"
+        | "pending_verification"
+        | "evidence_requested"
+        | "approved"
+        | "rejected"
+        | "expired";
       permission_mode: "grant" | "deny";
       product_category:
         | "fursuits"
@@ -722,6 +1041,9 @@ export type CompositeTypes<
     : never;
 
 export const Constants = {
+  audit: {
+    Enums: {},
+  },
   graphql_public: {
     Enums: {},
   },
@@ -736,7 +1058,16 @@ export const Constants = {
         "party",
         "other",
       ],
-      payment_status: ["pending", "paid"],
+      payment_status: [
+        "pending",
+        "paid",
+        "awaiting_payment",
+        "pending_verification",
+        "evidence_requested",
+        "approved",
+        "rejected",
+        "expired",
+      ],
       permission_mode: ["grant", "deny"],
       product_category: [
         "fursuits",
