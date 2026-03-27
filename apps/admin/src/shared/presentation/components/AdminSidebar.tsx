@@ -3,10 +3,12 @@
 import {
   ChevronLeft,
   ChevronRight,
+  CreditCard,
   FileText,
   Layers,
   LayoutDashboard,
   Radio,
+  Settings,
 } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -21,11 +23,20 @@ const NAV_SECTIONS = [
     items: [
       { key: "dashboard" as const, href: "/", icon: LayoutDashboard },
       { key: "templates" as const, href: "/templates", icon: Layers },
+      {
+        key: "paymentMethods" as const,
+        href: "/payment-methods",
+        icon: CreditCard,
+      },
     ],
   },
   {
     labelKey: "monitoring" as const,
     items: [{ key: "auditLog" as const, href: "/audit", icon: FileText }],
+  },
+  {
+    labelKey: "configuration" as const,
+    items: [{ key: "settings" as const, href: "/settings", icon: Settings }],
   },
 ] as const;
 
