@@ -1,6 +1,5 @@
 /* eslint-disable i18next/no-literal-string -- infrastructure file: Supabase table/column names are SQL identifiers, not user-facing text */
 import {
-  FALLBACK_SELLER_NAME,
   MINUTES_PER_HOUR,
   MS_PER_SECOND,
   ORDER_EXPIRY_HOURS,
@@ -9,8 +8,9 @@ import {
 import type {
   CartItem,
   SellerPaymentMethodWithType,
-  SupabaseClient,
 } from "@/features/checkout/domain/types";
+import { FALLBACK_SELLER_NAME } from "@/shared/domain/constants";
+import type { SupabaseClient } from "@/shared/domain/types";
 
 interface PaymentMethodRow {
   id: string;

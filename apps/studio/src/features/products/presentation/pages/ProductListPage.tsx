@@ -7,6 +7,7 @@ import { useQueryStates } from "nuqs";
 import { tid } from "shared";
 import { Button } from "ui";
 
+import { PendingOrdersBadge } from "@/features/orders";
 import { useProducts } from "@/features/products/application/useProducts";
 import { productsSearchParams } from "@/features/products/domain/searchParams";
 import { ProductFilters } from "@/features/products/presentation/components/ProductFilters";
@@ -37,15 +38,18 @@ export function ProductListPage() {
               {t("products.subtitle")}
             </p>
           </div>
-          <Link href="/products/new">
-            <Button
-              className="nb-btn nb-shadow-md nb-btn-press-sm rounded-xl border-3 bg-brand px-6 py-3 text-brand-foreground hover:bg-brand-hover"
-              {...tid("new-product-button")}
-            >
-              <Plus className="size-5" />
-              {t("products.newProduct")}
-            </Button>
-          </Link>
+          <div className="flex items-center gap-3">
+            <PendingOrdersBadge />
+            <Link href="/products/new">
+              <Button
+                className="nb-btn nb-shadow-md nb-btn-press-sm rounded-xl border-3 bg-brand px-6 py-3 text-brand-foreground hover:bg-brand-hover"
+                {...tid("new-product-button")}
+              >
+                <Plus className="size-5" />
+                {t("products.newProduct")}
+              </Button>
+            </Link>
+          </div>
         </header>
 
         {/* Filters */}
