@@ -88,6 +88,28 @@
     "digital": "Digital",
     "deals": "Deals"
   },
+  "paymentMethods": {
+    "title": "My Payment Methods",
+    "subtitle": "Configure how buyers can pay you",
+    "addMethod": "Add Method",
+    "editMethod": "Edit Method",
+    "selectType": "Payment Type",
+    "selectTypePlaceholder": "Choose a payment method...",
+    "accountDetails": "Account Details",
+    "accountDetailsHint": "Bank account, phone number, or payment details",
+    "sellerNote": "Note to Buyers",
+    "sellerNoteHint": "Personal message shown to buyers (optional)",
+    "active": "Active",
+    "noMethods": "No payment methods configured yet",
+    "noMethodsHint": "Add a payment method so buyers can pay you",
+    "deleteConfirm": "Remove this payment method?",
+    "save": "Save",
+    "saving": "Saving...",
+    "cancel": "Cancel",
+    "backToProducts": "Products",
+    "removeMethod": "Remove method",
+    "editPaymentMethod": "Edit payment method"
+  },
   "form": {
     "subtitleCreate": "Fill in the details to create a new product.",
     "subtitleEdit": "Update the product details below.",
