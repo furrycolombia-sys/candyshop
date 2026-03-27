@@ -1,5 +1,5 @@
 import { RECEIPTS_BUCKET } from "@/features/checkout/domain/constants";
-import type { SupabaseClient } from "@/features/checkout/domain/types";
+import type { SupabaseClient } from "@/shared/domain/types";
 
 /**
  * Upload a receipt image to Supabase Storage.
