@@ -118,7 +118,8 @@ describe("AuditRowDetail", () => {
   });
 
   it("copies user id to clipboard when copy button is clicked", async () => {
-    const writeText = vi.fn<[], Promise<void>>().mockResolvedValue();
+    // eslint-disable-next-line unicorn/no-useless-undefined -- TS strict requires the argument
+    const writeText = vi.fn().mockResolvedValue(undefined);
     Object.defineProperty(navigator, "clipboard", {
       value: { writeText },
       writable: true,
