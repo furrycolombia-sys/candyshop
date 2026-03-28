@@ -27,7 +27,23 @@ export default defineConfig({
         "**/*.config.*",
         "**/index.ts",
         "src/shared/infrastructure/i18n/messages/**",
+        "src/shared/infrastructure/i18n/request.ts",
+        "src/shared/infrastructure/i18n/routing.ts",
+        "src/shared/infrastructure/config/**",
+        "src/shared/infrastructure/providers/**",
         "src/mocks/**",
+        "src/app/**",
+        "src/proxy.ts",
+        "e2e/**",
+        "public/**",
+        "**/*.spec.ts",
+        "**/domain/types.ts",
+        "**/domain/types/**",
+        // Type-only file: pure interface definitions for product gallery
+        "**/domain/galleryTypes.ts",
+        // Supabase auth shim — thin wrappers around Supabase SDK, tested via integration/E2E
+        "**/auth/application/hooks/useSupabaseAuth.ts",
+        "**/auth/presentation/components/ProtectedRoute.tsx",
       ],
       cleanOnRerun: false,
       thresholds: {

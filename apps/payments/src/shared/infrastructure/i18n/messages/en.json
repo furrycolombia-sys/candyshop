@@ -27,6 +27,16 @@
     "auth": "Account",
     "playground": "Playground"
   },
+  "sidebar": {
+    "buyer": "Buyer",
+    "seller": "Seller",
+    "checkout": "Checkout",
+    "myPurchases": "My Purchases",
+    "paymentMethods": "Payment Methods",
+    "sales": "Sales",
+    "collapse": "Collapse sidebar",
+    "expand": "Expand sidebar"
+  },
   "checkout": {
     "title": "Checkout",
     "backToStore": "Back to Store",
@@ -123,7 +133,29 @@
     "actionSuccess": "Order updated",
     "actionError": "Failed to update order"
   },
+  "paymentMethods": {
+    "title": "My Payment Methods",
+    "subtitle": "Configure how buyers can pay you",
+    "addMethod": "Add Method",
+    "editMethod": "Edit Method",
+    "selectType": "Payment Type",
+    "selectTypePlaceholder": "Choose a payment method...",
+    "accountDetails": "Account Details",
+    "accountDetailsHint": "Bank account, phone number, or payment details",
+    "sellerNote": "Note to Buyers",
+    "sellerNoteHint": "Personal message shown to buyers (optional)",
+    "active": "Active",
+    "noMethods": "No payment methods configured yet",
+    "noMethodsHint": "Add a payment method so buyers can pay you",
+    "deleteConfirm": "Remove this payment method?",
+    "save": "Save",
+    "saving": "Saving...",
+    "cancel": "Cancel",
+    "removeMethod": "Remove method",
+    "editPaymentMethod": "Edit payment method"
+  },
   "common": {
+    "loading": "Loading...",
     "theme": {
       "switchToDark": "Switch to dark mode",
       "switchToLight": "Switch to light mode",
