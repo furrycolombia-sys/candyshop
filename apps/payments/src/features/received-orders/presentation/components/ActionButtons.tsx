@@ -6,6 +6,7 @@ import { useCallback, useState } from "react";
 import { tid } from "shared";
 import { Button } from "ui";
 
+import { ConfirmActionPanel } from "./ConfirmActionPanel";
 import { SellerNoteInput } from "./SellerNoteInput";
 
 import type {
@@ -20,7 +21,7 @@ interface ActionButtonsProps {
   isPending: boolean;
 }
 
-type NoteMode = "reject" | "evidence" | null;
+type ActionMode = "approve" | "reject" | "evidence" | null;
 
 export function ActionButtons({
   orderId,
@@ -29,7 +30,7 @@ export function ActionButtons({
   isPending,
 }: ActionButtonsProps) {
   const t = useTranslations("receivedOrders");
-  const [noteMode, setNoteMode] = useState<NoteMode>(null);
+  const [mode, setMode] = useState<ActionMode>(null);
 
   const canApprove =
     status === "pending_verification" || status === "evidence_requested";
@@ -37,75 +38,106 @@ export function ActionButtons({
     status === "pending_verification" || status === "evidence_requested";
   const canRequestEvidence = status === "pending_verification";
 
-  const handleApprove = useCallback(() => {
-    if (globalThis.confirm(t("approveConfirm"))) {
-      onAction("approved");
-    }
-  }, [onAction, t]);
+  const handleConfirmApprove = useCallback(() => {
+    onAction("approved");
+    setMode(null);
+  }, [onAction]);
 
   const handleNoteSubmit = useCallback(
     (note: string) => {
-      if (noteMode === "reject") {
+      if (mode === "reject") {
         onAction("rejected", note);
-      } else if (noteMode === "evidence") {
+      } else if (mode === "evidence") {
         onAction("evidence_requested", note);
       }
-      setNoteMode(null);
+      setMode(null);
     },
-    [noteMode, onAction],
+    [mode, onAction],
   );
 
   if (!canApprove && !canReject) return null;
 
+  // Approve — inline confirmation with checkbox
+  if (mode === "approve") {
+    return (
+      <ConfirmActionPanel
+        warning={t("approveWarning")}
+        checkboxLabel={t("approveCheckbox")}
+        confirmLabel={t("confirmApprove")}
+        cancelLabel={t("cancel")}
+        variant="approve"
+        onConfirm={handleConfirmApprove}
+        onCancel={() => setMode(null)}
+        isPending={isPending}
+      />
+    );
+  }
+
+  // Reject — note input (required reason)
+  if (mode === "reject") {
+    return (
+      <SellerNoteInput
+        onSubmit={handleNoteSubmit}
+        onCancel={() => setMode(null)}
+        isPending={isPending}
+        placeholder={t("notePlaceholder")}
+      />
+    );
+  }
+
+  // Evidence request — simple note input (not destructive)
+  if (mode === "evidence") {
+    return (
+      <SellerNoteInput
+        onSubmit={handleNoteSubmit}
+        onCancel={() => setMode(null)}
+        isPending={isPending}
+        placeholder={t("notePlaceholder")}
+      />
+    );
+  }
+
+  // Default: action buttons
   return (
     <div className="flex flex-col gap-3" {...tid(`order-actions-${orderId}`)}>
-      {noteMode ? (
-        <SellerNoteInput
-          onSubmit={handleNoteSubmit}
-          onCancel={() => setNoteMode(null)}
-          isPending={isPending}
-          placeholder={t("notePlaceholder")}
-        />
-      ) : (
-        <div className="flex flex-wrap gap-2">
-          {canApprove && (
-            <Button
-              type="button"
-              onClick={handleApprove}
-              disabled={isPending}
-              className="nb-btn rounded-lg border-3 border-foreground bg-success px-4 py-1.5 font-display text-xs font-bold uppercase tracking-wider text-success-foreground"
-              {...tid(`order-approve-${orderId}`)}
-            >
-              <Check className="size-4" />
-              {t("approve")}
-            </Button>
-          )}
-          {canReject && (
-            <Button
-              type="button"
-              onClick={() => setNoteMode("reject")}
-              disabled={isPending}
-              className="nb-btn rounded-lg border-3 border-foreground bg-destructive px-4 py-1.5 font-display text-xs font-bold uppercase tracking-wider text-destructive-foreground"
-              {...tid(`order-reject-${orderId}`)}
-            >
-              <X className="size-4" />
-              {t("reject")}
-            </Button>
-          )}
-          {canRequestEvidence && (
-            <Button
-              type="button"
-              onClick={() => setNoteMode("evidence")}
-              disabled={isPending}
-              className="nb-btn rounded-lg border-3 border-foreground bg-warning px-4 py-1.5 font-display text-xs font-bold uppercase tracking-wider text-warning-foreground"
-              {...tid(`order-evidence-${orderId}`)}
-            >
-              <MessageSquareWarning className="size-4" />
-              {t("requestEvidence")}
-            </Button>
-          )}
-        </div>
-      )}
+      <div className="flex flex-wrap gap-2">
+        {canApprove && (
+          <Button
+            type="button"
+            onClick={() => setMode("approve")}
+            disabled={isPending}
+            className="nb-btn rounded-lg border-3 border-foreground bg-success px-4 py-1.5 font-display text-xs font-bold uppercase tracking-wider text-success-foreground"
+            {...tid(`order-approve-${orderId}`)}
+          >
+            <Check className="size-4" />
+            {t("approve")}
+          </Button>
+        )}
+        {canReject && (
+          <Button
+            type="button"
+            onClick={() => setMode("reject")}
+            disabled={isPending}
+            className="nb-btn rounded-lg border-3 border-foreground bg-destructive px-4 py-1.5 font-display text-xs font-bold uppercase tracking-wider text-destructive-foreground"
+            {...tid(`order-reject-${orderId}`)}
+          >
+            <X className="size-4" />
+            {t("reject")}
+          </Button>
+        )}
+        {canRequestEvidence && (
+          <Button
+            type="button"
+            onClick={() => setMode("evidence")}
+            disabled={isPending}
+            className="nb-btn rounded-lg border-3 border-foreground bg-warning px-4 py-1.5 font-display text-xs font-bold uppercase tracking-wider text-warning-foreground"
+            {...tid(`order-evidence-${orderId}`)}
+          >
+            <MessageSquareWarning className="size-4" />
+            {t("requestEvidence")}
+          </Button>
+        )}
+      </div>
     </div>
   );
 }

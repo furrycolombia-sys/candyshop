@@ -101,7 +101,10 @@
     "receiptPreview": "Receipt preview",
     "removeReceipt": "Remove receipt",
     "maxFileSize": "Max 5MB",
-    "backToStore": "Back to Store"
+    "backToStore": "Back to Store",
+    "viewDetails": "View details",
+    "hideDetails": "Hide details",
+    "total": "Total"
   },
   "receivedOrders": {
     "title": "Received Orders",
@@ -131,7 +134,14 @@
     "noTransferNumber": "No transfer number",
     "submitting": "Submitting...",
     "actionSuccess": "Order updated",
-    "actionError": "Failed to update order"
+    "actionError": "Failed to update order",
+    "permanentAction": "Permanent Action",
+    "approveWarning": "This action is permanent and cannot be undone. The buyer will be notified and stock will be committed.",
+    "approveCheckbox": "I have verified the receipt and transfer number",
+    "confirmApprove": "Confirm Approval — Irreversible",
+    "rejectWarning": "This will release reserved stock and cancel the order permanently. The buyer will be notified.",
+    "rejectCheckbox": "I understand this cannot be undone",
+    "confirmReject": "Confirm Rejection — Irreversible"
   },
   "paymentMethods": {
     "title": "My Payment Methods",

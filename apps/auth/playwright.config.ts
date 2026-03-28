@@ -35,5 +35,23 @@ export default defineConfig({
       reuseExistingServer: true,
       timeout: 120_000,
     },
+    {
+      command: process.env.CI
+        ? "npx next start --port 5005"
+        : "npx next dev --port 5005",
+      cwd: path.resolve(__dirname, "../payments"),
+      url: "http://localhost:5005",
+      reuseExistingServer: true,
+      timeout: 120_000,
+    },
+    {
+      command: process.env.CI
+        ? "npx next start --port 5006"
+        : "npx next dev --port 5006",
+      cwd: path.resolve(__dirname, "../studio"),
+      url: "http://localhost:5006",
+      reuseExistingServer: true,
+      timeout: 120_000,
+    },
   ],
 });
