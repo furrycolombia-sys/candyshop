@@ -1,4 +1,7 @@
-import { expect, test } from "@playwright/test";
+import fs from "node:fs";
+import path from "node:path";
+
+import { expect, test, type Page } from "@playwright/test";
 
 import { cleanupTestData } from "./helpers/cleanup";
 import {
@@ -8,11 +11,26 @@ import {
   type TestUser,
 } from "./helpers/session";
 
+const SCREENSHOTS_DIR = path.resolve(__dirname, "screenshots");
+fs.mkdirSync(SCREENSHOTS_DIR, { recursive: true });
+
+const STUDIO = "http://localhost:5006";
 const STORE = "http://localhost:5001";
 const PAYMENTS = "http://localhost:5005";
 
+let stepCounter = 0;
+
+async function snap(page: Page, label: string): Promise<void> {
+  stepCounter++;
+  const filename = `${String(stepCounter).padStart(2, "0")}-${label}.png`;
+  await page.screenshot({
+    path: path.join(SCREENSHOTS_DIR, filename),
+    fullPage: true,
+  });
+}
+
 /**
- * Full purchase flow E2E test.
+ * Full purchase flow E2E test — with screenshots at every step.
  *
  * Exercises the complete seller → buyer → approval lifecycle:
  * 1. Seller creates a product in Studio
@@ -30,6 +48,7 @@ test.describe.serial("Full purchase flow: seller → buyer → approval", () => 
   let buyer: TestUser;
 
   test.beforeAll(async () => {
+    stepCounter = 0;
     seller = await createTestUser("seller");
     buyer = await createTestUser("buyer");
   });
@@ -37,8 +56,6 @@ test.describe.serial("Full purchase flow: seller → buyer → approval", () => 
   test.afterAll(async () => {
     await cleanupTestData(seller.userId, buyer.userId);
   });
-
-  // ─── Phase 1-2: Seller setup via admin API (product + payment method) ───
 
   // ─── Phase 1: Seller creates a product in Studio ───────────────
 
@@ -49,33 +66,38 @@ test.describe.serial("Full purchase flow: seller → buyer → approval", () => 
     await injectSession(context, seller);
 
     // Navigate to studio
-    await page.goto("http://localhost:5006/en");
+    await page.goto(`${STUDIO}/en`);
     await page.waitForLoadState("networkidle");
+    await snap(page, "studio-product-list");
 
     // Click "New Product"
     await page.getByTestId("new-product-button").click();
     await page.waitForLoadState("networkidle");
+    await snap(page, "studio-new-product-empty");
 
     // Fill product name (EN)
     const nameField = page.getByTestId("inline-text-en-name_en");
     await nameField.click();
     await nameField.fill("E2E Test Product");
+    await snap(page, "studio-product-name-filled");
 
     // Set price COP
     const priceField = page.getByTestId("inline-price-cop");
     await priceField.click();
     await priceField.fill("10000");
+    await snap(page, "studio-product-price-filled");
 
     // Save (button says "CREATE")
     await page.getByTestId("toolbar-save").click();
 
     // Wait for redirect back to product list
-    await page.waitForURL("http://localhost:5006/en", { timeout: 15_000 });
+    await page.waitForURL(`${STUDIO}/en`, { timeout: 15_000 });
 
     // Verify product appears in table
     await expect(page.getByTestId("product-table")).toBeVisible({
       timeout: 10_000,
     });
+    await snap(page, "studio-product-created");
   });
 
   // ─── Phase 2: Seller configures payment method in Payments ─────
@@ -84,7 +106,7 @@ test.describe.serial("Full purchase flow: seller → buyer → approval", () => 
     await injectSession(context, seller);
 
     // Ensure an E2E payment type exists (no receipt required)
-    // This is admin-level setup — must use API since the seller can't create types
+    // This is admin-level setup — seller can't create types
     await adminInsert("payment_method_types", {
       name_en: "E2E Direct Transfer",
       name_es: "Transferencia E2E",
@@ -98,21 +120,24 @@ test.describe.serial("Full purchase flow: seller → buyer → approval", () => 
     // Navigate to payments app — payment methods page
     await page.goto(`${PAYMENTS}/en/payment-methods`);
     await page.waitForLoadState("networkidle");
+    await snap(page, "payments-methods-empty");
 
     // Click "Add Method"
     await page.getByTestId("add-payment-method-button").click();
+    await snap(page, "payments-method-editor-open");
 
     // Wait for the type select and select "E2E Direct Transfer"
     const typeSelect = page.getByTestId("payment-method-type-select");
     await typeSelect.waitFor({ state: "visible" });
     await page.waitForTimeout(1000);
-    // Select by label text
     await typeSelect.selectOption({ label: "E2E Direct Transfer" });
+    await snap(page, "payments-method-type-selected");
 
     // Fill account details (EN)
     await page
       .getByTestId("payment-method-account-en")
       .fill("E2E Bank Account 12345");
+    await snap(page, "payments-method-details-filled");
 
     // Save
     await page.getByTestId("payment-method-save").click();
@@ -124,6 +149,7 @@ test.describe.serial("Full purchase flow: seller → buyer → approval", () => 
 
     // Verify method appears in the table
     await expect(page.getByTestId("payment-methods-page")).toBeVisible();
+    await snap(page, "payments-method-saved");
   });
 
   // ─── Phase 3-4: Buyer browses store, adds to cart, checks out ──
@@ -137,10 +163,12 @@ test.describe.serial("Full purchase flow: seller → buyer → approval", () => 
     // Go to store catalog
     await page.goto(`${STORE}/en`);
     await page.waitForLoadState("networkidle");
+    await snap(page, "store-catalog");
 
     // Search for the seller's product
     await page.getByTestId("search-bar-input").fill("E2E Test");
     await page.waitForTimeout(1000); // debounce
+    await snap(page, "store-search-results");
 
     // Click the first matching product card
     const productCard = page.getByTestId("product-card-link").first();
@@ -149,9 +177,11 @@ test.describe.serial("Full purchase flow: seller → buyer → approval", () => 
 
     // Wait for product detail page
     await page.waitForLoadState("networkidle");
+    await snap(page, "store-product-detail");
 
     // Click "Add to Cart"
     await page.getByTestId("hero-add-to-cart").click();
+    await snap(page, "store-added-to-cart");
 
     // Wait for add-to-cart animation to finish
     await page.waitForTimeout(2000);
@@ -165,6 +195,7 @@ test.describe.serial("Full purchase flow: seller → buyer → approval", () => 
     // Verify item in cart
     await expect(page.getByTestId("cart-drawer-items")).toBeVisible();
     await expect(page.getByTestId("cart-item-name")).toBeVisible();
+    await snap(page, "store-cart-open");
 
     // Click checkout — navigates to payments app
     await page.getByTestId("cart-checkout").click();
@@ -177,6 +208,7 @@ test.describe.serial("Full purchase flow: seller → buyer → approval", () => 
     await expect(page.getByTestId("checkout-items-summary")).toBeVisible({
       timeout: 10_000,
     });
+    await snap(page, "checkout-page-loaded");
 
     // Select payment method
     const methodSelect = page.getByTestId("payment-method-select").first();
@@ -186,6 +218,7 @@ test.describe.serial("Full purchase flow: seller → buyer → approval", () => 
     if (!selectedValue) {
       await methodSelect.selectOption({ index: 1 });
     }
+    await snap(page, "checkout-method-selected");
 
     // Enter transfer number
     const transferInput = page.getByTestId(/^transfer-number-/).first();
@@ -195,6 +228,7 @@ test.describe.serial("Full purchase flow: seller → buyer → approval", () => 
     if (transferVisible) {
       await transferInput.fill("TXN-E2E-12345");
     }
+    await snap(page, "checkout-form-filled");
 
     // Submit payment (no receipt needed — E2E payment type)
     const submitBtn = page.getByTestId(/^submit-payment-/).first();
@@ -204,6 +238,7 @@ test.describe.serial("Full purchase flow: seller → buyer → approval", () => 
     await expect(page.getByTestId("checkout-all-submitted")).toBeVisible({
       timeout: 30_000,
     });
+    await snap(page, "checkout-submitted");
   });
 
   // ─── Phase 5: Buyer verifies order status ─────────────────────
@@ -221,6 +256,7 @@ test.describe.serial("Full purchase flow: seller → buyer → approval", () => 
     await expect(
       page.getByTestId("order-status-pending_verification"),
     ).toBeVisible({ timeout: 10_000 });
+    await snap(page, "buyer-order-pending");
   });
 
   // ─── Phase 6: Seller approves the payment ─────────────────────
@@ -234,6 +270,7 @@ test.describe.serial("Full purchase flow: seller → buyer → approval", () => 
     // Find the approve button
     const approveBtn = page.getByTestId(/^order-approve-/).first();
     await expect(approveBtn).toBeVisible({ timeout: 10_000 });
+    await snap(page, "seller-order-received");
 
     // Accept the confirm dialog before clicking
     page.on("dialog", (dialog) => dialog.accept());
@@ -248,6 +285,7 @@ test.describe.serial("Full purchase flow: seller → buyer → approval", () => 
     await expect(page.getByTestId(/^order-approve-/).first()).not.toBeVisible({
       timeout: 15_000,
     });
+    await snap(page, "seller-order-approved");
   });
 
   // ─── Phase 7: Buyer sees approval ─────────────────────────────
@@ -262,5 +300,6 @@ test.describe.serial("Full purchase flow: seller → buyer → approval", () => 
     await expect(page.getByTestId("order-status-approved")).toBeVisible({
       timeout: 10_000,
     });
+    await snap(page, "buyer-order-approved");
   });
 });
