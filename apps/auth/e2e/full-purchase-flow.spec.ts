@@ -262,16 +262,24 @@ test.describe.serial("Full purchase flow: seller → buyer → approval", () => 
     await page.goto(`${PAYMENTS}/en/sales`);
     await page.waitForLoadState("networkidle");
 
-    // Find the approve button
+    // Find and click the approve button
     const approveBtn = page.getByTestId(/^order-approve-/).first();
     await expect(approveBtn).toBeVisible({ timeout: 10_000 });
     await snap(page, "seller-order-received");
 
-    // Accept the confirm dialog before clicking
-    page.on("dialog", (dialog) => dialog.accept());
+    // Click approve — opens inline confirmation panel
     await approveBtn.click();
+    await expect(page.getByTestId("confirm-action-panel")).toBeVisible();
+    await snap(page, "seller-approve-confirmation");
 
-    // Wait for mutation to complete, then reload to see updated status
+    // Check the verification checkbox
+    await page.getByTestId("confirm-checkbox").check();
+    await snap(page, "seller-approve-checkbox-checked");
+
+    // Click the irreversible confirm button
+    await page.getByTestId("confirm-action-submit").click();
+
+    // Wait for mutation to complete, then reload
     await page.waitForTimeout(3000);
     await page.reload();
     await page.waitForLoadState("networkidle");

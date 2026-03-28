@@ -1,10 +1,12 @@
 "use client";
 
-import { ChevronDown, ChevronUp, Clock, Store } from "lucide-react";
+import { ChevronDown, ChevronUp, Clock } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useCallback, useState } from "react";
 import { tid } from "shared";
 
 import { useResubmitEvidence } from "@/features/orders/application/hooks/useResubmitEvidence";
+import { STATUS_COLORS } from "@/features/orders/domain/constants";
 import type { OrderWithItems } from "@/features/orders/domain/types";
 import { ExpirationLabel } from "@/features/orders/presentation/components/ExpirationLabel";
 import { OrderItemsList } from "@/features/orders/presentation/components/OrderItemsList";
@@ -14,15 +16,12 @@ import { formatCop } from "@/shared/application/utils/formatCop";
 
 const TERMINAL_STATUSES = new Set(["approved", "rejected", "expired"]);
 
-function isTerminalStatus(status: string): boolean {
-  return TERMINAL_STATUSES.has(status);
-}
-
 interface OrderCardProps {
   order: OrderWithItems;
 }
 
 export function OrderCard({ order }: OrderCardProps) {
+  const t = useTranslations("orders");
   const [isExpanded, setIsExpanded] = useState(
     order.payment_status === "evidence_requested",
   );
@@ -30,75 +29,82 @@ export function OrderCard({ order }: OrderCardProps) {
 
   const handleResubmit = useCallback(
     (transferNumber: string, receiptFile: File | null) => {
-      resubmit.mutate({
-        orderId: order.id,
-        transferNumber,
-        receiptFile,
-      });
+      resubmit.mutate({ orderId: order.id, transferNumber, receiptFile });
     },
     [resubmit, order.id],
   );
 
-  const toggleExpand = useCallback(() => {
-    setIsExpanded((prev) => !prev);
-  }, []);
+  const statusColors =
+    STATUS_COLORS[order.payment_status] ?? STATUS_COLORS.pending;
+  const isTerminal = TERMINAL_STATUSES.has(order.payment_status);
 
   return (
     <div
-      className="nb-shadow border-3 border-foreground bg-background"
+      className="overflow-hidden border-3 border-foreground bg-background nb-shadow"
       {...tid(`order-card-${order.id}`)}
     >
-      {/* Header - always visible */}
+      {/* Status banner — full width at top */}
+      <div className={`px-4 py-2.5 ${statusColors}`}>
+        <OrderStatusBadge status={order.payment_status} />
+      </div>
+
+      {/* Seller */}
+      <div className="px-4 pb-1 pt-3">
+        <span className="font-mono text-xs text-muted-foreground">
+          {order.seller_name}
+        </span>
+      </div>
+
+      {/* Items — always visible */}
+      <div className="px-4 py-2">
+        <OrderItemsList items={order.items} />
+      </div>
+
+      {/* Total */}
+      <div className="flex items-center justify-between border-t-2 border-dashed border-muted-foreground/20 px-4 py-3">
+        <span className="font-display text-xs font-bold uppercase tracking-wider text-muted-foreground">
+          {t("total")}
+        </span>
+        <span className="font-display text-lg font-extrabold">
+          {formatCop(order.total_cop)}
+        </span>
+      </div>
+
+      {/* Expiration — if applicable */}
+      {order.expires_at && !isTerminal && (
+        <div className="flex items-center gap-1.5 border-t border-muted-foreground/10 px-4 py-2 text-xs text-muted-foreground">
+          <Clock className="size-3" />
+          <ExpirationLabel expiresAt={order.expires_at} />
+        </div>
+      )}
+
+      {/* Expand toggle */}
       <button
         type="button"
-        onClick={toggleExpand}
+        onClick={() => setIsExpanded((p) => !p)}
+        className="flex w-full items-center justify-center gap-1 border-t-2 border-muted-foreground/10 py-2 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted/30"
         aria-expanded={isExpanded}
-        className="flex w-full items-center justify-between p-4 text-left transition-colors hover:bg-muted/30"
         {...tid(`order-card-toggle-${order.id}`)}
       >
-        <div className="flex flex-1 flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
-          <div className="flex items-center gap-2">
-            <Store className="size-4 shrink-0 text-muted-foreground" />
-            <span className="font-display text-sm font-extrabold uppercase tracking-wider">
-              {order.seller_name}
-            </span>
-          </div>
-          <OrderStatusBadge status={order.payment_status} />
-        </div>
-        <div className="flex items-center gap-3">
-          <span className="font-display text-sm font-extrabold">
-            {formatCop(order.total_cop)}
-          </span>
-          {isExpanded ? (
-            <ChevronUp className="size-4" />
-          ) : (
-            <ChevronDown className="size-4" />
-          )}
-        </div>
+        {isExpanded ? (
+          <>
+            {t("hideDetails")} <ChevronUp className="size-3" />
+          </>
+        ) : (
+          <>
+            {t("viewDetails")} <ChevronDown className="size-3" />
+          </>
+        )}
       </button>
 
       {/* Expanded content */}
       {isExpanded && (
         <div className="border-t-3 border-foreground p-4">
-          {/* Items */}
-          <OrderItemsList items={order.items} />
-
-          {/* Status-specific content */}
-          <div className="mt-4">
-            <StatusContent
-              order={order}
-              onResubmit={handleResubmit}
-              isPending={resubmit.isPending}
-            />
-          </div>
-
-          {/* Expiration info */}
-          {order.expires_at && !isTerminalStatus(order.payment_status) && (
-            <div className="mt-3 flex items-center gap-1.5 text-xs text-muted-foreground">
-              <Clock className="size-3" />
-              <ExpirationLabel expiresAt={order.expires_at} />
-            </div>
-          )}
+          <StatusContent
+            order={order}
+            onResubmit={handleResubmit}
+            isPending={resubmit.isPending}
+          />
         </div>
       )}
     </div>
