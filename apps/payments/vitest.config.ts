@@ -27,7 +27,23 @@ export default defineConfig({
         "**/*.config.*",
         "**/index.ts",
         "src/shared/infrastructure/i18n/messages/**",
+        "src/shared/infrastructure/i18n/request.ts",
+        "src/shared/infrastructure/i18n/routing.ts",
+        "src/shared/infrastructure/config/**",
+        "src/shared/infrastructure/providers/**",
         "src/mocks/**",
+        "src/app/**",
+        "src/proxy.ts",
+        "e2e/**",
+        "public/**",
+        "**/*.spec.ts",
+        "**/domain/types.ts",
+        "**/domain/types/**",
+        // Supabase auth shim — thin wrappers around Supabase SDK, tested via integration/E2E
+        "**/auth/application/hooks/useSupabaseAuth.ts",
+        "**/auth/presentation/components/ProtectedRoute.tsx",
+        // Supabase chain queries — tested via dedicated infrastructure tests
+        "**/payment-methods/infrastructure/paymentMethodQueries.ts",
       ],
       cleanOnRerun: false,
       thresholds: {

@@ -27,6 +27,16 @@
     "auth": "Cuenta",
     "playground": "Playground"
   },
+  "sidebar": {
+    "buyer": "Comprador",
+    "seller": "Vendedor",
+    "checkout": "Pagar",
+    "myPurchases": "Mis Compras",
+    "paymentMethods": "Metodos de Pago",
+    "sales": "Ventas",
+    "collapse": "Colapsar barra lateral",
+    "expand": "Expandir barra lateral"
+  },
   "checkout": {
     "title": "Pago",
     "backToStore": "Volver a la Tienda",
@@ -123,7 +133,29 @@
     "actionSuccess": "Orden actualizada",
     "actionError": "Error al actualizar la orden"
   },
+  "paymentMethods": {
+    "title": "Mis Metodos de Pago",
+    "subtitle": "Configura como los compradores pueden pagarte",
+    "addMethod": "Agregar Metodo",
+    "editMethod": "Editar Metodo",
+    "selectType": "Tipo de Pago",
+    "selectTypePlaceholder": "Elige un metodo de pago...",
+    "accountDetails": "Datos de la Cuenta",
+    "accountDetailsHint": "Cuenta bancaria, numero de telefono o datos de pago",
+    "sellerNote": "Nota para Compradores",
+    "sellerNoteHint": "Mensaje personal mostrado a los compradores (opcional)",
+    "active": "Activo",
+    "noMethods": "Sin metodos de pago configurados aun",
+    "noMethodsHint": "Agrega un metodo de pago para que los compradores puedan pagarte",
+    "deleteConfirm": "Eliminar este metodo de pago?",
+    "save": "Guardar",
+    "saving": "Guardando...",
+    "cancel": "Cancelar",
+    "removeMethod": "Eliminar metodo",
+    "editPaymentMethod": "Editar metodo de pago"
+  },
   "common": {
+    "loading": "Cargando...",
     "theme": {
       "switchToDark": "Cambiar a modo oscuro",
       "switchToLight": "Cambiar a modo claro",

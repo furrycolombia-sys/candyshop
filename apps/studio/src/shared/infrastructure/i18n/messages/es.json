@@ -92,28 +92,6 @@
     "pendingOrders": "{count} pendientes",
     "viewOrders": "Ver Ordenes"
   },
-  "paymentMethods": {
-    "title": "Mis Metodos de Pago",
-    "subtitle": "Configura como los compradores pueden pagarte",
-    "addMethod": "Agregar Metodo",
-    "editMethod": "Editar Metodo",
-    "selectType": "Tipo de Pago",
-    "selectTypePlaceholder": "Elige un metodo de pago...",
-    "accountDetails": "Datos de la Cuenta",
-    "accountDetailsHint": "Cuenta bancaria, numero de telefono o datos de pago",
-    "sellerNote": "Nota para Compradores",
-    "sellerNoteHint": "Mensaje personal mostrado a los compradores (opcional)",
-    "active": "Activo",
-    "noMethods": "Sin metodos de pago configurados aun",
-    "noMethodsHint": "Agrega un metodo de pago para que los compradores puedan pagarte",
-    "deleteConfirm": "Eliminar este metodo de pago?",
-    "save": "Guardar",
-    "saving": "Guardando...",
-    "cancel": "Cancelar",
-    "backToProducts": "Productos",
-    "removeMethod": "Eliminar metodo",
-    "editPaymentMethod": "Editar metodo de pago"
-  },
   "form": {
     "subtitleCreate": "Completa los datos para crear un nuevo producto.",
     "subtitleEdit": "Actualiza los detalles del producto.",
