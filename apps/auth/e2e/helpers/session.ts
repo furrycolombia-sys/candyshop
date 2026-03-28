@@ -76,6 +76,89 @@ export async function adminDelete(
   });
 }
 
+// ─── Permission Templates ────────────────────────────────────────
+
+export const BUYER_PERMISSIONS = [
+  "products.read",
+  "orders.create",
+  "orders.read",
+  "receipts.create",
+  "receipts.read",
+  "product_reviews.create",
+  "product_reviews.read",
+  "product_reviews.update",
+  "product_reviews.delete",
+];
+
+export const SELLER_PERMISSIONS = [
+  ...BUYER_PERMISSIONS,
+  "products.create",
+  "products.update",
+  "products.delete",
+  "product_images.create",
+  "product_images.read",
+  "product_images.delete",
+  "seller_payment_methods.create",
+  "seller_payment_methods.read",
+  "seller_payment_methods.update",
+  "seller_payment_methods.delete",
+  "orders.update",
+  "templates.read",
+];
+
+export const ADMIN_PERMISSIONS = [
+  ...SELLER_PERMISSIONS,
+  "audit.read",
+  "payment_method_types.create",
+  "payment_method_types.read",
+  "payment_method_types.update",
+  "payment_method_types.delete",
+  "payment_settings.read",
+  "payment_settings.update",
+  "templates.create",
+  "templates.update",
+  "templates.delete",
+  "user_permissions.create",
+  "user_permissions.read",
+  "user_permissions.update",
+  "user_permissions.delete",
+  "events.create",
+  "events.read",
+  "events.update",
+  "events.delete",
+];
+
+/**
+ * Grant a list of permission keys to a user via admin REST API.
+ */
+export async function grantPermissions(
+  userId: string,
+  permissionKeys: string[],
+): Promise<void> {
+  const allRps = await adminQuery(
+    "resource_permissions",
+    "resource_type=eq.global&select=id,permissions!inner(key)",
+  );
+
+  for (const key of permissionKeys) {
+    const rp = allRps.find(
+      (r: Record<string, unknown>) =>
+        (r.permissions as Record<string, unknown>).key === key,
+    );
+    if (!rp) continue;
+
+    await adminInsert("user_permissions", {
+      user_id: userId,
+      resource_permission_id: rp.id,
+      mode: "grant",
+      granted_by: userId,
+      reason: "E2E test setup",
+    });
+  }
+}
+
+// ─── Types ───────────────────────────────────────────────────────
+
 export interface TestUser {
   userId: string;
   email: string;
@@ -87,7 +170,10 @@ export interface TestUser {
  * Create a test user via Supabase admin API.
  * Returns user info + tokens (does NOT inject cookies).
  */
-export async function createTestUser(label: string): Promise<TestUser> {
+export async function createTestUser(
+  label: string,
+  permissions: string[] = [],
+): Promise<TestUser> {
   const email = `e2e-${label}-${Date.now()}@test.invalid`;
   const password = `test-${Date.now()}-${label}`;
 
@@ -107,12 +193,18 @@ export async function createTestUser(label: string): Promise<TestUser> {
   if (signInError)
     throw new Error(`Failed to sign in ${label} user: ${signInError.message}`);
 
-  return {
+  const testUser: TestUser = {
     userId: user.user!.id,
     email,
     accessToken: session.session!.access_token,
     refreshToken: session.session!.refresh_token,
   };
+
+  if (permissions.length > 0) {
+    await grantPermissions(testUser.userId, permissions);
+  }
+
+  return testUser;
 }
 
 /**

@@ -5,8 +5,10 @@ import { expect, test, type Page } from "@playwright/test";
 
 import { cleanupTestData } from "./helpers/cleanup";
 import {
+  BUYER_PERMISSIONS,
   createTestUser,
   injectSession,
+  SELLER_PERMISSIONS,
   type TestUser,
 } from "./helpers/session";
 
@@ -48,8 +50,8 @@ test.describe.serial("Full purchase flow: seller → buyer → approval", () => 
 
   test.beforeAll(async () => {
     stepCounter = 0;
-    seller = await createTestUser("seller");
-    buyer = await createTestUser("buyer");
+    seller = await createTestUser("seller", SELLER_PERMISSIONS);
+    buyer = await createTestUser("buyer", BUYER_PERMISSIONS);
   });
 
   test.afterAll(async () => {
