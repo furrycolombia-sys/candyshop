@@ -65,8 +65,6 @@ describe("ActionButtons", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    // Mock globalThis.confirm for approve action
-    vi.spyOn(globalThis, "confirm").mockReturnValue(true);
   });
 
   it("renders approve and reject for pending_verification", () => {
@@ -126,7 +124,7 @@ describe("ActionButtons", () => {
     expect(container.innerHTML).toBe("");
   });
 
-  it("calls onAction with approved when approve is clicked and confirmed", () => {
+  it("shows confirmation panel when approve is clicked", () => {
     render(
       <ActionButtons
         orderId="o1"
@@ -137,12 +135,28 @@ describe("ActionButtons", () => {
     );
 
     fireEvent.click(screen.getByTestId("order-approve-o1"));
+    expect(screen.getByTestId("confirm-action-panel")).toBeInTheDocument();
+    // onAction should NOT be called yet (no checkbox checked)
+    expect(mockOnAction).not.toHaveBeenCalled();
+  });
+
+  it("calls onAction with approved after checkbox and confirm", () => {
+    render(
+      <ActionButtons
+        orderId="o1"
+        status="pending_verification"
+        onAction={mockOnAction}
+        isPending={false}
+      />,
+    );
+
+    fireEvent.click(screen.getByTestId("order-approve-o1"));
+    fireEvent.click(screen.getByTestId("confirm-checkbox"));
+    fireEvent.click(screen.getByTestId("confirm-action-submit"));
     expect(mockOnAction).toHaveBeenCalledWith("approved");
   });
 
-  it("does not call onAction when approve is cancelled", () => {
-    vi.spyOn(globalThis, "confirm").mockReturnValue(false);
-
+  it("cancels approval and returns to buttons when cancel is clicked", () => {
     render(
       <ActionButtons
         orderId="o1"
@@ -153,6 +167,10 @@ describe("ActionButtons", () => {
     );
 
     fireEvent.click(screen.getByTestId("order-approve-o1"));
+    expect(screen.getByTestId("confirm-action-panel")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByTestId("confirm-action-cancel"));
+    expect(screen.getByTestId("order-approve-o1")).toBeInTheDocument();
     expect(mockOnAction).not.toHaveBeenCalled();
   });
 
