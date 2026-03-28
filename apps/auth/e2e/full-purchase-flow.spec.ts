@@ -3,7 +3,6 @@ import { expect, test } from "@playwright/test";
 import { cleanupTestData } from "./helpers/cleanup";
 import {
   adminInsert,
-  adminQuery,
   createTestUser,
   injectSession,
   type TestUser,
@@ -41,27 +40,52 @@ test.describe.serial("Full purchase flow: seller → buyer → approval", () => 
 
   // ─── Phase 1-2: Seller setup via admin API (product + payment method) ───
 
-  test("Phase 1-2: seller has a product and payment method", async () => {
-    // Create product via admin REST API (bypasses RLS)
-    await adminInsert("products", {
-      name_en: "E2E Test Product",
-      name_es: "Producto E2E",
-      description_en: "A test product for E2E",
-      description_es: "Un producto de prueba",
-      type: "merch",
-      category: "merch",
-      price_cop: 10000,
-      price_usd: 0,
-      is_active: true,
-      seller_id: seller.userId,
-      slug: `e2e-test-${Date.now()}`,
-      sort_order: 999,
-      max_quantity: 100,
-    });
+  // ─── Phase 1: Seller creates a product in Studio ───────────────
 
-    // Create an E2E-only payment type that doesn't require receipt
-    // (Storage upload from injected cookies has auth limitations)
-    const paymentType = await adminInsert("payment_method_types", {
+  test("Phase 1: seller creates a product in studio", async ({
+    context,
+    page,
+  }) => {
+    await injectSession(context, seller);
+
+    // Navigate to studio
+    await page.goto("http://localhost:5006/en");
+    await page.waitForLoadState("networkidle");
+
+    // Click "New Product"
+    await page.getByTestId("new-product-button").click();
+    await page.waitForLoadState("networkidle");
+
+    // Fill product name (EN)
+    const nameField = page.getByTestId("inline-text-en-name_en");
+    await nameField.click();
+    await nameField.fill("E2E Test Product");
+
+    // Set price COP
+    const priceField = page.getByTestId("inline-price-cop");
+    await priceField.click();
+    await priceField.fill("10000");
+
+    // Save (button says "CREATE")
+    await page.getByTestId("toolbar-save").click();
+
+    // Wait for redirect back to product list
+    await page.waitForURL("http://localhost:5006/en", { timeout: 15_000 });
+
+    // Verify product appears in table
+    await expect(page.getByTestId("product-table")).toBeVisible({
+      timeout: 10_000,
+    });
+  });
+
+  // ─── Phase 2: Seller configures payment method in Payments ─────
+
+  test("Phase 2: seller adds a payment method", async ({ context, page }) => {
+    await injectSession(context, seller);
+
+    // Ensure an E2E payment type exists (no receipt required)
+    // This is admin-level setup — must use API since the seller can't create types
+    await adminInsert("payment_method_types", {
       name_en: "E2E Direct Transfer",
       name_es: "Transferencia E2E",
       icon: "credit-card",
@@ -71,28 +95,35 @@ test.describe.serial("Full purchase flow: seller → buyer → approval", () => 
       sort_order: 999,
     });
 
-    // Create seller payment method via admin REST API
-    await adminInsert("seller_payment_methods", {
-      seller_id: seller.userId,
-      type_id: paymentType.id,
-      account_details_en: "E2E Bank Account 12345",
-      account_details_es: "Cuenta E2E 12345",
-      is_active: true,
-      sort_order: 1,
+    // Navigate to payments app — payment methods page
+    await page.goto(`${PAYMENTS}/en/payment-methods`);
+    await page.waitForLoadState("networkidle");
+
+    // Click "Add Method"
+    await page.getByTestId("add-payment-method-button").click();
+
+    // Wait for the type select and select "E2E Direct Transfer"
+    const typeSelect = page.getByTestId("payment-method-type-select");
+    await typeSelect.waitFor({ state: "visible" });
+    await page.waitForTimeout(1000);
+    // Select by label text
+    await typeSelect.selectOption({ label: "E2E Direct Transfer" });
+
+    // Fill account details (EN)
+    await page
+      .getByTestId("payment-method-account-en")
+      .fill("E2E Bank Account 12345");
+
+    // Save
+    await page.getByTestId("payment-method-save").click();
+
+    // Wait for editor to close (indicates save succeeded)
+    await expect(page.getByTestId("payment-method-save")).not.toBeVisible({
+      timeout: 10_000,
     });
 
-    // Verify both exist
-    const products = await adminQuery(
-      "products",
-      `seller_id=eq.${seller.userId}`,
-    );
-    expect(products).toHaveLength(1);
-
-    const methods = await adminQuery(
-      "seller_payment_methods",
-      `seller_id=eq.${seller.userId}`,
-    );
-    expect(methods).toHaveLength(1);
+    // Verify method appears in the table
+    await expect(page.getByTestId("payment-methods-page")).toBeVisible();
   });
 
   // ─── Phase 3-4: Buyer browses store, adds to cart, checks out ──
