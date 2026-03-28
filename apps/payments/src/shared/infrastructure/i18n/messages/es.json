@@ -101,7 +101,10 @@
     "receiptPreview": "Vista previa del comprobante",
     "removeReceipt": "Eliminar comprobante",
     "maxFileSize": "Max 5MB",
-    "backToStore": "Volver a la Tienda"
+    "backToStore": "Volver a la Tienda",
+    "viewDetails": "Ver detalles",
+    "hideDetails": "Ocultar detalles",
+    "total": "Total"
   },
   "receivedOrders": {
     "title": "Ordenes Recibidas",
@@ -131,7 +134,14 @@
     "noTransferNumber": "Sin numero de transferencia",
     "submitting": "Enviando...",
     "actionSuccess": "Orden actualizada",
-    "actionError": "Error al actualizar la orden"
+    "actionError": "Error al actualizar la orden",
+    "permanentAction": "Accion Permanente",
+    "approveWarning": "Esta accion es permanente y no se puede deshacer. El comprador sera notificado y el inventario sera comprometido.",
+    "approveCheckbox": "He verificado el recibo y el numero de transferencia",
+    "confirmApprove": "Confirmar Aprobacion — Irreversible",
+    "rejectWarning": "Esto liberara el inventario reservado y cancelara el pedido permanentemente. El comprador sera notificado.",
+    "rejectCheckbox": "Entiendo que esto no se puede deshacer",
+    "confirmReject": "Confirmar Rechazo — Irreversible"
   },
   "paymentMethods": {
     "title": "Mis Metodos de Pago",
