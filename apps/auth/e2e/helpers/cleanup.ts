@@ -25,13 +25,7 @@ export async function cleanupTestData(
     // 4. Delete seller's products
     await adminDelete("products", `seller_id=eq.${sellerUserId}`);
 
-    // 5. Delete E2E payment type (if created)
-    await adminDelete(
-      "payment_method_types",
-      "name_en=eq.E2E%20Direct%20Transfer",
-    );
-
-    // 6. Delete both users
+    // 5. Delete both users
     await supabaseAdmin.auth.admin.deleteUser(sellerUserId);
     await supabaseAdmin.auth.admin.deleteUser(buyerUserId);
   } catch (error) {

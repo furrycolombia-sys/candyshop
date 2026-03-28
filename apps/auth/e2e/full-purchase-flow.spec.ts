@@ -5,7 +5,6 @@ import { expect, test, type Page } from "@playwright/test";
 
 import { cleanupTestData } from "./helpers/cleanup";
 import {
-  adminInsert,
   createTestUser,
   injectSession,
   type TestUser,
@@ -105,18 +104,6 @@ test.describe.serial("Full purchase flow: seller → buyer → approval", () => 
   test("Phase 2: seller adds a payment method", async ({ context, page }) => {
     await injectSession(context, seller);
 
-    // Ensure an E2E payment type exists (no receipt required)
-    // This is admin-level setup — seller can't create types
-    await adminInsert("payment_method_types", {
-      name_en: "E2E Direct Transfer",
-      name_es: "Transferencia E2E",
-      icon: "credit-card",
-      requires_receipt: false,
-      requires_transfer_number: true,
-      is_active: true,
-      sort_order: 999,
-    });
-
     // Navigate to payments app — payment methods page
     await page.goto(`${PAYMENTS}/en/payment-methods`);
     await page.waitForLoadState("networkidle");
@@ -126,11 +113,11 @@ test.describe.serial("Full purchase flow: seller → buyer → approval", () => 
     await page.getByTestId("add-payment-method-button").click();
     await snap(page, "payments-method-editor-open");
 
-    // Wait for the type select and select "E2E Direct Transfer"
+    // Select Bancolombia Transfer (requires receipt + transfer number — real flow)
     const typeSelect = page.getByTestId("payment-method-type-select");
     await typeSelect.waitFor({ state: "visible" });
     await page.waitForTimeout(1000);
-    await typeSelect.selectOption({ label: "E2E Direct Transfer" });
+    await typeSelect.selectOption({ label: "Bancolombia Transfer" });
     await snap(page, "payments-method-type-selected");
 
     // Fill account details (EN)
@@ -222,15 +209,23 @@ test.describe.serial("Full purchase flow: seller → buyer → approval", () => 
 
     // Enter transfer number
     const transferInput = page.getByTestId(/^transfer-number-/).first();
-    const transferVisible = await transferInput
-      .isVisible({ timeout: 3000 })
-      .catch(() => false);
-    if (transferVisible) {
-      await transferInput.fill("TXN-E2E-12345");
-    }
-    await snap(page, "checkout-form-filled");
+    await transferInput.fill("TXN-E2E-12345");
+    await snap(page, "checkout-transfer-filled");
 
-    // Submit payment (no receipt needed — E2E payment type)
+    // Upload receipt photo (Bancolombia Transfer requires this)
+    const receiptInput = page.getByTestId("receipt-file-input").first();
+    await receiptInput.setInputFiles({
+      name: "receipt-proof.png",
+      mimeType: "image/png",
+      buffer: Buffer.from(
+        "iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAFklEQVQYV2P8z8BQz0AEYBxVOHIUAgBGWAgE/dLkRAAAAABJRU5ErkJggg==",
+        "base64",
+      ),
+    });
+    await page.waitForTimeout(1000);
+    await snap(page, "checkout-receipt-uploaded");
+
+    // Submit payment
     const submitBtn = page.getByTestId(/^submit-payment-/).first();
     await submitBtn.click();
 
