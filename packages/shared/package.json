@@ -22,15 +22,15 @@
   },
   "devDependencies": {
     "@tanstack/react-query": "^5.91.0",
-    "@testing-library/jest-dom": "^6.6.3",
-    "@testing-library/react": "^16.3.0",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
     "@types/node": "^22.15.0",
     "@types/react": "^19.2.14",
     "@vitejs/plugin-react": "^5.2.0",
     "@vitest/coverage-v8": "^3.2.4",
     "jsdom": "^26.1.0",
     "typescript": "^5",
-    "vitest": "^3.2.1"
+    "vitest": "^3.2.4"
   },
   "peerDependencies": {
     "@tanstack/react-query": "^5.91.0",

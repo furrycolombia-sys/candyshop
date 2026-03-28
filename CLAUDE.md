@@ -287,6 +287,8 @@ If any fail, keep in app's `shared/` folder instead.
 - [Start Task](.claude/skills/start-task/SKILL.md) - `/start-task <ticket> [type]`
 - [Submit PR](.claude/skills/submit-pr/SKILL.md) - `/submit-pr`
 - [Full Review](.claude/skills/full-review/SKILL.md) - `/full-review`
+- [Verify Code](.claude/skills/verify-code/SKILL.md) - `/verify-code`
+- [Review Branch](.claude/skills/review-branch/SKILL.md) - `/review-branch`
 
 See all skills in `.claude/skills/` folder.
 
