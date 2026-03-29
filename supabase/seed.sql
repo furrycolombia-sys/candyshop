@@ -2,16 +2,7 @@
 -- Seed Data: Moonfest 2026 + Core Permissions
 -- =============================================================================
 
--- -----------------------------------------------------------------------------
--- Permissions (seed)
--- -----------------------------------------------------------------------------
-insert into public.permissions (key, name_en, name_es, description_en, description_es) values
-  ('view',       'View',             'Ver',                 'Can see the resource',                              'Puede ver el recurso'),
-  ('purchase',   'Purchase',         'Comprar',             'Can buy products from the resource',                'Puede comprar productos del recurso'),
-  ('check-in',   'Check In',         'Registrar entrada',   'Can mark entitlements as used',                     'Puede marcar beneficios como usados'),
-  ('uncheck',    'Uncheck',          'Desmarcar entrada',   'Can reverse a check-in (requires reason)',          'Puede revertir un registro (requiere motivo)'),
-  ('audit-view', 'View Audit Log',   'Ver registro de auditoría', 'Can view the audit log',                     'Puede ver el registro de auditoría'),
-  ('manage',     'Manage',           'Administrar',         'Full access (dashboard, export, user management)',  'Acceso completo (panel, exportar, gestión de usuarios)');
+-- Permissions are seeded by the permissions migrations, not here.
 
 -- -----------------------------------------------------------------------------
 -- Event: Moonfest 2026
@@ -209,17 +200,4 @@ insert into public.product_entitlements (product_id, name_en, name_es, type, sor
   ((select id from public.products where slug = 'moonfest-2026-ticket'), 'Artist market access',               'Acceso al mercado de artistas',     'entry',    12),
   ((select id from public.products where slug = 'moonfest-2026-ticket'), 'Bus return: Paipa → Bogotá',         'Bus vuelta: Paipa → Bogotá',        'transport',13);
 
--- -----------------------------------------------------------------------------
--- Resource Permissions: Scoped to Moonfest event
--- -----------------------------------------------------------------------------
-insert into public.resource_permissions (permission_id, resource_type, resource_id)
-select p.id, 'event', e.id
-from public.permissions p, public.events e
-where e.slug = 'moonfest-2026'
-  and p.key in ('view', 'purchase', 'check-in', 'uncheck', 'audit-view', 'manage');
-
--- Global store permissions
-insert into public.resource_permissions (permission_id, resource_type, resource_id)
-select p.id, 'store', null
-from public.permissions p
-where p.key in ('view', 'purchase', 'manage');
+-- Resource permissions are seeded by the permissions migrations, not here.

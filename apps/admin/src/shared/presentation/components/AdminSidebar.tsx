@@ -37,7 +37,7 @@ const NAV_SECTIONS = [
   },
   {
     labelKey: "users" as const,
-    items: [{ key: "userPermissions" as const, href: "/users", icon: Shield }],
+    items: [{ key: "users" as const, href: "/users", icon: Shield }],
   },
   {
     labelKey: "configuration" as const,

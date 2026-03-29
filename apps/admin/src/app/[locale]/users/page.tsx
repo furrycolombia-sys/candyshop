@@ -1,6 +1,6 @@
 import { setRequestLocale } from "next-intl/server";
 
-import { UserPermissionsPage } from "@/features/users";
+import { UsersPage } from "@/features/users";
 
 export default async function Page({
   params,
@@ -9,5 +9,5 @@ export default async function Page({
 }) {
   const { locale } = await params;
   setRequestLocale(locale);
-  return <UserPermissionsPage />;
+  return <UsersPage />;
 }

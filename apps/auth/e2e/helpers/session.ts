@@ -92,14 +92,9 @@ export async function adminDelete(
 
 export const BUYER_PERMISSIONS = [
   "products.read",
-  "orders.create",
-  "orders.read",
-  "receipts.create",
-  "receipts.read",
-  "product_reviews.create",
-  "product_reviews.read",
-  "product_reviews.update",
-  "product_reviews.delete",
+  "reviews.write",
+  "orders.place",
+  "orders.view",
 ];
 
 export const SELLER_PERMISSIONS = [
@@ -107,37 +102,20 @@ export const SELLER_PERMISSIONS = [
   "products.create",
   "products.update",
   "products.delete",
-  "product_images.create",
-  "product_images.read",
-  "product_images.delete",
-  "seller_payment_methods.create",
-  "seller_payment_methods.read",
-  "seller_payment_methods.update",
-  "seller_payment_methods.delete",
-  "orders.update",
-  "templates.read",
+  "orders.manage",
+  "seller.payment_methods",
 ];
 
 export const ADMIN_PERMISSIONS = [
   ...SELLER_PERMISSIONS,
-  "audit.read",
-  "payment_method_types.create",
-  "payment_method_types.read",
-  "payment_method_types.update",
-  "payment_method_types.delete",
-  "payment_settings.read",
-  "payment_settings.update",
-  "templates.create",
-  "templates.update",
-  "templates.delete",
-  "user_permissions.create",
-  "user_permissions.read",
-  "user_permissions.update",
-  "user_permissions.delete",
-  "events.create",
+  "admin.payment_types",
+  "admin.templates",
+  "admin.settings",
+  "admin.audit",
+  "admin.users",
+  "events.manage",
   "events.read",
-  "events.update",
-  "events.delete",
+  "checkins.manage",
 ];
 
 /**

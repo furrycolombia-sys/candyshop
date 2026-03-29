@@ -33,7 +33,7 @@
     "settings": "Configuracion",
     "configuration": "Configuracion",
     "users": "Usuarios",
-    "userPermissions": "Permisos de Usuario"
+    "userManagement": "Gestion de Usuarios"
   },
   "dashboard": {
     "welcome": "Buen día, operador.",
@@ -173,49 +173,75 @@
     "saved": "Configuracion actualizada",
     "error": "Error al guardar configuracion"
   },
-  "userPermissions": {
-    "title": "Permisos de Usuario",
-    "subtitle": "Gestiona el control de acceso granular para cada usuario",
-    "searchPlaceholder": "Buscar por email...",
+  "users": {
+    "title": "Usuarios",
+    "subtitle": "Gestionar cuentas de usuario y permisos",
+    "searchPlaceholder": "Filtrar por email o nombre...",
     "noResults": "No se encontraron usuarios",
-    "selectUser": "Busca un usuario para gestionar sus permisos",
-    "productsCommerce": "Productos y Comercio",
-    "ordersPayments": "Pedidos y Pagos",
-    "sellerConfig": "Configuracion de Vendedor",
-    "adminPlatform": "Admin — Plataforma",
-    "adminUsersAudit": "Admin — Usuarios y Auditoria",
-    "eventsCheckins": "Eventos y Check-ins",
+    "loading": "Cargando...",
     "applyTemplate": "Aplicar Plantilla",
     "templateBuyer": "Comprador",
     "templateSeller": "Vendedor",
     "templateAdmin": "Admin",
     "templateNone": "Ninguno",
-    "operations": {
-      "create": "Crear",
-      "read": "Leer",
-      "update": "Actualizar",
-      "delete": "Eliminar"
+    "columns": {
+      "avatar": "Avatar",
+      "email": "Email",
+      "displayName": "Nombre",
+      "role": "Rol",
+      "lastSeen": "Ultima vez"
     },
-    "resources": {
+    "roles": {
+      "admin": "Admin",
+      "seller": "Vendedor",
+      "buyer": "Comprador",
+      "custom": "Personalizado",
+      "none": "Ninguno"
+    },
+    "groups": {
       "products": "Productos",
-      "product_images": "Imagenes de producto",
-      "product_reviews": "Resenas de producto",
+      "reviews": "Resenas",
       "orders": "Pedidos",
-      "receipts": "Comprobantes",
-      "seller_payment_methods": "Metodos de pago del vendedor",
-      "payment_method_types": "Tipos de metodo de pago",
-      "payment_settings": "Configuracion de pagos",
-      "templates": "Plantillas",
-      "audit": "Auditoria",
-      "user_permissions": "Permisos de usuario",
-      "events": "Eventos",
-      "check_ins": "Check-ins"
+      "seller": "Vendedor",
+      "admin": "Admin",
+      "events": "Eventos"
     },
-    "dependencyWarning": "Depende de {permission} (no otorgado)",
-    "granted": "Otorgado",
-    "revoked": "Revocado",
-    "permissionsCount": "{count} {count, plural, one {permiso} other {permisos}}",
-    "loading": "Cargando permisos..."
+    "lastSeen": {
+      "justNow": "justo ahora",
+      "minutesAgo": "hace {count}m",
+      "hoursAgo": "hace {count}h",
+      "daysAgo": "hace {count}d",
+      "monthsAgo": "hace {count} meses",
+      "yearsAgo": "hace {count} a"
+    },
+    "pagination": {
+      "showing": "Mostrando {from}-{to}",
+      "of": "de {total}"
+    },
+    "detail": {
+      "backToUsers": "Volver a Usuarios",
+      "viewProfile": "Ver Perfil",
+      "permissionsCount": "{count, plural, one {# permiso} other {# permisos}}"
+    }
+  },
+  "permissions": {
+    "products.create": "Crear Productos",
+    "products.read": "Ver Productos",
+    "products.update": "Editar Productos",
+    "products.delete": "Eliminar Productos",
+    "reviews.write": "Escribir Resenas",
+    "orders.place": "Hacer Pedidos",
+    "orders.view": "Ver Pedidos",
+    "orders.manage": "Gestionar Pedidos",
+    "seller.payment_methods": "Metodos de Pago",
+    "admin.payment_types": "Tipos de Pago",
+    "admin.templates": "Plantillas",
+    "admin.settings": "Configuracion",
+    "admin.audit": "Registro de Auditoria",
+    "admin.users": "Permisos de Usuario",
+    "events.manage": "Gestionar Eventos",
+    "events.read": "Ver Eventos",
+    "checkins.manage": "Check-ins"
   },
   "common": {
     "loading": "Cargando...",

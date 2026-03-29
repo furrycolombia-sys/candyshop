@@ -19,7 +19,7 @@ const TEMPLATES = [
 ] as const;
 
 export function TemplateButtons({ onApply, isPending }: TemplateButtonsProps) {
-  const t = useTranslations("userPermissions");
+  const t = useTranslations("users");
 
   return (
     <div className="flex flex-wrap items-center gap-2">

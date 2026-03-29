@@ -1,12 +1,17 @@
 /* eslint-disable i18next/no-literal-string -- Supabase query params are not UI strings */
 import type { createBrowserSupabaseClient } from "api/supabase";
 
-import { ADMIN_UI_GRANT_REASON } from "@/features/users/domain/constants";
-import type { UserProfileSummary } from "@/features/users/domain/types";
+import {
+  ADMIN_UI_GRANT_REASON,
+  PGRST_NOT_FOUND,
+  USER_PROFILE_SELECT_COLUMNS,
+} from "@/features/users/domain/constants";
+import type {
+  PaginatedUsers,
+  UserProfileSummary,
+} from "@/features/users/domain/types";
 
 type SupabaseClient = ReturnType<typeof createBrowserSupabaseClient>;
-
-const SEARCH_RESULTS_LIMIT = 20;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- tables not in generated types yet
 const USER_PROFILES_TABLE = "user_profiles" as any;
@@ -22,22 +27,58 @@ function escapeLikePattern(input: string): string {
   return input.replaceAll(/[%_\\]/g, (char) => `\\${char}`);
 }
 
-/** Search users by email (case-insensitive, partial match) */
-export async function searchUsers(
+/** List users with server-side pagination and optional search filter */
+export async function listUsers(
   supabase: SupabaseClient,
-  query: string,
-): Promise<UserProfileSummary[]> {
-  const sanitized = escapeLikePattern(query);
-  const { data, error } = await supabase
+  search: string,
+  page: number,
+  perPage: number,
+): Promise<PaginatedUsers> {
+  const from = (page - 1) * perPage;
+  const to = from + perPage - 1;
+
+  let query = supabase
     .from(USER_PROFILES_TABLE)
-    .select("id, email, display_name, avatar_url")
-    .ilike("email", `%${sanitized}%`)
+    .select(USER_PROFILE_SELECT_COLUMNS, {
+      count: "exact",
+    })
     .order("email")
-    .limit(SEARCH_RESULTS_LIMIT);
+    .range(from, to);
+
+  if (search.trim()) {
+    const sanitized = escapeLikePattern(search.trim());
+    query = query.or(
+      `email.ilike.%${sanitized}%,display_name.ilike.%${sanitized}%`,
+    );
+  }
+
+  const { data, error, count } = await query;
 
   if (error) throw error;
 
-  return (data ?? []) as unknown as UserProfileSummary[];
+  return {
+    users: (data ?? []) as unknown as UserProfileSummary[],
+    total: count ?? 0,
+  };
+}
+
+/** Get a single user profile by ID */
+export async function getUserProfile(
+  supabase: SupabaseClient,
+  userId: string,
+): Promise<UserProfileSummary | null> {
+  const { data, error } = await supabase
+    .from(USER_PROFILES_TABLE)
+    .select(USER_PROFILE_SELECT_COLUMNS)
+    .eq("id", userId)
+    .single();
+
+  if (error) {
+    if (error.code === PGRST_NOT_FOUND) return null;
+    throw error;
+  }
+
+  return data as unknown as UserProfileSummary;
 }
 
 /** Get all granted (non-expired) permission keys for a user */
@@ -68,7 +109,6 @@ async function findResourcePermissionId(
   supabase: SupabaseClient,
   permissionKey: string,
 ): Promise<string> {
-  // First get the permission id by key
   const { data: permData, error: permError } = await supabase
     .from(PERMISSIONS_TABLE)
     .select("id")
@@ -78,7 +118,6 @@ async function findResourcePermissionId(
   if (permError) throw permError;
   const permissionId = (permData as unknown as { id: string }).id;
 
-  // Then get the global-scope resource_permission
   const { data: rpData, error: rpError } = await supabase
     .from(RESOURCE_PERMISSIONS_TABLE)
     .select("id")
@@ -143,7 +182,6 @@ export async function applyTemplate(
   permissionKeys: string[],
   grantedBy: string,
 ): Promise<void> {
-  // Delete all existing permissions for this user
   const { error: deleteError } = await supabase
     .from(USER_PERMISSIONS_TABLE)
     .delete()
@@ -151,7 +189,6 @@ export async function applyTemplate(
 
   if (deleteError) throw deleteError;
 
-  // Grant each permission in the template
   await Promise.all(
     permissionKeys.map((key) =>
       grantPermission(supabase, userId, key, grantedBy),

@@ -22,10 +22,10 @@ const { snap, resetCounter } = createSnapHelper(
 );
 
 /**
- * Navigate to admin users page, search for a user, select them,
- * and wait for the permission panel to appear.
+ * Navigate to admin users page, search for a user in the table,
+ * click their row, and wait for the detail page to load.
  */
-async function searchAndSelectUser(
+async function navigateToUserDetail(
   page: Page,
   targetEmail: string,
   targetUserId: string,
@@ -33,17 +33,19 @@ async function searchAndSelectUser(
   await page.goto(`${APP_URLS.ADMIN}/en/users`);
   await page.waitForLoadState("networkidle");
 
-  await page.getByTestId("user-search-input").fill(targetEmail);
+  // Type in the search filter
+  await page.getByTestId("users-search-input").fill(targetEmail);
   await page.waitForTimeout(DEBOUNCE_WAIT_MS);
 
-  await page.getByTestId(`user-search-result-${targetUserId}`).click();
-  await expect(page.getByTestId("user-permission-panel")).toBeVisible({
+  // Click the user row
+  await page.getByTestId(`user-row-${targetUserId}`).click();
+  await expect(page.getByTestId("user-detail-page")).toBeVisible({
     timeout: ELEMENT_TIMEOUT_MS,
   });
 }
 
 /**
- * Revoke a single permission via the admin UI checkbox.
+ * Revoke a single permission via the admin UI checkbox on the detail page.
  * Assumes the permission is currently granted (checked).
  */
 async function revokePermission(
@@ -54,7 +56,7 @@ async function revokePermission(
   permissionKey: string,
 ): Promise<void> {
   await injectSession(context, admin);
-  await searchAndSelectUser(page, target.email, target.userId);
+  await navigateToUserDetail(page, target.email, target.userId);
 
   const checkbox = page.getByTestId(`permission-toggle-${permissionKey}`);
   await expect(checkbox).toBeChecked();
@@ -64,7 +66,7 @@ async function revokePermission(
 }
 
 /**
- * Grant a single permission via the admin UI checkbox.
+ * Grant a single permission via the admin UI checkbox on the detail page.
  * Assumes the permission is currently revoked (unchecked).
  */
 async function grantPermission(
@@ -75,7 +77,7 @@ async function grantPermission(
   permissionKey: string,
 ): Promise<void> {
   await injectSession(context, admin);
-  await searchAndSelectUser(page, target.email, target.userId);
+  await navigateToUserDetail(page, target.email, target.userId);
 
   const checkbox = page.getByTestId(`permission-toggle-${permissionKey}`);
   await expect(checkbox).not.toBeChecked();
@@ -181,7 +183,7 @@ test.describe
     await snap(page, "admin-audit-baseline");
   });
 
-  test("Phase 6: baseline — Admin user permissions page loads", async ({
+  test("Phase 6: baseline — Admin users page loads", async ({
     context,
     page,
   }) => {
@@ -189,10 +191,10 @@ test.describe
     await page.goto(`${APP_URLS.ADMIN}/en/users`);
     await page.waitForLoadState("networkidle");
 
-    await expect(page.getByTestId("user-permissions-page")).toBeVisible({
+    await expect(page.getByTestId("users-page")).toBeVisible({
       timeout: ELEMENT_TIMEOUT_MS,
     });
-    await snap(page, "admin-permissions-baseline");
+    await snap(page, "admin-users-baseline");
   });
 
   // ─── STUDIO: revoke products.read → empty product list ──────
@@ -223,9 +225,9 @@ test.describe
     await snap(page, "admin-regranted-products-read");
   });
 
-  // ─── PAYMENTS: revoke seller_payment_methods.read → empty ───
+  // ─── PAYMENTS: revoke seller.payment_methods → empty ───
 
-  test("Phase 10: admin revokes seller_payment_methods.read", async ({
+  test("Phase 10: admin revokes seller.payment_methods", async ({
     context,
     page,
   }) => {
@@ -234,9 +236,9 @@ test.describe
       context,
       admin,
       target,
-      "seller_payment_methods.read",
+      "seller.payment_methods",
     );
-    await snap(page, "admin-revoked-payment-methods-read");
+    await snap(page, "admin-revoked-payment-methods");
   });
 
   test("Phase 11: target blocked — Payment methods empty", async ({
@@ -254,7 +256,7 @@ test.describe
     await snap(page, "payment-methods-blocked");
   });
 
-  test("Phase 12: admin re-grants seller_payment_methods.read", async ({
+  test("Phase 12: admin re-grants seller.payment_methods", async ({
     context,
     page,
   }) => {
@@ -263,26 +265,25 @@ test.describe
       context,
       admin,
       target,
-      "seller_payment_methods.read",
+      "seller.payment_methods",
     );
-    await snap(page, "admin-regranted-payment-methods-read");
+    await snap(page, "admin-regranted-payment-methods");
   });
 
-  // ─── ADMIN: revoke products.read → verify via admin panel ──
+  // ─── ADMIN: revoke products.delete → verify via detail page ──
 
   test("Phase 13: admin revokes products.delete", async ({ context, page }) => {
     await revokePermission(page, context, admin, target, "products.delete");
     await snap(page, "admin-revoked-products-delete");
   });
 
-  test("Phase 14: admin panel shows products.delete unchecked", async ({
+  test("Phase 14: admin detail page shows products.delete unchecked", async ({
     context,
     page,
   }) => {
     await injectSession(context, admin);
-    await searchAndSelectUser(page, target.email, target.userId);
+    await navigateToUserDetail(page, target.email, target.userId);
 
-    // Verify the revoked permission is still unchecked after reload
     await expect(
       page.getByTestId("permission-toggle-products.delete"),
     ).not.toBeChecked();
@@ -304,7 +305,7 @@ test.describe
     page,
   }) => {
     await injectSession(context, admin);
-    await searchAndSelectUser(page, target.email, target.userId);
+    await navigateToUserDetail(page, target.email, target.userId);
     await snap(page, "admin-before-none-template");
 
     await page.getByTestId("template-btn-none").click();
@@ -315,10 +316,10 @@ test.describe
     for (const key of [
       "products.create",
       "products.read",
-      "orders.create",
-      "orders.read",
-      "audit.read",
-      "user_permissions.read",
+      "orders.place",
+      "orders.view",
+      "admin.audit",
+      "admin.users",
     ]) {
       await expect(
         page.getByTestId(`permission-toggle-${key}`),
@@ -353,21 +354,20 @@ test.describe
     await snap(page, "payment-methods-fully-blocked");
   });
 
-  test("Phase 19: fully blocked — Admin permissions panel confirms", async ({
+  test("Phase 19: fully blocked — Admin detail page confirms", async ({
     context,
     page,
   }) => {
     await injectSession(context, admin);
-    await searchAndSelectUser(page, target.email, target.userId);
+    await navigateToUserDetail(page, target.email, target.userId);
 
-    // Verify all key permissions are unchecked
     await expect(
       page.getByTestId("permission-toggle-products.read"),
     ).not.toBeChecked();
     await expect(
-      page.getByTestId("permission-toggle-orders.read"),
+      page.getByTestId("permission-toggle-orders.view"),
     ).not.toBeChecked();
-    await snap(page, "admin-panel-all-unchecked");
+    await snap(page, "admin-detail-all-unchecked");
   });
 
   test("Phase 20: fully blocked — Store still public", async ({
@@ -389,18 +389,18 @@ test.describe
 
   test("Phase 21: admin applies Seller template", async ({ context, page }) => {
     await injectSession(context, admin);
-    await searchAndSelectUser(page, target.email, target.userId);
+    await navigateToUserDetail(page, target.email, target.userId);
 
     await page.getByTestId("template-btn-seller").click();
     await page.waitForTimeout(MUTATION_WAIT_MS);
     await snap(page, "admin-seller-template-applied");
 
-    // Seller has products.create but NOT audit.read
+    // Seller has products.create but NOT admin.audit
     await expect(
       page.getByTestId("permission-toggle-products.create"),
     ).toBeChecked({ timeout: ELEMENT_TIMEOUT_MS });
     await expect(
-      page.getByTestId("permission-toggle-audit.read"),
+      page.getByTestId("permission-toggle-admin.audit"),
     ).not.toBeChecked();
   });
 
@@ -418,16 +418,16 @@ test.describe
     await snap(page, "studio-restored-as-seller");
   });
 
-  test("Phase 23: seller permissions — admin confirms audit.read unchecked", async ({
+  test("Phase 23: seller permissions — admin confirms admin.audit unchecked", async ({
     context,
     page,
   }) => {
     await injectSession(context, admin);
-    await searchAndSelectUser(page, target.email, target.userId);
+    await navigateToUserDetail(page, target.email, target.userId);
 
-    // Seller template does NOT include audit.read
+    // Seller template does NOT include admin.audit
     await expect(
-      page.getByTestId("permission-toggle-audit.read"),
+      page.getByTestId("permission-toggle-admin.audit"),
     ).not.toBeChecked();
     // But seller HAS products.create
     await expect(

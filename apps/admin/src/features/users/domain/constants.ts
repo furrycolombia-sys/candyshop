@@ -3,184 +3,113 @@ import type { PermissionGroup } from "./types";
 export const PERMISSION_GROUPS: PermissionGroup[] = [
   {
     key: "products",
-    labelKey: "productsCommerce",
+    labelKey: "products",
     permissions: [
       "products.create",
       "products.read",
       "products.update",
       "products.delete",
-      "product_images.create",
-      "product_images.read",
-      "product_images.delete",
-      "product_reviews.create",
-      "product_reviews.read",
-      "product_reviews.update",
-      "product_reviews.delete",
     ],
+  },
+  {
+    key: "reviews",
+    labelKey: "reviews",
+    permissions: ["reviews.write"],
   },
   {
     key: "orders",
-    labelKey: "ordersPayments",
-    permissions: [
-      "orders.create",
-      "orders.read",
-      "orders.update",
-      "receipts.create",
-      "receipts.read",
-      "receipts.delete",
-    ],
+    labelKey: "orders",
+    permissions: ["orders.place", "orders.view", "orders.manage"],
   },
   {
     key: "seller",
-    labelKey: "sellerConfig",
-    permissions: [
-      "seller_payment_methods.create",
-      "seller_payment_methods.read",
-      "seller_payment_methods.update",
-      "seller_payment_methods.delete",
-    ],
+    labelKey: "seller",
+    permissions: ["seller.payment_methods"],
   },
   {
-    key: "admin_platform",
-    labelKey: "adminPlatform",
+    key: "admin",
+    labelKey: "admin",
     permissions: [
-      "payment_method_types.create",
-      "payment_method_types.read",
-      "payment_method_types.update",
-      "payment_method_types.delete",
-      "payment_settings.read",
-      "payment_settings.update",
-      "templates.create",
-      "templates.read",
-      "templates.update",
-      "templates.delete",
-    ],
-  },
-  {
-    key: "admin_users",
-    labelKey: "adminUsersAudit",
-    permissions: [
-      "audit.read",
-      "user_permissions.create",
-      "user_permissions.read",
-      "user_permissions.update",
-      "user_permissions.delete",
+      "admin.payment_types",
+      "admin.templates",
+      "admin.settings",
+      "admin.audit",
+      "admin.users",
     ],
   },
   {
     key: "events",
-    labelKey: "eventsCheckins",
-    permissions: [
-      "events.create",
-      "events.read",
-      "events.update",
-      "events.delete",
-      "check_ins.create",
-      "check_ins.read",
-      "check_ins.update",
-    ],
+    labelKey: "events",
+    permissions: ["events.manage", "events.read", "checkins.manage"],
   },
 ];
 
+export const ALL_PERMISSION_KEYS: string[] = PERMISSION_GROUPS.flatMap(
+  (g) => g.permissions,
+);
+
 export const PERMISSION_TEMPLATES: Record<string, string[]> = {
-  buyer: [
-    "products.read",
-    "orders.create",
-    "orders.read",
-    "receipts.create",
-    "receipts.read",
-    "product_reviews.create",
-    "product_reviews.read",
-    "product_reviews.update",
-    "product_reviews.delete",
-  ],
+  buyer: ["products.read", "reviews.write", "orders.place", "orders.view"],
   seller: [
     "products.read",
-    "orders.create",
-    "orders.read",
-    "receipts.create",
-    "receipts.read",
-    "product_reviews.create",
-    "product_reviews.read",
-    "product_reviews.update",
-    "product_reviews.delete",
+    "reviews.write",
+    "orders.place",
+    "orders.view",
     "products.create",
     "products.update",
     "products.delete",
-    "product_images.create",
-    "product_images.read",
-    "product_images.delete",
-    "seller_payment_methods.create",
-    "seller_payment_methods.read",
-    "seller_payment_methods.update",
-    "seller_payment_methods.delete",
-    "orders.update",
-    "templates.read",
+    "orders.manage",
+    "seller.payment_methods",
   ],
-  admin: [
-    "products.read",
-    "orders.create",
-    "orders.read",
-    "receipts.create",
-    "receipts.read",
-    "product_reviews.create",
-    "product_reviews.read",
-    "product_reviews.update",
-    "product_reviews.delete",
-    "products.create",
-    "products.update",
-    "products.delete",
-    "product_images.create",
-    "product_images.read",
-    "product_images.delete",
-    "seller_payment_methods.create",
-    "seller_payment_methods.read",
-    "seller_payment_methods.update",
-    "seller_payment_methods.delete",
-    "orders.update",
-    "templates.read",
-    "audit.read",
-    "payment_method_types.create",
-    "payment_method_types.read",
-    "payment_method_types.update",
-    "payment_method_types.delete",
-    "payment_settings.read",
-    "payment_settings.update",
-    "templates.create",
-    "templates.update",
-    "templates.delete",
-    "user_permissions.create",
-    "user_permissions.read",
-    "user_permissions.update",
-    "user_permissions.delete",
-    "events.create",
-    "events.read",
-    "events.update",
-    "events.delete",
-  ],
+  admin: [...ALL_PERMISSION_KEYS],
   none: [],
 };
 
-/** Maps permission keys to their depends_on parent (for warnings) */
-export const PERMISSION_DEPENDENCIES: Record<string, string> = {
-  "products.update": "products.create",
-  "products.delete": "products.create",
-  "product_images.create": "products.create",
-  "product_images.delete": "products.create",
-  "seller_payment_methods.create": "products.create",
-  "seller_payment_methods.read": "products.create",
-  "seller_payment_methods.update": "products.create",
-  "seller_payment_methods.delete": "products.create",
-  "orders.update": "products.create",
-  "receipts.create": "orders.create",
-  "product_reviews.create": "orders.create",
-};
-
 export const USER_PERMISSIONS_QUERY_KEY = "user-permissions";
-export const USER_SEARCH_QUERY_KEY = "user-search";
+export const USERS_QUERY_KEY = "users";
+export const USER_PROFILE_QUERY_KEY = "user-profile";
 
-/** Minimum characters required before triggering a user search */
-export const MIN_USER_SEARCH_LENGTH = 3;
+/** Number of users per page in the user table */
+export const USERS_PER_PAGE = 20;
+
+/** Number of columns in the user table (avatar, email, name, role, lastSeen) */
+export const USER_TABLE_COLUMN_COUNT = 5;
+
+/** Debounce time for user search filter (ms) */
+export const USER_SEARCH_DEBOUNCE_MS = 300;
 
 /** Reason stored in audit trail when permissions are changed via the admin UI */
 export const ADMIN_UI_GRANT_REASON = "Admin UI";
+
+/** PostgREST error code when .single() finds no matching row */
+export const PGRST_NOT_FOUND = "PGRST116";
+
+/** Supabase select columns for user profile summaries */
+export const USER_PROFILE_SELECT_COLUMNS =
+  "id, email, display_name, display_avatar_url, avatar_url, last_seen_at";
+
+/** Maximum characters for user initials */
+export const MAX_INITIALS_LENGTH = 2;
+
+// ── Time constants for formatLastSeen ────────────────────────────────────────
+
+/** Milliseconds per second */
+export const MS_PER_SECOND = 1000;
+
+/** Seconds per minute */
+export const SECONDS_PER_MINUTE = 60;
+
+/** Minutes per hour */
+export const MINUTES_PER_HOUR = 60;
+
+/** Hours per day */
+export const HOURS_PER_DAY = 24;
+
+/** Approximate days per month */
+export const DAYS_PER_MONTH = 30;
+
+/** Approximate days per year */
+export const DAYS_PER_YEAR = 365;
+
+/** Months per year */
+export const MONTHS_PER_YEAR = 12;

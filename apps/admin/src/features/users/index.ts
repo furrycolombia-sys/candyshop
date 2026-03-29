@@ -1,1 +1,2 @@
-export { UserPermissionsPage } from "./presentation/pages/UserPermissionsPage";
+export { UsersPage } from "./presentation/pages/UsersPage";
+export { UserDetailPage } from "./presentation/pages/UserDetailPage";

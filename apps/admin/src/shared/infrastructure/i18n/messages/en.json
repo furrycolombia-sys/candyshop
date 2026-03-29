@@ -33,7 +33,7 @@
     "settings": "Settings",
     "configuration": "Configuration",
     "users": "Users",
-    "userPermissions": "User Permissions"
+    "userManagement": "User Management"
   },
   "dashboard": {
     "welcome": "Good to see you, operator.",
@@ -173,49 +173,75 @@
     "saved": "Settings updated",
     "error": "Failed to save settings"
   },
-  "userPermissions": {
-    "title": "User Permissions",
-    "subtitle": "Manage granular access control for each user",
-    "searchPlaceholder": "Search by email...",
+  "users": {
+    "title": "Users",
+    "subtitle": "Manage user accounts and permissions",
+    "searchPlaceholder": "Filter by email or name...",
     "noResults": "No users found",
-    "selectUser": "Search for a user to manage their permissions",
-    "productsCommerce": "Products & Commerce",
-    "ordersPayments": "Orders & Payments",
-    "sellerConfig": "Seller Configuration",
-    "adminPlatform": "Admin — Platform",
-    "adminUsersAudit": "Admin — Users & Audit",
-    "eventsCheckins": "Events & Check-ins",
+    "loading": "Loading...",
     "applyTemplate": "Apply Template",
     "templateBuyer": "Buyer",
     "templateSeller": "Seller",
     "templateAdmin": "Admin",
     "templateNone": "None",
-    "operations": {
-      "create": "Create",
-      "read": "Read",
-      "update": "Update",
-      "delete": "Delete"
+    "columns": {
+      "avatar": "Avatar",
+      "email": "Email",
+      "displayName": "Name",
+      "role": "Role",
+      "lastSeen": "Last Seen"
     },
-    "resources": {
+    "roles": {
+      "admin": "Admin",
+      "seller": "Seller",
+      "buyer": "Buyer",
+      "custom": "Custom",
+      "none": "None"
+    },
+    "groups": {
       "products": "Products",
-      "product_images": "Product images",
-      "product_reviews": "Product reviews",
+      "reviews": "Reviews",
       "orders": "Orders",
-      "receipts": "Receipts",
-      "seller_payment_methods": "Seller payment methods",
-      "payment_method_types": "Payment method types",
-      "payment_settings": "Payment settings",
-      "templates": "Templates",
-      "audit": "Audit",
-      "user_permissions": "User permissions",
-      "events": "Events",
-      "check_ins": "Check-ins"
+      "seller": "Seller",
+      "admin": "Admin",
+      "events": "Events"
     },
-    "dependencyWarning": "Depends on {permission} (not granted)",
-    "granted": "Granted",
-    "revoked": "Revoked",
-    "permissionsCount": "{count} {count, plural, one {permission} other {permissions}}",
-    "loading": "Loading permissions..."
+    "lastSeen": {
+      "justNow": "just now",
+      "minutesAgo": "{count}m ago",
+      "hoursAgo": "{count}h ago",
+      "daysAgo": "{count}d ago",
+      "monthsAgo": "{count}mo ago",
+      "yearsAgo": "{count}y ago"
+    },
+    "pagination": {
+      "showing": "Showing {from}-{to}",
+      "of": "of {total}"
+    },
+    "detail": {
+      "backToUsers": "Back to Users",
+      "viewProfile": "View Profile",
+      "permissionsCount": "{count, plural, one {# permission} other {# permissions}}"
+    }
+  },
+  "permissions": {
+    "products.create": "Create Products",
+    "products.read": "View Products",
+    "products.update": "Edit Products",
+    "products.delete": "Delete Products",
+    "reviews.write": "Write Reviews",
+    "orders.place": "Place Orders",
+    "orders.view": "View Orders",
+    "orders.manage": "Manage Orders",
+    "seller.payment_methods": "Payment Methods",
+    "admin.payment_types": "Payment Types",
+    "admin.templates": "Templates",
+    "admin.settings": "Settings",
+    "admin.audit": "Audit Log",
+    "admin.users": "User Permissions",
+    "events.manage": "Manage Events",
+    "events.read": "View Events",
+    "checkins.manage": "Check-ins"
   },
   "common": {
     "loading": "Loading...",
