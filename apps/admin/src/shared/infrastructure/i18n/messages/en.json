@@ -31,7 +31,9 @@
     "status": "All systems nominal",
     "paymentMethods": "Payment Methods",
     "settings": "Settings",
-    "configuration": "Configuration"
+    "configuration": "Configuration",
+    "users": "Users",
+    "userPermissions": "User Permissions"
   },
   "dashboard": {
     "welcome": "Good to see you, operator.",
@@ -170,6 +172,50 @@
     "saving": "Saving...",
     "saved": "Settings updated",
     "error": "Failed to save settings"
+  },
+  "userPermissions": {
+    "title": "User Permissions",
+    "subtitle": "Manage granular access control for each user",
+    "searchPlaceholder": "Search by email...",
+    "noResults": "No users found",
+    "selectUser": "Search for a user to manage their permissions",
+    "productsCommerce": "Products & Commerce",
+    "ordersPayments": "Orders & Payments",
+    "sellerConfig": "Seller Configuration",
+    "adminPlatform": "Admin — Platform",
+    "adminUsersAudit": "Admin — Users & Audit",
+    "eventsCheckins": "Events & Check-ins",
+    "applyTemplate": "Apply Template",
+    "templateBuyer": "Buyer",
+    "templateSeller": "Seller",
+    "templateAdmin": "Admin",
+    "templateNone": "None",
+    "operations": {
+      "create": "Create",
+      "read": "Read",
+      "update": "Update",
+      "delete": "Delete"
+    },
+    "resources": {
+      "products": "Products",
+      "product_images": "Product images",
+      "product_reviews": "Product reviews",
+      "orders": "Orders",
+      "receipts": "Receipts",
+      "seller_payment_methods": "Seller payment methods",
+      "payment_method_types": "Payment method types",
+      "payment_settings": "Payment settings",
+      "templates": "Templates",
+      "audit": "Audit",
+      "user_permissions": "User permissions",
+      "events": "Events",
+      "check_ins": "Check-ins"
+    },
+    "dependencyWarning": "Depends on {permission} (not granted)",
+    "granted": "Granted",
+    "revoked": "Revoked",
+    "permissionsCount": "{count} {count, plural, one {permission} other {permissions}}",
+    "loading": "Loading permissions..."
   },
   "common": {
     "loading": "Loading...",

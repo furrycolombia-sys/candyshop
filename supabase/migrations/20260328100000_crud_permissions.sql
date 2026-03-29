@@ -3,7 +3,7 @@
 -- =============================================================================
 -- 1. Add depends_on column to permissions table
 -- 2. Create has_permission() function
--- 3. Seed 42 permission keys + global resource_permissions
+-- 3. Seed 43 permission keys + global resource_permissions
 -- 4. Drop ALL existing RLS policies and recreate with has_permission() checks
 -- 5. Bootstrap: grant all permissions to existing users (dev environment)
 -- See: docs/superpowers/specs/2026-03-28-permissions-model-design.md
@@ -47,7 +47,7 @@ as $$
 $$;
 
 -- =============================================================================
--- 3. Seed 42 permission keys
+-- 3. Seed 43 permission keys
 -- =============================================================================
 
 -- Upsert permissions (old seed had view, purchase, check-in, uncheck, audit-view, manage)
@@ -118,14 +118,14 @@ where p.key in (
   'product_reviews.create', 'product_reviews.read', 'product_reviews.update', 'product_reviews.delete',
   'orders.create', 'orders.read', 'orders.update',
   'receipts.create', 'receipts.read', 'receipts.delete',
+  'check_ins.create', 'check_ins.read', 'check_ins.update',
   'seller_payment_methods.create', 'seller_payment_methods.read', 'seller_payment_methods.update', 'seller_payment_methods.delete',
   'payment_method_types.create', 'payment_method_types.read', 'payment_method_types.update', 'payment_method_types.delete',
   'payment_settings.read', 'payment_settings.update',
   'templates.create', 'templates.read', 'templates.update', 'templates.delete',
   'audit.read',
   'user_permissions.create', 'user_permissions.read', 'user_permissions.update', 'user_permissions.delete',
-  'events.create', 'events.read', 'events.update', 'events.delete',
-  'check_ins.create', 'check_ins.read', 'check_ins.update'
+  'events.create', 'events.read', 'events.update', 'events.delete'
 )
 on conflict (permission_id, resource_type, resource_id) do nothing;
 

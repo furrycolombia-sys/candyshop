@@ -13,6 +13,18 @@ const SUPABASE_URL =
   process.env.NEXT_PUBLIC_SUPABASE_URL || "http://127.0.0.1:54321";
 const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
 
+/** Session token lifetime in seconds for injected cookies. */
+const SESSION_EXPIRY_SECONDS = 3600;
+
+/** Reusable headers for admin REST API calls. */
+function adminHeaders(extra?: Record<string, string>): Record<string, string> {
+  return {
+    apikey: SERVICE_ROLE_KEY,
+    Authorization: `Bearer ${SERVICE_ROLE_KEY}`,
+    ...extra,
+  };
+}
+
 export const supabaseAdmin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
   auth: { autoRefreshToken: false, persistSession: false },
 });
@@ -28,12 +40,10 @@ export async function adminInsert(
 ): Promise<Record<string, unknown>> {
   const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}`, {
     method: "POST",
-    headers: {
-      apikey: SERVICE_ROLE_KEY,
-      Authorization: `Bearer ${SERVICE_ROLE_KEY}`,
+    headers: adminHeaders({
       "Content-Type": "application/json",
       Prefer: "return=representation",
-    },
+    }),
     body: JSON.stringify(data),
   });
   if (!res.ok) {
@@ -52,11 +62,12 @@ export async function adminQuery(
   params: string,
 ): Promise<Record<string, unknown>[]> {
   const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?${params}`, {
-    headers: {
-      apikey: SERVICE_ROLE_KEY,
-      Authorization: `Bearer ${SERVICE_ROLE_KEY}`,
-    },
+    headers: adminHeaders(),
   });
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(`Admin query on ${table} failed: ${err.message}`);
+  }
   return res.json();
 }
 
@@ -67,13 +78,14 @@ export async function adminDelete(
   table: string,
   params: string,
 ): Promise<void> {
-  await fetch(`${SUPABASE_URL}/rest/v1/${table}?${params}`, {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?${params}`, {
     method: "DELETE",
-    headers: {
-      apikey: SERVICE_ROLE_KEY,
-      Authorization: `Bearer ${SERVICE_ROLE_KEY}`,
-    },
+    headers: adminHeaders(),
   });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ message: res.statusText }));
+    throw new Error(`Admin delete on ${table} failed: ${err.message}`);
+  }
 }
 
 // ─── Permission Templates ────────────────────────────────────────
@@ -234,8 +246,8 @@ export async function injectSession(
           access_token: user.accessToken,
           refresh_token: user.refreshToken,
           token_type: "bearer",
-          expires_in: 3600,
-          expires_at: Math.floor(Date.now() / 1000) + 3600,
+          expires_in: SESSION_EXPIRY_SECONDS,
+          expires_at: Math.floor(Date.now() / 1000) + SESSION_EXPIRY_SECONDS,
           user: { id: user.userId, email: user.email },
         }),
       )}`,

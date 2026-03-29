@@ -9,6 +9,7 @@ import {
   LayoutDashboard,
   Radio,
   Settings,
+  Shield,
 } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -33,6 +34,10 @@ const NAV_SECTIONS = [
   {
     labelKey: "monitoring" as const,
     items: [{ key: "auditLog" as const, href: "/audit", icon: FileText }],
+  },
+  {
+    labelKey: "users" as const,
+    items: [{ key: "userPermissions" as const, href: "/users", icon: Shield }],
   },
   {
     labelKey: "configuration" as const,

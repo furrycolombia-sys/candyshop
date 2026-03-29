@@ -31,7 +31,9 @@
     "status": "Todos los sistemas nominales",
     "paymentMethods": "Metodos de Pago",
     "settings": "Configuracion",
-    "configuration": "Configuracion"
+    "configuration": "Configuracion",
+    "users": "Usuarios",
+    "userPermissions": "Permisos de Usuario"
   },
   "dashboard": {
     "welcome": "Buen día, operador.",
@@ -170,6 +172,50 @@
     "saving": "Guardando...",
     "saved": "Configuracion actualizada",
     "error": "Error al guardar configuracion"
+  },
+  "userPermissions": {
+    "title": "Permisos de Usuario",
+    "subtitle": "Gestiona el control de acceso granular para cada usuario",
+    "searchPlaceholder": "Buscar por email...",
+    "noResults": "No se encontraron usuarios",
+    "selectUser": "Busca un usuario para gestionar sus permisos",
+    "productsCommerce": "Productos y Comercio",
+    "ordersPayments": "Pedidos y Pagos",
+    "sellerConfig": "Configuracion de Vendedor",
+    "adminPlatform": "Admin — Plataforma",
+    "adminUsersAudit": "Admin — Usuarios y Auditoria",
+    "eventsCheckins": "Eventos y Check-ins",
+    "applyTemplate": "Aplicar Plantilla",
+    "templateBuyer": "Comprador",
+    "templateSeller": "Vendedor",
+    "templateAdmin": "Admin",
+    "templateNone": "Ninguno",
+    "operations": {
+      "create": "Crear",
+      "read": "Leer",
+      "update": "Actualizar",
+      "delete": "Eliminar"
+    },
+    "resources": {
+      "products": "Productos",
+      "product_images": "Imagenes de producto",
+      "product_reviews": "Resenas de producto",
+      "orders": "Pedidos",
+      "receipts": "Comprobantes",
+      "seller_payment_methods": "Metodos de pago del vendedor",
+      "payment_method_types": "Tipos de metodo de pago",
+      "payment_settings": "Configuracion de pagos",
+      "templates": "Plantillas",
+      "audit": "Auditoria",
+      "user_permissions": "Permisos de usuario",
+      "events": "Eventos",
+      "check_ins": "Check-ins"
+    },
+    "dependencyWarning": "Depende de {permission} (no otorgado)",
+    "granted": "Otorgado",
+    "revoked": "Revocado",
+    "permissionsCount": "{count} {count, plural, one {permiso} other {permisos}}",
+    "loading": "Cargando permisos..."
   },
   "common": {
     "loading": "Cargando...",

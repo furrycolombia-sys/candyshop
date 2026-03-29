@@ -2,6 +2,34 @@ import path from "node:path";
 
 import { defineConfig, devices } from "@playwright/test";
 
+const WEB_SERVER_TIMEOUT_MS = 120_000;
+
+interface AppServerConfig {
+  port: number;
+  /** Relative path from this config file to the app directory. Omit for current app. */
+  relativeCwd?: string;
+}
+
+const APP_SERVERS: AppServerConfig[] = [
+  { port: 5000 },
+  { port: 5001, relativeCwd: "../store" },
+  { port: 5005, relativeCwd: "../payments" },
+  { port: 5002, relativeCwd: "../admin" },
+  { port: 5006, relativeCwd: "../studio" },
+];
+
+function buildWebServers() {
+  return APP_SERVERS.map(({ port, relativeCwd }) => ({
+    command: process.env.CI
+      ? `npx next start --port ${port}`
+      : `npx next dev --port ${port}`,
+    ...(relativeCwd ? { cwd: path.resolve(__dirname, relativeCwd) } : {}),
+    url: `http://localhost:${port}`,
+    reuseExistingServer: true,
+    timeout: WEB_SERVER_TIMEOUT_MS,
+  }));
+}
+
 export default defineConfig({
   testDir: "./e2e",
   fullyParallel: true,
@@ -17,41 +45,5 @@ export default defineConfig({
     navigationTimeout: 45_000,
   },
   projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
-  webServer: [
-    {
-      command: process.env.CI
-        ? "npx next start --port 5000"
-        : "npx next dev --port 5000",
-      url: "http://localhost:5000",
-      reuseExistingServer: true,
-      timeout: 120_000,
-    },
-    {
-      command: process.env.CI
-        ? "npx next start --port 5001"
-        : "npx next dev --port 5001",
-      cwd: path.resolve(__dirname, "../store"),
-      url: "http://localhost:5001",
-      reuseExistingServer: true,
-      timeout: 120_000,
-    },
-    {
-      command: process.env.CI
-        ? "npx next start --port 5005"
-        : "npx next dev --port 5005",
-      cwd: path.resolve(__dirname, "../payments"),
-      url: "http://localhost:5005",
-      reuseExistingServer: true,
-      timeout: 120_000,
-    },
-    {
-      command: process.env.CI
-        ? "npx next start --port 5006"
-        : "npx next dev --port 5006",
-      cwd: path.resolve(__dirname, "../studio"),
-      url: "http://localhost:5006",
-      reuseExistingServer: true,
-      timeout: 120_000,
-    },
-  ],
+  webServer: buildWebServers(),
 });
