@@ -1,23 +1,30 @@
-import { PERMISSION_TEMPLATES } from "@/features/users/domain/constants";
+import {
+  ALL_PERMISSION_KEYS,
+  PERMISSION_TEMPLATES,
+} from "@/features/users/domain/constants";
 import type { UserRole } from "@/features/users/domain/types";
 
-function arraysEqual(a: string[], b: string[]): boolean {
-  if (a.length !== b.length) return false;
-  for (const [i, element] of a.entries()) {
-    if (element !== b[i]) return false;
-  }
-  return true;
+/** Check if all keys in `required` are present in `granted` */
+function hasAll(granted: string[], required: string[]): boolean {
+  return required.every((k) => granted.includes(k));
 }
 
-/** Determine a user's role based on their granted permission keys */
+/**
+ * Determine a user's display role based on their granted permission keys.
+ * Checks highest role first (admin → seller → buyer).
+ */
 export function computeRole(grantedKeys: string[]): UserRole {
   if (grantedKeys.length === 0) return "none";
-  const sorted = [...grantedKeys].sort();
-  if (arraysEqual(sorted, [...PERMISSION_TEMPLATES.admin].sort()))
-    return "admin";
-  if (arraysEqual(sorted, [...PERMISSION_TEMPLATES.seller].sort()))
-    return "seller";
-  if (arraysEqual(sorted, [...PERMISSION_TEMPLATES.buyer].sort()))
-    return "buyer";
+
+  if (hasAll(grantedKeys, ALL_PERMISSION_KEYS)) return "admin";
+
+  const sellerKeys = [
+    ...PERMISSION_TEMPLATES.buyer,
+    ...PERMISSION_TEMPLATES.seller,
+  ];
+  if (hasAll(grantedKeys, sellerKeys)) return "seller";
+
+  if (hasAll(grantedKeys, PERMISSION_TEMPLATES.buyer)) return "buyer";
+
   return "custom";
 }

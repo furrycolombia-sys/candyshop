@@ -7,39 +7,73 @@ import { Button } from "ui";
 import { PERMISSION_TEMPLATES } from "@/features/users/domain/constants";
 
 interface TemplateButtonsProps {
-  onApply: (permissionKeys: string[]) => void;
+  grantedKeys: string[];
+  onToggleTemplate: (keys: string[], active: boolean) => void;
+  onReset: () => void;
   isPending: boolean;
 }
 
-const TEMPLATES = [
+/** Toggle-able templates — clicking adds or removes their unique permissions. */
+const TOGGLE_TEMPLATES = [
   { key: "buyer", labelKey: "templateBuyer" },
   { key: "seller", labelKey: "templateSeller" },
   { key: "admin", labelKey: "templateAdmin" },
-  { key: "none", labelKey: "templateNone" },
+  { key: "events", labelKey: "templateEvents" },
 ] as const;
 
-export function TemplateButtons({ onApply, isPending }: TemplateButtonsProps) {
+/** Check if ALL keys in a template are currently granted. */
+function isTemplateActive(
+  templateKeys: string[],
+  grantedKeys: string[],
+): boolean {
+  return templateKeys.every((k) => grantedKeys.includes(k));
+}
+
+export function TemplateButtons({
+  grantedKeys,
+  onToggleTemplate,
+  onReset,
+  isPending,
+}: TemplateButtonsProps) {
   const t = useTranslations("users");
 
   return (
     <div className="flex flex-wrap items-center gap-2">
       <span className="font-display text-xs font-bold uppercase tracking-wider text-muted-foreground">
-        {t("applyTemplate")}:
+        {t("profiles")}:
       </span>
-      {TEMPLATES.map(({ key, labelKey }) => (
-        <Button
-          key={key}
-          type="button"
-          onClick={() => onApply(PERMISSION_TEMPLATES[key])}
-          disabled={isPending}
-          variant="outline"
-          size="sm"
-          className="rounded-none border-2 border-foreground font-display text-xs font-bold uppercase tracking-wider"
-          {...tid(`template-btn-${key}`)}
-        >
-          {t(labelKey)}
-        </Button>
-      ))}
+      {TOGGLE_TEMPLATES.map(({ key, labelKey }) => {
+        const templateKeys = PERMISSION_TEMPLATES[key];
+        const active = isTemplateActive(templateKeys, grantedKeys);
+
+        return (
+          <Button
+            key={key}
+            type="button"
+            onClick={() => onToggleTemplate(templateKeys, !active)}
+            disabled={isPending}
+            variant={active ? "default" : "outline"}
+            size="sm"
+            className={`rounded-none border-2 border-foreground font-display text-xs font-bold uppercase tracking-wider ${
+              active ? "bg-foreground text-background" : ""
+            }`}
+            {...tid(`template-btn-${key}`)}
+          >
+            {t(labelKey)}
+          </Button>
+        );
+      })}
+      <Button
+        type="button"
+        onClick={onReset}
+        disabled={isPending || grantedKeys.length === 0}
+        variant="outline"
+        size="sm"
+        className="rounded-none border-2 border-destructive font-display text-xs font-bold uppercase tracking-wider text-destructive"
+        {...tid("template-btn-none")}
+      >
+        {t("templateNone")}
+      </Button>
     </div>
   );
 }

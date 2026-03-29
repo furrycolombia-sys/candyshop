@@ -41,9 +41,23 @@ export function UserDetailPage({ userId }: UserDetailPageProps) {
     toggleMutation.mutate({ userId, permissionKey: key, grant, grantedBy });
   };
 
-  const handleApplyTemplate = (keys: string[]) => {
+  const handleToggleTemplate = (templateKeys: string[], activate: boolean) => {
     if (!grantedBy) return;
-    templateMutation.mutate({ userId, permissionKeys: keys, grantedBy });
+    if (activate) {
+      // Add template keys to existing grants (union)
+      const newKeys = [...new Set([...grantedKeys, ...templateKeys])];
+      templateMutation.mutate({ userId, permissionKeys: newKeys, grantedBy });
+    } else {
+      // Remove only this template's unique keys (keep the rest)
+      const keysToRemove = new Set(templateKeys);
+      const newKeys = grantedKeys.filter((k) => !keysToRemove.has(k));
+      templateMutation.mutate({ userId, permissionKeys: newKeys, grantedBy });
+    }
+  };
+
+  const handleReset = () => {
+    if (!grantedBy) return;
+    templateMutation.mutate({ userId, permissionKeys: [], grantedBy });
   };
 
   if (isLoading) {
@@ -88,7 +102,9 @@ export function UserDetailPage({ userId }: UserDetailPageProps) {
 
         {/* Template buttons */}
         <TemplateButtons
-          onApply={handleApplyTemplate}
+          grantedKeys={grantedKeys}
+          onToggleTemplate={handleToggleTemplate}
+          onReset={handleReset}
           isPending={isPending || !grantedBy}
         />
 

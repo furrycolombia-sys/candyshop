@@ -48,20 +48,29 @@ export const ALL_PERMISSION_KEYS: string[] = PERMISSION_GROUPS.flatMap(
   (g) => g.permissions,
 );
 
+/**
+ * Permission templates — each defines a set of permissions for a role.
+ * Templates are additive: toggling Seller ON adds its unique keys on top of existing.
+ * Toggling Seller OFF removes only its unique keys (keeps Buyer perms).
+ * "none" is a special reset that clears everything.
+ */
 export const PERMISSION_TEMPLATES: Record<string, string[]> = {
   buyer: ["products.read", "reviews.write", "orders.place", "orders.view"],
   seller: [
-    "products.read",
-    "reviews.write",
-    "orders.place",
-    "orders.view",
     "products.create",
     "products.update",
     "products.delete",
     "orders.manage",
     "seller.payment_methods",
   ],
-  admin: [...ALL_PERMISSION_KEYS],
+  admin: [
+    "admin.payment_types",
+    "admin.templates",
+    "admin.settings",
+    "admin.audit",
+    "admin.users",
+  ],
+  events: ["events.manage", "events.read", "checkins.manage"],
   none: [],
 };
 
