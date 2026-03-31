@@ -30,7 +30,7 @@ export function MobileBar({
 
   return (
     <div
-      className="lg:hidden sticky bottom-0 z-40 bg-background border-t-3 border-foreground px-4 py-3 flex items-center justify-between gap-4"
+      className="sticky bottom-0 z-40 flex items-center justify-between gap-4 border-t-strong border-foreground bg-background px-4 py-3 lg:hidden"
       {...tid("product-detail-mobile-bar")}
     >
       <div className="flex flex-col">
@@ -46,7 +46,8 @@ export function MobileBar({
       </div>
       <button
         type="button"
-        className={`flex-1 nb-btn nb-btn-press-sm nb-shadow-md font-display text-sm font-extrabold uppercase tracking-widest py-3 disabled:opacity-50 disabled:cursor-not-allowed ${theme.bg}`}
+        className="flex-1 button-brutal button-press-sm shadow-brutal-md py-3 font-display text-sm font-extrabold uppercase tracking-widest disabled:opacity-50 disabled:cursor-not-allowed"
+        style={{ backgroundColor: theme.bg, color: theme.foreground }}
         onClick={onAddToCart}
         disabled={!isProductAvailable(product) || added}
         {...tid("product-detail-mobile-add-to-cart")}

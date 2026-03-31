@@ -59,7 +59,7 @@ export function SearchBar() {
         value={localValue}
         onChange={handleChange}
         placeholder={t("search")}
-        className="w-full border-3 border-foreground bg-background pl-9 pr-4 py-2 text-sm font-medium placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-foreground focus:ring-offset-0 rounded-none"
+        className="w-full border-strong border-foreground bg-background pl-9 pr-4 py-2 text-sm font-medium placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-foreground focus:ring-offset-0 rounded-none"
         aria-label={t("search")}
         {...tid("search-bar-input")}
       />

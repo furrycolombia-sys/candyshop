@@ -69,7 +69,7 @@ export function EditorToolbar({
 
   return (
     <div
-      className="sticky top-0 z-40 flex flex-wrap items-center gap-3 border-b-3 border-foreground bg-foreground px-4 py-3 text-background"
+      className="sticky top-0 z-40 flex flex-wrap items-center gap-3 border-b-strong border-foreground bg-foreground px-4 py-3 text-background"
       {...tid("editor-toolbar")}
     >
       {/* Back link */}
@@ -95,7 +95,7 @@ export function EditorToolbar({
               key={type}
               type="button"
               onClick={() => setValue("type", type)}
-              className={`flex items-center gap-1 rounded-full px-3 py-1 font-display text-tiny font-bold uppercase tracking-wider transition-colors ${
+              className={`flex items-center gap-1 rounded-full px-3 py-1 font-display text-ui-xs font-bold uppercase tracking-wider transition-colors ${
                 isSelected
                   ? "bg-background text-foreground"
                   : "text-background/60 hover:text-background"
@@ -114,7 +114,7 @@ export function EditorToolbar({
 
       {/* Category select */}
       <select
-        className="rounded-lg border-2 border-background/30 bg-transparent px-2 py-1 font-display text-tiny font-bold uppercase tracking-wider text-background outline-none"
+        className="rounded-lg border-2 border-background/30 bg-transparent px-2 py-1 font-display text-ui-xs font-bold uppercase tracking-wider text-background outline-none"
         {...register("category")}
         {...tid("toolbar-category")}
       >
@@ -131,7 +131,7 @@ export function EditorToolbar({
 
       {/* Featured toggle */}
       <label
-        className="flex items-center gap-1.5 font-display text-tiny font-bold uppercase tracking-wider text-background/70"
+        className="flex items-center gap-1.5 font-display text-ui-xs font-bold uppercase tracking-wider text-background/70"
         {...tid("toolbar-featured")}
       >
         <input
@@ -150,7 +150,7 @@ export function EditorToolbar({
           const val = e.target.value;
           setValue("refundable", val === "" ? null : val === "true");
         }}
-        className="rounded-lg border-2 border-background/30 bg-transparent px-2 py-1 font-display text-tiny font-bold uppercase tracking-wider text-background outline-none"
+        className="rounded-lg border-2 border-background/30 bg-transparent px-2 py-1 font-display text-ui-xs font-bold uppercase tracking-wider text-background outline-none"
         {...tid("toolbar-refundable")}
       >
         <option value="" className="bg-foreground text-background">
@@ -174,7 +174,7 @@ export function EditorToolbar({
             onReset();
           }
         }}
-        className="flex items-center gap-1.5 rounded-lg border-2 border-background/30 px-2.5 py-1 font-display text-tiny font-bold uppercase tracking-wider text-background/70 transition-colors hover:border-background hover:text-background"
+        className="flex items-center gap-1.5 rounded-lg border-2 border-background/30 px-2.5 py-1 font-display text-ui-xs font-bold uppercase tracking-wider text-background/70 transition-colors hover:border-background hover:text-background"
         {...tid("toolbar-reset")}
       >
         <RotateCcw className="size-3.5" />
@@ -192,7 +192,7 @@ export function EditorToolbar({
           className="data-[state=checked]:bg-background/30"
           {...tid("toolbar-active")}
         />
-        <span className="font-display text-tiny font-bold uppercase tracking-wider text-background/70">
+        <span className="font-display text-ui-xs font-bold uppercase tracking-wider text-background/70">
           {t("products.active")}
         </span>
       </div>
@@ -202,7 +202,7 @@ export function EditorToolbar({
         type="button"
         onClick={onSave}
         disabled={isSaving}
-        className="nb-btn flex items-center gap-2 rounded-lg border-3 border-background bg-background px-5 py-1.5 font-display text-sm font-extrabold uppercase tracking-wider text-foreground transition-colors hover:bg-background/90 disabled:opacity-50"
+        className="button-brutal flex items-center gap-2 rounded-lg border-strong border-background bg-background px-5 py-1.5 font-display text-sm font-extrabold uppercase tracking-wider text-foreground transition-colors hover:bg-background/90 disabled:opacity-50"
         {...tid("toolbar-save")}
       >
         {isSaving && <Loader2 className="size-4 animate-spin" />}

@@ -60,7 +60,8 @@ function TwoColumnRow({
     <div
       ref={dragProvided.innerRef}
       {...dragProvided.draggableProps}
-      className={`relative flex items-stretch border-b-3 border-foreground last:border-b-0 ${zebraClass}`}
+      className="relative flex items-stretch border-b-strong border-foreground last:border-b-0"
+      style={{ backgroundColor: zebraClass }}
       {...tid(`section-${sectionIndex}-item-${itemIndex}`)}
     >
       {/* Remove */}
@@ -82,7 +83,7 @@ function TwoColumnRow({
         <button
           type="button"
           onClick={toggleLang}
-          className="shrink-0 rounded-sm border-2 border-foreground/30 px-1 py-0.5 font-display text-[9px] font-extrabold uppercase tracking-widest text-muted-foreground hover:border-foreground hover:text-foreground"
+          className="shrink-0 rounded-sm border-2 border-foreground/30 px-1 py-0.5 font-display text-ui-xs font-extrabold uppercase tracking-widest text-muted-foreground hover:border-foreground hover:text-foreground"
           {...tid(`section-item-lang-toggle-${sectionIndex}-${itemIndex}`)}
         >
           {lang.toUpperCase()}
@@ -149,7 +150,8 @@ export function SectionItemsTwoColumn({
           <div
             ref={provided.innerRef}
             {...provided.droppableProps}
-            className={`overflow-hidden border-3 ${theme.border} nb-shadow-sm`}
+            className="overflow-hidden border-strong shadow-brutal-sm"
+            style={{ borderColor: theme.border }}
           >
             {fields.map((field, itemIndex) => (
               <Draggable

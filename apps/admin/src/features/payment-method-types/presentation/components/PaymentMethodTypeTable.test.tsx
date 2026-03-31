@@ -6,9 +6,13 @@ vi.mock("next-intl", () => ({
   useLocale: () => "en",
 }));
 
-vi.mock("shared", () => ({
-  tid: (id: string) => ({ "data-testid": id }),
-}));
+vi.mock("shared", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("shared")>();
+  return {
+    ...actual,
+    tid: (id: string) => ({ "data-testid": id }),
+  };
+});
 
 import { PaymentMethodTypeTable } from "./PaymentMethodTypeTable";
 
@@ -125,15 +129,14 @@ describe("PaymentMethodTypeTable", () => {
     expect(screen.getAllByText("\u2713")).toHaveLength(2);
   });
 
-  it("shows dash for null description", () => {
+  it("falls back to the alternate locale description when primary is null", () => {
     render(
       <PaymentMethodTypeTable
         {...defaultProps}
         types={[makeType({ description_en: null })]}
       />,
     );
-    // em-dash for null description
-    expect(screen.getAllByText("\u2014").length).toBeGreaterThan(0);
+    expect(screen.getByText("Transferir dinero")).toBeInTheDocument();
   });
 
   it("calls onToggleActive when switch is toggled", () => {

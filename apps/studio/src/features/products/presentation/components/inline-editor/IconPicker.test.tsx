@@ -39,7 +39,7 @@ describe("IconPicker", () => {
   const defaultProps = {
     value: "sparkles",
     onChange: vi.fn(),
-    themeBg: "bg-mint",
+    themeBg: "var(--mint)",
   };
 
   it("renders the trigger button", () => {

@@ -13,11 +13,6 @@ import { receivedOrdersSearchParams } from "@/features/received-orders/domain/se
 import type { SellerAction } from "@/features/received-orders/domain/types";
 import { ReceivedOrderCard } from "@/features/received-orders/presentation/components/ReceivedOrderCard";
 
-const PILL_BASE =
-  "rounded-lg border-3 border-foreground px-3 py-1 font-display text-xs font-bold uppercase tracking-wider transition-colors";
-const PILL_ACTIVE = "bg-foreground text-background";
-const PILL_INACTIVE = "bg-background text-foreground hover:bg-muted";
-
 export function ReceivedOrdersPage() {
   const t = useTranslations("receivedOrders");
   const [params, setParams] = useQueryStates(receivedOrdersSearchParams);
@@ -34,7 +29,7 @@ export function ReceivedOrdersPage() {
 
   return (
     <main
-      className="flex flex-1 flex-col bg-dots"
+      className="flex flex-1 flex-col surface-grid-dots"
       {...tid("received-orders-page")}
     >
       <div className="mx-auto flex w-full max-w-4xl flex-col gap-6 px-4 py-8">
@@ -58,7 +53,7 @@ export function ReceivedOrdersPage() {
               key={status}
               type="button"
               onClick={() => setParams({ filter: status }, { history: "push" })}
-              className={`${PILL_BASE} ${activeFilter === status ? PILL_ACTIVE : PILL_INACTIVE}`}
+              className={`rounded-lg border-strong border-foreground px-3 py-1 font-display text-xs font-bold uppercase tracking-wider transition-colors ${activeFilter === status ? "bg-foreground text-background" : "bg-background text-foreground hover:bg-muted"}`}
               {...tid(`filter-${status}`)}
             >
               {t(`filters.${status}`)}

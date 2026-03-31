@@ -10,7 +10,7 @@ interface MutationErrorBannerProps {
 export function MutationErrorBanner({ message }: MutationErrorBannerProps) {
   return (
     <div
-      className="sticky top-[61px] z-30 border-b border-destructive/30 bg-destructive/8 px-4 py-2.5 backdrop-blur-xl backdrop-saturate-150"
+      className="top-app-toolbar sticky z-30 border-b border-destructive/30 bg-destructive/8 px-4 py-2.5 backdrop-blur-xl backdrop-saturate-150"
       role="alert"
       {...tid("mutation-error-banner")}
     >

@@ -48,7 +48,7 @@ export function PaymentMethodEditor({
 
   return (
     <div
-      className="flex flex-col gap-6 rounded-xl border-3 border-border bg-background p-6 nb-shadow-md"
+      className="flex flex-col gap-6 rounded-xl border-strong border-border bg-background p-6 shadow-brutal-md"
       {...tid("payment-method-editor")}
     >
       <h2 className="font-display text-2xl font-bold uppercase tracking-tight">
@@ -165,7 +165,7 @@ export function PaymentMethodEditor({
       <div className="flex items-center gap-3">
         <Button
           type="button"
-          className="nb-btn nb-shadow-md nb-btn-press-sm rounded-xl border-3 bg-brand px-6 py-3 text-brand-foreground hover:bg-brand-hover"
+          className="button-brutal shadow-brutal-md button-press-sm rounded-xl border-strong bg-brand px-6 py-3 text-brand-foreground hover:bg-brand-hover"
           disabled={isPending || !form.type_id}
           onClick={handleSubmit}
           {...tid("payment-method-save")}
@@ -175,7 +175,7 @@ export function PaymentMethodEditor({
         <Button
           type="button"
           variant="outline"
-          className="rounded-xl border-3 px-6 py-3"
+          className="rounded-xl border-strong px-6 py-3"
           onClick={onCancel}
           {...tid("payment-method-cancel")}
         >

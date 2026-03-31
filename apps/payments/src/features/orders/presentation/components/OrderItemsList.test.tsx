@@ -5,9 +5,13 @@ vi.mock("next-intl", () => ({
   useLocale: () => "en",
 }));
 
-vi.mock("shared", () => ({
-  tid: (id: string) => ({ "data-testid": id }),
-}));
+vi.mock("shared", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("shared")>();
+  return {
+    ...actual,
+    tid: (id: string) => ({ "data-testid": id }),
+  };
+});
 
 vi.mock("@/shared/application/utils/formatCop", () => ({
   formatCop: (amount: number) => `$${amount.toLocaleString()} COP`,

@@ -15,7 +15,6 @@ import { ProductTableRow } from "./ProductTableRow";
 import { useReorderProducts } from "@/features/products/application/useProductMutations";
 import type { Product } from "@/features/products/domain/types";
 
-const TABLE_HEADER_CLASS = "text-table-header px-4 py-3";
 const ZEBRA_MODULO = 2;
 
 interface ProductTableProps {
@@ -67,7 +66,7 @@ export function ProductTable({
   if (products.length === 0) {
     return (
       <div
-        className="flex flex-col items-center justify-center gap-2 rounded-xl border-3 border-dashed border-border bg-muted/30 py-16"
+        className="flex flex-col items-center justify-center gap-2 rounded-xl border-strong border-dashed border-border bg-muted/30 py-16"
         {...tid("products-empty-state")}
       >
         <p className="font-display text-lg font-bold uppercase">
@@ -82,36 +81,36 @@ export function ProductTable({
 
   return (
     <div
-      className="overflow-x-auto rounded-xl border-3 border-border bg-background nb-shadow-md"
+      className="overflow-x-auto rounded-xl border-strong border-border bg-background shadow-brutal-md"
       {...tid("product-table")}
     >
       <DragDropContext onDragEnd={handleDragEnd}>
         <table className="w-full">
           <thead>
-            <tr className="border-b-3 border-border bg-muted/50">
+            <tr className="border-b-strong border-border bg-muted/50">
               {canReorder && (
-                <th className={`${TABLE_HEADER_CLASS} w-10`}>{""}</th>
+                <th className="w-10 px-4 py-3 text-table-header">{""}</th>
               )}
-              <th className={`${TABLE_HEADER_CLASS} text-left`}>{""}</th>
-              <th className={`${TABLE_HEADER_CLASS} text-left`}>
+              <th className="px-4 py-3 text-left text-table-header">{""}</th>
+              <th className="px-4 py-3 text-left text-table-header">
                 {t("products.name")}
               </th>
-              <th className={`${TABLE_HEADER_CLASS} text-left`}>
+              <th className="px-4 py-3 text-left text-table-header">
                 {t("products.type")}
               </th>
-              <th className={`${TABLE_HEADER_CLASS} text-left`}>
+              <th className="px-4 py-3 text-left text-table-header">
                 {t("products.category")}
               </th>
-              <th className={`${TABLE_HEADER_CLASS} text-right`}>
+              <th className="px-4 py-3 text-right text-table-header">
                 {t("products.price")}
               </th>
-              <th className={`${TABLE_HEADER_CLASS} text-center`}>
+              <th className="px-4 py-3 text-center text-table-header">
                 {t("products.active")}
               </th>
-              <th className={`${TABLE_HEADER_CLASS} text-center`}>
+              <th className="px-4 py-3 text-center text-table-header">
                 {t("products.featured")}
               </th>
-              <th className={`${TABLE_HEADER_CLASS} text-right`}>
+              <th className="px-4 py-3 text-right text-table-header">
                 {t("products.actions")}
               </th>
             </tr>

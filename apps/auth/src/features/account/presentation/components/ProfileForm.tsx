@@ -50,7 +50,7 @@ export function ProfileForm({
   return (
     <form
       onSubmit={handleSubmit(onSubmit)}
-      className="border-3 border-foreground bg-background p-6 nb-shadow-sm"
+      className="border-strong border-foreground bg-background p-6 shadow-brutal-sm"
       {...tid("profile-form")}
     >
       <h2 className="mb-4 font-display text-xs font-extrabold uppercase tracking-widest text-muted-foreground">
@@ -60,7 +60,7 @@ export function ProfileForm({
       <div className="flex flex-col gap-4">
         {/* Display Name */}
         <label className="flex flex-col gap-1">
-          <span className="font-display text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+          <span className="font-display text-ui-xs font-bold uppercase tracking-widest text-muted-foreground">
             {t("displayName")}
           </span>
           <Input
@@ -77,7 +77,7 @@ export function ProfileForm({
 
         {/* Contact Email */}
         <label className="flex flex-col gap-1">
-          <span className="font-display text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+          <span className="font-display text-ui-xs font-bold uppercase tracking-widest text-muted-foreground">
             {t("contactEmail")}
           </span>
           <Input
@@ -95,7 +95,7 @@ export function ProfileForm({
 
         {/* Custom Avatar URL */}
         <label className="flex flex-col gap-1">
-          <span className="font-display text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+          <span className="font-display text-ui-xs font-bold uppercase tracking-widest text-muted-foreground">
             {t("customAvatar")}
           </span>
           <Input
@@ -124,7 +124,7 @@ export function ProfileForm({
       <button
         type="submit"
         disabled={isPending}
-        className="nb-btn nb-btn-press-sm mt-6 w-full justify-center border-3 border-foreground bg-foreground py-2.5 font-display text-sm font-extrabold uppercase tracking-widest text-background disabled:opacity-50"
+        className="button-brutal button-press-sm mt-6 w-full justify-center border-strong border-foreground bg-foreground py-2.5 font-display text-sm font-extrabold uppercase tracking-widest text-background disabled:opacity-50"
         {...tid("profile-save")}
       >
         {isPending && <Loader2 className="size-4 animate-spin" />}

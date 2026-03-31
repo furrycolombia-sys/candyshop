@@ -114,7 +114,7 @@ export function InlineImageCarousel({ control }: InlineImageCarouselProps) {
       return <ImageOff className="size-5 text-muted-foreground" />;
     }
     return (
-      <span className="font-display text-[8px] font-extrabold uppercase tracking-wide leading-tight text-center px-0.5">
+      <span className="px-0.5 text-center font-display text-ui-xs font-extrabold uppercase tracking-wide leading-tight">
         #{index + 1}
       </span>
     );
@@ -127,7 +127,7 @@ export function InlineImageCarousel({ control }: InlineImageCarouselProps) {
   ) => {
     const isActive = index === safeIndex;
     const activeCls = isActive
-      ? `border-foreground ${theme.bg} nb-shadow-sm`
+      ? "border-foreground shadow-brutal-sm"
       : thumbInactive;
     // Use live form value (watchedImages) instead of stale fields snapshot
     const liveUrl = watchedImages?.[index]?.url ?? field.url;
@@ -140,7 +140,8 @@ export function InlineImageCarousel({ control }: InlineImageCarouselProps) {
         <button
           type="button"
           onClick={() => setActiveIndex(index)}
-          className={`flex items-center justify-center size-16 border-3 transition-all overflow-hidden ${activeCls}`}
+          className={`flex items-center justify-center size-16 border-strong transition-all overflow-hidden ${activeCls}`}
+          style={isActive ? { backgroundColor: theme.bg } : undefined}
           aria-label={t("imageNumber", { number: index + 1 })}
         >
           {hasUrl && !isBroken ? (
@@ -176,7 +177,7 @@ export function InlineImageCarousel({ control }: InlineImageCarouselProps) {
     <button
       type="button"
       onClick={handleAdd}
-      className="flex items-center justify-center size-16 border-3 border-dashed border-foreground/40 transition-colors hover:border-foreground/70 text-muted-foreground hover:text-foreground shrink-0"
+      className="flex items-center justify-center size-16 border-strong border-dashed border-foreground/40 transition-colors hover:border-foreground/70 text-muted-foreground hover:text-foreground shrink-0"
       aria-label={t("addImage")}
       {...tid("image-thumb-add")}
     >
@@ -202,7 +203,8 @@ export function InlineImageCarousel({ control }: InlineImageCarouselProps) {
       <button
         type="button"
         onClick={handleAdd}
-        className={`relative flex-1 flex flex-col items-center justify-center gap-3 aspect-square border-3 border-dashed border-foreground/40 overflow-hidden ${theme.bg}`}
+        className="relative flex flex-1 aspect-square flex-col items-center justify-center gap-3 overflow-hidden border-strong border-dashed border-foreground/40"
+        style={{ backgroundColor: theme.bg }}
         {...tid("image-gallery-main-empty")}
       >
         <Plus className="size-8 text-foreground/30" />
@@ -214,7 +216,8 @@ export function InlineImageCarousel({ control }: InlineImageCarouselProps) {
       <button
         type="button"
         onClick={toggleEditMain}
-        className={`relative flex-1 flex items-center justify-center aspect-square border-3 border-foreground nb-shadow-lg overflow-hidden ${theme.bg} cursor-pointer`}
+        className="relative flex flex-1 aspect-square cursor-pointer items-center justify-center overflow-hidden border-strong border-foreground shadow-brutal-lg"
+        style={{ backgroundColor: theme.bg }}
         {...tid("image-gallery-main")}
       >
         {(() => {
@@ -240,14 +243,14 @@ export function InlineImageCarousel({ control }: InlineImageCarouselProps) {
         {/* Bottom bar: caption + counter */}
         <div className="absolute bottom-0 inset-x-0 flex items-center justify-between bg-foreground/70 px-3 py-1.5">
           {(watchedImages?.[safeIndex]?.alt ?? activeField?.alt) ? (
-            <span className="text-tiny font-bold uppercase tracking-widest text-background truncate">
+            <span className="text-ui-xs font-bold uppercase tracking-widest text-background truncate">
               {watchedImages?.[safeIndex]?.alt ?? activeField?.alt}
             </span>
           ) : (
             <span />
           )}
           {fields.length > 1 && (
-            <span className="text-tiny font-bold text-background tracking-widest shrink-0 ml-2">
+            <span className="text-ui-xs font-bold text-background tracking-widest shrink-0 ml-2">
               {safeIndex + 1} / {fields.length}
             </span>
           )}
@@ -261,12 +264,12 @@ export function InlineImageCarousel({ control }: InlineImageCarouselProps) {
   const editBar =
     safeIndex >= 0 ? (
       <div
-        className={`border-3 border-foreground bg-background p-3 ${editingMain ? "" : "hidden"}`}
+        className={`border-strong border-foreground bg-background p-3 ${editingMain ? "" : "hidden"}`}
         {...tid("image-edit-bar")}
       >
         <div className="flex flex-col gap-2">
           <label className="flex flex-col gap-1">
-            <span className="font-display text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+            <span className="font-display text-ui-xs font-bold uppercase tracking-widest text-muted-foreground">
               {t("editImageUrl")}
             </span>
             <Input
@@ -277,7 +280,7 @@ export function InlineImageCarousel({ control }: InlineImageCarouselProps) {
             />
           </label>
           <label className="flex flex-col gap-1">
-            <span className="font-display text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+            <span className="font-display text-ui-xs font-bold uppercase tracking-widest text-muted-foreground">
               {t("editImageAlt")}
             </span>
             <Input
@@ -291,7 +294,7 @@ export function InlineImageCarousel({ control }: InlineImageCarouselProps) {
         <button
           type="button"
           onClick={() => setEditingMain(false)}
-          className="nb-btn nb-btn-press-sm mt-3 w-full justify-center border-3 border-foreground bg-foreground py-1.5 font-display text-xs font-bold uppercase tracking-widest text-background"
+          className="button-brutal button-press-sm mt-3 w-full justify-center border-strong border-foreground bg-foreground py-1.5 font-display text-xs font-bold uppercase tracking-widest text-background"
           {...tid("image-edit-done")}
         >
           {t("doneEditing")}

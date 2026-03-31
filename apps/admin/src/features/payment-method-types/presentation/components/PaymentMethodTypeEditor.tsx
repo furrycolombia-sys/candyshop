@@ -35,7 +35,7 @@ export function PaymentMethodTypeEditor({
 
   return (
     <div
-      className="flex flex-col gap-6 border-3 border-foreground bg-background p-6 nb-shadow-md"
+      className="flex flex-col gap-6 border-strong border-foreground bg-background p-6 shadow-brutal-md"
       {...tid("payment-type-editor")}
     >
       {/* Name fields */}

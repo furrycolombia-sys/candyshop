@@ -3,13 +3,15 @@
 import { useTranslations } from "next-intl";
 import { tid } from "shared";
 
+const DEFAULT_CANDY_TEXT = "var(--candy-text)";
+
 const CATEGORIES = [
-  { key: "commissions", fill: "bg-pink text-candy-text" },
-  { key: "fursuits", fill: "bg-mint text-candy-text" },
-  { key: "events", fill: "bg-lemon text-candy-text-on-lemon" },
-  { key: "merch", fill: "bg-lilac text-candy-text" },
-  { key: "digital", fill: "bg-sky text-candy-text" },
-  { key: "deals", fill: "bg-peach text-candy-text" },
+  { key: "commissions", bg: "var(--pink)", fg: DEFAULT_CANDY_TEXT },
+  { key: "fursuits", bg: "var(--mint)", fg: DEFAULT_CANDY_TEXT },
+  { key: "events", bg: "var(--lemon)", fg: "var(--candy-text-on-lemon)" },
+  { key: "merch", bg: "var(--lilac)", fg: DEFAULT_CANDY_TEXT },
+  { key: "digital", bg: "var(--sky)", fg: DEFAULT_CANDY_TEXT },
+  { key: "deals", bg: "var(--peach)", fg: DEFAULT_CANDY_TEXT },
 ] as const;
 
 export function FeaturesSection() {
@@ -19,7 +21,7 @@ export function FeaturesSection() {
   return (
     <section
       id="features"
-      className="relative border-t-[3px] border-foreground bg-muted py-20 lg:py-28"
+      className="relative border-t-strong border-foreground bg-muted py-20 lg:py-28"
       aria-labelledby="features-heading"
       {...tid("features-section")}
     >
@@ -28,10 +30,11 @@ export function FeaturesSection() {
       </h2>
       <div className="mx-auto max-w-6xl px-6 lg:px-8">
         <ul className="flex flex-wrap gap-4">
-          {CATEGORIES.map(({ key, fill }) => (
+          {CATEGORIES.map(({ key, bg, fg }) => (
             <li
               key={key}
-              className={`nb-shadow-sm inline-block border-3 border-foreground px-5 py-2.5 text-sm font-bold uppercase tracking-wider ${fill}`}
+              className="shadow-brutal-sm inline-block border-strong border-foreground px-5 py-2.5 text-sm font-bold uppercase tracking-wider"
+              style={{ backgroundColor: bg, color: fg }}
               {...tid(`category-${key}`)}
             >
               {t(key)}

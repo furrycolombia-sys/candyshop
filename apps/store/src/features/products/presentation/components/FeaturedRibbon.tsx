@@ -26,7 +26,6 @@ const MAX_WIDTH_RATIO = 0.65;
 const SHINE_DURATION_MS = 2500;
 const SHINE_PAUSE_MS = 1500;
 const CYCLE_MS = SHINE_DURATION_MS + SHINE_PAUSE_MS;
-const FALLBACK_COLOR = "#e91e63";
 
 /* Shine gradient stops */
 const SHINE_BAND_START = -0.3;
@@ -34,9 +33,8 @@ const SHINE_BAND_RANGE = 1.6;
 const SHINE_STOP_EDGE = 0.4;
 const SHINE_STOP_CENTER = 0.5;
 const SHINE_STOP_END = 0.6;
-const SHINE_OPACITY = "rgba(255,255,255,0.5)";
-const SHINE_TRANSPARENT = "rgba(255,255,255,0)";
-
+const SHINE_OPACITY = 0.35;
+const SHINE_TRANSPARENT = "transparent";
 /* Text rotation: -45 degrees in radians */
 const DIAGONAL_DIVISOR = 4;
 const TEXT_ANGLE = -Math.PI / DIAGONAL_DIVISOR;
@@ -86,8 +84,15 @@ export function FeaturedRibbon({
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    // eslint-disable-next-line i18next/no-literal-string -- canvas context type
-    const ctx = canvas.getContext("2d");
+    let ctx: CanvasRenderingContext2D | null = null;
+    try {
+      ctx = canvas.getContext(
+        // eslint-disable-next-line i18next/no-literal-string -- HTML canvas API context identifier
+        "2d",
+      );
+    } catch {
+      return;
+    }
     if (!ctx) return;
 
     canvas.width = s * DEVICE_PIXEL_RATIO;
@@ -96,12 +101,15 @@ export function FeaturedRibbon({
 
     // Resolve CSS variable to actual color
     const style = getComputedStyle(canvas);
+    const foregroundColor =
+      style.getPropertyValue("--foreground").trim() || "currentColor";
     const bgColor =
       style.getPropertyValue(accentVar).trim() ||
       style
         .getPropertyValue(`--color-${accentVar.replace(/^-+/, "")}`)
         .trim() ||
-      FALLBACK_COLOR;
+      style.getPropertyValue("--primary").trim() ||
+      foregroundColor;
 
     const text = label.toUpperCase();
     let finalFontSize: number = baseFontSize;
@@ -137,11 +145,14 @@ export function FeaturedRibbon({
         );
         grad.addColorStop(0, SHINE_TRANSPARENT);
         grad.addColorStop(SHINE_STOP_EDGE, SHINE_TRANSPARENT);
-        grad.addColorStop(SHINE_STOP_CENTER, SHINE_OPACITY);
+        grad.addColorStop(SHINE_STOP_CENTER, foregroundColor);
         grad.addColorStop(SHINE_STOP_END, SHINE_TRANSPARENT);
         grad.addColorStop(1, SHINE_TRANSPARENT);
+        ctx.save();
+        ctx.globalAlpha = SHINE_OPACITY;
         ctx.fillStyle = grad;
         ctx.fillRect(0, 0, s, s);
+        ctx.restore();
       }
       ctx.restore();
 
@@ -149,7 +160,7 @@ export function FeaturedRibbon({
       ctx.save();
       ctx.translate(s * textOffset, s * textOffset);
       ctx.rotate(TEXT_ANGLE);
-      ctx.fillStyle = "white";
+      ctx.fillStyle = foregroundColor;
       ctx.font = `800 ${String(finalFontSize)}px ${FONT_STACK}`;
       ctx.textAlign = "left";
       ctx.textBaseline = "middle";

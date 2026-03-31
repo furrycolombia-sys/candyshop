@@ -48,6 +48,10 @@
   --peach: #ff7840;
   --candy-text: #1a1a1a;
   --candy-text-on-lemon: #1a1a1a;
+  --google-blue: #4285f4;
+  --google-green: #34a853;
+  --google-yellow: #fbbc05;
+  --google-red: #ea4335;
 
   /* Shared theme compatibility */
   --popover: #ffffff;
@@ -83,10 +87,10 @@
   --shadow-card: 3px 3px 0 0 #1a1a1a;
 
   /* Neobrutalist tokens */
-  --nb-border: 3px solid #1a1a1a;
-  --nb-shadow-sm: 3px 3px 0 0 #1a1a1a;
-  --nb-shadow-md: 5px 5px 0 0 #1a1a1a;
-  --nb-shadow-lg: 8px 8px 0 0 #1a1a1a;
+  --border-strong: 3px solid #1a1a1a;
+  --shadow-brutal-sm: 3px 3px 0 0 #1a1a1a;
+  --shadow-brutal-md: 5px 5px 0 0 #1a1a1a;
+  --shadow-brutal-lg: 8px 8px 0 0 #1a1a1a;
 }
 
 .dark {
@@ -128,6 +132,10 @@
   --peach: #a05828;
   --candy-text: #f5f5f5;
   --candy-text-on-lemon: #f5f5f5;
+  --google-blue: #4285f4;
+  --google-green: #34a853;
+  --google-yellow: #fbbc05;
+  --google-red: #ea4335;
 
   /* Shared theme compatibility — dark mode */
   --popover: #1a1a1e;
@@ -162,8 +170,8 @@
   --shadow-card: 3px 3px 0 0 #f5f5f5;
 
   /* Neobrutalist tokens */
-  --nb-border: 3px solid #f5f5f5;
-  --nb-shadow-sm: 3px 3px 0 0 #f5f5f5;
-  --nb-shadow-md: 5px 5px 0 0 #f5f5f5;
-  --nb-shadow-lg: 8px 8px 0 0 #f5f5f5;
+  --border-strong: 3px solid #f5f5f5;
+  --shadow-brutal-sm: 3px 3px 0 0 #f5f5f5;
+  --shadow-brutal-md: 5px 5px 0 0 #f5f5f5;
+  --shadow-brutal-lg: 8px 8px 0 0 #f5f5f5;
 }

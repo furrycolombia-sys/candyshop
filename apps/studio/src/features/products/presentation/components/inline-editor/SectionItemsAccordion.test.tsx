@@ -80,13 +80,14 @@ vi.mock("./InlineRemoveButton", () => ({
 import { SectionItemsAccordion } from "./SectionItemsAccordion";
 
 const mockTheme = {
-  bg: "bg-mint",
-  bgLight: "bg-mint/15",
-  border: "border-mint",
-  text: "text-mint",
-  badgeBg: "bg-mint",
-  rowEven: "bg-mint/5",
-  rowOdd: "bg-mint/15",
+  bg: "var(--mint)",
+  bgLight: "color-mix(in srgb, var(--mint) 15%, transparent)",
+  border: "var(--mint)",
+  text: "var(--mint)",
+  badgeBg: "var(--mint)",
+  rowEven: "color-mix(in srgb, var(--mint) 5%, transparent)",
+  rowOdd: "color-mix(in srgb, var(--mint) 15%, transparent)",
+  foreground: "var(--candy-text)",
   accent: "--mint",
 };
 

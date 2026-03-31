@@ -11,20 +11,20 @@ export function HeroSection() {
 
   return (
     <section
-      className="relative min-h-[88vh] flex items-center bg-dots"
+      className="relative flex min-h-hero-stage items-center surface-grid-dots"
       aria-labelledby="hero-heading"
       {...tid("hero-section")}
     >
       <div className="mx-auto w-full max-w-6xl px-6 py-24 lg:px-8">
         <div className="max-w-3xl">
           {/* Tagline — neobrutalist badge */}
-          <div className="nb-shadow-sm mb-8 inline-block border-3 border-foreground bg-lemon px-4 py-1.5 text-sm font-extrabold uppercase tracking-wider text-candy-text-on-lemon">
+          <div className="shadow-brutal-sm mb-8 inline-block border-strong border-foreground bg-warning px-4 py-1.5 text-sm font-extrabold uppercase tracking-wider text-warning-foreground">
             {t("above")}
           </div>
 
           <h1
             id="hero-heading"
-            className="mb-8 font-display text-[clamp(3.5rem,10vw,8rem)] font-extrabold uppercase leading-[0.9] tracking-tight text-foreground"
+            className="text-hero-display mb-8 font-display uppercase text-foreground"
           >
             {t("title")
               .split("\n")
@@ -41,7 +41,7 @@ export function HeroSection() {
 
           <a
             href={appUrls.store}
-            className="group nb-btn nb-btn-press-lg nb-shadow-md gap-3 bg-pink px-8 py-4 text-candy-text"
+            className="group button-brutal button-press-lg shadow-brutal-md gap-3 bg-primary px-8 py-4 text-primary-foreground"
             {...tid("hero-cta")}
           >
             {t("cta")}

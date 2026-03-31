@@ -9,9 +9,9 @@ export function LoginPage() {
   const t = useTranslations("auth.login");
 
   return (
-    <main className="flex flex-1 items-center justify-center bg-dots p-4">
+    <main className="flex flex-1 items-center justify-center surface-grid-dots p-4">
       <div
-        className="nb-shadow-lg w-full max-w-md border-3 border-foreground bg-background p-8 sm:p-10"
+        className="shadow-brutal-lg w-full max-w-md border-strong border-foreground bg-background p-8 sm:p-10"
         {...tid("login-card")}
       >
         <div className="mb-8 text-center">

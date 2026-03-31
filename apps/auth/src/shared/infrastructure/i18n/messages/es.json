@@ -8,8 +8,7 @@
       "title": "Iniciar sesion",
       "subtitle": "Elige tu metodo de inicio de sesion preferido",
       "google": "Continuar con Google",
-      "discord": "Continuar con Discord",
-      "twitter": "Continuar con X"
+      "discord": "Continuar con Discord"
     },
     "signOut": "Cerrar sesion",
     "account": {
@@ -58,6 +57,8 @@
     "playground": "Playground"
   },
   "common": {
+    "error": "Ocurrió un error",
+    "retry": "Intentar de nuevo",
     "theme": {
       "switchToDark": "Cambiar a modo oscuro",
       "switchToLight": "Cambiar a modo claro",

@@ -43,14 +43,15 @@ export function GalleryOverlays({
       </span>
 
       {/* Counter */}
-      <div className="absolute bottom-2 right-2 bg-foreground text-background text-tiny font-bold px-2 py-0.5 tracking-widest">
+      <div className="absolute bottom-2 right-2 bg-foreground text-background text-ui-xs font-bold px-2 py-0.5 tracking-widest">
         {activeIndex + 1} / {totalViews}
       </div>
 
       {/* Featured */}
       {product.featured && (
         <span
-          className={`absolute top-2 left-2 ${theme.bg} border-3 border-foreground text-foreground text-tiny font-bold uppercase tracking-widest px-2 py-0.5`}
+          className="absolute top-2 left-2 border-strong border-foreground px-2 py-0.5 text-ui-xs font-bold uppercase tracking-widest"
+          style={{ backgroundColor: theme.bg, color: theme.foreground }}
           {...tid("hero-featured-badge")}
         >
           {t("featured")}

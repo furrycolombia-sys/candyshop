@@ -2,7 +2,7 @@
 
 import { useLocale, useTranslations } from "next-intl";
 import { useId } from "react";
-import { tid } from "shared";
+import { i18nField, tid } from "shared";
 
 import type { SellerPaymentMethodWithType } from "@/features/checkout/domain/types";
 
@@ -24,15 +24,15 @@ export function PaymentMethodSelector({
   const selectId = useId();
 
   const getTypeName = (method: SellerPaymentMethodWithType) =>
-    locale === "es" ? method.type_name_es : method.type_name_en;
+    i18nField(method, "type_name", locale);
 
   const selected = methods.find((m) => m.id === selectedId);
 
   const getAccountDetails = (method: SellerPaymentMethodWithType) =>
-    locale === "es" ? method.account_details_es : method.account_details_en;
+    i18nField(method, "account_details", locale);
 
   const getSellerNote = (method: SellerPaymentMethodWithType) =>
-    locale === "es" ? method.seller_note_es : method.seller_note_en;
+    i18nField(method, "seller_note", locale);
 
   return (
     <div className="space-y-3" {...tid("payment-method-selector")}>
@@ -47,7 +47,7 @@ export function PaymentMethodSelector({
         value={selectedId ?? ""}
         onChange={(e) => onSelect(e.target.value)}
         disabled={disabled}
-        className="w-full border-3 border-foreground bg-background px-3 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-foreground disabled:cursor-not-allowed disabled:opacity-50"
+        className="w-full border-strong border-foreground bg-background px-3 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-foreground disabled:cursor-not-allowed disabled:opacity-50"
         {...tid("payment-method-select")}
       >
         <option value="">{t("selectMethodPlaceholder")}</option>

@@ -12,9 +12,13 @@ vi.mock("@/features/audit/application/useAuditLog", () => ({
   }),
 }));
 
-vi.mock("shared", () => ({
-  tid: (id: string) => ({ "data-testid": id }),
-}));
+vi.mock("shared", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("shared")>();
+  return {
+    ...actual,
+    tid: (id: string) => ({ "data-testid": id }),
+  };
+});
 
 import { AuditFilters } from "./AuditFilters";
 

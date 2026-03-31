@@ -2,15 +2,7 @@
 
 const GIT_SHORT_HASH_LENGTH = 7;
 
-const VARIANT_CLASSES = {
-  /** Centered block — use inside sidebars / vertical navigation. */
-  sidebar:
-    "block text-center font-mono text-tiny text-muted-foreground/30 select-all",
-  /** Inline span — use inside footers or horizontal layouts. */
-  footer: "font-mono text-tiny text-muted-foreground/30 select-all",
-} as const;
-
-type BuildVersionVariant = keyof typeof VARIANT_CLASSES;
+type BuildVersionVariant = "sidebar" | "footer";
 
 interface BuildVersionProps {
   /** The full build hash from the app's environment config. */
@@ -26,12 +18,11 @@ interface BuildVersionProps {
  * Displays the current build hash for deployment verification.
  *
  * Variants:
- *  - `sidebar` (default) — centered block for vertical navigation / sidebars.
- *  - `footer` — inline span for horizontal footer layouts.
+ *  - `sidebar` (default) for vertical navigation or sidebars.
+ *  - `footer` for horizontal footer layouts.
  *
  * Apps provide the hash from their centralized environment config.
- * Uses props injection for i18n — apps pass a `formatLabel` function
- * that handles translation, e.g. `(hash) => t("build", { hash })`.
+ * Uses props injection for i18n, e.g. `(hash) => t("build", { hash })`.
  */
 export function BuildVersion({
   hash,
@@ -42,7 +33,14 @@ export function BuildVersion({
   const label = formatLabel ? formatLabel(shortHash) : `Build: ${shortHash}`;
 
   return (
-    <span className={VARIANT_CLASSES[variant]} title={hash}>
+    <span
+      className={
+        variant === "sidebar"
+          ? "block select-all text-center font-mono text-ui-xs text-muted-foreground/30"
+          : "select-all font-mono text-ui-xs text-muted-foreground/30"
+      }
+      title={hash}
+    >
       {label}
     </span>
   );
