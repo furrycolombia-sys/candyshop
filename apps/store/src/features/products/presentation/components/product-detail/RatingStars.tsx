@@ -1,6 +1,6 @@
 import { Star } from "lucide-react";
 
-import type { CategoryTheme } from "@/features/products/domain/constants";
+import type { CategoryTheme } from "@/shared/domain/categoryConstants";
 
 interface RatingStarsProps {
   rating: number;
@@ -9,9 +9,10 @@ interface RatingStarsProps {
 
 export function RatingStars({ rating, theme }: RatingStarsProps) {
   const rounded = Math.round(rating);
-  const filledClass = theme
-    ? `size-4 fill-current ${theme.text}`
-    : "size-4 fill-foreground text-foreground";
+  const filledClass = "size-4 fill-current";
+  const filledStyle = theme
+    ? { color: theme.text }
+    : { color: "var(--foreground)" };
 
   return (
     <div className="flex items-center gap-0.5">
@@ -19,6 +20,7 @@ export function RatingStars({ rating, theme }: RatingStarsProps) {
         <Star
           key={i}
           className={i < rounded ? filledClass : "size-4 text-muted-foreground"}
+          style={i < rounded ? filledStyle : undefined}
         />
       ))}
     </div>

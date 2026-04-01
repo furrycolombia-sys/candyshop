@@ -55,7 +55,8 @@ describe("ProductBadges", () => {
     render(
       <ProductBadges
         product={makeProduct()}
-        categoryColor="bg-pink"
+        categoryColor="var(--pink)"
+        categoryForeground="var(--candy-text)"
         tCategories={identity}
         tTypes={identity}
         t={identity}
@@ -70,7 +71,8 @@ describe("ProductBadges", () => {
     render(
       <ProductBadges
         product={makeProduct({ type: "digital" })}
-        categoryColor="bg-pink"
+        categoryColor="var(--pink)"
+        categoryForeground="var(--candy-text)"
         tCategories={identity}
         tTypes={identity}
         t={identity}
@@ -85,7 +87,8 @@ describe("ProductBadges", () => {
     render(
       <ProductBadges
         product={makeProduct({ refundable: true })}
-        categoryColor="bg-pink"
+        categoryColor="var(--pink)"
+        categoryForeground="var(--candy-text)"
         tCategories={identity}
         tTypes={identity}
         t={identity}
@@ -98,7 +101,8 @@ describe("ProductBadges", () => {
     render(
       <ProductBadges
         product={makeProduct({ refundable: false })}
-        categoryColor="bg-pink"
+        categoryColor="var(--pink)"
+        categoryForeground="var(--candy-text)"
         tCategories={identity}
         tTypes={identity}
         t={identity}
@@ -111,7 +115,8 @@ describe("ProductBadges", () => {
     render(
       <ProductBadges
         product={makeProduct({ refundable: null })}
-        categoryColor="bg-pink"
+        categoryColor="var(--pink)"
+        categoryForeground="var(--candy-text)"
         tCategories={identity}
         tTypes={identity}
         t={identity}

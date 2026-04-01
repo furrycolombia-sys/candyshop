@@ -35,7 +35,8 @@ export function HeroSection({ product, theme }: HeroSectionProps) {
 
   return (
     <section
-      className={`w-full ${theme.bg}/15 border-b-3 border-foreground`}
+      className="w-full border-b-strong border-foreground"
+      style={{ backgroundColor: theme.bgLight }}
       {...tid("hero-section")}
     >
       <div className="max-w-6xl mx-auto px-4 py-10 lg:py-14">
@@ -48,7 +49,8 @@ export function HeroSection({ product, theme }: HeroSectionProps) {
             {/* Tagline */}
             {tagline && (
               <p
-                className={`text-xs font-bold uppercase tracking-[0.2em] ${theme.text}`}
+                className="text-xs font-bold uppercase tracking-section"
+                style={{ color: theme.text }}
                 {...tid("hero-tagline")}
               >
                 {tagline}
@@ -69,29 +71,33 @@ export function HeroSection({ product, theme }: HeroSectionProps) {
               {...tid("hero-badges")}
             >
               <span
-                className={`${theme.badgeBg} border-3 border-foreground px-3 py-1 text-xs font-bold text-foreground`}
+                className="border-strong border-foreground px-3 py-1 text-xs font-bold"
+                style={{
+                  backgroundColor: theme.badgeBg,
+                  color: theme.foreground,
+                }}
                 {...tid("hero-category")}
               >
                 {tCategories(product.category)}
               </span>
               <span
-                className="bg-background border-3 border-foreground px-3 py-1 text-tiny font-bold uppercase tracking-widest text-muted-foreground"
+                className="bg-background border-strong border-foreground px-3 py-1 text-ui-xs font-bold uppercase tracking-widest text-muted-foreground"
                 {...tid("hero-type")}
               >
                 {tTypes(product.type)}
               </span>
               {isAvailable ? (
-                <span className="bg-mint border-3 border-foreground px-3 py-1 text-tiny font-bold uppercase tracking-widest text-foreground">
+                <span className="border-strong border-foreground bg-success px-3 py-1 text-ui-xs font-bold uppercase tracking-widest text-success-foreground">
                   {t("inStock")}
                 </span>
               ) : (
-                <span className="bg-peach border-3 border-foreground px-3 py-1 text-tiny font-bold uppercase tracking-widest text-foreground">
+                <span className="border-strong border-foreground bg-warning px-3 py-1 text-ui-xs font-bold uppercase tracking-widest text-warning-foreground">
                   {t("outOfStock")}
                 </span>
               )}
               {product.refundable === true && (
                 <span
-                  className="bg-mint border-3 border-foreground px-3 py-1 text-tiny font-bold uppercase tracking-widest text-foreground"
+                  className="border-strong border-foreground bg-success px-3 py-1 text-ui-xs font-bold uppercase tracking-widest text-success-foreground"
                   {...tid("hero-refundable")}
                 >
                   {t("refundable")}
@@ -99,7 +105,7 @@ export function HeroSection({ product, theme }: HeroSectionProps) {
               )}
               {product.refundable === false && (
                 <span
-                  className="bg-peach border-3 border-foreground px-3 py-1 text-tiny font-bold uppercase tracking-widest text-foreground"
+                  className="border-strong border-foreground bg-warning px-3 py-1 text-ui-xs font-bold uppercase tracking-widest text-warning-foreground"
                   {...tid("hero-non-refundable")}
                 >
                   {t("nonRefundable")}
@@ -148,7 +154,7 @@ export function HeroSection({ product, theme }: HeroSectionProps) {
                 {product.tags.map((tag) => (
                   <span
                     key={tag}
-                    className="bg-muted px-2 py-0.5 text-tiny font-bold uppercase tracking-widest text-muted-foreground"
+                    className="bg-muted px-2 py-0.5 text-ui-xs font-bold uppercase tracking-widest text-muted-foreground"
                   >
                     #{tag}
                   </span>
@@ -160,7 +166,11 @@ export function HeroSection({ product, theme }: HeroSectionProps) {
             <div className="mt-2 flex flex-col sm:flex-row sm:items-center gap-3">
               <button
                 type="button"
-                className={`w-full sm:w-auto nb-btn nb-btn-press-lg nb-shadow-md font-display text-lg font-extrabold uppercase tracking-widest px-10 py-4 disabled:opacity-50 disabled:cursor-not-allowed ${theme.bg}`}
+                className="w-full sm:w-auto button-brutal button-press-lg shadow-brutal-md font-display text-lg font-extrabold uppercase tracking-widest px-10 py-4 disabled:opacity-50 disabled:cursor-not-allowed"
+                style={{
+                  backgroundColor: theme.bg,
+                  color: theme.foreground,
+                }}
                 onClick={handleAddToCart}
                 disabled={!isAvailable || added}
                 {...tid("hero-add-to-cart")}

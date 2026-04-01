@@ -166,6 +166,7 @@
   },
   "common": {
     "loading": "Cargando...",
+    "retry": "Intentar de nuevo",
     "theme": {
       "switchToDark": "Cambiar a modo oscuro",
       "switchToLight": "Cambiar a modo claro",

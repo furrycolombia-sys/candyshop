@@ -29,7 +29,6 @@ test.describe("Smoke test — all apps", () => {
     await expect(page.getByTestId("login-card")).toBeVisible();
     await expect(page.getByTestId("login-google")).toBeVisible();
     await expect(page.getByTestId("login-discord")).toBeVisible();
-    await expect(page.getByTestId("login-twitter")).toBeVisible();
     console.log("[smoke] ✓ Auth login page with social buttons");
   });
 

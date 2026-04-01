@@ -20,7 +20,7 @@ export function AccountSettingsPage() {
 
   if (isLoading || (!profile && !isError)) {
     return (
-      <main className="flex flex-1 items-center justify-center bg-dots p-4">
+      <main className="flex flex-1 items-center justify-center surface-grid-dots p-4">
         <div className="w-full max-w-lg space-y-4">
           <Skeleton className="h-32 w-full" />
           <Skeleton className="h-64 w-full" />
@@ -31,8 +31,8 @@ export function AccountSettingsPage() {
 
   if (isError || !profile) {
     return (
-      <main className="flex flex-1 items-center justify-center bg-dots p-4">
-        <div className="w-full max-w-lg border-3 border-foreground bg-background p-8 text-center nb-shadow-sm">
+      <main className="flex flex-1 items-center justify-center surface-grid-dots p-4">
+        <div className="w-full max-w-lg border-strong border-foreground bg-background p-8 text-center shadow-brutal-sm">
           <p className="font-display text-lg font-bold uppercase text-destructive">
             {t("error")}
           </p>
@@ -43,7 +43,7 @@ export function AccountSettingsPage() {
 
   return (
     <main
-      className="flex flex-1 flex-col items-center bg-dots px-4 py-10"
+      className="flex flex-1 flex-col items-center surface-grid-dots px-4 py-10"
       {...tid("account-settings-page")}
     >
       <div className="w-full max-w-lg">
@@ -72,7 +72,7 @@ export function AccountSettingsPage() {
               await signOut();
               globalThis.location.replace(`/${locale}/login`);
             }}
-            className="nb-btn nb-btn-press-sm w-full justify-center border-2 border-foreground px-6 py-3 text-sm"
+            className="button-brutal button-press-sm w-full justify-center border-2 border-foreground px-6 py-3 text-sm"
             {...tid("sign-out")}
           >
             {tAuth("signOut")}

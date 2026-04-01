@@ -3,7 +3,6 @@
 import { useTranslations } from "next-intl";
 import { tid } from "shared";
 
-import { CartDrawer } from "@/features/cart/presentation/components/CartDrawer";
 import { useStoreProduct } from "@/features/products/application/useStoreProducts";
 import { MobileBarWithCart } from "@/features/products/presentation/components/product-detail/MobileBarWithCart";
 import { ProductSections } from "@/features/products/presentation/components/product-detail/ProductSections";
@@ -22,10 +21,10 @@ export function ProductDetailPage({ productId }: ProductDetailPageProps) {
   if (isLoading) {
     return (
       <div
-        className="flex-1 flex flex-col items-center justify-center gap-4 min-h-[50vh]"
+        className="flex flex-1 flex-col items-center justify-center gap-4 min-h-app-pane"
         {...tid("product-detail-page")}
       >
-        <div className="size-8 border-3 border-foreground border-t-transparent rounded-full animate-spin" />
+        <div className="size-8 border-strong border-foreground border-t-transparent rounded-full animate-spin" />
         <p className="font-display text-sm font-bold uppercase tracking-widest text-muted-foreground">
           {t("loading")}
         </p>
@@ -36,7 +35,7 @@ export function ProductDetailPage({ productId }: ProductDetailPageProps) {
   if (isError || !product) {
     return (
       <div
-        className="flex-1 flex flex-col items-center justify-center gap-4 min-h-[50vh]"
+        className="flex flex-1 flex-col items-center justify-center gap-4 min-h-app-pane"
         {...tid("product-detail-page")}
       >
         <p className="font-display text-lg font-extrabold uppercase tracking-tight text-destructive">
@@ -57,8 +56,11 @@ export function ProductDetailPage({ productId }: ProductDetailPageProps) {
   return (
     <div className="flex-1 flex flex-col" {...tid("product-detail-page")}>
       {/* Inline nav: back + cart — sits inside the hero background */}
-      <div className={`${theme.bg}/15 border-b-[3px] border-foreground`}>
-        <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+      <div
+        className="border-b-strong border-foreground"
+        style={{ backgroundColor: theme.bgLight }}
+      >
+        <div className="mx-auto flex max-w-6xl items-center px-4 py-3">
           <Link
             href="/"
             className="font-display text-xs font-bold uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors"
@@ -66,7 +68,6 @@ export function ProductDetailPage({ productId }: ProductDetailPageProps) {
           >
             {t("detail.backToProducts")}
           </Link>
-          <CartDrawer />
         </div>
       </div>
 

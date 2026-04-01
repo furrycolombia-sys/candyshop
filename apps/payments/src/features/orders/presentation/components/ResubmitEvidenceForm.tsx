@@ -107,7 +107,7 @@ export function ResubmitEvidenceForm({
           value={transferNumber}
           onChange={(e) => setTransferNumber(e.target.value)}
           disabled={isPending}
-          className="mt-1 w-full border-3 border-foreground bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-foreground disabled:opacity-50"
+          className="mt-1 w-full border-strong border-foreground bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-foreground disabled:opacity-50"
           {...tid(`resubmit-transfer-${orderId}`)}
         />
       </div>
@@ -137,7 +137,7 @@ export function ResubmitEvidenceForm({
               onClick={handleRemoveFile}
               disabled={isPending}
               aria-label={t("removeReceipt")}
-              className="absolute -top-2 -right-2 border-2 border-foreground bg-destructive p-0.5 text-white hover:opacity-80 disabled:opacity-50"
+              className="absolute -top-2 -right-2 border-2 border-foreground bg-destructive p-0.5 text-destructive-foreground hover:opacity-80 disabled:opacity-50"
               {...tid(`resubmit-remove-receipt-${orderId}`)}
             >
               <X className="size-3" />
@@ -148,7 +148,7 @@ export function ResubmitEvidenceForm({
             type="button"
             onClick={() => fileInputRef.current?.click()}
             disabled={isPending}
-            className="mt-2 flex items-center gap-2 border-3 border-dashed border-muted-foreground px-4 py-3 text-sm text-muted-foreground transition-colors hover:border-foreground hover:text-foreground disabled:opacity-50"
+            className="mt-2 flex items-center gap-2 border-strong border-dashed border-muted-foreground px-4 py-3 text-sm text-muted-foreground transition-colors hover:border-foreground hover:text-foreground disabled:opacity-50"
             {...tid(`resubmit-upload-btn-${orderId}`)}
           >
             <Upload className="size-4" />
@@ -171,7 +171,7 @@ export function ResubmitEvidenceForm({
         type="button"
         onClick={handleSubmit}
         disabled={isPending || !transferNumber.trim()}
-        className="nb-btn nb-btn-press-sm nb-shadow-sm inline-flex items-center gap-2 border-3 border-foreground bg-foreground px-5 py-2.5 font-display text-sm font-extrabold uppercase tracking-widest text-background disabled:opacity-50"
+        className="button-brutal button-press-sm shadow-brutal-sm inline-flex items-center gap-2 border-strong border-foreground bg-foreground px-5 py-2.5 font-display text-sm font-extrabold uppercase tracking-widest text-background disabled:opacity-50"
         {...tid(`resubmit-submit-${orderId}`)}
       >
         {isPending ? (

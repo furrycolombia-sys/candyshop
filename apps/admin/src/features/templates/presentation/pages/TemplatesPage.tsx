@@ -50,7 +50,10 @@ export function TemplatesPage() {
   const isSaving = insertMutation.isPending || updateMutation.isPending;
 
   return (
-    <main className="flex flex-1 flex-col bg-dots" {...tid("templates-page")}>
+    <main
+      className="flex flex-1 flex-col surface-grid-dots"
+      {...tid("templates-page")}
+    >
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-6 py-8">
         {/* Header */}
         <header className="flex items-start justify-between">
@@ -69,7 +72,7 @@ export function TemplatesPage() {
             <button
               type="button"
               onClick={() => setEditor({ mode: "create" })}
-              className="flex items-center gap-2 border-3 border-foreground bg-foreground px-4 py-2.5 font-display text-xs font-bold uppercase tracking-widest text-background transition-colors hover:bg-foreground/90 nb-shadow-sm"
+              className="flex items-center gap-2 border-strong border-foreground bg-foreground px-4 py-2.5 font-display text-xs font-bold uppercase tracking-widest text-background transition-colors hover:bg-foreground/90 shadow-brutal-sm"
               {...tid("templates-add")}
             >
               <Plus className="size-4" strokeWidth={3} />

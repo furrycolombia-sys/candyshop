@@ -42,7 +42,7 @@ export function ConfirmActionPanel({
 
   return (
     <div
-      className={`space-y-3 border-3 ${borderColor} ${bgColor} p-4`}
+      className={`space-y-3 border-strong ${borderColor} ${bgColor} p-4`}
       {...tid("confirm-action-panel")}
     >
       {/* Warning */}
@@ -69,7 +69,7 @@ export function ConfirmActionPanel({
           type="button"
           onClick={handleConfirm}
           disabled={!checked || isPending}
-          className={`nb-btn rounded-lg border-3 border-foreground px-4 py-1.5 font-display text-xs font-bold uppercase tracking-wider disabled:cursor-not-allowed disabled:opacity-40 ${btnBg}`}
+          className={`button-brutal rounded-lg border-strong border-foreground px-4 py-1.5 font-display text-xs font-bold uppercase tracking-wider disabled:cursor-not-allowed disabled:opacity-40 ${btnBg}`}
           {...tid("confirm-action-submit")}
         >
           {isPending ? "..." : confirmLabel}
@@ -78,7 +78,7 @@ export function ConfirmActionPanel({
           type="button"
           onClick={onCancel}
           disabled={isPending}
-          className="nb-btn rounded-lg border-3 border-foreground bg-background px-4 py-1.5 font-display text-xs font-bold uppercase tracking-wider"
+          className="button-brutal rounded-lg border-strong border-foreground bg-background px-4 py-1.5 font-display text-xs font-bold uppercase tracking-wider"
           {...tid("confirm-action-cancel")}
         >
           {cancelLabel}

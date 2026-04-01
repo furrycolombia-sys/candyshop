@@ -1,5 +1,8 @@
 /* eslint-disable i18next/no-literal-string -- infrastructure file: Supabase table/column names are SQL identifiers, not user-facing text */
-import { RECEIPTS_BUCKET } from "@/features/orders/domain/constants";
+import {
+  getReceiptUrl,
+  uploadReceipt,
+} from "@/features/checkout/infrastructure/receiptStorage";
 import type { OrderWithItems } from "@/features/orders/domain/types";
 import { FALLBACK_SELLER_NAME } from "@/shared/domain/constants";
 import type { OrderRow, SupabaseClient } from "@/shared/domain/types";
@@ -48,30 +51,32 @@ export async function fetchMyOrders(
     FALLBACK_SELLER_NAME,
   );
 
-  return rows.map((row) => ({
-    id: row.id,
-    user_id: row.user_id,
-    seller_id: row.seller_id,
-    payment_status: row.payment_status as OrderWithItems["payment_status"],
-    total_cop: row.total_cop,
-    transfer_number: row.transfer_number,
-    receipt_url: row.receipt_url,
-    seller_note: row.seller_note,
-    expires_at: row.expires_at,
-    checkout_session_id: row.checkout_session_id,
-    created_at: row.created_at,
-    payment_method_id: row.payment_method_id,
-    items: row.order_items.map((item) => ({
-      id: item.id,
-      product_id: item.product_id,
-      quantity: item.quantity,
-      unit_price_cop: item.unit_price_cop,
-      metadata: item.metadata,
+  return Promise.all(
+    rows.map(async (row) => ({
+      id: row.id,
+      user_id: row.user_id,
+      seller_id: row.seller_id,
+      payment_status: row.payment_status as OrderWithItems["payment_status"],
+      total_cop: row.total_cop,
+      transfer_number: row.transfer_number,
+      receipt_url: await getReceiptUrl(supabase, row.receipt_url),
+      seller_note: row.seller_note,
+      expires_at: row.expires_at,
+      checkout_session_id: row.checkout_session_id,
+      created_at: row.created_at,
+      payment_method_id: row.payment_method_id,
+      items: row.order_items.map((item) => ({
+        id: item.id,
+        product_id: item.product_id,
+        quantity: item.quantity,
+        unit_price_cop: item.unit_price_cop,
+        metadata: item.metadata,
+      })),
+      seller_name: row.seller_id
+        ? (sellerNames[row.seller_id] ?? FALLBACK_SELLER_NAME)
+        : FALLBACK_SELLER_NAME,
     })),
-    seller_name: row.seller_id
-      ? (sellerNames[row.seller_id] ?? FALLBACK_SELLER_NAME)
-      : FALLBACK_SELLER_NAME,
-  }));
+  );
 }
 
 /**
@@ -88,13 +93,7 @@ export async function resubmitEvidence(
 
   // Upload receipt if provided
   if (receiptFile) {
-    const storagePath = `${orderId}/${receiptFile.name}`;
-    const { error: uploadError } = await supabase.storage
-      .from(RECEIPTS_BUCKET)
-      .upload(storagePath, receiptFile, { upsert: true });
-
-    if (uploadError) throw uploadError;
-    receiptUrl = storagePath;
+    receiptUrl = await uploadReceipt(supabase, receiptFile, orderId);
   }
 
   // Update order status back to pending_verification

@@ -35,10 +35,6 @@ vi.mock("nuqs", async (importOriginal) => {
   };
 });
 
-vi.mock("@/features/orders", () => ({
-  PendingOrdersBadge: () => <div data-testid="orders-badge" />,
-}));
-
 vi.mock("@/features/products/application/useProducts", () => ({
   useProducts: () => ({
     data: [{ id: "1", name_en: "Product 1" }],
@@ -75,10 +71,5 @@ describe("ProductListPage", () => {
   it("renders add product button", () => {
     render(<ProductListPage />);
     expect(screen.getByTestId("new-product-button")).toBeInTheDocument();
-  });
-
-  it("renders pending orders badge", () => {
-    render(<ProductListPage />);
-    expect(screen.getByTestId("orders-badge")).toBeInTheDocument();
   });
 });

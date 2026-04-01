@@ -9,23 +9,29 @@ import { appUrls } from "@/shared/infrastructure/config";
 interface RoleCard {
   key: string;
   cardBg: string;
+  cardText: string;
   btnBg: string;
   btnText: string;
 }
 
+const DEFAULT_CANDY_TEXT = "var(--candy-text)";
+const LEMON_CANDY_TEXT = "var(--candy-text-on-lemon)";
+const PINK_BG = "var(--pink)";
+
 const ROLES: RoleCard[] = [
   {
     key: "artists",
-
-    cardBg: "bg-pink",
-    btnBg: "bg-lemon",
-    btnText: "text-candy-text-on-lemon",
+    cardBg: PINK_BG,
+    cardText: DEFAULT_CANDY_TEXT,
+    btnBg: "var(--lemon)",
+    btnText: LEMON_CANDY_TEXT,
   },
   {
     key: "fans",
-    cardBg: "bg-mint",
-    btnBg: "bg-pink",
-    btnText: "text-candy-text",
+    cardBg: "var(--mint)",
+    cardText: DEFAULT_CANDY_TEXT,
+    btnBg: PINK_BG,
+    btnText: DEFAULT_CANDY_TEXT,
   },
 ];
 
@@ -35,7 +41,7 @@ export function RolesSection() {
 
   return (
     <section
-      className="relative border-t-[3px] border-foreground py-24 lg:py-32"
+      className="relative border-t-strong border-foreground py-24 lg:py-32"
       aria-labelledby="roles-heading"
       {...tid("roles-section")}
     >
@@ -44,15 +50,16 @@ export function RolesSection() {
       </h2>
       <div className="mx-auto max-w-6xl px-6 lg:px-8">
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
-          {ROLES.map(({ key, cardBg, btnBg, btnText }) => (
+          {ROLES.map(({ key, cardBg, cardText, btnBg, btnText }) => (
             <div
               key={key}
               role="group"
               aria-labelledby={`${key}-heading`}
-              className={`group nb-shadow-lg flex flex-col border-3 border-foreground ${cardBg} p-8 text-candy-text transition-all duration-150 hover:-translate-0.5 lg:p-10`}
+              className="group shadow-brutal-lg flex flex-col border-strong border-foreground p-8 transition-all duration-150 hover:-translate-0.5 lg:p-10"
+              style={{ backgroundColor: cardBg, color: cardText }}
               {...tid(`role-${key}`)}
             >
-              <p className="mb-3 text-xs font-bold uppercase tracking-[0.2em] text-candy-text">
+              <p className="mb-3 text-xs font-bold uppercase tracking-section">
                 {t(`${key}.label`)}
               </p>
               <h3
@@ -61,12 +68,18 @@ export function RolesSection() {
               >
                 {t(`${key}.title`)}
               </h3>
-              <p className="mb-8 text-base/relaxed text-candy-text/90">
+              <p className="mb-8 text-base/relaxed opacity-90">
                 {t(`${key}.description`)}
               </p>
               <a
                 href={appUrls.store}
-                className={`nb-btn nb-btn-press-sm nb-shadow-sm mt-auto self-start border-(--candy-text) ${btnBg} px-6 py-3 text-sm ${btnText} focus-visible:outline-(--candy-text)`}
+                className="button-brutal button-press-sm shadow-brutal-sm mt-auto self-start px-6 py-3 text-sm"
+                style={{
+                  backgroundColor: btnBg,
+                  color: btnText,
+                  borderColor: cardText,
+                  outlineColor: cardText,
+                }}
               >
                 {t(`${key}.cta`)}
                 <ArrowRight

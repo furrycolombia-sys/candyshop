@@ -12,10 +12,10 @@ export default async function PlaygroundPage({
 
   return (
     <main
-      className="flex flex-1 items-center justify-center bg-dots p-4"
+      className="flex flex-1 items-center justify-center surface-grid-dots p-4"
       {...tid("playground-page")}
     >
-      <div className="nb-shadow-lg w-full max-w-md border-3 border-foreground bg-background p-8 sm:p-10 text-center">
+      <div className="shadow-brutal-lg w-full max-w-md border-strong border-foreground bg-background p-8 sm:p-10 text-center">
         <h1
           className="font-display text-3xl font-extrabold uppercase tracking-tight"
           {...tid("playground-title")}

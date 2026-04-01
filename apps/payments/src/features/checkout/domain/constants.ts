@@ -1,14 +1,9 @@
-/** Cookie key used by the store app to persist the cart */
-export const CART_COOKIE_KEY = "candystore-cart";
-
-/** Max receipt file size in bytes (5 MB) */
-export const MAX_RECEIPT_SIZE_BYTES = 5 * 1024 * 1024;
-
-/** Accepted receipt image MIME types */
-export const ACCEPTED_RECEIPT_TYPES = "image/*";
-
-/** Supabase Storage bucket for receipts */
-export const RECEIPTS_BUCKET = "receipts";
+export {
+  ACCEPTED_RECEIPT_TYPES,
+  CART_COOKIE_KEY,
+  MAX_RECEIPT_SIZE_BYTES,
+  RECEIPTS_BUCKET,
+} from "@/shared/domain/constants";
 
 /** Default expiry offset for new orders (48 hours) */
 export const ORDER_EXPIRY_HOURS = 48;

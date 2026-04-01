@@ -6,6 +6,7 @@ vi.mock("next-intl", () => ({
     if (params?.time) return `${key}:${params.time}`;
     return key;
   },
+  useLocale: () => "en",
 }));
 
 import { ExpirationLabel } from "./ExpirationLabel";
@@ -15,16 +16,15 @@ describe("ExpirationLabel", () => {
     vi.useRealTimers();
   });
 
-  it("shows remaining time in hours and minutes", () => {
+  it("shows remaining time in hours", () => {
     vi.useFakeTimers();
     // Set to a known time
     vi.setSystemTime(new Date("2026-01-01T12:00:00Z"));
 
-    // Expires in 2 hours 30 minutes
     const expiresAt = "2026-01-01T14:30:00Z";
     render(<ExpirationLabel expiresAt={expiresAt} />);
 
-    expect(screen.getByText("expiresIn:2h 30m")).toBeInTheDocument();
+    expect(screen.getByText("expiresIn:in 2 hours")).toBeInTheDocument();
   });
 
   it("shows only minutes when less than 1 hour", () => {
@@ -34,7 +34,7 @@ describe("ExpirationLabel", () => {
     const expiresAt = "2026-01-01T12:45:00Z";
     render(<ExpirationLabel expiresAt={expiresAt} />);
 
-    expect(screen.getByText("expiresIn:45m")).toBeInTheDocument();
+    expect(screen.getByText("expiresIn:in 45 minutes")).toBeInTheDocument();
   });
 
   it("shows expired when time has passed", () => {

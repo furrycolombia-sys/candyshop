@@ -50,7 +50,7 @@ export function PaymentsSidebar() {
   return (
     <aside
       className={`relative flex shrink-0 flex-col border-r-3 border-foreground bg-background transition-all duration-300 ease-in-out ${
-        collapsed ? "w-[68px]" : "w-60"
+        collapsed ? "w-sidebar-collapsed" : "w-60"
       }`}
       {...tid("payments-sidebar")}
     >
@@ -75,7 +75,7 @@ export function PaymentsSidebar() {
           <div key={section.labelKey} className="mb-2">
             {/* Section label */}
             {!collapsed && (
-              <span className="mb-1.5 block px-2 font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/60">
+              <span className="text-section-label mb-1.5 block px-2 font-mono text-muted-foreground/60">
                 {t(section.labelKey)}
               </span>
             )}
@@ -103,7 +103,7 @@ export function PaymentsSidebar() {
                   >
                     {/* Active indicator bar */}
                     {isActive && (
-                      <span className="absolute left-0 inset-y-1 w-[3px] rounded-r-full bg-pink" />
+                      <span className="absolute left-0 inset-y-1 w-sidebar-indicator rounded-r-full bg-pink" />
                     )}
 
                     <NavIcon

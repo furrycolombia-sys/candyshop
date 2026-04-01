@@ -33,7 +33,7 @@ describe("LoadingState", () => {
   it("applies default height class when not specified", () => {
     render(<LoadingState />);
     const el = screen.getByTestId("loading-state");
-    expect(el.className).toContain("h-[60vh]");
+    expect(el.className).toContain("min-h-state-pane");
   });
 
   it("renders a spinning icon", () => {

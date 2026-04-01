@@ -30,7 +30,7 @@ describe("useFlyToCart", () => {
     const sourceRect = new DOMRect(100, 100, 50, 50);
     // Should not throw
     act(() => {
-      result.current.fire(sourceRect, "bg-mint");
+      result.current.fire(sourceRect, "var(--mint)");
     });
   });
 
@@ -57,9 +57,10 @@ describe("useFlyToCart", () => {
 
     const sourceRect = new DOMRect(100, 200, 50, 50);
     act(() => {
-      result.current.fire(sourceRect, "bg-mint");
+      result.current.fire(sourceRect, "var(--mint)");
     });
 
     expect(mockAnimate).toHaveBeenCalled();
+    expect(mockDiv.style.backgroundColor).toBe("var(--mint)");
   });
 });

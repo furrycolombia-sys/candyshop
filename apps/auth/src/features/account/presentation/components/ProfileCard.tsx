@@ -20,7 +20,7 @@ export function ProfileCard({ profile }: ProfileCardProps) {
 
   return (
     <div
-      className="border-3 border-foreground bg-background p-6 nb-shadow-sm"
+      className="border-strong border-foreground bg-background p-6 shadow-brutal-sm"
       {...tid("profile-card")}
     >
       <h2 className="mb-4 font-display text-xs font-extrabold uppercase tracking-widest text-muted-foreground">
@@ -33,12 +33,12 @@ export function ProfileCard({ profile }: ProfileCardProps) {
           <img
             src={profile.avatar_url}
             alt=""
-            className="size-14 rounded-full border-3 border-foreground"
+            className="size-14 rounded-full border-strong border-foreground"
           />
         )}
         <div className="flex flex-col gap-2">
           <div className="flex items-baseline gap-2">
-            <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground/60">
+            <span className="font-mono text-ui-xs uppercase tracking-widest text-muted-foreground/60">
               {t("loginEmail")}
             </span>
             <span className="font-mono text-sm" {...tid("profile-email")}>
@@ -46,7 +46,7 @@ export function ProfileCard({ profile }: ProfileCardProps) {
             </span>
           </div>
           <div className="flex items-baseline gap-2">
-            <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground/60">
+            <span className="font-mono text-ui-xs uppercase tracking-widest text-muted-foreground/60">
               {t("provider")}
             </span>
             <span
@@ -57,7 +57,7 @@ export function ProfileCard({ profile }: ProfileCardProps) {
             </span>
           </div>
           <div className="flex items-baseline gap-2">
-            <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground/60">
+            <span className="font-mono text-ui-xs uppercase tracking-widest text-muted-foreground/60">
               {t("memberSince")}
             </span>
             <span className="font-mono text-sm">{memberSince}</span>

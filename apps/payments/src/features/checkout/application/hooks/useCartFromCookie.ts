@@ -2,28 +2,22 @@
 
 import { useLocale } from "next-intl";
 import { useMemo, useSyncExternalStore } from "react";
+import { i18nField } from "shared";
 
 import { useSellerProfiles } from "./useSellerProfiles";
 
 import type { CartItem, SellerGroup } from "@/features/checkout/domain/types";
-import { readCartFromCookie } from "@/features/checkout/infrastructure/cartCookie";
+import {
+  readCartFromCookie,
+  subscribeToCartCookie,
+} from "@/features/checkout/infrastructure/cartCookie";
 import { FALLBACK_SELLER_NAME } from "@/shared/domain/constants";
 
 /** Stable empty array so the server snapshot reference never changes. */
 const EMPTY: CartItem[] = [];
 
-/** Subscribe is a no-op — the cookie doesn't change while the page is open. */
-function subscribe() {
-  return () => {};
-}
-
-let cachedItems: CartItem[] | null = null;
-
 function getSnapshot(): CartItem[] {
-  if (cachedItems === null) {
-    cachedItems = readCartFromCookie();
-  }
-  return cachedItems;
+  return readCartFromCookie();
 }
 
 function getServerSnapshot(): CartItem[] {
@@ -36,7 +30,11 @@ function getServerSnapshot(): CartItem[] {
  */
 export function useCartFromCookie() {
   const locale = useLocale();
-  const items = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+  const items = useSyncExternalStore(
+    subscribeToCartCookie,
+    getSnapshot,
+    getServerSnapshot,
+  );
   const isHydrated = items !== EMPTY;
 
   const sellerIds = useMemo(() => {
@@ -73,8 +71,7 @@ export function useCartFromCookie() {
   const isEmpty = isHydrated && items.length === 0;
   const isLoading = !isHydrated || isLoadingProfiles;
 
-  const getItemName = (item: CartItem) =>
-    locale === "es" ? item.name_es : item.name_en;
+  const getItemName = (item: CartItem) => i18nField(item, "name", locale);
 
   return { groups, isEmpty, isLoading, getItemName };
 }

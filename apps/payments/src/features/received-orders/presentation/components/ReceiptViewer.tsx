@@ -4,6 +4,8 @@ import { ExternalLink, FileText, Hash } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { tid } from "shared";
 
+import { getSafeReceiptHref } from "@/shared/domain/receipt";
+
 interface ReceiptViewerProps {
   transferNumber: string | null;
   receiptUrl: string | null;
@@ -14,6 +16,7 @@ export function ReceiptViewer({
   receiptUrl,
 }: ReceiptViewerProps) {
   const t = useTranslations("receivedOrders");
+  const safeReceiptHref = getSafeReceiptHref(receiptUrl);
 
   return (
     <div
@@ -36,9 +39,9 @@ export function ReceiptViewer({
       {/* Receipt image */}
       <div className="flex items-center gap-2 text-sm">
         <FileText className="size-4 text-muted-foreground" />
-        {receiptUrl ? (
+        {safeReceiptHref ? (
           <a
-            href={receiptUrl}
+            href={safeReceiptHref}
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-1 font-medium text-info underline underline-offset-2"

@@ -6,8 +6,8 @@ export default function NotFound() {
   const t = useTranslations("products");
 
   return (
-    <div className="flex-1 bg-dots flex items-center justify-center p-8">
-      <div className="border-3 border-foreground nb-shadow-md bg-background p-10 max-w-md w-full text-center">
+    <div className="flex-1 surface-grid-dots flex items-center justify-center p-8">
+      <div className="border-strong border-foreground shadow-brutal-md bg-background p-10 max-w-md w-full text-center">
         <p className="font-display text-8xl font-extrabold text-foreground/10 select-none mb-4">
           404
         </p>
@@ -17,7 +17,7 @@ export default function NotFound() {
         <p className="text-muted-foreground mb-8">{t("detail.notFoundHint")}</p>
         <Link
           href="/"
-          className="inline-block nb-btn nb-btn-press-sm font-bold uppercase tracking-widest"
+          className="inline-block button-brutal button-press-sm font-bold uppercase tracking-widest"
         >
           {t("detail.backToProducts")}
         </Link>

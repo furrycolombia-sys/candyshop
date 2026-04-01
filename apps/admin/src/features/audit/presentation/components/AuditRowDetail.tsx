@@ -48,7 +48,7 @@ export function AuditRowDetail({ entry }: AuditRowDetailProps) {
                 className="size-5 rounded-full border border-foreground/20"
               />
             )}
-            <span className="font-display text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">
+            <span className="font-display text-ui-xs font-bold uppercase tracking-widest text-muted-foreground/60">
               {t("user")}
             </span>
             <a

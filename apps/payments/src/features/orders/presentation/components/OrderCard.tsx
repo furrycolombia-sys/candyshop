@@ -6,7 +6,6 @@ import { useCallback, useState } from "react";
 import { tid } from "shared";
 
 import { useResubmitEvidence } from "@/features/orders/application/hooks/useResubmitEvidence";
-import { STATUS_COLORS } from "@/features/orders/domain/constants";
 import type { OrderWithItems } from "@/features/orders/domain/types";
 import { ExpirationLabel } from "@/features/orders/presentation/components/ExpirationLabel";
 import { OrderItemsList } from "@/features/orders/presentation/components/OrderItemsList";
@@ -18,6 +17,28 @@ const TERMINAL_STATUSES = new Set(["approved", "rejected", "expired"]);
 
 interface OrderCardProps {
   order: OrderWithItems;
+}
+
+function getOrderBannerClass(status: OrderWithItems["payment_status"]): string {
+  switch (status) {
+    case "awaiting_payment":
+    case "evidence_requested": {
+      return "bg-warning/15 text-warning border-warning/30";
+    }
+    case "pending_verification": {
+      return "bg-info/15 text-info border-info/30";
+    }
+    case "approved":
+    case "paid": {
+      return "bg-success/15 text-success border-success/30";
+    }
+    case "rejected": {
+      return "bg-destructive/15 text-destructive border-destructive/30";
+    }
+    default: {
+      return "bg-muted text-muted-foreground";
+    }
+  }
 }
 
 export function OrderCard({ order }: OrderCardProps) {
@@ -34,17 +55,17 @@ export function OrderCard({ order }: OrderCardProps) {
     [resubmit, order.id],
   );
 
-  const statusColors =
-    STATUS_COLORS[order.payment_status] ?? STATUS_COLORS.pending;
   const isTerminal = TERMINAL_STATUSES.has(order.payment_status);
 
   return (
     <div
-      className="overflow-hidden border-3 border-foreground bg-background nb-shadow"
+      className="overflow-hidden border-strong border-foreground bg-background shadow-card"
       {...tid(`order-card-${order.id}`)}
     >
       {/* Status banner — full width at top */}
-      <div className={`px-4 py-2.5 ${statusColors}`}>
+      <div
+        className={`px-4 py-2.5 ${getOrderBannerClass(order.payment_status)}`}
+      >
         <OrderStatusBadge status={order.payment_status} />
       </div>
 
@@ -99,7 +120,7 @@ export function OrderCard({ order }: OrderCardProps) {
 
       {/* Expanded content */}
       {isExpanded && (
-        <div className="border-t-3 border-foreground p-4">
+        <div className="border-t-strong border-foreground p-4">
           <StatusContent
             order={order}
             onResubmit={handleResubmit}
