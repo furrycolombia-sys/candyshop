@@ -1,7 +1,7 @@
 "use client";
 
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { type ReactNode, useEffect } from "react";
+import { type ReactNode, useEffect, useRef } from "react";
 
 import { useAuth } from "./useAuth";
 
@@ -31,9 +31,16 @@ export function ProtectedRoute({
   fallback = null,
 }: ProtectedRouteProps) {
   const { isAuthenticated, isLoading } = useAuth({ supabaseClient });
+  const hasRedirectedRef = useRef(false);
 
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
+    if (isAuthenticated) {
+      hasRedirectedRef.current = false;
+      return;
+    }
+
+    if (!isLoading && !isAuthenticated && !hasRedirectedRef.current) {
+      hasRedirectedRef.current = true;
       const returnTo = globalThis.location.href;
       globalThis.location.replace(
         `${authUrl}/${locale}/login?returnTo=${encodeURIComponent(returnTo)}`,

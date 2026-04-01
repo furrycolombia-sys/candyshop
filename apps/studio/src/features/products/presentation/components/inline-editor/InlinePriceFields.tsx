@@ -34,7 +34,7 @@ export function InlinePriceFields({ control }: InlinePriceFieldsProps) {
 
   return (
     <div
-      className="border-3 border-foreground bg-background p-4 nb-shadow-sm"
+      className="border-strong border-foreground bg-background p-4 shadow-brutal-sm"
       {...tid("inline-price-fields")}
     >
       {/* Main prices — big display like store PriceBlock */}
@@ -79,7 +79,7 @@ export function InlinePriceFields({ control }: InlinePriceFieldsProps) {
       {/* Compare-at prices — strikethrough style */}
       <div className="mt-3 flex items-baseline gap-4 flex-wrap">
         <div className="flex items-baseline gap-1">
-          <span className="font-display text-tiny font-bold uppercase tracking-wider text-muted-foreground">
+          <span className="font-display text-ui-xs font-bold uppercase tracking-wider text-muted-foreground">
             {t("comparePriceCop")}
           </span>
           <span className="font-display text-lg font-bold text-muted-foreground line-through">
@@ -97,7 +97,7 @@ export function InlinePriceFields({ control }: InlinePriceFieldsProps) {
         </div>
 
         <div className="flex items-baseline gap-1">
-          <span className="font-display text-tiny font-bold uppercase tracking-wider text-muted-foreground">
+          <span className="font-display text-ui-xs font-bold uppercase tracking-wider text-muted-foreground">
             {t("comparePriceUsd")}
           </span>
           <span className="font-display text-lg font-bold text-muted-foreground line-through">

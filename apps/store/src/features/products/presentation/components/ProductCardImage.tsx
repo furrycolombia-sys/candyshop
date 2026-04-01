@@ -14,6 +14,7 @@ import { getCategoryTheme } from "@/shared/domain/categoryConstants";
 interface ProductCardImageProps {
   product: Product;
   categoryColor: string;
+  categoryForeground: string;
   isFeatured: boolean;
   featuredLabel: string;
   outOfStockLabel: string;
@@ -34,6 +35,7 @@ function getFirstImageUrl(images: unknown): string | null {
 export function ProductCardImage({
   product,
   categoryColor,
+  categoryForeground,
   isFeatured,
   featuredLabel,
   outOfStockLabel,
@@ -45,11 +47,12 @@ export function ProductCardImage({
 
   return (
     <div
-      className={`relative flex items-center justify-center border-foreground overflow-hidden ${categoryColor} ${
+      className={`relative flex items-center justify-center overflow-hidden border-foreground ${
         isFeatured
-          ? "h-56 sm:h-auto sm:w-1/2 border-b-3 sm:border-b-0 sm:border-r-3"
-          : "h-48 border-b-3"
+          ? "h-56 sm:h-auto sm:w-1/2 border-b-strong sm:border-b-0 sm:border-r-3"
+          : "h-48 border-b-strong"
       }`}
+      style={{ backgroundColor: categoryColor }}
       {...tid("product-card-image")}
     >
       {imageUrl ? (
@@ -62,9 +65,10 @@ export function ProductCardImage({
         />
       ) : (
         <span
-          className={`font-display font-extrabold uppercase tracking-widest text-foreground opacity-40 ${
+          className={`font-display font-extrabold uppercase tracking-widest opacity-40 ${
             isFeatured ? "text-2xl sm:text-4xl" : "text-lg"
           }`}
+          style={{ color: categoryForeground }}
         >
           {typeLabel}
         </span>
@@ -81,7 +85,7 @@ export function ProductCardImage({
       {/* In-cart stamp */}
       {quantityInCart > 0 && inCartLabel && (
         <span
-          className="absolute top-2 right-2 flex items-center gap-1 bg-foreground text-background text-tiny font-bold uppercase tracking-widest px-2 py-0.5 z-10"
+          className="absolute top-2 right-2 flex items-center gap-1 bg-foreground text-background text-ui-xs font-bold uppercase tracking-widest px-2 py-0.5 z-10"
           {...tid("product-card-in-cart")}
         >
           <ShoppingCart className="size-3" />

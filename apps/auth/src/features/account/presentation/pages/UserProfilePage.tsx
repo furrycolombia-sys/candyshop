@@ -17,7 +17,7 @@ export function UserProfilePage({ userId }: UserProfilePageProps) {
 
   if (isLoading) {
     return (
-      <main className="flex flex-1 items-center justify-center bg-dots p-4">
+      <main className="flex flex-1 items-center justify-center surface-grid-dots p-4">
         <div className="w-full max-w-md space-y-4">
           <Skeleton className="mx-auto size-20 rounded-full" />
           <Skeleton className="mx-auto h-8 w-48" />
@@ -29,9 +29,9 @@ export function UserProfilePage({ userId }: UserProfilePageProps) {
 
   if (isError || !profile) {
     return (
-      <main className="flex flex-1 items-center justify-center bg-dots p-4">
+      <main className="flex flex-1 items-center justify-center surface-grid-dots p-4">
         <div
-          className="nb-shadow-lg w-full max-w-md border-3 border-foreground bg-background p-8 text-center"
+          className="shadow-brutal-lg w-full max-w-md border-strong border-foreground bg-background p-8 text-center"
           {...tid("profile-not-found")}
         >
           <h1 className="font-display text-2xl font-extrabold uppercase tracking-tight">
@@ -55,10 +55,10 @@ export function UserProfilePage({ userId }: UserProfilePageProps) {
 
   return (
     <main
-      className="flex flex-1 items-center justify-center bg-dots p-4"
+      className="flex flex-1 items-center justify-center surface-grid-dots p-4"
       {...tid("user-profile-page")}
     >
-      <div className="nb-shadow-lg w-full max-w-md border-3 border-foreground bg-background p-8 sm:p-10">
+      <div className="shadow-brutal-lg w-full max-w-md border-strong border-foreground bg-background p-8 sm:p-10">
         {/* Avatar + Name */}
         <div className="mb-6 text-center">
           {avatarUrl ? (
@@ -66,10 +66,10 @@ export function UserProfilePage({ userId }: UserProfilePageProps) {
             <img
               src={avatarUrl}
               alt=""
-              className="mx-auto mb-4 size-20 rounded-full border-3 border-foreground"
+              className="mx-auto mb-4 size-20 rounded-full border-strong border-foreground"
             />
           ) : (
-            <div className="mx-auto mb-4 flex size-20 items-center justify-center rounded-full border-3 border-foreground bg-muted">
+            <div className="mx-auto mb-4 flex size-20 items-center justify-center rounded-full border-strong border-foreground bg-muted">
               <span className="font-display text-2xl font-extrabold uppercase text-muted-foreground">
                 {displayName.charAt(0)}
               </span>
@@ -79,7 +79,7 @@ export function UserProfilePage({ userId }: UserProfilePageProps) {
             {displayName}
           </h1>
           {profile.provider && (
-            <span className="mt-1 inline-block font-mono text-[10px] uppercase tracking-widest text-muted-foreground/60">
+            <span className="mt-1 inline-block font-mono text-ui-xs uppercase tracking-widest text-muted-foreground/60">
               {profile.provider}
             </span>
           )}
@@ -88,7 +88,7 @@ export function UserProfilePage({ userId }: UserProfilePageProps) {
         {/* Info rows */}
         <div className="space-y-3">
           <div className="flex items-center justify-between border-b border-foreground/10 pb-2">
-            <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground/60">
+            <span className="font-mono text-ui-xs uppercase tracking-widest text-muted-foreground/60">
               {t("contactEmail")}
             </span>
             <span className="font-mono text-sm" {...tid("profile-contact")}>
@@ -96,7 +96,7 @@ export function UserProfilePage({ userId }: UserProfilePageProps) {
             </span>
           </div>
           <div className="flex items-center justify-between border-b border-foreground/10 pb-2">
-            <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground/60">
+            <span className="font-mono text-ui-xs uppercase tracking-widest text-muted-foreground/60">
               {t("memberSince")}
             </span>
             <span className="font-mono text-sm">{memberSince}</span>

@@ -3,7 +3,7 @@
 import { LayoutTemplate } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useCallback } from "react";
-import { tid } from "shared";
+import { i18nField, tid } from "shared";
 import type { ProductSection } from "shared/types";
 import {
   DropdownMenu,
@@ -38,7 +38,7 @@ export function TemplatePicker({ onApply, hasSections }: TemplatePickerProps) {
       <DropdownMenuTrigger asChild>
         <button
           type="button"
-          className="flex items-center gap-1.5 rounded-lg border-2 border-background/30 px-2.5 py-1 font-display text-tiny font-bold uppercase tracking-wider text-background/70 transition-colors hover:border-background hover:text-background"
+          className="flex items-center gap-1.5 rounded-lg border-2 border-background/30 px-2.5 py-1 font-display text-ui-xs font-bold uppercase tracking-wider text-background/70 transition-colors hover:border-background hover:text-background"
           {...tid("toolbar-use-template")}
         >
           <LayoutTemplate className="size-3.5" />
@@ -48,7 +48,7 @@ export function TemplatePicker({ onApply, hasSections }: TemplatePickerProps) {
 
       <DropdownMenuContent
         align="start"
-        className="w-72 border-3 border-foreground p-1"
+        className="w-72 border-strong border-foreground p-1"
         {...tid("template-picker-popover")}
       >
         {isLoading && (
@@ -64,14 +64,8 @@ export function TemplatePicker({ onApply, hasSections }: TemplatePickerProps) {
         )}
 
         {templates?.map((template) => {
-          const name =
-            locale === "es" && template.name_es
-              ? template.name_es
-              : template.name_en;
-          const description =
-            locale === "es" && template.description_es
-              ? template.description_es
-              : template.description_en;
+          const name = i18nField(template, "name", locale);
+          const description = i18nField(template, "description", locale);
 
           return (
             <DropdownMenuItem
@@ -86,7 +80,7 @@ export function TemplatePicker({ onApply, hasSections }: TemplatePickerProps) {
                   {description}
                 </span>
               )}
-              <span className="text-tiny text-muted-foreground">
+              <span className="text-ui-xs text-muted-foreground">
                 {template.sections.length}{" "}
                 {template.sections.length === 1
                   ? t("templateSectionSingular")

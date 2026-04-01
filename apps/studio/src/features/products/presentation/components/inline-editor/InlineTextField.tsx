@@ -36,7 +36,7 @@ export function InlineTextField({
       <button
         type="button"
         onClick={toggleLang}
-        className="absolute -top-3 right-0 z-10 rounded-sm border-2 border-foreground/30 bg-background px-1.5 py-0.5 font-display text-tiny font-extrabold uppercase tracking-widest text-muted-foreground transition-colors hover:border-foreground hover:text-foreground"
+        className="absolute -top-3 right-0 z-10 rounded-sm border-2 border-foreground/30 bg-background px-1.5 py-0.5 font-display text-ui-xs font-extrabold uppercase tracking-widest text-muted-foreground transition-colors hover:border-foreground hover:text-foreground"
         {...tid(`lang-toggle-${fieldNameEn}`)}
       >
         {lang.toUpperCase()}

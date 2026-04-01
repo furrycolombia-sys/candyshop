@@ -2,7 +2,7 @@
 
 import { Pencil, Trash2 } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
-import { tid } from "shared";
+import { i18nField, tid } from "shared";
 import { Switch } from "ui";
 
 import type { PaymentMethodType } from "@/features/payment-method-types/domain/types";
@@ -14,8 +14,6 @@ interface PaymentMethodTypeTableProps {
   onDelete: (id: string) => void;
   onToggleActive: (id: string, isActive: boolean) => void;
 }
-
-const GRID_COLS = "grid-cols-[1fr_1fr_80px_100px_100px_80px_100px]";
 
 export function PaymentMethodTypeTable({
   types,
@@ -39,7 +37,7 @@ export function PaymentMethodTypeTable({
   if (types.length === 0) {
     return (
       <div
-        className="flex flex-col items-center justify-center gap-2 rounded-xl border-3 border-dashed border-border bg-muted/30 py-16"
+        className="flex flex-col items-center justify-center gap-2 rounded-xl border-strong border-dashed border-border bg-muted/30 py-16"
         {...tid("payment-types-empty")}
       >
         <p className="font-display text-lg font-bold uppercase">
@@ -51,13 +49,11 @@ export function PaymentMethodTypeTable({
 
   return (
     <div
-      className="overflow-x-auto border-3 border-foreground bg-background nb-shadow-md"
+      className="overflow-x-auto border-strong border-foreground bg-background shadow-brutal-md"
       {...tid("payment-types-table")}
     >
       {/* Header row */}
-      <div
-        className={`grid ${GRID_COLS} border-b-3 border-foreground bg-muted/50`}
-      >
+      <div className="grid grid-cols-[1fr_1fr_80px_100px_100px_80px_100px] border-b-strong border-foreground bg-muted/50">
         <span className="px-4 py-3 font-display text-xs font-bold uppercase tracking-wider">
           {t("name")}
         </span>
@@ -82,14 +78,13 @@ export function PaymentMethodTypeTable({
       {/* Data rows */}
       <div className="divide-y divide-foreground/8">
         {types.map((type) => {
-          const name = locale === "es" ? type.name_es : type.name_en;
-          const description =
-            locale === "es" ? type.description_es : type.description_en;
+          const name = i18nField(type, "name", locale);
+          const description = i18nField(type, "description", locale);
 
           return (
             <div
               key={type.id}
-              className={`grid ${GRID_COLS} items-center transition-colors hover:bg-muted/30`}
+              className="grid grid-cols-[1fr_1fr_80px_100px_100px_80px_100px] items-center transition-colors hover:bg-muted/30"
               {...tid(`payment-type-row-${type.id}`)}
             >
               {/* Name */}

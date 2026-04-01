@@ -10,8 +10,8 @@ vi.mock("shared", () => ({
   tid: (id: string) => ({ "data-testid": id }),
 }));
 
-vi.mock("@/features/audit/application/useAuditLog", () => ({
-  useAuditLog: () => ({
+vi.mock("@/shared/application/hooks/useRecentActivity", () => ({
+  useRecentActivity: () => ({
     data: [
       {
         event_id: 1,
@@ -69,14 +69,6 @@ describe("DashboardPage", () => {
   it("renders the welcome message", () => {
     render(<DashboardPage />);
     expect(screen.getByText("welcome")).toBeInTheDocument();
-  });
-
-  it("renders stat cards", () => {
-    render(<DashboardPage />);
-    expect(screen.getByTestId("stat-totalEvents")).toBeInTheDocument();
-    expect(screen.getByTestId("stat-tablesMonitored")).toBeInTheDocument();
-    expect(screen.getByTestId("stat-activeUsers")).toBeInTheDocument();
-    expect(screen.getByTestId("stat-uptime")).toBeInTheDocument();
   });
 
   it("renders recent activity section", () => {

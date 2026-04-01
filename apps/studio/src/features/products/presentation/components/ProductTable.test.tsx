@@ -5,9 +5,13 @@ vi.mock("next-intl", () => ({
   useTranslations: () => (key: string) => key,
 }));
 
-vi.mock("shared", () => ({
-  tid: (id: string) => ({ "data-testid": id }),
-}));
+vi.mock("shared", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("shared")>();
+  return {
+    ...actual,
+    tid: (id: string) => ({ "data-testid": id }),
+  };
+});
 
 vi.mock("@hello-pangea/dnd", () => ({
   DragDropContext: ({ children }: { children: React.ReactNode }) => (

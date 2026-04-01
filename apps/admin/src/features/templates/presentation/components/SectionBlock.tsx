@@ -43,7 +43,7 @@ export function SectionBlock({
       <div className="flex items-start justify-between gap-4">
         <div className="grid flex-1 grid-cols-3 gap-3">
           <div className="flex flex-col gap-1">
-            <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+            <label className="text-ui-xs font-bold uppercase tracking-wider text-muted-foreground">
               {t("sectionNameEn")}
             </label>
             <Input
@@ -52,7 +52,7 @@ export function SectionBlock({
             />
           </div>
           <div className="flex flex-col gap-1">
-            <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+            <label className="text-ui-xs font-bold uppercase tracking-wider text-muted-foreground">
               {t("sectionNameEs")}
             </label>
             <Input
@@ -61,7 +61,7 @@ export function SectionBlock({
             />
           </div>
           <div className="flex flex-col gap-1">
-            <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+            <label className="text-ui-xs font-bold uppercase tracking-wider text-muted-foreground">
               {t("sectionType")}
             </label>
             <select
@@ -92,13 +92,13 @@ export function SectionBlock({
       {/* Items */}
       <div className="flex flex-col gap-2">
         <div className="flex items-center justify-between">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+          <span className="text-ui-xs font-bold uppercase tracking-wider text-muted-foreground">
             {t("items")}
           </span>
           <button
             type="button"
             onClick={onAddItem}
-            className="flex items-center gap-1 rounded-sm border border-foreground/30 px-2 py-1 text-[10px] font-bold uppercase tracking-wider transition-colors hover:bg-foreground hover:text-background"
+            className="flex items-center gap-1 rounded-sm border border-foreground/30 px-2 py-1 text-ui-xs font-bold uppercase tracking-wider transition-colors hover:bg-foreground hover:text-background"
             {...tid(`template-add-item-${String(sectionIndex)}`)}
           >
             <Plus className="size-3" />

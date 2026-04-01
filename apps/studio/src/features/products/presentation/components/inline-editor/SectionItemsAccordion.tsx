@@ -58,7 +58,7 @@ function AccordionItemEditor({
     <div
       ref={dragProvided.innerRef}
       {...dragProvided.draggableProps}
-      className="relative border-3 border-foreground nb-shadow-sm"
+      className="relative border-strong border-foreground shadow-brutal-sm"
       {...tid(`section-${sectionIndex}-item-${itemIndex}`)}
     >
       {/* Remove */}
@@ -82,7 +82,7 @@ function AccordionItemEditor({
         <button
           type="button"
           onClick={toggleLang}
-          className="shrink-0 rounded-sm border-2 border-foreground/30 px-1.5 py-0.5 font-display text-tiny font-extrabold uppercase tracking-widest text-muted-foreground hover:border-foreground hover:text-foreground"
+          className="shrink-0 rounded-sm border-2 border-foreground/30 px-1.5 py-0.5 font-display text-ui-xs font-extrabold uppercase tracking-widest text-muted-foreground hover:border-foreground hover:text-foreground"
           {...tid(`section-item-lang-toggle-${sectionIndex}-${itemIndex}`)}
         >
           {lang.toUpperCase()}
@@ -118,7 +118,8 @@ function AccordionItemEditor({
       {/* Expanded content — mirrors store AccordionItem answer area */}
       {open && (
         <div
-          className={`border-t-3 border-foreground ${theme.bgLight} px-5 pb-5 pt-4`}
+          className="border-t-strong border-foreground px-5 pb-5 pt-4"
+          style={{ backgroundColor: theme.bgLight }}
         >
           <AutoTextarea
             ref={descField.field.ref}

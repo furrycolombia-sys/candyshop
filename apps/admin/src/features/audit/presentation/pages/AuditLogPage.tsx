@@ -31,7 +31,10 @@ export function AuditLogPage() {
   };
 
   return (
-    <main className="flex flex-1 flex-col bg-dots" {...tid("audit-log-page")}>
+    <main
+      className="flex flex-1 flex-col surface-grid-dots"
+      {...tid("audit-log-page")}
+    >
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-6 py-8">
         {/* Header */}
         <header>

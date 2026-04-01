@@ -14,9 +14,8 @@ describe("RatingStars", () => {
   it("fills stars based on rounded rating", () => {
     const { container } = render(<RatingStars rating={4} />);
     const stars = container.querySelectorAll("svg");
-    // Without theme, filled class is "size-4 fill-foreground text-foreground"
     const filledStars = [...stars].filter((s) =>
-      (s.getAttribute("class") ?? "").includes("fill-foreground"),
+      (s.getAttribute("class") ?? "").includes("fill-current"),
     );
     expect(filledStars).toHaveLength(4);
   });
@@ -25,7 +24,7 @@ describe("RatingStars", () => {
     const { container } = render(<RatingStars rating={0} />);
     const stars = container.querySelectorAll("svg");
     const filledStars = [...stars].filter((s) =>
-      (s.getAttribute("class") ?? "").includes("fill-foreground"),
+      (s.getAttribute("class") ?? "").includes("fill-current"),
     );
     expect(filledStars).toHaveLength(0);
   });
@@ -34,7 +33,7 @@ describe("RatingStars", () => {
     const { container } = render(<RatingStars rating={5} />);
     const stars = container.querySelectorAll("svg");
     const filledStars = [...stars].filter((s) =>
-      (s.getAttribute("class") ?? "").includes("fill-foreground"),
+      (s.getAttribute("class") ?? "").includes("fill-current"),
     );
     expect(filledStars).toHaveLength(5);
   });
@@ -50,19 +49,20 @@ describe("RatingStars", () => {
 
   it("applies theme text color when theme is provided", () => {
     const theme = {
-      bg: "bg-pink",
-      bgLight: "bg-pink/15",
-      border: "border-pink",
-      text: "text-pink",
-      badgeBg: "bg-pink",
-      rowEven: "bg-pink/5",
-      rowOdd: "bg-pink/15",
+      bg: "var(--pink)",
+      bgLight: "color-mix(in srgb, var(--pink) 15%, transparent)",
+      border: "var(--pink)",
+      text: "var(--pink)",
+      badgeBg: "var(--pink)",
+      rowEven: "color-mix(in srgb, var(--pink) 5%, transparent)",
+      rowOdd: "color-mix(in srgb, var(--pink) 15%, transparent)",
+      foreground: "var(--candy-text)",
       accent: "--pink",
     };
     const { container } = render(<RatingStars rating={3} theme={theme} />);
     const stars = container.querySelectorAll("svg");
-    const themedStars = [...stars].filter((s) =>
-      (s.getAttribute("class") ?? "").includes("text-pink"),
+    const themedStars = [...stars].filter(
+      (s) => s.getAttribute("style")?.includes("var(--pink)") ?? false,
     );
     expect(themedStars).toHaveLength(3);
   });

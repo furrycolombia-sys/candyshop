@@ -11,6 +11,8 @@ import { FeaturedRibbon } from "@/features/products/presentation/components/Feat
 
 const TID_GALLERY = "image-gallery";
 const TID_GALLERY_MAIN = "image-gallery-main";
+const COUNTER_SEPARATOR = " / ";
+const ACTIVE_THUMB_CLASS = "border-foreground shadow-brutal-sm";
 
 interface ImageGalleryProps {
   product: Product;
@@ -56,7 +58,8 @@ export function ImageGallery({ product, theme }: ImageGalleryProps) {
     return (
       <div className="w-full lg:w-3/5 shrink-0" {...tid(TID_GALLERY)}>
         <div
-          className={`relative flex items-center justify-center aspect-square border-3 border-foreground nb-shadow-lg overflow-hidden ${theme.bg}`}
+          className="relative flex aspect-square items-center justify-center overflow-hidden border-strong border-foreground shadow-brutal-lg"
+          style={{ backgroundColor: theme.bg }}
           {...tid(TID_GALLERY_MAIN)}
         >
           <span className="font-display text-4xl font-extrabold uppercase tracking-widest text-foreground/10 select-none">
@@ -86,15 +89,14 @@ export function ImageGallery({ product, theme }: ImageGalleryProps) {
           >
             {images.map((img, idx) => {
               const isActive = idx === activeIndex;
-              const activeCls = isActive
-                ? `border-foreground ${theme.bg} nb-shadow-sm`
-                : thumbInactive;
+              const activeCls = isActive ? ACTIVE_THUMB_CLASS : thumbInactive;
               return (
                 <button
                   type="button"
                   key={img.url}
                   onClick={() => setActiveIndex(idx)}
-                  className={`relative size-16 border-3 transition-all overflow-hidden ${activeCls}`}
+                  className={`relative size-16 overflow-hidden border-strong transition-all ${activeCls}`}
+                  style={isActive ? { backgroundColor: theme.bg } : undefined}
                   aria-label={
                     img.alt ??
                     t("gallery.views.viewImage", { label: String(idx + 1) })
@@ -116,7 +118,8 @@ export function ImageGallery({ product, theme }: ImageGalleryProps) {
 
         {/* Main image */}
         <div
-          className={`relative flex-1 aspect-square border-3 border-foreground nb-shadow-lg overflow-hidden ${theme.bg}`}
+          className="relative flex-1 aspect-square overflow-hidden border-strong border-foreground shadow-brutal-lg"
+          style={{ backgroundColor: theme.bg }}
           {...tid(TID_GALLERY_MAIN)}
         >
           <Image
@@ -130,15 +133,17 @@ export function ImageGallery({ product, theme }: ImageGalleryProps) {
           {/* Bottom bar: caption + counter */}
           <div className="absolute bottom-0 inset-x-0 flex items-center justify-between bg-foreground/70 px-3 py-1.5 z-10">
             {activeImage.alt ? (
-              <span className="text-tiny font-bold uppercase tracking-widest text-background truncate">
+              <span className="text-ui-xs font-bold uppercase tracking-widest text-background truncate">
                 {activeImage.alt}
               </span>
             ) : (
               <span />
             )}
             {images.length > 1 && (
-              <span className="text-tiny font-bold text-background tracking-widest shrink-0 ml-2">
-                {activeIndex + 1} / {images.length}
+              <span className="text-ui-xs font-bold text-background tracking-widest shrink-0 ml-2">
+                {activeIndex + 1}
+                {COUNTER_SEPARATOR}
+                {images.length}
               </span>
             )}
           </div>
@@ -156,7 +161,8 @@ export function ImageGallery({ product, theme }: ImageGalleryProps) {
       {/* Mobile: image on top, thumbnails below */}
       <div className="flex flex-col gap-3 lg:hidden">
         <div
-          className={`relative aspect-square border-3 border-foreground nb-shadow-lg overflow-hidden ${theme.bg}`}
+          className="relative aspect-square overflow-hidden border-strong border-foreground shadow-brutal-lg"
+          style={{ backgroundColor: theme.bg }}
           {...tid("image-gallery-main-mobile")}
         >
           <Image
@@ -170,15 +176,17 @@ export function ImageGallery({ product, theme }: ImageGalleryProps) {
           {/* Bottom bar: caption + counter */}
           <div className="absolute bottom-0 inset-x-0 flex items-center justify-between bg-foreground/70 px-3 py-1.5 z-10">
             {activeImage.alt ? (
-              <span className="text-tiny font-bold uppercase tracking-widest text-background truncate">
+              <span className="text-ui-xs font-bold uppercase tracking-widest text-background truncate">
                 {activeImage.alt}
               </span>
             ) : (
               <span />
             )}
             {images.length > 1 && (
-              <span className="text-tiny font-bold text-background tracking-widest shrink-0 ml-2">
-                {activeIndex + 1} / {images.length}
+              <span className="text-ui-xs font-bold text-background tracking-widest shrink-0 ml-2">
+                {activeIndex + 1}
+                {COUNTER_SEPARATOR}
+                {images.length}
               </span>
             )}
           </div>
@@ -201,15 +209,14 @@ export function ImageGallery({ product, theme }: ImageGalleryProps) {
           >
             {images.map((img, idx) => {
               const isActive = idx === activeIndex;
-              const activeCls = isActive
-                ? `border-foreground ${theme.bg} nb-shadow-sm`
-                : thumbInactive;
+              const activeCls = isActive ? ACTIVE_THUMB_CLASS : thumbInactive;
               return (
                 <button
                   type="button"
                   key={img.url}
                   onClick={() => setActiveIndex(idx)}
-                  className={`relative py-2 h-16 border-3 transition-all overflow-hidden ${activeCls}`}
+                  className={`relative h-16 overflow-hidden border-strong py-2 transition-all ${activeCls}`}
+                  style={isActive ? { backgroundColor: theme.bg } : undefined}
                   aria-label={img.alt ?? String(idx + 1)}
                 >
                   <Image

@@ -18,8 +18,8 @@ const labelVariants = cva(
         attention: "bg-warning text-warning-foreground",
         critical: "bg-destructive text-destructive-foreground",
         info: "bg-info text-info-foreground",
-        brand: "bg-brand text-white",
-        "brand-soft": "bg-(--brand-alpha) text-brand-text dark:text-white",
+        brand: "bg-brand text-brand-foreground",
+        "brand-soft": "bg-(--brand-alpha) text-brand-text",
       },
     },
     defaultVariants: {

@@ -1,7 +1,7 @@
 import { createServerSupabaseClient } from "api/supabase/server";
 import { setRequestLocale } from "next-intl/server";
 
-import { AccountPage } from "@/features/auth/presentation/pages/AccountPage";
+import { AccountSettingsPage } from "@/features/account";
 import { LoginPage } from "@/features/auth/presentation/pages/LoginPage";
 
 export default async function AuthPage({
@@ -21,5 +21,5 @@ export default async function AuthPage({
     // Supabase not available — show login
   }
 
-  return isAuthenticated ? <AccountPage /> : <LoginPage />;
+  return isAuthenticated ? <AccountSettingsPage /> : <LoginPage />;
 }

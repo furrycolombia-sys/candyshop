@@ -6,7 +6,6 @@ import {
   MY_ORDERS_QUERY_KEY,
   ORDERS_STALE_TIME_MS,
   RECEIPTS_BUCKET,
-  STATUS_COLORS,
 } from "./constants";
 
 describe("orders domain constants", () => {
@@ -14,32 +13,12 @@ describe("orders domain constants", () => {
     expect(MY_ORDERS_QUERY_KEY).toBe("my-orders");
   });
 
-  it("STATUS_COLORS has entries for all known statuses", () => {
-    const expectedStatuses = [
-      "pending",
-      "awaiting_payment",
-      "pending_verification",
-      "evidence_requested",
-      "approved",
-      "rejected",
-      "expired",
-      "paid",
-    ];
-
-    for (const status of expectedStatuses) {
-      expect(STATUS_COLORS).toHaveProperty(status);
-      expect(typeof STATUS_COLORS[status as keyof typeof STATUS_COLORS]).toBe(
-        "string",
-      );
-    }
-  });
-
   it("MAX_RECEIPT_SIZE_BYTES is 5 MB", () => {
     expect(MAX_RECEIPT_SIZE_BYTES).toBe(5 * 1024 * 1024);
   });
 
-  it("ACCEPTED_RECEIPT_TYPES is image/*", () => {
-    expect(ACCEPTED_RECEIPT_TYPES).toBe("image/*");
+  it("ACCEPTED_RECEIPT_TYPES lists the accepted image mime types", () => {
+    expect(ACCEPTED_RECEIPT_TYPES).toBe("image/jpeg,image/png,image/webp");
   });
 
   it("RECEIPTS_BUCKET is receipts", () => {

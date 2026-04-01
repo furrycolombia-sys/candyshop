@@ -43,10 +43,6 @@ vi.mock("@/features/products/application/useStoreProducts", () => ({
   }),
 }));
 
-vi.mock("@/features/cart/presentation/components/CartDrawer", () => ({
-  CartDrawer: () => <div data-testid="cart-drawer-mock" />,
-}));
-
 vi.mock(
   "@/features/products/presentation/components/product-detail/MobileBarWithCart",
   () => ({
@@ -63,13 +59,14 @@ vi.mock(
 
 vi.mock("@/shared/domain/categoryConstants", () => ({
   getCategoryTheme: () => ({
-    bg: "bg-mint",
-    bgLight: "bg-mint/15",
-    border: "border-mint",
-    text: "text-mint",
-    badgeBg: "bg-mint",
-    rowEven: "bg-mint/5",
-    rowOdd: "bg-mint/15",
+    bg: "var(--mint)",
+    bgLight: "color-mix(in srgb, var(--mint) 15%, transparent)",
+    border: "var(--mint)",
+    text: "var(--mint)",
+    badgeBg: "var(--mint)",
+    rowEven: "color-mix(in srgb, var(--mint) 5%, transparent)",
+    rowOdd: "color-mix(in srgb, var(--mint) 15%, transparent)",
+    foreground: "var(--candy-text)",
     accent: "--mint",
   }),
 }));
@@ -113,7 +110,6 @@ describe("ProductDetailPage", () => {
     expect(screen.getByTestId("product-detail-page")).toBeInTheDocument();
     expect(screen.getByTestId("product-sections-mock")).toBeInTheDocument();
     expect(screen.getByTestId("mobile-bar-mock")).toBeInTheDocument();
-    expect(screen.getByTestId("cart-drawer-mock")).toBeInTheDocument();
   });
 
   it("renders back link", () => {

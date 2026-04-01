@@ -21,25 +21,46 @@ export const PRODUCT_CATEGORIES: ProductCategory[] = [
   "deals",
 ];
 
+export interface BadgeTone {
+  backgroundColor: string;
+  color: string;
+}
+
+const BADGE_TINT = 15;
+const DEFAULT_BADGE_FOREGROUND = "--foreground";
+const LEMON_BADGE_FOREGROUND = "--candy-text-on-lemon";
+
+/* eslint-disable i18next/no-literal-string -- CSS value helper, not user-facing copy */
+function badgeTone(
+  accent: `--${string}`,
+  foreground: `--${string}` = DEFAULT_BADGE_FOREGROUND,
+): BadgeTone {
+  return {
+    backgroundColor: `color-mix(in srgb, var(${accent}) ${String(BADGE_TINT)}%, transparent)`,
+    color: `var(${foreground})`,
+  };
+}
+/* eslint-enable i18next/no-literal-string */
+
 /**
  * Category color mapping using candy CSS variables.
  * Used for badge accents in the product table.
  */
-export const CATEGORY_COLOR_MAP: Record<ProductCategory, string> = {
-  fursuits: "bg-pink/15 text-pink",
-  merch: "bg-mint/15 text-mint",
-  art: "bg-lilac/15 text-lilac",
-  events: "bg-lemon/15 text-candy-text",
-  digital: "bg-sky/15 text-sky",
-  deals: "bg-peach/15 text-peach",
+export const CATEGORY_COLOR_MAP: Record<ProductCategory, BadgeTone> = {
+  fursuits: badgeTone("--pink"),
+  merch: badgeTone("--mint"),
+  art: badgeTone("--lilac"),
+  events: badgeTone("--lemon", LEMON_BADGE_FOREGROUND),
+  digital: badgeTone("--sky"),
+  deals: badgeTone("--peach"),
 };
 
 /** Type color mapping */
-export const TYPE_COLOR_MAP: Record<ProductType, string> = {
-  merch: "bg-mint/15 text-mint",
-  digital: "bg-sky/15 text-sky",
-  service: "bg-lilac/15 text-lilac",
-  ticket: "bg-peach/15 text-peach",
+export const TYPE_COLOR_MAP: Record<ProductType, BadgeTone> = {
+  merch: badgeTone("--mint"),
+  digital: badgeTone("--sky"),
+  service: badgeTone("--lilac"),
+  ticket: badgeTone("--peach"),
 };
 
 /** Shared i18n namespace for section editors */

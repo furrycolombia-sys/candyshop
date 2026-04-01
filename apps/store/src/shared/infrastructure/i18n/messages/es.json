@@ -22,12 +22,13 @@
       "title": "Iniciar sesión",
       "subtitle": "Elige tu método de inicio de sesión preferido",
       "google": "Continuar con Google",
-      "discord": "Continuar con Discord",
-      "twitter": "Continuar con X"
+      "discord": "Continuar con Discord"
     },
     "signOut": "Cerrar sesión"
   },
   "common": {
+    "error": "Ocurrió un error",
+    "retry": "Intentar de nuevo",
     "theme": {
       "switchToDark": "Cambiar a modo oscuro",
       "switchToLight": "Cambiar a modo claro",

@@ -17,7 +17,7 @@ export function ErrorState({
   message,
   onRetry,
   retryLabel,
-  height = "h-[60vh]",
+  height = "min-h-state-pane",
 }: ErrorStateProps) {
   const tCommon = useTranslations("common");
 

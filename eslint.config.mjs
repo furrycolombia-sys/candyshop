@@ -617,13 +617,36 @@ const eslintConfig = defineConfig([
         {
           default: "disallow",
           rules: [
-            { from: "shared", allow: ["shared"] },
-            { from: "shared-layouts", allow: ["shared", "feature"] },
-            { from: "feature", allow: ["shared", "feature", "mocks"] },
-            { from: "app", allow: ["shared", "shared-layouts", "feature"] },
-            { from: "test", allow: ["shared", "feature", "app", "test"] },
-            { from: "mocks", allow: ["shared", "feature", "app", "test", "mocks"] },
-            { from: "root", allow: ["shared", "feature", "app", "mocks"] },
+            {
+              from: { type: "shared" },
+              allow: { to: { type: ["shared"] } },
+            },
+            {
+              from: { type: "shared-layouts" },
+              allow: { to: { type: ["shared", "feature"] } },
+            },
+            {
+              from: { type: "feature" },
+              allow: { to: { type: ["shared", "feature", "mocks"] } },
+            },
+            {
+              from: { type: "app" },
+              allow: { to: { type: ["shared", "shared-layouts", "feature"] } },
+            },
+            {
+              from: { type: "test" },
+              allow: { to: { type: ["shared", "feature", "app", "test"] } },
+            },
+            {
+              from: { type: "mocks" },
+              allow: {
+                to: { type: ["shared", "feature", "app", "test", "mocks"] },
+              },
+            },
+            {
+              from: { type: "root" },
+              allow: { to: { type: ["shared", "feature", "app", "mocks"] } },
+            },
           ],
         },
       ],

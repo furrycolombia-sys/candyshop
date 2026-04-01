@@ -1,5 +1,16 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
+vi.mock("@/features/checkout/infrastructure/receiptStorage", () => ({
+  getReceiptUrl: vi.fn(
+    async (_supabase: unknown, storagePath: string | null) =>
+      storagePath ? `https://example.com/${storagePath}` : null,
+  ),
+  uploadReceipt: vi.fn(
+    async (_supabase: unknown, file: File, orderId: string) =>
+      `${orderId}/${file.name}`,
+  ),
+}));
+
 import { fetchMyOrders, resubmitEvidence } from "./orderQueries";
 
 // ---------------------------------------------------------------------------
@@ -15,20 +26,12 @@ function createMockSupabase() {
     update: vi.fn().mockReturnThis(),
   };
 
-  const storageChain = {
-    upload: vi.fn(),
-  };
-
   return {
     from: vi.fn(() => chain),
     auth: {
       getUser: vi.fn(),
     },
-    storage: {
-      from: vi.fn(() => storageChain),
-    },
     _chain: chain,
-    _storageChain: storageChain,
   };
 }
 
@@ -81,7 +84,7 @@ describe("fetchMyOrders", () => {
           payment_status: "approved",
           total_cop: 10_000,
           transfer_number: "TX-1",
-          receipt_url: null,
+          receipt_url: "order-1/receipt.png",
           seller_note: null,
           expires_at: null,
           checkout_session_id: "sess-1",
@@ -114,6 +117,9 @@ describe("fetchMyOrders", () => {
     expect(result).toHaveLength(1);
     expect(result[0].seller_name).toBe("Seller One");
     expect(result[0].items).toHaveLength(1);
+    expect(result[0].receipt_url).toBe(
+      "https://example.com/order-1/receipt.png",
+    );
   });
 
   it("throws on query error", async () => {
@@ -158,11 +164,9 @@ describe("resubmitEvidence", () => {
     );
 
     expect(supabase.from).toHaveBeenCalledWith("orders");
-    expect(supabase.storage.from).not.toHaveBeenCalled();
   });
 
   it("uploads receipt then updates order when file is provided", async () => {
-    supabase._storageChain.upload.mockResolvedValue({ error: null });
     supabase._chain.eq
       .mockReturnValueOnce(supabase._chain)
       .mockResolvedValueOnce({ error: null });
@@ -176,29 +180,7 @@ describe("resubmitEvidence", () => {
       file,
     );
 
-    expect(supabase.storage.from).toHaveBeenCalledWith("receipts");
-    expect(supabase._storageChain.upload).toHaveBeenCalledWith(
-      "order-1/receipt.jpg",
-      file,
-      { upsert: true },
-    );
-  });
-
-  it("throws on upload error", async () => {
-    supabase._storageChain.upload.mockResolvedValue({
-      error: new Error("Upload failed"),
-    });
-
-    const file = new File(["data"], "receipt.jpg", { type: "image/jpeg" });
-
-    await expect(
-      resubmitEvidence(
-        supabase as unknown as Parameters<typeof resubmitEvidence>[0],
-        "order-1",
-        "TX-999",
-        file,
-      ),
-    ).rejects.toThrow("Upload failed");
+    expect(supabase.from).toHaveBeenCalledWith("orders");
   });
 
   it("throws on order update error", async () => {

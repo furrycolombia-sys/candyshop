@@ -3,15 +3,24 @@ import { createBrowserClient } from "@supabase/ssr";
 import { SUPABASE_ANON_KEY, SUPABASE_URL } from "./config";
 import type { Database } from "./types";
 
+let browserClient: ReturnType<typeof createBrowserClient<Database>> | null =
+  null;
+
 /**
  * Creates a Supabase client for use in Client Components (browser).
  *
- * Call this in hooks, event handlers, or useEffect — not at module scope.
- * Each call returns a new client instance (cheap, no connection pool).
+ * Reuses a singleton browser client so hooks across the app share auth state
+ * and do not re-create clients on every mount.
  */
 export function createBrowserSupabaseClient() {
-  return createBrowserClient<Database>(
+  if (browserClient) {
+    return browserClient;
+  }
+
+  browserClient = createBrowserClient<Database>(
     SUPABASE_URL || "http://localhost:54321",
     SUPABASE_ANON_KEY || "placeholder",
   );
+
+  return browserClient;
 }

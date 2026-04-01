@@ -53,6 +53,8 @@
     "playground": "Playground"
   },
   "common": {
+    "error": "Ocurrió un error",
+    "retry": "Intentar de nuevo",
     "theme": {
       "switchToDark": "Cambiar a modo oscuro",
       "switchToLight": "Cambiar a modo claro",

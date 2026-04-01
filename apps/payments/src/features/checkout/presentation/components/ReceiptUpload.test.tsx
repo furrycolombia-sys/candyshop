@@ -81,4 +81,16 @@ describe("ReceiptUpload", () => {
 
     expect(screen.getByTestId("receipt-upload")).toBeInTheDocument();
   });
+
+  it("ignores unsupported receipt files", () => {
+    render(<ReceiptUpload file={null} onFileChange={mockOnFileChange} />);
+
+    const input = screen.getByTestId("receipt-file-input") as HTMLInputElement;
+    const file = new File(["data"], "receipt.gif", { type: "image/gif" });
+
+    fireEvent.change(input, { target: { files: [file] } });
+
+    expect(mockOnFileChange).not.toHaveBeenCalled();
+    expect(mockCreateObjectURL).not.toHaveBeenCalled();
+  });
 });

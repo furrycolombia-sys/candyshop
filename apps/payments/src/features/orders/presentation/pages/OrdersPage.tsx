@@ -43,7 +43,7 @@ export function OrdersPage() {
   // Loading
   if (isLoading) {
     return (
-      <main className="flex flex-1 justify-center bg-dots p-4 pt-8">
+      <main className="flex flex-1 justify-center surface-grid-dots p-4 pt-8">
         <div className="w-full max-w-2xl space-y-4">
           <Skeleton className="h-8 w-48" />
           <Skeleton className="h-48 w-full" />
@@ -57,10 +57,10 @@ export function OrdersPage() {
   if (!orders || orders.length === 0) {
     return (
       <main
-        className="flex flex-1 items-center justify-center bg-dots p-4"
+        className="flex flex-1 items-center justify-center surface-grid-dots p-4"
         {...tid("orders-empty")}
       >
-        <div className="nb-shadow-lg w-full max-w-md border-3 border-foreground bg-background p-8 text-center sm:p-10">
+        <div className="shadow-brutal-lg w-full max-w-md border-strong border-foreground bg-background p-8 text-center sm:p-10">
           <ShoppingBag className="mx-auto mb-4 size-12 text-muted-foreground" />
           <h1 className="font-display text-2xl font-extrabold uppercase tracking-tight">
             {t("noOrders")}
@@ -70,7 +70,7 @@ export function OrdersPage() {
           </p>
           <a
             href={appUrls.store}
-            className="nb-btn nb-btn-press-sm nb-shadow-sm mt-6 inline-flex items-center gap-2 border-3 border-foreground bg-foreground px-6 py-3 font-display text-sm font-extrabold uppercase tracking-widest text-background"
+            className="button-brutal button-press-sm shadow-brutal-sm mt-6 inline-flex items-center gap-2 border-strong border-foreground bg-foreground px-6 py-3 font-display text-sm font-extrabold uppercase tracking-widest text-background"
             {...tid("orders-go-to-store")}
           >
             <ArrowLeft className="size-4" />
@@ -84,7 +84,7 @@ export function OrdersPage() {
   // Orders list grouped by checkout session
   return (
     <main
-      className="flex flex-1 justify-center bg-dots p-4 pt-8"
+      className="flex flex-1 justify-center surface-grid-dots p-4 pt-8"
       {...tid("orders-page")}
     >
       <div className="w-full max-w-2xl space-y-6">

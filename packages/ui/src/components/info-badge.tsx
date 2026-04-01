@@ -21,7 +21,7 @@ const infoBadgeVariants = cva(
         brand: "bg-(--brand-alpha) text-brand-text border-brand-text/30",
       },
       size: {
-        sm: "px-2 py-0.5 text-tiny gap-1 [&>svg]:size-3",
+        sm: "px-2 py-0.5 text-ui-xs gap-1 [&>svg]:size-3",
         md: "px-2.5 py-1 text-xs gap-1.5 [&>svg]:size-3.5",
         lg: "px-3 py-1.5 text-sm gap-2 [&>svg]:size-4",
       },

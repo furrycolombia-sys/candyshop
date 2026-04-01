@@ -16,7 +16,18 @@ vi.mock("next/image", () => ({
 }));
 
 vi.mock("@/shared/domain/categoryConstants", () => ({
-  getCategoryColor: () => "bg-pink",
+  getCategoryColor: () => "var(--pink)",
+  getCategoryTheme: () => ({
+    bg: "var(--pink)",
+    bgLight: "color-mix(in srgb, var(--pink) 15%, transparent)",
+    border: "var(--pink)",
+    text: "var(--pink)",
+    badgeBg: "var(--pink)",
+    rowEven: "color-mix(in srgb, var(--pink) 5%, transparent)",
+    rowOdd: "color-mix(in srgb, var(--pink) 15%, transparent)",
+    foreground: "var(--candy-text)",
+    accent: "--pink",
+  }),
 }));
 
 // ---------------------------------------------------------------------------

@@ -70,7 +70,8 @@ function CardItem({
     <div
       ref={dragProvided.innerRef}
       {...dragProvided.draggableProps}
-      className={`relative flex w-56 shrink-0 flex-col gap-3 border-3 ${theme.border} bg-background p-5 nb-shadow-sm lg:w-auto`}
+      className="relative flex w-56 shrink-0 flex-col gap-3 border-strong bg-background p-5 shadow-brutal-sm lg:w-auto"
+      style={{ borderColor: theme.border }}
       {...tid(`section-${sectionIndex}-item-${itemIndex}`)}
     >
       {/* Drag handle */}
@@ -99,7 +100,7 @@ function CardItem({
       <button
         type="button"
         onClick={toggleLang}
-        className="w-fit shrink-0 rounded-sm border-2 border-foreground/30 px-1.5 py-0.5 font-display text-tiny font-extrabold uppercase tracking-widest text-muted-foreground hover:border-foreground hover:text-foreground"
+        className="w-fit shrink-0 rounded-sm border-2 border-foreground/30 px-1.5 py-0.5 font-display text-ui-xs font-extrabold uppercase tracking-widest text-muted-foreground hover:border-foreground hover:text-foreground"
         {...tid(`section-item-lang-toggle-${sectionIndex}-${itemIndex}`)}
       >
         {lang.toUpperCase()}

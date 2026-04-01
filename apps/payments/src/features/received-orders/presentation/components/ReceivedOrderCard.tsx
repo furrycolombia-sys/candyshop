@@ -3,7 +3,7 @@
 import { Clock } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { tid } from "shared";
+import { i18nField, tid } from "shared";
 
 import { ActionButtons } from "./ActionButtons";
 import { ReceiptViewer } from "./ReceiptViewer";
@@ -21,14 +21,7 @@ import { formatCop } from "@/shared/application/utils/formatCop";
 const TICK_INTERVAL_MS = 60_000;
 
 function getItemName(item: OrderItem, locale: string): string {
-  const meta = item.metadata;
-  if (locale === "es" && typeof meta.name_es === "string" && meta.name_es) {
-    return meta.name_es;
-  }
-  if (typeof meta.name_en === "string" && meta.name_en) {
-    return meta.name_en;
-  }
-  return item.product_id;
+  return i18nField(item.metadata, "name", locale) || item.product_id;
 }
 
 interface ReceivedOrderCardProps {
@@ -75,11 +68,11 @@ export function ReceivedOrderCard({
 
   return (
     <div
-      className="border-3 border-foreground bg-background nb-shadow-md"
+      className="border-strong border-foreground bg-background shadow-brutal-md"
       {...tid(`received-order-${order.id}`)}
     >
       {/* Header */}
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b-3 border-foreground p-4">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b-strong border-foreground p-4">
         <div className="flex flex-col gap-1">
           <div className="flex items-center gap-2">
             <span className="font-display text-sm font-extrabold uppercase tracking-widest">

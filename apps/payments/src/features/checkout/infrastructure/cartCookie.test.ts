@@ -9,7 +9,11 @@ vi.mock("cookies-next", () => ({
 // eslint-disable-next-line import/order -- vi.mock must be hoisted before this import
 import { getCookie, deleteCookie } from "cookies-next";
 
-import { clearCartCookie, readCartFromCookie } from "./cartCookie";
+import {
+  clearCartCookie,
+  readCartFromCookie,
+  subscribeToCartCookie,
+} from "./cartCookie";
 
 const mockGetCookie = getCookie as unknown as ReturnType<typeof vi.fn>;
 const mockDeleteCookie = deleteCookie as unknown as ReturnType<typeof vi.fn>;
@@ -96,5 +100,15 @@ describe("clearCartCookie", () => {
     expect(mockDeleteCookie).toHaveBeenCalledWith("candystore-cart", {
       path: "/",
     });
+  });
+
+  it("notifies listeners after clearing the cart cookie", () => {
+    const listener = vi.fn();
+    const unsubscribe = subscribeToCartCookie(listener);
+
+    clearCartCookie();
+
+    expect(listener).toHaveBeenCalledTimes(1);
+    unsubscribe();
   });
 });

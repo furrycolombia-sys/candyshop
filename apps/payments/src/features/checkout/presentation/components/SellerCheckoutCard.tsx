@@ -91,7 +91,7 @@ export function SellerCheckoutCard({
 
   return (
     <div
-      className="border-3 border-foreground bg-background nb-shadow-md"
+      className="border-strong border-foreground bg-background shadow-brutal-md"
       {...tid(`seller-checkout-${sellerId}`)}
     >
       {/* Header */}

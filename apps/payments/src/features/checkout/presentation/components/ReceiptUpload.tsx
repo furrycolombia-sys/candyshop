@@ -6,10 +6,8 @@ import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { tid } from "shared";
 
-import {
-  ACCEPTED_RECEIPT_TYPES,
-  MAX_RECEIPT_SIZE_BYTES,
-} from "@/features/checkout/domain/constants";
+import { ACCEPTED_RECEIPT_TYPES } from "@/features/checkout/domain/constants";
+import { validateReceiptFile } from "@/shared/domain/receipt";
 
 interface ReceiptUploadProps {
   file: File | null;
@@ -44,7 +42,8 @@ export function ReceiptUpload({
       const selected = e.target.files?.[0] ?? null;
       if (!selected) return;
 
-      if (selected.size > MAX_RECEIPT_SIZE_BYTES) {
+      const validation = validateReceiptFile(selected);
+      if (!validation.isValid) {
         // Reset input
         if (inputRef.current) inputRef.current.value = "";
         return;
@@ -75,7 +74,7 @@ export function ReceiptUpload({
       <p className="text-xs text-muted-foreground">{t("uploadReceiptHint")}</p>
 
       {file ? (
-        <div className="relative border-3 border-foreground p-2">
+        <div className="relative border-strong border-foreground p-2">
           {previewUrl && (
             <img
               src={previewUrl}
@@ -103,7 +102,7 @@ export function ReceiptUpload({
           type="button"
           onClick={() => inputRef.current?.click()}
           disabled={disabled}
-          className="nb-btn nb-btn-press-sm flex w-full items-center justify-center gap-2 border-3 border-dashed border-foreground/40 bg-background px-4 py-6 text-sm font-medium text-muted-foreground transition-colors hover:border-foreground hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
+          className="button-brutal button-press-sm flex w-full items-center justify-center gap-2 border-strong border-dashed border-foreground/40 bg-background px-4 py-6 text-sm font-medium text-muted-foreground transition-colors hover:border-foreground hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
           {...tid("receipt-upload-trigger")}
         >
           <Upload className="size-4" />

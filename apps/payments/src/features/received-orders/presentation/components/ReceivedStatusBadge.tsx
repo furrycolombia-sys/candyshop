@@ -12,35 +12,48 @@ import { tid } from "shared";
 
 import type { OrderStatus } from "@/features/received-orders/domain/types";
 
-const WARNING_STYLE = "border-warning bg-warning/10 text-warning";
-
-const STATUS_CONFIG: Record<string, { icon: typeof Clock; className: string }> =
-  {
-    pending_verification: {
-      icon: Clock,
-      className: WARNING_STYLE,
-    },
-    evidence_requested: {
-      icon: MessageSquareWarning,
-      className: WARNING_STYLE,
-    },
-    approved: {
-      icon: CheckCircle,
-      className: "border-success bg-success/10 text-success",
-    },
-    rejected: {
-      icon: XCircle,
-      className: "border-destructive bg-destructive/10 text-destructive",
-    },
-    expired: {
-      icon: ShieldAlert,
-      className: "border-muted-foreground bg-muted text-muted-foreground",
-    },
+function getWarningConfig(icon: typeof Clock) {
+  return {
+    icon,
+    className: "border-warning bg-warning/10 text-warning",
   };
+}
+
+function getStatusConfig(status: OrderStatus): {
+  icon: typeof Clock;
+  className: string;
+} {
+  switch (status) {
+    case "pending_verification": {
+      return getWarningConfig(Clock);
+    }
+    case "evidence_requested": {
+      return getWarningConfig(MessageSquareWarning);
+    }
+    case "approved": {
+      return {
+        icon: CheckCircle,
+        className: "border-success bg-success/10 text-success",
+      };
+    }
+    case "rejected": {
+      return {
+        icon: XCircle,
+        className: "border-destructive bg-destructive/10 text-destructive",
+      };
+    }
+    default: {
+      return {
+        icon: ShieldAlert,
+        className: "border-muted-foreground bg-muted text-muted-foreground",
+      };
+    }
+  }
+}
 
 export function ReceivedStatusBadge({ status }: { status: OrderStatus }) {
   const t = useTranslations("receivedOrders.filters");
-  const config = STATUS_CONFIG[status] ?? STATUS_CONFIG.expired;
+  const config = getStatusConfig(status);
   const Icon = config.icon;
 
   return (

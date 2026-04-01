@@ -3,7 +3,10 @@ import Image from "next/image";
 import { i18nField, i18nPrice, tid } from "shared";
 
 import type { CartItem } from "@/features/cart/domain/types";
-import { getCategoryColor } from "@/shared/domain/categoryConstants";
+import {
+  getCategoryColor,
+  getCategoryTheme,
+} from "@/shared/domain/categoryConstants";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- next-intl Translator type is complex; accepting any callable
 type TranslatorFn = (...args: any[]) => string;
@@ -30,17 +33,19 @@ export function CartItemRow({
   updateQuantity,
 }: CartItemRowProps) {
   const itemColor = getCategoryColor(item.category ?? "");
+  const itemTheme = getCategoryTheme(item.category ?? "merch");
   const name = i18nField(item, "name", locale);
   const lineTotal = item.price_usd * item.quantity;
 
   return (
     <li
-      className="flex gap-3 border-b-3 border-foreground/10 px-5 py-4 group"
+      className="flex gap-3 border-b-strong border-foreground/10 px-5 py-4 group"
       {...tid("cart-item")}
     >
       {/* Product thumbnail */}
       <div
-        className={`relative size-20 shrink-0 border-3 border-foreground overflow-hidden ${itemColor}`}
+        className="relative size-20 shrink-0 overflow-hidden border-strong border-foreground"
+        style={{ backgroundColor: itemColor }}
       >
         {Array.isArray(item.images) &&
         item.images.length > 0 &&
@@ -53,14 +58,14 @@ export function CartItemRow({
             sizes="80px"
           />
         ) : (
-          <span className="flex size-full items-center justify-center font-display text-tiny font-extrabold uppercase tracking-widest text-foreground/30">
+          <span className="flex size-full items-center justify-center font-display text-ui-xs font-extrabold uppercase tracking-widest text-foreground/30">
             {tTypes(item.type)}
           </span>
         )}
       </div>
 
       {/* Item details */}
-      <div className="flex flex-1 flex-col gap-1.5 min-w-0">
+      <div className="flex min-w-0 flex-1 flex-col gap-1.5">
         <div className="flex items-start justify-between gap-2">
           <div className="flex flex-col gap-1.5">
             <p
@@ -71,20 +76,24 @@ export function CartItemRow({
             </p>
             <div className="flex items-center gap-1 flex-wrap">
               <span
-                className={`${itemColor} border-2 border-foreground px-1.5 py-0.5 text-[9px] font-bold text-foreground`}
+                className="border-2 border-foreground px-1.5 py-0.5 text-ui-xs font-bold"
+                style={{
+                  backgroundColor: itemColor,
+                  color: itemTheme.foreground,
+                }}
               >
                 {tCategories(item.category)}
               </span>
-              <span className="border-2 border-foreground px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-widest text-muted-foreground">
+              <span className="border-2 border-foreground px-1.5 py-0.5 text-ui-xs font-bold uppercase tracking-widest text-muted-foreground">
                 {tTypes(item.type)}
               </span>
               {item.refundable === true && (
-                <span className="bg-mint border-2 border-foreground px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-widest text-foreground">
+                <span className="border-2 border-foreground bg-success px-1.5 py-0.5 text-ui-xs font-bold uppercase tracking-widest text-success-foreground">
                   {tProducts("refundable")}
                 </span>
               )}
               {item.refundable === false && (
-                <span className="bg-peach border-2 border-foreground px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-widest text-foreground">
+                <span className="border-2 border-foreground bg-warning px-1.5 py-0.5 text-ui-xs font-bold uppercase tracking-widest text-warning-foreground">
                   {tProducts("nonRefundable")}
                 </span>
               )}
@@ -104,7 +113,7 @@ export function CartItemRow({
         <div className="flex items-center justify-between">
           {/* Quantity controls */}
           <div
-            className="flex items-center border-3 border-foreground"
+            className="flex items-center border-strong border-foreground"
             {...tid("cart-item-qty")}
           >
             <button
@@ -116,7 +125,7 @@ export function CartItemRow({
             >
               <Minus size={12} aria-hidden="true" />
             </button>
-            <span className="flex size-7 items-center justify-center border-x-[3px] border-foreground text-xs font-bold">
+            <span className="border-x-strong flex size-7 items-center justify-center border-foreground text-xs font-bold">
               {item.quantity}
             </span>
             <button

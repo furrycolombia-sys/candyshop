@@ -20,7 +20,7 @@ const chipVariants = cva(
         muted: "bg-muted text-muted-foreground",
       },
       size: {
-        sm: "size-4 text-tiny",
+        sm: "size-4 text-ui-xs",
         default: "size-5",
         lg: "size-6",
       },

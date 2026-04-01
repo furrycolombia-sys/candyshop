@@ -3,15 +3,11 @@
 import { useTranslations } from "next-intl";
 import { useQueryState } from "nuqs";
 import { tid } from "shared";
+import { cn } from "ui";
 
 import { PRODUCT_TYPES } from "@/features/products/domain/constants";
 import { catalogSearchParams } from "@/features/products/domain/searchParams";
 import type { ProductType } from "@/features/products/domain/types";
-
-const TAB_BASE =
-  "border-2 border-foreground px-4 py-1.5 text-sm font-bold transition-colors";
-const TAB_ACTIVE = "bg-foreground text-background z-10";
-const TAB_INACTIVE = "bg-background text-foreground hover:bg-foreground/10";
 
 export function TypeFilter() {
   const t = useTranslations("products");
@@ -21,6 +17,15 @@ export function TypeFilter() {
   function handleSelect(value: ProductType | "") {
     void setType(value === "" ? null : value, { history: "push" });
   }
+
+  const getTabClass = (isActive: boolean, withOverlap = false) =>
+    cn(
+      "border-2 border-foreground px-4 py-1.5 text-sm font-bold transition-colors",
+      withOverlap && "-ml-0.5",
+      isActive
+        ? "z-10 bg-foreground text-background"
+        : "bg-background text-foreground hover:bg-foreground/10",
+    );
 
   return (
     <div
@@ -33,7 +38,7 @@ export function TypeFilter() {
         type="button"
         role="tab"
         aria-selected={type === ""}
-        className={`${TAB_BASE} ${type === "" ? TAB_ACTIVE : TAB_INACTIVE}`}
+        className={getTabClass(type === "")}
         onClick={() => handleSelect("")}
         {...tid("type-filter-all")}
       >
@@ -48,7 +53,7 @@ export function TypeFilter() {
             key={value}
             role="tab"
             aria-selected={isActive}
-            className={`${TAB_BASE} -ml-[2px] ${isActive ? TAB_ACTIVE : TAB_INACTIVE}`}
+            className={getTabClass(isActive, true)}
             onClick={() => handleSelect(value)}
             {...tid(`type-filter-${value}`)}
           >

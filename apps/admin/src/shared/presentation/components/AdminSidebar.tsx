@@ -50,7 +50,7 @@ export function AdminSidebar() {
   return (
     <aside
       className={`relative flex shrink-0 flex-col border-r-3 border-foreground bg-background transition-all duration-300 ease-in-out ${
-        collapsed ? "w-[68px]" : "w-60"
+        collapsed ? "w-sidebar-collapsed" : "w-60"
       }`}
       {...tid("admin-sidebar")}
     >
@@ -75,7 +75,7 @@ export function AdminSidebar() {
           <div key={section.labelKey} className="mb-2">
             {/* Section label */}
             {!collapsed && (
-              <span className="mb-1.5 block px-2 font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/60">
+              <span className="text-section-label mb-1.5 block px-2 font-mono text-muted-foreground/60">
                 {t(section.labelKey)}
               </span>
             )}
@@ -103,7 +103,7 @@ export function AdminSidebar() {
                   >
                     {/* Active indicator bar */}
                     {isActive && (
-                      <span className="absolute left-0 inset-y-1 w-[3px] rounded-r-full bg-pink" />
+                      <span className="absolute left-0 inset-y-1 w-sidebar-indicator rounded-r-full bg-pink" />
                     )}
 
                     <NavIcon
@@ -136,11 +136,11 @@ export function AdminSidebar() {
                 <span className="absolute inline-flex size-full animate-ping rounded-full bg-success opacity-75" />
                 <span className="relative inline-flex size-2 rounded-full bg-success" />
               </span>
-              <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground/70">
+              <span className="text-micro-label font-mono text-muted-foreground/70">
                 {t("status")}
               </span>
             </div>
-            <span className="px-4 font-mono text-[10px] text-muted-foreground/40">
+            <span className="px-4 font-mono text-ui-xs text-muted-foreground/40">
               {t("version")}
             </span>
           </div>

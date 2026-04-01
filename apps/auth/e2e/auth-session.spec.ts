@@ -11,7 +11,6 @@ test.describe("Auth session", () => {
     await expect(page.getByTestId("login-card")).toBeVisible();
     await expect(page.getByTestId("login-google")).toBeVisible();
     await expect(page.getByTestId("login-discord")).toBeVisible();
-    await expect(page.getByTestId("login-twitter")).toBeVisible();
   });
 
   test("Discord button redirects to Discord OAuth", async ({ page }) => {

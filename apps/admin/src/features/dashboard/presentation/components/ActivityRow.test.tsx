@@ -1,13 +1,5 @@
 import { render, screen } from "@testing-library/react";
-import { describe, it, expect, vi } from "vitest";
-
-vi.mock("@/shared/domain/constants", () => ({
-  AUDIT_ACTION_COLORS: {
-    INSERT: "bg-mint text-mint",
-    UPDATE: "bg-sky text-sky",
-    DELETE: "bg-peach text-peach",
-  },
-}));
+import { describe, it, expect } from "vitest";
 
 import { ActivityRow } from "./ActivityRow";
 

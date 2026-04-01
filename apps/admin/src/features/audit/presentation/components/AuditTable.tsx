@@ -8,7 +8,6 @@ import { tid } from "shared";
 import { AuditRowDetail } from "./AuditRowDetail";
 
 import type { AuditEntry } from "@/features/audit/domain/types";
-import { AUDIT_ACTION_COLORS } from "@/shared/domain/constants";
 import { appUrls } from "@/shared/infrastructure/config";
 
 /** Max fields to show before collapsing into "+N more" */
@@ -16,12 +15,6 @@ const MAX_VISIBLE_FIELDS = 3;
 
 /** Number of characters to show for UUID previews */
 const UUID_PREVIEW_LENGTH = 8;
-
-/**
- * Grid template for the audit log columns.
- * timestamp | user | table | action | summary | chevron
- */
-const GRID_COLS = "grid-cols-[160px_100px_1fr_90px_1fr_40px]";
 
 interface AuditTableProps {
   entries: AuditEntry[];
@@ -87,6 +80,23 @@ function formatTimestamp(ts: string, locale: string): string {
   });
 }
 
+function getActionClass(actionType: AuditEntry["action_type"]): string {
+  switch (actionType) {
+    case "INSERT": {
+      return "border-mint bg-mint/20 text-mint";
+    }
+    case "UPDATE": {
+      return "border-sky bg-sky/20 text-sky";
+    }
+    case "DELETE": {
+      return "border-peach bg-peach/20 text-peach";
+    }
+    default: {
+      return "";
+    }
+  }
+}
+
 export function AuditTable({
   entries,
   isLoading,
@@ -109,7 +119,7 @@ export function AuditTable({
   if (isError) {
     return (
       <div
-        className="flex flex-col items-center justify-center gap-2 rounded-xl border-3 border-dashed border-destructive/30 bg-destructive/5 py-16"
+        className="flex flex-col items-center justify-center gap-2 rounded-xl border-strong border-dashed border-destructive/30 bg-destructive/5 py-16"
         {...tid("audit-error")}
       >
         <p className="font-display text-lg font-bold uppercase text-destructive">
@@ -122,7 +132,7 @@ export function AuditTable({
   if (entries.length === 0) {
     return (
       <div
-        className="flex flex-col items-center justify-center gap-2 rounded-xl border-3 border-dashed border-border bg-muted/30 py-16"
+        className="flex flex-col items-center justify-center gap-2 rounded-xl border-strong border-dashed border-border bg-muted/30 py-16"
         {...tid("audit-empty")}
       >
         <p className="font-display text-lg font-bold uppercase">
@@ -135,13 +145,11 @@ export function AuditTable({
   return (
     <div className="flex flex-col gap-4">
       <div
-        className="overflow-x-auto border-3 border-foreground bg-background nb-shadow-md"
+        className="overflow-x-auto border-strong border-foreground bg-background shadow-brutal-md"
         {...tid("audit-table")}
       >
         {/* Header row */}
-        <div
-          className={`grid ${GRID_COLS} border-b-3 border-foreground bg-muted/50`}
-        >
+        <div className="grid grid-cols-[160px_100px_1fr_90px_1fr_40px] border-b-strong border-foreground bg-muted/50">
           <span className="px-4 py-3 font-display text-xs font-bold uppercase tracking-wider">
             {t("timestamp")}
           </span>
@@ -164,7 +172,7 @@ export function AuditTable({
         <div className="divide-y divide-foreground/8">
           {entries.map((entry) => {
             const isExpanded = expandedId === entry.event_id;
-            const colorClass = AUDIT_ACTION_COLORS[entry.action_type] ?? "";
+            const colorClass = getActionClass(entry.action_type);
 
             return (
               <div
@@ -183,7 +191,7 @@ export function AuditTable({
                       setExpandedId(isExpanded ? null : entry.event_id);
                     }
                   }}
-                  className={`grid w-full ${GRID_COLS} cursor-pointer items-center text-left transition-colors hover:bg-muted/30`}
+                  className="grid w-full grid-cols-[160px_100px_1fr_90px_1fr_40px] cursor-pointer items-center text-left transition-colors hover:bg-muted/30"
                 >
                   {/* Timestamp */}
                   <span className="truncate px-4 py-2.5 font-mono text-xs text-muted-foreground">
@@ -215,7 +223,7 @@ export function AuditTable({
                   {/* Action badge */}
                   <span className="px-4 py-2.5">
                     <span
-                      className={`inline-block rounded-sm border px-2 py-0.5 font-mono text-[10px] font-bold uppercase tracking-widest ${colorClass}`}
+                      className={`inline-block rounded-sm border px-2 py-0.5 font-mono text-ui-xs font-bold uppercase tracking-widest ${colorClass}`}
                     >
                       {entry.action_type}
                     </span>
@@ -254,7 +262,7 @@ export function AuditTable({
           type="button"
           onClick={onLoadMore}
           disabled={isLoading}
-          className="nb-btn nb-btn-press-sm mx-auto border-3 border-foreground px-6 py-2 font-display text-xs font-bold uppercase tracking-widest"
+          className="button-brutal button-press-sm mx-auto border-strong border-foreground px-6 py-2 font-display text-xs font-bold uppercase tracking-widest"
           {...tid("audit-load-more")}
         >
           {t("loadMore")}

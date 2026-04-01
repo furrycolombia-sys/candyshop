@@ -4,6 +4,8 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 import { FeaturedRibbon } from "@/features/products/presentation/components/FeaturedRibbon";
 
+HTMLCanvasElement.prototype.getContext = vi.fn(() => null) as never;
+
 describe("FeaturedRibbon", () => {
   it("renders a canvas element", () => {
     const { container } = render(
@@ -85,7 +87,8 @@ describe("FeaturedRibbon canvas drawing", () => {
     HTMLCanvasElement.prototype.getContext = (() => mockCtx) as never;
 
     vi.stubGlobal("getComputedStyle", () => ({
-      getPropertyValue: () => "#e91e63",
+      getPropertyValue: (prop: string) =>
+        prop === "--foreground" ? "var(--foreground)" : "var(--pink)",
     }));
 
     Object.defineProperty(document, "fonts", {

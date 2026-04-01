@@ -1,4 +1,5 @@
 /* eslint-disable i18next/no-literal-string -- infrastructure file: Supabase table/column names are SQL identifiers, not user-facing text */
+import { getReceiptUrl } from "@/features/checkout/infrastructure/receiptStorage";
 import type {
   ReceivedOrder,
   SellerAction,
@@ -76,21 +77,23 @@ export async function fetchReceivedOrders(
     FALLBACK_BUYER_NAME,
   );
 
-  return rows.map((row) => ({
-    id: row.id,
-    user_id: row.user_id,
-    seller_id: row.seller_id,
-    payment_status: row.payment_status as ReceivedOrder["payment_status"],
-    total_cop: row.total_cop,
-    transfer_number: row.transfer_number,
-    receipt_url: row.receipt_url,
-    seller_note: row.seller_note,
-    expires_at: row.expires_at,
-    checkout_session_id: row.checkout_session_id,
-    created_at: row.created_at,
-    buyer_name: buyerMap[row.user_id] ?? FALLBACK_BUYER_NAME,
-    items: row.order_items as OrderItem[],
-  }));
+  return Promise.all(
+    rows.map(async (row) => ({
+      id: row.id,
+      user_id: row.user_id,
+      seller_id: row.seller_id,
+      payment_status: row.payment_status as ReceivedOrder["payment_status"],
+      total_cop: row.total_cop,
+      transfer_number: row.transfer_number,
+      receipt_url: await getReceiptUrl(supabase, row.receipt_url),
+      seller_note: row.seller_note,
+      expires_at: row.expires_at,
+      checkout_session_id: row.checkout_session_id,
+      created_at: row.created_at,
+      buyer_name: buyerMap[row.user_id] ?? FALLBACK_BUYER_NAME,
+      items: row.order_items as OrderItem[],
+    })),
+  );
 }
 
 /**

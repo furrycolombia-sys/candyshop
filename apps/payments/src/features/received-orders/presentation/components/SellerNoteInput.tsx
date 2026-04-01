@@ -41,7 +41,7 @@ export function SellerNoteInput({
         }}
         placeholder={placeholder ?? t("notePlaceholder")}
         aria-label={t("notePlaceholder")}
-        className="min-h-[80px] w-full rounded-lg border-3 border-foreground bg-background px-3 py-2 font-mono text-sm"
+        className="min-h-form-textarea w-full rounded-lg border-strong border-foreground bg-background px-3 py-2 font-mono text-sm"
         disabled={isPending}
         {...tid("seller-note-textarea")}
       />
@@ -55,7 +55,7 @@ export function SellerNoteInput({
           type="button"
           onClick={handleSubmit}
           disabled={isPending}
-          className="nb-btn rounded-lg border-3 border-foreground bg-foreground px-4 py-1.5 font-display text-xs font-bold uppercase tracking-wider text-background"
+          className="button-brutal rounded-lg border-strong border-foreground bg-foreground px-4 py-1.5 font-display text-xs font-bold uppercase tracking-wider text-background"
           {...tid("seller-note-submit")}
         >
           {isPending ? t("submitting") : t("approve")}
@@ -64,7 +64,7 @@ export function SellerNoteInput({
           type="button"
           onClick={onCancel}
           disabled={isPending}
-          className="nb-btn rounded-lg border-3 border-foreground bg-background px-4 py-1.5 font-display text-xs font-bold uppercase tracking-wider text-foreground"
+          className="button-brutal rounded-lg border-strong border-foreground bg-background px-4 py-1.5 font-display text-xs font-bold uppercase tracking-wider text-foreground"
           {...tid("seller-note-cancel")}
         >
           {t("cancel")}

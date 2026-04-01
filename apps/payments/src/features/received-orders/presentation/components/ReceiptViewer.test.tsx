@@ -49,6 +49,18 @@ describe("ReceiptViewer", () => {
     expect(screen.getByTestId("receipt-none")).toHaveTextContent("noReceipt");
   });
 
+  it("hides unsafe receipt links", () => {
+    render(
+      <ReceiptViewer
+        transferNumber="TX-12345"
+        receiptUrl="javascript:alert(1)"
+      />,
+    );
+
+    expect(screen.queryByTestId("receipt-view-link")).not.toBeInTheDocument();
+    expect(screen.getByTestId("receipt-none")).toBeInTheDocument();
+  });
+
   it("has the correct test ID", () => {
     render(<ReceiptViewer transferNumber={null} receiptUrl={null} />);
     expect(screen.getByTestId("receipt-viewer")).toBeInTheDocument();

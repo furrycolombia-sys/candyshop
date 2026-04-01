@@ -19,7 +19,7 @@ export function PendingOrdersBadge() {
       className="flex items-center gap-2 rounded-sm border-2 border-warning bg-warning/10 px-3 py-1.5 font-display text-xs font-bold uppercase tracking-wider text-warning transition-colors hover:bg-warning/20"
       {...tid("pending-orders-badge")}
     >
-      <span className="flex size-5 items-center justify-center rounded-full bg-warning text-[10px] font-extrabold text-background">
+      <span className="flex size-5 items-center justify-center rounded-full bg-warning text-ui-xs font-extrabold text-background">
         {count}
       </span>
       {t("pendingOrders", { count })}

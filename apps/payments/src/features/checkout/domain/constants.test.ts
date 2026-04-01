@@ -21,7 +21,7 @@ describe("checkout domain constants", () => {
   });
 
   it("ACCEPTED_RECEIPT_TYPES accepts images", () => {
-    expect(ACCEPTED_RECEIPT_TYPES).toBe("image/*");
+    expect(ACCEPTED_RECEIPT_TYPES).toBe("image/jpeg,image/png,image/webp");
   });
 
   it("RECEIPTS_BUCKET is defined", () => {

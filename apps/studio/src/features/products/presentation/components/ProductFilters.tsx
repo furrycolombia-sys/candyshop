@@ -14,10 +14,6 @@ import {
 import { productsSearchParams } from "@/features/products/domain/searchParams";
 
 const DEBOUNCE_MS = 300;
-const PILL_BASE =
-  "nb-btn rounded-full border-2 px-4 py-1.5 text-sm transition-all";
-const PILL_ACTIVE = "bg-foreground text-background nb-shadow-sm";
-const PILL_INACTIVE = "bg-background hover:bg-muted";
 const I18N_ALL = "common.all";
 
 export function ProductFilters() {
@@ -54,6 +50,14 @@ export function ProductFilters() {
     [setParams],
   );
 
+  const getPillClass = (isActive: boolean) =>
+    cn(
+      "button-brutal rounded-full border-2 px-4 py-1.5 text-sm transition-all",
+      isActive
+        ? "bg-foreground text-background shadow-brutal-sm"
+        : "bg-background hover:bg-muted",
+    );
+
   return (
     <div className="flex flex-col gap-4" {...tid("product-filters")}>
       {/* Search */}
@@ -63,7 +67,7 @@ export function ProductFilters() {
           placeholder={t("common.search")}
           value={searchInput}
           onChange={(e) => setSearchInput(e.target.value)}
-          className="border-3 border-border pl-10 font-medium"
+          className="border-strong border-border pl-10 font-medium"
           {...tid("product-search")}
         />
       </div>
@@ -73,7 +77,7 @@ export function ProductFilters() {
         <button
           type="button"
           onClick={() => handleTypeChange("")}
-          className={cn(PILL_BASE, type === "" ? PILL_ACTIVE : PILL_INACTIVE)}
+          className={getPillClass(type === "")}
           {...tid("type-filter-all")}
         >
           {t(I18N_ALL)}
@@ -83,7 +87,7 @@ export function ProductFilters() {
             type="button"
             key={pt}
             onClick={() => handleTypeChange(pt)}
-            className={cn(PILL_BASE, type === pt ? PILL_ACTIVE : PILL_INACTIVE)}
+            className={getPillClass(type === pt)}
             {...tid(`type-filter-${pt}`)}
           >
             {t(`productTypes.${pt}`)}
@@ -96,10 +100,7 @@ export function ProductFilters() {
         <button
           type="button"
           onClick={() => handleCategoryChange("")}
-          className={cn(
-            PILL_BASE,
-            category === "" ? PILL_ACTIVE : PILL_INACTIVE,
-          )}
+          className={getPillClass(category === "")}
           {...tid("category-filter-all")}
         >
           {t(I18N_ALL)}
@@ -109,10 +110,7 @@ export function ProductFilters() {
             type="button"
             key={cat}
             onClick={() => handleCategoryChange(cat)}
-            className={cn(
-              PILL_BASE,
-              category === cat ? PILL_ACTIVE : PILL_INACTIVE,
-            )}
+            className={getPillClass(category === cat)}
             {...tid(`category-filter-${cat}`)}
           >
             {t(`categories.${cat}`)}

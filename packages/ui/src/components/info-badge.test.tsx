@@ -42,7 +42,7 @@ describe("InfoBadge", () => {
 
   it("applies sm size classes (default)", () => {
     render(<InfoBadge>Small</InfoBadge>);
-    expect(screen.getByText("Small").className).toContain("text-tiny");
+    expect(screen.getByText("Small").className).toContain("text-ui-xs");
   });
 
   it("applies md size classes", () => {
