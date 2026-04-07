@@ -28,11 +28,11 @@ import { SocialLoginButtons } from "./SocialLoginButtons";
 describe("SocialLoginButtons", () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it("renders all three provider buttons", () => {
+  it("renders the available provider buttons", () => {
     render(<SocialLoginButtons />);
     expect(screen.getByTestId("login-google")).toBeInTheDocument();
     expect(screen.getByTestId("login-discord")).toBeInTheDocument();
-    expect(screen.getByTestId("login-twitter")).toBeInTheDocument();
+    expect(screen.queryByTestId("login-twitter")).not.toBeInTheDocument();
   });
 
   it("calls signInWithProvider when button is clicked", () => {

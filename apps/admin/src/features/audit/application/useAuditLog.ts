@@ -17,9 +17,14 @@ const STALE_TIME_MS = 30_000;
 interface UseAuditLogOptions {
   filters?: Partial<AuditFilters>;
   offset: number;
+  enabled?: boolean;
 }
 
-export function useAuditLog({ filters, offset }: UseAuditLogOptions) {
+export function useAuditLog({
+  filters,
+  offset,
+  enabled = true,
+}: UseAuditLogOptions) {
   const supabase = useMemo(() => createBrowserSupabaseClient(), []);
 
   const { data, isLoading, isError } = useQuery({
@@ -27,6 +32,7 @@ export function useAuditLog({ filters, offset }: UseAuditLogOptions) {
     queryKey: [AUDIT_QUERY_KEY, filters, offset],
     queryFn: () => fetchAuditLog(supabase, filters, offset),
     staleTime: STALE_TIME_MS,
+    enabled,
   });
 
   return { data, isLoading, isError };

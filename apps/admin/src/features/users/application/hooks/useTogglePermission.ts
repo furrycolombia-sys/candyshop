@@ -1,33 +1,28 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { USER_PERMISSIONS_QUERY_KEY } from "@/features/users/domain/constants";
-import {
-  grantPermission,
-  revokePermission,
-} from "@/features/users/infrastructure/userPermissionQueries";
-import { useSupabase } from "@/shared/application/hooks/useSupabase";
 
 interface ToggleParams {
   userId: string;
   permissionKey: string;
   grant: boolean;
-  grantedBy: string;
 }
 
 export function useTogglePermission() {
-  const supabase = useSupabase();
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({
-      userId,
-      permissionKey,
-      grant: shouldGrant,
-      grantedBy,
-    }: ToggleParams) => {
-      await (shouldGrant
-        ? grantPermission(supabase, userId, permissionKey, grantedBy)
-        : revokePermission(supabase, userId, permissionKey));
+    mutationFn: async ({ userId, permissionKey, grant }: ToggleParams) => {
+      const response = await fetch(`/api/admin/users/${userId}/permissions`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
+        body: JSON.stringify({ permissionKey, grant }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to update permission");
+      }
     },
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({

@@ -1,12 +1,14 @@
 "use client";
 
+import { useCurrentUserPermissions } from "auth/client";
 import { useTranslations } from "next-intl";
 import { tid } from "shared";
 
 import { UserTable } from "@/features/users/presentation/components/UserTable";
 import { useRouter } from "@/shared/infrastructure/i18n";
+import { AccessDeniedState } from "@/shared/presentation/components/AccessDeniedState";
 
-export function UsersPage() {
+function UsersPageContent() {
   const t = useTranslations("users");
   const router = useRouter();
 
@@ -33,4 +35,15 @@ export function UsersPage() {
       </div>
     </main>
   );
+}
+
+export function UsersPage() {
+  const { isLoading, hasPermission } = useCurrentUserPermissions();
+
+  if (isLoading) return null;
+  if (!hasPermission("user_permissions.read")) {
+    return <AccessDeniedState />;
+  }
+
+  return <UsersPageContent />;
 }

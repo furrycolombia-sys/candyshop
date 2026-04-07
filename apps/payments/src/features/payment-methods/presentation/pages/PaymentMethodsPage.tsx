@@ -1,5 +1,6 @@
 "use client";
 
+import { useCurrentUserPermissions } from "auth/client";
 import { Plus } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useCallback, useState } from "react";
@@ -22,13 +23,22 @@ import type {
 } from "@/features/payment-methods/domain/types";
 import { PaymentMethodEditor } from "@/features/payment-methods/presentation/components/PaymentMethodEditor";
 import { PaymentMethodTable } from "@/features/payment-methods/presentation/components/PaymentMethodTable";
+import { AccessDeniedState } from "@/shared/presentation/components/AccessDeniedState";
 
 type EditorState =
   | { mode: "closed" }
   | { mode: "create" }
   | { mode: "edit"; method: SellerPaymentMethod };
 
-export function PaymentMethodsPage() {
+function PaymentMethodsPageContent({
+  canCreate,
+  canUpdate,
+  canDelete,
+}: {
+  canCreate: boolean;
+  canUpdate: boolean;
+  canDelete: boolean;
+}) {
   const t = useTranslations("paymentMethods");
   const tCommon = useTranslations("common");
 
@@ -124,7 +134,7 @@ export function PaymentMethodsPage() {
               {t("subtitle")}
             </p>
           </div>
-          {editor.mode === "closed" && (
+          {editor.mode === "closed" && canCreate && (
             <Button
               type="button"
               className="nb-btn nb-shadow-md nb-btn-press-sm rounded-xl border-3 bg-brand px-6 py-3 text-brand-foreground hover:bg-brand-hover"
@@ -142,9 +152,9 @@ export function PaymentMethodsPage() {
           <PaymentMethodTable
             methods={methods ?? []}
             types={types ?? []}
-            onEdit={handleEdit}
-            onDelete={handleDelete}
-            onToggleActive={handleToggleActive}
+            onEdit={canUpdate ? handleEdit : undefined}
+            onDelete={canDelete ? handleDelete : undefined}
+            onToggleActive={canUpdate ? handleToggleActive : undefined}
             isLoading={isLoading}
           />
         ) : (
@@ -158,5 +168,22 @@ export function PaymentMethodsPage() {
         )}
       </div>
     </main>
+  );
+}
+
+export function PaymentMethodsPage() {
+  const { isLoading, hasPermission } = useCurrentUserPermissions();
+
+  if (isLoading) return null;
+  if (!hasPermission("seller_payment_methods.read")) {
+    return <AccessDeniedState />;
+  }
+
+  return (
+    <PaymentMethodsPageContent
+      canCreate={hasPermission("seller_payment_methods.create")}
+      canUpdate={hasPermission("seller_payment_methods.update")}
+      canDelete={hasPermission("seller_payment_methods.delete")}
+    />
   );
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import { useCurrentUserPermissions } from "auth/client";
 import { Package } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useQueryStates } from "nuqs";
@@ -12,13 +13,14 @@ import { FILTER_STATUSES } from "@/features/received-orders/domain/constants";
 import { receivedOrdersSearchParams } from "@/features/received-orders/domain/searchParams";
 import type { SellerAction } from "@/features/received-orders/domain/types";
 import { ReceivedOrderCard } from "@/features/received-orders/presentation/components/ReceivedOrderCard";
+import { AccessDeniedState } from "@/shared/presentation/components/AccessDeniedState";
 
 const PILL_BASE =
   "rounded-lg border-3 border-foreground px-3 py-1 font-display text-xs font-bold uppercase tracking-wider transition-colors";
 const PILL_ACTIVE = "bg-foreground text-background";
 const PILL_INACTIVE = "bg-background text-foreground hover:bg-muted";
 
-export function ReceivedOrdersPage() {
+function ReceivedOrdersPageContent() {
   const t = useTranslations("receivedOrders");
   const [params, setParams] = useQueryStates(receivedOrdersSearchParams);
   const activeFilter = params.filter;
@@ -103,4 +105,18 @@ export function ReceivedOrdersPage() {
       </div>
     </main>
   );
+}
+
+export function ReceivedOrdersPage() {
+  const { isLoading, hasPermission } = useCurrentUserPermissions();
+
+  if (isLoading) {
+    return null;
+  }
+
+  if (!hasPermission(["orders.read", "orders.update", "receipts.read"])) {
+    return <AccessDeniedState />;
+  }
+
+  return <ReceivedOrdersPageContent />;
 }

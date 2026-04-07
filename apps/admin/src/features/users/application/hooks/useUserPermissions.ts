@@ -1,16 +1,22 @@
 import { useQuery } from "@tanstack/react-query";
 
 import { USER_PERMISSIONS_QUERY_KEY } from "@/features/users/domain/constants";
-import { getUserPermissionKeys } from "@/features/users/infrastructure/userPermissionQueries";
-import { useSupabase } from "@/shared/application/hooks/useSupabase";
 
 export function useUserPermissions(userId: string | null) {
-  const supabase = useSupabase();
-
   return useQuery({
-    // eslint-disable-next-line @tanstack/query/exhaustive-deps -- supabase client is stable
     queryKey: [USER_PERMISSIONS_QUERY_KEY, userId],
-    queryFn: () => getUserPermissionKeys(supabase, userId as string),
+    queryFn: async () => {
+      const response = await fetch(`/api/admin/users/${userId}/permissions`, {
+        credentials: "same-origin",
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to load user permissions");
+      }
+
+      const data = (await response.json()) as { grantedKeys: string[] };
+      return data.grantedKeys;
+    },
     enabled: !!userId,
   });
 }

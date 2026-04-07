@@ -1,5 +1,6 @@
 "use client";
 
+import { useCurrentUserPermissions } from "auth/client";
 import { useTranslations } from "next-intl";
 import { tid } from "shared";
 import { Skeleton } from "ui";
@@ -9,8 +10,9 @@ import { useUpdateSettings } from "@/features/settings/application/hooks/useUpda
 import type { PaymentSettings } from "@/features/settings/domain/types";
 import { SETTING_KEYS } from "@/features/settings/domain/types";
 import { TimeoutSettings } from "@/features/settings/presentation/components/TimeoutSettings";
+import { AccessDeniedState } from "@/shared/presentation/components/AccessDeniedState";
 
-export function SettingsPage() {
+function SettingsPageContent({ canUpdate }: { canUpdate: boolean }) {
   const t = useTranslations("settings");
   const { data: settings, isLoading, isError } = usePaymentSettings();
   const updateMutation = useUpdateSettings();
@@ -57,11 +59,25 @@ export function SettingsPage() {
         {settings && (
           <TimeoutSettings
             settings={settings}
-            onSave={handleSave}
-            isPending={updateMutation.isPending}
+            onSave={canUpdate ? handleSave : () => undefined}
+            isPending={canUpdate && updateMutation.isPending}
+            canUpdate={canUpdate}
           />
         )}
       </div>
     </main>
+  );
+}
+
+export function SettingsPage() {
+  const { isLoading, hasPermission } = useCurrentUserPermissions();
+
+  if (isLoading) return null;
+  if (!hasPermission("payment_settings.read")) {
+    return <AccessDeniedState />;
+  }
+
+  return (
+    <SettingsPageContent canUpdate={hasPermission("payment_settings.update")} />
   );
 }

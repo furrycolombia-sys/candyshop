@@ -8,8 +8,7 @@
       "title": "Sign in",
       "subtitle": "Choose your preferred sign-in method",
       "google": "Continue with Google",
-      "discord": "Continue with Discord",
-      "twitter": "Continue with X"
+      "discord": "Continue with Discord"
     },
     "signOut": "Sign out",
     "account": {

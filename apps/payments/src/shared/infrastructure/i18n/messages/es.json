@@ -166,6 +166,8 @@
   },
   "common": {
     "loading": "Cargando...",
+    "accessDenied": "Acceso denegado",
+    "accessDeniedHint": "Esta seccion permanece oculta hasta que se otorgue el permiso requerido.",
     "theme": {
       "switchToDark": "Cambiar a modo oscuro",
       "switchToLight": "Cambiar a modo claro",

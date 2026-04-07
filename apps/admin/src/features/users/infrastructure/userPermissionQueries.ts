@@ -120,13 +120,23 @@ async function findResourcePermissionId(
 
   const { data: rpData, error: rpError } = await supabase
     .from(RESOURCE_PERMISSIONS_TABLE)
-    .select("id")
+    .select("id, resource_id")
     .eq("permission_id", permissionId)
-    .eq("resource_type", "global")
-    .single();
+    .order("resource_id", { ascending: true, nullsFirst: true });
 
   if (rpError) throw rpError;
-  return (rpData as unknown as { id: string }).id;
+
+  const rows = (rpData ?? []) as unknown as Array<{
+    id: string;
+    resource_id: string | null;
+  }>;
+
+  const preferred = rows.find((row) => row.resource_id === null) ?? rows[0];
+  if (!preferred) {
+    throw new Error(`No resource permission found for key: ${permissionKey}`);
+  }
+
+  return preferred.id;
 }
 
 /** Grant a permission to a user (upserts to handle duplicates) */

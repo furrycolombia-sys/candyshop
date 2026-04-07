@@ -10,6 +10,7 @@ interface PermissionGroupCardProps {
   grantedKeys: string[];
   onToggle: (key: string, grant: boolean) => void;
   isPending: boolean;
+  canManage: boolean;
 }
 
 export function PermissionGroupCard({
@@ -19,6 +20,7 @@ export function PermissionGroupCard({
   grantedKeys,
   onToggle,
   isPending,
+  canManage,
 }: PermissionGroupCardProps) {
   const t = useTranslations("users");
   const tp = useTranslations("permissions");
@@ -44,7 +46,7 @@ export function PermissionGroupCard({
                 type="checkbox"
                 checked={isGranted}
                 onChange={() => onToggle(perm, !isGranted)}
-                disabled={isPending}
+                disabled={isPending || !canManage}
                 className="size-4 accent-foreground"
                 {...tid(`permission-toggle-${perm}`)}
               />

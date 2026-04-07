@@ -23,12 +23,16 @@ interface ProductTableProps {
   isLoading: boolean;
   /** When true, filters are active and drag-to-reorder is disabled */
   isFiltered: boolean;
+  canUpdate: boolean;
+  canDelete: boolean;
 }
 
 export function ProductTable({
   products,
   isLoading,
   isFiltered,
+  canUpdate,
+  canDelete,
 }: ProductTableProps) {
   const t = useTranslations();
   const reorderMutation = useReorderProducts();
@@ -132,6 +136,8 @@ export function ProductTable({
                         product={product}
                         isOddRow={index % ZEBRA_MODULO === 1}
                         canReorder={canReorder}
+                        canUpdate={canUpdate}
+                        canDelete={canDelete}
                         dragProvided={dragProvided}
                         isDragging={snapshot.isDragging}
                       />

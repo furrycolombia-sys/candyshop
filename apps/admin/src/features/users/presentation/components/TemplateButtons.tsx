@@ -11,6 +11,7 @@ interface TemplateButtonsProps {
   onToggleTemplate: (keys: string[], active: boolean) => void;
   onReset: () => void;
   isPending: boolean;
+  canManage: boolean;
 }
 
 /** Toggle-able templates — clicking adds or removes their unique permissions. */
@@ -34,6 +35,7 @@ export function TemplateButtons({
   onToggleTemplate,
   onReset,
   isPending,
+  canManage,
 }: TemplateButtonsProps) {
   const t = useTranslations("users");
 
@@ -51,7 +53,7 @@ export function TemplateButtons({
             key={key}
             type="button"
             onClick={() => onToggleTemplate(templateKeys, !active)}
-            disabled={isPending}
+            disabled={isPending || !canManage}
             variant={active ? "default" : "outline"}
             size="sm"
             className={`rounded-none border-2 border-foreground font-display text-xs font-bold uppercase tracking-wider ${
@@ -66,7 +68,7 @@ export function TemplateButtons({
       <Button
         type="button"
         onClick={onReset}
-        disabled={isPending || grantedKeys.length === 0}
+        disabled={isPending || grantedKeys.length === 0 || !canManage}
         variant="outline"
         size="sm"
         className="rounded-none border-2 border-destructive font-display text-xs font-bold uppercase tracking-wider text-destructive"

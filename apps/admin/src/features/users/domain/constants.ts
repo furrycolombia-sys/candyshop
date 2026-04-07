@@ -9,70 +9,147 @@ export const PERMISSION_GROUPS: PermissionGroup[] = [
       "products.read",
       "products.update",
       "products.delete",
+      "product_images.create",
+      "product_images.read",
+      "product_images.delete",
     ],
   },
   {
     key: "reviews",
     labelKey: "reviews",
-    permissions: ["reviews.write"],
+    permissions: [
+      "product_reviews.create",
+      "product_reviews.read",
+      "product_reviews.update",
+      "product_reviews.delete",
+    ],
   },
   {
     key: "orders",
     labelKey: "orders",
-    permissions: ["orders.place", "orders.view", "orders.manage"],
+    permissions: [
+      "orders.create",
+      "orders.read",
+      "orders.update",
+      "receipts.create",
+      "receipts.read",
+      "receipts.delete",
+    ],
   },
   {
     key: "seller",
     labelKey: "seller",
-    permissions: ["seller.payment_methods"],
+    permissions: [
+      "seller_payment_methods.create",
+      "seller_payment_methods.read",
+      "seller_payment_methods.update",
+      "seller_payment_methods.delete",
+    ],
   },
   {
-    key: "admin",
-    labelKey: "admin",
+    key: "adminCatalog",
+    labelKey: "adminCatalog",
     permissions: [
-      "admin.payment_types",
-      "admin.templates",
-      "admin.settings",
-      "admin.audit",
-      "admin.users",
+      "payment_method_types.create",
+      "payment_method_types.read",
+      "payment_method_types.update",
+      "payment_method_types.delete",
+      "templates.create",
+      "templates.read",
+      "templates.update",
+      "templates.delete",
+    ],
+  },
+  {
+    key: "adminConfig",
+    labelKey: "adminConfig",
+    permissions: [
+      "payment_settings.read",
+      "payment_settings.update",
+      "audit.read",
+    ],
+  },
+  {
+    key: "adminUsers",
+    labelKey: "adminUsers",
+    permissions: [
+      "user_permissions.create",
+      "user_permissions.read",
+      "user_permissions.update",
+      "user_permissions.delete",
     ],
   },
   {
     key: "events",
     labelKey: "events",
-    permissions: ["events.manage", "events.read", "checkins.manage"],
+    permissions: [
+      "events.create",
+      "events.read",
+      "events.update",
+      "events.delete",
+    ],
+  },
+  {
+    key: "checkins",
+    labelKey: "checkins",
+    permissions: ["check_ins.create", "check_ins.read", "check_ins.update"],
   },
 ];
 
 export const ALL_PERMISSION_KEYS: string[] = PERMISSION_GROUPS.flatMap(
-  (g) => g.permissions,
+  (group) => group.permissions,
 );
 
-/**
- * Permission templates — each defines a set of permissions for a role.
- * Templates are additive: toggling Seller ON adds its unique keys on top of existing.
- * Toggling Seller OFF removes only its unique keys (keeps Buyer perms).
- * "none" is a special reset that clears everything.
- */
 export const PERMISSION_TEMPLATES: Record<string, string[]> = {
-  buyer: ["products.read", "reviews.write", "orders.place", "orders.view"],
+  buyer: [
+    "products.read",
+    "product_images.read",
+    "product_reviews.create",
+    "product_reviews.read",
+    "product_reviews.update",
+    "product_reviews.delete",
+    "orders.create",
+    "orders.read",
+    "receipts.create",
+    "receipts.delete",
+  ],
   seller: [
+    "products.read",
+    "product_images.read",
+    "product_reviews.read",
+    "orders.read",
+    "receipts.read",
     "products.create",
     "products.update",
     "products.delete",
-    "orders.manage",
-    "seller.payment_methods",
+    "product_images.create",
+    "product_images.delete",
+    "orders.update",
+    "seller_payment_methods.create",
+    "seller_payment_methods.read",
+    "seller_payment_methods.update",
+    "seller_payment_methods.delete",
   ],
-  admin: [
-    "admin.payment_types",
-    "admin.templates",
-    "admin.settings",
-    "admin.audit",
-    "admin.users",
+  admin: ALL_PERMISSION_KEYS,
+  events: [
+    "events.read",
+    "events.create",
+    "events.update",
+    "events.delete",
+    "check_ins.create",
+    "check_ins.read",
+    "check_ins.update",
   ],
-  events: ["events.manage", "events.read", "checkins.manage"],
   none: [],
 };
+
+export const ADMIN_APP_ACCESS_KEYS = [
+  "templates.read",
+  "payment_method_types.read",
+  "payment_settings.read",
+  "audit.read",
+  "user_permissions.read",
+] as const;
 
 export const USER_PERMISSIONS_QUERY_KEY = "user-permissions";
 export const USERS_QUERY_KEY = "users";
@@ -100,25 +177,10 @@ export const USER_PROFILE_SELECT_COLUMNS =
 /** Maximum characters for user initials */
 export const MAX_INITIALS_LENGTH = 2;
 
-// ── Time constants for formatLastSeen ────────────────────────────────────────
-
-/** Milliseconds per second */
 export const MS_PER_SECOND = 1000;
-
-/** Seconds per minute */
 export const SECONDS_PER_MINUTE = 60;
-
-/** Minutes per hour */
 export const MINUTES_PER_HOUR = 60;
-
-/** Hours per day */
 export const HOURS_PER_DAY = 24;
-
-/** Approximate days per month */
 export const DAYS_PER_MONTH = 30;
-
-/** Approximate days per year */
 export const DAYS_PER_YEAR = 365;
-
-/** Months per year */
 export const MONTHS_PER_YEAR = 12;

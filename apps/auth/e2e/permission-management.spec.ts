@@ -1,6 +1,6 @@
 import path from "node:path";
 
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type BrowserContext, type Page } from "@playwright/test";
 
 import { cleanupTestData } from "./helpers/cleanup";
 import {
@@ -21,418 +21,369 @@ const { snap, resetCounter } = createSnapHelper(
   path.resolve(__dirname, "screenshots-permissions"),
 );
 
-/**
- * Navigate to admin users page, search for a user in the table,
- * click their row, and wait for the detail page to load.
- */
+const ALL_APP_PERMISSIONS = [
+  "products.create",
+  "products.read",
+  "products.update",
+  "products.delete",
+  "product_images.create",
+  "product_images.read",
+  "product_images.delete",
+  "product_reviews.create",
+  "product_reviews.read",
+  "product_reviews.update",
+  "product_reviews.delete",
+  "orders.create",
+  "orders.read",
+  "orders.update",
+  "receipts.create",
+  "receipts.read",
+  "receipts.delete",
+  "seller_payment_methods.create",
+  "seller_payment_methods.read",
+  "seller_payment_methods.update",
+  "seller_payment_methods.delete",
+  "payment_method_types.create",
+  "payment_method_types.read",
+  "payment_method_types.update",
+  "payment_method_types.delete",
+  "payment_settings.read",
+  "payment_settings.update",
+  "templates.create",
+  "templates.read",
+  "templates.update",
+  "templates.delete",
+  "audit.read",
+  "user_permissions.create",
+  "user_permissions.read",
+  "user_permissions.update",
+  "user_permissions.delete",
+  "events.create",
+  "events.read",
+  "events.update",
+  "events.delete",
+  "check_ins.create",
+  "check_ins.read",
+  "check_ins.update",
+] as const;
+
 async function navigateToUserDetail(
   page: Page,
   targetEmail: string,
   targetUserId: string,
 ): Promise<void> {
   await page.goto(`${APP_URLS.ADMIN}/en/users`);
-  await page.waitForLoadState("networkidle");
+  await expect(page.getByTestId("users-page")).toBeVisible({
+    timeout: ELEMENT_TIMEOUT_MS,
+  });
 
-  // Type in the search filter
   await page.getByTestId("users-search-input").fill(targetEmail);
   await page.waitForTimeout(DEBOUNCE_WAIT_MS);
-
-  // Click the user row
   await page.getByTestId(`user-row-${targetUserId}`).click();
+
   await expect(page.getByTestId("user-detail-page")).toBeVisible({
     timeout: ELEMENT_TIMEOUT_MS,
   });
 }
 
-/**
- * Revoke a single permission via the admin UI checkbox on the detail page.
- * Assumes the permission is currently granted (checked).
- */
-async function revokePermission(
+async function setPermissions(
   page: Page,
-  context: import("@playwright/test").BrowserContext,
+  context: BrowserContext,
   admin: TestUser,
   target: TestUser,
-  permissionKey: string,
+  updates: Record<string, boolean>,
 ): Promise<void> {
   await injectSession(context, admin);
   await navigateToUserDetail(page, target.email, target.userId);
 
-  const checkbox = page.getByTestId(`permission-toggle-${permissionKey}`);
-  await expect(checkbox).toBeChecked();
-  await checkbox.click();
-  await page.waitForTimeout(MUTATION_WAIT_MS);
-  await expect(checkbox).not.toBeChecked({ timeout: ELEMENT_TIMEOUT_MS });
+  for (const [permissionKey, desired] of Object.entries(updates)) {
+    const checkbox = page.getByTestId(`permission-toggle-${permissionKey}`);
+    await expect(checkbox).toBeVisible({ timeout: ELEMENT_TIMEOUT_MS });
+
+    const current = await checkbox.isChecked();
+    if (current !== desired) {
+      await checkbox.click();
+      await page.waitForTimeout(MUTATION_WAIT_MS);
+    }
+
+    if (desired) {
+      await expect(checkbox).toBeChecked({ timeout: ELEMENT_TIMEOUT_MS });
+    } else {
+      await expect(checkbox).not.toBeChecked({ timeout: ELEMENT_TIMEOUT_MS });
+    }
+  }
 }
 
-/**
- * Grant a single permission via the admin UI checkbox on the detail page.
- * Assumes the permission is currently revoked (unchecked).
- */
-async function grantPermission(
-  page: Page,
-  context: import("@playwright/test").BrowserContext,
-  admin: TestUser,
-  target: TestUser,
-  permissionKey: string,
-): Promise<void> {
-  await injectSession(context, admin);
-  await navigateToUserDetail(page, target.email, target.userId);
-
-  const checkbox = page.getByTestId(`permission-toggle-${permissionKey}`);
-  await expect(checkbox).not.toBeChecked();
-  await checkbox.click();
-  await page.waitForTimeout(MUTATION_WAIT_MS);
-  await expect(checkbox).toBeChecked({ timeout: ELEMENT_TIMEOUT_MS });
+async function expectVisible(page: Page, testId: string): Promise<void> {
+  await expect(page.getByTestId(testId)).toBeVisible({
+    timeout: ELEMENT_TIMEOUT_MS,
+  });
 }
 
-// ═══════════════════════════════════════════════════════════════════
-// Full permission E2E: admin grants/revokes across the entire system.
-//
-// Strategy: target starts with ALL admin permissions.
-// We verify access, revoke one area at a time, verify block,
-// re-grant, then nuke everything with "None" template.
-//
-// RLS is the enforcement layer — revoking READ permissions causes
-// empty results; revoking CREATE doesn't hide UI buttons (that's
-// client-side guards, a separate feature).
-// ═══════════════════════════════════════════════════════════════════
+async function expectHidden(page: Page, testId: string): Promise<void> {
+  await expect(page.getByTestId(testId)).toHaveCount(0, {
+    timeout: ELEMENT_TIMEOUT_MS,
+  });
+}
 
-test.describe
-  .serial("Permission management: full system grant/revoke flow", () => {
+test.describe.serial("Permission management", () => {
   let admin: TestUser;
   let target: TestUser;
 
   test.beforeAll(async () => {
     resetCounter();
-    admin = await createTestUser("admin", ADMIN_PERMISSIONS);
-    target = await createTestUser("target", ADMIN_PERMISSIONS);
+    admin = await createTestUser("permissions-admin", ADMIN_PERMISSIONS);
+    target = await createTestUser("permissions-target", ADMIN_PERMISSIONS);
   });
 
   test.afterAll(async () => {
     await cleanupTestData(admin.userId, target.userId);
   });
 
-  // ─── BASELINE: target can access everything ─────────────────
-
-  test("Phase 1: baseline — Store catalog loads", async ({ context, page }) => {
-    await injectSession(context, target);
-    await page.goto(`${APP_URLS.STORE}/en`);
-    await page.waitForLoadState("networkidle");
-
-    await expect(page.getByTestId("product-catalog-page")).toBeVisible({
-      timeout: ELEMENT_TIMEOUT_MS,
-    });
-    await snap(page, "store-catalog-baseline");
-  });
-
-  test("Phase 2: baseline — Studio loads with create button", async ({
+  test("shows the full permission matrix in admin", async ({
     context,
     page,
   }) => {
+    await injectSession(context, admin);
+    await navigateToUserDetail(page, target.email, target.userId);
+
+    for (const permissionKey of ALL_APP_PERMISSIONS) {
+      await expect(
+        page.getByTestId(`permission-toggle-${permissionKey}`),
+      ).toBeVisible({
+        timeout: ELEMENT_TIMEOUT_MS,
+      });
+    }
+
+    await snap(page, "permissions-matrix");
+  });
+
+  test("turns studio permissions off and on", async ({ context, page }) => {
     await injectSession(context, target);
     await page.goto(`${APP_URLS.STUDIO}/en`);
-    await page.waitForLoadState("networkidle");
-
-    await expect(page.getByTestId("new-product-button")).toBeVisible({
-      timeout: ELEMENT_TIMEOUT_MS,
-    });
+    await expectVisible(page, "new-product-button");
     await snap(page, "studio-baseline");
+
+    await setPermissions(page, context, admin, target, {
+      "products.create": false,
+    });
+
+    await injectSession(context, target);
+    await page.goto(`${APP_URLS.STUDIO}/en`);
+    await expectHidden(page, "new-product-button");
+    await snap(page, "studio-create-hidden");
+
+    await page.goto(`${APP_URLS.STUDIO}/en/products/new`);
+    await expectVisible(page, "access-denied");
+
+    await setPermissions(page, context, admin, target, {
+      "products.create": true,
+      "products.read": false,
+    });
+
+    await injectSession(context, target);
+    await page.goto(`${APP_URLS.STUDIO}/en`);
+    await expectVisible(page, "access-denied");
+    await snap(page, "studio-read-blocked");
+
+    await setPermissions(page, context, admin, target, {
+      "products.read": true,
+      "products.create": true,
+    });
+
+    await injectSession(context, target);
+    await page.goto(`${APP_URLS.STUDIO}/en`);
+    await expectVisible(page, "new-product-button");
+    await snap(page, "studio-restored");
   });
 
-  test("Phase 3: baseline — Payments purchases page loads", async ({
-    context,
-    page,
-  }) => {
+  test("turns payments sections off and on", async ({ context, page }) => {
+    await injectSession(context, target);
+    await page.goto(`${APP_URLS.PAYMENTS}/en/checkout`);
+    await expectVisible(page, "sidebar-checkout");
+    await expectVisible(page, "sidebar-myPurchases");
+    await expectVisible(page, "sidebar-paymentMethods");
+    await expectVisible(page, "sidebar-sales");
+    await snap(page, "payments-baseline");
+
+    await setPermissions(page, context, admin, target, {
+      "seller_payment_methods.read": false,
+    });
+
     await injectSession(context, target);
     await page.goto(`${APP_URLS.PAYMENTS}/en/purchases`);
-    await page.waitForLoadState("networkidle");
+    await expectVisible(page, "sidebar-myPurchases");
+    await expectHidden(page, "sidebar-paymentMethods");
+    await snap(page, "payments-methods-hidden");
 
-    // New user, no orders — but page renders (not blocked)
-    await expect(page.getByTestId("orders-empty")).toBeVisible({
-      timeout: ELEMENT_TIMEOUT_MS,
-    });
-    await snap(page, "payments-purchases-baseline");
-  });
-
-  test("Phase 4: baseline — Payment methods page loads", async ({
-    context,
-    page,
-  }) => {
-    await injectSession(context, target);
     await page.goto(`${APP_URLS.PAYMENTS}/en/payment-methods`);
-    await page.waitForLoadState("networkidle");
+    await expectVisible(page, "access-denied");
 
-    await expect(page.getByTestId("payment-methods-page")).toBeVisible({
-      timeout: ELEMENT_TIMEOUT_MS,
+    await setPermissions(page, context, admin, target, {
+      "seller_payment_methods.read": true,
+      "orders.create": false,
+      "receipts.create": false,
     });
-    await snap(page, "payment-methods-baseline");
+
+    await injectSession(context, target);
+    await page.goto(`${APP_URLS.PAYMENTS}/en/purchases`);
+    await expectVisible(page, "sidebar-myPurchases");
+    await expectHidden(page, "sidebar-checkout");
+    await snap(page, "payments-checkout-hidden");
+
+    await page.goto(`${APP_URLS.PAYMENTS}/en/checkout`);
+    await expectVisible(page, "access-denied");
+
+    await setPermissions(page, context, admin, target, {
+      "orders.create": true,
+      "receipts.create": true,
+      "orders.update": false,
+    });
+
+    await injectSession(context, target);
+    await page.goto(`${APP_URLS.PAYMENTS}/en/purchases`);
+    await expectVisible(page, "sidebar-myPurchases");
+    await expectHidden(page, "sidebar-sales");
+    await snap(page, "payments-sales-hidden");
+
+    await page.goto(`${APP_URLS.PAYMENTS}/en/sales`);
+    await expectVisible(page, "access-denied");
+
+    await setPermissions(page, context, admin, target, {
+      "seller_payment_methods.read": true,
+      "orders.create": true,
+      "receipts.create": true,
+      "orders.update": true,
+    });
+
+    await injectSession(context, target);
+    await page.goto(`${APP_URLS.PAYMENTS}/en/checkout`);
+    await expectVisible(page, "sidebar-checkout");
+    await expectVisible(page, "sidebar-paymentMethods");
+    await expectVisible(page, "sidebar-sales");
+    await snap(page, "payments-restored");
   });
 
-  test("Phase 5: baseline — Admin audit log loads", async ({
-    context,
-    page,
-  }) => {
+  test("turns admin sections off and on", async ({ context, page }) => {
     await injectSession(context, target);
-    await page.goto(`${APP_URLS.ADMIN}/en/audit`);
-    await page.waitForLoadState("networkidle");
+    await page.goto(`${APP_URLS.ADMIN}/en`);
+    await expectVisible(page, "sidebar-templates");
+    await expectVisible(page, "sidebar-paymentMethods");
+    await expectVisible(page, "sidebar-auditLog");
+    await expectVisible(page, "sidebar-users");
+    await expectVisible(page, "sidebar-settings");
+    await snap(page, "admin-baseline");
 
-    await expect(page.getByTestId("audit-log-page")).toBeVisible({
-      timeout: ELEMENT_TIMEOUT_MS,
+    await setPermissions(page, context, admin, target, {
+      "templates.read": false,
+      "payment_method_types.read": false,
+      "audit.read": false,
+      "user_permissions.read": false,
+      "payment_settings.read": false,
     });
-    await snap(page, "admin-audit-baseline");
-  });
 
-  test("Phase 6: baseline — Admin users page loads", async ({
-    context,
-    page,
-  }) => {
     await injectSession(context, target);
+    await page.goto(`${APP_URLS.ADMIN}/en`);
+    await expectVisible(page, "access-denied");
+    await snap(page, "admin-all-sections-hidden");
+
     await page.goto(`${APP_URLS.ADMIN}/en/users`);
-    await page.waitForLoadState("networkidle");
+    await expectVisible(page, "access-denied");
 
-    await expect(page.getByTestId("users-page")).toBeVisible({
-      timeout: ELEMENT_TIMEOUT_MS,
+    await page.goto(`${APP_URLS.ADMIN}/en/templates`);
+    await expectVisible(page, "access-denied");
+
+    await page.goto(`${APP_URLS.ADMIN}/en/payment-methods`);
+    await expectVisible(page, "access-denied");
+
+    await page.goto(`${APP_URLS.ADMIN}/en/audit`);
+    await expectVisible(page, "access-denied");
+
+    await page.goto(`${APP_URLS.ADMIN}/en/settings`);
+    await expectVisible(page, "access-denied");
+
+    await setPermissions(page, context, admin, target, {
+      "templates.read": true,
+      "payment_method_types.read": true,
+      "audit.read": true,
+      "user_permissions.read": true,
+      "payment_settings.read": true,
     });
-    await snap(page, "admin-users-baseline");
-  });
 
-  // ─── STUDIO: revoke products.read → empty product list ──────
-
-  test("Phase 7: admin revokes products.read", async ({ context, page }) => {
-    await revokePermission(page, context, admin, target, "products.read");
-    await snap(page, "admin-revoked-products-read");
-  });
-
-  test("Phase 8: target blocked — Studio shows empty products", async ({
-    context,
-    page,
-  }) => {
     await injectSession(context, target);
-    await page.goto(`${APP_URLS.STUDIO}/en`);
-    await page.waitForLoadState("networkidle");
-    await page.waitForTimeout(MUTATION_WAIT_MS);
-
-    // RLS blocks products.read — table shows empty state
-    await expect(page.getByTestId("products-empty-state")).toBeVisible({
-      timeout: ELEMENT_TIMEOUT_MS,
-    });
-    await snap(page, "studio-products-blocked");
+    await page.goto(`${APP_URLS.ADMIN}/en`);
+    await expectVisible(page, "sidebar-templates");
+    await expectVisible(page, "sidebar-paymentMethods");
+    await expectVisible(page, "sidebar-auditLog");
+    await expectVisible(page, "sidebar-users");
+    await expectVisible(page, "sidebar-settings");
+    await snap(page, "admin-restored");
   });
 
-  test("Phase 9: admin re-grants products.read", async ({ context, page }) => {
-    await grantPermission(page, context, admin, target, "products.read");
-    await snap(page, "admin-regranted-products-read");
-  });
-
-  // ─── PAYMENTS: revoke seller.payment_methods → empty ───
-
-  test("Phase 10: admin revokes seller.payment_methods", async ({
-    context,
-    page,
-  }) => {
-    await revokePermission(
-      page,
-      context,
-      admin,
-      target,
-      "seller.payment_methods",
-    );
-    await snap(page, "admin-revoked-payment-methods");
-  });
-
-  test("Phase 11: target blocked — Payment methods empty", async ({
-    context,
-    page,
-  }) => {
-    await injectSession(context, target);
-    await page.goto(`${APP_URLS.PAYMENTS}/en/payment-methods`);
-    await page.waitForLoadState("networkidle");
-    await page.waitForTimeout(MUTATION_WAIT_MS);
-
-    await expect(page.getByTestId("payment-methods-empty-state")).toBeVisible({
-      timeout: ELEMENT_TIMEOUT_MS,
-    });
-    await snap(page, "payment-methods-blocked");
-  });
-
-  test("Phase 12: admin re-grants seller.payment_methods", async ({
-    context,
-    page,
-  }) => {
-    await grantPermission(
-      page,
-      context,
-      admin,
-      target,
-      "seller.payment_methods",
-    );
-    await snap(page, "admin-regranted-payment-methods");
-  });
-
-  // ─── ADMIN: revoke products.delete → verify via detail page ──
-
-  test("Phase 13: admin revokes products.delete", async ({ context, page }) => {
-    await revokePermission(page, context, admin, target, "products.delete");
-    await snap(page, "admin-revoked-products-delete");
-  });
-
-  test("Phase 14: admin detail page shows products.delete unchecked", async ({
+  test("applies none and admin templates cleanly", async ({
     context,
     page,
   }) => {
     await injectSession(context, admin);
     await navigateToUserDetail(page, target.email, target.userId);
-
-    await expect(
-      page.getByTestId("permission-toggle-products.delete"),
-    ).not.toBeChecked();
-    await snap(page, "admin-products-delete-still-revoked");
-  });
-
-  test("Phase 15: admin re-grants products.delete", async ({
-    context,
-    page,
-  }) => {
-    await grantPermission(page, context, admin, target, "products.delete");
-    await snap(page, "admin-regranted-products-delete");
-  });
-
-  // ─── NUKE: apply "None" template → everything blocked ───────
-
-  test("Phase 16: admin applies None template — revoke all", async ({
-    context,
-    page,
-  }) => {
-    await injectSession(context, admin);
-    await navigateToUserDetail(page, target.email, target.userId);
-    await snap(page, "admin-before-none-template");
-
     await page.getByTestId("template-btn-none").click();
     await page.waitForTimeout(MUTATION_WAIT_MS);
-    await snap(page, "admin-after-none-template");
-
-    // Verify key permissions all unchecked
-    for (const key of [
-      "products.create",
-      "products.read",
-      "orders.place",
-      "orders.view",
-      "admin.audit",
-      "admin.users",
-    ]) {
-      await expect(
-        page.getByTestId(`permission-toggle-${key}`),
-      ).not.toBeChecked();
-    }
-  });
-
-  test("Phase 17: fully blocked — Studio empty", async ({ context, page }) => {
-    await injectSession(context, target);
-    await page.goto(`${APP_URLS.STUDIO}/en`);
-    await page.waitForLoadState("networkidle");
-    await page.waitForTimeout(MUTATION_WAIT_MS);
-
-    await expect(page.getByTestId("products-empty-state")).toBeVisible({
-      timeout: ELEMENT_TIMEOUT_MS,
-    });
-    await snap(page, "studio-fully-blocked");
-  });
-
-  test("Phase 18: fully blocked — Payment methods empty", async ({
-    context,
-    page,
-  }) => {
-    await injectSession(context, target);
-    await page.goto(`${APP_URLS.PAYMENTS}/en/payment-methods`);
-    await page.waitForLoadState("networkidle");
-    await page.waitForTimeout(MUTATION_WAIT_MS);
-
-    await expect(page.getByTestId("payment-methods-empty-state")).toBeVisible({
-      timeout: ELEMENT_TIMEOUT_MS,
-    });
-    await snap(page, "payment-methods-fully-blocked");
-  });
-
-  test("Phase 19: fully blocked — Admin detail page confirms", async ({
-    context,
-    page,
-  }) => {
-    await injectSession(context, admin);
-    await navigateToUserDetail(page, target.email, target.userId);
 
     await expect(
       page.getByTestId("permission-toggle-products.read"),
     ).not.toBeChecked();
     await expect(
-      page.getByTestId("permission-toggle-orders.view"),
+      page.getByTestId("permission-toggle-user_permissions.read"),
     ).not.toBeChecked();
-    await snap(page, "admin-detail-all-unchecked");
-  });
+    await snap(page, "template-none-applied");
 
-  test("Phase 20: fully blocked — Store still public", async ({
-    context,
-    page,
-  }) => {
     await injectSession(context, target);
-    await page.goto(`${APP_URLS.STORE}/en`);
-    await page.waitForLoadState("networkidle");
+    await page.goto(`${APP_URLS.ADMIN}/en`);
+    await expectVisible(page, "access-denied");
+    await expectHidden(page, "nav-link-admin");
+    await expectHidden(page, "nav-link-payments");
+    await expectHidden(page, "nav-link-studio");
+    await expectVisible(page, "nav-link-landing");
+    await expectVisible(page, "nav-link-store");
+    await expectVisible(page, "nav-link-auth");
+    await expectVisible(page, "nav-link-playground");
 
-    // Store is public — catalog always loads
-    await expect(page.getByTestId("product-catalog-page")).toBeVisible({
-      timeout: ELEMENT_TIMEOUT_MS,
-    });
-    await snap(page, "store-still-public");
-  });
+    await page.goto(`${APP_URLS.PAYMENTS}/en/checkout`);
+    await expectVisible(page, "access-denied");
 
-  // ─── RESTORE: apply Seller template → partial access back ───
-
-  test("Phase 21: admin applies Seller template", async ({ context, page }) => {
-    await injectSession(context, admin);
-    await navigateToUserDetail(page, target.email, target.userId);
-
-    await page.getByTestId("template-btn-seller").click();
-    await page.waitForTimeout(MUTATION_WAIT_MS);
-    await snap(page, "admin-seller-template-applied");
-
-    // Seller has products.create but NOT admin.audit
-    await expect(
-      page.getByTestId("permission-toggle-products.create"),
-    ).toBeChecked({ timeout: ELEMENT_TIMEOUT_MS });
-    await expect(
-      page.getByTestId("permission-toggle-admin.audit"),
-    ).not.toBeChecked();
-  });
-
-  test("Phase 22: seller restored — Studio access back", async ({
-    context,
-    page,
-  }) => {
-    await injectSession(context, target);
     await page.goto(`${APP_URLS.STUDIO}/en`);
-    await page.waitForLoadState("networkidle");
+    await expectVisible(page, "access-denied");
+    await snap(page, "all-apps-blocked");
 
-    await expect(page.getByTestId("new-product-button")).toBeVisible({
-      timeout: ELEMENT_TIMEOUT_MS,
-    });
-    await snap(page, "studio-restored-as-seller");
-  });
-
-  test("Phase 23: seller permissions — admin confirms admin.audit unchecked", async ({
-    context,
-    page,
-  }) => {
     await injectSession(context, admin);
     await navigateToUserDetail(page, target.email, target.userId);
+    await page.getByTestId("template-btn-admin").click();
+    await page.waitForTimeout(MUTATION_WAIT_MS);
 
-    // Seller template does NOT include admin.audit
     await expect(
-      page.getByTestId("permission-toggle-admin.audit"),
-    ).not.toBeChecked();
-    // But seller HAS products.create
+      page.getByTestId("permission-toggle-products.read"),
+    ).toBeChecked({
+      timeout: ELEMENT_TIMEOUT_MS,
+    });
     await expect(
-      page.getByTestId("permission-toggle-products.create"),
-    ).toBeChecked();
-    await snap(page, "admin-seller-template-no-audit");
+      page.getByTestId("permission-toggle-user_permissions.read"),
+    ).toBeChecked({
+      timeout: ELEMENT_TIMEOUT_MS,
+    });
+    await snap(page, "template-admin-restored");
+
+    await injectSession(context, target);
+    await page.goto(`${APP_URLS.ADMIN}/en`);
+    await expectVisible(page, "sidebar-users");
+    await expectVisible(page, "nav-link-admin");
+    await expectVisible(page, "nav-link-payments");
+    await expectVisible(page, "nav-link-studio");
+
+    await page.goto(`${APP_URLS.PAYMENTS}/en/checkout`);
+    await expectVisible(page, "sidebar-checkout");
+
+    await page.goto(`${APP_URLS.STUDIO}/en`);
+    await expectVisible(page, "new-product-button");
+    await snap(page, "all-apps-restored");
   });
 });

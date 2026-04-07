@@ -29,6 +29,8 @@
   },
   "common": {
     "loading": "Cargando...",
+    "accessDenied": "Acceso denegado",
+    "accessDeniedHint": "Esta seccion permanece oculta hasta que se otorgue el permiso requerido.",
     "error": "Ocurrió un error",
     "save": "Guardar",
     "cancel": "Cancelar",

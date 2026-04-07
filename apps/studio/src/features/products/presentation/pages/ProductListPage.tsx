@@ -1,5 +1,6 @@
 "use client";
 
+import { useCurrentUserPermissions } from "auth/client";
 import { Plus } from "lucide-react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
@@ -12,8 +13,17 @@ import { useProducts } from "@/features/products/application/useProducts";
 import { productsSearchParams } from "@/features/products/domain/searchParams";
 import { ProductFilters } from "@/features/products/presentation/components/ProductFilters";
 import { ProductTable } from "@/features/products/presentation/components/ProductTable";
+import { AccessDeniedState } from "@/shared/presentation/components/AccessDeniedState";
 
-export function ProductListPage() {
+function ProductListPageContent({
+  canCreate,
+  canUpdate,
+  canDelete,
+}: {
+  canCreate: boolean;
+  canUpdate: boolean;
+  canDelete: boolean;
+}) {
   const t = useTranslations();
   const [filters] = useQueryStates(productsSearchParams);
   const { data: products, isLoading } = useProducts(filters);
@@ -40,15 +50,17 @@ export function ProductListPage() {
           </div>
           <div className="flex items-center gap-3">
             <PendingOrdersBadge />
-            <Link href="/products/new">
-              <Button
-                className="nb-btn nb-shadow-md nb-btn-press-sm rounded-xl border-3 bg-brand px-6 py-3 text-brand-foreground hover:bg-brand-hover"
-                {...tid("new-product-button")}
-              >
-                <Plus className="size-5" />
-                {t("products.newProduct")}
-              </Button>
-            </Link>
+            {canCreate && (
+              <Link href="/products/new">
+                <Button
+                  className="nb-btn nb-shadow-md nb-btn-press-sm rounded-xl border-3 bg-brand px-6 py-3 text-brand-foreground hover:bg-brand-hover"
+                  {...tid("new-product-button")}
+                >
+                  <Plus className="size-5" />
+                  {t("products.newProduct")}
+                </Button>
+              </Link>
+            )}
           </div>
         </header>
 
@@ -60,8 +72,27 @@ export function ProductListPage() {
           products={products ?? []}
           isLoading={isLoading}
           isFiltered={isFiltered}
+          canUpdate={canUpdate}
+          canDelete={canDelete}
         />
       </div>
     </main>
+  );
+}
+
+export function ProductListPage() {
+  const { isLoading, hasPermission } = useCurrentUserPermissions();
+
+  if (isLoading) return null;
+  if (!hasPermission("products.read")) {
+    return <AccessDeniedState />;
+  }
+
+  return (
+    <ProductListPageContent
+      canCreate={hasPermission("products.create")}
+      canUpdate={hasPermission("products.update")}
+      canDelete={hasPermission("products.delete")}
+    />
   );
 }

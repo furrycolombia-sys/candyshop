@@ -1,6 +1,6 @@
 "use client";
 
-import { useSupabaseAuth } from "auth/client";
+import { useCurrentUserPermissions } from "auth/client";
 import { ArrowLeft } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { tid } from "shared";
@@ -16,15 +16,22 @@ import { useUserPermissions } from "@/features/users/application/hooks/useUserPe
 import { useUserProfile } from "@/features/users/application/hooks/useUserProfile";
 import { PERMISSION_GROUPS } from "@/features/users/domain/constants";
 import { useRouter } from "@/shared/infrastructure/i18n";
+import { AccessDeniedState } from "@/shared/presentation/components/AccessDeniedState";
 
 interface UserDetailPageProps {
   userId: string;
 }
 
-export function UserDetailPage({ userId }: UserDetailPageProps) {
+function UserDetailPageContent({
+  userId,
+  canCreate,
+  canDelete,
+}: UserDetailPageProps & {
+  canCreate: boolean;
+  canDelete: boolean;
+}) {
   const t = useTranslations("users");
   const router = useRouter();
-  const { user: currentUser } = useSupabaseAuth();
 
   const { data: profile, isLoading: profileLoading } = useUserProfile(userId);
   const { data: grantedKeys = [], isLoading: permissionsLoading } =
@@ -32,32 +39,34 @@ export function UserDetailPage({ userId }: UserDetailPageProps) {
   const toggleMutation = useTogglePermission();
   const templateMutation = useApplyTemplate();
 
-  const isPending = toggleMutation.isPending || templateMutation.isPending;
-  const grantedBy = currentUser?.id;
+  const isPending =
+    toggleMutation.isPending ||
+    templateMutation.isPending ||
+    (!canCreate && !canDelete);
   const isLoading = profileLoading || permissionsLoading;
 
   const handleToggle = (key: string, grant: boolean) => {
-    if (!grantedBy) return;
-    toggleMutation.mutate({ userId, permissionKey: key, grant, grantedBy });
+    if ((grant && !canCreate) || (!grant && !canDelete)) return;
+    toggleMutation.mutate({ userId, permissionKey: key, grant });
   };
 
   const handleToggleTemplate = (templateKeys: string[], activate: boolean) => {
-    if (!grantedBy) return;
+    if (!canCreate || !canDelete) return;
     if (activate) {
       // Add template keys to existing grants (union)
       const newKeys = [...new Set([...grantedKeys, ...templateKeys])];
-      templateMutation.mutate({ userId, permissionKeys: newKeys, grantedBy });
+      templateMutation.mutate({ userId, permissionKeys: newKeys });
     } else {
       // Remove only this template's unique keys (keep the rest)
       const keysToRemove = new Set(templateKeys);
       const newKeys = grantedKeys.filter((k) => !keysToRemove.has(k));
-      templateMutation.mutate({ userId, permissionKeys: newKeys, grantedBy });
+      templateMutation.mutate({ userId, permissionKeys: newKeys });
     }
   };
 
   const handleReset = () => {
-    if (!grantedBy) return;
-    templateMutation.mutate({ userId, permissionKeys: [], grantedBy });
+    if (!canDelete) return;
+    templateMutation.mutate({ userId, permissionKeys: [] });
   };
 
   if (isLoading) {
@@ -105,7 +114,8 @@ export function UserDetailPage({ userId }: UserDetailPageProps) {
           grantedKeys={grantedKeys}
           onToggleTemplate={handleToggleTemplate}
           onReset={handleReset}
-          isPending={isPending || !grantedBy}
+          isPending={isPending}
+          canManage={canCreate && canDelete}
         />
 
         {/* Permission groups */}
@@ -117,10 +127,28 @@ export function UserDetailPage({ userId }: UserDetailPageProps) {
             permissions={group.permissions}
             grantedKeys={grantedKeys}
             onToggle={handleToggle}
-            isPending={isPending || !grantedBy}
+            isPending={isPending}
+            canManage={canCreate || canDelete}
           />
         ))}
       </div>
     </main>
+  );
+}
+
+export function UserDetailPage({ userId }: UserDetailPageProps) {
+  const { isLoading, hasPermission } = useCurrentUserPermissions();
+
+  if (isLoading) return null;
+  if (!hasPermission("user_permissions.read")) {
+    return <AccessDeniedState />;
+  }
+
+  return (
+    <UserDetailPageContent
+      userId={userId}
+      canCreate={hasPermission("user_permissions.create")}
+      canDelete={hasPermission("user_permissions.delete")}
+    />
   );
 }

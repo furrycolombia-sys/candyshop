@@ -1,5 +1,6 @@
 "use client";
 
+import { matchesPermissions, useCurrentUserPermissions } from "auth/client";
 import { Activity, ArrowRight, Database, Shield, Users } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { tid } from "shared";
@@ -7,7 +8,9 @@ import { tid } from "shared";
 import { useAuditLog } from "@/features/audit/application/useAuditLog";
 import { ActivityRow } from "@/features/dashboard/presentation/components/ActivityRow";
 import { StatusRow } from "@/features/dashboard/presentation/components/StatusRow";
+import { ADMIN_APP_ACCESS_KEYS } from "@/features/users/domain/constants";
 import { Link } from "@/shared/infrastructure/i18n";
+import { AccessDeniedState } from "@/shared/presentation/components/AccessDeniedState";
 
 /** Number of recent activity entries to show on the dashboard */
 const RECENT_ACTIVITY_LIMIT = 5;
@@ -45,13 +48,14 @@ const STAT_CARDS = [
 
 const SYSTEM_STATUS_KEYS = ["database", "auth", "storage", "realtime"] as const;
 
-export function DashboardPage() {
+function DashboardPageContent({ canViewAudit }: { canViewAudit: boolean }) {
   const t = useTranslations("dashboard");
   const tSidebar = useTranslations("sidebar");
   const locale = useLocale();
   const { data: recentEntries } = useAuditLog({
     filters: {},
     offset: 0,
+    enabled: canViewAudit,
   });
 
   return (
@@ -109,30 +113,36 @@ export function DashboardPage() {
                 </h2>
               </div>
               <div className="divide-y divide-foreground/10">
-                {(recentEntries ?? [])
-                  .slice(0, RECENT_ACTIVITY_LIMIT)
-                  .map((entry) => (
-                    <ActivityRow
-                      key={entry.event_id}
-                      action={entry.action_type}
-                      table={entry.table_name}
-                      time={new Date(entry.action_timestamp).toLocaleString(
-                        locale,
-                        {
-                          month: "short",
-                          day: "numeric",
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        },
-                      )}
-                      user={
-                        entry.user_display_name ??
-                        entry.user_email ??
-                        entry.db_user
-                      }
-                    />
-                  ))}
-                {recentEntries?.length === 0 && (
+                {!canViewAudit && (
+                  <div className="px-5 py-6 text-center font-mono text-xs text-muted-foreground">
+                    {t("activity.noActivity")}
+                  </div>
+                )}
+                {canViewAudit &&
+                  (recentEntries ?? [])
+                    .slice(0, RECENT_ACTIVITY_LIMIT)
+                    .map((entry) => (
+                      <ActivityRow
+                        key={entry.event_id}
+                        action={entry.action_type}
+                        table={entry.table_name}
+                        time={new Date(entry.action_timestamp).toLocaleString(
+                          locale,
+                          {
+                            month: "short",
+                            day: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          },
+                        )}
+                        user={
+                          entry.user_display_name ??
+                          entry.user_email ??
+                          entry.db_user
+                        }
+                      />
+                    ))}
+                {canViewAudit && recentEntries?.length === 0 && (
                   <div className="px-5 py-6 text-center font-mono text-xs text-muted-foreground">
                     {t("activity.noActivity")}
                   </div>
@@ -150,17 +160,19 @@ export function DashboardPage() {
                 </h2>
               </div>
               <div className="flex flex-col gap-3 p-5">
-                <Link
-                  href="/audit"
-                  className="nb-btn rounded-md bg-foreground px-4 py-3 text-sm text-background nb-shadow-sm nb-btn-press-sm"
-                  {...tid("quick-action-audit")}
-                >
-                  <Activity className="size-4" />
-                  <span className="flex-1 font-display tracking-wider">
-                    {t("viewAuditLog")}
-                  </span>
-                  <ArrowRight className="size-4" />
-                </Link>
+                {canViewAudit && (
+                  <Link
+                    href="/audit"
+                    className="nb-btn rounded-md bg-foreground px-4 py-3 text-sm text-background nb-shadow-sm nb-btn-press-sm"
+                    {...tid("quick-action-audit")}
+                  >
+                    <Activity className="size-4" />
+                    <span className="flex-1 font-display tracking-wider">
+                      {t("viewAuditLog")}
+                    </span>
+                    <ArrowRight className="size-4" />
+                  </Link>
+                )}
               </div>
 
               {/* System status panel */}
@@ -187,4 +199,15 @@ export function DashboardPage() {
       </div>
     </main>
   );
+}
+
+export function DashboardPage() {
+  const { grantedKeys, isLoading, hasPermission } = useCurrentUserPermissions();
+
+  if (isLoading) return null;
+  if (!matchesPermissions(grantedKeys, [...ADMIN_APP_ACCESS_KEYS], "any")) {
+    return <AccessDeniedState />;
+  }
+
+  return <DashboardPageContent canViewAudit={hasPermission("audit.read")} />;
 }

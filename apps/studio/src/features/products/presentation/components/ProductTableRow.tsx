@@ -34,6 +34,8 @@ interface ProductTableRowProps {
   product: Product;
   isOddRow: boolean;
   canReorder: boolean;
+  canUpdate: boolean;
+  canDelete: boolean;
   dragProvided: DraggableProvided;
   isDragging: boolean;
 }
@@ -62,6 +64,8 @@ export function ProductTableRow({
   product,
   isOddRow,
   canReorder,
+  canUpdate,
+  canDelete,
   dragProvided,
   isDragging,
 }: ProductTableRowProps) {
@@ -179,66 +183,80 @@ export function ProductTableRow({
 
       {/* Active toggle */}
       <td className={`${CELL_CLASS} text-center`}>
-        <button
-          type="button"
-          onClick={() => handleToggle("is_active", product.is_active)}
-          disabled={toggleMutation.isPending}
-          className={cn(
-            SWITCH_CLASS,
-            product.is_active ? "bg-success" : "bg-muted",
-          )}
-          role="switch"
-          aria-checked={product.is_active}
-          {...tid(`toggle-active-${product.id}`)}
-        >
-          <span
+        {canUpdate ? (
+          <button
+            type="button"
+            onClick={() => handleToggle("is_active", product.is_active)}
+            disabled={toggleMutation.isPending}
             className={cn(
-              SWITCH_THUMB_CLASS,
-              product.is_active ? SWITCH_ON_POSITION : SWITCH_OFF_POSITION,
+              SWITCH_CLASS,
+              product.is_active ? "bg-success" : "bg-muted",
             )}
-          />
-        </button>
+            role="switch"
+            aria-checked={product.is_active}
+            {...tid(`toggle-active-${product.id}`)}
+          >
+            <span
+              className={cn(
+                SWITCH_THUMB_CLASS,
+                product.is_active ? SWITCH_ON_POSITION : SWITCH_OFF_POSITION,
+              )}
+            />
+          </button>
+        ) : (
+          <span className="font-mono text-xs">
+            {product.is_active ? "on" : "off"}
+          </span>
+        )}
       </td>
 
       {/* Featured toggle */}
       <td className={`${CELL_CLASS} text-center`}>
-        <button
-          type="button"
-          onClick={() => handleToggle("featured", product.featured)}
-          disabled={toggleMutation.isPending}
-          className={cn(
-            SWITCH_CLASS,
-            product.featured ? "bg-brand" : "bg-muted",
-          )}
-          role="switch"
-          aria-checked={product.featured}
-          {...tid(`toggle-featured-${product.id}`)}
-        >
-          <span
+        {canUpdate ? (
+          <button
+            type="button"
+            onClick={() => handleToggle("featured", product.featured)}
+            disabled={toggleMutation.isPending}
             className={cn(
-              SWITCH_THUMB_CLASS,
-              product.featured ? SWITCH_ON_POSITION : SWITCH_OFF_POSITION,
+              SWITCH_CLASS,
+              product.featured ? "bg-brand" : "bg-muted",
             )}
-          />
-        </button>
+            role="switch"
+            aria-checked={product.featured}
+            {...tid(`toggle-featured-${product.id}`)}
+          >
+            <span
+              className={cn(
+                SWITCH_THUMB_CLASS,
+                product.featured ? SWITCH_ON_POSITION : SWITCH_OFF_POSITION,
+              )}
+            />
+          </button>
+        ) : (
+          <span className="font-mono text-xs">
+            {product.featured ? "on" : "off"}
+          </span>
+        )}
       </td>
 
       {/* Actions */}
       <td className={`${CELL_CLASS} text-right`}>
         <div className="flex items-center justify-end gap-2">
-          <Link href={`/products/${product.id}`}>
-            <Button
-              variant="outline"
-              size="sm"
-              className={ACTION_BTN_CLASS}
-              {...tid(`edit-product-${product.id}`)}
-            >
-              <Pencil className="size-3.5" />
-              <span className="sr-only">{t("common.edit")}</span>
-            </Button>
-          </Link>
+          {canUpdate && (
+            <Link href={`/products/${product.id}`}>
+              <Button
+                variant="outline"
+                size="sm"
+                className={ACTION_BTN_CLASS}
+                {...tid(`edit-product-${product.id}`)}
+              >
+                <Pencil className="size-3.5" />
+                <span className="sr-only">{t("common.edit")}</span>
+              </Button>
+            </Link>
+          )}
 
-          {deletingId === product.id ? (
+          {canDelete && deletingId === product.id ? (
             <div className="flex items-center gap-1">
               <Button
                 variant="destructive"
@@ -260,7 +278,7 @@ export function ProductTableRow({
                 {t("common.cancel")}
               </Button>
             </div>
-          ) : (
+          ) : canDelete ? (
             <Button
               variant="outline"
               size="sm"
@@ -271,7 +289,7 @@ export function ProductTableRow({
               <Trash2 className="size-3.5" />
               <span className="sr-only">{t("common.delete")}</span>
             </Button>
-          )}
+          ) : null}
         </div>
       </td>
     </tr>

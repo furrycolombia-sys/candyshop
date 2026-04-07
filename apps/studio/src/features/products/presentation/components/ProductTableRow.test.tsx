@@ -79,6 +79,8 @@ const defaultProps = {
   product: mockProduct as any,
   isOddRow: false,
   canReorder: false,
+  canUpdate: true,
+  canDelete: true,
   dragProvided: {
     innerRef: () => null,
     draggableProps: {},

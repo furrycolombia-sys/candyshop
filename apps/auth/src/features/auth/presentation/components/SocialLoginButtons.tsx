@@ -6,11 +6,9 @@ import { tid } from "shared";
 
 import { DiscordIcon } from "./DiscordIcon";
 import { GoogleIcon } from "./GoogleIcon";
-import { XIcon } from "./XIcon";
-
 import { useSupabaseAuth } from "@/features/auth/application/hooks/useSupabaseAuth";
 
-type Provider = "google" | "discord" | "twitter";
+type Provider = "google" | "discord";
 
 interface ProviderConfig {
   id: Provider;
@@ -32,12 +30,6 @@ const PROVIDERS: ProviderConfig[] = [
     icon: <DiscordIcon />,
     // Discord brand color — intentional hardcode per brand guidelines
     fill: "bg-[#5865F2] text-white",
-  },
-  {
-    id: "twitter",
-    labelKey: "twitter",
-    icon: <XIcon />,
-    fill: "bg-black text-white",
   },
 ];
 

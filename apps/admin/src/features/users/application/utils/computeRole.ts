@@ -18,10 +18,7 @@ export function computeRole(grantedKeys: string[]): UserRole {
 
   if (hasAll(grantedKeys, ALL_PERMISSION_KEYS)) return "admin";
 
-  const sellerKeys = [
-    ...PERMISSION_TEMPLATES.buyer,
-    ...PERMISSION_TEMPLATES.seller,
-  ];
+  const sellerKeys = [...new Set(PERMISSION_TEMPLATES.seller)];
   if (hasAll(grantedKeys, sellerKeys)) return "seller";
 
   if (hasAll(grantedKeys, PERMISSION_TEMPLATES.buyer)) return "buyer";

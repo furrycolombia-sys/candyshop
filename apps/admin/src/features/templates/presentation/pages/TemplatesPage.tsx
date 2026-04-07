@@ -1,5 +1,6 @@
 "use client";
 
+import { useCurrentUserPermissions } from "auth/client";
 import { Plus } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
@@ -18,13 +19,22 @@ import type {
 } from "@/features/templates/domain/types";
 import { TemplateEditor } from "@/features/templates/presentation/components/TemplateEditor";
 import { TemplateTable } from "@/features/templates/presentation/components/TemplateTable";
+import { AccessDeniedState } from "@/shared/presentation/components/AccessDeniedState";
 
 type EditorState =
   | { mode: "closed" }
   | { mode: "create" }
   | { mode: "edit"; template: ProductTemplate };
 
-export function TemplatesPage() {
+function TemplatesPageContent({
+  canCreate,
+  canUpdate,
+  canDelete,
+}: {
+  canCreate: boolean;
+  canUpdate: boolean;
+  canDelete: boolean;
+}) {
   const t = useTranslations("templates");
   const { data: templates, isLoading } = useTemplates();
   const insertMutation = useInsertTemplate();
@@ -65,7 +75,7 @@ export function TemplatesPage() {
               {t("subtitle")}
             </p>
           </div>
-          {editor.mode === "closed" && (
+          {editor.mode === "closed" && canCreate && (
             <button
               type="button"
               onClick={() => setEditor({ mode: "create" })}
@@ -83,10 +93,16 @@ export function TemplatesPage() {
           <TemplateTable
             templates={templates ?? []}
             isLoading={isLoading}
-            onEdit={(template) => setEditor({ mode: "edit", template })}
-            onDelete={(id) => deleteMutation.mutate(id)}
-            onToggleActive={(id, isActive) =>
-              toggleMutation.mutate({ id, isActive })
+            onEdit={
+              canUpdate
+                ? (template) => setEditor({ mode: "edit", template })
+                : undefined
+            }
+            onDelete={canDelete ? (id) => deleteMutation.mutate(id) : undefined}
+            onToggleActive={
+              canUpdate
+                ? (id, isActive) => toggleMutation.mutate({ id, isActive })
+                : undefined
             }
           />
         ) : (
@@ -111,5 +127,22 @@ export function TemplatesPage() {
         )}
       </div>
     </main>
+  );
+}
+
+export function TemplatesPage() {
+  const { isLoading, hasPermission } = useCurrentUserPermissions();
+
+  if (isLoading) return null;
+  if (!hasPermission("templates.read")) {
+    return <AccessDeniedState />;
+  }
+
+  return (
+    <TemplatesPageContent
+      canCreate={hasPermission("templates.create")}
+      canUpdate={hasPermission("templates.update")}
+      canDelete={hasPermission("templates.delete")}
+    />
   );
 }

@@ -30,6 +30,8 @@
   "common": {
     "loading": "Loading...",
     "error": "An error occurred",
+    "accessDenied": "Access denied",
+    "accessDeniedHint": "This section is hidden until the required permission is granted.",
     "save": "Save",
     "cancel": "Cancel",
     "delete": "Delete",

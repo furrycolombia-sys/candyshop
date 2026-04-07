@@ -1,5 +1,6 @@
 "use client";
 
+import { matchesPermissions, useCurrentUserPermissions } from "auth/client";
 import {
   ChevronLeft,
   ChevronRight,
@@ -7,6 +8,7 @@ import {
   CreditCard,
   Package,
   ShoppingCart,
+  type LucideIcon,
 } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -15,12 +17,34 @@ import { tid } from "shared";
 
 import { Link } from "@/shared/infrastructure/i18n";
 
-const NAV_SECTIONS = [
+type NavItem = {
+  key: string;
+  href: string;
+  icon: LucideIcon;
+  required: readonly string[];
+};
+
+type NavSection = {
+  labelKey: string;
+  items: readonly NavItem[];
+};
+
+const NAV_SECTIONS: readonly NavSection[] = [
   {
     labelKey: "buyer" as const,
     items: [
-      { key: "checkout" as const, href: "/checkout", icon: ShoppingCart },
-      { key: "myPurchases" as const, href: "/purchases", icon: Package },
+      {
+        key: "checkout" as const,
+        href: "/checkout",
+        icon: ShoppingCart,
+        required: ["orders.create", "receipts.create"],
+      },
+      {
+        key: "myPurchases" as const,
+        href: "/purchases",
+        icon: Package,
+        required: ["orders.read"],
+      },
     ],
   },
   {
@@ -30,11 +54,13 @@ const NAV_SECTIONS = [
         key: "paymentMethods" as const,
         href: "/payment-methods",
         icon: CreditCard,
+        required: ["seller_payment_methods.read"],
       },
       {
         key: "sales" as const,
         href: "/sales",
         icon: ClipboardCheck,
+        required: ["orders.read", "orders.update", "receipts.read"],
       },
     ],
   },
@@ -44,8 +70,15 @@ export function PaymentsSidebar() {
   const t = useTranslations("sidebar");
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
+  const { grantedKeys, isLoading } = useCurrentUserPermissions();
 
   const appPath = pathname.replace(/^\/[a-z]{2}/, "") || "/";
+  const visibleSections = NAV_SECTIONS.map((section) => ({
+    ...section,
+    items: section.items.filter((item) =>
+      isLoading ? false : matchesPermissions(grantedKeys, item.required),
+    ),
+  })).filter((section) => section.items.length > 0);
 
   return (
     <aside
@@ -71,7 +104,7 @@ export function PaymentsSidebar() {
 
       {/* Navigation sections */}
       <nav className="flex flex-1 flex-col gap-1 px-2.5 pt-10">
-        {NAV_SECTIONS.map((section) => (
+        {visibleSections.map((section) => (
           <div key={section.labelKey} className="mb-2">
             {/* Section label */}
             {!collapsed && (

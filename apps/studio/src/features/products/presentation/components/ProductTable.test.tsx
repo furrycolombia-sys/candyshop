@@ -90,12 +90,28 @@ const mockProducts = [
 
 describe("ProductTable", () => {
   it("shows loading text when isLoading is true", () => {
-    render(<ProductTable products={[]} isLoading={true} isFiltered={false} />);
+    render(
+      <ProductTable
+        products={[]}
+        isLoading={true}
+        isFiltered={false}
+        canUpdate={true}
+        canDelete={true}
+      />,
+    );
     expect(screen.getByText("common.loading")).toBeInTheDocument();
   });
 
   it("shows empty state when products is empty and not loading", () => {
-    render(<ProductTable products={[]} isLoading={false} isFiltered={false} />);
+    render(
+      <ProductTable
+        products={[]}
+        isLoading={false}
+        isFiltered={false}
+        canUpdate={true}
+        canDelete={true}
+      />,
+    );
     expect(screen.getByTestId("products-empty-state")).toBeInTheDocument();
     expect(screen.getByText("products.noProducts")).toBeInTheDocument();
   });
@@ -107,6 +123,8 @@ describe("ProductTable", () => {
         products={mockProducts as any}
         isLoading={false}
         isFiltered={false}
+        canUpdate={true}
+        canDelete={true}
       />,
     );
     expect(screen.getByTestId("product-table")).toBeInTheDocument();
@@ -119,6 +137,8 @@ describe("ProductTable", () => {
         products={mockProducts as any}
         isLoading={false}
         isFiltered={false}
+        canUpdate={true}
+        canDelete={true}
       />,
     );
     expect(screen.getByText("products.name")).toBeInTheDocument();
@@ -134,6 +154,8 @@ describe("ProductTable", () => {
         products={mockProducts as any}
         isLoading={false}
         isFiltered={false}
+        canUpdate={true}
+        canDelete={true}
       />,
     );
     expect(screen.getByTestId("product-row-Product 1")).toBeInTheDocument();

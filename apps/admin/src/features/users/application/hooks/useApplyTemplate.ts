@@ -1,26 +1,27 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { USER_PERMISSIONS_QUERY_KEY } from "@/features/users/domain/constants";
-import { applyTemplate } from "@/features/users/infrastructure/userPermissionQueries";
-import { useSupabase } from "@/shared/application/hooks/useSupabase";
 
 interface ApplyTemplateParams {
   userId: string;
   permissionKeys: string[];
-  grantedBy: string;
 }
 
 export function useApplyTemplate() {
-  const supabase = useSupabase();
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({
-      userId,
-      permissionKeys,
-      grantedBy,
-    }: ApplyTemplateParams) => {
-      await applyTemplate(supabase, userId, permissionKeys, grantedBy);
+    mutationFn: async ({ userId, permissionKeys }: ApplyTemplateParams) => {
+      const response = await fetch(`/api/admin/users/${userId}/permissions`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
+        body: JSON.stringify({ permissionKeys }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to apply permission template");
+      }
     },
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({
