@@ -237,9 +237,18 @@ export async function injectSession(
   context: BrowserContext,
   user: TestUser,
 ): Promise<void> {
-  // Local Supabase uses http
   const projectRef = new URL(SUPABASE_URL).hostname.split(".")[0];
   const cookieBase = `sb-${projectRef}-auth-token`;
+  const authHost = new URL(
+    process.env.NEXT_PUBLIC_AUTH_URL || "http://localhost:5000",
+  );
+  const isLocalhost =
+    authHost.hostname === "localhost" || authHost.hostname === "127.0.0.1";
+  const hostParts = authHost.hostname.split(".");
+  const sharedDomain =
+    !isLocalhost && hostParts.length >= 2
+      ? `.${hostParts.slice(-2).join(".")}`
+      : authHost.hostname;
 
   // Clear existing auth cookies first
   const cookies = await context.cookies();
@@ -261,10 +270,10 @@ export async function injectSession(
           user: { id: user.userId, email: user.email },
         }),
       )}`,
-      domain: "localhost",
+      domain: sharedDomain,
       path: "/",
       httpOnly: false,
-      secure: false,
+      secure: !isLocalhost,
       sameSite: "Lax",
     },
   ]);

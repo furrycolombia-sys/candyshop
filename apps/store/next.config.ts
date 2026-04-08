@@ -28,8 +28,10 @@ const securityHeaders = [
 
 const isStandalone = process.env.STANDALONE === "true";
 const basePathPrefix = process.env.BASE_PATH_PREFIX || "";
+const allowedDevOrigins = ["store.ffxivbe.org"];
 
 const nextConfig: NextConfig = {
+  allowedDevOrigins,
   // lucide-react v1.x ESM dist uses .ts imports — Turbopack needs explicit extensions
   turbopack: {
     resolveExtensions: [".ts", ".tsx", ".js", ".jsx", ".mjs", ".json"],
