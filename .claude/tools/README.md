@@ -1,33 +1,33 @@
 # Claude Tools Configuration
 
-This folder contains MCP (Model Context Protocol) server configurations and related tooling.
+This folder contains local MCP wrapper scripts and token templates used by `.mcp.json`.
 
 ## Setup
 
 1. Copy `.env.local.example` to `.env.local`
 2. Fill in your personal tokens
-3. Restart Claude Code session
+3. Restart Claude or any MCP-aware client
 
-## Token Security
+## Available Local Wrappers
 
-- `.env.local` is gitignored - never commit tokens
-- Each developer maintains their own tokens
-- See `.env.local.example` for required tokens
+The repository currently ships local wrappers for:
 
-## MCP Servers
+- `github-unified-mcp.mjs`
+- `git-mcp.mjs`
 
-MCP servers are configured in `/.mcp.json` at project root.
+`.mcp.json` also includes a disabled `github-setup` entry, but that wrapper is not shipped in this repo.
 
-### Available Servers
+## Token Files
 
-| Server             | Purpose                                | Token Required |
-| ------------------ | -------------------------------------- | -------------- |
-| github-unified-mcp | GitHub operations (PRs, issues, repos) | GITHUB_TOKEN   |
+Wrappers look for tokens in this order:
+
+1. Project root `.env.local`
+2. `.claude/tools/.env.local`
+
+The local `.env.local` file in this directory is gitignored. Keep secrets there or in the project root, not in tracked files.
 
 ## Troubleshooting
 
-If MCP tools aren't working:
-
-1. Verify `.env.local` exists with valid tokens
-2. Restart Claude Code session
-3. Check `/.mcp.json` configuration
+1. Verify the referenced wrapper files exist.
+2. Verify `.env.local` contains the expected token names.
+3. Restart the MCP client after changing tokens or `.mcp.json`.
