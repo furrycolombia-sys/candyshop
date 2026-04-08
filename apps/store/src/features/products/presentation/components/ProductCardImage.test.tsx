@@ -72,7 +72,8 @@ describe("ProductCardImage", () => {
     render(
       <ProductCardImage
         product={makeProduct()}
-        categoryColor="bg-pink"
+        categoryColor="var(--pink)"
+        categoryForeground="var(--candy-text)"
         isFeatured={false}
         featuredLabel="Featured"
         outOfStockLabel="Out of stock"
@@ -89,7 +90,8 @@ describe("ProductCardImage", () => {
     render(
       <ProductCardImage
         product={product}
-        categoryColor="bg-pink"
+        categoryColor="var(--pink)"
+        categoryForeground="var(--candy-text)"
         isFeatured={false}
         featuredLabel="Featured"
         outOfStockLabel="Out of stock"
@@ -103,7 +105,8 @@ describe("ProductCardImage", () => {
     render(
       <ProductCardImage
         product={makeProduct({ images: [] })}
-        categoryColor="bg-pink"
+        categoryColor="var(--pink)"
+        categoryForeground="var(--candy-text)"
         isFeatured={false}
         featuredLabel="Featured"
         outOfStockLabel="Out of stock"
@@ -117,7 +120,8 @@ describe("ProductCardImage", () => {
     render(
       <ProductCardImage
         product={makeProduct({ featured: true })}
-        categoryColor="bg-pink"
+        categoryColor="var(--pink)"
+        categoryForeground="var(--candy-text)"
         isFeatured={true}
         featuredLabel="Featured"
         outOfStockLabel="Out of stock"
@@ -131,7 +135,8 @@ describe("ProductCardImage", () => {
     render(
       <ProductCardImage
         product={makeProduct({ featured: false })}
-        categoryColor="bg-pink"
+        categoryColor="var(--pink)"
+        categoryForeground="var(--candy-text)"
         isFeatured={false}
         featuredLabel="Featured"
         outOfStockLabel="Out of stock"
@@ -145,7 +150,8 @@ describe("ProductCardImage", () => {
     render(
       <ProductCardImage
         product={makeProduct()}
-        categoryColor="bg-pink"
+        categoryColor="var(--pink)"
+        categoryForeground="var(--candy-text)"
         isFeatured={false}
         featuredLabel="Featured"
         outOfStockLabel="Out of stock"
@@ -163,7 +169,8 @@ describe("ProductCardImage", () => {
     render(
       <ProductCardImage
         product={makeProduct()}
-        categoryColor="bg-pink"
+        categoryColor="var(--pink)"
+        categoryForeground="var(--candy-text)"
         isFeatured={false}
         featuredLabel="Featured"
         outOfStockLabel="Out of stock"
@@ -179,7 +186,8 @@ describe("ProductCardImage", () => {
     render(
       <ProductCardImage
         product={makeProduct({ is_active: false })}
-        categoryColor="bg-pink"
+        categoryColor="var(--pink)"
+        categoryForeground="var(--candy-text)"
         isFeatured={false}
         featuredLabel="Featured"
         outOfStockLabel="Sold Out"

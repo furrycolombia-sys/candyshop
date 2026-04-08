@@ -33,12 +33,6 @@ export interface ProgressBarProps
   size?: "sm" | "md" | "lg";
 }
 
-const sizeClasses = {
-  sm: "h-2",
-  md: "h-4",
-  lg: "h-8",
-} as const;
-
 function ProgressBar({
   className,
   variant,
@@ -47,12 +41,18 @@ function ProgressBar({
   ...props
 }: ProgressBarProps) {
   const percentage = Math.min(Math.max(value, 0), 100);
+  let sizeClass = "h-8";
+  if (size === "sm") {
+    sizeClass = "h-2";
+  } else if (size === "md") {
+    sizeClass = "h-4";
+  }
 
   return (
     <div
       className={cn(
         "w-full bg-muted rounded-full overflow-hidden",
-        sizeClasses[size],
+        sizeClass,
         className,
       )}
       role="progressbar"

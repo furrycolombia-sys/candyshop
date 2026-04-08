@@ -16,11 +16,6 @@ import type { SellerAction } from "@/features/received-orders/domain/types";
 import { ReceivedOrderCard } from "@/features/received-orders/presentation/components/ReceivedOrderCard";
 import { AccessDeniedState } from "@/shared/presentation/components/AccessDeniedState";
 
-const PILL_BASE =
-  "rounded-lg border-3 border-foreground px-3 py-1 font-display text-xs font-bold uppercase tracking-wider transition-colors";
-const PILL_ACTIVE = "bg-foreground text-background";
-const PILL_INACTIVE = "bg-background text-foreground hover:bg-muted";
-
 function ReceivedOrdersPageContent() {
   const t = useTranslations("receivedOrders");
   const [params, setParams] = useQueryStates(receivedOrdersSearchParams);
@@ -37,11 +32,10 @@ function ReceivedOrdersPageContent() {
 
   return (
     <main
-      className="flex flex-1 flex-col bg-dots"
+      className="flex flex-1 flex-col surface-grid-dots"
       {...tid("received-orders-page")}
     >
       <div className="mx-auto flex w-full max-w-4xl flex-col gap-6 px-4 py-8">
-        {/* Header */}
         <header>
           <h1
             className="font-display text-4xl font-extrabold uppercase tracking-tight"
@@ -51,7 +45,6 @@ function ReceivedOrdersPageContent() {
           </h1>
         </header>
 
-        {/* Filter pills */}
         <div
           className="flex flex-wrap items-center gap-2"
           {...tid("received-orders-filters")}
@@ -61,7 +54,7 @@ function ReceivedOrdersPageContent() {
               key={status}
               type="button"
               onClick={() => setParams({ filter: status }, { history: "push" })}
-              className={`${PILL_BASE} ${activeFilter === status ? PILL_ACTIVE : PILL_INACTIVE}`}
+              className={`rounded-lg border-strong border-foreground px-3 py-1 font-display text-xs font-bold uppercase tracking-wider transition-colors ${activeFilter === status ? "bg-foreground text-background" : "bg-background text-foreground hover:bg-muted"}`}
               {...tid(`filter-${status}`)}
             >
               {t(`filters.${status}`)}
@@ -69,14 +62,12 @@ function ReceivedOrdersPageContent() {
           ))}
         </div>
 
-        {/* Loading */}
         {isLoading && (
           <div className="flex items-center justify-center py-16">
             <div className="size-8 animate-spin rounded-full border-4 border-foreground border-t-transparent" />
           </div>
         )}
 
-        {/* Empty state */}
         {!isLoading && (!orders || orders.length === 0) && (
           <div
             className="flex flex-col items-center justify-center gap-4 py-16 text-center"
@@ -90,7 +81,6 @@ function ReceivedOrdersPageContent() {
           </div>
         )}
 
-        {/* Order cards */}
         {!isLoading && orders && orders.length > 0 && (
           <div className="flex flex-col gap-4" {...tid("received-orders-list")}>
             {orders.map((order) => (

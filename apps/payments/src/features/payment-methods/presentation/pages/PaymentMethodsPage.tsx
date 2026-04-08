@@ -108,7 +108,7 @@ function PaymentMethodsPageContent({
 
   if (isLoading) {
     return (
-      <main className="flex flex-1 flex-col bg-dots">
+      <main className="flex flex-1 flex-col surface-grid-dots">
         <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-8">
           <p className="text-muted-foreground">{tCommon("loading")}</p>
         </div>
@@ -118,7 +118,7 @@ function PaymentMethodsPageContent({
 
   return (
     <main
-      className="flex flex-1 flex-col bg-dots"
+      className="flex flex-1 flex-col surface-grid-dots"
       {...tid("payment-methods-page")}
     >
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-8">
@@ -138,7 +138,7 @@ function PaymentMethodsPageContent({
           {editor.mode === "closed" && canCreate && (
             <Button
               type="button"
-              className="nb-btn nb-shadow-md nb-btn-press-sm rounded-xl border-3 bg-brand px-6 py-3 text-brand-foreground hover:bg-brand-hover"
+              className="button-brutal shadow-brutal-md button-press-sm rounded-xl border-strong bg-brand px-6 py-3 text-brand-foreground hover:bg-brand-hover"
               onClick={() => setEditor({ mode: "create" })}
               {...tid("add-payment-method-button")}
             >

@@ -1,5 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
+vi.mock("@/features/checkout/infrastructure/receiptStorage", () => ({
+  getReceiptUrl: vi.fn(
+    async (_supabase: unknown, storagePath: string | null) =>
+      storagePath ? `https://example.com/${storagePath}` : null,
+  ),
+}));
+
 import {
   fetchPendingOrderCount,
   fetchReceivedOrders,
@@ -64,7 +71,7 @@ describe("fetchReceivedOrders", () => {
           payment_status: "pending_verification",
           total_cop: 10_000,
           transfer_number: "TX-1",
-          receipt_url: null,
+          receipt_url: "order-1/receipt.png",
           seller_note: null,
           expires_at: null,
           checkout_session_id: "sess-1",
@@ -98,6 +105,9 @@ describe("fetchReceivedOrders", () => {
     expect(result).toHaveLength(1);
     expect(result[0].buyer_name).toBe("Buyer Bob");
     expect(result[0].payment_status).toBe("pending_verification");
+    expect(result[0].receipt_url).toBe(
+      "https://example.com/order-1/receipt.png",
+    );
   });
 
   it("applies filter when provided and not 'all'", async () => {

@@ -4,7 +4,6 @@ import { useEffect, useRef } from "react";
 
 interface FeaturedRibbonProps {
   label: string;
-  /** CSS variable name for the category color, e.g. "--pink" */
   accentVar: string;
   size?: "sm" | "lg";
 }
@@ -20,32 +19,23 @@ const DEVICE_PIXEL_RATIO =
     ? SSR_PIXEL_RATIO
     : globalThis.window.devicePixelRatio || 1;
 
-/** Canvas drawing constants */
 const LETTER_SPACING_RATIO = 0.15;
 const MAX_WIDTH_RATIO = 0.65;
 const SHINE_DURATION_MS = 2500;
 const SHINE_PAUSE_MS = 1500;
 const CYCLE_MS = SHINE_DURATION_MS + SHINE_PAUSE_MS;
-const FALLBACK_COLOR = "#e91e63";
-
-/* Shine gradient stops */
 const SHINE_BAND_START = -0.3;
 const SHINE_BAND_RANGE = 1.6;
 const SHINE_STOP_EDGE = 0.4;
 const SHINE_STOP_CENTER = 0.5;
 const SHINE_STOP_END = 0.6;
-const SHINE_OPACITY = "rgba(255,255,255,0.5)";
-const SHINE_TRANSPARENT = "rgba(255,255,255,0)";
-
-/* Text rotation: -45 degrees in radians */
+const SHINE_OPACITY = 0.35;
+const SHINE_TRANSPARENT = "transparent";
 const DIAGONAL_DIVISOR = 4;
 const TEXT_ANGLE = -Math.PI / DIAGONAL_DIVISOR;
-
 const FONT_STACK = "Syne, sans-serif";
-
 const HALF_DIVISOR = 2;
 
-/** Measure total width of spaced text */
 function measureSpacedText(
   ctx: CanvasRenderingContext2D,
   text: string,
@@ -58,7 +48,6 @@ function measureSpacedText(
   );
 }
 
-/** Draw text character by character with manual letter spacing */
 function drawSpacedText(
   ctx: CanvasRenderingContext2D,
   text: string,
@@ -88,8 +77,10 @@ export function FeaturedRibbon({
 
     let ctx: CanvasRenderingContext2D | null = null;
     try {
-      // eslint-disable-next-line i18next/no-literal-string -- canvas context type
-      ctx = canvas.getContext("2d");
+      ctx = canvas.getContext(
+        // eslint-disable-next-line i18next/no-literal-string -- HTML canvas API context identifier
+        "2d",
+      );
     } catch {
       return;
     }
@@ -99,14 +90,16 @@ export function FeaturedRibbon({
     canvas.height = s * DEVICE_PIXEL_RATIO;
     ctx.scale(DEVICE_PIXEL_RATIO, DEVICE_PIXEL_RATIO);
 
-    // Resolve CSS variable to actual color
     const style = getComputedStyle(canvas);
+    const foregroundColor =
+      style.getPropertyValue("--foreground").trim() || "currentColor";
     const bgColor =
       style.getPropertyValue(accentVar).trim() ||
       style
         .getPropertyValue(`--color-${accentVar.replace(/^-+/, "")}`)
         .trim() ||
-      FALLBACK_COLOR;
+      style.getPropertyValue("--primary").trim() ||
+      foregroundColor;
 
     const text = label.toUpperCase();
     let finalFontSize: number = baseFontSize;
@@ -117,7 +110,6 @@ export function FeaturedRibbon({
       if (!ctx) return;
       ctx.clearRect(0, 0, s, s);
 
-      // 1. Triangle
       ctx.save();
       ctx.beginPath();
       ctx.moveTo(0, 0);
@@ -127,7 +119,6 @@ export function FeaturedRibbon({
       ctx.fillStyle = bgColor;
       ctx.fill();
 
-      // 2. Shine sweep (clipped to triangle)
       ctx.clip();
       const cycle = timestamp % CYCLE_MS;
       if (cycle < SHINE_DURATION_MS) {
@@ -142,19 +133,21 @@ export function FeaturedRibbon({
         );
         grad.addColorStop(0, SHINE_TRANSPARENT);
         grad.addColorStop(SHINE_STOP_EDGE, SHINE_TRANSPARENT);
-        grad.addColorStop(SHINE_STOP_CENTER, SHINE_OPACITY);
+        grad.addColorStop(SHINE_STOP_CENTER, foregroundColor);
         grad.addColorStop(SHINE_STOP_END, SHINE_TRANSPARENT);
         grad.addColorStop(1, SHINE_TRANSPARENT);
+        ctx.save();
+        ctx.globalAlpha = SHINE_OPACITY;
         ctx.fillStyle = grad;
         ctx.fillRect(0, 0, s, s);
+        ctx.restore();
       }
       ctx.restore();
 
-      // 3. Text along diagonal
       ctx.save();
       ctx.translate(s * textOffset, s * textOffset);
       ctx.rotate(TEXT_ANGLE);
-      ctx.fillStyle = "white";
+      ctx.fillStyle = foregroundColor;
       ctx.font = `800 ${String(finalFontSize)}px ${FONT_STACK}`;
       ctx.textAlign = "left";
       ctx.textBaseline = "middle";
@@ -164,7 +157,6 @@ export function FeaturedRibbon({
       animId = requestAnimationFrame(draw);
     }
 
-    // Wait for fonts, then auto-scale text to fit
     document.fonts.ready.then(() => {
       ctx.font = `800 ${String(baseFontSize)}px ${FONT_STACK}`;
       const baseSpacing = baseFontSize * LETTER_SPACING_RATIO;

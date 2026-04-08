@@ -1,4 +1,4 @@
-/* eslint-disable sonarjs/cognitive-complexity */
+/* eslint-disable react-hooks/refs -- @hello-pangea/dnd requires ref access during render for drag-and-drop binding */
 "use client";
 
 import type { DraggableProvided } from "@hello-pangea/dnd";
@@ -22,15 +22,6 @@ import {
 } from "@/features/products/domain/constants";
 import type { Product } from "@/features/products/domain/types";
 
-const BADGE_CLASS = "border-2 font-bold uppercase";
-const SWITCH_CLASS =
-  "inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border-2 border-border transition-colors";
-const SWITCH_THUMB_CLASS =
-  "pointer-events-none block size-4 rounded-full border border-border bg-background transition-transform";
-const CELL_CLASS = "px-4 py-3";
-const ACTION_BTN_CLASS = "border-2 border-border";
-const SWITCH_ON_POSITION = "translate-x-5";
-const SWITCH_OFF_POSITION = "translate-x-0.5";
 const STATUS_ON = "on";
 const STATUS_OFF = "off";
 
@@ -109,15 +100,26 @@ export function ProductTableRow({
     });
   }, [deleteMutation, product.id]);
 
-  let actionControls: ReactNode = null;
+  const getToggleClass = (isActive: boolean, activeClass: string) =>
+    cn(
+      "inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border-2 border-border transition-colors",
+      isActive ? activeClass : "bg-muted",
+    );
 
+  const getToggleThumbClass = (isActive: boolean) =>
+    cn(
+      "pointer-events-none block size-4 rounded-full border border-border bg-background transition-transform",
+      isActive ? "translate-x-5" : "translate-x-0.5",
+    );
+
+  let actionControls: ReactNode = null;
   if (canDelete && deletingId === product.id) {
     actionControls = (
       <div className="flex items-center gap-1">
         <Button
           variant="destructive"
           size="sm"
-          className={`${ACTION_BTN_CLASS} text-xs`}
+          className="border-2 border-border text-xs"
           onClick={confirmDelete}
           disabled={deleteMutation.isPending}
           {...tid(`confirm-delete-${product.id}`)}
@@ -127,7 +129,7 @@ export function ProductTableRow({
         <Button
           variant="outline"
           size="sm"
-          className={`${ACTION_BTN_CLASS} text-xs`}
+          className="border-2 border-border text-xs"
           onClick={() => setDeletingId(null)}
           {...tid(`cancel-delete-${product.id}`)}
         >
@@ -140,7 +142,7 @@ export function ProductTableRow({
       <Button
         variant="outline"
         size="sm"
-        className={`${ACTION_BTN_CLASS} text-destructive hover:bg-destructive/10`}
+        className="border-2 border-border text-destructive hover:bg-destructive/10"
         onClick={handleDelete}
         {...tid(`delete-product-${product.id}`)}
       >
@@ -150,7 +152,6 @@ export function ProductTableRow({
     );
   }
 
-  /* eslint-disable react-hooks/refs -- @hello-pangea/dnd requires ref access during render for drag-and-drop binding */
   return (
     <tr
       ref={dragProvided.innerRef}
@@ -162,9 +163,8 @@ export function ProductTableRow({
       )}
       {...tid(`product-row-${product.id}`)}
     >
-      {/* Drag handle */}
       {canReorder && (
-        <td className={`${CELL_CLASS} w-10`}>
+        <td className="w-10 px-4 py-3">
           <div
             {...dragProvided.dragHandleProps}
             className="cursor-grab text-muted-foreground hover:text-foreground"
@@ -175,8 +175,7 @@ export function ProductTableRow({
         </td>
       )}
 
-      {/* Thumbnail */}
-      <td className={CELL_CLASS}>
+      <td className="px-4 py-3">
         <div className="size-10 overflow-hidden rounded-lg border-2 border-border bg-muted">
           {imageUrl ? (
             <Image
@@ -194,107 +193,80 @@ export function ProductTableRow({
         </div>
       </td>
 
-      {/* Name */}
-      <td className={CELL_CLASS}>
+      <td className="px-4 py-3">
         <span className="text-table-cell font-medium">{name}</span>
       </td>
 
-      {/* Type */}
-      <td className={CELL_CLASS}>
+      <td className="px-4 py-3">
         <Badge
           variant="outline"
-          className={cn(
-            BADGE_CLASS,
-            TYPE_COLOR_MAP[product.type as ProductType],
-          )}
+          className="border-2 font-bold uppercase"
+          style={TYPE_COLOR_MAP[product.type as ProductType]}
         >
           {t(`productTypes.${product.type}`)}
         </Badge>
       </td>
 
-      {/* Category */}
-      <td className={CELL_CLASS}>
+      <td className="px-4 py-3">
         <Badge
           variant="outline"
-          className={cn(
-            BADGE_CLASS,
-            CATEGORY_COLOR_MAP[product.category as ProductCategory],
-          )}
+          className="border-2 font-bold uppercase"
+          style={CATEGORY_COLOR_MAP[product.category as ProductCategory]}
         >
           {t(`categories.${product.category}`)}
         </Badge>
       </td>
 
-      {/* Price */}
-      <td className={`${CELL_CLASS} text-right`}>
+      <td className="px-4 py-3 text-right">
         <span className="text-table-cell font-bold tabular-nums">
           {formatCOP(product.price_cop)}
         </span>
       </td>
 
-      {/* Active toggle */}
-      <td className={`${CELL_CLASS} text-center`}>
+      <td className="px-4 py-3 text-center">
         {canUpdate ? (
           <button
             type="button"
             onClick={() => handleToggle("is_active", product.is_active)}
             disabled={toggleMutation.isPending}
-            className={cn(
-              SWITCH_CLASS,
-              product.is_active ? "bg-success" : "bg-muted",
-            )}
+            className={getToggleClass(product.is_active, "bg-success")}
             role="switch"
             aria-checked={product.is_active}
             {...tid(`toggle-active-${product.id}`)}
           >
-            <span
-              className={cn(
-                SWITCH_THUMB_CLASS,
-                product.is_active ? SWITCH_ON_POSITION : SWITCH_OFF_POSITION,
-              )}
-            />
+            <span className={getToggleThumbClass(product.is_active)} />
           </button>
         ) : (
           renderReadOnlyState(product.is_active)
         )}
       </td>
 
-      {/* Featured toggle */}
-      <td className={`${CELL_CLASS} text-center`}>
+      <td className="px-4 py-3 text-center">
         {canUpdate ? (
           <button
             type="button"
             onClick={() => handleToggle("featured", product.featured)}
             disabled={toggleMutation.isPending}
-            className={cn(
-              SWITCH_CLASS,
-              product.featured ? "bg-brand" : "bg-muted",
-            )}
+            className={getToggleClass(product.featured, "bg-brand")}
             role="switch"
             aria-checked={product.featured}
             {...tid(`toggle-featured-${product.id}`)}
           >
-            <span
-              className={cn(
-                SWITCH_THUMB_CLASS,
-                product.featured ? SWITCH_ON_POSITION : SWITCH_OFF_POSITION,
-              )}
-            />
+            <span className={getToggleThumbClass(product.featured)} />
           </button>
         ) : (
           renderReadOnlyState(product.featured)
         )}
       </td>
 
-      {/* Actions */}
-      <td className={`${CELL_CLASS} text-right`}>
+      <td className="px-4 py-3 text-right">
         <div className="flex items-center justify-end gap-2">
           {canUpdate && (
             <Link href={`/products/${product.id}`}>
               <Button
                 variant="outline"
                 size="sm"
-                className={ACTION_BTN_CLASS}
+                className="border-2 border-border"
                 {...tid(`edit-product-${product.id}`)}
               >
                 <Pencil className="size-3.5" />
@@ -307,5 +279,4 @@ export function ProductTableRow({
       </td>
     </tr>
   );
-  /* eslint-enable react-hooks/refs */
 }

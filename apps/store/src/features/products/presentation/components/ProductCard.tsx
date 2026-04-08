@@ -13,7 +13,10 @@ import {
   type Product,
 } from "@/features/products/domain/types";
 import { useAddToCart } from "@/shared/application/hooks/useAddToCart";
-import { getCategoryColor } from "@/shared/domain/categoryConstants";
+import {
+  getCategoryColor,
+  getCategoryTheme,
+} from "@/shared/domain/categoryConstants";
 import { Link } from "@/shared/infrastructure/i18n";
 
 type ProductCardVariant = "default" | "featured";
@@ -33,6 +36,7 @@ export function ProductCard({
   const locale = useLocale();
   const { added, quantityInCart, handleAddToCart } = useAddToCart(product);
 
+  const categoryTheme = getCategoryTheme(product.category);
   const categoryColor = getCategoryColor(product.category);
   const isFeatured = variant === "featured";
   const addToCartLabel = added ? t("addedToCart") : t("addToCart");
@@ -43,7 +47,7 @@ export function ProductCard({
 
   return (
     <article
-      className={`flex border-3 border-foreground nb-shadow-md bg-background transition-transform hover:-translate-1 ${
+      className={`flex border-strong border-foreground shadow-brutal-md bg-background transition-transform hover:-translate-1 ${
         isFeatured ? "flex-col sm:flex-row" : "flex-col"
       }`}
       {...tid("product-card")}
@@ -60,6 +64,7 @@ export function ProductCard({
         <ProductCardImage
           product={product}
           categoryColor={categoryColor}
+          categoryForeground={categoryTheme.foreground}
           isFeatured={isFeatured}
           featuredLabel={t("featured")}
           outOfStockLabel={t("outOfStock")}
@@ -78,6 +83,7 @@ export function ProductCard({
           <ProductBadges
             product={product}
             categoryColor={categoryColor}
+            categoryForeground={categoryTheme.foreground}
             tCategories={tCategories}
             tTypes={tTypes}
             t={t}
@@ -134,7 +140,7 @@ export function ProductCard({
             {isFeatured && (
               <button
                 type="button"
-                className="sm:ml-auto nb-btn nb-btn-press-sm nb-shadow-md font-display font-extrabold uppercase tracking-widest px-8 py-3 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                className="sm:ml-auto button-brutal button-press-sm shadow-brutal-md font-display font-extrabold uppercase tracking-widest px-8 py-3 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                 onClick={handleAddToCart}
                 disabled={isAddToCartDisabled}
                 {...tid("product-card-add-to-cart")}
@@ -152,7 +158,7 @@ export function ProductCard({
         <div className="px-4 pb-4">
           <button
             type="button"
-            className="w-full justify-center nb-btn nb-btn-press-sm nb-shadow-md font-display text-xs font-extrabold uppercase tracking-widest px-6 py-2.5 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full justify-center button-brutal button-press-sm shadow-brutal-md font-display text-xs font-extrabold uppercase tracking-widest px-6 py-2.5 disabled:opacity-50 disabled:cursor-not-allowed"
             onClick={handleAddToCart}
             disabled={isAddToCartDisabled}
             {...tid("product-card-add-to-cart")}

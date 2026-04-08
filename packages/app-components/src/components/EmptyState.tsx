@@ -9,7 +9,10 @@ interface EmptyStateProps {
   height?: string;
 }
 
-export function EmptyState({ message, height = "h-[60vh]" }: EmptyStateProps) {
+export function EmptyState({
+  message,
+  height = "min-h-state-pane",
+}: EmptyStateProps) {
   const tCommon = useTranslations("common");
 
   return (

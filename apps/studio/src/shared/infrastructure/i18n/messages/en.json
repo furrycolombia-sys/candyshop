@@ -22,8 +22,7 @@
       "title": "Sign in",
       "subtitle": "Choose your preferred sign-in method",
       "google": "Continue with Google",
-      "discord": "Continue with Discord",
-      "twitter": "Continue with X"
+      "discord": "Continue with Discord"
     },
     "signOut": "Sign out"
   },
@@ -32,6 +31,7 @@
     "error": "An error occurred",
     "accessDenied": "Access denied",
     "accessDeniedHint": "This section is hidden until the required permission is granted.",
+    "retry": "Try again",
     "save": "Save",
     "cancel": "Cancel",
     "delete": "Delete",

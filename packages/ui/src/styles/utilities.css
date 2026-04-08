@@ -14,6 +14,20 @@
     @apply text-4xl font-bold leading-tight tracking-tight;
   }
 
+  .text-hero-display {
+    font-size: clamp(3.5rem, 10vw, 8rem);
+    line-height: 0.9;
+    font-weight: 800;
+    letter-spacing: -0.025em;
+  }
+
+  .text-cta-display {
+    font-size: clamp(2.5rem, 7vw, 6rem);
+    line-height: 0.9;
+    font-weight: 800;
+    letter-spacing: -0.025em;
+  }
+
   .text-title-2 {
     @apply text-3xl font-bold leading-tight tracking-tight;
   }
@@ -70,11 +84,20 @@
     @apply text-xs leading-normal;
   }
 
-  /* Note: text-tiny is defined in @theme inline as --text-tiny */
+  /* Note: text-ui-xs is defined in @theme inline as --text-ui-xs */
 
   /* === BADGE TEXT === */
   .text-badge {
     @apply text-xs font-medium leading-none;
+  }
+
+  .text-micro-label {
+    @apply text-ui-xs font-bold uppercase tracking-widest;
+  }
+
+  .text-section-label {
+    @apply text-ui-xs font-semibold uppercase;
+    letter-spacing: 0.2em;
   }
 
   /* === CARD ELEMENTS === */
@@ -122,30 +145,106 @@
      ============================================ */
 
   /* Dot grid background */
-  .bg-dots {
-    background-image: radial-gradient(circle, #d0d0d0 1px, transparent 1px);
+  .surface-grid-dots {
+    background-image: radial-gradient(
+      circle,
+      color-mix(in srgb, var(--foreground) 18%, transparent) 1px,
+      transparent 1px
+    );
     background-size: 24px 24px;
   }
 
-  .dark .bg-dots {
-    background-image: radial-gradient(circle, #2a2a2e 1px, transparent 1px);
+  .dark .surface-grid-dots {
+    background-image: radial-gradient(
+      circle,
+      color-mix(in srgb, var(--foreground) 24%, transparent) 1px,
+      transparent 1px
+    );
+  }
+
+  .w-sidebar-collapsed {
+    width: 4.25rem;
+  }
+
+  .w-sidebar-indicator {
+    width: 3px;
+  }
+
+  .min-h-app-pane {
+    min-height: 50vh;
+  }
+
+  .min-h-state-pane {
+    min-height: 60vh;
+  }
+
+  .min-h-hero-stage {
+    min-height: 88vh;
+  }
+
+  .min-h-form-textarea {
+    min-height: 80px;
+  }
+
+  .top-app-toolbar {
+    top: 61px;
+  }
+
+  .max-w-empty-copy {
+    max-width: 15rem;
+  }
+
+  .tracking-section {
+    letter-spacing: 0.2em;
+  }
+
+  .border-b-strong {
+    border-bottom-width: 3px;
+  }
+
+  .border-t-strong {
+    border-top-width: 3px;
+  }
+
+  .border-strong {
+    border-width: 3px;
+  }
+
+  .border-x-strong {
+    border-left-width: 3px;
+    border-right-width: 3px;
+  }
+
+  .rounded-inherit {
+    border-radius: inherit;
+  }
+
+  .focus-ring-strong:focus-visible {
+    outline: 3px solid color-mix(in srgb, var(--ring) 50%, transparent);
+    outline-offset: 0;
   }
 
   /* Hard shadow utilities */
-  .nb-shadow-sm {
-    box-shadow: var(--nb-shadow-sm);
+  .shadow-brutal-sm {
+    box-shadow: var(--shadow-brutal-sm);
+  }
+  .shadow-brutal-md {
+    box-shadow: var(--shadow-brutal-md);
+  }
+  .shadow-brutal-lg {
+    box-shadow: var(--shadow-brutal-lg);
   }
 
   .nb-shadow-md {
-    box-shadow: var(--nb-shadow-md);
+    box-shadow: var(--shadow-brutal-md);
   }
 
   .nb-shadow-lg {
-    box-shadow: var(--nb-shadow-lg);
+    box-shadow: var(--shadow-brutal-lg);
   }
 
   /* Neobrutalist button — bold uppercase with press/hover feedback */
-  .nb-btn {
+  .button-brutal {
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
@@ -154,6 +253,13 @@
     text-transform: uppercase;
     letter-spacing: 0.05em;
     transition: all 150ms;
+  }
+  .button-brutal:hover {
+    translate: -2px -2px;
+  }
+  .button-brutal:focus-visible {
+    outline: 2px solid var(--foreground);
+    outline-offset: 2px;
   }
 
   .nb-btn:hover {
@@ -166,13 +272,13 @@
   }
 
   /* Small press — for buttons inside colored cards */
-  .nb-btn-press-sm:active {
+  .button-press-sm:active {
     translate: 2px 2px;
     box-shadow: none;
   }
 
   /* Large press — for standalone CTA buttons */
-  .nb-btn-press-lg:active {
+  .button-press-lg:active {
     translate: 3px 3px;
     box-shadow: none;
   }

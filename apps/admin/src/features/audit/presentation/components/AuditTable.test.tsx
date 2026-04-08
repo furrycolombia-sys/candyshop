@@ -14,14 +14,6 @@ vi.mock("shared", () => ({
   tid: (id: string) => ({ "data-testid": id }),
 }));
 
-vi.mock("@/shared/domain/constants", () => ({
-  AUDIT_ACTION_COLORS: {
-    INSERT: "bg-mint text-mint",
-    UPDATE: "bg-sky text-sky",
-    DELETE: "bg-peach text-peach",
-  },
-}));
-
 vi.mock("@/shared/infrastructure/config", () => ({
   appUrls: { auth: "https://auth.local" },
 }));
@@ -217,12 +209,17 @@ describe("AuditTable", () => {
     expect(screen.getByTestId("detail-42")).toBeInTheDocument();
   });
 
-  it("user link click stops propagation", () => {
+  it("user link click does not expand the row", () => {
     render(<AuditTable {...defaultProps} entries={[makeEntry()]} />);
-    const link = screen.getByText("Test User").closest("a")!;
-    const event = new MouseEvent("click", { bubbles: true });
-    const stopProp = vi.spyOn(event, "stopPropagation");
-    link.dispatchEvent(event);
-    expect(stopProp).toHaveBeenCalled();
+
+    expect(screen.queryByTestId("detail-1")).not.toBeInTheDocument();
+
+    const link = screen.getByText("Test User").closest("a");
+    expect(link).not.toBeNull();
+    link?.addEventListener("click", (event) => event.preventDefault());
+
+    fireEvent.click(link!);
+
+    expect(screen.queryByTestId("detail-1")).not.toBeInTheDocument();
   });
 });

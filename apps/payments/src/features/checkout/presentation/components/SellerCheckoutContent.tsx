@@ -130,7 +130,7 @@ export function SellerCheckoutContent({
                 onChange={(e) => onTransferNumberChange(e.target.value)}
                 placeholder={t("transferNumberHint")}
                 disabled={isDisabled}
-                className="border-3 border-foreground rounded-none"
+                className="border-strong border-foreground rounded-none"
                 {...tid(`transfer-number-${sellerId}`)}
               />
             </div>
@@ -154,7 +154,7 @@ export function SellerCheckoutContent({
             type="button"
             onClick={onSubmit}
             disabled={isDisabled || !selectedMethodId}
-            className="nb-btn nb-btn-press-sm nb-shadow-sm w-full justify-center border-3 border-foreground bg-foreground px-6 py-3 font-display text-sm font-extrabold uppercase tracking-widest text-background transition-all disabled:cursor-not-allowed disabled:opacity-50"
+            className="button-brutal button-press-sm shadow-brutal-sm w-full justify-center border-strong border-foreground bg-foreground px-6 py-3 font-display text-sm font-extrabold uppercase tracking-widest text-background transition-all disabled:cursor-not-allowed disabled:opacity-50"
             {...tid(`submit-payment-${sellerId}`)}
           >
             {submitLabel}

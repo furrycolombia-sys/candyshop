@@ -79,7 +79,8 @@ function GalleryItemEditor({
       {/* eslint-disable @next/next/no-img-element -- studio editor uses raw img for arbitrary user URLs */}
       {/* Image preview / placeholder — mirrors store GallerySection */}
       <div
-        className={`relative flex h-44 items-center justify-center overflow-hidden border-3 border-foreground ${theme.bg} nb-shadow-sm`}
+        className="relative flex h-44 items-center justify-center overflow-hidden border-strong border-foreground shadow-brutal-sm"
+        style={{ backgroundColor: theme.bg }}
       >
         {imageUrl ? (
           <img
@@ -101,7 +102,7 @@ function GalleryItemEditor({
         onChange={imageField.field.onChange}
         onBlur={imageField.field.onBlur}
         placeholder={t("imageUrl")}
-        className="border-none bg-transparent p-0 text-tiny text-muted-foreground shadow-none focus-visible:ring-0"
+        className="border-none bg-transparent p-0 text-ui-xs text-muted-foreground shadow-none focus-visible:ring-0"
         {...tid(`section-item-image-${sectionIndex}-${itemIndex}`)}
       />
 
@@ -110,7 +111,7 @@ function GalleryItemEditor({
         <button
           type="button"
           onClick={toggleLang}
-          className="shrink-0 rounded-sm border-2 border-foreground/30 px-1 py-0.5 font-display text-[9px] font-extrabold uppercase tracking-widest text-muted-foreground hover:border-foreground hover:text-foreground"
+          className="shrink-0 rounded-sm border-2 border-foreground/30 px-1 py-0.5 font-display text-ui-xs font-extrabold uppercase tracking-widest text-muted-foreground hover:border-foreground hover:text-foreground"
           {...tid(`section-item-lang-toggle-${sectionIndex}-${itemIndex}`)}
         >
           {lang.toUpperCase()}

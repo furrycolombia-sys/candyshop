@@ -168,6 +168,7 @@
     "loading": "Loading...",
     "accessDenied": "Access denied",
     "accessDeniedHint": "This section is hidden until the required permission is granted.",
+    "retry": "Try again",
     "theme": {
       "switchToDark": "Switch to dark mode",
       "switchToLight": "Switch to light mode",

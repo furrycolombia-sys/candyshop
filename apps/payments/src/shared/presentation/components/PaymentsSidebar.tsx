@@ -76,7 +76,8 @@ const NAV_SECTIONS: readonly NavSection[] = [
     ],
   },
 ] as const;
-const COLLAPSED_WIDTH_CLASS = "w-[68px]";
+
+const COLLAPSED_WIDTH_CLASS = "w-sidebar-collapsed";
 const INACTIVE_LINK_CLASS =
   "text-muted-foreground hover:bg-muted hover:text-foreground";
 
@@ -101,7 +102,6 @@ export function PaymentsSidebar() {
       }`}
       {...tid("payments-sidebar")}
     >
-      {/* Collapse toggle */}
       <button
         type="button"
         onClick={() => setCollapsed((prev) => !prev)}
@@ -116,18 +116,15 @@ export function PaymentsSidebar() {
         )}
       </button>
 
-      {/* Navigation sections */}
       <nav className="flex flex-1 flex-col gap-1 px-2.5 pt-10">
         {visibleSections.map((section) => (
           <div key={section.labelKey} className="mb-2">
-            {/* Section label */}
             {!collapsed && (
-              <span className="mb-1.5 block px-2 font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/60">
+              <span className="text-section-label mb-1.5 block px-2 font-mono text-muted-foreground/60">
                 {t(section.labelKey)}
               </span>
             )}
 
-            {/* Section items */}
             <div className="flex flex-col gap-0.5">
               {section.items.map(({ key, href, icon }) => {
                 const NavIcon = icon;
@@ -148,9 +145,8 @@ export function PaymentsSidebar() {
                     aria-current={isActive ? "page" : undefined}
                     {...tid(`sidebar-${key}`)}
                   >
-                    {/* Active indicator bar */}
                     {isActive && (
-                      <span className="absolute left-0 inset-y-1 w-[3px] rounded-r-full bg-pink" />
+                      <span className="absolute left-0 inset-y-1 w-sidebar-indicator rounded-r-full bg-pink" />
                     )}
 
                     <NavIcon

@@ -74,8 +74,8 @@ export function useFlyToCart() {
       left: `${sourceRect.left + sourceRect.width / HALF - PROJECTILE_SIZE / HALF}px`,
       top: `${sourceRect.top + sourceRect.height / HALF - PROJECTILE_SIZE / HALF}px`,
       border: `3px solid var(--foreground)`,
+      backgroundColor: color,
     });
-    dot.className = color;
     document.body.append(dot);
 
     // Target position: centre of the cart button

@@ -47,7 +47,7 @@ export function TimeoutSettings({
 
   return (
     <div
-      className="border-3 border-foreground bg-background p-6 nb-shadow-sm"
+      className="border-strong border-foreground bg-background p-6 shadow-brutal-sm"
       {...tid("timeout-settings-card")}
     >
       <h2 className="mb-4 font-display text-xl font-extrabold uppercase tracking-tight">
@@ -90,7 +90,7 @@ export function TimeoutSettings({
           type="button"
           onClick={() => onSave(local)}
           disabled={isPending}
-          className="mt-6 border-3 border-foreground bg-foreground px-5 py-2.5 font-display text-xs font-bold uppercase tracking-widest text-background transition-colors hover:bg-foreground/90 disabled:opacity-50"
+          className="mt-6 border-strong border-foreground bg-foreground px-5 py-2.5 font-display text-xs font-bold uppercase tracking-widest text-background transition-colors hover:bg-foreground/90 disabled:opacity-50"
           {...tid("timeout-settings-save")}
         >
           {isPending ? t("saving") : t("save")}

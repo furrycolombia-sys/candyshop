@@ -37,14 +37,16 @@ describe("products domain constants", () => {
   it("maps every category to a color", () => {
     for (const category of PRODUCT_CATEGORIES) {
       expect(CATEGORY_COLOR_MAP[category]).toBeDefined();
-      expect(typeof CATEGORY_COLOR_MAP[category]).toBe("string");
+      expect(CATEGORY_COLOR_MAP[category]).toHaveProperty("backgroundColor");
+      expect(CATEGORY_COLOR_MAP[category]).toHaveProperty("color");
     }
   });
 
   it("maps every type to a color", () => {
     for (const type of PRODUCT_TYPES) {
       expect(TYPE_COLOR_MAP[type]).toBeDefined();
-      expect(typeof TYPE_COLOR_MAP[type]).toBe("string");
+      expect(TYPE_COLOR_MAP[type]).toHaveProperty("backgroundColor");
+      expect(TYPE_COLOR_MAP[type]).toHaveProperty("color");
     }
   });
 

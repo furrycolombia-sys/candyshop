@@ -1,12 +1,14 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-import { deleteReceipt, uploadReceipt } from "./receiptStorage";
+import { deleteReceipt, getReceiptUrl, uploadReceipt } from "./receiptStorage";
 
 const mockUpload = vi.fn();
 const mockRemove = vi.fn();
+const mockCreateSignedUrl = vi.fn();
 const mockStorageFrom = vi.fn(() => ({
   upload: mockUpload,
   remove: mockRemove,
+  createSignedUrl: mockCreateSignedUrl,
 }));
 
 const mockSupabase = {
@@ -36,6 +38,22 @@ describe("uploadReceipt", () => {
     randomUuidSpy.mockRestore();
   });
 
+  it("sanitizes receipt file names before upload", async () => {
+    mockUpload.mockResolvedValue({ error: null });
+
+    const file = new File(["data"], "../../Receipt Final.jpeg", {
+      type: "image/jpeg",
+    });
+    const result = await uploadReceipt(mockSupabase, file, "order-123");
+
+    expect(mockUpload).toHaveBeenCalledWith(
+      "order-123/receipt-final.jpg",
+      file,
+      { upsert: true },
+    );
+    expect(result).toBe("order-123/receipt-final.jpg");
+  });
+
   it("throws on upload error", async () => {
     const uploadError = new Error("Upload failed");
     mockUpload.mockResolvedValue({ error: uploadError });
@@ -45,6 +63,14 @@ describe("uploadReceipt", () => {
     await expect(
       uploadReceipt(mockSupabase, file, "order-123"),
     ).rejects.toThrow("Upload failed");
+  });
+
+  it("throws when the receipt type is not allowed", async () => {
+    const file = new File(["data"], "receipt.gif", { type: "image/gif" });
+
+    await expect(
+      uploadReceipt(mockSupabase, file, "order-123"),
+    ).rejects.toThrow("invalid_receipt_type");
   });
 });
 
@@ -69,5 +95,27 @@ describe("deleteReceipt", () => {
     await expect(
       deleteReceipt(mockSupabase, "order-123/receipt.png"),
     ).rejects.toThrow("Remove failed");
+  });
+});
+
+describe("getReceiptUrl", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("returns null when no storage path is provided", async () => {
+    await expect(getReceiptUrl(mockSupabase, null)).resolves.toBeNull();
+    expect(mockCreateSignedUrl).not.toHaveBeenCalled();
+  });
+
+  it("returns a signed url for valid storage paths", async () => {
+    mockCreateSignedUrl.mockResolvedValue({
+      data: { signedUrl: "https://example.com/signed.png" },
+      error: null,
+    });
+
+    await expect(
+      getReceiptUrl(mockSupabase, "order-123/receipt.png"),
+    ).resolves.toBe("https://example.com/signed.png");
   });
 });

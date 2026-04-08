@@ -129,7 +129,7 @@ export function SectionCard({
     <div
       ref={dragProvided.innerRef}
       {...dragProvided.draggableProps}
-      className="relative rounded-xl border-3 border-foreground bg-card nb-shadow-sm"
+      className="relative rounded-xl border-strong border-foreground bg-card shadow-brutal-sm"
       {...tid(`section-card-${sectionIndex}`)}
     >
       {/* Section header */}
@@ -147,7 +147,7 @@ export function SectionCard({
         <button
           type="button"
           onClick={toggleNameLang}
-          className="shrink-0 rounded-sm border-2 border-foreground/30 px-1.5 py-0.5 font-display text-tiny font-extrabold uppercase tracking-widest text-muted-foreground hover:border-foreground hover:text-foreground"
+          className="shrink-0 rounded-sm border-2 border-foreground/30 px-1.5 py-0.5 font-display text-ui-xs font-extrabold uppercase tracking-widest text-muted-foreground hover:border-foreground hover:text-foreground"
         >
           {nameLang.toUpperCase()}
         </button>

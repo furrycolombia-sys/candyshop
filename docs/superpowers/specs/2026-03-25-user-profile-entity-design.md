@@ -35,7 +35,7 @@ Create a `public.user_profiles` table that:
 | `id`                 | uuid        | NO       | —       | PK, same as `auth.users.id`                                           |
 | `email`              | text        | NO       | —       | Login email, synced from auth. CHECK: must contain `@`                |
 | `avatar_url`         | text        | YES      | NULL    | Auth provider avatar, synced on every login                           |
-| `provider`           | text        | YES      | NULL    | Last auth provider used (`google`, `discord`, `twitter`)              |
+| `provider`           | text        | YES      | NULL    | Last auth provider used (`google`, `discord`)                         |
 | `display_name`       | text        | YES      | NULL    | User-editable. Set from provider on first login, preserved after      |
 | `display_email`      | text        | YES      | NULL    | User-editable contact email. CHECK: must contain `@` if set           |
 | `display_avatar_url` | text        | YES      | NULL    | User-editable custom avatar. CHECK: must start with `https://` if set |

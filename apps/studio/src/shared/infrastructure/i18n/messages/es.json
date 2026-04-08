@@ -22,8 +22,7 @@
       "title": "Iniciar sesión",
       "subtitle": "Elige tu método de inicio de sesión preferido",
       "google": "Continuar con Google",
-      "discord": "Continuar con Discord",
-      "twitter": "Continuar con X"
+      "discord": "Continuar con Discord"
     },
     "signOut": "Cerrar sesión"
   },
@@ -32,6 +31,7 @@
     "accessDenied": "Acceso denegado",
     "accessDeniedHint": "Esta seccion permanece oculta hasta que se otorgue el permiso requerido.",
     "error": "Ocurrió un error",
+    "retry": "Intentar de nuevo",
     "save": "Guardar",
     "cancel": "Cancelar",
     "delete": "Eliminar",

@@ -11,10 +11,7 @@ import { InlineTagEditor } from "./InlineTagEditor";
 import { InlineTextField } from "./InlineTextField";
 
 import type { ProductFormValues } from "@/features/products/domain/validationSchema";
-import {
-  CATEGORY_HERO_BG,
-  getCategoryTheme,
-} from "@/shared/domain/categoryConstants";
+import { getCategoryTheme } from "@/shared/domain/categoryConstants";
 
 interface InlineHeroProps {
   control: Control<ProductFormValues>;
@@ -34,7 +31,6 @@ export function InlineHero({ control, errors }: InlineHeroProps) {
   const refundable = useWatch({ control, name: "refundable" });
 
   const theme = getCategoryTheme(category);
-  const heroBg = CATEGORY_HERO_BG[category] ?? "bg-muted";
 
   // Stock status — mirrors store logic
   const isAvailable = isActive && (maxQuantity === null || maxQuantity > 0);
@@ -62,13 +58,14 @@ export function InlineHero({ control, errors }: InlineHeroProps) {
   }
 
   const badgeBase =
-    "border-3 border-foreground px-3 py-1 text-tiny font-bold uppercase tracking-widest text-foreground";
+    "border-strong border-foreground px-3 py-1 text-ui-xs font-bold uppercase tracking-widest text-foreground";
   const errorRing =
     "rounded-md ring-2 ring-destructive ring-offset-2 ring-offset-transparent";
 
   return (
     <section
-      className={`w-full ${heroBg} border-b-3 border-foreground`}
+      className="w-full border-b-strong border-foreground"
+      style={{ backgroundColor: theme.bgLight }}
       {...tid("inline-hero")}
     >
       <div className="max-w-6xl mx-auto px-4 py-10 lg:py-14">
@@ -79,13 +76,15 @@ export function InlineHero({ control, errors }: InlineHeroProps) {
           {/* Right: Product Info */}
           <div className="flex flex-col flex-1 gap-4 min-w-0">
             {/* 1. Tagline — theme-colored */}
-            <InlineTextField
-              control={control}
-              fieldNameEn="tagline_en"
-              fieldNameEs="tagline_es"
-              placeholder={t("taglinePlaceholder")}
-              className={`text-xs font-bold uppercase tracking-[0.2em] ${theme.text}`}
-            />
+            <div style={{ color: theme.text }}>
+              <InlineTextField
+                control={control}
+                fieldNameEn="tagline_en"
+                fieldNameEs="tagline_es"
+                placeholder={t("taglinePlaceholder")}
+                className="text-xs font-bold uppercase tracking-section"
+              />
+            </div>
 
             {/* 2. Name */}
             <div className={errors?.name_en ? errorRing : ""}>
@@ -110,7 +109,11 @@ export function InlineHero({ control, errors }: InlineHeroProps) {
             >
               {/* Category badge — theme bg */}
               <span
-                className={`${theme.badgeBg} border-3 border-foreground px-3 py-1 text-xs font-bold text-foreground`}
+                className="border-strong border-foreground px-3 py-1 text-xs font-bold"
+                style={{
+                  backgroundColor: theme.badgeBg,
+                  color: theme.foreground,
+                }}
                 {...tid("hero-category")}
               >
                 {tCategories(category)}
@@ -126,19 +129,23 @@ export function InlineHero({ control, errors }: InlineHeroProps) {
 
               {/* Stock badge */}
               <span
-                className={`${isAvailable ? "bg-mint" : "bg-peach"} ${badgeBase}`}
+                className={`${isAvailable ? "bg-success text-success-foreground" : "bg-warning text-warning-foreground"} ${badgeBase}`}
               >
                 {isAvailable ? tProducts("inStock") : tProducts("outOfStock")}
               </span>
 
               {/* Refundable badge */}
               {refundable === true && (
-                <span className={`bg-mint ${badgeBase}`}>
+                <span
+                  className={`bg-success text-success-foreground ${badgeBase}`}
+                >
                   {tProducts("refundable")}
                 </span>
               )}
               {refundable === false && (
-                <span className={`bg-peach ${badgeBase}`}>
+                <span
+                  className={`bg-warning text-warning-foreground ${badgeBase}`}
+                >
                   {tProducts("nonRefundable")}
                 </span>
               )}

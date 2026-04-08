@@ -3,6 +3,7 @@
 import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { tid } from "shared";
+import { cn } from "ui";
 
 import { DiscordIcon } from "./DiscordIcon";
 import { GoogleIcon } from "./GoogleIcon";
@@ -15,7 +16,6 @@ interface ProviderConfig {
   id: Provider;
   labelKey: string;
   icon: React.ReactNode;
-  fill: string;
 }
 
 const PROVIDERS: ProviderConfig[] = [
@@ -23,14 +23,11 @@ const PROVIDERS: ProviderConfig[] = [
     id: "google",
     labelKey: "google",
     icon: <GoogleIcon />,
-    fill: "bg-white text-black",
   },
   {
     id: "discord",
     labelKey: "discord",
     icon: <DiscordIcon />,
-    // Discord brand color — intentional hardcode per brand guidelines
-    fill: "bg-[#5865F2] text-white",
   },
 ];
 
@@ -50,11 +47,16 @@ export function SocialLoginButtons() {
 
   return (
     <div className="flex flex-col gap-4">
-      {PROVIDERS.map(({ id, labelKey, icon, fill }) => (
+      {PROVIDERS.map(({ id, labelKey, icon }) => (
         <button
           key={id}
           type="button"
-          className={`nb-btn nb-btn-press-sm nb-shadow-sm w-full justify-center gap-3 px-6 py-4 text-sm ${fill}`}
+          className={cn(
+            "button-brutal button-press-sm shadow-brutal-sm w-full justify-center gap-3 px-6 py-4 text-sm",
+            id === "google" &&
+              "border-strong border-border bg-background text-foreground hover:bg-muted",
+            id === "discord" && "bg-info text-info-foreground hover:bg-info/90",
+          )}
           onClick={() => handleSignIn(id)}
           {...tid(`login-${id}`)}
         >

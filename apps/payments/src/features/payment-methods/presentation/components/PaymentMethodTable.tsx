@@ -11,7 +11,6 @@ import type {
 } from "@/features/payment-methods/domain/types";
 import { getPaymentTypeName } from "@/features/payment-methods/domain/utils";
 
-const TABLE_HEADER_CLASS = "text-table-header px-4 py-3";
 const ZEBRA_MODULO = 2;
 const SKELETON_ROWS = 3;
 
@@ -41,7 +40,7 @@ export function PaymentMethodTable({
   if (isLoading) {
     return (
       <div
-        className="overflow-x-auto rounded-xl border-3 border-border bg-background nb-shadow-md"
+        className="overflow-x-auto rounded-xl border-strong border-border bg-background shadow-brutal-md"
         {...tid("payment-methods-table-loading")}
       >
         <div className="flex flex-col gap-4 p-6">
@@ -57,7 +56,7 @@ export function PaymentMethodTable({
   if (methods.length === 0) {
     return (
       <div
-        className="flex flex-col items-center justify-center gap-2 rounded-xl border-3 border-dashed border-border bg-muted/30 py-16"
+        className="flex flex-col items-center justify-center gap-2 rounded-xl border-strong border-dashed border-border bg-muted/30 py-16"
         {...tid("payment-methods-empty-state")}
       >
         <p className="font-display text-lg font-bold uppercase">
@@ -70,19 +69,19 @@ export function PaymentMethodTable({
 
   return (
     <div
-      className="overflow-x-auto rounded-xl border-3 border-border bg-background nb-shadow-md"
+      className="overflow-x-auto rounded-xl border-strong border-border bg-background shadow-brutal-md"
       {...tid("payment-methods-table")}
     >
       <table className="w-full">
         <thead>
-          <tr className="border-b-3 border-border bg-muted/50">
-            <th className={`${TABLE_HEADER_CLASS} text-left`}>
+          <tr className="border-b-strong border-border bg-muted/50">
+            <th className="px-4 py-3 text-left text-table-header">
               {t("selectType")}
             </th>
-            <th className={`${TABLE_HEADER_CLASS} text-center`}>
+            <th className="px-4 py-3 text-center text-table-header">
               {t("active")}
             </th>
-            <th className={`${TABLE_HEADER_CLASS} text-right`}>
+            <th className="px-4 py-3 text-right text-table-header">
               <span className="sr-only">{t("editPaymentMethod")}</span>
             </th>
           </tr>

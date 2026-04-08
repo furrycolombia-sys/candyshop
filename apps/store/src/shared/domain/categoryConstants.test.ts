@@ -40,12 +40,12 @@ describe("CATEGORY_THEMES", () => {
     expect(theme).toHaveProperty("accent");
   });
 
-  it("generates Tailwind-compatible class strings", () => {
+  it("generates CSS variable-driven theme values", () => {
     const theme = CATEGORY_THEMES.fursuits;
-    expect(theme.bg).toMatch(/^bg-/);
-    expect(theme.bgLight).toMatch(/^bg-.*\/\d+$/);
-    expect(theme.border).toMatch(/^border-/);
-    expect(theme.text).toMatch(/^text-/);
+    expect(theme.bg).toBe("var(--pink)");
+    expect(theme.bgLight).toContain("color-mix(");
+    expect(theme.border).toBe("var(--pink)");
+    expect(theme.text).toBe("var(--pink)");
   });
 });
 

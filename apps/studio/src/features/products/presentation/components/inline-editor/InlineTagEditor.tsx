@@ -79,7 +79,7 @@ export function InlineTagEditor({ control }: InlineTagEditorProps) {
       {tags.map((tag) => (
         <span
           key={tag}
-          className="flex items-center gap-1 rounded-full border-2 border-foreground bg-muted px-2.5 py-0.5 font-display text-tiny font-bold uppercase tracking-widest"
+          className="flex items-center gap-1 rounded-full border-2 border-foreground bg-muted px-2.5 py-0.5 font-display text-ui-xs font-bold uppercase tracking-widest"
         >
           #{tag}
           <button
@@ -111,7 +111,7 @@ export function InlineTagEditor({ control }: InlineTagEditorProps) {
         <button
           type="button"
           onClick={() => setShowInput(true)}
-          className="rounded-full border-2 border-dashed border-foreground/30 px-2.5 py-0.5 font-display text-tiny font-bold uppercase tracking-widest text-muted-foreground transition-colors hover:border-foreground/60 hover:text-foreground"
+          className="rounded-full border-2 border-dashed border-foreground/30 px-2.5 py-0.5 font-display text-ui-xs font-bold uppercase tracking-widest text-muted-foreground transition-colors hover:border-foreground/60 hover:text-foreground"
           {...tid("inline-tag-add-btn")}
         >
           + {t("addTag")}

@@ -39,7 +39,7 @@ export function ProductFormPage({ productId }: ProductFormPageProps) {
 
   if (isEdit && isLoading) {
     return (
-      <main className="flex flex-1 flex-col bg-dots">
+      <main className="flex flex-1 flex-col surface-grid-dots">
         <div className="mx-auto flex w-full max-w-4xl flex-col gap-6 px-4 py-8">
           <Skeleton className="h-10 w-48" />
           <Skeleton className="h-64 w-full rounded-xl" />

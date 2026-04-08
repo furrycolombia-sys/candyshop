@@ -33,6 +33,6 @@ describe("EmptyState", () => {
   it("applies default height class when not specified", () => {
     render(<EmptyState />);
     const el = screen.getByTestId("empty-state");
-    expect(el.className).toContain("h-[60vh]");
+    expect(el.className).toContain("min-h-state-pane");
   });
 });

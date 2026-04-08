@@ -15,8 +15,6 @@ interface TemplateTableProps {
   onToggleActive?: (id: string, isActive: boolean) => void;
 }
 
-const GRID_COLS = "grid-cols-[1fr_1fr_100px_80px_100px]";
-
 export function TemplateTable({
   templates,
   isLoading,
@@ -39,7 +37,7 @@ export function TemplateTable({
   if (templates.length === 0) {
     return (
       <div
-        className="flex flex-col items-center justify-center gap-2 rounded-xl border-3 border-dashed border-border bg-muted/30 py-16"
+        className="flex flex-col items-center justify-center gap-2 rounded-xl border-strong border-dashed border-border bg-muted/30 py-16"
         {...tid("templates-empty")}
       >
         <p className="font-display text-lg font-bold uppercase">
@@ -51,13 +49,11 @@ export function TemplateTable({
 
   return (
     <div
-      className="overflow-x-auto border-3 border-foreground bg-background nb-shadow-md"
+      className="overflow-x-auto border-strong border-foreground bg-background shadow-brutal-md"
       {...tid("templates-table")}
     >
       {/* Header row */}
-      <div
-        className={`grid ${GRID_COLS} border-b-3 border-foreground bg-muted/50`}
-      >
+      <div className="grid grid-cols-[1fr_1fr_100px_80px_100px] border-b-strong border-foreground bg-muted/50">
         <span className="px-4 py-3 font-display text-xs font-bold uppercase tracking-wider">
           {t("name")}
         </span>
@@ -83,7 +79,7 @@ export function TemplateTable({
           return (
             <div
               key={template.id}
-              className={`grid ${GRID_COLS} items-center transition-colors hover:bg-muted/30`}
+              className="grid grid-cols-[1fr_1fr_100px_80px_100px] items-center transition-colors hover:bg-muted/30"
               {...tid(`template-row-${template.id}`)}
             >
               {/* Name */}

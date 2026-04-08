@@ -21,7 +21,7 @@ export function PriceBlock({ product, discountLabel }: PriceBlockProps) {
 
   return (
     <div
-      className="border-3 border-foreground bg-background p-4 nb-shadow-sm"
+      className="border-strong border-foreground bg-background p-4 shadow-brutal-sm"
       {...tid("hero-price")}
     >
       <div className="flex items-baseline gap-3 flex-wrap">
@@ -48,7 +48,7 @@ export function PriceBlock({ product, discountLabel }: PriceBlockProps) {
       </div>
       {hasDiscount && compareAtPrice != null && (
         <div className="mt-2">
-          <span className="bg-lemon border-3 border-foreground px-2 py-0.5 text-xs font-bold uppercase tracking-widest">
+          <span className="border-strong border-foreground bg-warning px-2 py-0.5 text-xs font-bold uppercase tracking-widest text-warning-foreground">
             {discountLabel({
               amount: i18nPrice(
                 {

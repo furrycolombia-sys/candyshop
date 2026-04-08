@@ -14,7 +14,7 @@ interface LoadingStateProps {
 export function LoadingState({
   message,
   size = "lg",
-  height = "h-[60vh]",
+  height = "min-h-state-pane",
 }: LoadingStateProps) {
   const tCommon = useTranslations("common");
   let iconSizeClass = "size-8";

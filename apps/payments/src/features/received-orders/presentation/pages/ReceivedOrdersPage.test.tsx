@@ -28,9 +28,13 @@ vi.mock("next-intl", () => ({
   },
 }));
 
-vi.mock("shared", () => ({
-  tid: (id: string) => ({ "data-testid": id }),
-}));
+vi.mock("shared", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("shared")>();
+  return {
+    ...actual,
+    tid: (id: string) => ({ "data-testid": id }),
+  };
+});
 
 const mockSetParams = vi.fn();
 vi.mock("nuqs", () => ({

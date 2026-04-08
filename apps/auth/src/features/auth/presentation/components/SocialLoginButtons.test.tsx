@@ -1,5 +1,5 @@
-import { render, screen, fireEvent } from "@testing-library/react";
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { fireEvent, render, screen } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mockSignIn = vi.fn();
 
@@ -32,7 +32,7 @@ describe("SocialLoginButtons", () => {
     render(<SocialLoginButtons />);
     expect(screen.getByTestId("login-google")).toBeInTheDocument();
     expect(screen.getByTestId("login-discord")).toBeInTheDocument();
-    expect(screen.queryByTestId("login-twitter")).not.toBeInTheDocument();
+    expect(screen.getAllByRole("button")).toHaveLength(2);
   });
 
   it("calls signInWithProvider when button is clicked", () => {

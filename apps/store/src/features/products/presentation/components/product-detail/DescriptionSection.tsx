@@ -11,7 +11,7 @@ export function DescriptionSection({ description }: DescriptionSectionProps) {
 
   return (
     <section
-      className="w-full bg-dots border-b-3 border-foreground"
+      className="w-full surface-grid-dots border-b-strong border-foreground"
       {...tid("description-section")}
     >
       <div className="max-w-5xl mx-auto px-4 py-12">

@@ -21,7 +21,7 @@ vi.mock("@/features/cart/application/FlyToCartContext", () => ({
 }));
 
 vi.mock("@/shared/domain/categoryConstants", () => ({
-  getCategoryColor: () => "bg-mint",
+  getCategoryColor: () => "var(--mint)",
 }));
 
 const mockProduct = {

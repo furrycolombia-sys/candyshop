@@ -38,10 +38,10 @@ describe("cn", () => {
     expect(result).toBe("text-blue-500");
   });
 
-  it("preserves custom text-tiny alongside text-color classes", () => {
+  it("preserves custom text-ui-xs alongside text-color classes", () => {
     // This tests the extendTailwindMerge custom font-size config
-    const result = cn("text-tiny", "text-success");
-    expect(result).toBe("text-tiny text-success");
+    const result = cn("text-ui-xs", "text-success");
+    expect(result).toBe("text-ui-xs text-success");
   });
 
   it("resolves conflicting font-size utilities correctly", () => {
