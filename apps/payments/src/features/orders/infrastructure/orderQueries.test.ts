@@ -1,9 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const uploadReceiptMock = vi.fn(
-  async (_supabase: unknown, file: File, orderId: string) =>
-    `${orderId}/${file.name}`,
-);
+const { uploadReceiptMock } = vi.hoisted(() => ({
+  uploadReceiptMock: vi.fn(
+    async (_supabase: unknown, file: File, orderId: string) =>
+      `${orderId}/${file.name}`,
+  ),
+}));
 
 vi.mock("@/features/checkout/infrastructure/receiptStorage", () => ({
   getReceiptUrl: vi.fn(
