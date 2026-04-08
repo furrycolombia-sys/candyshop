@@ -1,37 +1,34 @@
-import fs from "node:fs";
 import path from "node:path";
 
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 
 import { cleanupTestData } from "./helpers/cleanup";
 import {
+  APP_URLS,
+  BULK_MUTATION_WAIT_MS,
+  DEBOUNCE_WAIT_MS,
+  ELEMENT_TIMEOUT_MS,
+  LONG_OPERATION_TIMEOUT_MS,
+  MUTATION_WAIT_MS,
+  NAVIGATION_TIMEOUT_MS,
+} from "./helpers/constants";
+import {
+  BUYER_PERMISSIONS,
   createTestUser,
   injectSession,
+  SELLER_PERMISSIONS,
   type TestUser,
 } from "./helpers/session";
+import { createSnapHelper } from "./helpers/snap";
 
-const SCREENSHOTS_DIR = path.resolve(__dirname, "screenshots");
-fs.mkdirSync(SCREENSHOTS_DIR, { recursive: true });
-
-const STUDIO = "http://localhost:5006";
-const STORE = "http://localhost:5001";
-const PAYMENTS = "http://localhost:5005";
-
-let stepCounter = 0;
-
-async function snap(page: Page, label: string): Promise<void> {
-  stepCounter++;
-  const filename = `${String(stepCounter).padStart(2, "0")}-${label}.png`;
-  await page.screenshot({
-    path: path.join(SCREENSHOTS_DIR, filename),
-    fullPage: true,
-  });
-}
+const { snap, resetCounter } = createSnapHelper(
+  path.resolve(__dirname, "screenshots"),
+);
 
 /**
- * Full purchase flow E2E test — with screenshots at every step.
+ * Full purchase flow E2E test -- with screenshots at every step.
  *
- * Exercises the complete seller → buyer → approval lifecycle:
+ * Exercises the complete seller -> buyer -> approval lifecycle:
  * 1. Seller creates a product in Studio
  * 2. Seller configures a payment method in Payments
  * 3. Buyer finds the product in Store and adds to cart
@@ -42,14 +39,14 @@ async function snap(page: Page, label: string): Promise<void> {
  *
  * Requires: supabase start + pnpm dev (all apps)
  */
-test.describe.serial("Full purchase flow: seller → buyer → approval", () => {
+test.describe.serial("Full purchase flow: seller -> buyer -> approval", () => {
   let seller: TestUser;
   let buyer: TestUser;
 
   test.beforeAll(async () => {
-    stepCounter = 0;
-    seller = await createTestUser("seller");
-    buyer = await createTestUser("buyer");
+    resetCounter();
+    seller = await createTestUser("seller", SELLER_PERMISSIONS);
+    buyer = await createTestUser("buyer", BUYER_PERMISSIONS);
   });
 
   test.afterAll(async () => {
@@ -65,7 +62,7 @@ test.describe.serial("Full purchase flow: seller → buyer → approval", () => 
     await injectSession(context, seller);
 
     // Navigate to studio
-    await page.goto(`${STUDIO}/en`);
+    await page.goto(`${APP_URLS.STUDIO}/en`);
     await page.waitForLoadState("networkidle");
     await snap(page, "studio-product-list");
 
@@ -90,11 +87,13 @@ test.describe.serial("Full purchase flow: seller → buyer → approval", () => 
     await page.getByTestId("toolbar-save").click();
 
     // Wait for redirect back to product list
-    await page.waitForURL(`${STUDIO}/en`, { timeout: 15_000 });
+    await page.waitForURL(`${APP_URLS.STUDIO}/en`, {
+      timeout: NAVIGATION_TIMEOUT_MS,
+    });
 
     // Verify product appears in table
     await expect(page.getByTestId("product-table")).toBeVisible({
-      timeout: 10_000,
+      timeout: ELEMENT_TIMEOUT_MS,
     });
     await snap(page, "studio-product-created");
   });
@@ -104,8 +103,8 @@ test.describe.serial("Full purchase flow: seller → buyer → approval", () => 
   test("Phase 2: seller adds a payment method", async ({ context, page }) => {
     await injectSession(context, seller);
 
-    // Navigate to payments app — payment methods page
-    await page.goto(`${PAYMENTS}/en/payment-methods`);
+    // Navigate to payments app -- payment methods page
+    await page.goto(`${APP_URLS.PAYMENTS}/en/payment-methods`);
     await page.waitForLoadState("networkidle");
     await snap(page, "payments-methods-empty");
 
@@ -113,10 +112,10 @@ test.describe.serial("Full purchase flow: seller → buyer → approval", () => 
     await page.getByTestId("add-payment-method-button").click();
     await snap(page, "payments-method-editor-open");
 
-    // Select Bancolombia Transfer (requires receipt + transfer number — real flow)
+    // Select Bancolombia Transfer (requires receipt + transfer number)
     const typeSelect = page.getByTestId("payment-method-type-select");
     await typeSelect.waitFor({ state: "visible" });
-    await page.waitForTimeout(1000);
+    await page.waitForTimeout(DEBOUNCE_WAIT_MS);
     await typeSelect.selectOption({ label: "Bancolombia Transfer" });
     await snap(page, "payments-method-type-selected");
 
@@ -131,7 +130,7 @@ test.describe.serial("Full purchase flow: seller → buyer → approval", () => 
 
     // Wait for editor to close (indicates save succeeded)
     await expect(page.getByTestId("payment-method-save")).not.toBeVisible({
-      timeout: 10_000,
+      timeout: ELEMENT_TIMEOUT_MS,
     });
 
     // Verify method appears in the table
@@ -148,18 +147,18 @@ test.describe.serial("Full purchase flow: seller → buyer → approval", () => 
     await injectSession(context, buyer);
 
     // Go to store catalog
-    await page.goto(`${STORE}/en`);
+    await page.goto(`${APP_URLS.STORE}/en`);
     await page.waitForLoadState("networkidle");
     await snap(page, "store-catalog");
 
     // Search for the seller's product
     await page.getByTestId("search-bar-input").fill("E2E Test");
-    await page.waitForTimeout(1000); // debounce
+    await page.waitForTimeout(DEBOUNCE_WAIT_MS);
     await snap(page, "store-search-results");
 
     // Click the first matching product card
     const productCard = page.getByTestId("product-card-link").first();
-    await expect(productCard).toBeVisible({ timeout: 10_000 });
+    await expect(productCard).toBeVisible({ timeout: ELEMENT_TIMEOUT_MS });
     await productCard.click();
 
     // Wait for product detail page
@@ -171,9 +170,9 @@ test.describe.serial("Full purchase flow: seller → buyer → approval", () => 
     await snap(page, "store-added-to-cart");
 
     // Wait for add-to-cart animation to finish
-    await page.waitForTimeout(2000);
+    await page.waitForTimeout(MUTATION_WAIT_MS);
 
-    // Open cart drawer (force click — fly-to-cart animation can intercept)
+    // Open cart drawer (force click -- fly-to-cart animation can intercept)
     await page
       .getByTestId("cart-drawer-trigger")
       .first()
@@ -184,23 +183,31 @@ test.describe.serial("Full purchase flow: seller → buyer → approval", () => 
     await expect(page.getByTestId("cart-item-name")).toBeVisible();
     await snap(page, "store-cart-open");
 
-    // Click checkout — navigates to payments app
+    // Click checkout -- navigates to payments app
     await page.getByTestId("cart-checkout").click();
 
     // Wait for payments checkout page
-    await page.waitForURL(/localhost:5005.*checkout/, { timeout: 15_000 });
+    await page.waitForURL(
+      new RegExp(`${APP_URLS.PAYMENTS.replace("http://", "")}.*checkout`),
+      {
+        timeout: NAVIGATION_TIMEOUT_MS,
+      },
+    );
     await page.waitForLoadState("networkidle");
 
     // Wait for items and payment method to load
     await expect(page.getByTestId("checkout-items-summary")).toBeVisible({
-      timeout: 10_000,
+      timeout: ELEMENT_TIMEOUT_MS,
     });
     await snap(page, "checkout-page-loaded");
 
     // Select payment method
     const methodSelect = page.getByTestId("payment-method-select").first();
-    await methodSelect.waitFor({ state: "visible", timeout: 10_000 });
-    await page.waitForTimeout(2000);
+    await methodSelect.waitFor({
+      state: "visible",
+      timeout: ELEMENT_TIMEOUT_MS,
+    });
+    await page.waitForTimeout(MUTATION_WAIT_MS);
     const selectedValue = await methodSelect.inputValue();
     if (!selectedValue) {
       await methodSelect.selectOption({ index: 1 });
@@ -222,7 +229,7 @@ test.describe.serial("Full purchase flow: seller → buyer → approval", () => 
         "base64",
       ),
     });
-    await page.waitForTimeout(1000);
+    await page.waitForTimeout(DEBOUNCE_WAIT_MS);
     await snap(page, "checkout-receipt-uploaded");
 
     // Submit payment
@@ -231,7 +238,7 @@ test.describe.serial("Full purchase flow: seller → buyer → approval", () => 
 
     // Wait for success state
     await expect(page.getByTestId("checkout-all-submitted")).toBeVisible({
-      timeout: 30_000,
+      timeout: LONG_OPERATION_TIMEOUT_MS,
     });
     await snap(page, "checkout-submitted");
   });
@@ -244,13 +251,13 @@ test.describe.serial("Full purchase flow: seller → buyer → approval", () => 
   }) => {
     await injectSession(context, buyer);
 
-    await page.goto(`${PAYMENTS}/en/purchases`);
+    await page.goto(`${APP_URLS.PAYMENTS}/en/purchases`);
     await page.waitForLoadState("networkidle");
 
     // Verify order exists with "pending_verification" status
     await expect(
       page.getByTestId("order-status-pending_verification"),
-    ).toBeVisible({ timeout: 10_000 });
+    ).toBeVisible({ timeout: ELEMENT_TIMEOUT_MS });
     await snap(page, "buyer-order-pending");
   });
 
@@ -259,15 +266,15 @@ test.describe.serial("Full purchase flow: seller → buyer → approval", () => 
   test("Phase 6: seller approves the order", async ({ context, page }) => {
     await injectSession(context, seller);
 
-    await page.goto(`${PAYMENTS}/en/sales`);
+    await page.goto(`${APP_URLS.PAYMENTS}/en/sales`);
     await page.waitForLoadState("networkidle");
 
     // Find and click the approve button
     const approveBtn = page.getByTestId(/^order-approve-/).first();
-    await expect(approveBtn).toBeVisible({ timeout: 10_000 });
+    await expect(approveBtn).toBeVisible({ timeout: ELEMENT_TIMEOUT_MS });
     await snap(page, "seller-order-received");
 
-    // Click approve — opens inline confirmation panel
+    // Click approve -- opens inline confirmation panel
     await approveBtn.click();
     await expect(page.getByTestId("confirm-action-panel")).toBeVisible();
     await snap(page, "seller-approve-confirmation");
@@ -280,13 +287,13 @@ test.describe.serial("Full purchase flow: seller → buyer → approval", () => 
     await page.getByTestId("confirm-action-submit").click();
 
     // Wait for mutation to complete, then reload
-    await page.waitForTimeout(3000);
+    await page.waitForTimeout(BULK_MUTATION_WAIT_MS);
     await page.reload();
     await page.waitForLoadState("networkidle");
 
     // Approve button should be gone after approval
     await expect(page.getByTestId(/^order-approve-/).first()).not.toBeVisible({
-      timeout: 15_000,
+      timeout: NAVIGATION_TIMEOUT_MS,
     });
     await snap(page, "seller-order-approved");
   });
@@ -296,12 +303,12 @@ test.describe.serial("Full purchase flow: seller → buyer → approval", () => 
   test("Phase 7: buyer sees approved order", async ({ context, page }) => {
     await injectSession(context, buyer);
 
-    await page.goto(`${PAYMENTS}/en/purchases`);
+    await page.goto(`${APP_URLS.PAYMENTS}/en/purchases`);
     await page.waitForLoadState("networkidle");
 
     // Verify order shows approved status
     await expect(page.getByTestId("order-status-approved")).toBeVisible({
-      timeout: 10_000,
+      timeout: ELEMENT_TIMEOUT_MS,
     });
     await snap(page, "buyer-order-approved");
   });

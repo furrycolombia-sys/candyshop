@@ -1,6 +1,7 @@
+/* eslint-disable react/no-multi-comp */
 "use client";
 
-import { useSupabaseAuth } from "auth/client";
+import { useCurrentUserPermissions, useSupabaseAuth } from "auth/client";
 import { ArrowLeft, PartyPopper, ShoppingBag } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -13,8 +14,9 @@ import type { CheckoutSellerStatus } from "@/features/checkout/domain/types";
 import { clearCartCookie } from "@/features/checkout/infrastructure/cartCookie";
 import { SellerCheckoutCard } from "@/features/checkout/presentation/components/SellerCheckoutCard";
 import { appUrls } from "@/shared/infrastructure/config";
+import { AccessDeniedState } from "@/shared/presentation/components/AccessDeniedState";
 
-export function CheckoutPage() {
+function CheckoutPageContent() {
   const t = useTranslations("checkout");
   const { user } = useSupabaseAuth();
   const { groups, isEmpty, isLoading, getItemName } = useCartFromCookie();
@@ -199,4 +201,18 @@ export function CheckoutPage() {
       </div>
     </main>
   );
+}
+
+export function CheckoutPage() {
+  const { isLoading, hasPermission } = useCurrentUserPermissions();
+
+  if (isLoading) {
+    return null;
+  }
+
+  if (!hasPermission(["orders.create", "receipts.create"])) {
+    return <AccessDeniedState />;
+  }
+
+  return <CheckoutPageContent />;
 }

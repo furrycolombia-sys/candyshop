@@ -1,5 +1,7 @@
+/* eslint-disable react/no-multi-comp */
 "use client";
 
+import { useCurrentUserPermissions } from "auth/client";
 import { useTranslations } from "next-intl";
 import { useQueryStates } from "nuqs";
 import { tid } from "shared";
@@ -9,8 +11,9 @@ import { AUDIT_PAGE_SIZE } from "@/features/audit/domain/constants";
 import { auditSearchParams } from "@/features/audit/domain/searchParams";
 import { AuditFilters } from "@/features/audit/presentation/components/AuditFilters";
 import { AuditTable } from "@/features/audit/presentation/components/AuditTable";
+import { AccessDeniedState } from "@/shared/presentation/components/AccessDeniedState";
 
-export function AuditLogPage() {
+function AuditLogPageContent() {
   const t = useTranslations("audit");
   const [params, setParams] = useQueryStates(auditSearchParams);
 
@@ -70,4 +73,15 @@ export function AuditLogPage() {
       </div>
     </main>
   );
+}
+
+export function AuditLogPage() {
+  const { isLoading, hasPermission } = useCurrentUserPermissions();
+
+  if (isLoading) return null;
+  if (!hasPermission("audit.read")) {
+    return <AccessDeniedState />;
+  }
+
+  return <AuditLogPageContent />;
 }

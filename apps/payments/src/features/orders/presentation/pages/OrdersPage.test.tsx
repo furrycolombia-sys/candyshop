@@ -1,6 +1,16 @@
 import { render, screen } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
 
+vi.mock("auth/client", () => ({
+  useCurrentUserPermissions: () => ({
+    isLoading: false,
+    hasPermission: (permission: string | string[]) =>
+      Array.isArray(permission)
+        ? permission.every((key) => key === "orders.read")
+        : permission === "orders.read",
+  }),
+}));
+
 import { OrdersPage } from "./OrdersPage";
 
 import type { OrderWithItems } from "@/features/orders/domain/types";

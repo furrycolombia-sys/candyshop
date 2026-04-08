@@ -1,5 +1,6 @@
 "use client";
 
+import { useCurrentUserPermissions } from "auth/client";
 import { tid } from "shared";
 import { Skeleton } from "ui";
 
@@ -10,6 +11,7 @@ import {
   useUpdateProduct,
 } from "@/features/products/application/useProductForm";
 import { InlineEditor } from "@/features/products/presentation/components/inline-editor";
+import { AccessDeniedState } from "@/shared/presentation/components/AccessDeniedState";
 
 interface ProductFormPageProps {
   productId?: string;
@@ -17,10 +19,23 @@ interface ProductFormPageProps {
 
 export function ProductFormPage({ productId }: ProductFormPageProps) {
   const isEdit = !!productId;
+  const { isLoading: permissionsLoading, hasPermission } =
+    useCurrentUserPermissions();
 
   const { data: product, isLoading } = useProductById(productId);
   const insertMutation = useInsertProduct();
   const updateMutation = useUpdateProduct(productId ?? "");
+
+  if (permissionsLoading) {
+    return null;
+  }
+
+  if (
+    (isEdit && !hasPermission("products.update")) ||
+    (!isEdit && !hasPermission("products.create"))
+  ) {
+    return <AccessDeniedState />;
+  }
 
   if (isEdit && isLoading) {
     return (

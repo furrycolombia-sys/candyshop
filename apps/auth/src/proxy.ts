@@ -1,34 +1,10 @@
 import { updateSupabaseSession } from "api/supabase/proxy";
-import { type NextRequest, NextResponse } from "next/server";
-import createMiddleware from "next-intl/middleware";
+import { createSupabaseIntlProxy } from "shared/i18n/createIntlProxy";
 
 import { routing } from "@/shared/infrastructure/i18n";
 
-const intlMiddleware = createMiddleware(routing);
-
-export default async function proxy(request: NextRequest) {
-  const { pathname } = request.nextUrl;
-
-  // Skip static assets, internal Next.js requests, and OAuth callback
-  if (
-    pathname.startsWith("/_next") ||
-    pathname.startsWith("/api") ||
-    pathname.startsWith("/auth/callback") ||
-    pathname.includes(".")
-  ) {
-    return NextResponse.next();
-  }
-
-  // Refresh Supabase session (keeps auth cookies alive)
-  const supabaseResponse = await updateSupabaseSession(request);
-
-  // Run i18n middleware (handles locale detection and redirects)
-  const intlResponse = intlMiddleware(request);
-
-  // Merge Supabase cookies into the i18n response
-  for (const cookie of supabaseResponse.cookies.getAll()) {
-    intlResponse.cookies.set(cookie.name, cookie.value);
-  }
-
-  return intlResponse;
-}
+export default createSupabaseIntlProxy({
+  routing,
+  updateSession: updateSupabaseSession,
+  extraBypassPrefixes: ["/auth/callback"],
+});

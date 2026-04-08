@@ -1,6 +1,24 @@
 import { render, screen, fireEvent } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
 
+const mockGrantedPermissions = [
+  "orders.create",
+  "receipts.create",
+  "orders.read",
+  "seller_payment_methods.read",
+  "orders.update",
+  "receipts.read",
+];
+
+vi.mock("auth/client", () => ({
+  matchesPermissions: (grantedKeys: string[], required: readonly string[]) =>
+    required.every((key) => grantedKeys.includes(key)),
+  useCurrentUserPermissions: () => ({
+    grantedKeys: mockGrantedPermissions,
+    isLoading: false,
+  }),
+}));
+
 vi.mock("next-intl", () => ({
   useTranslations: () => (key: string) => key,
 }));

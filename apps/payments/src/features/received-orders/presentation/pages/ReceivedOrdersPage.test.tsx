@@ -1,6 +1,22 @@
 import { render, screen, fireEvent } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
+vi.mock("auth/client", () => ({
+  useCurrentUserPermissions: () => ({
+    isLoading: false,
+    hasPermission: (permission: string | string[]) => {
+      const granted = new Set([
+        "orders.read",
+        "orders.update",
+        "receipts.read",
+      ]);
+      return Array.isArray(permission)
+        ? permission.every((key) => granted.has(key))
+        : granted.has(permission);
+    },
+  }),
+}));
+
 import { ReceivedOrdersPage } from "./ReceivedOrdersPage";
 
 import type { ReceivedOrder } from "@/features/received-orders/domain/types";

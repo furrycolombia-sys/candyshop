@@ -8,15 +8,10 @@ import { FALLBACK_SELLER_NAME } from "@/shared/domain/constants";
 import type { OrderRow, SupabaseClient } from "@/shared/domain/types";
 import { fetchUserDisplayNames } from "@/shared/infrastructure/fetchUserDisplayNames";
 
-/** Extended OrderRow with payment_method_id for buyer orders. */
 interface BuyerOrderRow extends OrderRow {
   payment_method_id: string | null;
 }
 
-/**
- * Fetch all orders for the current authenticated user, including items
- * and seller display names.
- */
 export async function fetchMyOrders(
   supabase: SupabaseClient,
 ): Promise<OrderWithItems[]> {
@@ -37,14 +32,12 @@ export async function fetchMyOrders(
 
   const rows = (data ?? []) as unknown as BuyerOrderRow[];
 
-  // Collect unique seller IDs
   const sellerIds = [
     ...new Set(
       rows.map((r) => r.seller_id).filter((id): id is string => id !== null),
     ),
   ];
 
-  // Fetch seller display names
   const sellerNames = await fetchUserDisplayNames(
     supabase,
     sellerIds,
@@ -79,10 +72,6 @@ export async function fetchMyOrders(
   );
 }
 
-/**
- * Resubmit payment evidence for an order that has status `evidence_requested`.
- * Uploads the receipt file, then updates the order to `pending_verification`.
- */
 export async function resubmitEvidence(
   supabase: SupabaseClient,
   orderId: string,
@@ -91,12 +80,10 @@ export async function resubmitEvidence(
 ): Promise<void> {
   let receiptUrl: string | null = null;
 
-  // Upload receipt if provided
   if (receiptFile) {
     receiptUrl = await uploadReceipt(supabase, receiptFile, orderId);
   }
 
-  // Update order status back to pending_verification
   const { error } = await supabase
     .from("orders")
     .update({

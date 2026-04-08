@@ -14,7 +14,7 @@ import { AutoTextarea } from "./AutoTextarea";
 import { IconPicker } from "./IconPicker";
 import { InlineAddButton } from "./InlineAddButton";
 import { InlineRemoveButton } from "./InlineRemoveButton";
-import type { SectionFieldArray } from "./SectionCard";
+import type { SectionFieldArray } from "./sectionItemTypes";
 
 import { useLangToggle } from "@/features/products/application/useLangToggle";
 import {

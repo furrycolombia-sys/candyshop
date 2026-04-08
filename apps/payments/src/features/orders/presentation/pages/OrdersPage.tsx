@@ -1,5 +1,7 @@
+/* eslint-disable react/no-multi-comp */
 "use client";
 
+import { useCurrentUserPermissions } from "auth/client";
 import { ArrowLeft, ShoppingBag } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useMemo } from "react";
@@ -13,6 +15,7 @@ import type {
 } from "@/features/orders/domain/types";
 import { OrderCard } from "@/features/orders/presentation/components/OrderCard";
 import { appUrls } from "@/shared/infrastructure/config";
+import { AccessDeniedState } from "@/shared/presentation/components/AccessDeniedState";
 
 function groupByCheckoutSession(orders: OrderWithItems[]): CheckoutGroup[] {
   const map = new Map<string, OrderWithItems[]>();
@@ -34,7 +37,7 @@ function groupByCheckoutSession(orders: OrderWithItems[]): CheckoutGroup[] {
   }));
 }
 
-export function OrdersPage() {
+function OrdersPageContent() {
   const t = useTranslations("orders");
   const { data: orders, isLoading } = useMyOrders();
 
@@ -138,4 +141,18 @@ export function OrdersPage() {
       </div>
     </main>
   );
+}
+
+export function OrdersPage() {
+  const { isLoading, hasPermission } = useCurrentUserPermissions();
+
+  if (isLoading) {
+    return null;
+  }
+
+  if (!hasPermission("orders.read")) {
+    return <AccessDeniedState />;
+  }
+
+  return <OrdersPageContent />;
 }

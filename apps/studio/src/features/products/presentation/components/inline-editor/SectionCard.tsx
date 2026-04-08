@@ -4,7 +4,7 @@ import type { DraggableProvided } from "@hello-pangea/dnd";
 import { ChevronDown, GripVertical } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect } from "react";
-import type { Control, UseFieldArrayReturn } from "react-hook-form";
+import type { Control } from "react-hook-form";
 import { useController, useFieldArray } from "react-hook-form";
 import { tid } from "shared";
 
@@ -14,6 +14,7 @@ import { SectionItemsAccordion } from "./SectionItemsAccordion";
 import { SectionItemsCards } from "./SectionItemsCards";
 import { SectionItemsGallery } from "./SectionItemsGallery";
 import { SectionItemsTwoColumn } from "./SectionItemsTwoColumn";
+import type { SectionFieldArray } from "./sectionItemTypes";
 
 import { useLangToggle } from "@/features/products/application/useLangToggle";
 import { SECTION_I18N_NAMESPACE } from "@/features/products/domain/constants";
@@ -22,11 +23,6 @@ import type { CategoryTheme } from "@/shared/domain/categoryConstants";
 
 /** Ref map so parent DragDropContext can call move on any section's items */
 export type ItemMoveRegistry = Map<number, (from: number, to: number) => void>;
-
-/** Narrowed field array interface passed to section item editors.
- *  Uses UseFieldArrayReturn directly (default generics) to match the dynamic
- *  `sections.${n}.items` path that requires `as any` for react-hook-form. */
-export type SectionFieldArray = UseFieldArrayReturn;
 
 interface SectionCardProps {
   sectionIndex: number;

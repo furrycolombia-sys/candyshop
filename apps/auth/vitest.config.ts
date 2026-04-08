@@ -11,6 +11,7 @@ export default defineConfig({
     include: ["**/*.test.{ts,tsx}"],
     passWithNoTests: true,
     exclude: [
+      ".next/**",
       "node_modules/",
       "src/test/",
       "**/*.d.ts",
@@ -22,6 +23,7 @@ export default defineConfig({
       reporter: ["text"],
       include: ["src/**/*.{ts,tsx}"],
       exclude: [
+        ".next/**",
         "node_modules/",
         ".next/**",
         "src/test/",

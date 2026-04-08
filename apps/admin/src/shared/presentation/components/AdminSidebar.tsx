@@ -1,5 +1,6 @@
 "use client";
 
+import { matchesPermissions, useCurrentUserPermissions } from "auth/client";
 import {
   ChevronLeft,
   ChevronRight,
@@ -9,34 +10,87 @@ import {
   LayoutDashboard,
   Radio,
   Settings,
+  Shield,
+  type LucideIcon,
 } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { tid } from "shared";
 
+import { ADMIN_APP_ACCESS_KEYS } from "@/features/users/domain/constants";
 import { Link } from "@/shared/infrastructure/i18n";
 
-const NAV_SECTIONS = [
+type NavItem = {
+  key: string;
+  href: string;
+  icon: LucideIcon;
+  required: readonly string[];
+  mode?: "all" | "any";
+};
+
+type NavSection = {
+  labelKey: string;
+  items: readonly NavItem[];
+};
+
+const NAV_SECTIONS: readonly NavSection[] = [
   {
     labelKey: "operations" as const,
     items: [
-      { key: "dashboard" as const, href: "/", icon: LayoutDashboard },
-      { key: "templates" as const, href: "/templates", icon: Layers },
+      {
+        key: "dashboard" as const,
+        href: "/",
+        icon: LayoutDashboard,
+        required: [...ADMIN_APP_ACCESS_KEYS],
+        mode: "any" as const,
+      },
+      {
+        key: "templates" as const,
+        href: "/templates",
+        icon: Layers,
+        required: ["templates.read"],
+      },
       {
         key: "paymentMethods" as const,
         href: "/payment-methods",
         icon: CreditCard,
+        required: ["payment_method_types.read"],
       },
     ],
   },
   {
     labelKey: "monitoring" as const,
-    items: [{ key: "auditLog" as const, href: "/audit", icon: FileText }],
+    items: [
+      {
+        key: "auditLog" as const,
+        href: "/audit",
+        icon: FileText,
+        required: ["audit.read"],
+      },
+    ],
+  },
+  {
+    labelKey: "users" as const,
+    items: [
+      {
+        key: "users" as const,
+        href: "/users",
+        icon: Shield,
+        required: ["user_permissions.read"],
+      },
+    ],
   },
   {
     labelKey: "configuration" as const,
-    items: [{ key: "settings" as const, href: "/settings", icon: Settings }],
+    items: [
+      {
+        key: "settings" as const,
+        href: "/settings",
+        icon: Settings,
+        required: ["payment_settings.read"],
+      },
+    ],
   },
 ] as const;
 
@@ -44,8 +98,17 @@ export function AdminSidebar() {
   const t = useTranslations("sidebar");
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
+  const { grantedKeys, isLoading } = useCurrentUserPermissions();
 
   const appPath = pathname.replace(/^\/[a-z]{2}/, "") || "/";
+  const visibleSections = NAV_SECTIONS.map((section) => ({
+    ...section,
+    items: section.items.filter((item) =>
+      isLoading
+        ? false
+        : matchesPermissions(grantedKeys, item.required, item.mode ?? "all"),
+    ),
+  })).filter((section) => section.items.length > 0);
 
   return (
     <aside
@@ -71,7 +134,7 @@ export function AdminSidebar() {
 
       {/* Navigation sections */}
       <nav className="flex flex-1 flex-col gap-1 px-2.5 pt-10">
-        {NAV_SECTIONS.map((section) => (
+        {visibleSections.map((section) => (
           <div key={section.labelKey} className="mb-2">
             {/* Section label */}
             {!collapsed && (

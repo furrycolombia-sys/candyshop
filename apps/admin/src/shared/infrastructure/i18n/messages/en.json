@@ -31,7 +31,9 @@
     "status": "All systems nominal",
     "paymentMethods": "Payment Methods",
     "settings": "Settings",
-    "configuration": "Configuration"
+    "configuration": "Configuration",
+    "users": "Users",
+    "userManagement": "User Management"
   },
   "dashboard": {
     "welcome": "Good to see you, operator.",
@@ -171,9 +173,137 @@
     "saved": "Settings updated",
     "error": "Failed to save settings"
   },
+  "users": {
+    "title": "Users",
+    "subtitle": "Manage user accounts and permissions",
+    "searchPlaceholder": "Filter by email or name...",
+    "noResults": "No users found",
+    "loading": "Loading...",
+    "profiles": "Profiles",
+    "templateBuyer": "Buyer",
+    "templateSeller": "Seller",
+    "templateAdmin": "Admin",
+    "templateEvents": "Events",
+    "templateNone": "Reset All",
+    "columns": {
+      "avatar": "Avatar",
+      "email": "Email",
+      "displayName": "Name",
+      "role": "Role",
+      "lastSeen": "Last Seen"
+    },
+    "roles": {
+      "admin": "Admin",
+      "seller": "Seller",
+      "buyer": "Buyer",
+      "custom": "Custom",
+      "none": "None"
+    },
+    "groups": {
+      "products": "Products",
+      "reviews": "Reviews",
+      "orders": "Orders & Receipts",
+      "seller": "Seller",
+      "adminCatalog": "Admin Catalog",
+      "adminConfig": "Admin Configuration",
+      "adminUsers": "User Permissions",
+      "checkins": "Check-ins",
+      "events": "Events"
+    },
+    "lastSeen": {
+      "justNow": "just now",
+      "minutesAgo": "{count}m ago",
+      "hoursAgo": "{count}h ago",
+      "daysAgo": "{count}d ago",
+      "monthsAgo": "{count}mo ago",
+      "yearsAgo": "{count}y ago"
+    },
+    "pagination": {
+      "showing": "Showing {from}-{to}",
+      "of": "of {total}"
+    },
+    "detail": {
+      "backToUsers": "Back to Users",
+      "viewProfile": "View Profile",
+      "permissionsCount": "{count, plural, one {# permission} other {# permissions}}"
+    }
+  },
+  "permissions": {
+    "products": {
+      "create": "Create Products",
+      "read": "View Products",
+      "update": "Edit Products",
+      "delete": "Delete Products"
+    },
+    "product_images": {
+      "create": "Upload Product Images",
+      "read": "View Product Images",
+      "delete": "Delete Product Images"
+    },
+    "product_reviews": {
+      "create": "Write Reviews",
+      "read": "View Reviews",
+      "update": "Edit Reviews",
+      "delete": "Delete Reviews"
+    },
+    "orders": {
+      "create": "Place Orders",
+      "read": "View Orders",
+      "update": "Manage Orders"
+    },
+    "receipts": {
+      "create": "Upload Receipts",
+      "read": "View Receipts",
+      "delete": "Delete Receipts"
+    },
+    "seller_payment_methods": {
+      "create": "Add Seller Payment Methods",
+      "read": "View Seller Payment Methods",
+      "update": "Edit Seller Payment Methods",
+      "delete": "Delete Seller Payment Methods"
+    },
+    "payment_method_types": {
+      "create": "Create Payment Types",
+      "read": "View Payment Types",
+      "update": "Edit Payment Types",
+      "delete": "Delete Payment Types"
+    },
+    "payment_settings": {
+      "read": "View Payment Settings",
+      "update": "Edit Payment Settings"
+    },
+    "templates": {
+      "create": "Create Templates",
+      "read": "View Templates",
+      "update": "Edit Templates",
+      "delete": "Delete Templates"
+    },
+    "audit": {
+      "read": "View Audit Log"
+    },
+    "user_permissions": {
+      "create": "Grant Permissions",
+      "read": "View User Permissions",
+      "update": "Modify Permission Grants",
+      "delete": "Revoke Permissions"
+    },
+    "events": {
+      "create": "Create Events",
+      "read": "View Events",
+      "update": "Edit Events",
+      "delete": "Delete Events"
+    },
+    "check_ins": {
+      "create": "Check In Attendees",
+      "read": "View Check-ins",
+      "update": "Undo Check-ins"
+    }
+  },
   "common": {
     "loading": "Loading...",
     "error": "An error occurred",
+    "accessDenied": "Access denied",
+    "accessDeniedHint": "This section is hidden until the required permission is granted.",
     "retry": "Try again",
     "theme": {
       "switchToDark": "Switch to dark mode",

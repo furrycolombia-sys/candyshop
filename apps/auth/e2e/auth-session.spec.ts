@@ -1,4 +1,4 @@
-import { test, expect } from "./fixtures/auth.fixture";
+import { expect, test } from "./fixtures/auth.fixture";
 
 const AUTH_URL = "http://localhost:5000";
 const STORE_URL = "http://localhost:5001";
@@ -19,7 +19,6 @@ test.describe("Auth session", () => {
 
     await page.getByTestId("login-discord").click();
 
-    // Should redirect to Discord's OAuth page
     await page.waitForURL("**/discord.com/**", { timeout: 10000 });
     expect(page.url()).toContain("discord.com/oauth2/authorize");
     expect(page.url()).toContain("client_id=");
@@ -29,7 +28,6 @@ test.describe("Auth session", () => {
     page,
     authenticatedPage,
   }) => {
-    // Visit auth app — should have session and show email in navbar
     await page.goto(`${AUTH_URL}/en`);
     await page.waitForLoadState("networkidle");
 
@@ -37,7 +35,6 @@ test.describe("Auth session", () => {
     await expect(authNavEmail).toBeVisible();
     await expect(authNavEmail).not.toBeEmpty();
 
-    // Visit store app — session should persist, email visible
     await page.goto(`${STORE_URL}/en`);
     await page.waitForLoadState("networkidle");
 

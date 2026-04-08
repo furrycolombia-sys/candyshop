@@ -10,9 +10,9 @@ import type { PaymentMethodType } from "@/features/payment-method-types/domain/t
 interface PaymentMethodTypeTableProps {
   types: PaymentMethodType[];
   isLoading: boolean;
-  onEdit: (type: PaymentMethodType) => void;
-  onDelete: (id: string) => void;
-  onToggleActive: (id: string, isActive: boolean) => void;
+  onEdit?: (type: PaymentMethodType) => void;
+  onDelete?: (id: string) => void;
+  onToggleActive?: (id: string, isActive: boolean) => void;
 }
 
 export function PaymentMethodTypeTable({
@@ -114,39 +114,49 @@ export function PaymentMethodTypeTable({
 
               {/* Active toggle */}
               <span className="px-4 py-2.5">
-                <Switch
-                  checked={type.is_active}
-                  onCheckedChange={(checked: boolean) =>
-                    onToggleActive(type.id, checked)
-                  }
-                  {...tid(`payment-type-active-${type.id}`)}
-                />
+                {onToggleActive ? (
+                  <Switch
+                    checked={type.is_active}
+                    onCheckedChange={(checked: boolean) =>
+                      onToggleActive(type.id, checked)
+                    }
+                    {...tid(`payment-type-active-${type.id}`)}
+                  />
+                ) : (
+                  <span className="font-mono text-xs">
+                    {type.is_active ? "on" : "off"}
+                  </span>
+                )}
               </span>
 
               {/* Actions */}
               <span className="flex items-center gap-1 px-4 py-2.5">
-                <button
-                  type="button"
-                  onClick={() => onEdit(type)}
-                  aria-label={t("editPaymentType")}
-                  className="rounded-sm p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-                  {...tid(`payment-type-edit-${type.id}`)}
-                >
-                  <Pencil className="size-3.5" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (globalThis.confirm(t("deleteConfirm"))) {
-                      onDelete(type.id);
-                    }
-                  }}
-                  aria-label={t("deletePaymentType")}
-                  className="rounded-sm p-1.5 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
-                  {...tid(`payment-type-delete-${type.id}`)}
-                >
-                  <Trash2 className="size-3.5" />
-                </button>
+                {onEdit && (
+                  <button
+                    type="button"
+                    onClick={() => onEdit(type)}
+                    aria-label={t("editPaymentType")}
+                    className="rounded-sm p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                    {...tid(`payment-type-edit-${type.id}`)}
+                  >
+                    <Pencil className="size-3.5" />
+                  </button>
+                )}
+                {onDelete && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (globalThis.confirm(t("deleteConfirm"))) {
+                        onDelete(type.id);
+                      }
+                    }}
+                    aria-label={t("deletePaymentType")}
+                    className="rounded-sm p-1.5 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+                    {...tid(`payment-type-delete-${type.id}`)}
+                  >
+                    <Trash2 className="size-3.5" />
+                  </button>
+                )}
               </span>
             </div>
           );
