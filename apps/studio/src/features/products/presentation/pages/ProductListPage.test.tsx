@@ -58,6 +58,12 @@ vi.mock("@/features/products/application/useProducts", () => ({
   }),
 }));
 
+vi.mock("@/features/orders/application/hooks/usePendingOrderCount", () => ({
+  usePendingOrderCount: () => ({
+    data: 0,
+  }),
+}));
+
 vi.mock("@/features/products/presentation/components/ProductFilters", () => ({
   ProductFilters: () => <div data-testid="product-filters" />,
 }));
