@@ -1,6 +1,18 @@
 import { render, screen } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
 
+vi.mock("auth/client", () => ({
+  useCurrentUserPermissions: () => ({
+    isLoading: false,
+    hasPermission: (permission: string | string[]) => {
+      const granted = new Set(["products.create", "products.update"]);
+      return Array.isArray(permission)
+        ? permission.every((key) => granted.has(key))
+        : granted.has(permission);
+    },
+  }),
+}));
+
 vi.mock("shared", () => ({
   tid: (id: string) => ({ "data-testid": id }),
 }));

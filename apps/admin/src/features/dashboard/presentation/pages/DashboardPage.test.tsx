@@ -10,6 +10,15 @@ vi.mock("shared", () => ({
   tid: (id: string) => ({ "data-testid": id }),
 }));
 
+vi.mock("auth/client", () => ({
+  matchesPermissions: () => true,
+  useCurrentUserPermissions: () => ({
+    grantedKeys: ["audit.read", "audit-view", "manage"],
+    isLoading: false,
+    hasPermission: () => true,
+  }),
+}));
+
 vi.mock("@/features/audit/application/useAuditLog", () => ({
   useAuditLog: () => ({
     data: [

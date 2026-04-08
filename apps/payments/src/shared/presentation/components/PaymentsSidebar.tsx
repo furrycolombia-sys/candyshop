@@ -29,6 +29,17 @@ type NavSection = {
   items: readonly NavItem[];
 };
 
+const ORDER_READ_PERMISSIONS = ["orders.read"] as const;
+const CHECKOUT_PERMISSIONS = ["orders.create", "receipts.create"] as const;
+const SALES_PERMISSIONS = [
+  ...ORDER_READ_PERMISSIONS,
+  "orders.update",
+  "receipts.read",
+] as const;
+const SELLER_PAYMENT_METHOD_PERMISSIONS = [
+  "seller_payment_methods.read",
+] as const;
+
 const NAV_SECTIONS: readonly NavSection[] = [
   {
     labelKey: "buyer" as const,
@@ -37,13 +48,13 @@ const NAV_SECTIONS: readonly NavSection[] = [
         key: "checkout" as const,
         href: "/checkout",
         icon: ShoppingCart,
-        required: ["orders.create", "receipts.create"],
+        required: CHECKOUT_PERMISSIONS,
       },
       {
         key: "myPurchases" as const,
         href: "/purchases",
         icon: Package,
-        required: ["orders.read"],
+        required: ORDER_READ_PERMISSIONS,
       },
     ],
   },
@@ -54,17 +65,20 @@ const NAV_SECTIONS: readonly NavSection[] = [
         key: "paymentMethods" as const,
         href: "/payment-methods",
         icon: CreditCard,
-        required: ["seller_payment_methods.read"],
+        required: SELLER_PAYMENT_METHOD_PERMISSIONS,
       },
       {
         key: "sales" as const,
         href: "/sales",
         icon: ClipboardCheck,
-        required: ["orders.read", "orders.update", "receipts.read"],
+        required: SALES_PERMISSIONS,
       },
     ],
   },
 ] as const;
+const COLLAPSED_WIDTH_CLASS = "w-[68px]";
+const INACTIVE_LINK_CLASS =
+  "text-muted-foreground hover:bg-muted hover:text-foreground";
 
 export function PaymentsSidebar() {
   const t = useTranslations("sidebar");
@@ -83,7 +97,7 @@ export function PaymentsSidebar() {
   return (
     <aside
       className={`relative flex shrink-0 flex-col border-r-3 border-foreground bg-background transition-all duration-300 ease-in-out ${
-        collapsed ? "w-[68px]" : "w-60"
+        collapsed ? COLLAPSED_WIDTH_CLASS : "w-60"
       }`}
       {...tid("payments-sidebar")}
     >
@@ -129,7 +143,7 @@ export function PaymentsSidebar() {
                     } ${
                       isActive
                         ? "bg-foreground text-background"
-                        : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                        : INACTIVE_LINK_CLASS
                     }`}
                     aria-current={isActive ? "page" : undefined}
                     {...tid(`sidebar-${key}`)}

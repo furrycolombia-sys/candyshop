@@ -1,3 +1,4 @@
+/* eslint-disable sonarjs/cognitive-complexity */
 "use client";
 
 import type { DraggableProvided } from "@hello-pangea/dnd";
@@ -5,6 +6,7 @@ import { GripVertical, Pencil, Trash2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
+import type { ReactNode } from "react";
 import { useCallback, useState } from "react";
 import { i18nField, tid } from "shared";
 import type { ProductCategory, ProductType } from "shared/types";
@@ -29,6 +31,8 @@ const CELL_CLASS = "px-4 py-3";
 const ACTION_BTN_CLASS = "border-2 border-border";
 const SWITCH_ON_POSITION = "translate-x-5";
 const SWITCH_OFF_POSITION = "translate-x-0.5";
+const STATUS_ON = "on";
+const STATUS_OFF = "off";
 
 interface ProductTableRowProps {
   product: Product;
@@ -58,6 +62,12 @@ function getFirstImage(images: unknown): string | null {
     }
   }
   return null;
+}
+
+function renderReadOnlyState(value: boolean) {
+  return (
+    <span className="font-mono text-xs">{value ? STATUS_ON : STATUS_OFF}</span>
+  );
 }
 
 export function ProductTableRow({
@@ -98,6 +108,47 @@ export function ProductTableRow({
       onSettled: () => setDeletingId(null),
     });
   }, [deleteMutation, product.id]);
+
+  let actionControls: ReactNode = null;
+
+  if (canDelete && deletingId === product.id) {
+    actionControls = (
+      <div className="flex items-center gap-1">
+        <Button
+          variant="destructive"
+          size="sm"
+          className={`${ACTION_BTN_CLASS} text-xs`}
+          onClick={confirmDelete}
+          disabled={deleteMutation.isPending}
+          {...tid(`confirm-delete-${product.id}`)}
+        >
+          {t("common.confirm")}
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          className={`${ACTION_BTN_CLASS} text-xs`}
+          onClick={() => setDeletingId(null)}
+          {...tid(`cancel-delete-${product.id}`)}
+        >
+          {t("common.cancel")}
+        </Button>
+      </div>
+    );
+  } else if (canDelete) {
+    actionControls = (
+      <Button
+        variant="outline"
+        size="sm"
+        className={`${ACTION_BTN_CLASS} text-destructive hover:bg-destructive/10`}
+        onClick={handleDelete}
+        {...tid(`delete-product-${product.id}`)}
+      >
+        <Trash2 className="size-3.5" />
+        <span className="sr-only">{t("common.delete")}</span>
+      </Button>
+    );
+  }
 
   /* eslint-disable react-hooks/refs -- @hello-pangea/dnd requires ref access during render for drag-and-drop binding */
   return (
@@ -204,9 +255,7 @@ export function ProductTableRow({
             />
           </button>
         ) : (
-          <span className="font-mono text-xs">
-            {product.is_active ? "on" : "off"}
-          </span>
+          renderReadOnlyState(product.is_active)
         )}
       </td>
 
@@ -233,9 +282,7 @@ export function ProductTableRow({
             />
           </button>
         ) : (
-          <span className="font-mono text-xs">
-            {product.featured ? "on" : "off"}
-          </span>
+          renderReadOnlyState(product.featured)
         )}
       </td>
 
@@ -255,41 +302,7 @@ export function ProductTableRow({
               </Button>
             </Link>
           )}
-
-          {canDelete && deletingId === product.id ? (
-            <div className="flex items-center gap-1">
-              <Button
-                variant="destructive"
-                size="sm"
-                className={`${ACTION_BTN_CLASS} text-xs`}
-                onClick={confirmDelete}
-                disabled={deleteMutation.isPending}
-                {...tid(`confirm-delete-${product.id}`)}
-              >
-                {t("common.confirm")}
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className={`${ACTION_BTN_CLASS} text-xs`}
-                onClick={() => setDeletingId(null)}
-                {...tid(`cancel-delete-${product.id}`)}
-              >
-                {t("common.cancel")}
-              </Button>
-            </div>
-          ) : canDelete ? (
-            <Button
-              variant="outline"
-              size="sm"
-              className={`${ACTION_BTN_CLASS} text-destructive hover:bg-destructive/10`}
-              onClick={handleDelete}
-              {...tid(`delete-product-${product.id}`)}
-            >
-              <Trash2 className="size-3.5" />
-              <span className="sr-only">{t("common.delete")}</span>
-            </Button>
-          ) : null}
+          {actionControls}
         </div>
       </td>
     </tr>

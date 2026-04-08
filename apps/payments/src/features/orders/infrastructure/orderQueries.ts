@@ -88,10 +88,10 @@ export async function resubmitEvidence(
 
   // Upload receipt if provided
   if (receiptFile) {
-    const storagePath = `${orderId}/${receiptFile.name}`;
+    const storagePath = `${orderId}/${crypto.randomUUID()}-${receiptFile.name}`;
     const { error: uploadError } = await supabase.storage
       .from(RECEIPTS_BUCKET)
-      .upload(storagePath, receiptFile, { upsert: true });
+      .upload(storagePath, receiptFile);
 
     if (uploadError) throw uploadError;
     receiptUrl = storagePath;

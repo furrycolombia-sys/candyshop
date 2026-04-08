@@ -9,6 +9,13 @@ vi.mock("shared", () => ({
   tid: (id: string) => ({ "data-testid": id }),
 }));
 
+vi.mock("auth/client", () => ({
+  useCurrentUserPermissions: () => ({
+    isLoading: false,
+    hasPermission: () => true,
+  }),
+}));
+
 const mockInsert = { mutate: vi.fn(), isPending: false };
 const mockUpdate = { mutate: vi.fn(), isPending: false };
 const mockDelete = { mutate: vi.fn() };

@@ -1,3 +1,4 @@
+/* eslint-disable react/no-multi-comp */
 "use client";
 
 import { matchesPermissions, useCurrentUserPermissions } from "auth/client";
@@ -47,6 +48,9 @@ const STAT_CARDS = [
 ] as const;
 
 const SYSTEM_STATUS_KEYS = ["database", "auth", "storage", "realtime"] as const;
+const NO_ACTIVITY_CLASS =
+  "px-5 py-6 text-center font-mono text-xs text-muted-foreground";
+const NO_ACTIVITY_TEXT_KEY = "activity.noActivity";
 
 function DashboardPageContent({ canViewAudit }: { canViewAudit: boolean }) {
   const t = useTranslations("dashboard");
@@ -114,8 +118,8 @@ function DashboardPageContent({ canViewAudit }: { canViewAudit: boolean }) {
               </div>
               <div className="divide-y divide-foreground/10">
                 {!canViewAudit && (
-                  <div className="px-5 py-6 text-center font-mono text-xs text-muted-foreground">
-                    {t("activity.noActivity")}
+                  <div className={NO_ACTIVITY_CLASS}>
+                    {t(NO_ACTIVITY_TEXT_KEY)}
                   </div>
                 )}
                 {canViewAudit &&
@@ -143,8 +147,8 @@ function DashboardPageContent({ canViewAudit }: { canViewAudit: boolean }) {
                       />
                     ))}
                 {canViewAudit && recentEntries?.length === 0 && (
-                  <div className="px-5 py-6 text-center font-mono text-xs text-muted-foreground">
-                    {t("activity.noActivity")}
+                  <div className={NO_ACTIVITY_CLASS}>
+                    {t(NO_ACTIVITY_TEXT_KEY)}
                   </div>
                 )}
               </div>

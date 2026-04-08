@@ -21,6 +21,7 @@ export default defineConfig({
       provider: "v8",
       reporter: ["text"],
       exclude: [
+        ".next/**",
         "node_modules/",
         "src/test/",
         "**/*.d.ts",

@@ -1,6 +1,6 @@
 /* eslint-disable react/button-has-type */
 import { render, screen } from "@testing-library/react";
-import { describe, it, expect, vi } from "vitest";
+import { beforeEach, describe, it, expect, vi } from "vitest";
 
 vi.mock("next-intl", () => ({
   useTranslations: () => (key: string) => key,
@@ -8,6 +8,22 @@ vi.mock("next-intl", () => ({
 
 vi.mock("shared", () => ({
   tid: (id: string) => ({ "data-testid": id }),
+}));
+
+const mockHasPermission = vi.fn((permission: string) =>
+  [
+    "products.read",
+    "products.create",
+    "products.update",
+    "products.delete",
+  ].includes(permission),
+);
+
+vi.mock("auth/client", () => ({
+  useCurrentUserPermissions: () => ({
+    isLoading: false,
+    hasPermission: mockHasPermission,
+  }),
 }));
 
 vi.mock("next/link", () => ({
@@ -57,6 +73,18 @@ vi.mock("@/features/products/presentation/components/ProductTable", () => ({
 import { ProductListPage } from "./ProductListPage";
 
 describe("ProductListPage", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockHasPermission.mockImplementation((permission: string) =>
+      [
+        "products.read",
+        "products.create",
+        "products.update",
+        "products.delete",
+      ].includes(permission),
+    );
+  });
+
   it("renders page with title", () => {
     render(<ProductListPage />);
     expect(screen.getByTestId("products-title")).toBeInTheDocument();

@@ -1,8 +1,17 @@
+/* eslint-disable i18next/no-literal-string, unicorn/prefer-ternary */
 import { createServerSupabaseClient } from "api/supabase/server";
 import { NextResponse } from "next/server";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const FORBIDDEN_ERROR = "Forbidden";
+const INVALID_PAYLOAD_ERROR = "Invalid payload";
+const USER_PERMISSIONS_READ = "user_permissions.read";
+const USER_PERMISSIONS_CREATE = "user_permissions.create";
+const USER_PERMISSIONS_DELETE = "user_permissions.delete";
+const RETURN_MINIMAL = "return=minimal";
+const MERGE_DUPLICATES_RETURN_MINIMAL =
+  "resolution=merge-duplicates,return=minimal";
 
 function getRestHeaders() {
   if (!supabaseUrl || !serviceRoleKey) {
@@ -29,7 +38,7 @@ async function adminFetch(path: string, init?: RequestInit) {
     ...init,
     headers: {
       ...getRestHeaders(),
-      ...(init?.headers ?? {}),
+      ...init?.headers,
     },
     cache: "no-store",
   });
@@ -102,7 +111,7 @@ async function grantPermission(
     {
       method: "POST",
       headers: {
-        Prefer: "resolution=merge-duplicates,return=minimal",
+        Prefer: MERGE_DUPLICATES_RETURN_MINIMAL,
       },
       body: JSON.stringify([
         {
@@ -125,7 +134,7 @@ async function revokePermission(userId: string, permissionKey: string) {
     {
       method: "DELETE",
       headers: {
-        Prefer: "return=minimal",
+        Prefer: RETURN_MINIMAL,
       },
     },
   );
@@ -139,7 +148,7 @@ async function replacePermissions(
   await adminFetch(`user_permissions?user_id=eq.${userId}`, {
     method: "DELETE",
     headers: {
-      Prefer: "return=minimal",
+      Prefer: RETURN_MINIMAL,
     },
   });
 
@@ -166,9 +175,9 @@ export async function GET(
   _request: Request,
   context: { params: Promise<{ userId: string }> },
 ) {
-  const adminUserId = await getAuthorizedAdmin(["user_permissions.read"]);
+  const adminUserId = await getAuthorizedAdmin([USER_PERMISSIONS_READ]);
   if (!adminUserId) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    return NextResponse.json({ error: FORBIDDEN_ERROR }, { status: 403 });
   }
 
   const { userId } = await context.params;
@@ -187,15 +196,15 @@ export async function POST(
   };
 
   if (!permissionKey || typeof grant !== "boolean") {
-    return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
+    return NextResponse.json({ error: INVALID_PAYLOAD_ERROR }, { status: 400 });
   }
 
   const requiredKeys = grant
-    ? ["user_permissions.create"]
-    : ["user_permissions.delete"];
+    ? [USER_PERMISSIONS_CREATE]
+    : [USER_PERMISSIONS_DELETE];
   const adminUserId = await getAuthorizedAdmin(requiredKeys);
   if (!adminUserId) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    return NextResponse.json({ error: FORBIDDEN_ERROR }, { status: 403 });
   }
 
   const { userId } = await context.params;
@@ -214,11 +223,11 @@ export async function PUT(
   context: { params: Promise<{ userId: string }> },
 ) {
   const adminUserId = await getAuthorizedAdmin([
-    "user_permissions.create",
-    "user_permissions.delete",
+    USER_PERMISSIONS_CREATE,
+    USER_PERMISSIONS_DELETE,
   ]);
   if (!adminUserId) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    return NextResponse.json({ error: FORBIDDEN_ERROR }, { status: 403 });
   }
 
   const { userId } = await context.params;
@@ -227,7 +236,7 @@ export async function PUT(
   };
 
   if (!Array.isArray(permissionKeys)) {
-    return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
+    return NextResponse.json({ error: INVALID_PAYLOAD_ERROR }, { status: 400 });
   }
 
   await replacePermissions(userId, permissionKeys, adminUserId);

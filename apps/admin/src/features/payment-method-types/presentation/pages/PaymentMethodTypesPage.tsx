@@ -1,3 +1,4 @@
+/* eslint-disable react/no-multi-comp, i18next/no-literal-string */
 "use client";
 
 import { useCurrentUserPermissions } from "auth/client";

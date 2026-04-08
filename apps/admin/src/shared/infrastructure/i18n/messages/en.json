@@ -229,49 +229,75 @@
     }
   },
   "permissions": {
-    "products.create": "Create Products",
-    "products.read": "View Products",
-    "products.update": "Edit Products",
-    "products.delete": "Delete Products",
-    "product_images.create": "Upload Product Images",
-    "product_images.read": "View Product Images",
-    "product_images.delete": "Delete Product Images",
-    "product_reviews.create": "Write Reviews",
-    "product_reviews.read": "View Reviews",
-    "product_reviews.update": "Edit Reviews",
-    "product_reviews.delete": "Delete Reviews",
-    "orders.create": "Place Orders",
-    "orders.read": "View Orders",
-    "orders.update": "Manage Orders",
-    "receipts.create": "Upload Receipts",
-    "receipts.read": "View Receipts",
-    "receipts.delete": "Delete Receipts",
-    "seller_payment_methods.create": "Add Seller Payment Methods",
-    "seller_payment_methods.read": "View Seller Payment Methods",
-    "seller_payment_methods.update": "Edit Seller Payment Methods",
-    "seller_payment_methods.delete": "Delete Seller Payment Methods",
-    "payment_method_types.create": "Create Payment Types",
-    "payment_method_types.read": "View Payment Types",
-    "payment_method_types.update": "Edit Payment Types",
-    "payment_method_types.delete": "Delete Payment Types",
-    "payment_settings.read": "View Payment Settings",
-    "payment_settings.update": "Edit Payment Settings",
-    "templates.create": "Create Templates",
-    "templates.read": "View Templates",
-    "templates.update": "Edit Templates",
-    "templates.delete": "Delete Templates",
-    "audit.read": "View Audit Log",
-    "user_permissions.create": "Grant Permissions",
-    "user_permissions.read": "View User Permissions",
-    "user_permissions.update": "Modify Permission Grants",
-    "user_permissions.delete": "Revoke Permissions",
-    "events.create": "Create Events",
-    "events.read": "View Events",
-    "events.update": "Edit Events",
-    "events.delete": "Delete Events",
-    "check_ins.create": "Check In Attendees",
-    "check_ins.read": "View Check-ins",
-    "check_ins.update": "Undo Check-ins"
+    "products": {
+      "create": "Create Products",
+      "read": "View Products",
+      "update": "Edit Products",
+      "delete": "Delete Products"
+    },
+    "product_images": {
+      "create": "Upload Product Images",
+      "read": "View Product Images",
+      "delete": "Delete Product Images"
+    },
+    "product_reviews": {
+      "create": "Write Reviews",
+      "read": "View Reviews",
+      "update": "Edit Reviews",
+      "delete": "Delete Reviews"
+    },
+    "orders": {
+      "create": "Place Orders",
+      "read": "View Orders",
+      "update": "Manage Orders"
+    },
+    "receipts": {
+      "create": "Upload Receipts",
+      "read": "View Receipts",
+      "delete": "Delete Receipts"
+    },
+    "seller_payment_methods": {
+      "create": "Add Seller Payment Methods",
+      "read": "View Seller Payment Methods",
+      "update": "Edit Seller Payment Methods",
+      "delete": "Delete Seller Payment Methods"
+    },
+    "payment_method_types": {
+      "create": "Create Payment Types",
+      "read": "View Payment Types",
+      "update": "Edit Payment Types",
+      "delete": "Delete Payment Types"
+    },
+    "payment_settings": {
+      "read": "View Payment Settings",
+      "update": "Edit Payment Settings"
+    },
+    "templates": {
+      "create": "Create Templates",
+      "read": "View Templates",
+      "update": "Edit Templates",
+      "delete": "Delete Templates"
+    },
+    "audit": {
+      "read": "View Audit Log"
+    },
+    "user_permissions": {
+      "create": "Grant Permissions",
+      "read": "View User Permissions",
+      "update": "Modify Permission Grants",
+      "delete": "Revoke Permissions"
+    },
+    "events": {
+      "create": "Create Events",
+      "read": "View Events",
+      "update": "Edit Events",
+      "delete": "Delete Events"
+    },
+    "check_ins": {
+      "create": "Check In Attendees",
+      "read": "View Check-ins",
+      "update": "Undo Check-ins"
+    }
   },
   "common": {
     "loading": "Loading...",

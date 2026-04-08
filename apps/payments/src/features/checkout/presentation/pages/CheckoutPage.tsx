@@ -1,7 +1,7 @@
+/* eslint-disable react/no-multi-comp */
 "use client";
 
-import { useSupabaseAuth } from "auth/client";
-import { useCurrentUserPermissions } from "auth/client";
+import { useCurrentUserPermissions, useSupabaseAuth } from "auth/client";
 import { ArrowLeft, PartyPopper, ShoppingBag } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";

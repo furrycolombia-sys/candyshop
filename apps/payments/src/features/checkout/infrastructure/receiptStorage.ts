@@ -10,11 +10,11 @@ export async function uploadReceipt(
   file: File,
   orderId: string,
 ): Promise<string> {
-  const storagePath = `${orderId}/${file.name}`;
+  const storagePath = `${orderId}/${crypto.randomUUID()}-${file.name}`;
 
   const { error } = await supabase.storage
     .from(RECEIPTS_BUCKET)
-    .upload(storagePath, file, { upsert: true });
+    .upload(storagePath, file);
 
   if (error) throw error;
 

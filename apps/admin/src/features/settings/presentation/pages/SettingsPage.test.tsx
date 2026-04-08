@@ -9,6 +9,17 @@ vi.mock("shared", () => ({
   tid: (id: string) => ({ "data-testid": id }),
 }));
 
+const mockHasPermission = vi.fn((permission: string) =>
+  ["payment_settings.read", "payment_settings.update"].includes(permission),
+);
+
+vi.mock("auth/client", () => ({
+  useCurrentUserPermissions: () => ({
+    isLoading: false,
+    hasPermission: mockHasPermission,
+  }),
+}));
+
 const mockPaymentSettings = vi.fn();
 const mockUpdateMutate = vi.fn();
 
@@ -37,6 +48,10 @@ import { SettingsPage } from "./SettingsPage";
 describe("SettingsPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    capturedOnSave = null;
+    mockHasPermission.mockImplementation((permission: string) =>
+      ["payment_settings.read", "payment_settings.update"].includes(permission),
+    );
   });
 
   it("renders title and subtitle", () => {

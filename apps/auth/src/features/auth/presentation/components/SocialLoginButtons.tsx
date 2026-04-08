@@ -6,6 +6,7 @@ import { tid } from "shared";
 
 import { DiscordIcon } from "./DiscordIcon";
 import { GoogleIcon } from "./GoogleIcon";
+
 import { useSupabaseAuth } from "@/features/auth/application/hooks/useSupabaseAuth";
 
 type Provider = "google" | "discord";

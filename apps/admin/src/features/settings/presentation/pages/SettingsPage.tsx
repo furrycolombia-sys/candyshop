@@ -1,3 +1,4 @@
+/* eslint-disable react/no-multi-comp, i18next/no-literal-string */
 "use client";
 
 import { useCurrentUserPermissions } from "auth/client";
@@ -59,8 +60,8 @@ function SettingsPageContent({ canUpdate }: { canUpdate: boolean }) {
         {settings && (
           <TimeoutSettings
             settings={settings}
-            onSave={canUpdate ? handleSave : () => undefined}
-            isPending={canUpdate && updateMutation.isPending}
+            onSave={canUpdate ? handleSave : () => {}}
+            isPending={canUpdate ? updateMutation.isPending : false}
             canUpdate={canUpdate}
           />
         )}

@@ -20,15 +20,20 @@ describe("uploadReceipt", () => {
 
   it("uploads file to the receipts bucket and returns storage path", async () => {
     mockUpload.mockResolvedValue({ error: null });
+    const randomUuidSpy = vi
+      .spyOn(crypto, "randomUUID")
+      .mockReturnValue("test-uuid");
 
     const file = new File(["data"], "receipt.png", { type: "image/png" });
     const result = await uploadReceipt(mockSupabase, file, "order-123");
 
     expect(mockStorageFrom).toHaveBeenCalledWith("receipts");
-    expect(mockUpload).toHaveBeenCalledWith("order-123/receipt.png", file, {
-      upsert: true,
-    });
-    expect(result).toBe("order-123/receipt.png");
+    expect(mockUpload).toHaveBeenCalledWith(
+      "order-123/test-uuid-receipt.png",
+      file,
+    );
+    expect(result).toBe("order-123/test-uuid-receipt.png");
+    randomUuidSpy.mockRestore();
   });
 
   it("throws on upload error", async () => {

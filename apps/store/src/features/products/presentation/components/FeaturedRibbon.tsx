@@ -86,8 +86,13 @@ export function FeaturedRibbon({
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    // eslint-disable-next-line i18next/no-literal-string -- canvas context type
-    const ctx = canvas.getContext("2d");
+    let ctx: CanvasRenderingContext2D | null = null;
+    try {
+      // eslint-disable-next-line i18next/no-literal-string -- canvas context type
+      ctx = canvas.getContext("2d");
+    } catch {
+      return;
+    }
     if (!ctx) return;
 
     canvas.width = s * DEVICE_PIXEL_RATIO;

@@ -1,21 +1,5 @@
-import { type NextRequest, NextResponse } from "next/server";
-import createMiddleware from "next-intl/middleware";
+import { createIntlProxy } from "shared/i18n/createIntlProxy";
 
 import { routing } from "@/shared/infrastructure/i18n";
 
-const intlMiddleware = createMiddleware(routing);
-
-export default function proxy(request: NextRequest) {
-  const { pathname } = request.nextUrl;
-
-  // Skip static assets and internal Next.js requests
-  if (
-    pathname.startsWith("/_next") ||
-    pathname.startsWith("/api") ||
-    pathname.includes(".")
-  ) {
-    return NextResponse.next();
-  }
-
-  return intlMiddleware(request);
-}
+export default createIntlProxy(routing);

@@ -12,8 +12,8 @@ import { ProtectedRoute } from "@/features/auth";
 import { appUrls } from "@/shared/infrastructure/config";
 import { routing } from "@/shared/infrastructure/i18n";
 import { ThemeProvider } from "@/shared/infrastructure/providers";
-import { AppTopNavigation } from "@/shared/presentation/components/AppTopNavigation";
 import { AdminSidebar } from "@/shared/presentation/components/AdminSidebar";
+import { AppTopNavigation } from "@/shared/presentation/components/AppTopNavigation";
 
 export async function generateMetadata({
   params,

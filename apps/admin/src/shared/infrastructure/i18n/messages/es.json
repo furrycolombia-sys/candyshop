@@ -231,49 +231,75 @@
     }
   },
   "permissions": {
-    "products.create": "Crear Productos",
-    "products.read": "Ver Productos",
-    "products.update": "Editar Productos",
-    "products.delete": "Eliminar Productos",
-    "product_images.create": "Subir Imagenes de Producto",
-    "product_images.read": "Ver Imagenes de Producto",
-    "product_images.delete": "Eliminar Imagenes de Producto",
-    "product_reviews.create": "Escribir Resenas",
-    "product_reviews.read": "Ver Resenas",
-    "product_reviews.update": "Editar Resenas",
-    "product_reviews.delete": "Eliminar Resenas",
-    "orders.create": "Hacer Pedidos",
-    "orders.read": "Ver Pedidos",
-    "orders.update": "Gestionar Pedidos",
-    "receipts.create": "Subir Recibos",
-    "receipts.read": "Ver Recibos",
-    "receipts.delete": "Eliminar Recibos",
-    "seller_payment_methods.create": "Agregar Metodos de Pago del Vendedor",
-    "seller_payment_methods.read": "Ver Metodos de Pago del Vendedor",
-    "seller_payment_methods.update": "Editar Metodos de Pago del Vendedor",
-    "seller_payment_methods.delete": "Eliminar Metodos de Pago del Vendedor",
-    "payment_method_types.create": "Crear Tipos de Pago",
-    "payment_method_types.read": "Ver Tipos de Pago",
-    "payment_method_types.update": "Editar Tipos de Pago",
-    "payment_method_types.delete": "Eliminar Tipos de Pago",
-    "payment_settings.read": "Ver Configuracion de Pagos",
-    "payment_settings.update": "Editar Configuracion de Pagos",
-    "templates.create": "Crear Plantillas",
-    "templates.read": "Ver Plantillas",
-    "templates.update": "Editar Plantillas",
-    "templates.delete": "Eliminar Plantillas",
-    "audit.read": "Ver Registro de Auditoria",
-    "user_permissions.create": "Otorgar Permisos",
-    "user_permissions.read": "Ver Permisos de Usuario",
-    "user_permissions.update": "Modificar Permisos",
-    "user_permissions.delete": "Revocar Permisos",
-    "events.create": "Crear Eventos",
-    "events.read": "Ver Eventos",
-    "events.update": "Editar Eventos",
-    "events.delete": "Eliminar Eventos",
-    "check_ins.create": "Registrar Entrada",
-    "check_ins.read": "Ver Check-ins",
-    "check_ins.update": "Deshacer Check-in"
+    "products": {
+      "create": "Crear Productos",
+      "read": "Ver Productos",
+      "update": "Editar Productos",
+      "delete": "Eliminar Productos"
+    },
+    "product_images": {
+      "create": "Subir Imagenes de Producto",
+      "read": "Ver Imagenes de Producto",
+      "delete": "Eliminar Imagenes de Producto"
+    },
+    "product_reviews": {
+      "create": "Escribir Resenas",
+      "read": "Ver Resenas",
+      "update": "Editar Resenas",
+      "delete": "Eliminar Resenas"
+    },
+    "orders": {
+      "create": "Hacer Pedidos",
+      "read": "Ver Pedidos",
+      "update": "Gestionar Pedidos"
+    },
+    "receipts": {
+      "create": "Subir Recibos",
+      "read": "Ver Recibos",
+      "delete": "Eliminar Recibos"
+    },
+    "seller_payment_methods": {
+      "create": "Agregar Metodos de Pago del Vendedor",
+      "read": "Ver Metodos de Pago del Vendedor",
+      "update": "Editar Metodos de Pago del Vendedor",
+      "delete": "Eliminar Metodos de Pago del Vendedor"
+    },
+    "payment_method_types": {
+      "create": "Crear Tipos de Pago",
+      "read": "Ver Tipos de Pago",
+      "update": "Editar Tipos de Pago",
+      "delete": "Eliminar Tipos de Pago"
+    },
+    "payment_settings": {
+      "read": "Ver Configuracion de Pagos",
+      "update": "Editar Configuracion de Pagos"
+    },
+    "templates": {
+      "create": "Crear Plantillas",
+      "read": "Ver Plantillas",
+      "update": "Editar Plantillas",
+      "delete": "Eliminar Plantillas"
+    },
+    "audit": {
+      "read": "Ver Registro de Auditoria"
+    },
+    "user_permissions": {
+      "create": "Otorgar Permisos",
+      "read": "Ver Permisos de Usuario",
+      "update": "Modificar Permisos",
+      "delete": "Revocar Permisos"
+    },
+    "events": {
+      "create": "Crear Eventos",
+      "read": "Ver Eventos",
+      "update": "Editar Eventos",
+      "delete": "Eliminar Eventos"
+    },
+    "check_ins": {
+      "create": "Registrar Entrada",
+      "read": "Ver Check-ins",
+      "update": "Deshacer Check-in"
+    }
   },
   "common": {
     "loading": "Cargando...",

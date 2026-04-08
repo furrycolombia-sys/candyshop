@@ -166,6 +166,9 @@ describe("resubmitEvidence", () => {
     supabase._chain.eq
       .mockReturnValueOnce(supabase._chain)
       .mockResolvedValueOnce({ error: null });
+    const randomUuidSpy = vi
+      .spyOn(crypto, "randomUUID")
+      .mockReturnValue("test-uuid");
 
     const file = new File(["data"], "receipt.jpg", { type: "image/jpeg" });
 
@@ -178,10 +181,10 @@ describe("resubmitEvidence", () => {
 
     expect(supabase.storage.from).toHaveBeenCalledWith("receipts");
     expect(supabase._storageChain.upload).toHaveBeenCalledWith(
-      "order-1/receipt.jpg",
+      "order-1/test-uuid-receipt.jpg",
       file,
-      { upsert: true },
     );
+    randomUuidSpy.mockRestore();
   });
 
   it("throws on upload error", async () => {
