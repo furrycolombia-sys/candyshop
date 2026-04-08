@@ -1,4 +1,3 @@
-import { AppNavigation } from "@monorepo/app-components";
 import { getServerUserEmail } from "api/supabase/server";
 import type { Metadata } from "next";
 import { NextIntlClientProvider } from "next-intl";
@@ -12,6 +11,7 @@ import { Providers } from "@/app/[locale]/providers";
 import { appUrls } from "@/shared/infrastructure/config";
 import { routing } from "@/shared/infrastructure/i18n";
 import { ThemeProvider } from "@/shared/infrastructure/providers";
+import { AppTopNavigation } from "@/shared/presentation/components/AppTopNavigation";
 
 export async function generateMetadata({
   params,
@@ -50,7 +50,7 @@ export default async function LocaleLayout({
       <NextIntlClientProvider messages={messages}>
         <Providers>
           <div className="flex min-h-screen flex-col">
-            <AppNavigation
+            <AppTopNavigation
               currentApp="auth"
               urls={appUrls}
               locales={routing.locales}

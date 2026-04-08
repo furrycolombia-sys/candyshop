@@ -21,6 +21,10 @@ interface AppNavigationProps {
   urls: Record<AppId, string>;
   locales: readonly string[];
   userEmail?: string | null;
+  permissionState?: {
+    grantedKeys: string[];
+    isLoading: boolean;
+  };
 }
 
 const APP_ORDER: { id: AppId; labelKey: string }[] = [
@@ -33,14 +37,66 @@ const APP_ORDER: { id: AppId; labelKey: string }[] = [
   { id: "playground", labelKey: "playground" },
 ];
 
+const APP_ACCESS_RULES: Partial<
+  Record<AppId, { required: readonly string[]; mode?: "all" | "any" }>
+> = {
+  studio: {
+    required: [
+      "products.read",
+      "products.create",
+      "products.update",
+      "products.delete",
+    ],
+    mode: "any",
+  },
+  payments: {
+    required: [
+      "orders.create",
+      "receipts.create",
+      "orders.read",
+      "seller_payment_methods.read",
+      "orders.update",
+      "receipts.read",
+    ],
+    mode: "any",
+  },
+  admin: {
+    required: [
+      "templates.read",
+      "payment_method_types.read",
+      "payment_settings.read",
+      "audit.read",
+      "user_permissions.read",
+    ],
+    mode: "any",
+  },
+};
+
+function matchesPermissions(
+  grantedKeys: string[],
+  required: readonly string[],
+  mode: "all" | "any" = "all",
+): boolean {
+  if (required.length === 0) return true;
+
+  return mode === "any"
+    ? required.some((key) => grantedKeys.includes(key))
+    : required.every((key) => grantedKeys.includes(key));
+}
+
 export function AppNavigation({
   currentApp,
   urls,
   locales,
   userEmail,
+  permissionState,
 }: AppNavigationProps) {
   const t = useTranslations("nav");
   const locale = useLocale();
+  const { grantedKeys, isLoading } = permissionState ?? {
+    grantedKeys: [],
+    isLoading: true,
+  };
 
   /** Append current locale to cross-app URL so the target app opens in the same language */
   function localizedHref(baseUrl: string): string {
@@ -52,6 +108,14 @@ export function AppNavigation({
     return `${baseUrl.replace(/\/$/, "")}/${locale}`;
   }
 
+  const visibleApps = APP_ORDER.filter(({ id }) => {
+    const rule = APP_ACCESS_RULES[id];
+    if (!rule) return true;
+    if (isLoading) return false;
+
+    return matchesPermissions(grantedKeys, rule.required, rule.mode ?? "all");
+  });
+
   return (
     <nav
       {...tid("app-navigation")}
@@ -61,7 +125,7 @@ export function AppNavigation({
         {t("brand")}
       </span>
       <div className="flex items-center gap-1">
-        {APP_ORDER.map(({ id, labelKey }) => {
+        {visibleApps.map(({ id, labelKey }) => {
           const isActive = id === currentApp;
           return (
             <a

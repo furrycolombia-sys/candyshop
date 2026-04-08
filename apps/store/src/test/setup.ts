@@ -4,7 +4,15 @@ import { beforeAll, afterEach, afterAll } from "vitest";
 
 import { server } from "@/mocks/server";
 
-beforeAll(() => server.listen({ onUnhandledRequest: "error" }));
+beforeAll(() => {
+  server.listen({ onUnhandledRequest: "error" });
+
+  Object.defineProperty(HTMLCanvasElement.prototype, "getContext", {
+    value: () => null,
+    writable: true,
+    configurable: true,
+  });
+});
 afterEach(() => {
   cleanup();
   server.resetHandlers();

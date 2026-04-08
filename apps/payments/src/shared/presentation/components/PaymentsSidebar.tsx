@@ -1,5 +1,6 @@
 "use client";
 
+import { matchesPermissions, useCurrentUserPermissions } from "auth/client";
 import {
   ChevronLeft,
   ChevronRight,
@@ -7,6 +8,7 @@ import {
   CreditCard,
   Package,
   ShoppingCart,
+  type LucideIcon,
 } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -15,12 +17,45 @@ import { tid } from "shared";
 
 import { Link } from "@/shared/infrastructure/i18n";
 
-const NAV_SECTIONS = [
+type NavItem = {
+  key: string;
+  href: string;
+  icon: LucideIcon;
+  required: readonly string[];
+};
+
+type NavSection = {
+  labelKey: string;
+  items: readonly NavItem[];
+};
+
+const ORDER_READ_PERMISSIONS = ["orders.read"] as const;
+const CHECKOUT_PERMISSIONS = ["orders.create", "receipts.create"] as const;
+const SALES_PERMISSIONS = [
+  ...ORDER_READ_PERMISSIONS,
+  "orders.update",
+  "receipts.read",
+] as const;
+const SELLER_PAYMENT_METHOD_PERMISSIONS = [
+  "seller_payment_methods.read",
+] as const;
+
+const NAV_SECTIONS: readonly NavSection[] = [
   {
     labelKey: "buyer" as const,
     items: [
-      { key: "checkout" as const, href: "/checkout", icon: ShoppingCart },
-      { key: "myPurchases" as const, href: "/purchases", icon: Package },
+      {
+        key: "checkout" as const,
+        href: "/checkout",
+        icon: ShoppingCart,
+        required: CHECKOUT_PERMISSIONS,
+      },
+      {
+        key: "myPurchases" as const,
+        href: "/purchases",
+        icon: Package,
+        required: ORDER_READ_PERMISSIONS,
+      },
     ],
   },
   {
@@ -30,31 +65,43 @@ const NAV_SECTIONS = [
         key: "paymentMethods" as const,
         href: "/payment-methods",
         icon: CreditCard,
+        required: SELLER_PAYMENT_METHOD_PERMISSIONS,
       },
       {
         key: "sales" as const,
         href: "/sales",
         icon: ClipboardCheck,
+        required: SALES_PERMISSIONS,
       },
     ],
   },
 ] as const;
 
+const COLLAPSED_WIDTH_CLASS = "w-sidebar-collapsed";
+const INACTIVE_LINK_CLASS =
+  "text-muted-foreground hover:bg-muted hover:text-foreground";
+
 export function PaymentsSidebar() {
   const t = useTranslations("sidebar");
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
+  const { grantedKeys, isLoading } = useCurrentUserPermissions();
 
   const appPath = pathname.replace(/^\/[a-z]{2}/, "") || "/";
+  const visibleSections = NAV_SECTIONS.map((section) => ({
+    ...section,
+    items: section.items.filter((item) =>
+      isLoading ? false : matchesPermissions(grantedKeys, item.required),
+    ),
+  })).filter((section) => section.items.length > 0);
 
   return (
     <aside
       className={`relative flex shrink-0 flex-col border-r-3 border-foreground bg-background transition-all duration-300 ease-in-out ${
-        collapsed ? "w-sidebar-collapsed" : "w-60"
+        collapsed ? COLLAPSED_WIDTH_CLASS : "w-60"
       }`}
       {...tid("payments-sidebar")}
     >
-      {/* Collapse toggle */}
       <button
         type="button"
         onClick={() => setCollapsed((prev) => !prev)}
@@ -69,18 +116,15 @@ export function PaymentsSidebar() {
         )}
       </button>
 
-      {/* Navigation sections */}
       <nav className="flex flex-1 flex-col gap-1 px-2.5 pt-10">
-        {NAV_SECTIONS.map((section) => (
+        {visibleSections.map((section) => (
           <div key={section.labelKey} className="mb-2">
-            {/* Section label */}
             {!collapsed && (
               <span className="text-section-label mb-1.5 block px-2 font-mono text-muted-foreground/60">
                 {t(section.labelKey)}
               </span>
             )}
 
-            {/* Section items */}
             <div className="flex flex-col gap-0.5">
               {section.items.map(({ key, href, icon }) => {
                 const NavIcon = icon;
@@ -96,12 +140,11 @@ export function PaymentsSidebar() {
                     } ${
                       isActive
                         ? "bg-foreground text-background"
-                        : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                        : INACTIVE_LINK_CLASS
                     }`}
                     aria-current={isActive ? "page" : undefined}
                     {...tid(`sidebar-${key}`)}
                   >
-                    {/* Active indicator bar */}
                     {isActive && (
                       <span className="absolute left-0 inset-y-1 w-sidebar-indicator rounded-r-full bg-pink" />
                     )}

@@ -114,7 +114,6 @@ test.describe("Language persistence across apps", () => {
     // Nav links visible (Spanish locale active)
     await expect(page.getByTestId("nav-link-landing")).toBeVisible();
     await expect(page.getByTestId("nav-link-store")).toBeVisible();
-    await expect(page.getByTestId("nav-link-payments")).toBeVisible();
   });
 
   test("cross-app nav links include current locale", async ({ page }) => {

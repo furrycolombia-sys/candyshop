@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/refs -- @hello-pangea/dnd requires ref access during render for drag-and-drop binding */
 "use client";
 
 import type { DraggableProvided } from "@hello-pangea/dnd";
@@ -5,6 +6,7 @@ import { GripVertical, Pencil, Trash2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
+import type { ReactNode } from "react";
 import { useCallback, useState } from "react";
 import { i18nField, tid } from "shared";
 import type { ProductCategory, ProductType } from "shared/types";
@@ -20,10 +22,15 @@ import {
 } from "@/features/products/domain/constants";
 import type { Product } from "@/features/products/domain/types";
 
+const STATUS_ON = "on";
+const STATUS_OFF = "off";
+
 interface ProductTableRowProps {
   product: Product;
   isOddRow: boolean;
   canReorder: boolean;
+  canUpdate: boolean;
+  canDelete: boolean;
   dragProvided: DraggableProvided;
   isDragging: boolean;
 }
@@ -48,10 +55,18 @@ function getFirstImage(images: unknown): string | null {
   return null;
 }
 
+function renderReadOnlyState(value: boolean) {
+  return (
+    <span className="font-mono text-xs">{value ? STATUS_ON : STATUS_OFF}</span>
+  );
+}
+
 export function ProductTableRow({
   product,
   isOddRow,
   canReorder,
+  canUpdate,
+  canDelete,
   dragProvided,
   isDragging,
 }: ProductTableRowProps) {
@@ -97,7 +112,46 @@ export function ProductTableRow({
       isActive ? "translate-x-5" : "translate-x-0.5",
     );
 
-  /* eslint-disable react-hooks/refs -- @hello-pangea/dnd requires ref access during render for drag-and-drop binding */
+  let actionControls: ReactNode = null;
+  if (canDelete && deletingId === product.id) {
+    actionControls = (
+      <div className="flex items-center gap-1">
+        <Button
+          variant="destructive"
+          size="sm"
+          className="border-2 border-border text-xs"
+          onClick={confirmDelete}
+          disabled={deleteMutation.isPending}
+          {...tid(`confirm-delete-${product.id}`)}
+        >
+          {t("common.confirm")}
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          className="border-2 border-border text-xs"
+          onClick={() => setDeletingId(null)}
+          {...tid(`cancel-delete-${product.id}`)}
+        >
+          {t("common.cancel")}
+        </Button>
+      </div>
+    );
+  } else if (canDelete) {
+    actionControls = (
+      <Button
+        variant="outline"
+        size="sm"
+        className="border-2 border-border text-destructive hover:bg-destructive/10"
+        onClick={handleDelete}
+        {...tid(`delete-product-${product.id}`)}
+      >
+        <Trash2 className="size-3.5" />
+        <span className="sr-only">{t("common.delete")}</span>
+      </Button>
+    );
+  }
+
   return (
     <tr
       ref={dragProvided.innerRef}
@@ -109,7 +163,6 @@ export function ProductTableRow({
       )}
       {...tid(`product-row-${product.id}`)}
     >
-      {/* Drag handle */}
       {canReorder && (
         <td className="w-10 px-4 py-3">
           <div
@@ -122,7 +175,6 @@ export function ProductTableRow({
         </td>
       )}
 
-      {/* Thumbnail */}
       <td className="px-4 py-3">
         <div className="size-10 overflow-hidden rounded-lg border-2 border-border bg-muted">
           {imageUrl ? (
@@ -141,12 +193,10 @@ export function ProductTableRow({
         </div>
       </td>
 
-      {/* Name */}
       <td className="px-4 py-3">
         <span className="text-table-cell font-medium">{name}</span>
       </td>
 
-      {/* Type */}
       <td className="px-4 py-3">
         <Badge
           variant="outline"
@@ -157,7 +207,6 @@ export function ProductTableRow({
         </Badge>
       </td>
 
-      {/* Category */}
       <td className="px-4 py-3">
         <Badge
           variant="outline"
@@ -168,95 +217,66 @@ export function ProductTableRow({
         </Badge>
       </td>
 
-      {/* Price */}
       <td className="px-4 py-3 text-right">
         <span className="text-table-cell font-bold tabular-nums">
           {formatCOP(product.price_cop)}
         </span>
       </td>
 
-      {/* Active toggle */}
       <td className="px-4 py-3 text-center">
-        <button
-          type="button"
-          onClick={() => handleToggle("is_active", product.is_active)}
-          disabled={toggleMutation.isPending}
-          className={getToggleClass(product.is_active, "bg-success")}
-          role="switch"
-          aria-checked={product.is_active}
-          {...tid(`toggle-active-${product.id}`)}
-        >
-          <span className={getToggleThumbClass(product.is_active)} />
-        </button>
+        {canUpdate ? (
+          <button
+            type="button"
+            onClick={() => handleToggle("is_active", product.is_active)}
+            disabled={toggleMutation.isPending}
+            className={getToggleClass(product.is_active, "bg-success")}
+            role="switch"
+            aria-checked={product.is_active}
+            {...tid(`toggle-active-${product.id}`)}
+          >
+            <span className={getToggleThumbClass(product.is_active)} />
+          </button>
+        ) : (
+          renderReadOnlyState(product.is_active)
+        )}
       </td>
 
-      {/* Featured toggle */}
       <td className="px-4 py-3 text-center">
-        <button
-          type="button"
-          onClick={() => handleToggle("featured", product.featured)}
-          disabled={toggleMutation.isPending}
-          className={getToggleClass(product.featured, "bg-brand")}
-          role="switch"
-          aria-checked={product.featured}
-          {...tid(`toggle-featured-${product.id}`)}
-        >
-          <span className={getToggleThumbClass(product.featured)} />
-        </button>
+        {canUpdate ? (
+          <button
+            type="button"
+            onClick={() => handleToggle("featured", product.featured)}
+            disabled={toggleMutation.isPending}
+            className={getToggleClass(product.featured, "bg-brand")}
+            role="switch"
+            aria-checked={product.featured}
+            {...tid(`toggle-featured-${product.id}`)}
+          >
+            <span className={getToggleThumbClass(product.featured)} />
+          </button>
+        ) : (
+          renderReadOnlyState(product.featured)
+        )}
       </td>
 
-      {/* Actions */}
       <td className="px-4 py-3 text-right">
         <div className="flex items-center justify-end gap-2">
-          <Link href={`/products/${product.id}`}>
-            <Button
-              variant="outline"
-              size="sm"
-              className="border-2 border-border"
-              {...tid(`edit-product-${product.id}`)}
-            >
-              <Pencil className="size-3.5" />
-              <span className="sr-only">{t("common.edit")}</span>
-            </Button>
-          </Link>
-
-          {deletingId === product.id ? (
-            <div className="flex items-center gap-1">
-              <Button
-                variant="destructive"
-                size="sm"
-                className="border-2 border-border text-xs"
-                onClick={confirmDelete}
-                disabled={deleteMutation.isPending}
-                {...tid(`confirm-delete-${product.id}`)}
-              >
-                {t("common.confirm")}
-              </Button>
+          {canUpdate && (
+            <Link href={`/products/${product.id}`}>
               <Button
                 variant="outline"
                 size="sm"
-                className="border-2 border-border text-xs"
-                onClick={() => setDeletingId(null)}
-                {...tid(`cancel-delete-${product.id}`)}
+                className="border-2 border-border"
+                {...tid(`edit-product-${product.id}`)}
               >
-                {t("common.cancel")}
+                <Pencil className="size-3.5" />
+                <span className="sr-only">{t("common.edit")}</span>
               </Button>
-            </div>
-          ) : (
-            <Button
-              variant="outline"
-              size="sm"
-              className="border-2 border-border text-destructive hover:bg-destructive/10"
-              onClick={handleDelete}
-              {...tid(`delete-product-${product.id}`)}
-            >
-              <Trash2 className="size-3.5" />
-              <span className="sr-only">{t("common.delete")}</span>
-            </Button>
+            </Link>
           )}
+          {actionControls}
         </div>
       </td>
     </tr>
   );
-  /* eslint-enable react-hooks/refs */
 }

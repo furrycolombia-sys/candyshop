@@ -1,21 +1,21 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+const { uploadReceiptMock } = vi.hoisted(() => ({
+  uploadReceiptMock: vi.fn(
+    async (_supabase: unknown, file: File, orderId: string) =>
+      `${orderId}/${file.name}`,
+  ),
+}));
 
 vi.mock("@/features/checkout/infrastructure/receiptStorage", () => ({
   getReceiptUrl: vi.fn(
     async (_supabase: unknown, storagePath: string | null) =>
       storagePath ? `https://example.com/${storagePath}` : null,
   ),
-  uploadReceipt: vi.fn(
-    async (_supabase: unknown, file: File, orderId: string) =>
-      `${orderId}/${file.name}`,
-  ),
+  uploadReceipt: uploadReceiptMock,
 }));
 
 import { fetchMyOrders, resubmitEvidence } from "./orderQueries";
-
-// ---------------------------------------------------------------------------
-// Supabase mock
-// ---------------------------------------------------------------------------
 
 function createMockSupabase() {
   const chain = {
@@ -34,10 +34,6 @@ function createMockSupabase() {
     _chain: chain,
   };
 }
-
-// ---------------------------------------------------------------------------
-// fetchMyOrders
-// ---------------------------------------------------------------------------
 
 describe("fetchMyOrders", () => {
   let supabase: ReturnType<typeof createMockSupabase>;
@@ -74,7 +70,6 @@ describe("fetchMyOrders", () => {
       error: null,
     });
 
-    // orders query
     supabase._chain.order.mockResolvedValueOnce({
       data: [
         {
@@ -104,7 +99,6 @@ describe("fetchMyOrders", () => {
       error: null,
     });
 
-    // user_profiles query for seller names
     supabase._chain.in.mockResolvedValueOnce({
       data: [{ id: "s1", display_name: "Seller One", email: "s1@example.com" }],
       error: null,
@@ -139,22 +133,18 @@ describe("fetchMyOrders", () => {
   });
 });
 
-// ---------------------------------------------------------------------------
-// resubmitEvidence
-// ---------------------------------------------------------------------------
-
 describe("resubmitEvidence", () => {
   let supabase: ReturnType<typeof createMockSupabase>;
 
   beforeEach(() => {
     supabase = createMockSupabase();
+    uploadReceiptMock.mockClear();
   });
 
   it("updates order without receipt upload when no file provided", async () => {
-    // The eq chain resolves at the second eq call
     supabase._chain.eq
-      .mockReturnValueOnce(supabase._chain) // first .eq("id", orderId)
-      .mockResolvedValueOnce({ error: null }); // second .eq("payment_status", ...)
+      .mockReturnValueOnce(supabase._chain)
+      .mockResolvedValueOnce({ error: null });
 
     await resubmitEvidence(
       supabase as unknown as Parameters<typeof resubmitEvidence>[0],
@@ -164,6 +154,7 @@ describe("resubmitEvidence", () => {
     );
 
     expect(supabase.from).toHaveBeenCalledWith("orders");
+    expect(uploadReceiptMock).not.toHaveBeenCalled();
   });
 
   it("uploads receipt then updates order when file is provided", async () => {
@@ -180,6 +171,7 @@ describe("resubmitEvidence", () => {
       file,
     );
 
+    expect(uploadReceiptMock).toHaveBeenCalledWith(supabase, file, "order-1");
     expect(supabase.from).toHaveBeenCalledWith("orders");
   });
 

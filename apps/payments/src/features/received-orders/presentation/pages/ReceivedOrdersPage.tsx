@@ -1,5 +1,7 @@
+/* eslint-disable react/no-multi-comp */
 "use client";
 
+import { useCurrentUserPermissions } from "auth/client";
 import { Package } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useQueryStates } from "nuqs";
@@ -12,8 +14,9 @@ import { FILTER_STATUSES } from "@/features/received-orders/domain/constants";
 import { receivedOrdersSearchParams } from "@/features/received-orders/domain/searchParams";
 import type { SellerAction } from "@/features/received-orders/domain/types";
 import { ReceivedOrderCard } from "@/features/received-orders/presentation/components/ReceivedOrderCard";
+import { AccessDeniedState } from "@/shared/presentation/components/AccessDeniedState";
 
-export function ReceivedOrdersPage() {
+function ReceivedOrdersPageContent() {
   const t = useTranslations("receivedOrders");
   const [params, setParams] = useQueryStates(receivedOrdersSearchParams);
   const activeFilter = params.filter;
@@ -33,7 +36,6 @@ export function ReceivedOrdersPage() {
       {...tid("received-orders-page")}
     >
       <div className="mx-auto flex w-full max-w-4xl flex-col gap-6 px-4 py-8">
-        {/* Header */}
         <header>
           <h1
             className="font-display text-4xl font-extrabold uppercase tracking-tight"
@@ -43,7 +45,6 @@ export function ReceivedOrdersPage() {
           </h1>
         </header>
 
-        {/* Filter pills */}
         <div
           className="flex flex-wrap items-center gap-2"
           {...tid("received-orders-filters")}
@@ -61,14 +62,12 @@ export function ReceivedOrdersPage() {
           ))}
         </div>
 
-        {/* Loading */}
         {isLoading && (
           <div className="flex items-center justify-center py-16">
             <div className="size-8 animate-spin rounded-full border-4 border-foreground border-t-transparent" />
           </div>
         )}
 
-        {/* Empty state */}
         {!isLoading && (!orders || orders.length === 0) && (
           <div
             className="flex flex-col items-center justify-center gap-4 py-16 text-center"
@@ -82,7 +81,6 @@ export function ReceivedOrdersPage() {
           </div>
         )}
 
-        {/* Order cards */}
         {!isLoading && orders && orders.length > 0 && (
           <div className="flex flex-col gap-4" {...tid("received-orders-list")}>
             {orders.map((order) => (
@@ -98,4 +96,18 @@ export function ReceivedOrdersPage() {
       </div>
     </main>
   );
+}
+
+export function ReceivedOrdersPage() {
+  const { isLoading, hasPermission } = useCurrentUserPermissions();
+
+  if (isLoading) {
+    return null;
+  }
+
+  if (!hasPermission(["orders.read", "orders.update", "receipts.read"])) {
+    return <AccessDeniedState />;
+  }
+
+  return <ReceivedOrdersPageContent />;
 }

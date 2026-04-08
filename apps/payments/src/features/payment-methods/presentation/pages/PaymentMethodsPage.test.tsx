@@ -1,8 +1,25 @@
 import { render, screen, fireEvent } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
+let mockGrantedPermissions = [
+  "seller_payment_methods.read",
+  "seller_payment_methods.create",
+  "seller_payment_methods.update",
+  "seller_payment_methods.delete",
+];
+
 vi.mock("next-intl", () => ({
   useTranslations: () => (key: string) => key,
+}));
+
+vi.mock("auth/client", () => ({
+  useCurrentUserPermissions: () => ({
+    isLoading: false,
+    hasPermission: (required: string | string[]) => {
+      const requiredKeys = Array.isArray(required) ? required : [required];
+      return requiredKeys.every((key) => mockGrantedPermissions.includes(key));
+    },
+  }),
 }));
 
 vi.mock("shared", () => ({
@@ -140,6 +157,12 @@ describe("PaymentMethodsPage", () => {
     vi.clearAllMocks();
     mockTypesLoading = false;
     mockMethodsLoading = false;
+    mockGrantedPermissions = [
+      "seller_payment_methods.read",
+      "seller_payment_methods.create",
+      "seller_payment_methods.update",
+      "seller_payment_methods.delete",
+    ];
   });
 
   it("renders page title", () => {
@@ -204,5 +227,11 @@ describe("PaymentMethodsPage", () => {
       id: "m1",
       isActive: false,
     });
+  });
+
+  it("shows access denied without read permission", () => {
+    mockGrantedPermissions = [];
+    render(<PaymentMethodsPage />);
+    expect(screen.getByTestId("access-denied")).toBeInTheDocument();
   });
 });

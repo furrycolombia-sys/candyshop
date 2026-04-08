@@ -13,6 +13,18 @@ const SUPABASE_URL =
   process.env.NEXT_PUBLIC_SUPABASE_URL || "http://127.0.0.1:54321";
 const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
 
+/** Session token lifetime in seconds for injected cookies. */
+const SESSION_EXPIRY_SECONDS = 3600;
+
+/** Reusable headers for admin REST API calls. */
+function adminHeaders(extra?: Record<string, string>): Record<string, string> {
+  return {
+    apikey: SERVICE_ROLE_KEY,
+    Authorization: `Bearer ${SERVICE_ROLE_KEY}`,
+    ...extra,
+  };
+}
+
 export const supabaseAdmin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
   auth: { autoRefreshToken: false, persistSession: false },
 });
@@ -28,12 +40,10 @@ export async function adminInsert(
 ): Promise<Record<string, unknown>> {
   const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}`, {
     method: "POST",
-    headers: {
-      apikey: SERVICE_ROLE_KEY,
-      Authorization: `Bearer ${SERVICE_ROLE_KEY}`,
+    headers: adminHeaders({
       "Content-Type": "application/json",
       Prefer: "return=representation",
-    },
+    }),
     body: JSON.stringify(data),
   });
   if (!res.ok) {
@@ -52,11 +62,12 @@ export async function adminQuery(
   params: string,
 ): Promise<Record<string, unknown>[]> {
   const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?${params}`, {
-    headers: {
-      apikey: SERVICE_ROLE_KEY,
-      Authorization: `Bearer ${SERVICE_ROLE_KEY}`,
-    },
+    headers: adminHeaders(),
   });
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(`Admin query on ${table} failed: ${err.message}`);
+  }
   return res.json();
 }
 
@@ -67,14 +78,108 @@ export async function adminDelete(
   table: string,
   params: string,
 ): Promise<void> {
-  await fetch(`${SUPABASE_URL}/rest/v1/${table}?${params}`, {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?${params}`, {
     method: "DELETE",
-    headers: {
-      apikey: SERVICE_ROLE_KEY,
-      Authorization: `Bearer ${SERVICE_ROLE_KEY}`,
-    },
+    headers: adminHeaders(),
   });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ message: res.statusText }));
+    throw new Error(`Admin delete on ${table} failed: ${err.message}`);
+  }
 }
+
+// ─── Permission Templates ────────────────────────────────────────
+
+export const BUYER_PERMISSIONS = [
+  "products.read",
+  "product_images.read",
+  "product_reviews.create",
+  "product_reviews.read",
+  "product_reviews.update",
+  "product_reviews.delete",
+  "orders.create",
+  "orders.read",
+  "receipts.create",
+  "receipts.delete",
+];
+
+export const SELLER_PERMISSIONS = [
+  "products.read",
+  "product_images.read",
+  "product_reviews.read",
+  "orders.read",
+  "receipts.read",
+  "products.create",
+  "products.update",
+  "products.delete",
+  "product_images.create",
+  "product_images.delete",
+  "orders.update",
+  "seller_payment_methods.create",
+  "seller_payment_methods.read",
+  "seller_payment_methods.update",
+  "seller_payment_methods.delete",
+];
+
+export const ADMIN_PERMISSIONS = [
+  ...new Set([
+    ...BUYER_PERMISSIONS,
+    ...SELLER_PERMISSIONS,
+    "payment_method_types.create",
+    "payment_method_types.read",
+    "payment_method_types.update",
+    "payment_method_types.delete",
+    "payment_settings.read",
+    "payment_settings.update",
+    "templates.create",
+    "templates.read",
+    "templates.update",
+    "templates.delete",
+    "audit.read",
+    "user_permissions.create",
+    "user_permissions.read",
+    "user_permissions.update",
+    "user_permissions.delete",
+    "events.create",
+    "events.read",
+    "events.update",
+    "events.delete",
+    "check_ins.create",
+    "check_ins.read",
+    "check_ins.update",
+  ]),
+];
+
+/**
+ * Grant a list of permission keys to a user via admin REST API.
+ */
+export async function grantPermissions(
+  userId: string,
+  permissionKeys: string[],
+): Promise<void> {
+  const allRps = await adminQuery(
+    "resource_permissions",
+    "resource_type=eq.global&select=id,permissions!inner(key)",
+  );
+
+  for (const key of permissionKeys) {
+    const rp = allRps.find(
+      (r: Record<string, unknown>) =>
+        (r.permissions as Record<string, unknown>).key === key,
+    );
+    if (!rp) continue;
+
+    await adminInsert("user_permissions", {
+      user_id: userId,
+      resource_permission_id: rp.id,
+      mode: "grant",
+      granted_by: userId,
+      reason: "E2E test setup",
+    });
+  }
+}
+
+// ─── Types ───────────────────────────────────────────────────────
 
 export interface TestUser {
   userId: string;
@@ -87,7 +192,10 @@ export interface TestUser {
  * Create a test user via Supabase admin API.
  * Returns user info + tokens (does NOT inject cookies).
  */
-export async function createTestUser(label: string): Promise<TestUser> {
+export async function createTestUser(
+  label: string,
+  permissions: string[] = [],
+): Promise<TestUser> {
   const email = `e2e-${label}-${Date.now()}@test.invalid`;
   const password = `test-${Date.now()}-${label}`;
 
@@ -107,12 +215,18 @@ export async function createTestUser(label: string): Promise<TestUser> {
   if (signInError)
     throw new Error(`Failed to sign in ${label} user: ${signInError.message}`);
 
-  return {
+  const testUser: TestUser = {
     userId: user.user!.id,
     email,
     accessToken: session.session!.access_token,
     refreshToken: session.session!.refresh_token,
   };
+
+  if (permissions.length > 0) {
+    await grantPermissions(testUser.userId, permissions);
+  }
+
+  return testUser;
 }
 
 /**
@@ -142,8 +256,8 @@ export async function injectSession(
           access_token: user.accessToken,
           refresh_token: user.refreshToken,
           token_type: "bearer",
-          expires_in: 3600,
-          expires_at: Math.floor(Date.now() / 1000) + 3600,
+          expires_in: SESSION_EXPIRY_SECONDS,
+          expires_at: Math.floor(Date.now() / 1000) + SESSION_EXPIRY_SECONDS,
           user: { id: user.userId, email: user.email },
         }),
       )}`,

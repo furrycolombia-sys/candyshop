@@ -1,5 +1,7 @@
+/* eslint-disable react/no-multi-comp, i18next/no-literal-string */
 "use client";
 
+import { useCurrentUserPermissions } from "auth/client";
 import { Plus } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
@@ -18,13 +20,22 @@ import type {
 } from "@/features/payment-method-types/domain/types";
 import { PaymentMethodTypeEditor } from "@/features/payment-method-types/presentation/components/PaymentMethodTypeEditor";
 import { PaymentMethodTypeTable } from "@/features/payment-method-types/presentation/components/PaymentMethodTypeTable";
+import { AccessDeniedState } from "@/shared/presentation/components/AccessDeniedState";
 
 type EditorState =
   | { mode: "closed" }
   | { mode: "create" }
   | { mode: "edit"; paymentType: PaymentMethodType };
 
-export function PaymentMethodTypesPage() {
+function PaymentMethodTypesPageContent({
+  canCreate,
+  canUpdate,
+  canDelete,
+}: {
+  canCreate: boolean;
+  canUpdate: boolean;
+  canDelete: boolean;
+}) {
   const t = useTranslations("paymentMethodTypes");
   const { data: types, isLoading } = usePaymentMethodTypes();
   const insertMutation = useInsertPaymentMethodType();
@@ -68,7 +79,7 @@ export function PaymentMethodTypesPage() {
               {t("subtitle")}
             </p>
           </div>
-          {editor.mode === "closed" && (
+          {editor.mode === "closed" && canCreate && (
             <button
               type="button"
               onClick={() => setEditor({ mode: "create" })}
@@ -86,10 +97,16 @@ export function PaymentMethodTypesPage() {
           <PaymentMethodTypeTable
             types={types ?? []}
             isLoading={isLoading}
-            onEdit={(paymentType) => setEditor({ mode: "edit", paymentType })}
-            onDelete={(id) => deleteMutation.mutate(id)}
-            onToggleActive={(id, isActive) =>
-              toggleMutation.mutate({ id, isActive })
+            onEdit={
+              canUpdate
+                ? (paymentType) => setEditor({ mode: "edit", paymentType })
+                : undefined
+            }
+            onDelete={canDelete ? (id) => deleteMutation.mutate(id) : undefined}
+            onToggleActive={
+              canUpdate
+                ? (id, isActive) => toggleMutation.mutate({ id, isActive })
+                : undefined
             }
           />
         ) : (
@@ -116,5 +133,22 @@ export function PaymentMethodTypesPage() {
         )}
       </div>
     </main>
+  );
+}
+
+export function PaymentMethodTypesPage() {
+  const { isLoading, hasPermission } = useCurrentUserPermissions();
+
+  if (isLoading) return null;
+  if (!hasPermission("payment_method_types.read")) {
+    return <AccessDeniedState />;
+  }
+
+  return (
+    <PaymentMethodTypesPageContent
+      canCreate={hasPermission("payment_method_types.create")}
+      canUpdate={hasPermission("payment_method_types.update")}
+      canDelete={hasPermission("payment_method_types.delete")}
+    />
   );
 }

@@ -27,9 +27,7 @@ describe("uploadReceipt", () => {
     const result = await uploadReceipt(mockSupabase, file, "order-123");
 
     expect(mockStorageFrom).toHaveBeenCalledWith("receipts");
-    expect(mockUpload).toHaveBeenCalledWith("order-123/receipt.png", file, {
-      upsert: true,
-    });
+    expect(mockUpload).toHaveBeenCalledWith("order-123/receipt.png", file);
     expect(result).toBe("order-123/receipt.png");
   });
 
@@ -44,7 +42,6 @@ describe("uploadReceipt", () => {
     expect(mockUpload).toHaveBeenCalledWith(
       "order-123/receipt-final.jpg",
       file,
-      { upsert: true },
     );
     expect(result).toBe("order-123/receipt-final.jpg");
   });

@@ -8,10 +8,6 @@ import {
 } from "@/shared/domain/receipt";
 import type { SupabaseClient } from "@/shared/domain/types";
 
-/**
- * Upload a receipt image to Supabase Storage.
- * Returns the storage path (not a public URL).
- */
 export async function uploadReceipt(
   supabase: SupabaseClient,
   file: File,
@@ -22,16 +18,13 @@ export async function uploadReceipt(
 
   const { error } = await supabase.storage
     .from(RECEIPTS_BUCKET)
-    .upload(storagePath, file, { upsert: true });
+    .upload(storagePath, file);
 
   if (error) throw error;
 
   return storagePath;
 }
 
-/**
- * Resolve a stored receipt path into a temporary signed URL safe for rendering.
- */
 export async function getReceiptUrl(
   supabase: SupabaseClient,
   storagePath: string | null,
@@ -46,9 +39,6 @@ export async function getReceiptUrl(
   return data.signedUrl;
 }
 
-/**
- * Delete a receipt from Supabase Storage.
- */
 export async function deleteReceipt(
   supabase: SupabaseClient,
   storagePath: string,

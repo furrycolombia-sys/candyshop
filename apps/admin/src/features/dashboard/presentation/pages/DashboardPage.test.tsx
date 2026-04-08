@@ -1,5 +1,5 @@
 import { render, screen } from "@testing-library/react";
-import { describe, it, expect, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 vi.mock("next-intl", () => ({
   useTranslations: () => (key: string) => key,
@@ -8,6 +8,15 @@ vi.mock("next-intl", () => ({
 
 vi.mock("shared", () => ({
   tid: (id: string) => ({ "data-testid": id }),
+}));
+
+vi.mock("auth/client", () => ({
+  matchesPermissions: () => true,
+  useCurrentUserPermissions: () => ({
+    grantedKeys: ["audit.read", "audit-view", "manage"],
+    isLoading: false,
+    hasPermission: () => true,
+  }),
 }));
 
 vi.mock("@/shared/application/hooks/useRecentActivity", () => ({

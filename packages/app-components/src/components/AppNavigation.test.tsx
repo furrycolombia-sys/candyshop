@@ -1,10 +1,15 @@
 import { render, screen } from "@testing-library/react";
-import { describe, it, expect, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("next-intl", () => ({
   useTranslations: () => (key: string) => `t:${key}`,
   useLocale: () => "en",
 }));
+
+type PermissionState = {
+  grantedKeys: string[];
+  isLoading: boolean;
+};
 
 vi.mock("next/navigation", () => ({
   usePathname: () => "/en/dashboard",
@@ -40,12 +45,22 @@ const defaultUrls: Record<AppId, string> = {
 const defaultLocales = ["en", "es"] as const;
 
 describe("AppNavigation", () => {
+  const defaultPermissionState: PermissionState = {
+    grantedKeys: [],
+    isLoading: false,
+  };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
   it("renders without crashing", () => {
     render(
       <AppNavigation
         currentApp="store"
         urls={defaultUrls}
         locales={defaultLocales}
+        permissionState={defaultPermissionState}
       />,
     );
     const nav = screen.getByTestId("app-navigation");
@@ -58,26 +73,48 @@ describe("AppNavigation", () => {
         currentApp="store"
         urls={defaultUrls}
         locales={defaultLocales}
+        permissionState={defaultPermissionState}
       />,
     );
     expect(screen.getByText("t:brand")).toBeInTheDocument();
   });
 
-  it("renders navigation links for all apps", () => {
+  it("renders public navigation links even without protected permissions", () => {
     render(
       <AppNavigation
         currentApp="store"
         urls={defaultUrls}
         locales={defaultLocales}
+        permissionState={defaultPermissionState}
       />,
     );
     expect(screen.getByTestId("nav-link-store")).toBeInTheDocument();
-    expect(screen.getByTestId("nav-link-admin")).toBeInTheDocument();
     expect(screen.getByTestId("nav-link-landing")).toBeInTheDocument();
-    expect(screen.getByTestId("nav-link-studio")).toBeInTheDocument();
-    expect(screen.getByTestId("nav-link-payments")).toBeInTheDocument();
     expect(screen.getByTestId("nav-link-auth")).toBeInTheDocument();
     expect(screen.getByTestId("nav-link-playground")).toBeInTheDocument();
+    expect(screen.queryByTestId("nav-link-admin")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("nav-link-studio")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("nav-link-payments")).not.toBeInTheDocument();
+  });
+
+  it("renders protected app links when the user has module access", () => {
+    const permissionState: PermissionState = {
+      grantedKeys: ["products.read", "orders.read", "user_permissions.read"],
+      isLoading: false,
+    };
+
+    render(
+      <AppNavigation
+        currentApp="store"
+        urls={defaultUrls}
+        locales={defaultLocales}
+        permissionState={permissionState}
+      />,
+    );
+
+    expect(screen.getByTestId("nav-link-studio")).toBeInTheDocument();
+    expect(screen.getByTestId("nav-link-payments")).toBeInTheDocument();
+    expect(screen.getByTestId("nav-link-admin")).toBeInTheDocument();
   });
 
   it("marks the current app link with aria-current=page", () => {
@@ -86,6 +123,10 @@ describe("AppNavigation", () => {
         currentApp="admin"
         urls={defaultUrls}
         locales={defaultLocales}
+        permissionState={{
+          grantedKeys: ["user_permissions.read"],
+          isLoading: false,
+        }}
       />,
     );
     expect(screen.getByTestId("nav-link-admin")).toHaveAttribute(
@@ -98,11 +139,17 @@ describe("AppNavigation", () => {
   });
 
   it("appends locale to relative URLs", () => {
+    const permissionState: PermissionState = {
+      grantedKeys: ["products.read"],
+      isLoading: false,
+    };
+
     render(
       <AppNavigation
         currentApp="store"
         urls={defaultUrls}
         locales={defaultLocales}
+        permissionState={permissionState}
       />,
     );
     expect(screen.getByTestId("nav-link-store")).toHaveAttribute(
@@ -114,7 +161,15 @@ describe("AppNavigation", () => {
   it("appends locale to absolute URLs", () => {
     const urls = { ...defaultUrls, store: "http://localhost:5001" };
     render(
-      <AppNavigation currentApp="admin" urls={urls} locales={defaultLocales} />,
+      <AppNavigation
+        currentApp="admin"
+        urls={urls}
+        locales={defaultLocales}
+        permissionState={{
+          grantedKeys: ["user_permissions.read"],
+          isLoading: false,
+        }}
+      />,
     );
     expect(screen.getByTestId("nav-link-store")).toHaveAttribute(
       "href",
@@ -129,6 +184,7 @@ describe("AppNavigation", () => {
         urls={defaultUrls}
         locales={defaultLocales}
         userEmail="user@example.com"
+        permissionState={defaultPermissionState}
       />,
     );
     expect(screen.getByTestId("nav-user-email")).toHaveTextContent(
@@ -142,8 +198,29 @@ describe("AppNavigation", () => {
         currentApp="store"
         urls={defaultUrls}
         locales={defaultLocales}
+        permissionState={defaultPermissionState}
       />,
     );
     expect(screen.queryByTestId("nav-user-email")).not.toBeInTheDocument();
+  });
+
+  it("hides protected links while permissions are loading", () => {
+    const permissionState: PermissionState = {
+      grantedKeys: ["products.read", "orders.read", "user_permissions.read"],
+      isLoading: true,
+    };
+
+    render(
+      <AppNavigation
+        currentApp="store"
+        urls={defaultUrls}
+        locales={defaultLocales}
+        permissionState={permissionState}
+      />,
+    );
+
+    expect(screen.queryByTestId("nav-link-studio")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("nav-link-payments")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("nav-link-admin")).not.toBeInTheDocument();
   });
 });

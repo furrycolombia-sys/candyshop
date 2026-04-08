@@ -25,7 +25,11 @@ export async function cleanupTestData(
     // 4. Delete seller's products
     await adminDelete("products", `seller_id=eq.${sellerUserId}`);
 
-    // 5. Delete both users
+    // 5. Delete user permissions
+    await adminDelete("user_permissions", `user_id=eq.${sellerUserId}`);
+    await adminDelete("user_permissions", `user_id=eq.${buyerUserId}`);
+
+    // 6. Delete both users
     await supabaseAdmin.auth.admin.deleteUser(sellerUserId);
     await supabaseAdmin.auth.admin.deleteUser(buyerUserId);
   } catch (error) {

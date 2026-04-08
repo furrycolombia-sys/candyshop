@@ -11,6 +11,7 @@ interface TimeoutSettingsProps {
   settings: PaymentSettings;
   onSave: (settings: PaymentSettings) => void;
   isPending: boolean;
+  canUpdate?: boolean;
 }
 
 const TIMEOUT_FIELDS = [
@@ -35,6 +36,7 @@ export function TimeoutSettings({
   settings,
   onSave,
   isPending,
+  canUpdate = true,
 }: TimeoutSettingsProps) {
   const t = useTranslations("settings");
   const [local, setLocal] = useState<PaymentSettings>(settings);
@@ -68,6 +70,7 @@ export function TimeoutSettings({
                 min={1}
                 value={local[key]}
                 onChange={(e) => handleChange(key, Number(e.target.value))}
+                disabled={!canUpdate}
                 className="w-28 border-2 border-foreground"
                 {...tid(`timeout-input-${key}`)}
               />
@@ -82,15 +85,17 @@ export function TimeoutSettings({
         ))}
       </div>
 
-      <button
-        type="button"
-        onClick={() => onSave(local)}
-        disabled={isPending}
-        className="mt-6 border-strong border-foreground bg-foreground px-5 py-2.5 font-display text-xs font-bold uppercase tracking-widest text-background transition-colors hover:bg-foreground/90 disabled:opacity-50"
-        {...tid("timeout-settings-save")}
-      >
-        {isPending ? t("saving") : t("save")}
-      </button>
+      {canUpdate && (
+        <button
+          type="button"
+          onClick={() => onSave(local)}
+          disabled={isPending}
+          className="mt-6 border-strong border-foreground bg-foreground px-5 py-2.5 font-display text-xs font-bold uppercase tracking-widest text-background transition-colors hover:bg-foreground/90 disabled:opacity-50"
+          {...tid("timeout-settings-save")}
+        >
+          {isPending ? t("saving") : t("save")}
+        </button>
+      )}
     </div>
   );
 }

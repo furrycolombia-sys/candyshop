@@ -29,6 +29,8 @@
   "common": {
     "loading": "Loading...",
     "error": "An error occurred",
+    "accessDenied": "Access denied",
+    "accessDeniedHint": "This section is hidden until the required permission is granted.",
     "retry": "Try again",
     "save": "Save",
     "cancel": "Cancel",

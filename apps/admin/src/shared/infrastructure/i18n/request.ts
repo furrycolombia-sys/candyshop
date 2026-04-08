@@ -1,23 +1,10 @@
-import { getRequestConfig } from "next-intl/server";
+import { createAppRequestConfig } from "shared/i18n/createAppRequestConfig";
+import { createAppRouting } from "shared/i18n/createAppRouting";
 
-import { routing } from ".";
+const routing = createAppRouting();
 
-export default getRequestConfig(async ({ requestLocale }) => {
-  let locale = await requestLocale;
-
-  if (
-    !locale ||
-    !routing.locales.includes(locale as (typeof routing.locales)[number])
-  ) {
-    locale = routing.defaultLocale;
-  }
-
-  return {
-    locale,
-    messages: (
-      await import(
-        `../../../shared/infrastructure/i18n/messages/${locale}.json`
-      )
-    ).default,
-  };
-});
+export default createAppRequestConfig(
+  routing,
+  (locale) =>
+    import(`../../../shared/infrastructure/i18n/messages/${locale}.json`),
+);

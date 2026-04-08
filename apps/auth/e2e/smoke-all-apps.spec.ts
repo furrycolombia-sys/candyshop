@@ -1,15 +1,4 @@
-import { test, expect } from "./fixtures/auth.fixture";
-
-/**
- * SMOKE TEST — Cross-app health check for the entire monorepo.
- *
- * Run with: pnpm smoke
- *
- * Uses Supabase admin API to create a test session (no Discord needed).
- * Verifies each app loads and shows the authenticated user in the navbar.
- *
- * Requires: all apps running (`pnpm dev`), Supabase running
- */
+import { expect, test } from "./fixtures/auth.fixture";
 
 const APPS = {
   auth: "http://localhost:5000",
@@ -21,7 +10,7 @@ const APPS = {
   studio: "http://localhost:5006",
 } as const;
 
-test.describe("Smoke test — all apps", () => {
+test.describe("Smoke test â€” all apps", () => {
   test("auth app: login page renders with social buttons", async ({ page }) => {
     await page.goto(`${APPS.auth}/en/login`);
     await page.waitForLoadState("networkidle");
@@ -29,7 +18,7 @@ test.describe("Smoke test — all apps", () => {
     await expect(page.getByTestId("login-card")).toBeVisible();
     await expect(page.getByTestId("login-google")).toBeVisible();
     await expect(page.getByTestId("login-discord")).toBeVisible();
-    console.log("[smoke] ✓ Auth login page with social buttons");
+    console.log("[smoke] âœ“ Auth login page with social buttons");
   });
 
   test("auth app: shows account page when authenticated", async ({
@@ -43,10 +32,10 @@ test.describe("Smoke test — all apps", () => {
     await expect(page.getByTestId("account-settings-page")).toBeVisible();
     await expect(page.getByTestId("profile-email")).not.toBeEmpty();
     await expect(page.getByTestId("profile-provider")).not.toBeEmpty();
-    console.log("[smoke] ✓ Auth account page shows user data");
+    console.log("[smoke] âœ“ Auth account page shows user data");
 
     await expect(page.getByTestId("nav-user-email")).toBeVisible();
-    console.log("[smoke] ✓ Auth navbar shows email");
+    console.log("[smoke] âœ“ Auth navbar shows email");
   });
 
   test("auth app: sign out works", async ({ page, authenticatedPage }) => {
@@ -60,7 +49,7 @@ test.describe("Smoke test — all apps", () => {
     await page.waitForURL(/\/login/, { timeout: 10000 });
 
     await expect(page.getByTestId("login-card")).toBeVisible();
-    console.log("[smoke] ✓ Sign out redirects to login");
+    console.log("[smoke] âœ“ Sign out redirects to login");
   });
 
   test("navbar shows user email across all apps", async ({
@@ -72,7 +61,9 @@ test.describe("Smoke test — all apps", () => {
       const response = await page.goto(`${url}/en`).catch(() => null);
 
       if (!response || response.status() >= 400) {
-        console.log(`[smoke] ⚠ ${appName} not reachable at ${url} — skipped`);
+        console.log(
+          `[smoke] âš  ${appName} not reachable at ${url} â€” skipped`,
+        );
         continue;
       }
 
@@ -85,10 +76,12 @@ test.describe("Smoke test — all apps", () => {
 
       if (isVisible) {
         await expect(navEmail).not.toBeEmpty();
-        console.log(`[smoke] ✓ ${appName} (${url}) — navbar shows user email`);
+        console.log(
+          `[smoke] âœ“ ${appName} (${url}) â€” navbar shows user email`,
+        );
       } else {
         console.log(
-          `[smoke] ⚠ ${appName} (${url}) — navbar does NOT show user email`,
+          `[smoke] âš  ${appName} (${url}) â€” navbar does NOT show user email`,
         );
       }
     }
@@ -102,7 +95,7 @@ test.describe("Smoke test — all apps", () => {
       const response = await page.goto(`${url}/en`).catch(() => null);
 
       if (!response) {
-        console.log(`[smoke] ⚠ ${appName} not reachable at ${url}`);
+        console.log(`[smoke] âš  ${appName} not reachable at ${url}`);
         continue;
       }
 
@@ -118,9 +111,12 @@ test.describe("Smoke test — all apps", () => {
       await expect(nav).toBeVisible();
 
       if (errors.length > 0) {
-        console.log(`[smoke] ⚠ ${appName} has JS errors:`, errors.slice(0, 3));
+        console.log(
+          `[smoke] âš  ${appName} has JS errors:`,
+          errors.slice(0, 3),
+        );
       } else {
-        console.log(`[smoke] ✓ ${appName} (${url}) — loads OK`);
+        console.log(`[smoke] âœ“ ${appName} (${url}) â€” loads OK`);
       }
     }
   });

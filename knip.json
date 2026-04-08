@@ -45,8 +45,8 @@
   "ignoreDependencies": [
     "@faker-js/faker",
     "orval",
-    "tw-animate-css",
     "@secretlint/secretlint-rule-preset-recommend",
+    "tw-animate-css",
     "tailwindcss"
   ]
 }

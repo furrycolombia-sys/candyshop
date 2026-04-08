@@ -8,11 +8,9 @@
 :root {
   --font-sans: var(--font-dm-sans);
   --font-display: var(--font-syne);
-
-  --background: #ffffff;
+  --background: #fff;
   --foreground: #1a1a1a;
-
-  --surface: #ffffff;
+  --surface: #fff;
   --card: var(--surface);
   --card-foreground: #1a1a1a;
 
@@ -22,19 +20,14 @@
   --brand-text: #ff4890;
   --brand-alpha: rgb(255 72 144 / 10%);
   --brand-foreground: #1a1a1a;
-
   --primary: var(--brand);
   --primary-foreground: var(--brand-foreground);
-
   --secondary: #f8f0ff;
   --secondary-foreground: #1a1a1a;
-
   --muted: #f0f0f0;
   --muted-foreground: #666;
-
   --accent: #5ee0a8;
   --accent-foreground: #1a1a1a;
-
   --border: #1a1a1a;
   --input: #1a1a1a;
   --ring: #f54d90;
@@ -54,16 +47,16 @@
   --google-red: #ea4335;
 
   /* Shared theme compatibility */
-  --popover: #ffffff;
+  --popover: #fff;
   --popover-foreground: #1a1a1a;
   --destructive: #e11d48;
-  --destructive-foreground: #ffffff;
+  --destructive-foreground: #fff;
   --success: #16a34a;
-  --success-foreground: #ffffff;
+  --success-foreground: #fff;
   --warning: #d97706;
-  --warning-foreground: #ffffff;
+  --warning-foreground: #fff;
   --info: #2563eb;
-  --info-foreground: #ffffff;
+  --info-foreground: #fff;
   --chart-1: var(--pink);
   --chart-2: var(--mint);
   --chart-3: var(--lilac);
@@ -96,29 +89,22 @@
 .dark {
   --background: #0e0e10;
   --foreground: #f5f5f5;
-
   --surface: #1a1a1e;
   --card: var(--surface);
   --card-foreground: #f5f5f5;
-
   --brand: #b83068;
   --brand-hover: #a02858;
   --brand-text: #ff68a8;
   --brand-alpha: rgb(184 48 104 / 12%);
   --brand-foreground: #f5f5f5;
-
   --primary: var(--brand);
   --primary-foreground: var(--brand-foreground);
-
   --secondary: #1e1a24;
   --secondary-foreground: #d0c8d8;
-
   --muted: #1a1a1e;
   --muted-foreground: #888;
-
   --accent: #50e0a0;
   --accent-foreground: #0e0e10;
-
   --border: #f5f5f5;
   --input: #f5f5f5;
   --ring: #ff68a8;

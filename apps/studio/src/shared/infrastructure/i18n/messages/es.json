@@ -28,6 +28,8 @@
   },
   "common": {
     "loading": "Cargando...",
+    "accessDenied": "Acceso denegado",
+    "accessDeniedHint": "Esta seccion permanece oculta hasta que se otorgue el permiso requerido.",
     "error": "Ocurrió un error",
     "retry": "Intentar de nuevo",
     "save": "Guardar",

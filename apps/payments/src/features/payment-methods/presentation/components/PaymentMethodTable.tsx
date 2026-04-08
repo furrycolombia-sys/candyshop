@@ -17,9 +17,9 @@ const SKELETON_ROWS = 3;
 interface PaymentMethodTableProps {
   methods: SellerPaymentMethod[];
   types: PaymentMethodType[];
-  onEdit: (method: SellerPaymentMethod) => void;
-  onDelete: (id: string) => void;
-  onToggleActive: (id: string, isActive: boolean) => void;
+  onEdit?: (method: SellerPaymentMethod) => void;
+  onDelete?: (id: string) => void;
+  onToggleActive?: (id: string, isActive: boolean) => void;
   isLoading: boolean;
 }
 
@@ -97,38 +97,48 @@ export function PaymentMethodTable({
                 {getTypeName(method.type_id)}
               </td>
               <td className="px-4 py-3 text-center">
-                <Switch
-                  checked={method.is_active}
-                  onCheckedChange={(checked: boolean) =>
-                    onToggleActive(method.id, checked)
-                  }
-                  {...tid(`payment-method-active-${method.id}`)}
-                />
+                {onToggleActive ? (
+                  <Switch
+                    checked={method.is_active}
+                    onCheckedChange={(checked: boolean) =>
+                      onToggleActive(method.id, checked)
+                    }
+                    {...tid(`payment-method-active-${method.id}`)}
+                  />
+                ) : (
+                  <span className="font-mono text-xs">
+                    {method.is_active ? "on" : "off"}
+                  </span>
+                )}
               </td>
               <td className="px-4 py-3 text-right">
                 <div className="flex items-center justify-end gap-1">
-                  <button
-                    type="button"
-                    className="rounded-lg p-2 text-muted-foreground hover:bg-muted hover:text-foreground"
-                    aria-label={t("editPaymentMethod")}
-                    onClick={() => onEdit(method)}
-                    {...tid(`payment-method-edit-${method.id}`)}
-                  >
-                    <Pencil className="size-4" />
-                  </button>
-                  <button
-                    type="button"
-                    className="rounded-lg p-2 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-                    aria-label={t("removeMethod")}
-                    onClick={() => {
-                      if (globalThis.confirm(t("deleteConfirm"))) {
-                        onDelete(method.id);
-                      }
-                    }}
-                    {...tid(`payment-method-delete-${method.id}`)}
-                  >
-                    <Trash2 className="size-4" />
-                  </button>
+                  {onEdit && (
+                    <button
+                      type="button"
+                      className="rounded-lg p-2 text-muted-foreground hover:bg-muted hover:text-foreground"
+                      aria-label={t("editPaymentMethod")}
+                      onClick={() => onEdit(method)}
+                      {...tid(`payment-method-edit-${method.id}`)}
+                    >
+                      <Pencil className="size-4" />
+                    </button>
+                  )}
+                  {onDelete && (
+                    <button
+                      type="button"
+                      className="rounded-lg p-2 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                      aria-label={t("removeMethod")}
+                      onClick={() => {
+                        if (globalThis.confirm(t("deleteConfirm"))) {
+                          onDelete(method.id);
+                        }
+                      }}
+                      {...tid(`payment-method-delete-${method.id}`)}
+                    >
+                      <Trash2 className="size-4" />
+                    </button>
+                  )}
                 </div>
               </td>
             </tr>

@@ -31,7 +31,9 @@
     "status": "Todos los sistemas nominales",
     "paymentMethods": "Metodos de Pago",
     "settings": "Configuracion",
-    "configuration": "Configuracion"
+    "configuration": "Configuracion",
+    "users": "Usuarios",
+    "userManagement": "Gestion de Usuarios"
   },
   "dashboard": {
     "welcome": "Buen día, operador.",
@@ -171,8 +173,138 @@
     "saved": "Configuracion actualizada",
     "error": "Error al guardar configuracion"
   },
+  "users": {
+    "title": "Usuarios",
+    "subtitle": "Gestionar cuentas de usuario y permisos",
+    "searchPlaceholder": "Filtrar por email o nombre...",
+    "noResults": "No se encontraron usuarios",
+    "loading": "Cargando...",
+    "accessDenied": "Acceso denegado",
+    "accessDeniedHint": "Esta seccion permanece oculta hasta que se otorgue el permiso requerido.",
+    "profiles": "Perfiles",
+    "templateBuyer": "Comprador",
+    "templateSeller": "Vendedor",
+    "templateAdmin": "Admin",
+    "templateEvents": "Eventos",
+    "templateNone": "Quitar Todo",
+    "columns": {
+      "avatar": "Avatar",
+      "email": "Email",
+      "displayName": "Nombre",
+      "role": "Rol",
+      "lastSeen": "Ultima vez"
+    },
+    "roles": {
+      "admin": "Admin",
+      "seller": "Vendedor",
+      "buyer": "Comprador",
+      "custom": "Personalizado",
+      "none": "Ninguno"
+    },
+    "groups": {
+      "products": "Productos",
+      "reviews": "Resenas",
+      "orders": "Ordenes y Comprobantes",
+      "seller": "Vendedor",
+      "adminCatalog": "Catalogo Admin",
+      "adminConfig": "Configuracion Admin",
+      "adminUsers": "Permisos de Usuario",
+      "checkins": "Check-ins",
+      "events": "Eventos"
+    },
+    "lastSeen": {
+      "justNow": "justo ahora",
+      "minutesAgo": "hace {count}m",
+      "hoursAgo": "hace {count}h",
+      "daysAgo": "hace {count}d",
+      "monthsAgo": "hace {count} meses",
+      "yearsAgo": "hace {count} a"
+    },
+    "pagination": {
+      "showing": "Mostrando {from}-{to}",
+      "of": "de {total}"
+    },
+    "detail": {
+      "backToUsers": "Volver a Usuarios",
+      "viewProfile": "Ver Perfil",
+      "permissionsCount": "{count, plural, one {# permiso} other {# permisos}}"
+    }
+  },
+  "permissions": {
+    "products": {
+      "create": "Crear Productos",
+      "read": "Ver Productos",
+      "update": "Editar Productos",
+      "delete": "Eliminar Productos"
+    },
+    "product_images": {
+      "create": "Subir Imagenes de Producto",
+      "read": "Ver Imagenes de Producto",
+      "delete": "Eliminar Imagenes de Producto"
+    },
+    "product_reviews": {
+      "create": "Escribir Resenas",
+      "read": "Ver Resenas",
+      "update": "Editar Resenas",
+      "delete": "Eliminar Resenas"
+    },
+    "orders": {
+      "create": "Hacer Pedidos",
+      "read": "Ver Pedidos",
+      "update": "Gestionar Pedidos"
+    },
+    "receipts": {
+      "create": "Subir Recibos",
+      "read": "Ver Recibos",
+      "delete": "Eliminar Recibos"
+    },
+    "seller_payment_methods": {
+      "create": "Agregar Metodos de Pago del Vendedor",
+      "read": "Ver Metodos de Pago del Vendedor",
+      "update": "Editar Metodos de Pago del Vendedor",
+      "delete": "Eliminar Metodos de Pago del Vendedor"
+    },
+    "payment_method_types": {
+      "create": "Crear Tipos de Pago",
+      "read": "Ver Tipos de Pago",
+      "update": "Editar Tipos de Pago",
+      "delete": "Eliminar Tipos de Pago"
+    },
+    "payment_settings": {
+      "read": "Ver Configuracion de Pagos",
+      "update": "Editar Configuracion de Pagos"
+    },
+    "templates": {
+      "create": "Crear Plantillas",
+      "read": "Ver Plantillas",
+      "update": "Editar Plantillas",
+      "delete": "Eliminar Plantillas"
+    },
+    "audit": {
+      "read": "Ver Registro de Auditoria"
+    },
+    "user_permissions": {
+      "create": "Otorgar Permisos",
+      "read": "Ver Permisos de Usuario",
+      "update": "Modificar Permisos",
+      "delete": "Revocar Permisos"
+    },
+    "events": {
+      "create": "Crear Eventos",
+      "read": "Ver Eventos",
+      "update": "Editar Eventos",
+      "delete": "Eliminar Eventos"
+    },
+    "check_ins": {
+      "create": "Registrar Entrada",
+      "read": "Ver Check-ins",
+      "update": "Deshacer Check-in"
+    }
+  },
   "common": {
     "loading": "Cargando...",
+    "accessDenied": "Acceso denegado",
+    "accessDeniedHint": "Esta seccion permanece oculta hasta que se otorgue el permiso requerido.",
     "error": "Ocurrió un error",
     "retry": "Intentar de nuevo",
     "theme": {

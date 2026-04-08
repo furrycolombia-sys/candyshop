@@ -10,9 +10,9 @@ import type { ProductTemplate } from "@/features/templates/domain/types";
 interface TemplateTableProps {
   templates: ProductTemplate[];
   isLoading: boolean;
-  onEdit: (template: ProductTemplate) => void;
-  onDelete: (id: string) => void;
-  onToggleActive: (id: string, isActive: boolean) => void;
+  onEdit?: (template: ProductTemplate) => void;
+  onDelete?: (id: string) => void;
+  onToggleActive?: (id: string, isActive: boolean) => void;
 }
 
 export function TemplateTable({
@@ -99,39 +99,49 @@ export function TemplateTable({
 
               {/* Active toggle */}
               <span className="px-4 py-2.5">
-                <Switch
-                  checked={template.is_active}
-                  onCheckedChange={(checked: boolean) =>
-                    onToggleActive(template.id, checked)
-                  }
-                  {...tid(`template-active-${template.id}`)}
-                />
+                {onToggleActive ? (
+                  <Switch
+                    checked={template.is_active}
+                    onCheckedChange={(checked: boolean) =>
+                      onToggleActive(template.id, checked)
+                    }
+                    {...tid(`template-active-${template.id}`)}
+                  />
+                ) : (
+                  <span className="font-mono text-xs">
+                    {template.is_active ? "on" : "off"}
+                  </span>
+                )}
               </span>
 
               {/* Actions */}
               <span className="flex items-center gap-1 px-4 py-2.5">
-                <button
-                  type="button"
-                  onClick={() => onEdit(template)}
-                  aria-label={t("editTemplate")}
-                  className="rounded-sm p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-                  {...tid(`template-edit-${template.id}`)}
-                >
-                  <Pencil className="size-3.5" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (globalThis.confirm(t("deleteConfirm"))) {
-                      onDelete(template.id);
-                    }
-                  }}
-                  aria-label={t("deleteTemplate")}
-                  className="rounded-sm p-1.5 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
-                  {...tid(`template-delete-${template.id}`)}
-                >
-                  <Trash2 className="size-3.5" />
-                </button>
+                {onEdit && (
+                  <button
+                    type="button"
+                    onClick={() => onEdit(template)}
+                    aria-label={t("editTemplate")}
+                    className="rounded-sm p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                    {...tid(`template-edit-${template.id}`)}
+                  >
+                    <Pencil className="size-3.5" />
+                  </button>
+                )}
+                {onDelete && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (globalThis.confirm(t("deleteConfirm"))) {
+                        onDelete(template.id);
+                      }
+                    }}
+                    aria-label={t("deleteTemplate")}
+                    className="rounded-sm p-1.5 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+                    {...tid(`template-delete-${template.id}`)}
+                  >
+                    <Trash2 className="size-3.5" />
+                  </button>
+                )}
               </span>
             </div>
           );

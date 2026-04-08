@@ -235,6 +235,14 @@
     box-shadow: var(--shadow-brutal-lg);
   }
 
+  .nb-shadow-md {
+    box-shadow: var(--shadow-brutal-md);
+  }
+
+  .nb-shadow-lg {
+    box-shadow: var(--shadow-brutal-lg);
+  }
+
   /* Neobrutalist button — bold uppercase with press/hover feedback */
   .button-brutal {
     display: inline-flex;
@@ -250,6 +258,15 @@
     translate: -2px -2px;
   }
   .button-brutal:focus-visible {
+    outline: 2px solid var(--foreground);
+    outline-offset: 2px;
+  }
+
+  .nb-btn:hover {
+    translate: -2px -2px;
+  }
+
+  .nb-btn:focus-visible {
     outline: 2px solid var(--foreground);
     outline-offset: 2px;
   }
@@ -477,6 +494,7 @@
   0% {
     background-position: 200% 0;
   }
+
   100% {
     background-position: -200% 0;
   }
@@ -487,6 +505,7 @@
   0% {
     transform: translateX(-100%);
   }
+
   100% {
     transform: translateX(400%);
   }

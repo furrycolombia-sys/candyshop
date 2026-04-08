@@ -16,7 +16,8 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "api": "workspace:*"
+    "api": "workspace:*",
+    "next-intl": "^4.1.4"
   },
   "devDependencies": {
     "@supabase/supabase-js": "^2.99.2",
