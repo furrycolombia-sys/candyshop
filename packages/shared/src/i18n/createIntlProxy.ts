@@ -68,7 +68,15 @@ export function createSupabaseIntlProxy({
     const intlResponse = intlMiddleware(request);
 
     for (const cookie of supabaseResponse.cookies.getAll()) {
-      intlResponse.cookies.set(cookie.name, cookie.value);
+      intlResponse.cookies.set(cookie.name, cookie.value, {
+        domain: cookie.domain,
+        expires: cookie.expires,
+        httpOnly: cookie.httpOnly,
+        maxAge: cookie.maxAge,
+        path: cookie.path,
+        sameSite: cookie.sameSite,
+        secure: cookie.secure,
+      });
     }
 
     return intlResponse;

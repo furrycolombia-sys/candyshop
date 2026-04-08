@@ -28,12 +28,14 @@ const securityHeaders = [
 
 const isStandalone = process.env.STANDALONE === "true";
 const basePathPrefix = process.env.BASE_PATH_PREFIX || "";
+const allowedDevOrigins = ["studio.ffxivbe.org"];
 
 const supabaseUrl =
   process.env.NEXT_PUBLIC_SUPABASE_URL || "http://localhost:54321";
 const supabaseHostname = new URL(supabaseUrl).hostname;
 
 const nextConfig: NextConfig = {
+  allowedDevOrigins,
   ...(isStandalone && {
     output: "standalone" as const,
     basePath: `${basePathPrefix}/studio`,
