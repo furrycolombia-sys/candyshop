@@ -12,6 +12,16 @@ const USER_PERMISSIONS_DELETE = "user_permissions.delete";
 const RETURN_MINIMAL = "return=minimal";
 const MERGE_DUPLICATES_RETURN_MINIMAL =
   "resolution=merge-duplicates,return=minimal";
+const BAD_REQUEST_STATUS = 400;
+const INTERNAL_SERVER_ERROR_STATUS = 500;
+const UUID_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+type GrantedPermissionRow = {
+  expires_at: string | null;
+  resource_permission_id: string;
+  resource_permissions: { permissions: { key: string } };
+};
 
 function getRestHeaders() {
   if (!supabaseUrl || !serviceRoleKey) {
@@ -33,6 +43,35 @@ function getRestUrl(path: string) {
   return `${supabaseUrl}/rest/v1/${path}`;
 }
 
+function createRestPath(
+  table: string,
+  query: Record<string, string | readonly string[]> = {},
+) {
+  const searchParams = new URLSearchParams();
+
+  for (const [key, value] of Object.entries(query)) {
+    if (typeof value === "string") {
+      searchParams.set(key, value);
+      continue;
+    }
+
+    for (const item of value) {
+      searchParams.append(key, item);
+    }
+  }
+
+  const serialized = searchParams.toString();
+  return serialized ? `${table}?${serialized}` : table;
+}
+
+function validateUserId(userId: string) {
+  if (!UUID_PATTERN.test(userId)) {
+    throw new Error(INVALID_PAYLOAD_ERROR);
+  }
+
+  return userId;
+}
+
 async function adminFetch(path: string, init?: RequestInit) {
   const response = await fetch(getRestUrl(path), {
     ...init,
@@ -51,28 +90,46 @@ async function adminFetch(path: string, init?: RequestInit) {
   return response;
 }
 
-async function fetchGrantedPermissionKeys(userId: string): Promise<string[]> {
-  const response = await adminFetch(
-    `user_permissions?user_id=eq.${userId}&mode=eq.grant&select=expires_at,resource_permissions!inner(permissions!inner(key))`,
-  );
-
-  const rows = (await response.json()) as Array<{
-    expires_at: string | null;
-    resource_permissions: { permissions: { key: string } };
-  }>;
-
+function getActiveGrantedPermissions(rows: GrantedPermissionRow[]) {
   const now = Date.now();
 
   return rows
     .filter((row) => !row.expires_at || Date.parse(row.expires_at) > now)
-    .map((row) => row.resource_permissions.permissions.key);
+    .map((row) => ({
+      key: row.resource_permissions.permissions.key,
+      resourcePermissionId: row.resource_permission_id,
+    }));
+}
+
+async function fetchGrantedPermissions(
+  userId: string,
+): Promise<Array<{ key: string; resourcePermissionId: string }>> {
+  const response = await adminFetch(
+    createRestPath("user_permissions", {
+      user_id: `eq.${validateUserId(userId)}`,
+      mode: "eq.grant",
+      select:
+        "expires_at,resource_permission_id,resource_permissions!inner(permissions!inner(key))",
+    }),
+  );
+
+  return getActiveGrantedPermissions(
+    (await response.json()) as GrantedPermissionRow[],
+  );
+}
+
+async function fetchGrantedPermissionKeys(userId: string): Promise<string[]> {
+  return (await fetchGrantedPermissions(userId)).map((row) => row.key);
 }
 
 async function findResourcePermissionId(
   permissionKey: string,
 ): Promise<string> {
   const permissionResponse = await adminFetch(
-    `permissions?key=eq.${encodeURIComponent(permissionKey)}&select=id`,
+    createRestPath("permissions", {
+      key: `eq.${permissionKey}`,
+      select: "id",
+    }),
   );
   const permissions = (await permissionResponse.json()) as Array<{
     id: string;
@@ -84,7 +141,10 @@ async function findResourcePermissionId(
   }
 
   const resourceResponse = await adminFetch(
-    `resource_permissions?permission_id=eq.${permissionId}&select=id,resource_id`,
+    createRestPath("resource_permissions", {
+      permission_id: `eq.${permissionId}`,
+      select: "id,resource_id",
+    }),
   );
   const rows = (await resourceResponse.json()) as Array<{
     id: string;
@@ -99,12 +159,14 @@ async function findResourcePermissionId(
   return preferred.id;
 }
 
-async function grantPermission(
+async function grantPermissions(
   userId: string,
-  permissionKey: string,
+  resourcePermissionIds: readonly string[],
   grantedBy: string,
 ) {
-  const resourcePermissionId = await findResourcePermissionId(permissionKey);
+  if (resourcePermissionIds.length === 0) {
+    return;
+  }
 
   await adminFetch(
     "user_permissions?on_conflict=user_id,resource_permission_id",
@@ -113,24 +175,41 @@ async function grantPermission(
       headers: {
         Prefer: MERGE_DUPLICATES_RETURN_MINIMAL,
       },
-      body: JSON.stringify([
-        {
-          user_id: userId,
+      body: JSON.stringify(
+        resourcePermissionIds.map((resourcePermissionId) => ({
+          user_id: validateUserId(userId),
           resource_permission_id: resourcePermissionId,
           mode: "grant",
           granted_by: grantedBy,
           reason: "Admin UI",
-        },
-      ]),
+        })),
+      ),
     },
   );
 }
 
-async function revokePermission(userId: string, permissionKey: string) {
+async function grantPermission(
+  userId: string,
+  permissionKey: string,
+  grantedBy: string,
+) {
   const resourcePermissionId = await findResourcePermissionId(permissionKey);
+  await grantPermissions(userId, [resourcePermissionId], grantedBy);
+}
+
+async function revokePermissions(
+  userId: string,
+  resourcePermissionIds: readonly string[],
+) {
+  if (resourcePermissionIds.length === 0) {
+    return;
+  }
 
   await adminFetch(
-    `user_permissions?user_id=eq.${userId}&resource_permission_id=eq.${resourcePermissionId}`,
+    createRestPath("user_permissions", {
+      user_id: `eq.${validateUserId(userId)}`,
+      resource_permission_id: `in.(${resourcePermissionIds.join(",")})`,
+    }),
     {
       method: "DELETE",
       headers: {
@@ -140,21 +219,47 @@ async function revokePermission(userId: string, permissionKey: string) {
   );
 }
 
+async function revokePermission(userId: string, permissionKey: string) {
+  const resourcePermissionId = await findResourcePermissionId(permissionKey);
+  await revokePermissions(userId, [resourcePermissionId]);
+}
+
 async function replacePermissions(
   userId: string,
   permissionKeys: string[],
   grantedBy: string,
 ) {
-  await adminFetch(`user_permissions?user_id=eq.${userId}`, {
-    method: "DELETE",
-    headers: {
-      Prefer: RETURN_MINIMAL,
-    },
-  });
+  const validatedUserId = validateUserId(userId);
+  const desiredKeys = [...new Set(permissionKeys)];
+  const [currentPermissions, desiredResourcePermissionIds] = await Promise.all([
+    fetchGrantedPermissions(validatedUserId),
+    Promise.all(desiredKeys.map((key) => findResourcePermissionId(key))),
+  ]);
 
-  for (const key of permissionKeys) {
-    await grantPermission(userId, key, grantedBy);
-  }
+  const currentByKey = new Map(
+    currentPermissions.map((permission) => [
+      permission.key,
+      permission.resourcePermissionId,
+    ]),
+  );
+  const desiredByKey = new Map(
+    desiredKeys.map((key, index) => [key, desiredResourcePermissionIds[index]]),
+  );
+
+  const resourcePermissionIdsToGrant = desiredKeys
+    .filter((key) => !currentByKey.has(key))
+    .map((key) => desiredByKey.get(key))
+    .filter(Boolean) as string[];
+  const resourcePermissionIdsToRevoke = currentPermissions
+    .filter((permission) => !desiredByKey.has(permission.key))
+    .map((permission) => permission.resourcePermissionId);
+
+  await revokePermissions(validatedUserId, resourcePermissionIdsToRevoke);
+  await grantPermissions(
+    validatedUserId,
+    resourcePermissionIdsToGrant,
+    grantedBy,
+  );
 }
 
 async function getAuthorizedAdmin(requiredKeys: string[]) {
@@ -180,10 +285,29 @@ export async function GET(
     return NextResponse.json({ error: FORBIDDEN_ERROR }, { status: 403 });
   }
 
-  const { userId } = await context.params;
-  const grantedKeys = await fetchGrantedPermissionKeys(userId);
+  try {
+    const { userId } = await context.params;
+    const grantedKeys = await fetchGrantedPermissionKeys(
+      validateUserId(userId),
+    );
 
-  return NextResponse.json({ grantedKeys });
+    return NextResponse.json({ grantedKeys });
+  } catch (error) {
+    return NextResponse.json(
+      {
+        error:
+          error instanceof Error && error.message === INVALID_PAYLOAD_ERROR
+            ? INVALID_PAYLOAD_ERROR
+            : "Failed to load user permissions",
+      },
+      {
+        status:
+          error instanceof Error && error.message === INVALID_PAYLOAD_ERROR
+            ? BAD_REQUEST_STATUS
+            : INTERNAL_SERVER_ERROR_STATUS,
+      },
+    );
+  }
 }
 
 export async function POST(
@@ -207,15 +331,33 @@ export async function POST(
     return NextResponse.json({ error: FORBIDDEN_ERROR }, { status: 403 });
   }
 
-  const { userId } = await context.params;
+  try {
+    const { userId } = await context.params;
+    const validatedUserId = validateUserId(userId);
 
-  if (grant) {
-    await grantPermission(userId, permissionKey, adminUserId);
-  } else {
-    await revokePermission(userId, permissionKey);
+    if (grant) {
+      await grantPermission(validatedUserId, permissionKey, adminUserId);
+    } else {
+      await revokePermission(validatedUserId, permissionKey);
+    }
+
+    return NextResponse.json({ ok: true });
+  } catch (error) {
+    return NextResponse.json(
+      {
+        error:
+          error instanceof Error && error.message === INVALID_PAYLOAD_ERROR
+            ? INVALID_PAYLOAD_ERROR
+            : "Failed to update permission",
+      },
+      {
+        status:
+          error instanceof Error && error.message === INVALID_PAYLOAD_ERROR
+            ? BAD_REQUEST_STATUS
+            : INTERNAL_SERVER_ERROR_STATUS,
+      },
+    );
   }
-
-  return NextResponse.json({ ok: true });
 }
 
 export async function PUT(
@@ -230,7 +372,6 @@ export async function PUT(
     return NextResponse.json({ error: FORBIDDEN_ERROR }, { status: 403 });
   }
 
-  const { userId } = await context.params;
   const { permissionKeys } = (await request.json()) as {
     permissionKeys?: string[];
   };
@@ -239,7 +380,29 @@ export async function PUT(
     return NextResponse.json({ error: INVALID_PAYLOAD_ERROR }, { status: 400 });
   }
 
-  await replacePermissions(userId, permissionKeys, adminUserId);
+  try {
+    const { userId } = await context.params;
+    await replacePermissions(
+      validateUserId(userId),
+      permissionKeys,
+      adminUserId,
+    );
 
-  return NextResponse.json({ ok: true });
+    return NextResponse.json({ ok: true });
+  } catch (error) {
+    return NextResponse.json(
+      {
+        error:
+          error instanceof Error && error.message === INVALID_PAYLOAD_ERROR
+            ? INVALID_PAYLOAD_ERROR
+            : "Failed to apply permission template",
+      },
+      {
+        status:
+          error instanceof Error && error.message === INVALID_PAYLOAD_ERROR
+            ? BAD_REQUEST_STATUS
+            : INTERNAL_SERVER_ERROR_STATUS,
+      },
+    );
+  }
 }

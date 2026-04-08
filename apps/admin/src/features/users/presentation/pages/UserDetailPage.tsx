@@ -15,6 +15,10 @@ import { useApplyTemplate } from "@/features/users/application/hooks/useApplyTem
 import { useTogglePermission } from "@/features/users/application/hooks/useTogglePermission";
 import { useUserPermissions } from "@/features/users/application/hooks/useUserPermissions";
 import { useUserProfile } from "@/features/users/application/hooks/useUserProfile";
+import {
+  getUpdatedPermissionKeysForTemplateToggle,
+  type TemplateKey,
+} from "@/features/users/application/utils/templatePermissions";
 import { PERMISSION_GROUPS } from "@/features/users/domain/constants";
 import { useRouter } from "@/shared/infrastructure/i18n";
 import { AccessDeniedState } from "@/shared/presentation/components/AccessDeniedState";
@@ -51,18 +55,20 @@ function UserDetailPageContent({
     toggleMutation.mutate({ userId, permissionKey: key, grant });
   };
 
-  const handleToggleTemplate = (templateKeys: string[], activate: boolean) => {
+  const handleToggleTemplate = (
+    templateKey: TemplateKey,
+    activate: boolean,
+  ) => {
     if (!canCreate || !canDelete) return;
-    if (activate) {
-      // Add template keys to existing grants (union)
-      const newKeys = [...new Set([...grantedKeys, ...templateKeys])];
-      templateMutation.mutate({ userId, permissionKeys: newKeys });
-    } else {
-      // Remove only this template's unique keys (keep the rest)
-      const keysToRemove = new Set(templateKeys);
-      const newKeys = grantedKeys.filter((k) => !keysToRemove.has(k));
-      templateMutation.mutate({ userId, permissionKeys: newKeys });
-    }
+
+    templateMutation.mutate({
+      userId,
+      permissionKeys: getUpdatedPermissionKeysForTemplateToggle(
+        grantedKeys,
+        templateKey,
+        activate,
+      ),
+    });
   };
 
   const handleReset = () => {

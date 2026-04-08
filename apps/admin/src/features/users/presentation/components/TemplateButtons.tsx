@@ -4,11 +4,12 @@ import { useTranslations } from "next-intl";
 import { tid } from "shared";
 import { Button } from "ui";
 
+import type { TemplateKey } from "@/features/users/application/utils/templatePermissions";
 import { PERMISSION_TEMPLATES } from "@/features/users/domain/constants";
 
 interface TemplateButtonsProps {
   grantedKeys: string[];
-  onToggleTemplate: (keys: string[], active: boolean) => void;
+  onToggleTemplate: (templateKey: TemplateKey, active: boolean) => void;
   onReset: () => void;
   isPending: boolean;
   canManage: boolean;
@@ -52,7 +53,7 @@ export function TemplateButtons({
           <Button
             key={key}
             type="button"
-            onClick={() => onToggleTemplate(templateKeys, !active)}
+            onClick={() => onToggleTemplate(key, !active)}
             disabled={isPending || !canManage}
             variant={active ? "default" : "outline"}
             size="sm"

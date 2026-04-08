@@ -384,32 +384,5 @@ create policy "receipts_delete" on storage.objects
     and has_permission(auth.uid(), 'receipts.delete')
   );
 
-do $$
-declare
-  v_user record;
-  v_rp record;
-begin
-  for v_user in (select id from auth.users) loop
-    for v_rp in (
-      select rp.id
-      from public.resource_permissions rp
-      where rp.resource_type = 'global'
-    ) loop
-      insert into public.user_permissions (
-        user_id,
-        resource_permission_id,
-        mode,
-        granted_by,
-        reason
-      ) values (
-        v_user.id,
-        v_rp.id,
-        'grant',
-        v_user.id,
-        'Bootstrap: granular permissions restore'
-      )
-      on conflict (user_id, resource_permission_id) do nothing;
-    end loop;
-  end loop;
-end;
-$$;
+-- Intentionally do not backfill grants for all existing users.
+-- Permissions must be assigned explicitly to avoid privilege escalation.
