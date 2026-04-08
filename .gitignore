@@ -24,6 +24,7 @@ out/
 .env
 .secrets
 .env.local
+.env.local.e2e
 .env.*.local
 !.env.example
 !.env.local.example

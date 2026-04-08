@@ -13,6 +13,7 @@ loadRootEnv();
 const SUPABASE_URL =
   process.env.NEXT_PUBLIC_SUPABASE_URL || "http://127.0.0.1:54321";
 const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
+const AUTH_URL = process.env.NEXT_PUBLIC_AUTH_URL || "http://localhost:5000";
 
 const supabaseAdmin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
   auth: { autoRefreshToken: false, persistSession: false },
@@ -47,19 +48,25 @@ async function createTestSession(context: BrowserContext) {
   const accessToken = session.session!.access_token;
   const refreshToken = session.session!.refresh_token;
 
-  // Inject session cookies into the browser context
-  // Supabase stores tokens in cookies with a project-specific prefix
   const projectRef = new URL(SUPABASE_URL).hostname.split(".")[0];
   const cookieBase = `sb-${projectRef}-auth-token`;
+  const authHost = new URL(AUTH_URL);
+  const isLocalhost =
+    authHost.hostname === "localhost" || authHost.hostname === "127.0.0.1";
+  const hostParts = authHost.hostname.split(".");
+  const sharedDomain =
+    !isLocalhost && hostParts.length >= 2
+      ? `.${hostParts.slice(-2).join(".")}`
+      : authHost.hostname;
 
   await context.addCookies([
     {
       name: `${cookieBase}.0`,
       value: `base64-${btoa(JSON.stringify({ access_token: accessToken, refresh_token: refreshToken, token_type: "bearer", expires_in: 3600, expires_at: Math.floor(Date.now() / 1000) + 3600, user: user.user }))}`,
-      domain: "localhost",
+      domain: sharedDomain,
       path: "/",
       httpOnly: false,
-      secure: false,
+      secure: !isLocalhost,
       sameSite: "Lax",
     },
   ]);

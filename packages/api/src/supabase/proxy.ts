@@ -2,6 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 import { SUPABASE_ANON_KEY, SUPABASE_URL } from "./config";
+import { mergeSupabaseCookieOptions } from "./cookies";
 import type { Database } from "./types";
 
 /**
@@ -26,7 +27,11 @@ export async function updateSupabaseSession(request: NextRequest) {
             request.cookies.set(name, value);
           supabaseResponse = NextResponse.next({ request });
           for (const { name, value, options } of cookiesToSet)
-            supabaseResponse.cookies.set(name, value, options);
+            supabaseResponse.cookies.set(
+              name,
+              value,
+              mergeSupabaseCookieOptions(options, request),
+            );
         },
       },
     },

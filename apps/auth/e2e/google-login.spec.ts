@@ -1,7 +1,145 @@
-import { type BrowserContext, chromium, expect, test } from "@playwright/test";
 import * as path from "node:path";
+import { existsSync, readFileSync } from "node:fs";
 
-const PROFILE_DIR = path.join(__dirname, ".auth", "chrome-profile-google");
+import { chromium, expect, test } from "@playwright/test";
+
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { loadRootEnv } = require("../../../scripts/load-root-env.js");
+loadRootEnv();
+
+function loadLocalE2EEnv(filePath: string) {
+  if (!existsSync(filePath)) return;
+  const content = readFileSync(filePath, "utf8");
+  for (const line of content.split("\n")) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith("#")) continue;
+    const eqIndex = trimmed.indexOf("=");
+    if (eqIndex === -1) continue;
+    const key = trimmed.slice(0, eqIndex).trim();
+    const value = trimmed
+      .slice(eqIndex + 1)
+      .trim()
+      .replace(/^["']|["']$/g, "");
+    if (!process.env[key]) {
+      process.env[key] = value;
+    }
+  }
+}
+
+loadLocalE2EEnv(path.resolve(__dirname, "../../../.env.local.e2e"));
+const AUTH_URL = process.env.NEXT_PUBLIC_AUTH_URL || "http://localhost:5000";
+const STORE_URL = process.env.NEXT_PUBLIC_STORE_URL || "http://localhost:5001";
+const ADMIN_URL = process.env.NEXT_PUBLIC_ADMIN_URL || "http://localhost:5002";
+const PLAYGROUND_URL =
+  process.env.NEXT_PUBLIC_PLAYGROUND_URL || "http://localhost:5003";
+const LANDING_URL =
+  process.env.NEXT_PUBLIC_LANDING_URL || "http://localhost:5004";
+const PAYMENTS_URL =
+  process.env.NEXT_PUBLIC_PAYMENTS_URL || "http://localhost:5005";
+const STUDIO_URL =
+  process.env.NEXT_PUBLIC_STUDIO_URL || "http://localhost:5006";
+const IGNORABLE_REQUEST_FAILURE_PATTERNS = ["/cdn-cgi/rum?"];
+
+const APP_CHECKS = [
+  {
+    name: "landing",
+    url: `${LANDING_URL}/en`,
+    readyTestIds: ["hero-section"],
+  },
+  {
+    name: "store",
+    url: `${STORE_URL}/en`,
+    readyTestIds: ["product-catalog-page"],
+  },
+  {
+    name: "playground",
+    url: `${PLAYGROUND_URL}/en`,
+    readyTestIds: ["playground-page"],
+  },
+  {
+    name: "payments",
+    url: `${PAYMENTS_URL}/en`,
+    readyTestIds: ["payments-page", "access-denied"],
+  },
+  {
+    name: "admin",
+    url: `${ADMIN_URL}/en`,
+    readyTestIds: ["admin-page", "access-denied"],
+  },
+  {
+    name: "studio",
+    url: `${STUDIO_URL}/en`,
+    readyTestIds: ["product-list-page", "access-denied"],
+  },
+] as const;
+
+async function clickFirstVisible(
+  page: import("@playwright/test").Page,
+  selectors: string[],
+) {
+  for (const selector of selectors) {
+    const button = page.locator(selector).first();
+    if (await button.isVisible({ timeout: 2000 }).catch(() => false)) {
+      await button.click();
+      return true;
+    }
+  }
+
+  return false;
+}
+
+async function waitForAnyVisible(
+  page: import("@playwright/test").Page,
+  selectors: string[],
+  timeout = 15000,
+) {
+  const deadline = Date.now() + timeout;
+  while (Date.now() < deadline) {
+    for (const selector of selectors) {
+      const locator = page.locator(selector).first();
+      if (await locator.isVisible().catch(() => false)) {
+        return locator;
+      }
+    }
+
+    await page.waitForTimeout(500);
+  }
+
+  return null;
+}
+
+async function expectAuthenticatedAcrossApps(
+  page: import("@playwright/test").Page,
+) {
+  for (const app of APP_CHECKS) {
+    await page.goto(app.url);
+    await page.waitForLoadState("networkidle", { timeout: 20000 });
+    await expect(
+      page,
+      `${app.name} should not bounce back to login`,
+    ).not.toHaveURL(/\/login(\?|$)/);
+    await expect(
+      page.getByTestId("nav-user-email"),
+      `${app.name} should keep the signed-in email visible`,
+    ).not.toBeEmpty();
+
+    const readyLocator = await waitForAnyVisible(
+      page,
+      app.readyTestIds.map((testId) => `[data-testid="${testId}"]`),
+      10000,
+    );
+    expect(
+      readyLocator,
+      `${app.name} should render one of: ${app.readyTestIds.join(", ")}`,
+    ).not.toBeNull();
+  }
+}
+
+function shouldIgnoreRequestFailure(url: string) {
+  return IGNORABLE_REQUEST_FAILURE_PATTERNS.some((pattern) =>
+    url.includes(pattern),
+  );
+}
 
 test("Google OAuth login flow", async () => {
   const googleEmail = process.env.GOOGLE_TEST_EMAIL;
@@ -14,135 +152,131 @@ test("Google OAuth login flow", async () => {
 
   test.setTimeout(120_000);
 
-  const context: BrowserContext = await chromium.launchPersistentContext(
-    PROFILE_DIR,
-    {
-      headless: false,
-      channel: "chrome",
-      viewport: { width: 1280, height: 720 },
-      args: ["--disable-blink-features=AutomationControlled"],
-    },
+  const browser = await chromium.launch({
+    headless: false,
+    channel: "chrome",
+    args: ["--disable-blink-features=AutomationControlled"],
+  });
+  const context = await browser.newContext({
+    viewport: { width: 1280, height: 720 },
+  });
+  context.on("request", (request) => {
+    if (request.url().includes("localhost")) {
+      console.log(`[browser:request] ${request.method()} ${request.url()}`);
+    }
+  });
+  context.on("requestfailed", (request) => {
+    if (shouldIgnoreRequestFailure(request.url())) return;
+    console.log(
+      `[browser:requestfailed] ${request.method()} ${request.url()} ${request.failure()?.errorText ?? ""}`,
+    );
+  });
+  const page = await context.newPage();
+  page.on("console", (message) =>
+    console.log(`[browser:${message.type()}] ${message.text()}`),
+  );
+  page.on("pageerror", (error) =>
+    console.log(`[browser:error] ${error.message}`),
   );
 
-  const page = context.pages()[0] || (await context.newPage());
-
   try {
-    // 1. Login page
-    await page.goto("http://localhost:5000/en/login");
-    await expect(page.getByTestId("login-card")).toBeVisible();
-    console.log("[e2e] ✓ Login page loaded");
+    await page.goto(`${AUTH_URL}/en/login`);
+    await expect(page.getByTestId("login-google")).toBeVisible();
+    console.log("[e2e] Login page loaded");
 
-    // 2. Click Google
+    await page.waitForTimeout(1000);
     await page.getByTestId("login-google").click();
-    console.log("[e2e] Clicked Google...");
+    console.log("[e2e] Clicked Google");
 
-    // 3. Wait for Google
-    await page.waitForURL(
-      (url) =>
-        url.hostname.includes("google") || url.href.includes("localhost:5000"),
-      { timeout: 30000 },
-    );
-    console.log("[e2e] ✓ Navigated to:", page.url());
+    let oauthPage = page;
+    const popupPromise = page
+      .waitForEvent("popup", { timeout: 10000 })
+      .catch(() => null);
+    const newPagePromise = context
+      .waitForEvent("page", { timeout: 10000 })
+      .catch(() => null);
+    const navigated = await page
+      .waitForURL((url) => url.hostname.includes("google"), { timeout: 10000 })
+      .then(() => "same-tab")
+      .catch(() => null);
 
-    // 4. If already back (persistent session auto-authorized)
-    if (page.url().includes("localhost:5000")) {
-      console.log("[e2e] Auto-authorized from persistent session");
-    } else {
-      // Handle Google login
-      const emailInput = page.locator('input[type="email"]');
-      if (await emailInput.isVisible({ timeout: 10000 }).catch(() => false)) {
-        console.log("[e2e] Filling email...");
-        await emailInput.fill(googleEmail!);
-
-        // Click Next (try multiple selectors)
-        await page
-          .locator(
-            '#identifierNext button, button:has-text("Next"), button:has-text("Siguiente")',
-          )
-          .first()
-          .click();
-        console.log("[e2e] ✓ Submitted email");
-
-        // Wait for password field (Google has a hidden + visible password input)
-        const passwordInput = page.locator('input[name="Passwd"]');
-        await passwordInput.waitFor({ state: "visible", timeout: 15000 });
-        await page.waitForTimeout(1000); // Google animation
-        await passwordInput.fill(googlePassword!);
-
-        // Click Next for password
-        await page
-          .locator(
-            '#passwordNext button, button:has-text("Next"), button:has-text("Siguiente")',
-          )
-          .first()
-          .click();
-        console.log("[e2e] ✓ Submitted password");
-      }
-
-      // Wait for Google to process — could redirect through multiple pages
-      console.log("[e2e] Waiting for Google to process...");
-
-      // Wait for either: back to our app, or a consent page, or still on Google
-      await page
-        .waitForURL(
-          (url) =>
-            url.href.includes("localhost:5000") ||
-            url.pathname.includes("/signin/oauth/consent") ||
-            url.pathname.includes("/signin/oauth/id"),
-          { timeout: 30000 },
-        )
-        .catch(() => {
-          console.log("[e2e] Still waiting, current URL:", page.url());
+    if (!navigated) {
+      const popup = (await popupPromise) ?? (await newPagePromise);
+      if (popup) {
+        oauthPage = popup;
+        await oauthPage.waitForLoadState("domcontentloaded");
+      } else {
+        await page.getByTestId("login-google").click();
+        await page.waitForURL((url) => url.hostname.includes("google"), {
+          timeout: 30000,
         });
-
-      await page.waitForTimeout(3000);
-      console.log("[e2e] After processing:", page.url());
-      await page.screenshot({
-        path: "e2e/screenshots/google-after-processing.png",
-      });
-
-      // If on consent page, handle it
-      if (
-        page.url().includes("google.com") &&
-        !page.url().includes("localhost")
-      ) {
-        console.log("[e2e] On Google consent/auth page...");
-
-        // Google consent: "Allow", "Continue", "Continuar", or auto-redirect
-        const consentSelectors = [
-          'button:has-text("Continue")',
-          'button:has-text("Continuar")',
-          'button:has-text("Allow")',
-          'button:has-text("Permitir")',
-          "#submit_approve_access",
-          'button[data-idom-class*="primary"]',
-        ];
-
-        for (const sel of consentSelectors) {
-          const btn = page.locator(sel).first();
-          if (await btn.isVisible({ timeout: 3000 }).catch(() => false)) {
-            console.log("[e2e] Clicking consent button:", sel);
-            await btn.click();
-            break;
-          }
-        }
-
-        // Wait for redirect back
-        await page.waitForURL(/localhost:5000/, { timeout: 30000 });
       }
     }
 
-    console.log("[e2e] ✓ Back on app:", page.url());
+    console.log("[e2e] Navigated to:", oauthPage.url());
 
-    // 5. Wait for page to settle
-    await page.waitForLoadState("networkidle", { timeout: 15000 });
-    await page.waitForTimeout(2000);
-    await page.screenshot({ path: "e2e/screenshots/google-final.png" });
-    console.log("[e2e] Final URL:", page.url());
+    const emailChoice = oauthPage
+      .locator(`[data-identifier="${googleEmail!}"]`)
+      .first();
+    if (await emailChoice.isVisible({ timeout: 5000 }).catch(() => false)) {
+      await emailChoice.click();
+      console.log("[e2e] Selected existing Google account");
+    }
 
-    // 6. Verify account page
-    const isAccountPage = await page
-      .getByTestId("account-card")
+    const emailInput = oauthPage.locator('input[type="email"]');
+    if (await emailInput.isVisible({ timeout: 10000 }).catch(() => false)) {
+      await emailInput.fill(googleEmail!);
+      await clickFirstVisible(oauthPage, [
+        "#identifierNext button",
+        'button:has-text("Next")',
+        'button:has-text("Siguiente")',
+      ]);
+      console.log("[e2e] Submitted email");
+    }
+
+    const passwordInput = await waitForAnyVisible(oauthPage, [
+      'input[name="Passwd"]',
+      'input[type="password"]',
+      'input[aria-label*="password" i]',
+      'input[aria-label*="contraseña" i]',
+    ]);
+    if (passwordInput) {
+      await passwordInput.fill(googlePassword!);
+      await clickFirstVisible(oauthPage, [
+        "#passwordNext button",
+        'div[role="button"]:has-text("Next")',
+        'div[role="button"]:has-text("Siguiente")',
+        'button:has-text("Next")',
+        'button:has-text("Siguiente")',
+      ]);
+      console.log("[e2e] Submitted password");
+    }
+
+    await oauthPage.waitForTimeout(3000);
+    await oauthPage.screenshot({
+      path: "e2e/screenshots/google-after-processing.png",
+    });
+
+    await clickFirstVisible(oauthPage, [
+      'button:has-text("Continue")',
+      'button:has-text("Continuar")',
+      'button:has-text("Allow")',
+      'button:has-text("Permitir")',
+      "#submit_approve_access",
+      'button[data-idom-class*="primary"]',
+    ]);
+
+    await oauthPage.waitForURL((url) => url.href.startsWith(AUTH_URL), {
+      timeout: 45000,
+    });
+    console.log("[e2e] Back on app:", oauthPage.url());
+
+    await oauthPage.waitForLoadState("networkidle", { timeout: 15000 });
+    await oauthPage.waitForTimeout(2000);
+    await oauthPage.screenshot({ path: "e2e/screenshots/google-final.png" });
+
+    const isAccountPage = await oauthPage
+      .getByTestId("account-settings-page")
       .isVisible({ timeout: 5000 })
       .catch(() => false);
 
@@ -152,14 +286,19 @@ test("Google OAuth login flow", async () => {
         "[e2e] Cookies:",
         cookies.map((c) => c.name),
       );
-      console.log("[e2e] URL:", page.url());
+      console.log("[e2e] URL:", oauthPage.url());
     }
 
     expect(isAccountPage, "Should show account page").toBe(true);
-    await expect(page.getByTestId("account-email")).not.toBeEmpty();
-    await expect(page.getByTestId("nav-user-email")).toBeVisible();
-    console.log("[e2e] ✓ All passed!");
+    await expect(oauthPage.getByTestId("profile-card")).toBeVisible();
+    await expect(oauthPage.getByTestId("sign-out")).toBeVisible();
+    await expectAuthenticatedAcrossApps(oauthPage);
+    await oauthPage.screenshot({
+      path: "e2e/screenshots/google-store-final.png",
+    });
+    console.log("[e2e] All passed");
   } finally {
     await context.close();
+    await browser.close();
   }
 });

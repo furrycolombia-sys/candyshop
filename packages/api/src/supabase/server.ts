@@ -2,6 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
 import { SUPABASE_ANON_KEY, SUPABASE_URL } from "./config";
+import { mergeSupabaseCookieOptions } from "./cookies";
 import type { Database } from "./types";
 
 /**
@@ -22,7 +23,7 @@ export async function createServerSupabaseClient() {
       setAll(cookiesToSet) {
         try {
           for (const { name, value, options } of cookiesToSet)
-            cookieStore.set(name, value, options);
+            cookieStore.set(name, value, mergeSupabaseCookieOptions(options));
         } catch {
           // Called from a Server Component — safe to ignore.
           // Proxy (middleware) handles session refresh.
