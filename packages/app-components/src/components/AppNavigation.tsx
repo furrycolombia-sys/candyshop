@@ -24,6 +24,7 @@ interface AppNavigationProps {
   permissionState?: {
     grantedKeys: string[];
     isLoading: boolean;
+    isAuthenticated?: boolean;
   };
 }
 
@@ -93,9 +94,10 @@ export function AppNavigation({
 }: AppNavigationProps) {
   const t = useTranslations("nav");
   const locale = useLocale();
-  const { grantedKeys, isLoading } = permissionState ?? {
+  const { grantedKeys, isLoading, isAuthenticated } = permissionState ?? {
     grantedKeys: [],
     isLoading: true,
+    isAuthenticated: false,
   };
 
   /** Append current locale to cross-app URL so the target app opens in the same language */
@@ -109,6 +111,8 @@ export function AppNavigation({
   }
 
   const visibleApps = APP_ORDER.filter(({ id }) => {
+    if (!isAuthenticated) return false;
+
     const rule = APP_ACCESS_RULES[id];
     if (!rule) return true;
     if (isLoading) return false;

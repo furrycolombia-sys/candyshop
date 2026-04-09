@@ -1,6 +1,6 @@
 "use client";
 
-import { getCookie, setCookie } from "cookies-next";
+import { deleteCookie, getCookie, setCookie } from "cookies-next";
 import {
   createContext,
   useCallback,
@@ -34,9 +34,89 @@ const DAYS = 30;
 const HOURS_PER_DAY = 24;
 const MINUTES_PER_HOUR = 60;
 const SECONDS_PER_MINUTE = 60;
+const MINIMUM_DOMAIN_SEGMENTS = 2;
+const DOMAIN_SUFFIX_SEGMENT_OFFSET = -2;
 /** Cookie lives for 30 days */
 const COOKIE_MAX_AGE_S =
   DAYS * HOURS_PER_DAY * MINUTES_PER_HOUR * SECONDS_PER_MINUTE;
+
+function getSharedCookieDomain(hostname: string): string | undefined {
+  if (hostname === "localhost" || hostname === "127.0.0.1") return undefined;
+
+  const parts = hostname.split(".");
+  if (parts.length < MINIMUM_DOMAIN_SEGMENTS) return undefined;
+
+  return `.${parts.slice(DOMAIN_SUFFIX_SEGMENT_OFFSET).join(".")}`;
+}
+
+function getCartCookieOptions() {
+  const isSecure =
+    globalThis.window !== undefined &&
+    globalThis.location.protocol === "https:";
+  let sharedDomain: string | undefined;
+  if (globalThis.window !== undefined) {
+    sharedDomain = getSharedCookieDomain(globalThis.location.hostname);
+  }
+
+  return {
+    path: "/",
+    ...(sharedDomain ? { domain: sharedDomain } : {}),
+    sameSite: "lax" as const,
+    secure: isSecure,
+  };
+}
+
+function persistCartCookie(items: CartItem[]) {
+  const cookieOptions = getCartCookieOptions();
+
+  if (cookieOptions.domain) {
+    deleteCookie(COOKIE_KEY, { path: "/" });
+  }
+
+  setCookie(COOKIE_KEY, JSON.stringify(items), {
+    ...cookieOptions,
+    maxAge: COOKIE_MAX_AGE_S,
+  });
+}
+
+function removeCartCookie() {
+  const cookieOptions = getCartCookieOptions();
+  deleteCookie(COOKIE_KEY, cookieOptions);
+
+  if (cookieOptions.domain !== undefined) {
+    deleteCookie(COOKIE_KEY, { path: "/" });
+  }
+}
+
+function addItemToItems(
+  items: CartItem[],
+  payload: Omit<CartItem, "quantity"> & { quantity?: number },
+): CartItem[] {
+  const { quantity = 1, ...rest } = payload;
+  const existingIndex = items.findIndex((item) => item.id === rest.id);
+
+  if (existingIndex !== -1) {
+    return items.map((item, index) =>
+      index === existingIndex
+        ? { ...item, quantity: item.quantity + quantity }
+        : item,
+    );
+  }
+
+  return [...items, { ...rest, quantity }];
+}
+
+function updateItemQuantity(
+  items: CartItem[],
+  id: string,
+  quantity: number,
+): CartItem[] {
+  if (quantity <= 0) {
+    return items.filter((item) => item.id !== id);
+  }
+
+  return items.map((item) => (item.id === id ? { ...item, quantity } : item));
+}
 
 type CartAction =
   | {
@@ -158,15 +238,11 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!mountedRef.current) return;
     try {
-      const isSecure =
-        globalThis.window !== undefined &&
-        globalThis.location.protocol === "https:";
-      setCookie(COOKIE_KEY, JSON.stringify(state.items), {
-        maxAge: COOKIE_MAX_AGE_S,
-        path: "/",
-        sameSite: "lax",
-        secure: isSecure,
-      });
+      if (state.items.length === 0) {
+        removeCartCookie();
+      } else {
+        persistCartCookie(state.items);
+      }
     } catch {
       // Ignore cookie errors
     }
@@ -174,20 +250,35 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   const addItem = useCallback(
     (item: Omit<CartItem, "quantity"> & { quantity?: number }) => {
+      persistCartCookie(addItemToItems(state.items, item));
       dispatch({ type: "ADD_ITEM", payload: item });
     },
-    [],
+    [state.items],
   );
 
-  const removeItem = useCallback((id: string) => {
-    dispatch({ type: "REMOVE_ITEM", payload: { id } });
-  }, []);
+  const removeItem = useCallback(
+    (id: string) => {
+      persistCartCookie(state.items.filter((item) => item.id !== id));
+      dispatch({ type: "REMOVE_ITEM", payload: { id } });
+    },
+    [state.items],
+  );
 
-  const updateQuantity = useCallback((id: string, quantity: number) => {
-    dispatch({ type: "UPDATE_QUANTITY", payload: { id, quantity } });
-  }, []);
+  const updateQuantity = useCallback(
+    (id: string, quantity: number) => {
+      const nextItems = updateItemQuantity(state.items, id, quantity);
+      if (nextItems.length === 0) {
+        removeCartCookie();
+      } else {
+        persistCartCookie(nextItems);
+      }
+      dispatch({ type: "UPDATE_QUANTITY", payload: { id, quantity } });
+    },
+    [state.items],
+  );
 
   const clearCart = useCallback(() => {
+    removeCartCookie();
     dispatch({ type: "CLEAR_CART" });
   }, []);
 

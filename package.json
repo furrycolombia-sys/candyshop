@@ -76,6 +76,7 @@
     "codegen:graphql:watch": "graphql-codegen --config graphql-codegen.ts --watch",
     "codegen:supabase": "supabase gen types typescript --local > packages/api/src/supabase/types.ts && node -e \"const f=require('fs');const c=f.readFileSync('packages/api/src/supabase/types.ts','utf8');f.writeFileSync('packages/api/src/supabase/types.ts',c.replace(/^Connecting to db \\d+\\n/,''))\"",
     "codegen:all": "pnpm codegen && pnpm codegen:graphql && pnpm codegen:supabase",
+    "user:grant-role": "node scripts/grant-user-role.mjs",
     "supabase:start": "supabase start",
     "supabase:stop": "supabase stop",
     "supabase:reset": "supabase db reset",

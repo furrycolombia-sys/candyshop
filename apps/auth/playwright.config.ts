@@ -45,5 +45,8 @@ export default defineConfig({
     navigationTimeout: 45_000,
   },
   projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
-  webServer: buildWebServers(),
+  webServer:
+    process.env.PLAYWRIGHT_USE_EXISTING_STACK === "true"
+      ? undefined
+      : buildWebServers(),
 });
