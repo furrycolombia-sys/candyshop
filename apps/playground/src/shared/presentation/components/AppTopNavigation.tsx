@@ -11,10 +11,14 @@ interface AppTopNavigationProps {
 }
 
 export function AppTopNavigation(props: AppTopNavigationProps) {
-  const { grantedKeys, isLoading } = useCurrentUserPermissions();
+  const { grantedKeys, isLoading, isAuthenticated } =
+    useCurrentUserPermissions();
   const navProps = props;
 
   return (
-    <AppNavigation {...navProps} permissionState={{ grantedKeys, isLoading }} />
+    <AppNavigation
+      {...navProps}
+      permissionState={{ grantedKeys, isLoading, isAuthenticated }}
+    />
   );
 }

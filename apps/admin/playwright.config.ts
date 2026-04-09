@@ -23,7 +23,7 @@ export default defineConfig({
     env: {
       NEXT_PUBLIC_API_BASE_URL: "/api",
       NEXT_PUBLIC_API_PREFIX: "",
-      NEXT_PUBLIC_ENABLE_MOCKS: "true",
+      NEXT_PUBLIC_ENABLE_MOCKS: "false",
     },
   },
 });

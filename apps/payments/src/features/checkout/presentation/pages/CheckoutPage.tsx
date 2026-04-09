@@ -16,6 +16,30 @@ import { SellerCheckoutCard } from "@/features/checkout/presentation/components/
 import { appUrls } from "@/shared/infrastructure/config";
 import { AccessDeniedState } from "@/shared/presentation/components/AccessDeniedState";
 
+const CHECKOUT_COMPLETED_SESSION_KEY = "candystore-checkout-completed";
+
+function readCompletedCheckoutFlag(): boolean {
+  if (globalThis.window === undefined) return false;
+  return (
+    globalThis.sessionStorage.getItem(CHECKOUT_COMPLETED_SESSION_KEY) === "1"
+  );
+}
+
+function writeCompletedCheckoutFlag(value: boolean) {
+  if (globalThis.window === undefined) return;
+
+  if (value) {
+    globalThis.sessionStorage.setItem(CHECKOUT_COMPLETED_SESSION_KEY, "1");
+    return;
+  }
+
+  globalThis.sessionStorage.removeItem(CHECKOUT_COMPLETED_SESSION_KEY);
+}
+
+function getCompletedCheckoutState(allSubmitted: boolean): boolean {
+  return allSubmitted || readCompletedCheckoutFlag();
+}
+
 function CheckoutPageContent() {
   const t = useTranslations("checkout");
   const { user } = useSupabaseAuth();
@@ -29,7 +53,6 @@ function CheckoutPageContent() {
   const [sellerStates, setSellerStates] = useState<
     Record<string, { status: CheckoutSellerStatus; error: string | null }>
   >({});
-
   const updateSellerState = useCallback(
     (sellerId: string, status: CheckoutSellerStatus, error: string | null) => {
       setSellerStates((prev) => ({
@@ -83,15 +106,23 @@ function CheckoutPageContent() {
       (g) => sellerStates[g.sellerId]?.status === "submitted",
     );
   }, [groups, sellerStates]);
+  const hasCompletedCheckout = getCompletedCheckoutState(allSubmitted);
 
   // Clear cart when all orders are submitted
   const cartCleared = useRef(false);
   useEffect(() => {
     if (allSubmitted && !cartCleared.current) {
       cartCleared.current = true;
+      writeCompletedCheckoutFlag(true);
       clearCartCookie();
     }
   }, [allSubmitted]);
+
+  useEffect(() => {
+    if (groups.length > 0 && hasCompletedCheckout && !cartCleared.current) {
+      writeCompletedCheckoutFlag(false);
+    }
+  }, [groups.length, hasCompletedCheckout]);
 
   // Loading state
   if (isLoading) {
@@ -101,6 +132,27 @@ function CheckoutPageContent() {
           <Skeleton className="h-8 w-48" />
           <Skeleton className="h-64 w-full" />
           <Skeleton className="h-64 w-full" />
+        </div>
+      </main>
+    );
+  }
+
+  // All submitted success state
+  if (hasCompletedCheckout || allSubmitted) {
+    return (
+      <main
+        className="flex flex-1 items-center justify-center surface-grid-dots p-4"
+        {...tid("checkout-all-submitted")}
+      >
+        <div className="shadow-brutal-lg w-full max-w-md border-strong border-foreground bg-background p-8 text-center sm:p-10">
+          <PartyPopper className="mx-auto mb-4 size-12 text-success" />
+          <h1 className="font-display text-2xl font-extrabold uppercase tracking-tight">
+            {t("allSubmitted")}
+          </h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            {t("pendingVerification")}
+          </p>
+          {/* Orders page link will be added in Part 3 (seller verification) */}
         </div>
       </main>
     );
@@ -126,27 +178,6 @@ function CheckoutPageContent() {
             <ArrowLeft className="size-4" />
             {t("goToStore")}
           </a>
-        </div>
-      </main>
-    );
-  }
-
-  // All submitted success state
-  if (allSubmitted) {
-    return (
-      <main
-        className="flex flex-1 items-center justify-center surface-grid-dots p-4"
-        {...tid("checkout-all-submitted")}
-      >
-        <div className="shadow-brutal-lg w-full max-w-md border-strong border-foreground bg-background p-8 text-center sm:p-10">
-          <PartyPopper className="mx-auto mb-4 size-12 text-success" />
-          <h1 className="font-display text-2xl font-extrabold uppercase tracking-tight">
-            {t("allSubmitted")}
-          </h1>
-          <p className="mt-2 text-sm text-muted-foreground">
-            {t("pendingVerification")}
-          </p>
-          {/* Orders page link will be added in Part 3 (seller verification) */}
         </div>
       </main>
     );

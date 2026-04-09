@@ -4,6 +4,7 @@ import {
   clearAccessToken,
   getAccessToken,
   getAccessTokenFromCookie,
+  hasRefreshableAuthCookies,
   hydrateAccessTokenFromRefresh,
   setAccessToken,
 } from "./accessToken";
@@ -84,6 +85,39 @@ describe("accessToken", () => {
         cookie: "first=one; auth_access_token=the-token; other=two",
       });
       expect(getAccessTokenFromCookie()).toBe("the-token");
+    });
+  });
+
+  describe("hasRefreshableAuthCookies", () => {
+    afterEach(() => {
+      vi.unstubAllGlobals();
+    });
+
+    it("returns false when document is undefined", () => {
+      const unset: undefined = void 0;
+      vi.stubGlobal("document", unset);
+      expect(hasRefreshableAuthCookies()).toBe(false);
+    });
+
+    it("returns true when auth refresh cookie exists", () => {
+      vi.stubGlobal("document", {
+        cookie: "auth_refresh_token=refresh-123",
+      });
+      expect(hasRefreshableAuthCookies()).toBe(true);
+    });
+
+    it("returns true when Supabase auth cookie exists", () => {
+      vi.stubGlobal("document", {
+        cookie: "sb-localhost-auth-token=encoded-session",
+      });
+      expect(hasRefreshableAuthCookies()).toBe(true);
+    });
+
+    it("returns false when no refreshable auth cookies exist", () => {
+      vi.stubGlobal("document", {
+        cookie: "theme=dark; locale=en",
+      });
+      expect(hasRefreshableAuthCookies()).toBe(false);
     });
   });
 
