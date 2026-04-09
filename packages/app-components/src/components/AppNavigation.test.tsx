@@ -9,6 +9,7 @@ vi.mock("next-intl", () => ({
 type PermissionState = {
   grantedKeys: string[];
   isLoading: boolean;
+  isAuthenticated?: boolean;
 };
 
 vi.mock("next/navigation", () => ({
@@ -48,6 +49,7 @@ describe("AppNavigation", () => {
   const defaultPermissionState: PermissionState = {
     grantedKeys: [],
     isLoading: false,
+    isAuthenticated: false,
   };
 
   beforeEach(() => {
@@ -79,7 +81,7 @@ describe("AppNavigation", () => {
     expect(screen.getByText("t:brand")).toBeInTheDocument();
   });
 
-  it("renders public navigation links even without protected permissions", () => {
+  it("hides cross-app navigation links while signed out", () => {
     render(
       <AppNavigation
         currentApp="store"
@@ -88,6 +90,29 @@ describe("AppNavigation", () => {
         permissionState={defaultPermissionState}
       />,
     );
+    expect(screen.queryByTestId("nav-link-store")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("nav-link-landing")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("nav-link-auth")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("nav-link-playground")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("nav-link-admin")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("nav-link-studio")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("nav-link-payments")).not.toBeInTheDocument();
+  });
+
+  it("renders base app links for authenticated users without elevated permissions", () => {
+    render(
+      <AppNavigation
+        currentApp="store"
+        urls={defaultUrls}
+        locales={defaultLocales}
+        permissionState={{
+          grantedKeys: [],
+          isLoading: false,
+          isAuthenticated: true,
+        }}
+      />,
+    );
+
     expect(screen.getByTestId("nav-link-store")).toBeInTheDocument();
     expect(screen.getByTestId("nav-link-landing")).toBeInTheDocument();
     expect(screen.getByTestId("nav-link-auth")).toBeInTheDocument();
@@ -101,6 +126,7 @@ describe("AppNavigation", () => {
     const permissionState: PermissionState = {
       grantedKeys: ["products.read", "orders.read", "user_permissions.read"],
       isLoading: false,
+      isAuthenticated: true,
     };
 
     render(
@@ -126,6 +152,7 @@ describe("AppNavigation", () => {
         permissionState={{
           grantedKeys: ["user_permissions.read"],
           isLoading: false,
+          isAuthenticated: true,
         }}
       />,
     );
@@ -142,6 +169,7 @@ describe("AppNavigation", () => {
     const permissionState: PermissionState = {
       grantedKeys: ["products.read"],
       isLoading: false,
+      isAuthenticated: true,
     };
 
     render(
@@ -168,6 +196,7 @@ describe("AppNavigation", () => {
         permissionState={{
           grantedKeys: ["user_permissions.read"],
           isLoading: false,
+          isAuthenticated: true,
         }}
       />,
     );
@@ -208,6 +237,7 @@ describe("AppNavigation", () => {
     const permissionState: PermissionState = {
       grantedKeys: ["products.read", "orders.read", "user_permissions.read"],
       isLoading: true,
+      isAuthenticated: true,
     };
 
     render(

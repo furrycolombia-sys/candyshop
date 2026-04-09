@@ -21,6 +21,27 @@ export function getAccessTokenFromCookie(): string | null {
   return null;
 }
 
+export function hasRefreshableAuthCookies(): boolean {
+  if (typeof document === "undefined") return false;
+
+  const cookies = document.cookie
+    .split(";")
+    .map((cookie) => cookie.trim())
+    .filter(Boolean);
+
+  return cookies.some((cookie) => {
+    const [name, ...rest] = cookie.split("=");
+    const value = rest.join("=");
+    if (!name || value.length === 0) return false;
+
+    return (
+      name === AUTH_COOKIE_NAMES.accessToken ||
+      name === AUTH_COOKIE_NAMES.refreshToken ||
+      (name.startsWith("sb-") && name.includes("auth-token"))
+    );
+  });
+}
+
 function buildRefreshUrl(authHostUrl: string): string {
   return `${stripTrailingSlash(authHostUrl)}${AUTH_REFRESH_ENDPOINT}`;
 }

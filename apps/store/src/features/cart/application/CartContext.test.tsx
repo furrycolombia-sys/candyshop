@@ -11,6 +11,7 @@ import type { CartItem } from "@/features/cart/domain/types";
 vi.mock("cookies-next", () => ({
   getCookie: vi.fn(() => null),
   setCookie: vi.fn(),
+  deleteCookie: vi.fn(),
 }));
 
 // ---------------------------------------------------------------------------
