@@ -286,6 +286,14 @@ mcp__git__git_commit({
 })
 ```
 
+**If the commit fails due to git hooks or pre-commit checks:**
+
+1. Analyze the output to see which files failed (e.g., Prettier formatting, ESLint warnings).
+2. Run autofix commands (e.g., `npx prettier --write <file>` or `npx eslint --fix <file>`).
+3. Stage the modified files again `git add <file>`.
+4. Re-run the commit command.
+5. DO NOT skip any problems. Keep fixing until the commit succeeds.
+
 **Commit message format:**
 
 Follow [commit message conventions](../../rules/git-workflow.md#commit-messages):
@@ -370,7 +378,7 @@ If push fails with authentication error:
 | "Authentication failed"  | Check GITHUB_PERSONAL_ACCESS_TOKEN in .env.local       |
 | "Push rejected"          | Pull/rebase first, then push                           |
 | "No upstream branch"     | Use `setUpstream: true` (already default)              |
-| "Pre-commit hook failed" | Git hooks will show what needs fixing - address issues |
+| "Pre-commit hook failed" | Check output, run `prettier --write` or fixing scripts |
 | "Coverage below 85%"     | Create additional tests                                |
 
 ---
