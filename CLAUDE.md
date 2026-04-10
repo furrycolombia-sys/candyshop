@@ -265,6 +265,8 @@ If any fail, keep in app's `shared/` folder instead.
 ### Testing & Quality
 
 - [Testing](.claude/rules/testing.md)
+- [Checkout Stock Integrity](.claude/rules/checkout-stock-integrity.md)
+- [Checkout Stock Integrity Standard](docs/standards/checkout-stock-integrity.md)
 - [E2E Selectors](.claude/rules/e2e-selectors.md)
 - [Build Checks](.claude/rules/build-checks.md)
 - [Code Review Standards](.claude/rules/code-review-standards.md)

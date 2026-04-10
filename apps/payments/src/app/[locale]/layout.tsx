@@ -13,7 +13,10 @@ import { appUrls } from "@/shared/infrastructure/config";
 import { routing } from "@/shared/infrastructure/i18n";
 import { ThemeProvider } from "@/shared/infrastructure/providers";
 import { AppTopNavigation } from "@/shared/presentation/components/AppTopNavigation";
-import { PaymentsSidebar } from "@/shared/presentation/components/PaymentsSidebar";
+import {
+  PaymentsMobileSidebar,
+  PaymentsSidebar,
+} from "@/shared/presentation/components/PaymentsSidebar";
 
 export async function generateMetadata({
   params,
@@ -62,6 +65,7 @@ export default async function LocaleLayout({
               <div className="flex flex-1 overflow-hidden">
                 <PaymentsSidebar />
                 <div className="flex flex-1 flex-col overflow-y-auto">
+                  <PaymentsMobileSidebar />
                   {children}
                 </div>
               </div>

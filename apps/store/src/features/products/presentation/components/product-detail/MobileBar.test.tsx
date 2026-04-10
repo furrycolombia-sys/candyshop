@@ -78,6 +78,7 @@ describe("MobileBar", () => {
       <MobileBar
         product={makeProduct()}
         added={false}
+        hasReachedStockLimit={false}
         onAddToCart={onAddToCart}
         theme={defaultTheme}
         quantityInCart={0}
@@ -92,6 +93,7 @@ describe("MobileBar", () => {
       <MobileBar
         product={makeProduct()}
         added={false}
+        hasReachedStockLimit={false}
         onAddToCart={onAddToCart}
         theme={defaultTheme}
         quantityInCart={0}
@@ -108,6 +110,7 @@ describe("MobileBar", () => {
       <MobileBar
         product={makeProduct()}
         added={true}
+        hasReachedStockLimit={false}
         onAddToCart={onAddToCart}
         theme={defaultTheme}
         quantityInCart={1}
@@ -121,6 +124,7 @@ describe("MobileBar", () => {
       <MobileBar
         product={makeProduct()}
         added={false}
+        hasReachedStockLimit={false}
         onAddToCart={onAddToCart}
         theme={defaultTheme}
         quantityInCart={3}
@@ -134,6 +138,7 @@ describe("MobileBar", () => {
       <MobileBar
         product={makeProduct()}
         added={false}
+        hasReachedStockLimit={false}
         onAddToCart={onAddToCart}
         theme={defaultTheme}
         quantityInCart={0}
@@ -147,6 +152,7 @@ describe("MobileBar", () => {
       <MobileBar
         product={makeProduct()}
         added={false}
+        hasReachedStockLimit={false}
         onAddToCart={onAddToCart}
         theme={defaultTheme}
         quantityInCart={0}
@@ -161,6 +167,7 @@ describe("MobileBar", () => {
       <MobileBar
         product={makeProduct({ is_active: false })}
         added={false}
+        hasReachedStockLimit={false}
         onAddToCart={onAddToCart}
         theme={defaultTheme}
         quantityInCart={0}
@@ -176,9 +183,26 @@ describe("MobileBar", () => {
       <MobileBar
         product={makeProduct()}
         added={true}
+        hasReachedStockLimit={false}
         onAddToCart={onAddToCart}
         theme={defaultTheme}
         quantityInCart={0}
+      />,
+    );
+    expect(
+      screen.getByTestId("product-detail-mobile-add-to-cart"),
+    ).toBeDisabled();
+  });
+
+  it("disables button when the stock limit is already reached", () => {
+    render(
+      <MobileBar
+        product={makeProduct({ max_quantity: 1 })}
+        added={false}
+        hasReachedStockLimit={true}
+        onAddToCart={onAddToCart}
+        theme={defaultTheme}
+        quantityInCart={1}
       />,
     );
     expect(

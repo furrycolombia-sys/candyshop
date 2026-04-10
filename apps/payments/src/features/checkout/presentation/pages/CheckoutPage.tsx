@@ -186,12 +186,12 @@ function CheckoutPageContent() {
   // Main checkout flow
   return (
     <main
-      className="flex flex-1 justify-center surface-grid-dots p-4 pt-8"
+      className="flex flex-1 justify-center surface-grid-dots p-3 pt-4 sm:p-4 sm:pt-8"
       {...tid("checkout-page")}
     >
       <div className="w-full max-w-2xl space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <h1
             className="font-display text-2xl font-extrabold uppercase tracking-tight sm:text-3xl"
             {...tid("checkout-title")}
@@ -200,7 +200,7 @@ function CheckoutPageContent() {
           </h1>
           <a
             href={appUrls.store}
-            className="flex items-center gap-1 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+            className="flex items-center gap-1 self-start text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
             {...tid("checkout-back-to-store")}
           >
             <ArrowLeft className="size-3" />

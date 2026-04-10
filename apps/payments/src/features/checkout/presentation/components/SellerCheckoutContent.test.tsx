@@ -91,6 +91,7 @@ describe("SellerCheckoutContent", () => {
     isSubmitting: false,
     isDisabled: false,
     error: null,
+    hasStockIssues: false,
     isLoadingMethods: false,
     methods: mockMethods,
     selectedMethodId: null,
@@ -143,6 +144,25 @@ describe("SellerCheckoutContent", () => {
   it("translates stock_error to stockError", () => {
     render(<SellerCheckoutContent {...defaultProps} error="stock_error" />);
     expect(screen.getByText("stockError")).toBeInTheDocument();
+  });
+
+  it("hides payment information when stock issues are present", () => {
+    render(
+      <SellerCheckoutContent
+        {...defaultProps}
+        hasStockIssues={true}
+        error="stock_error"
+        selectedMethodId="pm-1"
+        selectedMethod={mockMethods[0]}
+      />,
+    );
+
+    expect(screen.getByText("stockError")).toBeInTheDocument();
+    expect(
+      screen.queryByTestId("payment-method-selector"),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByTestId("receipt-upload")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("submit-payment-s1")).not.toBeInTheDocument();
   });
 
   it("shows transfer number input when selected method requires it", () => {

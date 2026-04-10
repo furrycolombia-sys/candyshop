@@ -36,6 +36,8 @@ export function CartItemRow({
   const itemTheme = getCategoryTheme(item.category ?? "merch");
   const name = i18nField(item, "name", locale);
   const lineTotal = item.price_usd * item.quantity;
+  const hasReachedStockLimit =
+    item.max_quantity !== null && item.quantity >= item.max_quantity;
 
   return (
     <li
@@ -132,6 +134,7 @@ export function CartItemRow({
               type="button"
               className="flex size-7 items-center justify-center hover:bg-foreground hover:text-background transition-colors"
               onClick={() => updateQuantity(item.id, item.quantity + 1)}
+              disabled={hasReachedStockLimit}
               aria-label={t("increaseQty", { name })}
               {...tid("cart-item-qty-increase")}
             >

@@ -461,6 +461,52 @@ jobs:
           name: build-payments
           path: apps/payments/.next/
 
+      - name: Rebuild E2E apps locally
+        run: |
+          set -euo pipefail
+
+          SELECT_OUTPUT=$(bash scripts/select-workspaces.sh \
+            "${{ needs.changes.outputs.store }}" \
+            "${{ needs.changes.outputs.landing }}" \
+            "${{ needs.changes.outputs.payments }}" \
+            "${{ needs.changes.outputs.admin }}" \
+            "${{ needs.changes.outputs.auth }}" \
+            "${{ needs.changes.outputs.playground }}" \
+            "${{ needs.changes.outputs.packages }}" \
+            "${{ needs.changes.outputs.tooling }}" \
+            "${{ needs.changes.outputs.studio }}")
+
+          APPS=$(echo "$SELECT_OUTPUT" | grep '^APPS=' | cut -d= -f2-)
+          [ -z "$APPS" ] && echo "No workspace apps selected for E2E rebuild." && exit 0
+
+          BUILD_TARGETS="$APPS"
+          BUILT_APPS=""
+
+          # Store E2E starts the landing app too, so keep both builds in sync.
+          if echo " $APPS " | grep -q " store "; then
+            BUILD_TARGETS="$BUILD_TARGETS landing"
+          fi
+
+          for APP in $BUILD_TARGETS; do
+            case " $BUILT_APPS " in
+              *" $APP "*) continue ;;
+            esac
+
+            echo "Building ${APP} for E2E startup"
+            pnpm --filter "${APP}" build
+            BUILT_APPS="$BUILT_APPS $APP"
+          done
+        env:
+          NEXT_PUBLIC_API_BASE_URL: /api
+          NEXT_PUBLIC_API_PREFIX: ""
+          NEXT_PUBLIC_ENABLE_MOCKS: "true"
+          NEXT_PUBLIC_ENABLE_TEST_IDS: "true"
+          NEXT_PUBLIC_AUTH_HOST_URL: "http://localhost:5000"
+          NEXT_PUBLIC_STORE_URL: "http://localhost:5001"
+          NEXT_PUBLIC_ADMIN_URL: "http://localhost:5002"
+          NEXT_PUBLIC_PLAYGROUND_URL: "http://localhost:5003"
+          NEXT_PUBLIC_STUDIO_URL: "http://localhost:5006"
+
       - name: Run E2E tests (scoped)
         run: |
           set -euo pipefail

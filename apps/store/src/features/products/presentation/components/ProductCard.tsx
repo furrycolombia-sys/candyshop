@@ -34,13 +34,15 @@ export function ProductCard({
   const tCategories = useTranslations("categories");
   const tTypes = useTranslations("productTypes");
   const locale = useLocale();
-  const { added, quantityInCart, handleAddToCart } = useAddToCart(product);
+  const { added, quantityInCart, hasReachedStockLimit, handleAddToCart } =
+    useAddToCart(product);
 
   const categoryTheme = getCategoryTheme(product.category);
   const categoryColor = getCategoryColor(product.category);
   const isFeatured = variant === "featured";
   const addToCartLabel = added ? t("addedToCart") : t("addToCart");
-  const isAddToCartDisabled = !isProductAvailable(product) || added;
+  const isAddToCartDisabled =
+    !isProductAvailable(product) || added || hasReachedStockLimit;
   const inCartLabel = t("inCart", { count: quantityInCart });
   const name = i18nField(product, "name", locale);
   const description = i18nField(product, "description", locale);

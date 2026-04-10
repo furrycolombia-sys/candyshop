@@ -31,6 +31,22 @@ vi.mock("shared", () => ({
   tid: (id: string) => ({ "data-testid": id }),
 }));
 
+vi.mock("ui", () => ({
+  Sheet: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  SheetTrigger: ({ children }: { children: React.ReactNode }) => (
+    <div>{children}</div>
+  ),
+  SheetContent: ({ children }: { children: React.ReactNode }) => (
+    <div>{children}</div>
+  ),
+  SheetHeader: ({ children }: { children: React.ReactNode }) => (
+    <div>{children}</div>
+  ),
+  SheetTitle: ({ children }: { children: React.ReactNode }) => (
+    <div>{children}</div>
+  ),
+}));
+
 vi.mock("@/shared/infrastructure/i18n", () => ({
   Link: ({
     children,
@@ -47,7 +63,7 @@ vi.mock("@/shared/infrastructure/i18n", () => ({
   ),
 }));
 
-import { PaymentsSidebar } from "./PaymentsSidebar";
+import { PaymentsMobileSidebar, PaymentsSidebar } from "./PaymentsSidebar";
 
 describe("PaymentsSidebar", () => {
   it("renders buyer section with checkout and purchases links", () => {
@@ -79,5 +95,12 @@ describe("PaymentsSidebar", () => {
     render(<PaymentsSidebar />);
     expect(screen.getByText("buyer")).toBeInTheDocument();
     expect(screen.getByText("seller")).toBeInTheDocument();
+  });
+
+  it("renders a mobile trigger", () => {
+    render(<PaymentsMobileSidebar />);
+    expect(
+      screen.getByTestId("payments-mobile-sidebar-trigger"),
+    ).toBeInTheDocument();
   });
 });

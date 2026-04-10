@@ -1,7 +1,7 @@
 "use client";
 
 import { createBrowserSupabaseClient } from "api/supabase";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { useSupabaseAuth } from "./useSupabaseAuth";
 
@@ -46,6 +46,8 @@ export function useCurrentUserPermissions() {
   const supabase = useMemo(() => createBrowserSupabaseClient(), []);
   const [grantedKeys, setGrantedKeys] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const loadedUserIdRef = useRef<string | null>(null);
+  const userId = user?.id ?? null;
 
   useEffect(() => {
     let isActive = true;
@@ -53,26 +55,32 @@ export function useCurrentUserPermissions() {
     async function loadPermissions() {
       if (authLoading) return;
 
-      if (!user) {
+      if (!userId) {
         if (isActive) {
           setGrantedKeys([]);
+          loadedUserIdRef.current = null;
           setIsLoading(false);
         }
         return;
       }
 
-      setIsLoading(true);
+      const shouldBlockOnReload = loadedUserIdRef.current !== userId;
+
+      if (shouldBlockOnReload) {
+        setIsLoading(true);
+      }
 
       const { data, error } = await supabase
         .from("user_permissions")
         .select("expires_at,resource_permissions!inner(permissions!inner(key))")
-        .eq("user_id", user.id)
+        .eq("user_id", userId)
         .eq("mode", "grant");
 
       if (!isActive) return;
 
       if (error) {
         setGrantedKeys([]);
+        loadedUserIdRef.current = userId;
         setIsLoading(false);
         return;
       }
@@ -85,6 +93,7 @@ export function useCurrentUserPermissions() {
       );
 
       setGrantedKeys([...uniqueKeys]);
+      loadedUserIdRef.current = userId;
       setIsLoading(false);
     }
 
@@ -93,7 +102,7 @@ export function useCurrentUserPermissions() {
     return () => {
       isActive = false;
     };
-  }, [authLoading, supabase, user]);
+  }, [authLoading, supabase, userId]);
 
   return {
     grantedKeys,

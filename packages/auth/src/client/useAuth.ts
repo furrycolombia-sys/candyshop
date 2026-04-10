@@ -37,13 +37,42 @@ interface UseAuthOptions {
 export function useAuth({ supabaseClient }: UseAuthOptions): UseAuthReturn {
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const useMockSession = process.env.NEXT_PUBLIC_ENABLE_MOCKS === "true";
 
   useEffect(() => {
-    // Get initial session
-    supabaseClient.auth.getSession().then(({ data: { session: s } }) => {
-      setSession(s);
+    let isActive = true;
+
+    async function loadInitialSession() {
+      const {
+        data: { session: initialSession },
+      } = await supabaseClient.auth.getSession();
+
+      if (!isActive) return;
+
+      if (!initialSession) {
+        setSession(null);
+        setIsLoading(false);
+        return;
+      }
+
+      if (useMockSession) {
+        setSession(initialSession);
+        setIsLoading(false);
+        return;
+      }
+
+      const {
+        data: { user },
+        error,
+      } = await supabaseClient.auth.getUser();
+
+      if (!isActive) return;
+
+      setSession(error || !user ? null : initialSession);
       setIsLoading(false);
-    });
+    }
+
+    void loadInitialSession();
 
     // Listen for auth state changes
     const {
@@ -53,8 +82,11 @@ export function useAuth({ supabaseClient }: UseAuthOptions): UseAuthReturn {
       setIsLoading(false);
     });
 
-    return () => subscription.unsubscribe();
-  }, [supabaseClient]);
+    return () => {
+      isActive = false;
+      subscription.unsubscribe();
+    };
+  }, [supabaseClient, useMockSession]);
 
   const signInWithProvider = useCallback(
     async (provider: AuthProvider, redirectTo?: string) => {

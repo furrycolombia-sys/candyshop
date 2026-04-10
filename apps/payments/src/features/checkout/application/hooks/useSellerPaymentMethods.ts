@@ -1,21 +1,21 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { createBrowserSupabaseClient } from "api/supabase";
-import { useMemo } from "react";
 
-import { fetchSellerPaymentMethods } from "@/features/checkout/infrastructure/checkoutQueries";
+import type { CartItem } from "@/features/checkout/domain/types";
+import { fetchCheckoutPaymentMethods } from "@/features/checkout/infrastructure/checkoutPaymentMethods";
 
 /**
  * Fetches payment methods configured by a specific seller.
  */
-export function useSellerPaymentMethods(sellerId: string) {
-  const supabase = useMemo(() => createBrowserSupabaseClient(), []);
-
+export function useSellerPaymentMethods(sellerId: string, items: CartItem[]) {
   return useQuery({
-    // eslint-disable-next-line @tanstack/query/exhaustive-deps -- supabase is not serializable (circular refs)
-    queryKey: ["seller-payment-methods", sellerId],
-    queryFn: () => fetchSellerPaymentMethods(supabase, sellerId),
-    enabled: !!sellerId,
+    queryKey: [
+      "seller-payment-methods",
+      sellerId,
+      items.map((item) => `${item.id}:${item.quantity}`).join("|"),
+    ],
+    queryFn: () => fetchCheckoutPaymentMethods({ sellerId, items }),
+    enabled: !!sellerId && items.length > 0,
   });
 }

@@ -3,6 +3,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 import type { Product } from "@/features/products/domain/types";
 import { ProductCard } from "@/features/products/presentation/components/ProductCard";
+import { useAddToCart } from "@/shared/application/hooks/useAddToCart";
 
 // ---------------------------------------------------------------------------
 // Mocks
@@ -40,11 +41,12 @@ vi.mock("@/shared/infrastructure/i18n", () => ({
 }));
 
 vi.mock("@/shared/application/hooks/useAddToCart", () => ({
-  useAddToCart: () => ({
+  useAddToCart: vi.fn(() => ({
     added: false,
     quantityInCart: 0,
+    hasReachedStockLimit: false,
     handleAddToCart: mockHandleAddToCart,
-  }),
+  })),
 }));
 
 vi.mock("next/image", () => ({
@@ -174,6 +176,19 @@ describe("ProductCard", () => {
 
     const button = screen.getByTestId("product-card-add-to-cart");
     expect(button).toBeDisabled();
+  });
+
+  it("disables add to cart when the cart already reached the stock limit", () => {
+    vi.mocked(useAddToCart).mockReturnValue({
+      added: false,
+      quantityInCart: 2,
+      hasReachedStockLimit: true,
+      handleAddToCart: mockHandleAddToCart,
+    });
+
+    render(<ProductCard product={makeProduct({ max_quantity: 2 })} />);
+
+    expect(screen.getByTestId("product-card-add-to-cart")).toBeDisabled();
   });
 
   it("renders a link to the product detail page", () => {

@@ -2,7 +2,7 @@
 
 import { CheckCircle, ChevronDown, ChevronUp } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { tid } from "shared";
 
 import { SellerCheckoutContent } from "./SellerCheckoutContent";
@@ -47,19 +47,28 @@ export function SellerCheckoutCard({
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
   const [validationError, setValidationError] = useState<string | null>(null);
 
-  const { data: methods = [], isLoading: isLoadingMethods } =
-    useSellerPaymentMethods(sellerId);
+  const { data, isLoading: isLoadingMethods } = useSellerPaymentMethods(
+    sellerId,
+    items,
+  );
+  const methods = useMemo(() => data?.methods ?? [], [data?.methods]);
+  const hasStockIssues = data?.hasStockIssues ?? false;
 
   const selectedMethod: SellerPaymentMethodWithType | undefined = methods.find(
     (m) => m.id === selectedMethodId,
   );
+  const effectiveSelectedMethodId = selectedMethod ? selectedMethodId : null;
 
   const isSubmitted = status === "submitted";
   const isSubmitting = status === "submitting";
   const isDisabled = isSubmitted || isSubmitting;
 
   const handleSubmit = useCallback(() => {
-    if (!selectedMethodId) {
+    if (hasStockIssues) {
+      return;
+    }
+
+    if (!effectiveSelectedMethodId || !selectedMethod) {
       setValidationError(t("methodRequired"));
       return;
     }
@@ -76,49 +85,52 @@ export function SellerCheckoutCard({
 
     setValidationError(null);
     onSubmit({
-      paymentMethodId: selectedMethodId,
+      paymentMethodId: effectiveSelectedMethodId,
       transferNumber: transferNumber.trim() || null,
       receiptFile,
     });
   }, [
-    selectedMethodId,
+    effectiveSelectedMethodId,
     selectedMethod,
     receiptFile,
     transferNumber,
     onSubmit,
+    hasStockIssues,
     t,
   ]);
 
   return (
     <div
-      className="border-strong border-foreground bg-background shadow-brutal-md"
+      className="overflow-hidden border-strong border-foreground bg-background shadow-brutal-md"
       {...tid(`seller-checkout-${sellerId}`)}
     >
       {/* Header */}
       <button
         type="button"
         onClick={() => setIsExpanded((prev) => !prev)}
-        className="flex w-full items-center justify-between p-4"
+        className="flex w-full items-start justify-between gap-3 p-3 sm:items-center sm:p-4"
         aria-expanded={isExpanded}
         {...tid(`seller-checkout-toggle-${sellerId}`)}
       >
-        <div className="flex items-center gap-3">
+        <div className="flex min-w-0 items-start gap-3 sm:items-center">
           {isSubmitted && <CheckCircle className="size-5 text-success" />}
-          <div className="text-left">
-            <h3 className="font-display text-sm font-extrabold uppercase tracking-widest">
+          <div className="min-w-0 text-left">
+            <h3 className="truncate font-display text-sm font-extrabold uppercase tracking-widest">
               {sellerName}
             </h3>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-muted-foreground sm:whitespace-nowrap">
               {t("items", { count: items.length })} &middot;{" "}
               {formatCop(subtotalCop)}
             </p>
           </div>
         </div>
-        {isExpanded ? (
-          <ChevronUp className="size-4" />
-        ) : (
-          <ChevronDown className="size-4" />
-        )}
+        <span className="shrink-0 pt-0.5 sm:pt-0">
+          {isExpanded ? (
+            <ChevronUp className="size-4" />
+          ) : (
+            <ChevronDown className="size-4" />
+          )}
+        </span>
       </button>
 
       {/* Expandable content */}
@@ -131,10 +143,11 @@ export function SellerCheckoutCard({
           isSubmitted={isSubmitted}
           isSubmitting={isSubmitting}
           isDisabled={isDisabled}
-          error={error}
+          error={hasStockIssues ? "stock_error" : error}
+          hasStockIssues={hasStockIssues}
           isLoadingMethods={isLoadingMethods}
           methods={methods}
-          selectedMethodId={selectedMethodId}
+          selectedMethodId={effectiveSelectedMethodId}
           selectedMethod={selectedMethod}
           transferNumber={transferNumber}
           receiptFile={receiptFile}
