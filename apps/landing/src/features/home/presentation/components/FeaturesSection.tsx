@@ -91,43 +91,47 @@ export function FeaturesSection() {
           className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3"
           aria-label={tSections(SECTION_LABEL_KEY)}
         >
-          {CATEGORIES.map(({ key, bg, fg, icon: iconComponent, tilt }) => (
-            <li key={key} className="list-none" {...tid(`category-${key}`)}>
-              <article
-                className={`group shadow-brutal-lg relative flex h-full min-h-52 flex-col overflow-hidden border-strong border-foreground p-6 transition-transform duration-150 hover:-translate-y-1 sm:min-h-56 lg:p-7 ${tilt} xl:even:translate-y-6`}
-                style={{ backgroundColor: bg, color: fg }}
-              >
-                <div
-                  className="absolute inset-x-0 top-0 h-4 border-b-3 border-foreground/70 bg-background/25"
-                  aria-hidden="true"
-                />
-                <div
-                  className="absolute bottom-5 right-5 size-18 rounded-full border border-foreground/15 bg-background/12"
-                  aria-hidden="true"
-                />
-                <div className="mb-8 flex items-start justify-between gap-4">
-                  <span className="border-strong border-foreground bg-background/70 px-3 py-1 text-[11px] font-bold uppercase tracking-section">
-                    {tSections("categories")}
-                  </span>
-                  <span
-                    className="shadow-brutal-sm flex size-14 items-center justify-center border-strong border-foreground bg-background/80"
+          {CATEGORIES.map(({ key, bg, fg, icon: iconComponent, tilt }) => {
+            const IconComponent = iconComponent;
+
+            return (
+              <li key={key} className="list-none" {...tid(`category-${key}`)}>
+                <article
+                  className={`group shadow-brutal-lg relative flex h-full min-h-52 flex-col overflow-hidden border-strong border-foreground p-6 transition-transform duration-150 hover:-translate-y-1 sm:min-h-56 lg:p-7 ${tilt} xl:even:translate-y-6`}
+                  style={{ backgroundColor: bg, color: fg }}
+                >
+                  <div
+                    className="absolute inset-x-0 top-0 h-4 border-b-3 border-foreground/70 bg-background/25"
                     aria-hidden="true"
-                  >
-                    {iconComponent({ className: "size-6", strokeWidth: 2.4 })}
-                  </span>
-                </div>
-                <div className="mt-auto pr-10">
-                  <p className="max-w-full text-pretty font-display text-[1.55rem] leading-[0.94] font-extrabold uppercase sm:text-[1.8rem] lg:text-[2rem]">
-                    {t(key)}
-                  </p>
-                  <div className="mt-5 flex items-center gap-2">
-                    <div className="h-1.5 w-16 border-strong border-foreground bg-background/70" />
-                    <div className="h-1.5 w-6 border-strong border-foreground bg-background/40" />
+                  />
+                  <div
+                    className="absolute bottom-5 right-5 size-18 rounded-full border border-foreground/15 bg-background/12"
+                    aria-hidden="true"
+                  />
+                  <div className="mb-8 flex items-start justify-between gap-4">
+                    <span className="border-strong border-foreground bg-background/70 px-3 py-1 text-[11px] font-bold uppercase tracking-section">
+                      {tSections("categories")}
+                    </span>
+                    <span
+                      className="shadow-brutal-sm flex size-14 items-center justify-center border-strong border-foreground bg-background/80"
+                      aria-hidden="true"
+                    >
+                      <IconComponent className="size-6" strokeWidth={2.4} />
+                    </span>
                   </div>
-                </div>
-              </article>
-            </li>
-          ))}
+                  <div className="mt-auto pr-10">
+                    <p className="max-w-full text-pretty font-display text-[1.55rem] leading-[0.94] font-extrabold uppercase sm:text-[1.8rem] lg:text-[2rem]">
+                      {t(key)}
+                    </p>
+                    <div className="mt-5 flex items-center gap-2">
+                      <div className="h-1.5 w-16 border-strong border-foreground bg-background/70" />
+                      <div className="h-1.5 w-6 border-strong border-foreground bg-background/40" />
+                    </div>
+                  </div>
+                </article>
+              </li>
+            );
+          })}
         </ul>
       </div>
     </section>
