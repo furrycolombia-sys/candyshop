@@ -63,7 +63,8 @@ vi.mock("@/shared/infrastructure/i18n", () => ({
   ),
 }));
 
-import { PaymentsMobileSidebar, PaymentsSidebar } from "./PaymentsSidebar";
+import { PaymentsMobileSidebar } from "./PaymentsMobileSidebar";
+import { PaymentsSidebar } from "./PaymentsSidebar";
 
 describe("PaymentsSidebar", () => {
   it("renders buyer section with checkout and purchases links", () => {
