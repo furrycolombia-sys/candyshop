@@ -13,10 +13,8 @@ import { appUrls } from "@/shared/infrastructure/config";
 import { routing } from "@/shared/infrastructure/i18n";
 import { ThemeProvider } from "@/shared/infrastructure/providers";
 import { AppTopNavigation } from "@/shared/presentation/components/AppTopNavigation";
-import {
-  PaymentsMobileSidebar,
-  PaymentsSidebar,
-} from "@/shared/presentation/components/PaymentsSidebar";
+import { PaymentsMobileSidebar } from "@/shared/presentation/components/PaymentsMobileSidebar";
+import { PaymentsSidebar } from "@/shared/presentation/components/PaymentsSidebar";
 
 export async function generateMetadata({
   params,
