@@ -4,6 +4,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { HeroSection } from "./HeroSection";
 
 import type { Product } from "@/features/products/domain/types";
+import { useAddToCart } from "@/shared/application/hooks/useAddToCart";
 
 // ---------------------------------------------------------------------------
 // Mocks
@@ -32,11 +33,12 @@ vi.mock("shared", () => ({
 }));
 
 vi.mock("@/shared/application/hooks/useAddToCart", () => ({
-  useAddToCart: () => ({
+  useAddToCart: vi.fn(() => ({
     added: false,
     quantityInCart: 0,
+    hasReachedStockLimit: false,
     handleAddToCart: mockHandleAddToCart,
-  }),
+  })),
 }));
 
 vi.mock("./ImageGallery", () => ({
@@ -234,6 +236,24 @@ describe("HeroSection", () => {
         theme={defaultTheme}
       />,
     );
+    expect(screen.getByTestId("hero-add-to-cart")).toBeDisabled();
+  });
+
+  it("disables add-to-cart when the cart already reached the stock limit", () => {
+    vi.mocked(useAddToCart).mockReturnValue({
+      added: false,
+      quantityInCart: 1,
+      hasReachedStockLimit: true,
+      handleAddToCart: mockHandleAddToCart,
+    });
+
+    render(
+      <HeroSection
+        product={makeProduct({ max_quantity: 1 })}
+        theme={defaultTheme}
+      />,
+    );
+
     expect(screen.getByTestId("hero-add-to-cart")).toBeDisabled();
   });
 });

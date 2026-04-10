@@ -1,6 +1,7 @@
 "use client";
 
 import { ArrowRight } from "lucide-react";
+import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { tid } from "shared";
 
@@ -24,7 +25,7 @@ export function CtaSection() {
         </h2>
 
         <div className="flex flex-wrap justify-center gap-5">
-          <a
+          <Link
             href={appUrls.store}
             className="group button-brutal button-press-lg shadow-brutal-md gap-3 bg-primary px-8 py-4 text-primary-foreground"
             {...tid("final-cta")}
@@ -35,14 +36,14 @@ export function CtaSection() {
               className="size-4 transition-transform duration-150 group-hover:translate-x-1"
               strokeWidth={2.5}
             />
-          </a>
-          <a
+          </Link>
+          <Link
             href={appUrls.payments}
             className="button-brutal button-press-lg shadow-brutal-md bg-background px-8 py-4 text-foreground"
             {...tid("final-payments")}
           >
             {t("payments")}
-          </a>
+          </Link>
         </div>
       </div>
     </section>

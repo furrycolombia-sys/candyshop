@@ -148,6 +148,25 @@ describe("CartContext", () => {
       expect(result.current.items[0].quantity).toBe(5);
     });
 
+    it("caps added quantity at max_quantity", () => {
+      const { result } = renderCartHook();
+      const product = makeCartItem({
+        id: "p1",
+        price_usd: 10,
+        max_quantity: 2,
+      });
+
+      act(() => {
+        result.current.addItem({ ...product, quantity: 2 });
+      });
+
+      act(() => {
+        result.current.addItem(product);
+      });
+
+      expect(result.current.items[0].quantity).toBe(2);
+    });
+
     it("keeps different products separate", () => {
       const { result } = renderCartHook();
 
@@ -208,6 +227,22 @@ describe("CartContext", () => {
       });
 
       expect(result.current.items[0].quantity).toBe(5);
+    });
+
+    it("caps updated quantity at max_quantity", () => {
+      const { result } = renderCartHook();
+
+      act(() => {
+        result.current.addItem(
+          makeCartItem({ id: "p1", price_usd: 10, max_quantity: 3 }),
+        );
+      });
+
+      act(() => {
+        result.current.updateQuantity("p1", 5);
+      });
+
+      expect(result.current.items[0].quantity).toBe(3);
     });
 
     it("removes item when quantity set to 0", () => {

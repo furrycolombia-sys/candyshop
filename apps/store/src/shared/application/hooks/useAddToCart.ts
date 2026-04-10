@@ -12,6 +12,7 @@ const ADDED_RESET_MS = 1500;
 interface UseAddToCartReturn {
   added: boolean;
   quantityInCart: number;
+  hasReachedStockLimit: boolean;
   handleAddToCart: (e: React.MouseEvent<HTMLButtonElement>) => void;
 }
 
@@ -35,11 +36,17 @@ export function useAddToCart(product: Product): UseAddToCartReturn {
     () => cartItems.find((i) => i.id === product.id)?.quantity ?? 0,
     [cartItems, product.id],
   );
+  const hasReachedStockLimit =
+    product.max_quantity !== null && quantityInCart >= product.max_quantity;
 
   const handleAddToCart = useCallback(
     (e: React.MouseEvent<HTMLButtonElement>) => {
       e.preventDefault();
       e.stopPropagation();
+
+      if (hasReachedStockLimit) {
+        return;
+      }
 
       // Pass the full product — CartItem extends Product with quantity
       addItem(product);
@@ -52,8 +59,8 @@ export function useAddToCart(product: Product): UseAddToCartReturn {
       const rect = e.currentTarget.getBoundingClientRect();
       flyCtx?.fire(rect, getCategoryColor(product.category));
     },
-    [addItem, product, flyCtx],
+    [addItem, product, flyCtx, hasReachedStockLimit],
   );
 
-  return { added, quantityInCart, handleAddToCart };
+  return { added, quantityInCart, hasReachedStockLimit, handleAddToCart };
 }

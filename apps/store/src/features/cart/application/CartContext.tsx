@@ -98,12 +98,27 @@ function addItemToItems(
   if (existingIndex !== -1) {
     return items.map((item, index) =>
       index === existingIndex
-        ? { ...item, quantity: item.quantity + quantity }
+        ? {
+            ...item,
+            quantity:
+              item.max_quantity === null
+                ? item.quantity + quantity
+                : Math.min(item.quantity + quantity, item.max_quantity),
+          }
         : item,
     );
   }
 
-  return [...items, { ...rest, quantity }];
+  return [
+    ...items,
+    {
+      ...rest,
+      quantity:
+        rest.max_quantity === null
+          ? quantity
+          : Math.min(quantity, rest.max_quantity),
+    },
+  ];
 }
 
 function updateItemQuantity(
@@ -115,7 +130,17 @@ function updateItemQuantity(
     return items.filter((item) => item.id !== id);
   }
 
-  return items.map((item) => (item.id === id ? { ...item, quantity } : item));
+  return items.map((item) =>
+    item.id === id
+      ? {
+          ...item,
+          quantity:
+            item.max_quantity === null
+              ? quantity
+              : Math.min(quantity, item.max_quantity),
+        }
+      : item,
+  );
 }
 
 type CartAction =
@@ -165,13 +190,28 @@ function cartReducer(state: CartState, action: CartAction): CartState {
       if (existingIndex !== -1) {
         const updatedItems = state.items.map((item, index) =>
           index === existingIndex
-            ? { ...item, quantity: item.quantity + quantity }
+            ? {
+                ...item,
+                quantity:
+                  item.max_quantity === null
+                    ? item.quantity + quantity
+                    : Math.min(item.quantity + quantity, item.max_quantity),
+              }
             : item,
         );
         return deriveState(updatedItems);
       }
 
-      return deriveState([...state.items, { ...rest, quantity }]);
+      return deriveState([
+        ...state.items,
+        {
+          ...rest,
+          quantity:
+            rest.max_quantity === null
+              ? quantity
+              : Math.min(quantity, rest.max_quantity),
+        },
+      ]);
     }
 
     case "REMOVE_ITEM": {
@@ -190,7 +230,15 @@ function cartReducer(state: CartState, action: CartAction): CartState {
       }
 
       const updatedItems = state.items.map((item) =>
-        item.id === id ? { ...item, quantity } : item,
+        item.id === id
+          ? {
+              ...item,
+              quantity:
+                item.max_quantity === null
+                  ? quantity
+                  : Math.min(quantity, item.max_quantity),
+            }
+          : item,
       );
       return deriveState(updatedItems);
     }

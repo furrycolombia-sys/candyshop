@@ -56,9 +56,12 @@ export function ImageGallery({ product, theme }: ImageGalleryProps) {
   // Placeholder for products with no images
   if (!hasImages) {
     return (
-      <div className="w-full lg:w-3/5 shrink-0" {...tid(TID_GALLERY)}>
+      <div
+        className="w-full max-w-full shrink-0 lg:w-3/5"
+        {...tid(TID_GALLERY)}
+      >
         <div
-          className="relative flex aspect-square items-center justify-center overflow-hidden border-strong border-foreground shadow-brutal-lg"
+          className="relative flex aspect-square w-full max-w-full items-center justify-center overflow-hidden border-strong border-foreground shadow-brutal-lg"
           style={{ backgroundColor: theme.bg }}
           {...tid(TID_GALLERY_MAIN)}
         >
@@ -78,7 +81,7 @@ export function ImageGallery({ product, theme }: ImageGalleryProps) {
   }
 
   return (
-    <div className="w-full lg:w-3/5 shrink-0" {...tid(TID_GALLERY)}>
+    <div className="w-full max-w-full shrink-0 lg:w-3/5" {...tid(TID_GALLERY)}>
       {/* Desktop: thumbnails left + image right */}
       <div className="hidden lg:flex gap-3">
         {/* Vertical thumbnails */}
@@ -159,9 +162,9 @@ export function ImageGallery({ product, theme }: ImageGalleryProps) {
       </div>
 
       {/* Mobile: image on top, thumbnails below */}
-      <div className="flex flex-col gap-3 lg:hidden">
+      <div className="flex w-full max-w-full flex-col gap-3 overflow-hidden lg:hidden">
         <div
-          className="relative aspect-square overflow-hidden border-strong border-foreground shadow-brutal-lg"
+          className="relative aspect-square w-full max-w-full overflow-hidden border-strong border-foreground shadow-brutal-lg"
           style={{ backgroundColor: theme.bg }}
           {...tid("image-gallery-main-mobile")}
         >
@@ -202,7 +205,7 @@ export function ImageGallery({ product, theme }: ImageGalleryProps) {
 
         {images.length > 1 && (
           <div
-            className="grid gap-2"
+            className="grid w-full max-w-full gap-2"
             style={{
               gridTemplateColumns: `repeat(${String(images.length)}, 1fr)`,
             }}

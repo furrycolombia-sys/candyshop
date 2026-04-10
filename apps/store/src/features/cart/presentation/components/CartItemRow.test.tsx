@@ -151,6 +151,23 @@ describe("CartItemRow", () => {
     expect(mockUpdateQuantity).toHaveBeenCalledWith("abc", 3);
   });
 
+  it("disables quantity increase when the cart item already reached the stock limit", () => {
+    render(
+      <CartItemRow
+        item={makeCartItem({ id: "abc", quantity: 2, max_quantity: 2 })}
+        locale="en"
+        tProducts={identity}
+        tTypes={identity}
+        tCategories={identity}
+        t={identity}
+        removeItem={mockRemoveItem}
+        updateQuantity={mockUpdateQuantity}
+      />,
+    );
+
+    expect(screen.getByTestId("cart-item-qty-increase")).toBeDisabled();
+  });
+
   it("calls updateQuantity with decremented value on decrease click", () => {
     render(
       <CartItemRow

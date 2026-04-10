@@ -1,6 +1,7 @@
 "use client";
 
 import { ArrowRight } from "lucide-react";
+import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { tid } from "shared";
 
@@ -39,7 +40,7 @@ export function HeroSection() {
             {t("subtitle")}
           </p>
 
-          <a
+          <Link
             href={appUrls.store}
             className="group button-brutal button-press-lg shadow-brutal-md gap-3 bg-primary px-8 py-4 text-primary-foreground"
             {...tid("hero-cta")}
@@ -50,7 +51,7 @@ export function HeroSection() {
               className="size-5 transition-transform duration-150 group-hover:translate-x-1"
               strokeWidth={2.5}
             />
-          </a>
+          </Link>
         </div>
       </div>
     </section>
