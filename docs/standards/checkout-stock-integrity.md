@@ -123,7 +123,8 @@ npx supabase migration up
 Relevant local services:
 
 - API: `http://127.0.0.1:54321`
-- DB: `postgresql://postgres:postgres@127.0.0.1:54322/postgres`
+- DB host: `127.0.0.1:54322`
+- DB name: `postgres`
 
 ## Review checklist
 

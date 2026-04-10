@@ -1,4 +1,5 @@
 import { render, screen } from "@testing-library/react";
+import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("next-intl", () => ({
@@ -13,7 +14,7 @@ vi.mock("next/link", () => ({
     ...props
   }: {
     href: string;
-    children: unknown;
+    children: ReactNode;
   }) => (
     <a href={href} {...props}>
       {children}
