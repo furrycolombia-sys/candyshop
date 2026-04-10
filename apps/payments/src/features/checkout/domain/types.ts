@@ -38,6 +38,11 @@ export interface SellerPaymentMethodWithType {
   seller_note_es: string | null;
 }
 
+export interface CheckoutPaymentMethodsResponse {
+  methods: SellerPaymentMethodWithType[];
+  hasStockIssues: boolean;
+}
+
 export type CheckoutSellerStatus =
   | "pending"
   | "submitting"

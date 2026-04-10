@@ -24,6 +24,7 @@ interface SellerCheckoutContentProps {
   isSubmitting: boolean;
   isDisabled: boolean;
   error: string | null;
+  hasStockIssues: boolean;
   isLoadingMethods: boolean;
   methods: SellerPaymentMethodWithType[];
   selectedMethodId: string | null;
@@ -46,6 +47,7 @@ export function SellerCheckoutContent({
   isSubmitting,
   isDisabled,
   error,
+  hasStockIssues,
   isLoadingMethods,
   methods,
   selectedMethodId,
@@ -61,7 +63,7 @@ export function SellerCheckoutContent({
   const t = useTranslations("checkout");
   const transferInputId = useId();
 
-  const showForm = !isSubmitted && !isLoadingMethods;
+  const showForm = !isSubmitted && !isLoadingMethods && !hasStockIssues;
   const showLoading = !isSubmitted && isLoadingMethods;
   const errorMessage = error === "stock_error" ? t("stockError") : error;
   const submitLabel = isSubmitting ? (
@@ -74,7 +76,7 @@ export function SellerCheckoutContent({
   );
 
   return (
-    <div className="space-y-4 border-t-2 border-foreground p-4">
+    <div className="space-y-4 border-t-2 border-foreground p-3 sm:p-4">
       {/* Items summary */}
       <CheckoutItemsSummary
         items={items}
@@ -94,7 +96,10 @@ export function SellerCheckoutContent({
       )}
 
       {error && (
-        <div className="border-2 border-destructive/30 bg-destructive/10 p-3 text-sm font-medium text-destructive">
+        <div
+          className="border-2 border-destructive/30 bg-destructive/10 p-3 text-sm font-medium text-destructive"
+          {...tid(`seller-checkout-error-${sellerId}`)}
+        >
           {errorMessage}
         </div>
       )}

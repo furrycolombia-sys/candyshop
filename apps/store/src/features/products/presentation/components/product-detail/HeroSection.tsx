@@ -25,7 +25,8 @@ export function HeroSection({ product, theme }: HeroSectionProps) {
   const tCategories = useTranslations("categories");
   const tTypes = useTranslations("productTypes");
   const locale = useLocale();
-  const { added, quantityInCart, handleAddToCart } = useAddToCart(product);
+  const { added, quantityInCart, hasReachedStockLimit, handleAddToCart } =
+    useAddToCart(product);
 
   const name = i18nField(product, "name", locale);
   const tagline = i18nField(product, "tagline", locale);
@@ -35,12 +36,12 @@ export function HeroSection({ product, theme }: HeroSectionProps) {
 
   return (
     <section
-      className="w-full border-b-strong border-foreground"
+      className="w-full overflow-x-hidden border-b-strong border-foreground"
       style={{ backgroundColor: theme.bgLight }}
       {...tid("hero-section")}
     >
-      <div className="max-w-6xl mx-auto px-4 py-10 lg:py-14">
-        <div className="flex flex-col lg:flex-row gap-8 lg:gap-10 items-start">
+      <div className="mx-auto w-full min-w-0 max-w-6xl px-4 py-8 sm:py-10 lg:py-14">
+        <div className="flex flex-col items-start gap-6 sm:gap-8 lg:flex-row lg:gap-10">
           {/* Left: Image Gallery */}
           <ImageGallery product={product} theme={theme} />
 
@@ -59,7 +60,7 @@ export function HeroSection({ product, theme }: HeroSectionProps) {
 
             {/* Name */}
             <h1
-              className="font-display text-4xl/tight lg:text-5xl/tight font-extrabold uppercase"
+              className="font-display text-3xl/tight font-extrabold uppercase sm:text-4xl/tight lg:text-5xl/tight"
               {...tid("hero-name")}
             >
               {name}
@@ -142,7 +143,7 @@ export function HeroSection({ product, theme }: HeroSectionProps) {
 
             {/* Short description */}
             <p
-              className="text-sm/relaxed text-muted-foreground max-w-prose"
+              className="max-w-prose text-sm/relaxed text-muted-foreground"
               {...tid("hero-description")}
             >
               {description}
@@ -163,16 +164,16 @@ export function HeroSection({ product, theme }: HeroSectionProps) {
             )}
 
             {/* Add to Cart CTA */}
-            <div className="mt-2 flex flex-col sm:flex-row sm:items-center gap-3">
+            <div className="mt-2 flex flex-col gap-3 sm:flex-row sm:items-center">
               <button
                 type="button"
-                className="w-full sm:w-auto button-brutal button-press-lg shadow-brutal-md font-display text-lg font-extrabold uppercase tracking-widest px-10 py-4 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="button-brutal button-press-lg shadow-brutal-md w-full px-6 py-3 font-display text-base font-extrabold uppercase tracking-widest disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:px-10 sm:py-4 sm:text-lg"
                 style={{
                   backgroundColor: theme.bg,
                   color: theme.foreground,
                 }}
                 onClick={handleAddToCart}
-                disabled={!isAvailable || added}
+                disabled={!isAvailable || added || hasReachedStockLimit}
                 {...tid("hero-add-to-cart")}
               >
                 <ShoppingCart className="size-5" />

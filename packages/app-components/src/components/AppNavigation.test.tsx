@@ -6,6 +6,21 @@ vi.mock("next-intl", () => ({
   useLocale: () => "en",
 }));
 
+vi.mock("next/link", () => ({
+  default: ({
+    href,
+    children,
+    ...props
+  }: {
+    href: string;
+    children: unknown;
+  }) => (
+    <a href={href} {...props}>
+      {children}
+    </a>
+  ),
+}));
+
 type PermissionState = {
   grantedKeys: string[];
   isLoading: boolean;
@@ -81,7 +96,7 @@ describe("AppNavigation", () => {
     expect(screen.getByText("t:brand")).toBeInTheDocument();
   });
 
-  it("hides cross-app navigation links while signed out", () => {
+  it("shows public app links while signed out and hides permissioned apps", () => {
     render(
       <AppNavigation
         currentApp="store"
@@ -90,10 +105,10 @@ describe("AppNavigation", () => {
         permissionState={defaultPermissionState}
       />,
     );
-    expect(screen.queryByTestId("nav-link-store")).not.toBeInTheDocument();
-    expect(screen.queryByTestId("nav-link-landing")).not.toBeInTheDocument();
-    expect(screen.queryByTestId("nav-link-auth")).not.toBeInTheDocument();
-    expect(screen.queryByTestId("nav-link-playground")).not.toBeInTheDocument();
+    expect(screen.getByTestId("nav-link-store")).toBeInTheDocument();
+    expect(screen.getByTestId("nav-link-landing")).toBeInTheDocument();
+    expect(screen.getByTestId("nav-link-auth")).toBeInTheDocument();
+    expect(screen.getByTestId("nav-link-playground")).toBeInTheDocument();
     expect(screen.queryByTestId("nav-link-admin")).not.toBeInTheDocument();
     expect(screen.queryByTestId("nav-link-studio")).not.toBeInTheDocument();
     expect(screen.queryByTestId("nav-link-payments")).not.toBeInTheDocument();
@@ -252,5 +267,44 @@ describe("AppNavigation", () => {
     expect(screen.queryByTestId("nav-link-studio")).not.toBeInTheDocument();
     expect(screen.queryByTestId("nav-link-payments")).not.toBeInTheDocument();
     expect(screen.queryByTestId("nav-link-admin")).not.toBeInTheDocument();
+  });
+
+  it("clears preserved permissioned links after sign-out but keeps public links", () => {
+    const { rerender } = render(
+      <AppNavigation
+        currentApp="store"
+        urls={defaultUrls}
+        locales={defaultLocales}
+        permissionState={{
+          grantedKeys: ["products.read"],
+          isLoading: false,
+          isAuthenticated: true,
+        }}
+      />,
+    );
+
+    expect(screen.getByTestId("nav-link-store")).toBeInTheDocument();
+    expect(screen.getByTestId("nav-link-studio")).toBeInTheDocument();
+
+    rerender(
+      <AppNavigation
+        currentApp="store"
+        urls={defaultUrls}
+        locales={defaultLocales}
+        permissionState={{
+          grantedKeys: [],
+          isLoading: true,
+          isAuthenticated: false,
+        }}
+      />,
+    );
+
+    expect(screen.getByTestId("nav-link-store")).toBeInTheDocument();
+    expect(screen.getByTestId("nav-link-landing")).toBeInTheDocument();
+    expect(screen.getByTestId("nav-link-auth")).toBeInTheDocument();
+    expect(screen.getByTestId("nav-link-playground")).toBeInTheDocument();
+    expect(screen.queryByTestId("nav-link-studio")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("nav-link-admin")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("nav-link-payments")).not.toBeInTheDocument();
   });
 });

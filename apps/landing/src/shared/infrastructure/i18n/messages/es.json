@@ -8,10 +8,15 @@
       "above": "Un mercado para el fandom",
       "title": "Donde vive el arte furry.",
       "subtitle": "Comisiones. Prints. Fursuits. Arte digital. Construido por artistas, para todos los que aman lo que crean.",
-      "cta": "Entrar a la galería"
+      "cta": "Entrar a la tienda"
     },
     "sections": {
       "categories": "Categorías",
+      "categoriesTitle": "Explora la tienda por categoría.",
+      "categoriesIntro": "Un vistazo rápido a lo que encuentras dentro de la tienda.",
+      "categoriesEyebrow": "Índice de tienda",
+      "categoriesNote": "Seis rincones del catálogo, cada uno con su propio ritmo.",
+      "categoriesCardKicker": "Dentro de la tienda",
       "roles": "Para creadores y coleccionistas"
     },
     "categories": {

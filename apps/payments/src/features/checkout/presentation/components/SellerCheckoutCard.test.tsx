@@ -1,6 +1,7 @@
 import { render, screen, fireEvent } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
+import { useSellerPaymentMethods } from "@/features/checkout/application/hooks/useSellerPaymentMethods";
 import type { CartItem } from "@/features/checkout/domain/types";
 
 vi.mock("next-intl", () => ({
@@ -21,16 +22,31 @@ vi.mock("@/shared/application/utils/formatCop", () => ({
 vi.mock(
   "@/features/checkout/application/hooks/useSellerPaymentMethods",
   () => ({
-    useSellerPaymentMethods: () => ({
-      data: [],
+    useSellerPaymentMethods: vi.fn(() => ({
+      data: {
+        methods: [],
+        hasStockIssues: false,
+      },
       isLoading: false,
-    }),
+    })),
   }),
 );
 
 vi.mock("./SellerCheckoutContent", () => ({
-  SellerCheckoutContent: () => (
-    <div data-testid="seller-checkout-content">Content</div>
+  SellerCheckoutContent: ({
+    hasStockIssues,
+    error,
+  }: {
+    hasStockIssues: boolean;
+    error: string | null;
+  }) => (
+    <div
+      data-testid="seller-checkout-content"
+      data-has-stock-issues={String(hasStockIssues)}
+      data-error={error ?? ""}
+    >
+      Content
+    </div>
   ),
 }));
 
@@ -112,5 +128,26 @@ describe("SellerCheckoutCard", () => {
   it("has the correct wrapper test ID", () => {
     render(<SellerCheckoutCard {...defaultProps} />);
     expect(screen.getByTestId("seller-checkout-s1")).toBeInTheDocument();
+  });
+
+  it("passes the stock error state to content when payment info is withheld", () => {
+    vi.mocked(useSellerPaymentMethods).mockReturnValue({
+      data: {
+        methods: [],
+        hasStockIssues: true,
+      },
+      isLoading: false,
+    } as unknown as ReturnType<typeof useSellerPaymentMethods>);
+
+    render(<SellerCheckoutCard {...defaultProps} />);
+
+    expect(screen.getByTestId("seller-checkout-content")).toHaveAttribute(
+      "data-has-stock-issues",
+      "true",
+    );
+    expect(screen.getByTestId("seller-checkout-content")).toHaveAttribute(
+      "data-error",
+      "stock_error",
+    );
   });
 });

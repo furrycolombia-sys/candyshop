@@ -30,6 +30,7 @@
   "sidebar": {
     "buyer": "Buyer",
     "seller": "Seller",
+    "menu": "Payments Menu",
     "checkout": "Checkout",
     "myPurchases": "My Purchases",
     "paymentMethods": "Payment Methods",

@@ -4,17 +4,7 @@ import { renderHook, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-vi.mock("api/supabase", () => ({
-  createBrowserSupabaseClient: vi.fn(() => ({ auth: {} })),
-}));
-
-vi.mock("@/features/checkout/infrastructure/checkoutQueries", () => ({
-  fetchSellerPaymentMethods: vi.fn(),
-}));
-
 import { useSellerPaymentMethods } from "./useSellerPaymentMethods";
-
-import { fetchSellerPaymentMethods } from "@/features/checkout/infrastructure/checkoutQueries";
 
 function createWrapper() {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
@@ -24,10 +14,13 @@ function createWrapper() {
 }
 
 describe("useSellerPaymentMethods", () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.stubGlobal("fetch", vi.fn());
+  });
 
   it("returns payment methods on success", async () => {
-    const mock: import("@/features/checkout/domain/types").SellerPaymentMethodWithType[] =
+    const mockMethods: import("@/features/checkout/domain/types").SellerPaymentMethodWithType[] =
       [
         {
           id: "pm1",
@@ -42,16 +35,73 @@ describe("useSellerPaymentMethods", () => {
           seller_note_es: null,
         },
       ];
-    vi.mocked(fetchSellerPaymentMethods).mockResolvedValue(mock);
-    const { result } = renderHook(() => useSellerPaymentMethods("seller-1"), {
-      wrapper: createWrapper(),
-    });
+    vi.mocked(fetch).mockResolvedValue({
+      ok: true,
+      json: async () => ({ methods: mockMethods, hasStockIssues: false }),
+    } as Response);
+    const { result } = renderHook(
+      () =>
+        useSellerPaymentMethods("seller-1", [
+          {
+            id: "product-1",
+            name_en: "Widget",
+            name_es: "Widget",
+            price_cop: 5000,
+            price_usd: 1,
+            seller_id: "seller-1",
+            quantity: 2,
+            images: [],
+            max_quantity: 5,
+          },
+        ]),
+      {
+        wrapper: createWrapper(),
+      },
+    );
     await waitFor(() => expect(result.current.isLoading).toBe(false));
-    expect(result.current.data).toEqual(mock);
+    expect(result.current.data).toEqual({
+      methods: mockMethods,
+      hasStockIssues: false,
+    });
   });
 
   it("does not fetch when sellerId is empty", () => {
-    renderHook(() => useSellerPaymentMethods(""), { wrapper: createWrapper() });
-    expect(fetchSellerPaymentMethods).not.toHaveBeenCalled();
+    renderHook(() => useSellerPaymentMethods("", []), {
+      wrapper: createWrapper(),
+    });
+    expect(fetch).not.toHaveBeenCalled();
+  });
+
+  it("returns a stock-issue response without payment methods", async () => {
+    vi.mocked(fetch).mockResolvedValue({
+      ok: true,
+      json: async () => ({ methods: [], hasStockIssues: true }),
+    } as Response);
+
+    const { result } = renderHook(
+      () =>
+        useSellerPaymentMethods("seller-1", [
+          {
+            id: "product-1",
+            name_en: "Widget",
+            name_es: "Widget",
+            price_cop: 5000,
+            price_usd: 1,
+            seller_id: "seller-1",
+            quantity: 99,
+            images: [],
+            max_quantity: 1,
+          },
+        ]),
+      {
+        wrapper: createWrapper(),
+      },
+    );
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(result.current.data).toEqual({
+      methods: [],
+      hasStockIssues: true,
+    });
   });
 });

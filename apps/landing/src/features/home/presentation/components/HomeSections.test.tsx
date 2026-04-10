@@ -6,6 +6,21 @@ vi.mock("next-intl", () => ({
     namespace ? `${namespace}.${key}` : key,
 }));
 
+vi.mock("next/link", () => ({
+  default: ({
+    href,
+    children,
+    ...props
+  }: {
+    href: string;
+    children: unknown;
+  }) => (
+    <a href={href} {...props}>
+      {children}
+    </a>
+  ),
+}));
+
 vi.mock("shared", () => ({
   tid: (id: string) => ({ "data-testid": id }),
 }));

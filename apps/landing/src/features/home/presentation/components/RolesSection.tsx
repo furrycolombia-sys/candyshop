@@ -1,6 +1,7 @@
 "use client";
 
 import { ArrowRight } from "lucide-react";
+import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { tid } from "shared";
 
@@ -71,7 +72,7 @@ export function RolesSection() {
               <p className="mb-8 text-base/relaxed opacity-90">
                 {t(`${key}.description`)}
               </p>
-              <a
+              <Link
                 href={appUrls.store}
                 className="button-brutal button-press-sm shadow-brutal-sm mt-auto self-start px-6 py-3 text-sm"
                 style={{
@@ -87,7 +88,7 @@ export function RolesSection() {
                   className="size-4"
                   strokeWidth={2.5}
                 />
-              </a>
+              </Link>
             </div>
           ))}
         </div>
