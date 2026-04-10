@@ -32,7 +32,8 @@
     "shared": "workspace:*",
     "tailwind-merge": "^3.3.0",
     "tw-animate-css": "^1.3.4",
-    "ui": "workspace:*"
+    "ui": "workspace:*",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@faker-js/faker": "^9.8.0",

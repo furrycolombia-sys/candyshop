@@ -19,9 +19,17 @@ interface UserRowProps {
   user: UserProfileSummary;
   role: UserRole;
   onClick: (userId: string) => void;
+  isSelected?: boolean;
+  onSelectToggle?: (userId: string, selected: boolean) => void;
 }
 
-export function UserRow({ user, role, onClick }: UserRowProps) {
+export function UserRow({
+  user,
+  role,
+  onClick,
+  isSelected,
+  onSelectToggle,
+}: UserRowProps) {
   const t = useTranslations("users.lastSeen");
   const avatarUrl = user.display_avatar_url ?? user.avatar_url;
   const lastSeen = formatLastSeen(user.last_seen_at);
@@ -32,6 +40,14 @@ export function UserRow({ user, role, onClick }: UserRowProps) {
       onClick={() => onClick(user.id)}
       {...tid(`user-row-${user.id}`)}
     >
+      <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
+        <input
+          type="checkbox"
+          checked={isSelected}
+          onChange={(e) => onSelectToggle?.(user.id, e.target.checked)}
+          className="size-4 rounded-sm border-2 border-foreground"
+        />
+      </td>
       <td className="px-4 py-3">
         <Avatar className="size-8 rounded-none border-2 border-foreground">
           {avatarUrl && (
