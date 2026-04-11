@@ -93,6 +93,8 @@
     "upserts",
     "vabc",
     "vite",
-    "vitest"
+    "Vitest",
+    "Traer",
+    "permissioned"
   ]
 }

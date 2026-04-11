@@ -24,8 +24,10 @@ const wantsStop = args.has("--stop");
 const skipBuild = args.has("--no-build");
 const wantsHelp = args.has("--help") || args.has("-h");
 
-const containerName = process.env.SITE_PROD_CONTAINER_NAME?.trim() || "candyshop-prod";
-const imageName = process.env.SITE_PROD_IMAGE_NAME?.trim() || "candyshop-local-prod";
+const containerName =
+  process.env.SITE_PROD_CONTAINER_NAME?.trim() || "candyshop-prod";
+const imageName =
+  process.env.SITE_PROD_IMAGE_NAME?.trim() || "candyshop-local-prod";
 const port = process.env.SITE_PROD_PORT?.trim() || "8088";
 const localBaseUrl = `http://localhost:${port}`;
 
@@ -46,7 +48,9 @@ function commandExists(command) {
 
 function ensureRequiredCommand(command, installHint) {
   if (commandExists(command)) return;
-  fail(`\`${command}\` is not installed or not available in PATH. ${installHint}`);
+  fail(
+    `\`${command}\` is not installed or not available in PATH. ${installHint}`,
+  );
 }
 
 function run(command, commandArgs, options = {}) {
@@ -210,7 +214,10 @@ Notes:
   process.exit(0);
 }
 
-ensureRequiredCommand(dockerBin, "Install Docker Desktop and make sure it is running.");
+ensureRequiredCommand(
+  dockerBin,
+  "Install Docker Desktop and make sure it is running.",
+);
 
 if (wantsStop) {
   log(`Stopping container \`${containerName}\` if it exists...`);

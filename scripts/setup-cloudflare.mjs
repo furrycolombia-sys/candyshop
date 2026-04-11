@@ -108,7 +108,8 @@ if (!ensureCommand("pnpm")) {
 
 const requestedBin = normalizeValue(args.bin) || process.env.CLOUDFLARED_BIN;
 const cloudflaredBin =
-  requestedBin || (process.platform === "win32" ? "cloudflared.exe" : "cloudflared");
+  requestedBin ||
+  (process.platform === "win32" ? "cloudflared.exe" : "cloudflared");
 
 if (!ensureCommand(cloudflaredBin)) {
   fail(
