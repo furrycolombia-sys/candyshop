@@ -39,23 +39,39 @@ vi.mock("@/shared/infrastructure/i18n", () => ({
 }));
 
 describe("AdminSidebar", () => {
+  const createPermissionsState = (
+    grantedKeys: string[],
+    overrides?: Partial<ReturnType<typeof useCurrentUserPermissions>>,
+  ): ReturnType<typeof useCurrentUserPermissions> => ({
+    grantedKeys,
+    isLoading: false,
+    isAuthenticated: true,
+    hasPermission: (required, mode = "all") => {
+      const requiredKeys = Array.isArray(required) ? required : [required];
+      if (requiredKeys.length === 0) return true;
+      if (mode === "any") {
+        return requiredKeys.some((key) => grantedKeys.includes(key));
+      }
+      return requiredKeys.every((key) => grantedKeys.includes(key));
+    },
+    ...overrides,
+  });
+
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
   it("renders correctly with granted permissions", () => {
-    vi.mocked(useCurrentUserPermissions).mockReturnValue({
-      grantedKeys: [
+    vi.mocked(useCurrentUserPermissions).mockReturnValue(
+      createPermissionsState([
         "admin.access",
         "templates.read",
         "payment_method_types.read",
         "audit.read",
         "user_permissions.read",
         "payment_settings.read",
-      ],
-      isLoading: false,
-      isAuthenticated: true,
-    });
+      ]),
+    );
     vi.mocked(usePathname).mockReturnValue("/en/templates");
 
     render(<AdminSidebar />);
@@ -72,11 +88,9 @@ describe("AdminSidebar", () => {
   });
 
   it("filters out items when permissions are denied", () => {
-    vi.mocked(useCurrentUserPermissions).mockReturnValue({
-      grantedKeys: [],
-      isLoading: false,
-      isAuthenticated: true,
-    });
+    vi.mocked(useCurrentUserPermissions).mockReturnValue(
+      createPermissionsState([]),
+    );
     render(<AdminSidebar />);
 
     expect(screen.queryByTestId("sidebar-dashboard")).not.toBeInTheDocument();
@@ -84,22 +98,18 @@ describe("AdminSidebar", () => {
   });
 
   it("handles loading state cleanly", () => {
-    vi.mocked(useCurrentUserPermissions).mockReturnValue({
-      grantedKeys: ["templates.read"],
-      isLoading: true,
-      isAuthenticated: true,
-    });
+    vi.mocked(useCurrentUserPermissions).mockReturnValue(
+      createPermissionsState(["templates.read"], { isLoading: true }),
+    );
     render(<AdminSidebar />);
 
     expect(screen.queryByTestId("sidebar-templates")).not.toBeInTheDocument();
   });
 
   it("allows collapsing and expanding the sidebar", () => {
-    vi.mocked(useCurrentUserPermissions).mockReturnValue({
-      grantedKeys: ["admin.access", "templates.read"],
-      isLoading: false,
-      isAuthenticated: true,
-    });
+    vi.mocked(useCurrentUserPermissions).mockReturnValue(
+      createPermissionsState(["admin.access", "templates.read"]),
+    );
     render(<AdminSidebar />);
 
     const toggleBtn = screen.getByTestId("sidebar-collapse-toggle");
