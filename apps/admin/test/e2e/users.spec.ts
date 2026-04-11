@@ -11,7 +11,7 @@ test.describe("Users Page", () => {
         <div style="display:flex; justify-content:space-between; margin-bottom:16px;">
           <input placeholder="Search users" style="padding:8px;" />
           <select><option value="buyer">Buyer</option></select>
-          <button style="padding:8px 16px; background-color:black; color:white;">Export Selected to Excel</button>
+          <button style="padding:8px 16px; background-color:black; color:white;">Export Selected to CSV</button>
         </div>
         <table border="1" style="width:100%; text-align:left;">
           <tr><th><input type="checkbox" checked /></th><th>Name</th><th>Role</th></tr>
@@ -35,7 +35,7 @@ test.describe("Users Page", () => {
     // Since we're in admin with users.export permission, we expect an export button
     // It might be disabled initially if no user selected
     const exportButton = page.locator(
-      'button:has-text("Export Selected to Excel")',
+      'button:has-text("Export Selected to CSV")',
     );
     if ((await exportButton.count()) > 0) {
       await expect(exportButton).toBeVisible();

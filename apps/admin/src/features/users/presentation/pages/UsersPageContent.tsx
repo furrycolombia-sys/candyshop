@@ -1,4 +1,3 @@
-/* eslint-disable i18next/no-literal-string */
 "use client";
 
 import { useCurrentUserPermissions } from "auth/client";
@@ -7,6 +6,7 @@ import { useQueryStates } from "nuqs";
 import { useEffect, useState } from "react";
 import { tid } from "shared";
 
+import { useLogExport } from "@/features/audit/application/useAuditLog";
 import { useUsers } from "@/features/users/application/hooks/useUsers";
 import { USER_SEARCH_DEBOUNCE_MS } from "@/features/users/domain/constants";
 import { usersSearchParams } from "@/features/users/domain/searchParams";
@@ -24,6 +24,7 @@ export function UsersPageContent() {
   const [filterInput, setFilterInput] = useState(params.search);
   const { grantedKeys } = useCurrentUserPermissions();
   const canExport = grantedKeys.includes("users.export");
+  const { mutate: logExport } = useLogExport();
 
   const [selectedUsers, setSelectedUsers] = useState<Set<string>>(new Set());
   const [roleFilter, setRoleFilter] = useState("all");
@@ -47,12 +48,16 @@ export function UsersPageContent() {
     router.push(`/users/${userId}`);
   };
 
-  const handleExportExcel = () => {
+  const handleExportCsv = () => {
     const selected = users.filter((u) => selectedUsers.has(u.id));
     if (selected.length === 0) return;
 
+    const timestamp = new Date().toISOString().replaceAll(/[:.]/g, "-");
     const csvContent = exportUsersToCsv(selected);
-    downloadCsv(csvContent, "users-export.csv");
+
+    downloadCsv(csvContent, `users-export-${timestamp}.csv`);
+
+    logExport({ table: "users", count: selected.length });
   };
 
   return (
@@ -84,7 +89,7 @@ export function UsersPageContent() {
           itemFilter={itemFilter}
           onItemFilterChange={setItemFilter}
           canExport={canExport}
-          onExportExcel={handleExportExcel}
+          onExportCsv={handleExportCsv}
         />
       </div>
     </main>

@@ -12,6 +12,8 @@ const PARAM_TABLE_NAME = "table_name";
 const PARAM_ACTION_TYPE = "action_type";
 const ORDER_BY_TIMESTAMP_DESC = "action_timestamp.desc";
 const POSTGREST_EQ_PREFIX = "eq.";
+const AUDIT_SCHEMA = "audit";
+const JSON_CONTENT_TYPE = "application/json";
 
 /** Get the Supabase REST URL and key from environment */
 function getSupabaseConfig() {
@@ -42,8 +44,8 @@ async function auditQuery(
       apikey: key,
       Authorization: `Bearer ${token}`, // eslint-disable-line i18next/no-literal-string -- HTTP header
       // Tell PostgREST to use the audit schema
-      "Accept-Profile": "audit",
-      Accept: "application/json",
+      "Accept-Profile": AUDIT_SCHEMA,
+      Accept: JSON_CONTENT_TYPE,
     },
   });
 
@@ -90,4 +92,42 @@ export async function fetchAuditTableNames(
     (r) => r.table_name,
   );
   return [...new Set(names)];
+}
+
+/** Log a custom manual action to the audit schema directly via POST */
+export async function insertAuditLog(
+  supabase: SupabaseClient,
+  actionType: string,
+  tableName: string,
+  rowData: unknown = null,
+): Promise<void> {
+  const { url, key } = getSupabaseConfig();
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+  const token = session?.access_token ?? key;
+
+  const endpoint = `${url}/rest/v1/logged_actions`;
+
+  const response = await fetch(endpoint, {
+    method: "POST",
+    headers: {
+      apikey: key,
+      Authorization: `Bearer ${token}`, // eslint-disable-line i18next/no-literal-string -- HTTP header
+      "Content-Profile": AUDIT_SCHEMA,
+      "Content-Type": JSON_CONTENT_TYPE,
+      Prefer: "return=minimal", // eslint-disable-line i18next/no-literal-string -- HTTP header
+    },
+    body: JSON.stringify({
+      action_type: actionType,
+      schema_name: "public",
+      table_name: tableName,
+      row_data: rowData,
+      user_id: session?.user?.id ?? null,
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Audit insert failed: ${String(response.status)}`);
+  }
 }

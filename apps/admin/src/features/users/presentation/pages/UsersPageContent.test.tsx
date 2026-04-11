@@ -11,6 +11,12 @@ vi.mock("auth/client", () => ({
   useCurrentUserPermissions: vi.fn(() => ({ grantedKeys: ["users.export"] })),
 }));
 
+vi.mock("@/features/audit/application/useAuditLog", () => ({
+  useLogExport: vi.fn(() => ({
+    mutate: vi.fn(),
+  })),
+}));
+
 vi.mock("nuqs", () => ({
   useQueryStates: vi.fn(() => [{ search: "", page: 1 }, vi.fn()]),
   parseAsString: { withDefault: () => ({}) },

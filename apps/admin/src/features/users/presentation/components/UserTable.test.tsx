@@ -53,7 +53,7 @@ describe("UserTable", () => {
     itemFilter: "all",
     onItemFilterChange: vi.fn(),
     canExport: true,
-    onExportExcel: vi.fn(),
+    onExportCsv: vi.fn(),
   };
 
   it("renders users and filter inputs correctly", () => {
@@ -84,7 +84,7 @@ describe("UserTable", () => {
       name: /Export Selected/i,
     });
     fireEvent.click(downloadBtn);
-    expect(defaultProps.onExportExcel).toHaveBeenCalled();
+    expect(defaultProps.onExportCsv).toHaveBeenCalled();
   });
 
   it("shows loading state", () => {
