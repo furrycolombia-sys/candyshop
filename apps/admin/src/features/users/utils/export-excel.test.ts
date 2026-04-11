@@ -8,10 +8,9 @@ import type { UserProfileSummary } from "@/features/users/domain/types";
 vi.mock("xlsx", () => ({
   utils: {
     json_to_sheet: vi.fn(),
-    book_new: vi.fn(),
+    book_new: vi.fn(() => ({ MockWorkbook: true })),
     book_append_sheet: vi.fn(),
   },
-  writeFile: vi.fn(),
 }));
 
 describe("exportUsersToExcel", () => {
@@ -27,7 +26,7 @@ describe("exportUsersToExcel", () => {
       },
     ];
 
-    exportUsersToExcel(mockUsers);
+    const workbook = exportUsersToExcel(mockUsers);
 
     expect(xlsx.utils.json_to_sheet).toHaveBeenCalledWith([
       {
@@ -41,6 +40,6 @@ describe("exportUsersToExcel", () => {
     expect(xlsx.utils.book_new).toHaveBeenCalled();
     expect(xlsx.utils.book_append_sheet).toHaveBeenCalled();
 
-    expect(xlsx.writeFile).toHaveBeenCalledWith(undefined, "users-export.xlsx");
+    expect(workbook).toEqual({ MockWorkbook: true });
   });
 });

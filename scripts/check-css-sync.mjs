@@ -22,12 +22,12 @@ const CSS_PATH = "src/app/globals.css";
 
 // Lines to ignore when comparing (regex patterns)
 const IGNORE_PATTERNS = [
-  /^\/\*.*\*\/$/,         // Single-line comments
-  /^\/\*/,                // Start of multi-line comment
-  /^\*\//,                // End of multi-line comment
-  /^\s*\*/,               // Middle of multi-line comment
-  /^@source\s+/,          // @source directive (path varies by app)
-  /^\s*$/,                // Empty lines
+  /^\/\*.*\*\/$/, // Single-line comments
+  /^\/\*/, // Start of multi-line comment
+  /^\*\//, // End of multi-line comment
+  /^\s*\*/, // Middle of multi-line comment
+  /^@source\s+/, // @source directive (path varies by app)
+  /^\s*$/, // Empty lines
 ];
 
 // Markers for app-specific CSS blocks that should be excluded from sync comparison
@@ -94,7 +94,7 @@ function checkCSSSync() {
     if (!content.includes("@source")) {
       errors.push(
         `Missing @source directive in apps/${app}/${CSS_PATH}\n` +
-          `  Add: @source "../../../../packages/ui/src/**/*.{ts,tsx}";`
+          `  Add: @source "../../../../packages/ui/src/**/*.{ts,tsx}";`,
       );
     }
   }
@@ -111,7 +111,7 @@ function checkCSSSync() {
 
       if (content !== reference) {
         errors.push(
-          `CSS mismatch between apps/${referenceApp}/${CSS_PATH} and apps/${app}/${CSS_PATH}`
+          `CSS mismatch between apps/${referenceApp}/${CSS_PATH} and apps/${app}/${CSS_PATH}`,
         );
 
         // Find specific differences
@@ -135,7 +135,9 @@ function checkCSSSync() {
         if (diffs.length > 0) {
           errors.push("Differences:\n" + diffs.slice(0, 30).join("\n"));
           if (diffs.length > 30) {
-            errors.push(`  ... and ${Math.floor((diffs.length - 30) / 3)} more differences`);
+            errors.push(
+              `  ... and ${Math.floor((diffs.length - 30) / 3)} more differences`,
+            );
           }
         }
       }
@@ -153,7 +155,9 @@ function checkCSSSync() {
   }
 
   console.log(`CSS files are in sync across ${APPS.length} apps.`);
-  console.log("  - " + APPS.map((app) => `apps/${app}/${CSS_PATH}`).join("\n  - "));
+  console.log(
+    "  - " + APPS.map((app) => `apps/${app}/${CSS_PATH}`).join("\n  - "),
+  );
   process.exit(0);
 }
 

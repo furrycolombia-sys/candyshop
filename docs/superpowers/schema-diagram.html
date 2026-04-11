@@ -1,266 +1,603 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-<meta charset="UTF-8">
-<title>Candy Shop — Database Schema</title>
-<style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { background: #0d1117; color: #e6edf3; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; overflow: hidden; }
-  svg { width: 100vw; height: 100vh; }
-  .table-box { cursor: move; }
-  .table-header { font-weight: 700; font-size: 13px; }
-  .table-col { font-size: 11px; font-family: 'Consolas', 'Monaco', monospace; }
-  .table-col-type { fill: #8b949e; }
-  .table-col-name { fill: #e6edf3; }
-  .table-col-badge { font-size: 9px; font-weight: 700; }
-
-  .legend { position: fixed; bottom: 20px; left: 20px; background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 16px; font-size: 12px; z-index: 10; }
-  .legend h3 { margin-bottom: 8px; font-size: 13px; color: #58a6ff; }
-  .legend-item { display: flex; align-items: center; gap: 8px; margin: 4px 0; }
-  .legend-line { width: 30px; height: 3px; border-radius: 2px; }
-
-  .title { position: fixed; top: 20px; left: 20px; z-index: 10; }
-  .title h1 { font-size: 18px; color: #58a6ff; }
-  .title p { font-size: 12px; color: #8b949e; margin-top: 4px; }
-</style>
-</head>
-<body>
-
-<div class="title">
-  <h1>Candy Shop — Database Schema</h1>
-  <p>Drag tables to rearrange. Colors indicate relationship domain.</p>
-</div>
-
-<div class="legend">
-  <h3>Relationships</h3>
-  <div class="legend-item"><div class="legend-line" style="background:#f97583"></div> Commerce (events, products, orders)</div>
-  <div class="legend-item"><div class="legend-line" style="background:#56d364"></div> Entitlements and Check-ins</div>
-  <div class="legend-item"><div class="legend-line" style="background:#d2a8ff"></div> Permissions and Authorization</div>
-  <div class="legend-item"><div class="legend-line" style="background:#79c0ff"></div> Transfers</div>
-  <div class="legend-item"><div class="legend-line" style="background:#ffa657"></div> Audit</div>
-</div>
-
-<svg id="canvas">
-  <defs>
-    <marker id="arrow-commerce" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="#f97583"/></marker>
-    <marker id="arrow-entitlement" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="#56d364"/></marker>
-    <marker id="arrow-permission" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="#d2a8ff"/></marker>
-    <marker id="arrow-transfer" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="#79c0ff"/></marker>
-    <marker id="arrow-audit" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="#ffa657"/></marker>
-  </defs>
-  <g id="edges"></g>
-  <g id="nodes"></g>
-</svg>
-
-<script>
-const tables = [
-  { id: 'events', x: 80, y: 80, color: '#f97583', columns: [
-    { name: 'id', type: 'uuid', badge: 'PK' },
-    { name: 'slug', type: 'text', badge: 'UK' },
-    { name: 'name_en / name_es', type: 'text' },
-    { name: 'location', type: 'text' },
-    { name: 'starts_at / ends_at', type: 'timestamptz' },
-    { name: 'max_capacity', type: 'integer?' },
-    { name: 'is_active', type: 'boolean' },
-  ]},
-  { id: 'products', x: 380, y: 80, color: '#f97583', columns: [
-    { name: 'id', type: 'uuid', badge: 'PK' },
-    { name: 'event_id', type: 'uuid?', badge: 'FK' },
-    { name: 'slug', type: 'text', badge: 'UK' },
-    { name: 'name_en / name_es', type: 'text' },
-    { name: 'type', type: 'product_type' },
-    { name: 'price_cop / price_usd', type: 'integer' },
-    { name: 'max_quantity', type: 'integer?' },
-    { name: 'is_active', type: 'boolean' },
-  ]},
-  { id: 'product_entitlements', x: 380, y: 340, color: '#56d364', columns: [
-    { name: 'id', type: 'uuid', badge: 'PK' },
-    { name: 'product_id', type: 'uuid', badge: 'FK' },
-    { name: 'name_en / name_es', type: 'text' },
-    { name: 'type', type: 'entitlement_type' },
-    { name: 'sort_order', type: 'integer' },
-  ]},
-  { id: 'orders', x: 720, y: 80, color: '#f97583', columns: [
-    { name: 'id', type: 'uuid', badge: 'PK' },
-    { name: 'user_id', type: 'uuid', badge: 'FK' },
-    { name: 'stripe_session_id', type: 'text' },
-    { name: 'payment_status', type: 'enum' },
-    { name: 'total_cop', type: 'integer' },
-  ]},
-  { id: 'order_items', x: 720, y: 340, color: '#f97583', columns: [
-    { name: 'id', type: 'uuid', badge: 'PK' },
-    { name: 'order_id', type: 'uuid', badge: 'FK' },
-    { name: 'product_id', type: 'uuid', badge: 'FK' },
-    { name: 'quantity', type: 'integer' },
-    { name: 'unit_price_cop', type: 'integer' },
-    { name: 'metadata', type: 'jsonb' },
-  ]},
-  { id: 'check_ins', x: 720, y: 580, color: '#56d364', columns: [
-    { name: 'id', type: 'uuid', badge: 'PK' },
-    { name: 'order_item_id', type: 'uuid', badge: 'FK' },
-    { name: 'entitlement_id', type: 'uuid', badge: 'FK' },
-    { name: 'qr_code', type: 'text', badge: 'UK' },
-    { name: 'checked_in', type: 'boolean' },
-    { name: 'checked_in_by', type: 'uuid?', badge: 'FK' },
-  ]},
-  { id: 'check_in_audit', x: 1060, y: 580, color: '#ffa657', columns: [
-    { name: 'id', type: 'uuid', badge: 'PK' },
-    { name: 'check_in_id', type: 'uuid', badge: 'FK' },
-    { name: 'action', type: 'audit_action' },
-    { name: 'performed_by', type: 'uuid', badge: 'FK' },
-    { name: 'reason', type: 'text?' },
-    { name: 'ip / user_agent', type: 'text' },
-  ]},
-  { id: 'ticket_transfers', x: 1060, y: 340, color: '#79c0ff', columns: [
-    { name: 'id', type: 'uuid', badge: 'PK' },
-    { name: 'order_item_id', type: 'uuid', badge: 'FK' },
-    { name: 'transfer_token', type: 'text', badge: 'UK' },
-    { name: 'from_user_id', type: 'uuid', badge: 'FK' },
-    { name: 'to_user_id', type: 'uuid?', badge: 'FK' },
-    { name: 'status', type: 'transfer_status' },
-    { name: 'expires_at', type: 'timestamptz' },
-  ]},
-  { id: 'permissions', x: 80, y: 480, color: '#d2a8ff', columns: [
-    { name: 'id', type: 'uuid', badge: 'PK' },
-    { name: 'key', type: 'text', badge: 'UK' },
-    { name: 'name_en / name_es', type: 'text' },
-    { name: 'description_en / _es', type: 'text' },
-  ]},
-  { id: 'resource_permissions', x: 80, y: 700, color: '#d2a8ff', columns: [
-    { name: 'id', type: 'uuid', badge: 'PK' },
-    { name: 'permission_id', type: 'uuid', badge: 'FK' },
-    { name: 'resource_type', type: 'text' },
-    { name: 'resource_id', type: 'uuid?' },
-  ]},
-  { id: 'user_permissions', x: 380, y: 700, color: '#d2a8ff', columns: [
-    { name: 'id', type: 'uuid', badge: 'PK' },
-    { name: 'user_id', type: 'uuid', badge: 'FK' },
-    { name: 'resource_permission_id', type: 'uuid', badge: 'FK' },
-    { name: 'mode', type: 'grant | deny' },
-    { name: 'reason', type: 'text?' },
-    { name: 'granted_by', type: 'uuid', badge: 'FK' },
-    { name: 'expires_at', type: 'timestamptz?' },
-  ]},
-];
-
-const edges = [
-  { from: 'events', to: 'products', color: '#f97583', marker: 'arrow-commerce' },
-  { from: 'products', to: 'order_items', color: '#f97583', marker: 'arrow-commerce' },
-  { from: 'orders', to: 'order_items', color: '#f97583', marker: 'arrow-commerce' },
-  { from: 'products', to: 'product_entitlements', color: '#56d364', marker: 'arrow-entitlement' },
-  { from: 'order_items', to: 'check_ins', color: '#56d364', marker: 'arrow-entitlement' },
-  { from: 'product_entitlements', to: 'check_ins', color: '#56d364', marker: 'arrow-entitlement' },
-  { from: 'check_ins', to: 'check_in_audit', color: '#ffa657', marker: 'arrow-audit' },
-  { from: 'order_items', to: 'ticket_transfers', color: '#79c0ff', marker: 'arrow-transfer' },
-  { from: 'permissions', to: 'resource_permissions', color: '#d2a8ff', marker: 'arrow-permission' },
-  { from: 'resource_permissions', to: 'user_permissions', color: '#d2a8ff', marker: 'arrow-permission' },
-];
-
-const COL_H = 20;
-const HDR_H = 32;
-const PAD = 12;
-const W = 240;
-const svgEl = document.getElementById('canvas');
-const nodesG = document.getElementById('nodes');
-const edgesG = document.getElementById('edges');
-
-function tableH(t) { return HDR_H + t.columns.length * COL_H + PAD; }
-
-function getPort(t, side) {
-  const h = tableH(t);
-  return { x: side === 'right' ? t.x + W : t.x, y: t.y + h / 2 };
-}
-
-function createSvgEl(tag, attrs) {
-  const el = document.createElementNS('http://www.w3.org/2000/svg', tag);
-  for (const [k, v] of Object.entries(attrs)) el.setAttribute(k, v);
-  return el;
-}
-
-function drawEdges() {
-  while (edgesG.firstChild) edgesG.removeChild(edgesG.firstChild);
-  for (const e of edges) {
-    const from = tables.find(t => t.id === e.from);
-    const to = tables.find(t => t.id === e.to);
-    const fp = getPort(from, from.x < to.x ? 'right' : (from.x > to.x ? 'left' : 'right'));
-    const tp = getPort(to, to.x < from.x ? 'right' : (to.x > from.x ? 'left' : 'left'));
-    const dx = (tp.x - fp.x) * 0.5;
-    edgesG.appendChild(createSvgEl('path', {
-      d: 'M' + fp.x + ',' + fp.y + ' C' + (fp.x+dx) + ',' + fp.y + ' ' + (tp.x-dx) + ',' + tp.y + ' ' + tp.x + ',' + tp.y,
-      fill: 'none', stroke: e.color, 'stroke-width': '2.5', 'stroke-opacity': '0.7',
-      'marker-end': 'url(#' + e.marker + ')'
-    }));
-  }
-}
-
-function drawNodes() {
-  while (nodesG.firstChild) nodesG.removeChild(nodesG.firstChild);
-  for (const t of tables) {
-    const h = tableH(t);
-    const g = createSvgEl('g', { transform: 'translate(' + t.x + ',' + t.y + ')' });
-    g.classList.add('table-box');
-
-    g.appendChild(createSvgEl('rect', { x: 2, y: 2, width: W, height: h, rx: 8, fill: '#000', opacity: '0.3' }));
-    g.appendChild(createSvgEl('rect', { width: W, height: h, rx: 8, fill: '#161b22', stroke: '#30363d' }));
-    g.appendChild(createSvgEl('rect', { width: W, height: HDR_H, rx: 8, fill: t.color, opacity: '0.15' }));
-    g.appendChild(createSvgEl('rect', { y: HDR_H - 8, width: W, height: 8, fill: t.color, opacity: '0.15' }));
-
-    const title = createSvgEl('text', { x: PAD, y: 21, fill: t.color });
-    title.classList.add('table-header');
-    title.textContent = t.id;
-    g.appendChild(title);
-
-    t.columns.forEach(function(col, i) {
-      const y = HDR_H + 15 + i * COL_H;
-
-      const name = createSvgEl('text', { x: PAD, y: y });
-      name.classList.add('table-col', 'table-col-name');
-      name.textContent = col.name;
-      g.appendChild(name);
-
-      const type = createSvgEl('text', { x: W - PAD, y: y, 'text-anchor': 'end' });
-      type.classList.add('table-col', 'table-col-type');
-      type.textContent = col.type;
-      g.appendChild(type);
-
-      if (col.badge) {
-        var bw = col.badge.length * 6 + 8;
-        var bx = W - PAD - col.type.length * 6.5 - bw - 6;
-        var by = y - 10;
-        var badgeColor = col.badge === 'PK' ? '#58a6ff' : col.badge.startsWith('FK') ? '#f97583' : '#56d364';
-        var badgeBgColor = col.badge === 'PK' ? '#388bfd33' : col.badge.startsWith('FK') ? '#f9758333' : '#56d36433';
-
-        g.appendChild(createSvgEl('rect', { x: bx, y: by, width: bw, height: 14, rx: 3, fill: badgeBgColor }));
-        var badge = createSvgEl('text', { x: bx + bw/2, y: by + 10.5, 'text-anchor': 'middle', fill: badgeColor });
-        badge.classList.add('table-col-badge');
-        badge.textContent = col.badge;
-        g.appendChild(badge);
+  <head>
+    <meta charset="UTF-8" />
+    <title>Candy Shop — Database Schema</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
       }
-    });
+      body {
+        background: #0d1117;
+        color: #e6edf3;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        overflow: hidden;
+      }
+      svg {
+        width: 100vw;
+        height: 100vh;
+      }
+      .table-box {
+        cursor: move;
+      }
+      .table-header {
+        font-weight: 700;
+        font-size: 13px;
+      }
+      .table-col {
+        font-size: 11px;
+        font-family: "Consolas", "Monaco", monospace;
+      }
+      .table-col-type {
+        fill: #8b949e;
+      }
+      .table-col-name {
+        fill: #e6edf3;
+      }
+      .table-col-badge {
+        font-size: 9px;
+        font-weight: 700;
+      }
 
-    (function(table, group) {
-      var dragging = false, ox = 0, oy = 0;
-      group.addEventListener('mousedown', function(e) {
-        dragging = true;
-        ox = e.clientX - table.x;
-        oy = e.clientY - table.y;
-      });
-      window.addEventListener('mousemove', function(e) {
-        if (!dragging) return;
-        table.x = e.clientX - ox;
-        table.y = e.clientY - oy;
-        group.setAttribute('transform', 'translate(' + table.x + ',' + table.y + ')');
-        drawEdges();
-      });
-      window.addEventListener('mouseup', function() { dragging = false; });
-    })(t, g);
+      .legend {
+        position: fixed;
+        bottom: 20px;
+        left: 20px;
+        background: #161b22;
+        border: 1px solid #30363d;
+        border-radius: 8px;
+        padding: 16px;
+        font-size: 12px;
+        z-index: 10;
+      }
+      .legend h3 {
+        margin-bottom: 8px;
+        font-size: 13px;
+        color: #58a6ff;
+      }
+      .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin: 4px 0;
+      }
+      .legend-line {
+        width: 30px;
+        height: 3px;
+        border-radius: 2px;
+      }
 
-    nodesG.appendChild(g);
-  }
-}
+      .title {
+        position: fixed;
+        top: 20px;
+        left: 20px;
+        z-index: 10;
+      }
+      .title h1 {
+        font-size: 18px;
+        color: #58a6ff;
+      }
+      .title p {
+        font-size: 12px;
+        color: #8b949e;
+        margin-top: 4px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="title">
+      <h1>Candy Shop — Database Schema</h1>
+      <p>Drag tables to rearrange. Colors indicate relationship domain.</p>
+    </div>
 
-drawEdges();
-drawNodes();
-</script>
-</body>
+    <div class="legend">
+      <h3>Relationships</h3>
+      <div class="legend-item">
+        <div class="legend-line" style="background: #f97583"></div>
+        Commerce (events, products, orders)
+      </div>
+      <div class="legend-item">
+        <div class="legend-line" style="background: #56d364"></div>
+        Entitlements and Check-ins
+      </div>
+      <div class="legend-item">
+        <div class="legend-line" style="background: #d2a8ff"></div>
+        Permissions and Authorization
+      </div>
+      <div class="legend-item">
+        <div class="legend-line" style="background: #79c0ff"></div>
+        Transfers
+      </div>
+      <div class="legend-item">
+        <div class="legend-line" style="background: #ffa657"></div>
+        Audit
+      </div>
+    </div>
+
+    <svg id="canvas">
+      <defs>
+        <marker
+          id="arrow-commerce"
+          markerWidth="8"
+          markerHeight="6"
+          refX="8"
+          refY="3"
+          orient="auto"
+        >
+          <path d="M0,0 L8,3 L0,6" fill="#f97583" />
+        </marker>
+        <marker
+          id="arrow-entitlement"
+          markerWidth="8"
+          markerHeight="6"
+          refX="8"
+          refY="3"
+          orient="auto"
+        >
+          <path d="M0,0 L8,3 L0,6" fill="#56d364" />
+        </marker>
+        <marker
+          id="arrow-permission"
+          markerWidth="8"
+          markerHeight="6"
+          refX="8"
+          refY="3"
+          orient="auto"
+        >
+          <path d="M0,0 L8,3 L0,6" fill="#d2a8ff" />
+        </marker>
+        <marker
+          id="arrow-transfer"
+          markerWidth="8"
+          markerHeight="6"
+          refX="8"
+          refY="3"
+          orient="auto"
+        >
+          <path d="M0,0 L8,3 L0,6" fill="#79c0ff" />
+        </marker>
+        <marker
+          id="arrow-audit"
+          markerWidth="8"
+          markerHeight="6"
+          refX="8"
+          refY="3"
+          orient="auto"
+        >
+          <path d="M0,0 L8,3 L0,6" fill="#ffa657" />
+        </marker>
+      </defs>
+      <g id="edges"></g>
+      <g id="nodes"></g>
+    </svg>
+
+    <script>
+      const tables = [
+        {
+          id: "events",
+          x: 80,
+          y: 80,
+          color: "#f97583",
+          columns: [
+            { name: "id", type: "uuid", badge: "PK" },
+            { name: "slug", type: "text", badge: "UK" },
+            { name: "name_en / name_es", type: "text" },
+            { name: "location", type: "text" },
+            { name: "starts_at / ends_at", type: "timestamptz" },
+            { name: "max_capacity", type: "integer?" },
+            { name: "is_active", type: "boolean" },
+          ],
+        },
+        {
+          id: "products",
+          x: 380,
+          y: 80,
+          color: "#f97583",
+          columns: [
+            { name: "id", type: "uuid", badge: "PK" },
+            { name: "event_id", type: "uuid?", badge: "FK" },
+            { name: "slug", type: "text", badge: "UK" },
+            { name: "name_en / name_es", type: "text" },
+            { name: "type", type: "product_type" },
+            { name: "price_cop / price_usd", type: "integer" },
+            { name: "max_quantity", type: "integer?" },
+            { name: "is_active", type: "boolean" },
+          ],
+        },
+        {
+          id: "product_entitlements",
+          x: 380,
+          y: 340,
+          color: "#56d364",
+          columns: [
+            { name: "id", type: "uuid", badge: "PK" },
+            { name: "product_id", type: "uuid", badge: "FK" },
+            { name: "name_en / name_es", type: "text" },
+            { name: "type", type: "entitlement_type" },
+            { name: "sort_order", type: "integer" },
+          ],
+        },
+        {
+          id: "orders",
+          x: 720,
+          y: 80,
+          color: "#f97583",
+          columns: [
+            { name: "id", type: "uuid", badge: "PK" },
+            { name: "user_id", type: "uuid", badge: "FK" },
+            { name: "stripe_session_id", type: "text" },
+            { name: "payment_status", type: "enum" },
+            { name: "total_cop", type: "integer" },
+          ],
+        },
+        {
+          id: "order_items",
+          x: 720,
+          y: 340,
+          color: "#f97583",
+          columns: [
+            { name: "id", type: "uuid", badge: "PK" },
+            { name: "order_id", type: "uuid", badge: "FK" },
+            { name: "product_id", type: "uuid", badge: "FK" },
+            { name: "quantity", type: "integer" },
+            { name: "unit_price_cop", type: "integer" },
+            { name: "metadata", type: "jsonb" },
+          ],
+        },
+        {
+          id: "check_ins",
+          x: 720,
+          y: 580,
+          color: "#56d364",
+          columns: [
+            { name: "id", type: "uuid", badge: "PK" },
+            { name: "order_item_id", type: "uuid", badge: "FK" },
+            { name: "entitlement_id", type: "uuid", badge: "FK" },
+            { name: "qr_code", type: "text", badge: "UK" },
+            { name: "checked_in", type: "boolean" },
+            { name: "checked_in_by", type: "uuid?", badge: "FK" },
+          ],
+        },
+        {
+          id: "check_in_audit",
+          x: 1060,
+          y: 580,
+          color: "#ffa657",
+          columns: [
+            { name: "id", type: "uuid", badge: "PK" },
+            { name: "check_in_id", type: "uuid", badge: "FK" },
+            { name: "action", type: "audit_action" },
+            { name: "performed_by", type: "uuid", badge: "FK" },
+            { name: "reason", type: "text?" },
+            { name: "ip / user_agent", type: "text" },
+          ],
+        },
+        {
+          id: "ticket_transfers",
+          x: 1060,
+          y: 340,
+          color: "#79c0ff",
+          columns: [
+            { name: "id", type: "uuid", badge: "PK" },
+            { name: "order_item_id", type: "uuid", badge: "FK" },
+            { name: "transfer_token", type: "text", badge: "UK" },
+            { name: "from_user_id", type: "uuid", badge: "FK" },
+            { name: "to_user_id", type: "uuid?", badge: "FK" },
+            { name: "status", type: "transfer_status" },
+            { name: "expires_at", type: "timestamptz" },
+          ],
+        },
+        {
+          id: "permissions",
+          x: 80,
+          y: 480,
+          color: "#d2a8ff",
+          columns: [
+            { name: "id", type: "uuid", badge: "PK" },
+            { name: "key", type: "text", badge: "UK" },
+            { name: "name_en / name_es", type: "text" },
+            { name: "description_en / _es", type: "text" },
+          ],
+        },
+        {
+          id: "resource_permissions",
+          x: 80,
+          y: 700,
+          color: "#d2a8ff",
+          columns: [
+            { name: "id", type: "uuid", badge: "PK" },
+            { name: "permission_id", type: "uuid", badge: "FK" },
+            { name: "resource_type", type: "text" },
+            { name: "resource_id", type: "uuid?" },
+          ],
+        },
+        {
+          id: "user_permissions",
+          x: 380,
+          y: 700,
+          color: "#d2a8ff",
+          columns: [
+            { name: "id", type: "uuid", badge: "PK" },
+            { name: "user_id", type: "uuid", badge: "FK" },
+            { name: "resource_permission_id", type: "uuid", badge: "FK" },
+            { name: "mode", type: "grant | deny" },
+            { name: "reason", type: "text?" },
+            { name: "granted_by", type: "uuid", badge: "FK" },
+            { name: "expires_at", type: "timestamptz?" },
+          ],
+        },
+      ];
+
+      const edges = [
+        {
+          from: "events",
+          to: "products",
+          color: "#f97583",
+          marker: "arrow-commerce",
+        },
+        {
+          from: "products",
+          to: "order_items",
+          color: "#f97583",
+          marker: "arrow-commerce",
+        },
+        {
+          from: "orders",
+          to: "order_items",
+          color: "#f97583",
+          marker: "arrow-commerce",
+        },
+        {
+          from: "products",
+          to: "product_entitlements",
+          color: "#56d364",
+          marker: "arrow-entitlement",
+        },
+        {
+          from: "order_items",
+          to: "check_ins",
+          color: "#56d364",
+          marker: "arrow-entitlement",
+        },
+        {
+          from: "product_entitlements",
+          to: "check_ins",
+          color: "#56d364",
+          marker: "arrow-entitlement",
+        },
+        {
+          from: "check_ins",
+          to: "check_in_audit",
+          color: "#ffa657",
+          marker: "arrow-audit",
+        },
+        {
+          from: "order_items",
+          to: "ticket_transfers",
+          color: "#79c0ff",
+          marker: "arrow-transfer",
+        },
+        {
+          from: "permissions",
+          to: "resource_permissions",
+          color: "#d2a8ff",
+          marker: "arrow-permission",
+        },
+        {
+          from: "resource_permissions",
+          to: "user_permissions",
+          color: "#d2a8ff",
+          marker: "arrow-permission",
+        },
+      ];
+
+      const COL_H = 20;
+      const HDR_H = 32;
+      const PAD = 12;
+      const W = 240;
+      const svgEl = document.getElementById("canvas");
+      const nodesG = document.getElementById("nodes");
+      const edgesG = document.getElementById("edges");
+
+      function tableH(t) {
+        return HDR_H + t.columns.length * COL_H + PAD;
+      }
+
+      function getPort(t, side) {
+        const h = tableH(t);
+        return { x: side === "right" ? t.x + W : t.x, y: t.y + h / 2 };
+      }
+
+      function createSvgEl(tag, attrs) {
+        const el = document.createElementNS("http://www.w3.org/2000/svg", tag);
+        for (const [k, v] of Object.entries(attrs)) el.setAttribute(k, v);
+        return el;
+      }
+
+      function drawEdges() {
+        while (edgesG.firstChild) edgesG.removeChild(edgesG.firstChild);
+        for (const e of edges) {
+          const from = tables.find((t) => t.id === e.from);
+          const to = tables.find((t) => t.id === e.to);
+          const fp = getPort(
+            from,
+            from.x < to.x ? "right" : from.x > to.x ? "left" : "right",
+          );
+          const tp = getPort(
+            to,
+            to.x < from.x ? "right" : to.x > from.x ? "left" : "left",
+          );
+          const dx = (tp.x - fp.x) * 0.5;
+          edgesG.appendChild(
+            createSvgEl("path", {
+              d:
+                "M" +
+                fp.x +
+                "," +
+                fp.y +
+                " C" +
+                (fp.x + dx) +
+                "," +
+                fp.y +
+                " " +
+                (tp.x - dx) +
+                "," +
+                tp.y +
+                " " +
+                tp.x +
+                "," +
+                tp.y,
+              fill: "none",
+              stroke: e.color,
+              "stroke-width": "2.5",
+              "stroke-opacity": "0.7",
+              "marker-end": "url(#" + e.marker + ")",
+            }),
+          );
+        }
+      }
+
+      function drawNodes() {
+        while (nodesG.firstChild) nodesG.removeChild(nodesG.firstChild);
+        for (const t of tables) {
+          const h = tableH(t);
+          const g = createSvgEl("g", {
+            transform: "translate(" + t.x + "," + t.y + ")",
+          });
+          g.classList.add("table-box");
+
+          g.appendChild(
+            createSvgEl("rect", {
+              x: 2,
+              y: 2,
+              width: W,
+              height: h,
+              rx: 8,
+              fill: "#000",
+              opacity: "0.3",
+            }),
+          );
+          g.appendChild(
+            createSvgEl("rect", {
+              width: W,
+              height: h,
+              rx: 8,
+              fill: "#161b22",
+              stroke: "#30363d",
+            }),
+          );
+          g.appendChild(
+            createSvgEl("rect", {
+              width: W,
+              height: HDR_H,
+              rx: 8,
+              fill: t.color,
+              opacity: "0.15",
+            }),
+          );
+          g.appendChild(
+            createSvgEl("rect", {
+              y: HDR_H - 8,
+              width: W,
+              height: 8,
+              fill: t.color,
+              opacity: "0.15",
+            }),
+          );
+
+          const title = createSvgEl("text", { x: PAD, y: 21, fill: t.color });
+          title.classList.add("table-header");
+          title.textContent = t.id;
+          g.appendChild(title);
+
+          t.columns.forEach(function (col, i) {
+            const y = HDR_H + 15 + i * COL_H;
+
+            const name = createSvgEl("text", { x: PAD, y: y });
+            name.classList.add("table-col", "table-col-name");
+            name.textContent = col.name;
+            g.appendChild(name);
+
+            const type = createSvgEl("text", {
+              x: W - PAD,
+              y: y,
+              "text-anchor": "end",
+            });
+            type.classList.add("table-col", "table-col-type");
+            type.textContent = col.type;
+            g.appendChild(type);
+
+            if (col.badge) {
+              var bw = col.badge.length * 6 + 8;
+              var bx = W - PAD - col.type.length * 6.5 - bw - 6;
+              var by = y - 10;
+              var badgeColor =
+                col.badge === "PK"
+                  ? "#58a6ff"
+                  : col.badge.startsWith("FK")
+                    ? "#f97583"
+                    : "#56d364";
+              var badgeBgColor =
+                col.badge === "PK"
+                  ? "#388bfd33"
+                  : col.badge.startsWith("FK")
+                    ? "#f9758333"
+                    : "#56d36433";
+
+              g.appendChild(
+                createSvgEl("rect", {
+                  x: bx,
+                  y: by,
+                  width: bw,
+                  height: 14,
+                  rx: 3,
+                  fill: badgeBgColor,
+                }),
+              );
+              var badge = createSvgEl("text", {
+                x: bx + bw / 2,
+                y: by + 10.5,
+                "text-anchor": "middle",
+                fill: badgeColor,
+              });
+              badge.classList.add("table-col-badge");
+              badge.textContent = col.badge;
+              g.appendChild(badge);
+            }
+          });
+
+          (function (table, group) {
+            var dragging = false,
+              ox = 0,
+              oy = 0;
+            group.addEventListener("mousedown", function (e) {
+              dragging = true;
+              ox = e.clientX - table.x;
+              oy = e.clientY - table.y;
+            });
+            window.addEventListener("mousemove", function (e) {
+              if (!dragging) return;
+              table.x = e.clientX - ox;
+              table.y = e.clientY - oy;
+              group.setAttribute(
+                "transform",
+                "translate(" + table.x + "," + table.y + ")",
+              );
+              drawEdges();
+            });
+            window.addEventListener("mouseup", function () {
+              dragging = false;
+            });
+          })(t, g);
+
+          nodesG.appendChild(g);
+        }
+      }
+
+      drawEdges();
+      drawNodes();
+    </script>
+  </body>
 </html>

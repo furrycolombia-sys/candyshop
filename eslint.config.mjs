@@ -57,10 +57,7 @@ const eslintConfig = defineConfig([
   // Accessibility (jsx-a11y) — WCAG AA compliance
   // Plugin already registered by next/core-web-vitals, just override rules
   {
-    files: [
-      `${APP_SRC}/**/*.{tsx,jsx}`,
-      `${PKG_SRC}/**/*.{tsx,jsx}`,
-    ],
+    files: [`${APP_SRC}/**/*.{tsx,jsx}`, `${PKG_SRC}/**/*.{tsx,jsx}`],
     rules: {
       // Enforce alt text on images
       "jsx-a11y/alt-text": "error",

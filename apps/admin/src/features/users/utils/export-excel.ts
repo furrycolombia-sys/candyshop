@@ -19,6 +19,6 @@ export function exportUsersToExcel(users: UserProfileSummary[]) {
   const workbook = xlsx.utils.book_new();
   xlsx.utils.book_append_sheet(workbook, worksheet, "Users");
 
-  // Export as file
-  xlsx.writeFile(workbook, "users-export.xlsx");
+  // Return the workbook for the caller to handle I/O
+  return workbook;
 }

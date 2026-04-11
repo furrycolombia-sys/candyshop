@@ -1,29 +1,37 @@
 /* eslint-disable i18next/no-literal-string */
 "use client";
 
-import { useCurrentUserPermissions } from "auth/client";
 import { Download, Search } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useQueryStates } from "nuqs";
-import { useEffect, useState } from "react";
 import { tid } from "shared";
 import { Button, Input } from "ui";
 
 import { Pagination } from "./Pagination";
 import { UserRowWithRole } from "./UserRowWithRole";
 
-import { useUsers } from "@/features/users/application/hooks/useUsers";
 import {
-  USER_SEARCH_DEBOUNCE_MS,
   USER_TABLE_COLUMN_COUNT,
   USERS_PER_PAGE,
 } from "@/features/users/domain/constants";
-import { usersSearchParams } from "@/features/users/domain/searchParams";
 import type { UserProfileSummary } from "@/features/users/domain/types";
-import { exportUsersToExcel } from "@/features/users/utils/export-excel";
 
 interface UserTableProps {
+  users: UserProfileSummary[];
+  total: number;
+  isLoading: boolean;
+  page: number;
+  onPageChange: (newPage: number) => void;
   onSelectUser: (userId: string) => void;
+  selectedUsers: Set<string>;
+  onSelectUsersChange: (users: Set<string>) => void;
+  filterInput: string;
+  onFilterInputChange: (input: string) => void;
+  roleFilter: string;
+  onRoleFilterChange: (role: string) => void;
+  itemFilter: string;
+  onItemFilterChange: (item: string) => void;
+  canExport: boolean;
+  onExportExcel: () => void;
 }
 
 function renderTableBody(
@@ -73,45 +81,35 @@ function renderTableBody(
   ));
 }
 
-export function UserTable({ onSelectUser }: UserTableProps) {
+export function UserTable({
+  users,
+  total,
+  isLoading,
+  page,
+  onPageChange,
+  onSelectUser,
+  selectedUsers,
+  onSelectUsersChange,
+  filterInput,
+  onFilterInputChange,
+  roleFilter,
+  onRoleFilterChange,
+  itemFilter,
+  onItemFilterChange,
+  canExport,
+  onExportExcel,
+}: UserTableProps) {
   const t = useTranslations("users");
-  const [params, setParams] = useQueryStates(usersSearchParams);
-  const [filterInput, setFilterInput] = useState(params.search);
-  const { grantedKeys } = useCurrentUserPermissions();
-  const canExport = grantedKeys.includes("users.export");
 
-  // Selection and export states
-  const [selectedUsers, setSelectedUsers] = useState<Set<string>>(new Set());
-  const [roleFilter, setRoleFilter] = useState("all");
-  const [itemFilter, setItemFilter] = useState("all");
-
-  // Debounce search input
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setParams(
-        { search: filterInput || null, page: 1 },
-        { history: "replace" },
-      );
-    }, USER_SEARCH_DEBOUNCE_MS);
-    return () => clearTimeout(timer);
-  }, [filterInput, setParams]);
-
-  const { data, isLoading } = useUsers(params.search, params.page);
-  const users = data?.users ?? [];
-  const total = data?.total ?? 0;
   const totalPages = Math.max(1, Math.ceil(total / USERS_PER_PAGE));
-  const from = total === 0 ? 0 : (params.page - 1) * USERS_PER_PAGE + 1;
-  const to = Math.min(params.page * USERS_PER_PAGE, total);
-
-  const handlePageChange = (newPage: number) => {
-    setParams({ page: newPage }, { history: "push" });
-  };
+  const from = total === 0 ? 0 : (page - 1) * USERS_PER_PAGE + 1;
+  const to = Math.min(page * USERS_PER_PAGE, total);
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      setSelectedUsers(new Set(users.map((u) => u.id)));
+      onSelectUsersChange(new Set(users.map((u) => u.id)));
     } else {
-      setSelectedUsers(new Set());
+      onSelectUsersChange(new Set());
     }
   };
 
@@ -119,13 +117,7 @@ export function UserTable({ onSelectUser }: UserTableProps) {
     const next = new Set(selectedUsers);
     if (checked) next.add(userId);
     else next.delete(userId);
-    setSelectedUsers(next);
-  };
-
-  const handleExportExcel = () => {
-    const selected = users.filter((u) => selectedUsers.has(u.id));
-    if (selected.length === 0) return;
-    exportUsersToExcel(selected);
+    onSelectUsersChange(next);
   };
 
   return (
@@ -138,7 +130,7 @@ export function UserTable({ onSelectUser }: UserTableProps) {
             <Input
               type="text"
               value={filterInput}
-              onChange={(e) => setFilterInput(e.target.value)}
+              onChange={(e) => onFilterInputChange(e.target.value)}
               placeholder={t("searchPlaceholder")}
               className="rounded-none border-2 border-foreground pl-10"
               {...tid("users-search-input")}
@@ -146,7 +138,7 @@ export function UserTable({ onSelectUser }: UserTableProps) {
           </div>
           <select
             value={roleFilter}
-            onChange={(e) => setRoleFilter(e.target.value)}
+            onChange={(e) => onRoleFilterChange(e.target.value)}
             className="h-10 rounded-none border-2 border-foreground bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
           >
             <option value="all">All Roles</option>
@@ -155,7 +147,7 @@ export function UserTable({ onSelectUser }: UserTableProps) {
           </select>
           <select
             value={itemFilter}
-            onChange={(e) => setItemFilter(e.target.value)}
+            onChange={(e) => onItemFilterChange(e.target.value)}
             className="h-10 rounded-none border-2 border-foreground bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
           >
             <option value="all">All Items</option>
@@ -166,7 +158,7 @@ export function UserTable({ onSelectUser }: UserTableProps) {
         {canExport && (
           <div>
             <Button
-              onClick={handleExportExcel}
+              onClick={onExportExcel}
               disabled={selectedUsers.size === 0}
               className="gap-2"
             >
@@ -226,12 +218,12 @@ export function UserTable({ onSelectUser }: UserTableProps) {
       {/* Pagination */}
       {total > 0 && (
         <Pagination
-          page={params.page}
+          page={page}
           totalPages={totalPages}
           from={from}
           to={to}
           total={total}
-          onPageChange={handlePageChange}
+          onPageChange={onPageChange}
         />
       )}
     </div>
