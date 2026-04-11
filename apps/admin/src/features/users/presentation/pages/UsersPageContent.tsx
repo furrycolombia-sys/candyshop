@@ -11,6 +11,10 @@ import { useUsers } from "@/features/users/application/hooks/useUsers";
 import { USER_SEARCH_DEBOUNCE_MS } from "@/features/users/domain/constants";
 import { usersSearchParams } from "@/features/users/domain/searchParams";
 import { UserTable } from "@/features/users/presentation/components/UserTable";
+import {
+  exportUsersToCsv,
+  downloadCsv,
+} from "@/features/users/utils/export-csv";
 import { useRouter } from "@/shared/infrastructure/i18n";
 
 export function UsersPageContent() {
@@ -43,16 +47,12 @@ export function UsersPageContent() {
     router.push(`/users/${userId}`);
   };
 
-  const handleExportExcel = async () => {
+  const handleExportExcel = () => {
     const selected = users.filter((u) => selectedUsers.has(u.id));
     if (selected.length === 0) return;
 
-    const { exportUsersToExcel } =
-      await import("@/features/users/utils/export-excel");
-    const xlsx = await import("xlsx");
-
-    const workbook = await exportUsersToExcel(selected);
-    xlsx.writeFile(workbook, "users-export.xlsx");
+    const csvContent = exportUsersToCsv(selected);
+    downloadCsv(csvContent, "users-export.csv");
   };
 
   return (
