@@ -1,160 +1,229 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Hooks, CI &amp; Release Flow Diagrams</title>
-  <style>
-    :root {
-      --bg: #0d1117;
-      --surface: #161b22;
-      --border: #30363d;
-      --text: #e6edf3;
-      --text-muted: #8b949e;
-      --accent: #58a6ff;
-      --accent2: #3fb950;
-      --accent3: #d2a8ff;
-      --accent4: #f0883e;
-    }
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      line-height: 1.6;
-      padding: 2rem;
-      max-width: 1400px;
-      margin: 0 auto;
-    }
-    h1 {
-      font-size: 2rem;
-      margin-bottom: 0.5rem;
-      background: linear-gradient(90deg, var(--accent), var(--accent3));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-    .subtitle {
-      color: var(--text-muted);
-      margin-bottom: 2rem;
-      font-size: 1.1rem;
-    }
-    .toc {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 1.5rem 2rem;
-      margin-bottom: 3rem;
-    }
-    .toc h2 { font-size: 1.1rem; margin-bottom: 0.75rem; color: var(--accent); }
-    .toc ol { padding-left: 1.5rem; }
-    .toc li { margin-bottom: 0.3rem; }
-    .toc a { color: var(--accent); text-decoration: none; }
-    .toc a:hover { text-decoration: underline; }
-    section {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 2rem;
-      margin-bottom: 3rem;
-    }
-    section h2 {
-      font-size: 1.5rem;
-      margin-bottom: 0.5rem;
-      padding-bottom: 0.75rem;
-      border-bottom: 1px solid var(--border);
-    }
-    section p.desc {
-      color: var(--text-muted);
-      margin-bottom: 1.5rem;
-      font-size: 0.95rem;
-    }
-    .diagram-container {
-      display: flex;
-      justify-content: center;
-      overflow-x: auto;
-      padding: 1rem 0;
-    }
-    .mermaid { max-width: 100%; }
-    .legend {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 1rem;
-      margin-top: 1.5rem;
-      padding-top: 1rem;
-      border-top: 1px solid var(--border);
-    }
-    .legend-item {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      font-size: 0.85rem;
-      color: var(--text-muted);
-    }
-    .legend-dot {
-      width: 12px;
-      height: 12px;
-      border-radius: 50%;
-      flex-shrink: 0;
-    }
-    .dot-blue { background: #58a6ff; }
-    .dot-green { background: #3fb950; }
-    .dot-orange { background: #f0883e; }
-    .dot-purple { background: #d2a8ff; }
-    .dot-red { background: #f85149; }
-    .dot-gray { background: #8b949e; }
-    .dot-teal { background: #39d2c0; }
-    .dot-yellow { background: #d29922; }
-    .source-ref {
-      margin-top: 1rem;
-      padding: 0.5rem 0.75rem;
-      background: #0d1117;
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      font-family: monospace;
-      font-size: 0.8rem;
-      color: var(--text-muted);
-    }
-    .source-ref code { color: var(--accent); }
-    footer {
-      text-align: center;
-      color: var(--text-muted);
-      padding: 2rem 0;
-      font-size: 0.85rem;
-      border-top: 1px solid var(--border);
-    }
-    @media print {
-      body { background: white; color: #1f2328; padding: 1rem; }
-      section { border-color: #d0d7de; break-inside: avoid; }
-      .toc { break-after: page; }
-    }
-  </style>
-</head>
-<body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Hooks, CI &amp; Release Flow Diagrams</title>
+    <style>
+      :root {
+        --bg: #0d1117;
+        --surface: #161b22;
+        --border: #30363d;
+        --text: #e6edf3;
+        --text-muted: #8b949e;
+        --accent: #58a6ff;
+        --accent2: #3fb950;
+        --accent3: #d2a8ff;
+        --accent4: #f0883e;
+      }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial,
+          sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        line-height: 1.6;
+        padding: 2rem;
+        max-width: 1400px;
+        margin: 0 auto;
+      }
+      h1 {
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+        background: linear-gradient(90deg, var(--accent), var(--accent3));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+      .subtitle {
+        color: var(--text-muted);
+        margin-bottom: 2rem;
+        font-size: 1.1rem;
+      }
+      .toc {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 1.5rem 2rem;
+        margin-bottom: 3rem;
+      }
+      .toc h2 {
+        font-size: 1.1rem;
+        margin-bottom: 0.75rem;
+        color: var(--accent);
+      }
+      .toc ol {
+        padding-left: 1.5rem;
+      }
+      .toc li {
+        margin-bottom: 0.3rem;
+      }
+      .toc a {
+        color: var(--accent);
+        text-decoration: none;
+      }
+      .toc a:hover {
+        text-decoration: underline;
+      }
+      section {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 2rem;
+        margin-bottom: 3rem;
+      }
+      section h2 {
+        font-size: 1.5rem;
+        margin-bottom: 0.5rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 1px solid var(--border);
+      }
+      section p.desc {
+        color: var(--text-muted);
+        margin-bottom: 1.5rem;
+        font-size: 0.95rem;
+      }
+      .diagram-container {
+        display: flex;
+        justify-content: center;
+        overflow-x: auto;
+        padding: 1rem 0;
+      }
+      .mermaid {
+        max-width: 100%;
+      }
+      .legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        margin-top: 1.5rem;
+        padding-top: 1rem;
+        border-top: 1px solid var(--border);
+      }
+      .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.85rem;
+        color: var(--text-muted);
+      }
+      .legend-dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        flex-shrink: 0;
+      }
+      .dot-blue {
+        background: #58a6ff;
+      }
+      .dot-green {
+        background: #3fb950;
+      }
+      .dot-orange {
+        background: #f0883e;
+      }
+      .dot-purple {
+        background: #d2a8ff;
+      }
+      .dot-red {
+        background: #f85149;
+      }
+      .dot-gray {
+        background: #8b949e;
+      }
+      .dot-teal {
+        background: #39d2c0;
+      }
+      .dot-yellow {
+        background: #d29922;
+      }
+      .source-ref {
+        margin-top: 1rem;
+        padding: 0.5rem 0.75rem;
+        background: #0d1117;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        font-family: monospace;
+        font-size: 0.8rem;
+        color: var(--text-muted);
+      }
+      .source-ref code {
+        color: var(--accent);
+      }
+      footer {
+        text-align: center;
+        color: var(--text-muted);
+        padding: 2rem 0;
+        font-size: 0.85rem;
+        border-top: 1px solid var(--border);
+      }
+      @media print {
+        body {
+          background: white;
+          color: #1f2328;
+          padding: 1rem;
+        }
+        section {
+          border-color: #d0d7de;
+          break-inside: avoid;
+        }
+        .toc {
+          break-after: page;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Hooks, CI &amp; Release Flow</h1>
+    <p class="subtitle">
+      Visual diagrams of every quality gate from commit to production
+      deployment. Built from actual source files.
+    </p>
 
-<h1>Hooks, CI &amp; Release Flow</h1>
-<p class="subtitle">Visual diagrams of every quality gate from commit to production deployment. Built from actual source files.</p>
+    <nav class="toc">
+      <h2>Table of Contents</h2>
+      <ol>
+        <li><a href="#overview">End-to-End Overview</a></li>
+        <li>
+          <a href="#precommit"
+            >Pre-Commit Hook (category-aware, scoped to staged files)</a
+          >
+        </li>
+        <li>
+          <a href="#prepush"
+            >Pre-Push Hook (change detection, sequential execution)</a
+          >
+        </li>
+        <li>
+          <a href="#ci"
+            >CI Pipeline (7 jobs, docs-only skip, cache conditionals)</a
+          >
+        </li>
+        <li>
+          <a href="#pr"
+            >PR Checks (branch rules, conditional jobs, PR summary bot)</a
+          >
+        </li>
+        <li><a href="#release">Release &amp; Deployment (3 flows)</a></li>
+        <li><a href="#gates">Quality Gate Summary</a></li>
+      </ol>
+    </nav>
 
-<nav class="toc">
-  <h2>Table of Contents</h2>
-  <ol>
-    <li><a href="#overview">End-to-End Overview</a></li>
-    <li><a href="#precommit">Pre-Commit Hook (category-aware, scoped to staged files)</a></li>
-    <li><a href="#prepush">Pre-Push Hook (change detection, sequential execution)</a></li>
-    <li><a href="#ci">CI Pipeline (7 jobs, docs-only skip, cache conditionals)</a></li>
-    <li><a href="#pr">PR Checks (branch rules, conditional jobs, PR summary bot)</a></li>
-    <li><a href="#release">Release &amp; Deployment (3 flows)</a></li>
-    <li><a href="#gates">Quality Gate Summary</a></li>
-  </ol>
-</nav>
-
-<!-- ============================================================ -->
-<!-- 1. END-TO-END OVERVIEW                                        -->
-<!-- ============================================================ -->
-<section id="overview">
-  <h2>1. End-to-End Overview</h2>
-  <p class="desc">The complete journey of code from developer workstation through GitHub to Azure production.</p>
-  <div class="diagram-container">
-    <pre class="mermaid">
+    <!-- ============================================================ -->
+    <!-- 1. END-TO-END OVERVIEW                                        -->
+    <!-- ============================================================ -->
+    <section id="overview">
+      <h2>1. End-to-End Overview</h2>
+      <p class="desc">
+        The complete journey of code from developer workstation through GitHub
+        to Azure production.
+      </p>
+      <div class="diagram-container">
+        <pre class="mermaid">
 flowchart TB
   subgraph DEV["Developer Workstation"]
     direction TB
@@ -202,23 +271,34 @@ flowchart TB
   style TAG fill:#3fb950,stroke:#3fb950,color:#fff
   style V fill:#3fb950,stroke:#3fb950,color:#fff
     </pre>
-  </div>
-  <div class="legend">
-    <div class="legend-item"><span class="legend-dot dot-blue"></span> Developer Workstation</div>
-    <div class="legend-item"><span class="legend-dot dot-purple"></span> GitHub</div>
-    <div class="legend-item"><span class="legend-dot dot-green"></span> Azure / Success</div>
-    <div class="legend-item"><span class="legend-dot dot-red"></span> Blocked / Fix Required</div>
-  </div>
-</section>
+      </div>
+      <div class="legend">
+        <div class="legend-item">
+          <span class="legend-dot dot-blue"></span> Developer Workstation
+        </div>
+        <div class="legend-item">
+          <span class="legend-dot dot-purple"></span> GitHub
+        </div>
+        <div class="legend-item">
+          <span class="legend-dot dot-green"></span> Azure / Success
+        </div>
+        <div class="legend-item">
+          <span class="legend-dot dot-red"></span> Blocked / Fix Required
+        </div>
+      </div>
+    </section>
 
-<!-- ============================================================ -->
-<!-- 2. PRE-COMMIT HOOK                                            -->
-<!-- ============================================================ -->
-<section id="precommit">
-  <h2>2. Pre-Commit Hook</h2>
-  <p class="desc">Runs on every <code>git commit</code>. Detects staged file categories and runs only relevant checks. Skips entirely if no files are staged.</p>
-  <div class="diagram-container">
-    <pre class="mermaid">
+    <!-- ============================================================ -->
+    <!-- 2. PRE-COMMIT HOOK                                            -->
+    <!-- ============================================================ -->
+    <section id="precommit">
+      <h2>2. Pre-Commit Hook</h2>
+      <p class="desc">
+        Runs on every <code>git commit</code>. Detects staged file categories
+        and runs only relevant checks. Skips entirely if no files are staged.
+      </p>
+      <div class="diagram-container">
+        <pre class="mermaid">
 flowchart TD
   START(["git commit"]) --> DETECT["Detect staged files<br/><code>git diff --cached --name-only</code>"]
 
@@ -310,27 +390,50 @@ flowchart TD
   style CODE_CHECKS fill:#1c2333,stroke:#58a6ff,stroke-width:1px,color:#e6edf3
   style CSS_CHECKS fill:#1c2333,stroke:#39d2c0,stroke-width:1px,color:#e6edf3
     </pre>
-  </div>
-  <div class="legend">
-    <div class="legend-item"><span class="legend-dot dot-orange"></span> lint-staged (always, staged files only)</div>
-    <div class="legend-item"><span class="legend-dot dot-purple"></span> Workspace checks (if manifest files staged)</div>
-    <div class="legend-item"><span class="legend-dot dot-blue"></span> Code quality checks (if .ts/.tsx/.js/.jsx staged)</div>
-    <div class="legend-item"><span class="legend-dot dot-teal"></span> CSS checks (if .css files staged)</div>
-    <div class="legend-item"><span class="legend-dot dot-yellow"></span> Category gates (diamond nodes)</div>
-    <div class="legend-item"><span class="legend-dot dot-gray"></span> Skipped (no staged files)</div>
-    <div class="legend-item"><span class="legend-dot dot-red"></span> Blocked / error exit</div>
-  </div>
-  <div class="source-ref">Source: <code>.husky/pre-commit</code></div>
-</section>
+      </div>
+      <div class="legend">
+        <div class="legend-item">
+          <span class="legend-dot dot-orange"></span> lint-staged (always,
+          staged files only)
+        </div>
+        <div class="legend-item">
+          <span class="legend-dot dot-purple"></span> Workspace checks (if
+          manifest files staged)
+        </div>
+        <div class="legend-item">
+          <span class="legend-dot dot-blue"></span> Code quality checks (if
+          .ts/.tsx/.js/.jsx staged)
+        </div>
+        <div class="legend-item">
+          <span class="legend-dot dot-teal"></span> CSS checks (if .css files
+          staged)
+        </div>
+        <div class="legend-item">
+          <span class="legend-dot dot-yellow"></span> Category gates (diamond
+          nodes)
+        </div>
+        <div class="legend-item">
+          <span class="legend-dot dot-gray"></span> Skipped (no staged files)
+        </div>
+        <div class="legend-item">
+          <span class="legend-dot dot-red"></span> Blocked / error exit
+        </div>
+      </div>
+      <div class="source-ref">Source: <code>.husky/pre-commit</code></div>
+    </section>
 
-<!-- ============================================================ -->
-<!-- 3. PRE-PUSH HOOK                                              -->
-<!-- ============================================================ -->
-<section id="prepush">
-  <h2>3. Pre-Push Hook</h2>
-  <p class="desc">Runs on every <code>git push</code>. Detects change categories, validates Docker availability, and runs checks sequentially to avoid resource contention.</p>
-  <div class="diagram-container">
-    <pre class="mermaid">
+    <!-- ============================================================ -->
+    <!-- 3. PRE-PUSH HOOK                                              -->
+    <!-- ============================================================ -->
+    <section id="prepush">
+      <h2>3. Pre-Push Hook</h2>
+      <p class="desc">
+        Runs on every <code>git push</code>. Detects change categories,
+        validates Docker availability, and runs checks sequentially to avoid
+        resource contention.
+      </p>
+      <div class="diagram-container">
+        <pre class="mermaid">
 flowchart TD
   START(["git push"]) --> BASE["Detect base branch<br/><code>origin/develop</code> or <code>@{upstream}</code>"]
   BASE --> DIFF["git diff --name-only<br/><i>base..HEAD</i>"]
@@ -399,25 +502,45 @@ flowchart TD
   style CODE_BOTH_BOX fill:#1c2333,stroke:#58a6ff,stroke-width:1px,color:#e6edf3
   style CODE_ONLY_BOX fill:#1c2333,stroke:#d2a8ff,stroke-width:1px,color:#e6edf3
     </pre>
-  </div>
-  <div class="legend">
-    <div class="legend-item"><span class="legend-dot dot-orange"></span> Docker health check (foreground or background)</div>
-    <div class="legend-item"><span class="legend-dot dot-blue"></span> Code checks without build (Docker covers compilation)</div>
-    <div class="legend-item"><span class="legend-dot dot-purple"></span> Code checks with build (no Docker)</div>
-    <div class="legend-item"><span class="legend-dot dot-gray"></span> Skipped / neutral exit</div>
-    <div class="legend-item"><span class="legend-dot dot-red"></span> Failure + cleanup (kills background Docker PID)</div>
-  </div>
-  <div class="source-ref">Source: <code>.husky/pre-push</code> + <code>scripts/docker-health-check.sh</code></div>
-</section>
+      </div>
+      <div class="legend">
+        <div class="legend-item">
+          <span class="legend-dot dot-orange"></span> Docker health check
+          (foreground or background)
+        </div>
+        <div class="legend-item">
+          <span class="legend-dot dot-blue"></span> Code checks without build
+          (Docker covers compilation)
+        </div>
+        <div class="legend-item">
+          <span class="legend-dot dot-purple"></span> Code checks with build (no
+          Docker)
+        </div>
+        <div class="legend-item">
+          <span class="legend-dot dot-gray"></span> Skipped / neutral exit
+        </div>
+        <div class="legend-item">
+          <span class="legend-dot dot-red"></span> Failure + cleanup (kills
+          background Docker PID)
+        </div>
+      </div>
+      <div class="source-ref">
+        Source: <code>.husky/pre-push</code> +
+        <code>scripts/docker-health-check.sh</code>
+      </div>
+    </section>
 
-<!-- ============================================================ -->
-<!-- 4. CI PIPELINE                                                -->
-<!-- ============================================================ -->
-<section id="ci">
-  <h2>4. CI Pipeline</h2>
-  <p class="desc">Runs on PRs to <code>main</code> or <code>develop</code>. Concurrency group cancels previous runs. Each job has explicit skip conditions.</p>
-  <div class="diagram-container">
-    <pre class="mermaid">
+    <!-- ============================================================ -->
+    <!-- 4. CI PIPELINE                                                -->
+    <!-- ============================================================ -->
+    <section id="ci">
+      <h2>4. CI Pipeline</h2>
+      <p class="desc">
+        Runs on PRs to <code>main</code> or <code>develop</code>. Concurrency
+        group cancels previous runs. Each job has explicit skip conditions.
+      </p>
+      <div class="diagram-container">
+        <pre class="mermaid">
 flowchart TD
   START(["PR to main or develop<br/><i>Concurrency: cancel previous</i>"]) --> CHANGES["Job 1: CHANGES<br/><i>5 min</i><br/>dorny/paths-filter"]
 
@@ -477,26 +600,46 @@ flowchart TD
   style E2E_ART_FAIL fill:#1c2333,stroke:#f0883e,stroke-width:1px,color:#e6edf3
   style BUNDLE_ART fill:#1c2333,stroke:#3fb950,stroke-width:1px,color:#e6edf3
     </pre>
-  </div>
-  <div class="legend">
-    <div class="legend-item"><span class="legend-dot dot-purple"></span> Trigger</div>
-    <div class="legend-item"><span class="legend-dot dot-blue"></span> Quality checks</div>
-    <div class="legend-item"><span class="legend-dot dot-green"></span> Artifacts (always uploaded)</div>
-    <div class="legend-item"><span class="legend-dot dot-orange"></span> Artifacts (on failure only)</div>
-    <div class="legend-item"><span class="legend-dot dot-gray"></span> Skipped (docs-only or no deploy)</div>
-    <div class="legend-item"><span class="legend-dot dot-yellow"></span> Cache conditional (Playwright browsers)</div>
-  </div>
-  <div class="source-ref">Source: <code>.github/workflows/ci.yml</code></div>
-</section>
+      </div>
+      <div class="legend">
+        <div class="legend-item">
+          <span class="legend-dot dot-purple"></span> Trigger
+        </div>
+        <div class="legend-item">
+          <span class="legend-dot dot-blue"></span> Quality checks
+        </div>
+        <div class="legend-item">
+          <span class="legend-dot dot-green"></span> Artifacts (always uploaded)
+        </div>
+        <div class="legend-item">
+          <span class="legend-dot dot-orange"></span> Artifacts (on failure
+          only)
+        </div>
+        <div class="legend-item">
+          <span class="legend-dot dot-gray"></span> Skipped (docs-only or no
+          deploy)
+        </div>
+        <div class="legend-item">
+          <span class="legend-dot dot-yellow"></span> Cache conditional
+          (Playwright browsers)
+        </div>
+      </div>
+      <div class="source-ref">
+        Source: <code>.github/workflows/ci.yml</code>
+      </div>
+    </section>
 
-<!-- ============================================================ -->
-<!-- 5. PR CHECKS                                                  -->
-<!-- ============================================================ -->
-<section id="pr">
-  <h2>5. PR Checks</h2>
-  <p class="desc">Separate workflow from CI. Concurrency per PR number. Validates metadata, security, and visual/a11y quality.</p>
-  <div class="diagram-container">
-    <pre class="mermaid">
+    <!-- ============================================================ -->
+    <!-- 5. PR CHECKS                                                  -->
+    <!-- ============================================================ -->
+    <section id="pr">
+      <h2>5. PR Checks</h2>
+      <p class="desc">
+        Separate workflow from CI. Concurrency per PR number. Validates
+        metadata, security, and visual/a11y quality.
+      </p>
+      <div class="diagram-container">
+        <pre class="mermaid">
 flowchart TD
   START(["PR opened / sync / reopened<br/><i>Concurrency: per PR #</i>"]) --> JOBS
 
@@ -573,25 +716,43 @@ flowchart TD
   style SKIP_AV fill:#8b949e,stroke:#8b949e,color:#fff
   style VIS_ART fill:#1c2333,stroke:#f0883e,stroke-width:1px,color:#e6edf3
     </pre>
-  </div>
-  <div class="legend">
-    <div class="legend-item"><span class="legend-dot dot-red"></span> Critical / blocks merge (branch-target)</div>
-    <div class="legend-item"><span class="legend-dot dot-orange"></span> Validation rules</div>
-    <div class="legend-item"><span class="legend-dot dot-purple"></span> Change detection outputs</div>
-    <div class="legend-item"><span class="legend-dot dot-green"></span> PR summary bot (always runs)</div>
-    <div class="legend-item"><span class="legend-dot dot-gray"></span> Skipped (docs-only or no web/pkg changes)</div>
-  </div>
-  <div class="source-ref">Source: <code>.github/workflows/pr-checks.yml</code></div>
-</section>
+      </div>
+      <div class="legend">
+        <div class="legend-item">
+          <span class="legend-dot dot-red"></span> Critical / blocks merge
+          (branch-target)
+        </div>
+        <div class="legend-item">
+          <span class="legend-dot dot-orange"></span> Validation rules
+        </div>
+        <div class="legend-item">
+          <span class="legend-dot dot-purple"></span> Change detection outputs
+        </div>
+        <div class="legend-item">
+          <span class="legend-dot dot-green"></span> PR summary bot (always
+          runs)
+        </div>
+        <div class="legend-item">
+          <span class="legend-dot dot-gray"></span> Skipped (docs-only or no
+          web/pkg changes)
+        </div>
+      </div>
+      <div class="source-ref">
+        Source: <code>.github/workflows/pr-checks.yml</code>
+      </div>
+    </section>
 
-<!-- ============================================================ -->
-<!-- 6. RELEASE & DEPLOYMENT                                       -->
-<!-- ============================================================ -->
-<section id="release">
-  <h2>6. Release &amp; Deployment</h2>
-  <p class="desc">Three distinct flows: release (to main), continuous deploy (from develop), and hotfix (to main, sync to develop).</p>
-  <div class="diagram-container">
-    <pre class="mermaid">
+    <!-- ============================================================ -->
+    <!-- 6. RELEASE & DEPLOYMENT                                       -->
+    <!-- ============================================================ -->
+    <section id="release">
+      <h2>6. Release &amp; Deployment</h2>
+      <p class="desc">
+        Three distinct flows: release (to main), continuous deploy (from
+        develop), and hotfix (to main, sync to develop).
+      </p>
+      <div class="diagram-container">
+        <pre class="mermaid">
 flowchart TD
   subgraph RELEASE["Release Flow"]
     direction TB
@@ -651,25 +812,45 @@ flowchart TD
   style R8_FAIL fill:#f85149,stroke:#f85149,color:#fff
   style D2_SKIP fill:#8b949e,stroke:#8b949e,color:#fff
     </pre>
-  </div>
-  <div class="legend">
-    <div class="legend-item"><span class="legend-dot dot-purple"></span> Release flow (release/* to main)</div>
-    <div class="legend-item"><span class="legend-dot dot-green"></span> Deploy flow (push to develop -> Azure)</div>
-    <div class="legend-item"><span class="legend-dot dot-orange"></span> Hotfix flow (fix/* to main)</div>
-    <div class="legend-item"><span class="legend-dot dot-red"></span> Error (version extraction failed)</div>
-    <div class="legend-item"><span class="legend-dot dot-gray"></span> Skipped (no matching paths)</div>
-  </div>
-  <div class="source-ref">Source: <code>.github/workflows/release.yml</code> + <code>deploy-combined.yml</code></div>
-</section>
+      </div>
+      <div class="legend">
+        <div class="legend-item">
+          <span class="legend-dot dot-purple"></span> Release flow (release/* to
+          main)
+        </div>
+        <div class="legend-item">
+          <span class="legend-dot dot-green"></span> Deploy flow (push to
+          develop -> Azure)
+        </div>
+        <div class="legend-item">
+          <span class="legend-dot dot-orange"></span> Hotfix flow (fix/* to
+          main)
+        </div>
+        <div class="legend-item">
+          <span class="legend-dot dot-red"></span> Error (version extraction
+          failed)
+        </div>
+        <div class="legend-item">
+          <span class="legend-dot dot-gray"></span> Skipped (no matching paths)
+        </div>
+      </div>
+      <div class="source-ref">
+        Source: <code>.github/workflows/release.yml</code> +
+        <code>deploy-combined.yml</code>
+      </div>
+    </section>
 
-<!-- ============================================================ -->
-<!-- 7. QUALITY GATE SUMMARY                                       -->
-<!-- ============================================================ -->
-<section id="gates">
-  <h2>7. Quality Gate Summary</h2>
-  <p class="desc">All quality gates code passes through. Each gate must pass before the next is reached.</p>
-  <div class="diagram-container">
-    <pre class="mermaid">
+    <!-- ============================================================ -->
+    <!-- 7. QUALITY GATE SUMMARY                                       -->
+    <!-- ============================================================ -->
+    <section id="gates">
+      <h2>7. Quality Gate Summary</h2>
+      <p class="desc">
+        All quality gates code passes through. Each gate must pass before the
+        next is reached.
+      </p>
+      <div class="diagram-container">
+        <pre class="mermaid">
 flowchart LR
   subgraph G1["Pre-Commit<br/>(category-aware)"]
     direction TB
@@ -726,57 +907,70 @@ flowchart LR
   style G4 fill:#1c2333,stroke:#39d2c0,stroke-width:2px,color:#e6edf3
   style G5 fill:#1c2333,stroke:#3fb950,stroke-width:2px,color:#e6edf3
     </pre>
-  </div>
-  <div class="legend">
-    <div class="legend-item"><span class="legend-dot dot-blue"></span> Pre-Commit (local, blocks commit)</div>
-    <div class="legend-item"><span class="legend-dot dot-purple"></span> Pre-Push (local, change-aware, blocks push)</div>
-    <div class="legend-item"><span class="legend-dot dot-orange"></span> PR Checks (GitHub, conditional jobs)</div>
-    <div class="legend-item"><span class="legend-dot dot-teal"></span> CI Pipeline (GitHub, full test suite)</div>
-    <div class="legend-item"><span class="legend-dot dot-green"></span> Deploy (automatic on develop push)</div>
-  </div>
-</section>
+      </div>
+      <div class="legend">
+        <div class="legend-item">
+          <span class="legend-dot dot-blue"></span> Pre-Commit (local, blocks
+          commit)
+        </div>
+        <div class="legend-item">
+          <span class="legend-dot dot-purple"></span> Pre-Push (local,
+          change-aware, blocks push)
+        </div>
+        <div class="legend-item">
+          <span class="legend-dot dot-orange"></span> PR Checks (GitHub,
+          conditional jobs)
+        </div>
+        <div class="legend-item">
+          <span class="legend-dot dot-teal"></span> CI Pipeline (GitHub, full
+          test suite)
+        </div>
+        <div class="legend-item">
+          <span class="legend-dot dot-green"></span> Deploy (automatic on
+          develop push)
+        </div>
+      </div>
+    </section>
 
-<footer>
-  Generated from actual source files &mdash;
-  <code>.husky/pre-commit</code>,
-  <code>.husky/pre-push</code>,
-  <code>.github/workflows/ci.yml</code>,
-  <code>.github/workflows/pr-checks.yml</code>,
-  <code>.github/workflows/release.yml</code>,
-  <code>.github/workflows/deploy-combined.yml</code>,
-  <code>package.json</code>
-</footer>
+    <footer>
+      Generated from actual source files &mdash;
+      <code>.husky/pre-commit</code>, <code>.husky/pre-push</code>,
+      <code>.github/workflows/ci.yml</code>,
+      <code>.github/workflows/pr-checks.yml</code>,
+      <code>.github/workflows/release.yml</code>,
+      <code>.github/workflows/deploy-combined.yml</code>,
+      <code>package.json</code>
+    </footer>
 
-<script type="module">
-  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
-  mermaid.initialize({
-    startOnLoad: true,
-    theme: 'dark',
-    themeVariables: {
-      darkMode: true,
-      background: '#0d1117',
-      primaryColor: '#1c2333',
-      primaryBorderColor: '#58a6ff',
-      primaryTextColor: '#e6edf3',
-      secondaryColor: '#161b22',
-      tertiaryColor: '#1c2333',
-      lineColor: '#8b949e',
-      textColor: '#e6edf3',
-      mainBkg: '#1c2333',
-      nodeBorder: '#30363d',
-      clusterBkg: '#0d1117',
-      clusterBorder: '#30363d',
-      fontSize: '14px',
-    },
-    flowchart: {
-      htmlLabels: true,
-      curve: 'basis',
-      rankSpacing: 50,
-      nodeSpacing: 30,
-      padding: 15,
-    },
-  });
-</script>
-
-</body>
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      mermaid.initialize({
+        startOnLoad: true,
+        theme: "dark",
+        themeVariables: {
+          darkMode: true,
+          background: "#0d1117",
+          primaryColor: "#1c2333",
+          primaryBorderColor: "#58a6ff",
+          primaryTextColor: "#e6edf3",
+          secondaryColor: "#161b22",
+          tertiaryColor: "#1c2333",
+          lineColor: "#8b949e",
+          textColor: "#e6edf3",
+          mainBkg: "#1c2333",
+          nodeBorder: "#30363d",
+          clusterBkg: "#0d1117",
+          clusterBorder: "#30363d",
+          fontSize: "14px",
+        },
+        flowchart: {
+          htmlLabels: true,
+          curve: "basis",
+          rankSpacing: 50,
+          nodeSpacing: 30,
+          padding: 15,
+        },
+      });
+    </script>
+  </body>
 </html>

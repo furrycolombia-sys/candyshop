@@ -97,7 +97,7 @@ describe("AppNavigation", () => {
     expect(screen.getByText("t:brand")).toBeInTheDocument();
   });
 
-  it("shows public app links while signed out and hides permissioned apps", () => {
+  it("shows public app links while signed out and hides protected apps", () => {
     render(
       <AppNavigation
         currentApp="store"
@@ -270,7 +270,7 @@ describe("AppNavigation", () => {
     expect(screen.queryByTestId("nav-link-admin")).not.toBeInTheDocument();
   });
 
-  it("clears preserved permissioned links after sign-out but keeps public links", () => {
+  it("clears preserved protected links after sign-out but keeps public links", () => {
     const { rerender } = render(
       <AppNavigation
         currentApp="store"

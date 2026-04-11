@@ -77,6 +77,7 @@ export const PERMISSION_GROUPS: PermissionGroup[] = [
       "user_permissions.read",
       "user_permissions.update",
       "user_permissions.delete",
+      "users.export",
     ],
   },
   {
@@ -159,7 +160,7 @@ export const USER_PROFILE_QUERY_KEY = "user-profile";
 export const USERS_PER_PAGE = 20;
 
 /** Number of columns in the user table (avatar, email, name, role, lastSeen) */
-export const USER_TABLE_COLUMN_COUNT = 5;
+export const USER_TABLE_COLUMN_COUNT = 6;
 
 /** Debounce time for user search filter (ms) */
 export const USER_SEARCH_DEBOUNCE_MS = 300;

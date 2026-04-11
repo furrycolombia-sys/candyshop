@@ -112,7 +112,7 @@ function parseArgs(argv) {
 function printUsage() {
   console.log(
     [
-      "Usage: node scripts/grant-user-role.mjs --email user@example.com [--role admin|buyer|seller|events] [--reason \"...\"] [--dry-run]",
+      'Usage: node scripts/grant-user-role.mjs --email user@example.com [--role admin|buyer|seller|events] [--reason "..."] [--dry-run]',
       "",
       "Examples:",
       "  node scripts/grant-user-role.mjs --email heinerangarita@gmail.com --role admin",
@@ -142,7 +142,9 @@ async function queryJson(pathname) {
     headers: adminHeaders(),
   });
   if (!response.ok) {
-    const payload = await response.json().catch(() => ({ message: response.statusText }));
+    const payload = await response
+      .json()
+      .catch(() => ({ message: response.statusText }));
     throw new Error(payload.message || `Query failed: ${response.status}`);
   }
   return response.json();
@@ -158,7 +160,9 @@ async function insertJson(pathname, body) {
     body: JSON.stringify(body),
   });
   if (!response.ok) {
-    const payload = await response.json().catch(() => ({ message: response.statusText }));
+    const payload = await response
+      .json()
+      .catch(() => ({ message: response.statusText }));
     throw new Error(payload.message || `Insert failed: ${response.status}`);
   }
   return response.json();
@@ -221,7 +225,9 @@ async function main() {
         .map((row) => row.key),
     );
     const missing = templateKeys.filter((key) => !foundKeys.has(key));
-    throw new Error(`Missing global resource permissions for: ${missing.join(", ")}`);
+    throw new Error(
+      `Missing global resource permissions for: ${missing.join(", ")}`,
+    );
   }
 
   console.log(
@@ -248,7 +254,10 @@ async function main() {
     reason: args.reason,
   }));
 
-  await insertJson("user_permissions?on_conflict=user_id,resource_permission_id", rows);
+  await insertJson(
+    "user_permissions?on_conflict=user_id,resource_permission_id",
+    rows,
+  );
   console.log(
     `Granted ${templateKeys.length} ${args.role} permissions to ${args.email}`,
   );

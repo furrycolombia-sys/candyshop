@@ -9,12 +9,27 @@ import type { UserProfileSummary } from "@/features/users/domain/types";
 interface UserRowWithRoleProps {
   user: UserProfileSummary;
   onClick: (userId: string) => void;
+  isSelected?: boolean;
+  onSelectToggle?: (userId: string, selected: boolean) => void;
 }
 
 /** Row that fetches permissions for a single user to compute role */
-export function UserRowWithRole({ user, onClick }: UserRowWithRoleProps) {
+export function UserRowWithRole({
+  user,
+  onClick,
+  isSelected,
+  onSelectToggle,
+}: UserRowWithRoleProps) {
   const { data: grantedKeys = [] } = useUserPermissions(user.id);
   const role = computeRole(grantedKeys);
 
-  return <UserRow user={user} role={role} onClick={onClick} />;
+  return (
+    <UserRow
+      user={user}
+      role={role}
+      onClick={onClick}
+      isSelected={isSelected}
+      onSelectToggle={onSelectToggle}
+    />
+  );
 }

@@ -60,7 +60,7 @@ export function CartItemRow({
             sizes="80px"
           />
         ) : (
-          <span className="flex size-full items-center justify-center font-display text-ui-xs font-extrabold uppercase tracking-widest text-foreground/30">
+          <span className="flex size-full items-center justify-center font-display text-ui-xs font-extrabold uppercase tracking-widest text-muted-foreground">
             {tTypes(item.type)}
           </span>
         )}

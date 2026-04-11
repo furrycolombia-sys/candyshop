@@ -15,7 +15,8 @@ const EXAMPLES_ROOT = resolve("specs", "examples");
 const OPENAPI_URL = process.env.ORVAL_OPENAPI_URL || "";
 const API_BASE_URL = buildApiBaseUrl();
 const GLOBAL_PATH_PARAMS = {
-  tenant: process.env.SYNC_OPENAPI_TENANT ||
+  tenant:
+    process.env.SYNC_OPENAPI_TENANT ||
     process.env.NEXT_PUBLIC_TENANT ||
     "default",
 };
@@ -39,9 +40,7 @@ function buildApiBaseUrl() {
     return apiUrl;
   }
 
-  const normalizedPrefix = prefix.startsWith("/")
-    ? prefix
-    : `/${prefix}`;
+  const normalizedPrefix = prefix.startsWith("/") ? prefix : `/${prefix}`;
   return `${apiUrl}${normalizedPrefix}`.replace(/\/+$/, "");
 }
 
@@ -66,8 +65,7 @@ async function loadUserParams() {
     const raw = await readFile(USER_PARAMS_PATH, "utf8");
     const parsed = JSON.parse(raw) ?? {};
     return {
-      OPENAPI_PATH_PARAM_OVERRIDES:
-        parsed.OPENAPI_PATH_PARAM_OVERRIDES ?? {},
+      OPENAPI_PATH_PARAM_OVERRIDES: parsed.OPENAPI_PATH_PARAM_OVERRIDES ?? {},
       missingParams: parsed.missingParams ?? {},
     };
   } catch (error) {
@@ -98,7 +96,11 @@ async function saveUserParams(params) {
     },
   };
   await mkdir(dirname(USER_PARAMS_PATH), { recursive: true });
-  await writeFile(USER_PARAMS_PATH, JSON.stringify(output, null, 2) + "\n", "utf8");
+  await writeFile(
+    USER_PARAMS_PATH,
+    JSON.stringify(output, null, 2) + "\n",
+    "utf8",
+  );
 }
 
 async function runGit(args) {
@@ -135,7 +137,11 @@ async function runGitOutput(args) {
 
     child.on("close", (code) => {
       if (code !== 0) {
-        reject(new Error(`git ${(args ?? []).join(" ")} exited with ${code}: ${stderr}`));
+        reject(
+          new Error(
+            `git ${(args ?? []).join(" ")} exited with ${code}: ${stderr}`,
+          ),
+        );
         return;
       }
       resolveCommand(stdout);
@@ -201,8 +207,7 @@ async function discardGeneratedTimestampOnlyChanges() {
       .split("\n")
       .filter((line) => line.startsWith("+") || line.startsWith("-"))
       .filter(
-        (line) =>
-          !allowedPrefixes.some((prefix) => line.startsWith(prefix)),
+        (line) => !allowedPrefixes.some((prefix) => line.startsWith(prefix)),
       );
 
     if (
@@ -240,15 +245,19 @@ async function downloadSpecIfNeeded() {
   }
 }
 
-const FETCH_TIMEOUT_MS = Number(process.env.REFRESH_OPENAPI_TIMEOUT_MS || 10_000);
+const FETCH_TIMEOUT_MS = Number(
+  process.env.REFRESH_OPENAPI_TIMEOUT_MS || 10_000,
+);
 
 function sanitizePath(pathKey) {
-  return pathKey
-    .replaceAll('/', "_")
-    .replaceAll(/[{}]/g, "")
-    .replaceAll(/[^a-zA-Z0-9_-]/g, "_")
-    .replaceAll(/_+/g, "_")
-    .replaceAll(/^_+|_+$/g, "") || "root";
+  return (
+    pathKey
+      .replaceAll("/", "_")
+      .replaceAll(/[{}]/g, "")
+      .replaceAll(/[^a-zA-Z0-9_-]/g, "_")
+      .replaceAll(/_+/g, "_")
+      .replaceAll(/^_+|_+$/g, "") || "root"
+  );
 }
 
 function combineOverrides(pathKey, ...sources) {
@@ -323,7 +332,8 @@ async function main() {
 
       const content = successResponse.content ?? {};
       const mediaType = content["application/json"] ?? {};
-      const needsExample = !("example" in mediaType) || !hasSchema(mediaType.schema);
+      const needsExample =
+        !("example" in mediaType) || !hasSchema(mediaType.schema);
 
       if (!needsExample) {
         continue;
@@ -340,7 +350,9 @@ async function main() {
   }
 
   if (operationsToUpdate.length === 0) {
-    console.log("[refresh-openapi-mocks] No operations require example generation");
+    console.log(
+      "[refresh-openapi-mocks] No operations require example generation",
+    );
     if (shouldProcess) {
       await runPnpm(["exec", "orval"]);
       await discardGeneratedTimestampOnlyChanges();
@@ -390,7 +402,11 @@ async function main() {
       QUERY_PARAM_OVERRIDES,
       userParams.OPENAPI_PATH_PARAM_OVERRIDES,
     );
-    const queryResolution = buildParameterValues(queryParams, queryOverrides, {});
+    const queryResolution = buildParameterValues(
+      queryParams,
+      queryOverrides,
+      {},
+    );
 
     if (!queryResolution.values) {
       const added = markMissingUserParams(
@@ -445,7 +461,9 @@ async function main() {
     }
 
     if (shouldFetch) {
-      console.log(`[refresh-openapi-mocks] Fetching ${method.toUpperCase()} ${url}`);
+      console.log(
+        `[refresh-openapi-mocks] Fetching ${method.toUpperCase()} ${url}`,
+      );
       const controller = new AbortController();
       const timeoutId = setTimeout(() => {
         controller.abort();
@@ -480,7 +498,11 @@ async function main() {
         clearTimeout(timeoutId);
       }
 
-      await writeFile(filePath, JSON.stringify(payload, null, 2) + "\n", "utf8");
+      await writeFile(
+        filePath,
+        JSON.stringify(payload, null, 2) + "\n",
+        "utf8",
+      );
       await writeFile(
         metaPath,
         JSON.stringify({ overrides: overrideSnapshot }, null, 2) + "\n",

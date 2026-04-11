@@ -91,7 +91,7 @@ describe("POST /api/checkout/payment-methods", () => {
             account_details_en: "Account 123",
             account_details_es: "Cuenta 123",
             seller_note_en: "Bring receipt",
-            seller_note_es: "Trae recibo",
+            seller_note_es: "Traer recibo",
             payment_method_types: {
               name_en: "Bank Transfer",
               name_es: "Transferencia",
@@ -124,7 +124,7 @@ describe("POST /api/checkout/payment-methods", () => {
           account_details_en: "Account 123",
           account_details_es: "Cuenta 123",
           seller_note_en: "Bring receipt",
-          seller_note_es: "Trae recibo",
+          seller_note_es: "Traer recibo",
         },
       ],
     });

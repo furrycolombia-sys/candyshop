@@ -1,0 +1,18 @@
+{
+  "agent": "solid",
+  "review_id": "2026-04-10_23-20-00",
+  "scope": "src/",
+  "issues": [
+    {
+      "id": "SOLID-001",
+      "severity": "warning",
+      "file": "apps/admin/src/features/users/utils/export-excel.ts",
+      "line": 4,
+      "title": "Violates Single Responsibility Principle",
+      "description": "The export script handles parsing domains AND managing file downloads directly via 'xlsx.writeFile'. This couples browser IO logic with data formatting.",
+      "rule": "solid-principles.md#srp",
+      "fix": "Return a Blob or a workbook from 'exportUsersToExcel' and have the component handle the actual anchor download."
+    }
+  ],
+  "summary": { "critical": 0, "warning": 1, "suggestion": 0, "info": 0 }
+}
