@@ -1,9 +1,9 @@
 /* eslint-disable i18next/no-literal-string */
-// eslint-disable-next-line import/order
-import * as xlsx from "xlsx";
 import type { UserProfileSummary } from "@/features/users/domain/types";
 
-export function exportUsersToExcel(users: UserProfileSummary[]) {
+export async function exportUsersToExcel(users: UserProfileSummary[]) {
+  const xlsx = await import("xlsx");
+
   // Convert the user list to a flat array of objects suitable for Excel
   const data = users.map((u) => ({
     ID: u.id,

@@ -14,7 +14,7 @@ vi.mock("xlsx", () => ({
 }));
 
 describe("exportUsersToExcel", () => {
-  it("should format users and export them to an excel file", () => {
+  it("should format users and export them to an excel file", async () => {
     const mockUsers: UserProfileSummary[] = [
       {
         id: "1",
@@ -26,7 +26,7 @@ describe("exportUsersToExcel", () => {
       },
     ];
 
-    const workbook = exportUsersToExcel(mockUsers);
+    const workbook = await exportUsersToExcel(mockUsers);
 
     expect(xlsx.utils.json_to_sheet).toHaveBeenCalledWith([
       {

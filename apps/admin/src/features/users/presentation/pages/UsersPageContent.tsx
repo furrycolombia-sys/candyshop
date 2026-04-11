@@ -6,13 +6,11 @@ import { useTranslations } from "next-intl";
 import { useQueryStates } from "nuqs";
 import { useEffect, useState } from "react";
 import { tid } from "shared";
-import * as xlsx from "xlsx";
 
 import { useUsers } from "@/features/users/application/hooks/useUsers";
 import { USER_SEARCH_DEBOUNCE_MS } from "@/features/users/domain/constants";
 import { usersSearchParams } from "@/features/users/domain/searchParams";
 import { UserTable } from "@/features/users/presentation/components/UserTable";
-import { exportUsersToExcel } from "@/features/users/utils/export-excel";
 import { useRouter } from "@/shared/infrastructure/i18n";
 
 export function UsersPageContent() {
@@ -45,10 +43,15 @@ export function UsersPageContent() {
     router.push(`/users/${userId}`);
   };
 
-  const handleExportExcel = () => {
+  const handleExportExcel = async () => {
     const selected = users.filter((u) => selectedUsers.has(u.id));
     if (selected.length === 0) return;
-    const workbook = exportUsersToExcel(selected);
+
+    const { exportUsersToExcel } =
+      await import("@/features/users/utils/export-excel");
+    const xlsx = await import("xlsx");
+
+    const workbook = await exportUsersToExcel(selected);
     xlsx.writeFile(workbook, "users-export.xlsx");
   };
 
