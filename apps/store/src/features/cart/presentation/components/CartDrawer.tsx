@@ -3,7 +3,7 @@
 import { ShoppingCart, Trash2 } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useMemo } from "react";
-import { i18nPrice, tid } from "shared";
+import { tid } from "shared";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "ui";
 
 import { CartItemRow } from "./CartItemRow";
@@ -22,8 +22,7 @@ export function CartDrawer() {
   const tTypes = useTranslations("productTypes");
   const tCategories = useTranslations("categories");
   const locale = useLocale();
-  const { items, total, itemCount, removeItem, updateQuantity, clearCart } =
-    useCart();
+  const { items, itemCount, removeItem, updateQuantity, clearCart } = useCart();
   const flyCtx = useFlyToCartContext();
 
   // Group items by seller
@@ -49,9 +48,6 @@ export function CartDrawer() {
       : String(itemCount);
 
   /** Format a raw currency amount using the shared i18nPrice utility */
-  const formatAmount = (amount: number) =>
-    i18nPrice({ price_cop: amount, price_usd: amount }, locale);
-
   return (
     <Sheet>
       <SheetTrigger asChild>
@@ -153,21 +149,6 @@ export function CartDrawer() {
                         />
                       ))}
                     </ul>
-
-                    {/* Seller subtotal */}
-                    {sellerGroups.length > 1 && (
-                      <div className="flex items-center justify-between px-5 py-2 border-b border-foreground/10">
-                        <span className="text-ui-xs font-bold uppercase tracking-widest text-muted-foreground">
-                          {t("subtotal")}
-                        </span>
-                        <span
-                          className="font-display text-xs font-bold text-muted-foreground"
-                          {...tid("cart-seller-subtotal")}
-                        >
-                          {formatAmount(group.subtotal)}
-                        </span>
-                      </div>
-                    )}
                   </div>
                 );
               })}
@@ -186,19 +167,6 @@ export function CartDrawer() {
                   <Trash2 size={10} aria-hidden="true" />
                   {t("clear")}
                 </button>
-              </div>
-
-              {/* Total */}
-              <div className="flex items-center justify-between border-strong border-foreground p-3">
-                <span className="font-display text-sm font-extrabold uppercase tracking-tight">
-                  {t("total")}
-                </span>
-                <span
-                  className="font-display text-2xl font-extrabold"
-                  {...tid("cart-drawer-total")}
-                >
-                  {formatAmount(total)}
-                </span>
               </div>
 
               {/* Checkout */}
