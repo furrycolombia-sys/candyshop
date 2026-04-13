@@ -273,6 +273,71 @@
       "update": "Undo Check-ins"
     }
   },
+  "permissionHints": {
+    "products": {
+      "create": "Create new product listings in the store catalog",
+      "read": "View product details, prices, and inventory",
+      "update": "Edit product names, descriptions, prices, and stock",
+      "delete": "Permanently remove products from the catalog"
+    },
+    "product_images": {
+      "create": "Upload images to product galleries",
+      "read": "View product gallery images",
+      "delete": "Remove images from product galleries"
+    },
+    "product_reviews": {
+      "create": "Write reviews on purchased products",
+      "read": "View reviews left by other buyers",
+      "update": "Edit own reviews after posting",
+      "delete": "Remove own reviews"
+    },
+    "orders": {
+      "create": "Place new orders and initiate checkout",
+      "read": "View order history and status",
+      "update": "Approve, reject, or request evidence on orders"
+    },
+    "receipts": {
+      "create": "Upload payment receipts as proof of payment",
+      "read": "View uploaded payment receipts",
+      "delete": "Remove uploaded payment receipts"
+    },
+    "seller_payment_methods": {
+      "create": "Add new payment methods for buyers",
+      "read": "View configured payment methods",
+      "update": "Edit payment method details and fields",
+      "delete": "Remove payment methods"
+    },
+    "payment_settings": {
+      "read": "View platform payment timeout settings",
+      "update": "Change payment timeout and expiration settings"
+    },
+    "templates": {
+      "create": "Create permission templates for quick role assignment",
+      "read": "View available permission templates",
+      "update": "Edit permission template configurations",
+      "delete": "Remove permission templates"
+    },
+    "audit": {
+      "read": "View the audit log of all database changes"
+    },
+    "user_permissions": {
+      "create": "Grant permissions to other users",
+      "read": "View which permissions users have",
+      "update": "Modify existing permission grants",
+      "delete": "Revoke permissions from users"
+    },
+    "events": {
+      "create": "Create new events in the system",
+      "read": "View event details and schedules",
+      "update": "Edit event information and settings",
+      "delete": "Remove events from the system"
+    },
+    "check_ins": {
+      "create": "Check in attendees at events",
+      "read": "View check-in records and attendance",
+      "update": "Undo or modify check-in records"
+    }
+  },
   "common": {
     "loading": "Loading...",
     "error": "An error occurred",
