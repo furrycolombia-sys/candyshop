@@ -88,18 +88,11 @@ describe("POST /api/checkout/payment-methods", () => {
         json: async () => [
           {
             id: "pm-1",
-            account_details_en: "Account 123",
-            account_details_es: "Cuenta 123",
-            seller_note_en: "Bring receipt",
-            seller_note_es: "Traer recibo",
-            payment_method_types: {
-              name_en: "Bank Transfer",
-              name_es: "Transferencia",
-              icon: "bank",
-              requires_receipt: true,
-              requires_transfer_number: true,
-              required_buyer_fields: [],
-            },
+            name_en: "Bank Transfer",
+            name_es: "Transferencia",
+            display_blocks: [],
+            form_fields: [],
+            is_active: true,
           },
         ],
       } as Response);
@@ -117,16 +110,11 @@ describe("POST /api/checkout/payment-methods", () => {
       methods: [
         {
           id: "pm-1",
-          type_name_en: "Bank Transfer",
-          type_name_es: "Transferencia",
-          type_icon: "bank",
-          requires_receipt: true,
-          requires_transfer_number: true,
-          required_buyer_fields: [],
-          account_details_en: "Account 123",
-          account_details_es: "Cuenta 123",
-          seller_note_en: "Bring receipt",
-          seller_note_es: "Traer recibo",
+          name_en: "Bank Transfer",
+          name_es: "Transferencia",
+          display_blocks: [],
+          form_fields: [],
+          is_active: true,
         },
       ],
     });

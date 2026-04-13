@@ -81,7 +81,8 @@
     },
     "receiptPreview": "Vista previa del comprobante",
     "removeReceipt": "Eliminar comprobante",
-    "errorOccurred": "Ocurrio un error"
+    "paymentInstructions": "Instrucciones de Pago",
+    "fillForm": "Completa la informacion requerida"
   },
   "orders": {
     "title": "Mis Ordenes",
@@ -183,7 +184,45 @@
     "saving": "Guardando...",
     "cancel": "Cancelar",
     "removeMethod": "Eliminar metodo",
-    "editPaymentMethod": "Editar metodo de pago"
+    "editPaymentMethod": "Editar metodo de pago",
+    "displaySection": "Instrucciones de Pago",
+    "formSection": "Informacion Requerida",
+    "addBlock": "Agregar Bloque",
+    "addField": "Agregar Campo",
+    "blockTypes": {
+      "text": "Texto",
+      "image": "Imagen",
+      "video": "Video de YouTube",
+      "link": "Enlace",
+      "url": "URL"
+    },
+    "fieldTypes": {
+      "text": "Texto",
+      "email": "Correo",
+      "number": "Numero",
+      "file": "Subir Archivo",
+      "textarea": "Texto Largo"
+    },
+    "fieldLabel": "Etiqueta",
+    "fieldLabelEn": "Etiqueta (EN)",
+    "fieldLabelEs": "Etiqueta (ES)",
+    "fieldPlaceholderEn": "Marcador (EN)",
+    "fieldPlaceholderEs": "Marcador (ES)",
+    "fieldRequired": "Requerido",
+    "fieldType": "Tipo de Campo",
+    "contentEn": "Contenido (EN)",
+    "contentEs": "Contenido (ES)",
+    "imageUrl": "URL de Imagen",
+    "videoUrl": "URL de YouTube",
+    "linkUrl": "URL del Enlace",
+    "linkLabelEn": "Etiqueta del Enlace (EN)",
+    "linkLabelEs": "Etiqueta del Enlace (ES)",
+    "altTextEn": "Texto Alternativo (EN)",
+    "altTextEs": "Texto Alternativo (ES)",
+    "invalidYoutubeUrl": "Por favor ingresa una URL de YouTube valida",
+    "saved": "Guardado",
+    "saving2": "Guardando...",
+    "nameRequired": "El nombre (EN) es requerido"
   },
   "common": {
     "loading": "Cargando...",

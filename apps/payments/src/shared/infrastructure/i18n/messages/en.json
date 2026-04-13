@@ -81,7 +81,8 @@
     },
     "receiptPreview": "Receipt preview",
     "removeReceipt": "Remove receipt",
-    "errorOccurred": "An error occurred"
+    "paymentInstructions": "Payment Instructions",
+    "fillForm": "Fill in the required information"
   },
   "orders": {
     "title": "My Orders",
@@ -183,7 +184,45 @@
     "saving": "Saving...",
     "cancel": "Cancel",
     "removeMethod": "Remove method",
-    "editPaymentMethod": "Edit payment method"
+    "editPaymentMethod": "Edit payment method",
+    "displaySection": "Payment Instructions",
+    "formSection": "Required Information",
+    "addBlock": "Add Block",
+    "addField": "Add Field",
+    "blockTypes": {
+      "text": "Text",
+      "image": "Image",
+      "video": "YouTube Video",
+      "link": "Link",
+      "url": "URL"
+    },
+    "fieldTypes": {
+      "text": "Text",
+      "email": "Email",
+      "number": "Number",
+      "file": "File Upload",
+      "textarea": "Long Text"
+    },
+    "fieldLabel": "Label",
+    "fieldLabelEn": "Label (EN)",
+    "fieldLabelEs": "Label (ES)",
+    "fieldPlaceholderEn": "Placeholder (EN)",
+    "fieldPlaceholderEs": "Placeholder (ES)",
+    "fieldRequired": "Required",
+    "fieldType": "Field Type",
+    "contentEn": "Content (EN)",
+    "contentEs": "Content (ES)",
+    "imageUrl": "Image URL",
+    "videoUrl": "YouTube URL",
+    "linkUrl": "Link URL",
+    "linkLabelEn": "Link Label (EN)",
+    "linkLabelEs": "Link Label (ES)",
+    "altTextEn": "Alt Text (EN)",
+    "altTextEs": "Alt Text (ES)",
+    "invalidYoutubeUrl": "Please enter a valid YouTube URL",
+    "saved": "Saved",
+    "saving2": "Saving...",
+    "nameRequired": "Name (EN) is required"
   },
   "common": {
     "loading": "Loading...",

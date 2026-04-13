@@ -13,18 +13,11 @@ const REQUIRED_PERMISSION_KEYS = ["orders.create", "receipts.create"] as const;
 
 type PaymentMethodRow = {
   id: string;
-  account_details_en: string | null;
-  account_details_es: string | null;
-  seller_note_en: string | null;
-  seller_note_es: string | null;
-  payment_method_types: {
-    name_en: string;
-    name_es: string;
-    icon: string | null;
-    requires_receipt: boolean;
-    requires_transfer_number: boolean;
-    required_buyer_fields: unknown;
-  };
+  name_en: string;
+  name_es: string | null;
+  display_blocks: unknown;
+  form_fields: unknown;
+  is_active: boolean;
 };
 
 type ProductStockRow = {
@@ -142,21 +135,15 @@ function sanitizeItems(items: unknown): CheckoutItemPayload[] | null {
 function mapPaymentMethod(row: PaymentMethodRow): SellerPaymentMethodWithType {
   return {
     id: row.id,
-    type_name_en: row.payment_method_types.name_en,
-    type_name_es: row.payment_method_types.name_es,
-    type_icon: row.payment_method_types.icon,
-    requires_receipt: row.payment_method_types.requires_receipt,
-    requires_transfer_number: row.payment_method_types.requires_transfer_number,
-    required_buyer_fields: Array.isArray(
-      row.payment_method_types.required_buyer_fields,
-    )
-      ? (row.payment_method_types
-          .required_buyer_fields as SellerPaymentMethodWithType["required_buyer_fields"])
+    name_en: row.name_en,
+    name_es: row.name_es ?? null,
+    display_blocks: Array.isArray(row.display_blocks)
+      ? (row.display_blocks as SellerPaymentMethodWithType["display_blocks"])
       : [],
-    account_details_en: row.account_details_en,
-    account_details_es: row.account_details_es,
-    seller_note_en: row.seller_note_en,
-    seller_note_es: row.seller_note_es,
+    form_fields: Array.isArray(row.form_fields)
+      ? (row.form_fields as SellerPaymentMethodWithType["form_fields"])
+      : [],
+    is_active: row.is_active,
   };
 }
 
@@ -196,8 +183,7 @@ async function fetchPaymentMethodsBySeller(sellerId: string) {
       seller_id: `eq.${sellerId}`,
       is_active: "eq.true",
       order: "sort_order.asc",
-      select:
-        "id,account_details_en,account_details_es,seller_note_en,seller_note_es,payment_method_types!inner(name_en,name_es,icon,requires_receipt,requires_transfer_number,required_buyer_fields)",
+      select: "id,name_en,name_es,display_blocks,form_fields,is_active",
     }),
   );
 }

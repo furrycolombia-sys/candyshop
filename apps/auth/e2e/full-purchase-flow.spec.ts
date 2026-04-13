@@ -110,33 +110,70 @@ test.describe.serial("Full purchase flow: seller -> buyer -> approval", () => {
     await page.waitForLoadState("networkidle");
     await snap(page, "payments-methods-empty");
 
-    // Click "Add Method"
+    // Click "Add Method" -- opens the CreateMethodForm
     await page.getByTestId("add-payment-method-button").click();
-    await snap(page, "payments-method-editor-open");
+    await snap(page, "payments-method-create-form-open");
 
-    // Select Bancolombia Transfer (requires receipt + transfer number)
-    const typeSelect = page.getByTestId("payment-method-type-select");
-    await typeSelect.waitFor({ state: "visible" });
-    await page.waitForTimeout(DEBOUNCE_WAIT_MS);
-    await typeSelect.selectOption({ label: "Bancolombia Transfer" });
-    await snap(page, "payments-method-type-selected");
+    // Wait for the name input to appear and fill it
+    const nameInput = page.getByTestId("payment-method-name-en");
+    await nameInput.waitFor({ state: "visible", timeout: ELEMENT_TIMEOUT_MS });
+    await nameInput.fill("E2E Payment Method");
+    await snap(page, "payments-method-name-filled");
 
-    // Fill account details (EN)
-    await page
-      .getByTestId("payment-method-account-en")
-      .fill("E2E Bank Account 12345");
-    await snap(page, "payments-method-details-filled");
+    // Click Save to create the method and open the editor
+    await page.getByTestId("create-method-save").click();
 
-    // Save
-    await page.getByTestId("payment-method-save").click();
-
-    // Wait for editor to close (indicates save succeeded)
-    await expect(page.getByTestId("payment-method-save")).not.toBeVisible({
+    // Wait for the editor to appear (PaymentMethodEditor also has payment-method-name-en)
+    await expect(page.getByTestId("payment-method-name-en")).toBeVisible({
       timeout: ELEMENT_TIMEOUT_MS,
     });
+    await snap(page, "payments-method-editor-open");
 
-    // Verify method appears in the table
-    await expect(page.getByTestId("payment-methods-page")).toBeVisible();
+    // Wait for auto-save after creation
+    await page.waitForTimeout(MUTATION_WAIT_MS);
+
+    // ── Add a text display block ──────────────────────────────────
+    await page.getByTestId("add-display-block").click();
+    // Dropdown appears -- click the "Text" option
+    await page.getByTestId("add-block-type-text").click();
+    await snap(page, "payments-display-block-added");
+
+    // Fill the content_en textarea (first textarea inside the display section editor)
+    const displayBlockTextarea = page
+      .getByTestId("display-section-editor")
+      .locator("textarea")
+      .first();
+    await displayBlockTextarea.fill("Send payment to: E2E Bank Account 12345");
+    await snap(page, "payments-display-block-filled");
+
+    // Wait for auto-save
+    await page.waitForTimeout(MUTATION_WAIT_MS);
+
+    // ── Add a form field ──────────────────────────────────────────
+    await page.getByTestId("add-form-field").click();
+    await snap(page, "payments-form-field-added");
+
+    // Fill the label_en input for the new field (first label_en input in form section)
+    const labelEnInput = page
+      .getByTestId("form-section-editor")
+      .locator("input[placeholder]")
+      .first();
+    await labelEnInput.fill("Transfer Reference");
+    await snap(page, "payments-form-field-label-filled");
+
+    // Wait for auto-save
+    await page.waitForTimeout(MUTATION_WAIT_MS);
+
+    // Navigate back to payment methods list
+    await page.getByTestId("back-to-list").click();
+
+    // Verify method appears in the list
+    await expect(page.getByTestId("payment-methods-page")).toBeVisible({
+      timeout: ELEMENT_TIMEOUT_MS,
+    });
+    await expect(page.getByTestId("payment-method-name")).toBeVisible({
+      timeout: ELEMENT_TIMEOUT_MS,
+    });
     await snap(page, "payments-method-saved");
   });
 
@@ -225,23 +262,22 @@ test.describe.serial("Full purchase flow: seller -> buyer -> approval", () => {
     }
     await snap(page, "checkout-method-selected");
 
-    // Enter transfer number
-    const transferInput = page.getByTestId(/^transfer-number-/).first();
-    await transferInput.fill("TXN-E2E-12345");
-    await snap(page, "checkout-transfer-filled");
-
-    // Upload receipt photo (Bancolombia Transfer requires this)
-    const receiptInput = page.getByTestId("receipt-file-input").first();
-    await receiptInput.setInputFiles({
-      name: "receipt-proof.png",
-      mimeType: "image/png",
-      buffer: Buffer.from(
-        "iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAFklEQVQYV2P8z8BQz0AEYBxVOHIUAgBGWAgE/dLkRAAAAABJRU5ErkJggg==",
-        "base64",
-      ),
+    // Wait for display blocks to render
+    await expect(page.getByTestId(/^display-block-/).first()).toBeVisible({
+      timeout: ELEMENT_TIMEOUT_MS,
     });
-    await page.waitForTimeout(DEBOUNCE_WAIT_MS);
-    await snap(page, "checkout-receipt-uploaded");
+    await snap(page, "checkout-display-blocks-visible");
+
+    // Wait for dynamic form fields to render
+    await expect(page.getByTestId(/^dynamic-field-/).first()).toBeVisible({
+      timeout: ELEMENT_TIMEOUT_MS,
+    });
+    await snap(page, "checkout-form-fields-visible");
+
+    // Fill the "Transfer Reference" dynamic field
+    const dynamicField = page.getByTestId(/^dynamic-field-/).first();
+    await dynamicField.locator("input, textarea").first().fill("TXN-E2E-12345");
+    await snap(page, "checkout-transfer-filled");
 
     // Submit payment
     const submitBtn = page.getByTestId(/^submit-payment-/).first();

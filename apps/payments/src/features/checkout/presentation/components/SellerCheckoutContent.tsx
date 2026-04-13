@@ -1,20 +1,20 @@
+/* eslint-disable react/no-multi-comp -- helper components co-located with parent for cohesion */
 "use client";
 
 import { CheckCircle, Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useId } from "react";
 import { tid } from "shared";
-import { Input } from "ui";
 
-import { BuyerField } from "./BuyerField";
 import { CheckoutItemsSummary } from "./CheckoutItemsSummary";
+import { DisplayBlockRenderer } from "./DisplayBlockRenderer";
+import { DynamicFormField } from "./DynamicFormField";
 import { PaymentMethodSelector } from "./PaymentMethodSelector";
-import { ReceiptUpload } from "./ReceiptUpload";
 
 import type {
   CartItem,
   SellerPaymentMethodWithType,
 } from "@/features/checkout/domain/types";
+import type { FormField } from "@/features/payment-methods/domain/types";
 
 interface SellerCheckoutContentProps {
   sellerId: string;
@@ -30,15 +30,74 @@ interface SellerCheckoutContentProps {
   methods: SellerPaymentMethodWithType[];
   selectedMethodId: string | null;
   selectedMethod: SellerPaymentMethodWithType | undefined;
-  transferNumber: string;
-  receiptFile: File | null;
-  buyerInfo: Record<string, string>;
+  buyerSubmission: Record<string, string>;
   validationError: string | null;
   onSelectMethod: (id: string | null) => void;
-  onTransferNumberChange: (value: string) => void;
-  onReceiptFileChange: (file: File | null) => void;
-  onBuyerInfoChange: (key: string, value: string) => void;
+  onBuyerSubmissionChange: (fieldId: string, value: string) => void;
+  onFileSelected: (fieldId: string, file: File) => void;
   onSubmit: () => void;
+}
+
+interface DisplayBlocksSectionProps {
+  blocks: SellerPaymentMethodWithType["display_blocks"];
+  label: string;
+}
+
+function DisplayBlocksSection({ blocks, label }: DisplayBlocksSectionProps) {
+  if (blocks.length === 0) return null;
+  return (
+    <div className="space-y-3">
+      <p className="font-display text-xs font-extrabold uppercase tracking-widest">
+        {label}
+      </p>
+      <div className="space-y-3 rounded-lg border border-border bg-muted/20 p-4">
+        {blocks.map((block) => (
+          <DisplayBlockRenderer key={block.id} block={block} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+interface FormFieldsSectionProps {
+  fields: FormField[];
+  buyerSubmission: Record<string, string>;
+  isDisabled: boolean;
+  label: string;
+  onBuyerSubmissionChange: (fieldId: string, value: string) => void;
+  onFileSelected: (fieldId: string, file: File) => void;
+}
+
+function FormFieldsSection({
+  fields,
+  buyerSubmission,
+  isDisabled,
+  label,
+  onBuyerSubmissionChange,
+  onFileSelected,
+}: FormFieldsSectionProps) {
+  if (fields.length === 0) return null;
+  return (
+    <div className="space-y-3">
+      <p className="font-display text-xs font-extrabold uppercase tracking-widest">
+        {label}
+      </p>
+      <div className="space-y-4">
+        {fields.map((field: FormField) => (
+          <DynamicFormField
+            key={field.id}
+            field={field}
+            value={buyerSubmission[field.id] ?? ""}
+            onChange={(value) => onBuyerSubmissionChange(field.id, value)}
+            onFileChange={(file) => {
+              if (file) onFileSelected(field.id, file);
+            }}
+            disabled={isDisabled}
+          />
+        ))}
+      </div>
+    </div>
+  );
 }
 
 export function SellerCheckoutContent({
@@ -55,22 +114,19 @@ export function SellerCheckoutContent({
   methods,
   selectedMethodId,
   selectedMethod,
-  transferNumber,
-  receiptFile,
-  buyerInfo,
+  buyerSubmission,
   validationError,
   onSelectMethod,
-  onTransferNumberChange,
-  onReceiptFileChange,
-  onBuyerInfoChange,
+  onBuyerSubmissionChange,
+  onFileSelected,
   onSubmit,
 }: SellerCheckoutContentProps) {
   const t = useTranslations("checkout");
-  const transferInputId = useId();
 
   const showForm = !isSubmitted && !isLoadingMethods && !hasStockIssues;
   const showLoading = !isSubmitted && isLoadingMethods;
   const errorMessage = error === "stock_error" ? t("stockError") : error;
+
   const submitLabel = isSubmitting ? (
     <span className="flex items-center justify-center gap-2">
       <Loader2 className="size-4 animate-spin" />
@@ -109,7 +165,7 @@ export function SellerCheckoutContent({
         </div>
       )}
 
-      {/* Payment form loading */}
+      {/* Loading */}
       {showLoading && (
         <div className="flex items-center justify-center py-4">
           <Loader2 className="size-5 animate-spin text-muted-foreground" />
@@ -126,44 +182,23 @@ export function SellerCheckoutContent({
             disabled={isDisabled}
           />
 
-          {selectedMethod?.requires_transfer_number && (
-            <div className="space-y-1">
-              <label
-                htmlFor={transferInputId}
-                className="font-display text-xs font-extrabold uppercase tracking-widest"
-              >
-                {t("transferNumber")}
-              </label>
-              <Input
-                id={transferInputId}
-                value={transferNumber}
-                onChange={(e) => onTransferNumberChange(e.target.value)}
-                placeholder={t("transferNumberHint")}
-                disabled={isDisabled}
-                className="border-strong border-foreground rounded-none"
-                {...tid(`transfer-number-${sellerId}`)}
-              />
-            </div>
+          {/* Display blocks */}
+          {selectedMethod && (
+            <DisplayBlocksSection
+              blocks={selectedMethod.display_blocks}
+              label={t("paymentInstructions")}
+            />
           )}
 
-          {/* Dynamic buyer fields (e.g. Nequi: cédula, email, tracking, name, sender) */}
-          {(selectedMethod?.required_buyer_fields ?? []).map((field) => (
-            <BuyerField
-              key={field.key}
-              fieldKey={field.key}
-              fieldType={field.type}
-              value={buyerInfo[field.key] ?? ""}
-              onChange={(v) => onBuyerInfoChange(field.key, v)}
-              disabled={isDisabled}
-              sellerId={sellerId}
-            />
-          ))}
-
-          {selectedMethod?.requires_receipt && (
-            <ReceiptUpload
-              file={receiptFile}
-              onFileChange={onReceiptFileChange}
-              disabled={isDisabled}
+          {/* Form fields */}
+          {selectedMethod && (
+            <FormFieldsSection
+              fields={selectedMethod.form_fields}
+              buyerSubmission={buyerSubmission}
+              isDisabled={isDisabled}
+              label={t("fillForm")}
+              onBuyerSubmissionChange={onBuyerSubmissionChange}
+              onFileSelected={onFileSelected}
             />
           )}
 

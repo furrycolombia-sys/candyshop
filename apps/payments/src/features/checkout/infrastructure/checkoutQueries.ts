@@ -12,72 +12,34 @@ import type {
 import { FALLBACK_SELLER_NAME } from "@/shared/domain/constants";
 import type { SupabaseClient } from "@/shared/domain/types";
 
-interface PaymentMethodRow {
-  id: string;
-  account_details_en: string | null;
-  account_details_es: string | null;
-  seller_note_en: string | null;
-  seller_note_es: string | null;
-  payment_method_types: {
-    name_en: string;
-    name_es: string;
-    icon: string | null;
-    requires_receipt: boolean;
-    requires_transfer_number: boolean;
-    required_buyer_fields: unknown;
-  };
-}
-
 /**
- * Fetch a seller's active payment methods joined with their type info.
+ * Fetch a seller's active payment methods directly from seller_payment_methods.
  */
 export async function fetchSellerPaymentMethods(
   supabase: SupabaseClient,
   sellerId: string,
 ): Promise<SellerPaymentMethodWithType[]> {
   const { data, error } = await supabase
-    .from("seller_payment_methods")
-    .select(
-      `
-      id,
-      account_details_en,
-      account_details_es,
-      seller_note_en,
-      seller_note_es,
-      payment_method_types!inner (
-        name_en,
-        name_es,
-        icon,
-        requires_receipt,
-        requires_transfer_number,
-        required_buyer_fields
-      )
-    `,
-    )
-    .eq("seller_id", sellerId)
-    .eq("is_active", true)
-    .order("sort_order");
+    .from("seller_payment_methods" as never)
+    .select("id, name_en, name_es, display_blocks, form_fields, is_active")
+    .eq("seller_id" as never, sellerId)
+    .eq("is_active" as never, true)
+    .order("sort_order" as never);
 
   if (error) throw error;
 
-  return ((data ?? []) as unknown as PaymentMethodRow[]).map((row) => ({
-    id: row.id,
-    type_name_en: row.payment_method_types.name_en,
-    type_name_es: row.payment_method_types.name_es,
-    type_icon: row.payment_method_types.icon,
-    requires_receipt: row.payment_method_types.requires_receipt,
-    requires_transfer_number: row.payment_method_types.requires_transfer_number,
-    required_buyer_fields: Array.isArray(
-      row.payment_method_types.required_buyer_fields,
-    )
-      ? (row.payment_method_types
-          .required_buyer_fields as SellerPaymentMethodWithType["required_buyer_fields"])
-      : [],
-    account_details_en: row.account_details_en,
-    account_details_es: row.account_details_es,
-    seller_note_en: row.seller_note_en,
-    seller_note_es: row.seller_note_es,
-  }));
+  return ((data ?? []) as unknown as SellerPaymentMethodWithType[]).map(
+    (row) => ({
+      id: row.id,
+      name_en: row.name_en,
+      name_es: row.name_es ?? null,
+      display_blocks: Array.isArray(row.display_blocks)
+        ? row.display_blocks
+        : [],
+      form_fields: Array.isArray(row.form_fields) ? row.form_fields : [],
+      is_active: row.is_active,
+    }),
+  );
 }
 
 interface CreateOrderParams {

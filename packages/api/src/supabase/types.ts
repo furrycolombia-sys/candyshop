@@ -353,54 +353,6 @@ export type Database = {
           },
         ];
       };
-      payment_method_types: {
-        Row: {
-          created_at: string;
-          description_en: string | null;
-          description_es: string | null;
-          icon: string | null;
-          id: string;
-          is_active: boolean;
-          name_en: string;
-          name_es: string;
-          required_buyer_fields: Json;
-          requires_receipt: boolean;
-          requires_transfer_number: boolean;
-          sort_order: number;
-          updated_at: string;
-        };
-        Insert: {
-          created_at?: string;
-          description_en?: string | null;
-          description_es?: string | null;
-          icon?: string | null;
-          id?: string;
-          is_active?: boolean;
-          name_en: string;
-          name_es: string;
-          required_buyer_fields?: Json;
-          requires_receipt?: boolean;
-          requires_transfer_number?: boolean;
-          sort_order?: number;
-          updated_at?: string;
-        };
-        Update: {
-          created_at?: string;
-          description_en?: string | null;
-          description_es?: string | null;
-          icon?: string | null;
-          id?: string;
-          is_active?: boolean;
-          name_en?: string;
-          name_es?: string;
-          required_buyer_fields?: Json;
-          requires_receipt?: boolean;
-          requires_transfer_number?: boolean;
-          sort_order?: number;
-          updated_at?: string;
-        };
-        Relationships: [];
-      };
       payment_settings: {
         Row: {
           key: string;
@@ -705,53 +657,42 @@ export type Database = {
       };
       seller_payment_methods: {
         Row: {
-          account_details_en: string | null;
-          account_details_es: string | null;
           created_at: string;
+          display_blocks: Json;
+          form_fields: Json;
           id: string;
           is_active: boolean;
+          name_en: string;
+          name_es: string | null;
           seller_id: string;
-          seller_note_en: string | null;
-          seller_note_es: string | null;
           sort_order: number;
-          type_id: string;
           updated_at: string;
         };
         Insert: {
-          account_details_en?: string | null;
-          account_details_es?: string | null;
           created_at?: string;
+          display_blocks?: Json;
+          form_fields?: Json;
           id?: string;
           is_active?: boolean;
+          name_en: string;
+          name_es?: string | null;
           seller_id: string;
-          seller_note_en?: string | null;
-          seller_note_es?: string | null;
           sort_order?: number;
-          type_id: string;
           updated_at?: string;
         };
         Update: {
-          account_details_en?: string | null;
-          account_details_es?: string | null;
           created_at?: string;
+          display_blocks?: Json;
+          form_fields?: Json;
           id?: string;
           is_active?: boolean;
+          name_en?: string;
+          name_es?: string | null;
           seller_id?: string;
-          seller_note_en?: string | null;
-          seller_note_es?: string | null;
           sort_order?: number;
-          type_id?: string;
           updated_at?: string;
         };
-        Relationships: [
-          {
-            foreignKeyName: "seller_payment_methods_type_id_fkey";
-            columns: ["type_id"];
-            isOneToOne: false;
-            referencedRelation: "payment_method_types";
-            referencedColumns: ["id"];
-          },
-        ];
+        Relationships: [];
       };
       ticket_transfers: {
         Row: {

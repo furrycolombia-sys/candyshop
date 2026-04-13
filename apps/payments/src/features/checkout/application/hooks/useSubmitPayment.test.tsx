@@ -13,17 +13,12 @@ vi.mock("@/features/checkout/infrastructure/checkoutQueries", () => ({
   submitReceipt: vi.fn(),
 }));
 
-vi.mock("@/features/checkout/infrastructure/receiptStorage", () => ({
-  uploadReceipt: vi.fn(),
-}));
-
 import { useSubmitPayment } from "./useSubmitPayment";
 
 import {
   createOrder,
   submitReceipt,
 } from "@/features/checkout/infrastructure/checkoutQueries";
-import { uploadReceipt } from "@/features/checkout/infrastructure/receiptStorage";
 
 function createWrapper() {
   const qc = new QueryClient({
@@ -41,15 +36,13 @@ const baseParams = {
   items: [],
   totalCop: 100_000,
   checkoutSessionId: "sess-1",
-  transferNumber: null,
-  receiptFile: null,
   buyerInfo: {},
 };
 
 describe("useSubmitPayment", () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it("creates order and submits receipt without file", async () => {
+  it("creates order and submits receipt without buyer info", async () => {
     vi.mocked(createOrder).mockResolvedValue("order-1");
     vi.mocked(submitReceipt).mockResolvedValue();
 
@@ -68,39 +61,38 @@ describe("useSubmitPayment", () => {
       null,
       {},
     );
-    expect(uploadReceipt).not.toHaveBeenCalled();
   });
 
-  it("uploads receipt when file is provided", async () => {
+  it("passes buyer info to submitReceipt", async () => {
     vi.mocked(createOrder).mockResolvedValue("order-2");
-    vi.mocked(uploadReceipt).mockResolvedValue("https://storage/receipt.jpg");
     vi.mocked(submitReceipt).mockResolvedValue();
 
-    const file = new File(["test"], "receipt.jpg", { type: "image/jpeg" });
+    const buyerInfo = { "field-1": "John Doe", "field-2": "john@example.com" };
 
     const { result } = renderHook(() => useSubmitPayment(), {
       wrapper: createWrapper(),
     });
 
-    await act(() =>
-      result.current.mutateAsync({
-        ...baseParams,
-        receiptFile: file,
-        transferNumber: "TXN-123",
-      }),
-    );
+    await act(() => result.current.mutateAsync({ ...baseParams, buyerInfo }));
 
-    expect(uploadReceipt).toHaveBeenCalledWith(
-      expect.anything(),
-      file,
-      "order-2",
-    );
     expect(submitReceipt).toHaveBeenCalledWith(
       expect.anything(),
       "order-2",
-      "TXN-123",
-      "https://storage/receipt.jpg",
-      {},
+      null,
+      null,
+      buyerInfo,
     );
+  });
+
+  it("returns the order id on success", async () => {
+    vi.mocked(createOrder).mockResolvedValue("order-3");
+    vi.mocked(submitReceipt).mockResolvedValue();
+
+    const { result } = renderHook(() => useSubmitPayment(), {
+      wrapper: createWrapper(),
+    });
+
+    const orderId = await act(() => result.current.mutateAsync(baseParams));
+    expect(orderId).toBe("order-3");
   });
 });

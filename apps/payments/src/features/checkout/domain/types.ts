@@ -25,24 +25,25 @@ export interface SellerGroup {
   subtotalCop: number;
 }
 
+import type {
+  DisplayBlock,
+  FormField,
+} from "@/features/payment-methods/domain/types";
+
+export interface SellerPaymentMethodWithType {
+  id: string;
+  name_en: string;
+  name_es: string | null;
+  display_blocks: DisplayBlock[];
+  form_fields: FormField[];
+  is_active: boolean;
+}
+
+/** @deprecated Use SellerPaymentMethodWithType (new flat shape) */
 export interface BuyerFieldDescriptor {
   key: string;
   type: "text" | "email";
   required: boolean;
-}
-
-export interface SellerPaymentMethodWithType {
-  id: string;
-  type_name_en: string;
-  type_name_es: string;
-  type_icon: string | null;
-  requires_receipt: boolean;
-  requires_transfer_number: boolean;
-  required_buyer_fields: BuyerFieldDescriptor[];
-  account_details_en: string | null;
-  account_details_es: string | null;
-  seller_note_en: string | null;
-  seller_note_es: string | null;
 }
 
 export interface CheckoutPaymentMethodsResponse {

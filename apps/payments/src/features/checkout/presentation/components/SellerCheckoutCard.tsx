@@ -13,6 +13,7 @@ import type {
   CheckoutSellerStatus,
   SellerPaymentMethodWithType,
 } from "@/features/checkout/domain/types";
+import type { FormField } from "@/features/payment-methods/domain/types";
 import { formatCop } from "@/shared/application/utils/formatCop";
 
 interface SellerCheckoutCardProps {
@@ -25,9 +26,7 @@ interface SellerCheckoutCardProps {
   getItemName: (item: CartItem) => string;
   onSubmit: (params: {
     paymentMethodId: string;
-    transferNumber: string | null;
-    receiptFile: File | null;
-    buyerInfo: Record<string, string>;
+    buyerSubmission: Record<string, string>;
   }) => void;
 }
 
@@ -44,9 +43,9 @@ export function SellerCheckoutCard({
   const t = useTranslations("checkout");
   const [isExpanded, setIsExpanded] = useState(true);
   const [selectedMethodId, setSelectedMethodId] = useState<string | null>(null);
-  const [transferNumber, setTransferNumber] = useState("");
-  const [receiptFile, setReceiptFile] = useState<File | null>(null);
-  const [buyerInfo, setBuyerInfo] = useState<Record<string, string>>({});
+  const [buyerSubmission, setBuyerSubmission] = useState<
+    Record<string, string>
+  >({});
   const [validationError, setValidationError] = useState<string | null>(null);
 
   const { data, isLoading: isLoadingMethods } = useSellerPaymentMethods(
@@ -65,49 +64,48 @@ export function SellerCheckoutCard({
   const isSubmitting = status === "submitting";
   const isDisabled = isSubmitted || isSubmitting;
 
-  const handleSubmit = useCallback(() => {
-    if (hasStockIssues) {
-      return;
-    }
+  const handleBuyerSubmissionChange = useCallback(
+    (fieldId: string, value: string) => {
+      setBuyerSubmission((prev) => ({ ...prev, [fieldId]: value }));
+    },
+    [],
+  );
+
+  const handleFileSelected = useCallback((fieldId: string, file: File) => {
+    // Store filename as placeholder until upload completes
+    setBuyerSubmission((prev) => ({ ...prev, [fieldId]: file.name }));
+  }, []);
+
+  const handleSubmit = useCallback(async () => {
+    if (hasStockIssues) return;
 
     if (!effectiveSelectedMethodId || !selectedMethod) {
       setValidationError(t("methodRequired"));
       return;
     }
 
-    if (selectedMethod?.requires_receipt && !receiptFile) {
-      setValidationError(t("receiptRequired"));
-      return;
-    }
-
-    if (selectedMethod?.requires_transfer_number && !transferNumber.trim()) {
-      setValidationError(t("transferRequired"));
-      return;
-    }
-
-    // Validate required buyer fields
-    for (const field of selectedMethod.required_buyer_fields ?? []) {
-      if (field.required && !buyerInfo[field.key]?.trim()) {
-        setValidationError(
-          t("buyerFieldRequired", { field: t(`buyerFields.${field.key}`) }),
-        );
-        return;
+    // Validate required fields
+    const formFields: FormField[] = selectedMethod.form_fields ?? [];
+    for (const field of formFields) {
+      if (field.required) {
+        const value = buyerSubmission[field.id];
+        if (!value?.trim()) {
+          // eslint-disable-next-line i18next/no-literal-string -- field label is dynamic user data
+          setValidationError(`Please fill in: ${field.label_en}`);
+          return;
+        }
       }
     }
 
     setValidationError(null);
     onSubmit({
       paymentMethodId: effectiveSelectedMethodId,
-      transferNumber: transferNumber.trim() || null,
-      receiptFile,
-      buyerInfo,
+      buyerSubmission,
     });
   }, [
     effectiveSelectedMethodId,
     selectedMethod,
-    receiptFile,
-    transferNumber,
-    buyerInfo,
+    buyerSubmission,
     onSubmit,
     hasStockIssues,
     t,
@@ -163,16 +161,11 @@ export function SellerCheckoutCard({
           methods={methods}
           selectedMethodId={effectiveSelectedMethodId}
           selectedMethod={selectedMethod}
-          transferNumber={transferNumber}
-          receiptFile={receiptFile}
-          buyerInfo={buyerInfo}
+          buyerSubmission={buyerSubmission}
           validationError={validationError}
           onSelectMethod={setSelectedMethodId}
-          onTransferNumberChange={setTransferNumber}
-          onReceiptFileChange={setReceiptFile}
-          onBuyerInfoChange={(key, value) =>
-            setBuyerInfo((prev) => ({ ...prev, [key]: value }))
-          }
+          onBuyerSubmissionChange={handleBuyerSubmissionChange}
+          onFileSelected={handleFileSelected}
           onSubmit={handleSubmit}
         />
       )}
