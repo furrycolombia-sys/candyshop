@@ -28,7 +28,7 @@ export interface SellerGroup {
 import type {
   DisplayBlock,
   FormField,
-} from "@/features/payment-methods/domain/types";
+} from "@/shared/domain/paymentMethodTypes";
 
 export interface SellerPaymentMethodWithType {
   id: string;

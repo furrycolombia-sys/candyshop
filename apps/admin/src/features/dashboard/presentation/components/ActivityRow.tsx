@@ -1,22 +1,10 @@
+import { getActionClass } from "@/shared/presentation/utils/getActionClass";
+
 interface ActivityRowProps {
   action: "INSERT" | "UPDATE" | "DELETE";
   table: string;
   time: string;
   user: string;
-}
-
-function getActionClass(action: ActivityRowProps["action"]): string {
-  switch (action) {
-    case "INSERT": {
-      return "border-mint bg-mint/20 text-mint";
-    }
-    case "UPDATE": {
-      return "border-sky bg-sky/20 text-sky";
-    }
-    case "DELETE": {
-      return "border-peach bg-peach/20 text-peach";
-    }
-  }
 }
 
 export function ActivityRow({ action, table, time, user }: ActivityRowProps) {

@@ -1,19 +1,16 @@
 // eslint-disable-next-line boundaries/no-unknown, no-restricted-imports
 import appLinks from "../../../../config/app-links.json";
 
-type AppName = keyof typeof appLinks;
+import { stripTrailingSlash } from "@shared/utils/url";
 
-function trimTrailingSlash(value: string) {
-  // eslint-disable-next-line sonarjs/slow-regex
-  return value.replace(/\/+$/, "");
-}
+type AppName = keyof typeof appLinks;
 
 function joinUrl(baseUrl: string, pathname: string) {
   if (!pathname || pathname === "/") {
-    return trimTrailingSlash(baseUrl);
+    return stripTrailingSlash(baseUrl);
   }
 
-  return `${trimTrailingSlash(baseUrl)}${pathname}`;
+  return `${stripTrailingSlash(baseUrl)}${pathname}`;
 }
 
 function getPublicOrigin() {
@@ -30,7 +27,7 @@ function resolveAppUrl(app: AppName) {
   if (process.env.NODE_ENV === "production") {
     if (publicOrigin) {
       return definition.path === "/"
-        ? trimTrailingSlash(publicOrigin)
+        ? stripTrailingSlash(publicOrigin)
         : joinUrl(publicOrigin, definition.path);
     }
 

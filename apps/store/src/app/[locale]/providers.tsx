@@ -6,7 +6,7 @@ import { Suspense, type ReactNode } from "react";
 
 import { CartProvider, FlyToCartProvider } from "@/features/cart";
 import { ErrorProvider } from "@/shared/application/context/ErrorContext";
-import { runtimeEnv } from "@/shared/infrastructure/config/environment";
+import { getRuntimeEnv } from "@/shared/infrastructure/config/environment";
 import {
   ApiAuthBootstrap,
   MSWProvider,
@@ -22,13 +22,14 @@ interface ProvidersProps {
  * Orchestrates all runtime providers for the store app.
  */
 export function Providers({ children }: ProvidersProps) {
+  const { authHostUrl } = getRuntimeEnv();
   return (
     <Suspense>
       <NuqsAdapter>
         <QueryProvider>
           <MSWProvider>
-            <AuthSessionBootstrap authHostUrl={runtimeEnv.authHostUrl} />
-            <ApiAuthBootstrap authHostUrl={runtimeEnv.authHostUrl} />
+            <AuthSessionBootstrap authHostUrl={authHostUrl} />
+            <ApiAuthBootstrap authHostUrl={authHostUrl} />
             <CartProvider>
               <FlyToCartProvider>
                 <ErrorProvider>{children}</ErrorProvider>

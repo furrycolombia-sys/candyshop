@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createBrowserSupabaseClient } from "api/supabase";
-import type { Json } from "api/types/database";
+import type { Json } from "api/supabase/types";
 import { useMemo } from "react";
 
 import { PRODUCTS_QUERY_KEY } from "@/features/products/domain/constants";

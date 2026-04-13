@@ -14,7 +14,7 @@ import type {
   CartItem,
   SellerPaymentMethodWithType,
 } from "@/features/checkout/domain/types";
-import type { FormField } from "@/features/payment-methods/domain/types";
+import type { FormField } from "@/shared/domain/paymentMethodTypes";
 
 interface SellerCheckoutContentProps {
   sellerId: string;

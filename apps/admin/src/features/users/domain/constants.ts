@@ -50,10 +50,6 @@ export const PERMISSION_GROUPS: PermissionGroup[] = [
     key: "adminCatalog",
     labelKey: "adminCatalog",
     permissions: [
-      "payment_method_types.create",
-      "payment_method_types.read",
-      "payment_method_types.update",
-      "payment_method_types.delete",
       "templates.create",
       "templates.read",
       "templates.update",
@@ -143,13 +139,8 @@ export const PERMISSION_TEMPLATES: Record<string, string[]> = {
   none: [],
 };
 
-export const ADMIN_APP_ACCESS_KEYS = [
-  "templates.read",
-  "payment_method_types.read",
-  "payment_settings.read",
-  "audit.read",
-  "user_permissions.read",
-] as const;
+/** @deprecated Import from `@/shared/domain/constants` instead */
+export { ADMIN_APP_ACCESS_KEYS } from "@/shared/domain/constants";
 
 export const USER_PERMISSIONS_QUERY_KEY = "user-permissions";
 export const USERS_QUERY_KEY = "users";

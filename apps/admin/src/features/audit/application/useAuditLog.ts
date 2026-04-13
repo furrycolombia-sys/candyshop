@@ -1,6 +1,4 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { createBrowserSupabaseClient } from "api/supabase";
-import { useMemo } from "react";
 
 import type { AuditFilters } from "@/features/audit/domain/types";
 import {
@@ -8,6 +6,7 @@ import {
   fetchAuditTableNames,
   insertAuditLog,
 } from "@/features/audit/infrastructure/auditQueries";
+import { useSupabase } from "@/shared/application/hooks/useSupabase";
 
 const AUDIT_QUERY_KEY = "audit-log";
 const TABLE_NAMES_KEY = "audit-table-names";
@@ -26,7 +25,7 @@ export function useAuditLog({
   offset,
   enabled = true,
 }: UseAuditLogOptions) {
-  const supabase = useMemo(() => createBrowserSupabaseClient(), []);
+  const supabase = useSupabase();
 
   const { data, isLoading, isError } = useQuery({
     // eslint-disable-next-line @tanstack/query/exhaustive-deps -- supabase client is stable (memoized)
@@ -40,7 +39,7 @@ export function useAuditLog({
 }
 
 export function useAuditTableNames() {
-  const supabase = useMemo(() => createBrowserSupabaseClient(), []);
+  const supabase = useSupabase();
 
   return useQuery({
     // eslint-disable-next-line @tanstack/query/exhaustive-deps -- supabase client is stable (memoized)
@@ -51,7 +50,7 @@ export function useAuditTableNames() {
 }
 
 export function useLogExport() {
-  const supabase = useMemo(() => createBrowserSupabaseClient(), []);
+  const supabase = useSupabase();
   return useMutation({
     mutationFn: async (params: { table: string; count: number }) => {
       await insertAuditLog(supabase, "EXPORT", params.table, {

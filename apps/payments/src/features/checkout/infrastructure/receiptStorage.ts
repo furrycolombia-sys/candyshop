@@ -1,51 +1,12 @@
-import {
-  RECEIPTS_BUCKET,
-  RECEIPT_URL_TTL_SECONDS,
-} from "@/shared/domain/constants";
-import {
-  assertValidReceiptFile,
-  buildReceiptStoragePath,
-} from "@/shared/domain/receipt";
-import type { SupabaseClient } from "@/shared/domain/types";
-
-export async function uploadReceipt(
-  supabase: SupabaseClient,
-  file: File,
-  orderId: string,
-): Promise<string> {
-  assertValidReceiptFile(file);
-  const storagePath = buildReceiptStoragePath(orderId, file);
-
-  const { error } = await supabase.storage
-    .from(RECEIPTS_BUCKET)
-    .upload(storagePath, file);
-
-  if (error) throw error;
-
-  return storagePath;
-}
-
-export async function getReceiptUrl(
-  supabase: SupabaseClient,
-  storagePath: string | null,
-): Promise<string | null> {
-  if (!storagePath) return null;
-
-  const { data, error } = await supabase.storage
-    .from(RECEIPTS_BUCKET)
-    .createSignedUrl(storagePath, RECEIPT_URL_TTL_SECONDS);
-
-  if (error) return null;
-  return data.signedUrl;
-}
-
-export async function deleteReceipt(
-  supabase: SupabaseClient,
-  storagePath: string,
-): Promise<void> {
-  const { error } = await supabase.storage
-    .from(RECEIPTS_BUCKET)
-    .remove([storagePath]);
-
-  if (error) throw error;
-}
+/**
+ * Re-export receipt storage functions from the shared layer.
+ *
+ * These functions were promoted to `@/shared/infrastructure/receiptStorage`
+ * because they are used across multiple features (checkout, orders, received-orders).
+ * This re-export keeps internal checkout imports working unchanged.
+ */
+export {
+  deleteReceipt,
+  getReceiptUrl,
+  uploadReceipt,
+} from "@/shared/infrastructure/receiptStorage";

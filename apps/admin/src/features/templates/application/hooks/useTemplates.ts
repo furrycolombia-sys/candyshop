@@ -1,12 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
-import { createBrowserSupabaseClient } from "api/supabase";
-import { useMemo } from "react";
 
 import { TEMPLATES_QUERY_KEY } from "@/features/templates/domain/constants";
 import { fetchTemplates } from "@/features/templates/infrastructure/templateQueries";
+import { useSupabase } from "@/shared/application/hooks/useSupabase";
 
 export function useTemplates() {
-  const supabase = useMemo(() => createBrowserSupabaseClient(), []);
+  const supabase = useSupabase();
 
   return useQuery({
     // eslint-disable-next-line @tanstack/query/exhaustive-deps -- supabase client is stable (memoized)

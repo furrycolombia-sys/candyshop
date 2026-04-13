@@ -9,6 +9,7 @@ import { AuditRowDetail } from "./AuditRowDetail";
 
 import type { AuditEntry } from "@/features/audit/domain/types";
 import { appUrls } from "@/shared/infrastructure/config";
+import { getActionClass } from "@/shared/presentation/utils/getActionClass";
 
 /** Max fields to show before collapsing into "+N more" */
 const MAX_VISIBLE_FIELDS = 3;
@@ -78,23 +79,6 @@ function formatTimestamp(ts: string, locale: string): string {
     minute: "2-digit",
     second: "2-digit",
   });
-}
-
-function getActionClass(actionType: AuditEntry["action_type"]): string {
-  switch (actionType) {
-    case "INSERT": {
-      return "border-mint bg-mint/20 text-mint";
-    }
-    case "UPDATE": {
-      return "border-sky bg-sky/20 text-sky";
-    }
-    case "DELETE": {
-      return "border-peach bg-peach/20 text-peach";
-    }
-    default: {
-      return "";
-    }
-  }
 }
 
 export function AuditTable({

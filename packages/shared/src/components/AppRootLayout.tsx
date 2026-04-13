@@ -2,7 +2,6 @@
 "use server";
 
 import { DM_Sans, Syne } from "next/font/google";
-import { getLocale } from "next-intl/server";
 import type { ReactNode } from "react";
 
 import { ThemeScript } from "./ThemeScript";
@@ -21,11 +20,10 @@ const dmSans = DM_Sans({
 
 interface AppRootLayoutProps {
   children: ReactNode;
+  locale: string;
 }
 
-export async function AppRootLayout({ children }: AppRootLayoutProps) {
-  const locale = await getLocale();
-
+export async function AppRootLayout({ children, locale }: AppRootLayoutProps) {
   return (
     <html lang={locale} suppressHydrationWarning>
       <head>

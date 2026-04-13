@@ -43,10 +43,6 @@ const ALL_APP_PERMISSIONS = [
   "seller_payment_methods.read",
   "seller_payment_methods.update",
   "seller_payment_methods.delete",
-  "payment_method_types.create",
-  "payment_method_types.read",
-  "payment_method_types.update",
-  "payment_method_types.delete",
   "payment_settings.read",
   "payment_settings.update",
   "templates.create",
@@ -275,7 +271,6 @@ test.describe.serial("Permission management", () => {
     await injectSession(context, target);
     await page.goto(`${APP_URLS.ADMIN}/en`);
     await expectVisible(page, "sidebar-templates");
-    await expectVisible(page, "sidebar-paymentMethods");
     await expectVisible(page, "sidebar-auditLog");
     await expectVisible(page, "sidebar-users");
     await expectVisible(page, "sidebar-settings");
@@ -283,7 +278,6 @@ test.describe.serial("Permission management", () => {
 
     await setPermissions(page, context, admin, target, {
       "templates.read": false,
-      "payment_method_types.read": false,
       "audit.read": false,
       "user_permissions.read": false,
       "payment_settings.read": false,
@@ -300,9 +294,6 @@ test.describe.serial("Permission management", () => {
     await page.goto(`${APP_URLS.ADMIN}/en/templates`);
     await expectVisible(page, "access-denied");
 
-    await page.goto(`${APP_URLS.ADMIN}/en/payment-methods`);
-    await expectVisible(page, "access-denied");
-
     await page.goto(`${APP_URLS.ADMIN}/en/audit`);
     await expectVisible(page, "access-denied");
 
@@ -311,7 +302,6 @@ test.describe.serial("Permission management", () => {
 
     await setPermissions(page, context, admin, target, {
       "templates.read": true,
-      "payment_method_types.read": true,
       "audit.read": true,
       "user_permissions.read": true,
       "payment_settings.read": true,
@@ -320,7 +310,6 @@ test.describe.serial("Permission management", () => {
     await injectSession(context, target);
     await page.goto(`${APP_URLS.ADMIN}/en`);
     await expectVisible(page, "sidebar-templates");
-    await expectVisible(page, "sidebar-paymentMethods");
     await expectVisible(page, "sidebar-auditLog");
     await expectVisible(page, "sidebar-users");
     await expectVisible(page, "sidebar-settings");

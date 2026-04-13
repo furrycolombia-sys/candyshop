@@ -17,6 +17,10 @@ vi.mock("shared", () => ({
   tid: (id: string) => ({ "data-testid": id }),
 }));
 
+vi.mock("next-intl", () => ({
+  useTranslations: () => (key: string) => key,
+}));
+
 vi.mock("ui", () => ({
   Skeleton: ({ className }: { className?: string }) => (
     <div data-testid="skeleton" className={className} />
