@@ -40,6 +40,8 @@ describe("appUrls", () => {
 
   it("uses relative same-domain paths by default in production", async () => {
     vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("SITE_PUBLIC_ORIGIN", "");
+    vi.stubEnv("E2E_PUBLIC_ORIGIN", "");
 
     const { appUrls } = await importFreshAppUrls();
     expect(appUrls).toEqual(EXPECTED_PROD_PATHS);
@@ -48,6 +50,7 @@ describe("appUrls", () => {
   it("derives public absolute URLs from SITE_PUBLIC_ORIGIN for production", async () => {
     vi.stubEnv("NODE_ENV", "production");
     vi.stubEnv("SITE_PUBLIC_ORIGIN", "https://shop.example.com/");
+    vi.stubEnv("E2E_PUBLIC_ORIGIN", "");
 
     const { appUrls } = await importFreshAppUrls();
     expect(appUrls).toEqual({
@@ -63,6 +66,8 @@ describe("appUrls", () => {
 
   it("lets explicit NEXT_PUBLIC app URLs override the defaults", async () => {
     vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("SITE_PUBLIC_ORIGIN", "");
+    vi.stubEnv("E2E_PUBLIC_ORIGIN", "");
     vi.stubEnv("NEXT_PUBLIC_STORE_URL", "https://store.example.com");
     vi.stubEnv("NEXT_PUBLIC_AUTH_URL", "/auth");
 
@@ -75,6 +80,7 @@ describe("appUrls", () => {
   it("prefers SITE_PUBLIC_ORIGIN over explicit app URLs in production", async () => {
     vi.stubEnv("NODE_ENV", "production");
     vi.stubEnv("SITE_PUBLIC_ORIGIN", "https://shop.example.com/");
+    vi.stubEnv("E2E_PUBLIC_ORIGIN", "");
     vi.stubEnv("NEXT_PUBLIC_STORE_URL", "http://localhost:5001");
     vi.stubEnv("NEXT_PUBLIC_AUTH_URL", "http://localhost:5000");
 
