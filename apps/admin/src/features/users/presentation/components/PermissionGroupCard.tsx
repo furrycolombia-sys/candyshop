@@ -24,6 +24,7 @@ export function PermissionGroupCard({
 }: PermissionGroupCardProps) {
   const t = useTranslations("users");
   const tp = useTranslations("permissions");
+  const th = useTranslations("permissionHints");
 
   return (
     <div
@@ -41,6 +42,7 @@ export function PermissionGroupCard({
             <label
               key={perm}
               className="flex cursor-pointer items-center gap-1.5"
+              title={th(perm)}
             >
               <input
                 type="checkbox"

@@ -53,14 +53,14 @@ export function PaymentMethodsPageContent({
 
   const handleCreate = useCallback(() => {
     createMutation.mutate(
-      { sellerId, nameEn: t("newMethodDefault") },
+      { sellerId, nameEn: "" },
       {
         onSuccess: (method) => {
           setExpandedId(method.id);
         },
       },
     );
-  }, [createMutation, sellerId, t]);
+  }, [createMutation, sellerId]);
 
   const handleDelete = useCallback(
     (id: string) => {
