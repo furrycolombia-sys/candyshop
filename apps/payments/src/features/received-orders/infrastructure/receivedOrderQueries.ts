@@ -37,6 +37,7 @@ export async function fetchReceivedOrders(
       transfer_number,
       receipt_url,
       seller_note,
+      buyer_info,
       expires_at,
       checkout_session_id,
       created_at,
@@ -87,6 +88,9 @@ export async function fetchReceivedOrders(
       transfer_number: row.transfer_number,
       receipt_url: await getReceiptUrl(supabase, row.receipt_url),
       seller_note: row.seller_note,
+      buyer_info:
+        (row as unknown as { buyer_info: Record<string, string> | null })
+          .buyer_info ?? null,
       expires_at: row.expires_at,
       checkout_session_id: row.checkout_session_id,
       created_at: row.created_at,

@@ -26,6 +26,18 @@ vi.mock("shared", () => ({
   tid: (id: string) => ({ "data-testid": id }),
 }));
 
+vi.mock("@/shared/infrastructure/config", () => ({
+  appUrls: {
+    store: "/store",
+    payments: "/payments",
+    auth: "/auth",
+    admin: "/admin",
+    studio: "/studio",
+    landing: "/",
+    playground: "/playground",
+  },
+}));
+
 import { CtaSection } from "./CtaSection";
 import { FeaturesSection } from "./FeaturesSection";
 import { RolesSection } from "./RolesSection";

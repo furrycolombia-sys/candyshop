@@ -65,8 +65,7 @@ export function CheckoutPageContent() {
       subtotalCop: number,
       params: {
         paymentMethodId: string;
-        transferNumber: string | null;
-        receiptFile: File | null;
+        buyerSubmission: Record<string, string>;
       },
     ) => {
       if (!user) return;
@@ -81,8 +80,7 @@ export function CheckoutPageContent() {
           items,
           totalCop: subtotalCop,
           checkoutSessionId,
-          transferNumber: params.transferNumber,
-          receiptFile: params.receiptFile,
+          buyerInfo: params.buyerSubmission,
         });
 
         updateSellerState(sellerId, "submitted", null);

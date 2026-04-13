@@ -14,6 +14,10 @@ vi.mock("next-intl", () => ({
 
 vi.mock("shared", () => ({
   tid: (id: string) => ({ "data-testid": id }),
+  i18nField: (obj: Record<string, unknown>, field: string, locale: string) => {
+    const key = `${field}_${locale}`;
+    return (obj[key] as string) ?? (obj[`${field}_en`] as string) ?? "";
+  },
 }));
 
 vi.mock("ui", () => ({
@@ -45,8 +49,22 @@ vi.mock("./PaymentMethodSelector", () => ({
   ),
 }));
 
-vi.mock("./ReceiptUpload", () => ({
-  ReceiptUpload: () => <div data-testid="receipt-upload">Upload</div>,
+vi.mock("./DisplayBlockRenderer", () => ({
+  DisplayBlockRenderer: () => (
+    <div data-testid="display-block-renderer">Block</div>
+  ),
+}));
+
+vi.mock("./DynamicFormField", () => ({
+  DynamicFormField: ({
+    field,
+  }: {
+    field: { id: string; label_en: string };
+  }) => <div data-testid={`dynamic-field-${field.id}`}>{field.label_en}</div>,
+}));
+
+vi.mock("api/supabase", () => ({
+  createBrowserSupabaseClient: vi.fn(() => ({})),
 }));
 
 // eslint-disable-next-line import/order -- vi.mock must be hoisted before this import
@@ -66,20 +84,27 @@ const mockItems: CartItem[] = [
   },
 ];
 
-const mockMethods: SellerPaymentMethodWithType[] = [
-  {
-    id: "pm-1",
-    type_name_en: "Bank Transfer",
-    type_name_es: "Transferencia",
-    type_icon: null,
-    requires_receipt: true,
-    requires_transfer_number: true,
-    account_details_en: null,
-    account_details_es: null,
-    seller_note_en: null,
-    seller_note_es: null,
-  },
-];
+const mockMethodWithFields: SellerPaymentMethodWithType = {
+  id: "pm-1",
+  name_en: "Bank Transfer",
+  name_es: "Transferencia",
+  display_blocks: [],
+  form_fields: [
+    { id: "f1", type: "text", label_en: "Full Name", required: true },
+  ],
+  is_active: true,
+};
+
+const mockMethodWithBlocks: SellerPaymentMethodWithType = {
+  id: "pm-2",
+  name_en: "Nequi",
+  name_es: "Nequi",
+  display_blocks: [
+    { id: "b1", type: "text", content_en: "Send to 3001234567" },
+  ],
+  form_fields: [],
+  is_active: true,
+};
 
 describe("SellerCheckoutContent", () => {
   const defaultProps = {
@@ -93,15 +118,14 @@ describe("SellerCheckoutContent", () => {
     error: null,
     hasStockIssues: false,
     isLoadingMethods: false,
-    methods: mockMethods,
+    methods: [mockMethodWithFields],
     selectedMethodId: null,
     selectedMethod: undefined,
-    transferNumber: "",
-    receiptFile: null,
+    buyerSubmission: {},
     validationError: null,
     onSelectMethod: vi.fn(),
-    onTransferNumberChange: vi.fn(),
-    onReceiptFileChange: vi.fn(),
+    onBuyerSubmissionChange: vi.fn(),
+    onFileSelected: vi.fn(),
     onSubmit: vi.fn(),
   };
 
@@ -153,7 +177,7 @@ describe("SellerCheckoutContent", () => {
         hasStockIssues={true}
         error="stock_error"
         selectedMethodId="pm-1"
-        selectedMethod={mockMethods[0]}
+        selectedMethod={mockMethodWithFields}
       />,
     );
 
@@ -161,30 +185,30 @@ describe("SellerCheckoutContent", () => {
     expect(
       screen.queryByTestId("payment-method-selector"),
     ).not.toBeInTheDocument();
-    expect(screen.queryByTestId("receipt-upload")).not.toBeInTheDocument();
     expect(screen.queryByTestId("submit-payment-s1")).not.toBeInTheDocument();
   });
 
-  it("shows transfer number input when selected method requires it", () => {
+  it("shows form fields when a method with form_fields is selected", () => {
     render(
       <SellerCheckoutContent
         {...defaultProps}
         selectedMethodId="pm-1"
-        selectedMethod={mockMethods[0]}
+        selectedMethod={mockMethodWithFields}
       />,
     );
-    expect(screen.getByText("transferNumber")).toBeInTheDocument();
+    expect(screen.getByTestId("dynamic-field-f1")).toBeInTheDocument();
   });
 
-  it("shows receipt upload when selected method requires it", () => {
+  it("shows display blocks when a method with display_blocks is selected", () => {
     render(
       <SellerCheckoutContent
         {...defaultProps}
-        selectedMethodId="pm-1"
-        selectedMethod={mockMethods[0]}
+        methods={[mockMethodWithBlocks]}
+        selectedMethodId="pm-2"
+        selectedMethod={mockMethodWithBlocks}
       />,
     );
-    expect(screen.getByTestId("receipt-upload")).toBeInTheDocument();
+    expect(screen.getByTestId("display-block-renderer")).toBeInTheDocument();
   });
 
   it("shows validation error when present", () => {

@@ -49,6 +49,7 @@ function makeOrder(overrides: Partial<ReceivedOrder> = {}): ReceivedOrder {
     transfer_number: "TX-1",
     receipt_url: null,
     seller_note: null,
+    buyer_info: null,
     expires_at: null,
     checkout_session_id: null,
     created_at: "2026-01-01T00:00:00Z",

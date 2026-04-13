@@ -26,290 +26,436 @@ const { snap, resetCounter } = createSnapHelper(
 );
 
 /**
- * Full purchase flow E2E test -- with screenshots at every step.
+ * Full purchase flow E2E — two sellers, one buyer.
  *
- * Exercises the complete seller -> buyer -> approval lifecycle:
- * 1. Seller creates a product in Studio
- * 2. Seller configures a payment method in Payments
- * 3. Buyer finds the product in Store and adds to cart
- * 4. Buyer checks out via Payments
- * 5. Buyer verifies order is "Pending Verification"
- * 6. Seller approves the payment in Payments
- * 7. Buyer sees order is "Approved"
+ * Exercises the complete multi-seller lifecycle:
+ * 1a. Seller A creates a product in Studio
+ * 1b. Seller B creates a product in Studio
+ * 2a. Seller A configures a payment method in Payments
+ * 2b. Seller B configures a payment method in Payments
+ * 3.  Buyer adds both products to cart and checks out
+ *     → sees two separate seller checkout cards
+ *     → fills each seller's form independently
+ *     → submits both payments
+ * 4.  Buyer verifies both orders are "Pending Verification"
+ * 5a. Seller A approves their order
+ * 5b. Seller B approves their order
+ * 6.  Buyer sees both orders "Approved"
  *
  * Requires: supabase start + pnpm dev (all apps)
  */
-test.describe.serial("Full purchase flow: seller -> buyer -> approval", () => {
-  let seller: TestUser;
+test.describe.serial("Full purchase flow: two sellers, one buyer", () => {
+  let sellerA: TestUser;
+  let sellerB: TestUser;
   let buyer: TestUser;
 
   test.beforeAll(async () => {
     resetCounter();
-    seller = await createTestUser("seller", SELLER_PERMISSIONS);
+    sellerA = await createTestUser("sellerA", SELLER_PERMISSIONS);
+    sellerB = await createTestUser("sellerB", SELLER_PERMISSIONS);
     buyer = await createTestUser("buyer", BUYER_PERMISSIONS);
   });
 
   test.afterAll(async () => {
-    await cleanupTestData(seller.userId, buyer.userId);
+    if (sellerA) await cleanupTestData(sellerA.userId, buyer?.userId ?? "");
+    if (sellerB)
+      await cleanupTestData(sellerB.userId, buyer?.userId ?? "").catch(
+        () => {},
+      );
   });
 
-  // ─── Phase 1: Seller creates a product in Studio ───────────────
+  // ─── Helper: create a product in Studio ──────────────────────
 
-  test("Phase 1: seller creates a product in studio", async ({
-    context,
-    page,
-  }) => {
+  async function createProduct(
+    page: import("@playwright/test").Page,
+    context: import("@playwright/test").BrowserContext,
+    seller: TestUser,
+    productName: string,
+    price: string,
+    snapPrefix: string,
+  ) {
     await injectSession(context, seller);
-
-    // Navigate to studio
     await page.goto(`${APP_URLS.STUDIO}/en`);
     await page.waitForLoadState("networkidle");
-    await snap(page, "studio-product-list");
+    await snap(page, `${snapPrefix}-product-list`);
 
-    // Click "New Product"
     await page.getByTestId("new-product-button").click();
     await page.waitForLoadState("networkidle");
-    await snap(page, "studio-new-product-empty");
 
-    // Fill product name (EN)
     const nameField = page.getByTestId("inline-text-en-name_en");
     await nameField.click();
-    await nameField.fill("E2E Test Product");
-    await snap(page, "studio-product-name-filled");
+    await nameField.fill(productName);
 
-    // Set price COP
     const priceField = page.getByTestId("inline-price-cop");
     await priceField.click();
-    await priceField.fill("10000");
-    await snap(page, "studio-product-price-filled");
+    await priceField.fill(price);
+    await snap(page, `${snapPrefix}-product-filled`);
 
-    // Save (button says "CREATE")
     await page.getByTestId("toolbar-save").click();
-
-    // Wait for redirect back to product list
     await page.waitForURL(`${APP_URLS.STUDIO}/en`, {
       timeout: NAVIGATION_TIMEOUT_MS,
     });
-
-    // Verify product appears in table
     await expect(page.getByTestId("product-table")).toBeVisible({
       timeout: ELEMENT_TIMEOUT_MS,
     });
-    await snap(page, "studio-product-created");
-  });
+    await snap(page, `${snapPrefix}-product-created`);
+  }
 
-  // ─── Phase 2: Seller configures payment method in Payments ─────
+  // ─── Helper: create a payment method in Payments ─────────────
 
-  test("Phase 2: seller adds a payment method", async ({ context, page }) => {
+  async function createPaymentMethod(
+    page: import("@playwright/test").Page,
+    context: import("@playwright/test").BrowserContext,
+    seller: TestUser,
+    methodName: string,
+    instructions: string,
+    fieldLabel: string,
+    snapPrefix: string,
+  ) {
     await injectSession(context, seller);
-
-    // Navigate to payments app -- payment methods page
     await page.goto(`${APP_URLS.PAYMENTS}/en/payment-methods`);
     await page.waitForLoadState("networkidle");
-    await snap(page, "payments-methods-empty");
 
-    // Click "Add Method"
     await page.getByTestId("add-payment-method-button").click();
-    await snap(page, "payments-method-editor-open");
 
-    // Select Bancolombia Transfer (requires receipt + transfer number)
-    const typeSelect = page.getByTestId("payment-method-type-select");
-    await typeSelect.waitFor({ state: "visible" });
-    await page.waitForTimeout(DEBOUNCE_WAIT_MS);
-    await typeSelect.selectOption({ label: "Bancolombia Transfer" });
-    await snap(page, "payments-method-type-selected");
+    const nameInput = page.getByTestId("payment-method-name-en");
+    await nameInput.waitFor({ state: "visible", timeout: ELEMENT_TIMEOUT_MS });
+    await nameInput.fill(methodName);
+    await page.getByTestId("create-method-save").click();
 
-    // Fill account details (EN)
-    await page
-      .getByTestId("payment-method-account-en")
-      .fill("E2E Bank Account 12345");
-    await snap(page, "payments-method-details-filled");
-
-    // Save
-    await page.getByTestId("payment-method-save").click();
-
-    // Wait for editor to close (indicates save succeeded)
-    await expect(page.getByTestId("payment-method-save")).not.toBeVisible({
+    await expect(page.getByTestId("payment-method-name-en")).toBeVisible({
       timeout: ELEMENT_TIMEOUT_MS,
     });
+    await page.waitForTimeout(MUTATION_WAIT_MS);
 
-    // Verify method appears in the table
-    await expect(page.getByTestId("payment-methods-page")).toBeVisible();
-    await snap(page, "payments-method-saved");
+    // Add text display block with payment instructions
+    await page.getByTestId("add-display-block").click();
+    await page.getByTestId("add-block-type-text").click();
+    const textarea = page
+      .getByTestId("display-section-editor")
+      .locator("textarea")
+      .first();
+    await textarea.fill(instructions);
+    await page.waitForTimeout(MUTATION_WAIT_MS);
+
+    // Add a required form field
+    await page.getByTestId("add-form-field").click();
+    const labelInput = page
+      .getByTestId("form-section-editor")
+      .locator("input[placeholder]")
+      .first();
+    await labelInput.fill(fieldLabel);
+    await page.waitForTimeout(MUTATION_WAIT_MS);
+    await snap(page, `${snapPrefix}-method-configured`);
+
+    await page.getByTestId("back-to-list").click();
+    await expect(page.getByTestId("payment-methods-page")).toBeVisible({
+      timeout: ELEMENT_TIMEOUT_MS,
+    });
+    await snap(page, `${snapPrefix}-method-saved`);
+  }
+
+  // ─── Phase 1a: Seller A creates a product ────────────────────
+
+  test("Phase 1a: seller A creates a product in studio", async ({
+    context,
+    page,
+  }) => {
+    await createProduct(
+      page,
+      context,
+      sellerA,
+      "E2E Product Alpha",
+      "15000",
+      "sellerA",
+    );
   });
 
-  // ─── Phase 3-4: Buyer browses store, adds to cart, checks out ──
+  // ─── Phase 1b: Seller B creates a product ────────────────────
 
-  test("Phase 3-4: buyer finds product, adds to cart, and checks out", async ({
+  test("Phase 1b: seller B creates a product in studio", async ({
+    context,
+    page,
+  }) => {
+    await createProduct(
+      page,
+      context,
+      sellerB,
+      "E2E Product Beta",
+      "20000",
+      "sellerB",
+    );
+  });
+
+  // ─── Phase 2a: Seller A configures payment method ────────────
+
+  test("Phase 2a: seller A adds a payment method", async ({
+    context,
+    page,
+  }) => {
+    await createPaymentMethod(
+      page,
+      context,
+      sellerA,
+      "Seller A — Nequi",
+      "Send to Nequi: 300-111-2222 (Seller Alpha)",
+      "Nequi Transfer Reference",
+      "sellerA",
+    );
+  });
+
+  // ─── Phase 2b: Seller B configures payment method ────────────
+
+  test("Phase 2b: seller B adds a payment method", async ({
+    context,
+    page,
+  }) => {
+    await createPaymentMethod(
+      page,
+      context,
+      sellerB,
+      "Seller B — Bancolombia",
+      "Transfer to Bancolombia: 123-456789-00 (Seller Beta)",
+      "Bank Transfer Reference",
+      "sellerB",
+    );
+  });
+
+  // ─── Phase 3: Buyer adds both products and checks out ────────
+
+  test("Phase 3: buyer adds both products to cart and checks out", async ({
     context,
     page,
   }) => {
     await injectSession(context, buyer);
 
-    // Go to store catalog
     await page.goto(`${APP_URLS.STORE}/en`);
     await page.waitForLoadState("networkidle");
     await snap(page, "store-catalog");
 
-    // Search for the seller's product
-    await page.getByTestId("search-bar-input").fill("E2E Test");
+    // ── Add Seller A's product ──────────────────────────────────
+    await page.getByTestId("search-bar-input").fill("E2E Product Alpha");
     await page.waitForTimeout(DEBOUNCE_WAIT_MS);
-    await snap(page, "store-search-results");
+    await snap(page, "store-search-alpha");
 
-    // Click the first matching product card
-    const productCard = page.getByTestId("product-card-link").first();
-    await expect(productCard).toBeVisible({ timeout: ELEMENT_TIMEOUT_MS });
-    await productCard.click();
-
-    // Wait for product detail page
+    const cardA = page.getByTestId("product-card-link").first();
+    await expect(cardA).toBeVisible({ timeout: ELEMENT_TIMEOUT_MS });
+    await cardA.click();
     await page.waitForLoadState("networkidle");
-    await snap(page, "store-product-detail");
+    await snap(page, "store-product-alpha");
 
-    // Click "Add to Cart"
     await page.getByTestId("hero-add-to-cart").click();
-    await snap(page, "store-added-to-cart");
-
-    // Wait for add-to-cart animation to finish
     await page.waitForTimeout(MUTATION_WAIT_MS);
+    await snap(page, "store-added-alpha");
 
-    // Open cart drawer (force click -- fly-to-cart animation can intercept)
+    // ── Add Seller B's product ──────────────────────────────────
+    await page.goto(`${APP_URLS.STORE}/en`);
+    await page.waitForLoadState("networkidle");
+
+    await page.getByTestId("search-bar-input").fill("E2E Product Beta");
+    await page.waitForTimeout(DEBOUNCE_WAIT_MS);
+    await snap(page, "store-search-beta");
+
+    const cardB = page.getByTestId("product-card-link").first();
+    await expect(cardB).toBeVisible({ timeout: ELEMENT_TIMEOUT_MS });
+    await cardB.click();
+    await page.waitForLoadState("networkidle");
+    await snap(page, "store-product-beta");
+
+    await page.getByTestId("hero-add-to-cart").click();
+    await page.waitForTimeout(MUTATION_WAIT_MS);
+    await snap(page, "store-added-beta");
+
+    // ── Open cart and verify both items ────────────────────────
     await page
       .getByTestId("cart-drawer-trigger")
       .first()
       .click({ force: true });
-
-    // Verify item in cart
     await expect(page.getByTestId("cart-drawer-items")).toBeVisible();
-    await expect(page.getByTestId("cart-item-name")).toBeVisible();
-    await snap(page, "store-cart-open");
 
-    // Click checkout -- navigates to payments app
+    // Should see two seller groups
+    const sellerGroups = page.getByTestId("cart-seller-group");
+    await expect(sellerGroups).toHaveCount(2, { timeout: ELEMENT_TIMEOUT_MS });
+    await snap(page, "store-cart-two-sellers");
+
+    // ── Checkout ────────────────────────────────────────────────
     await page.getByTestId("cart-checkout").click();
-
-    // Wait for payments checkout page
     await page.waitForURL(
       new RegExp(`${APP_URLS.PAYMENTS.replace("http://", "")}.*checkout`),
-      {
-        timeout: NAVIGATION_TIMEOUT_MS,
-      },
+      { timeout: NAVIGATION_TIMEOUT_MS },
     );
-    await page.waitForLoadState("networkidle");
 
-    // Wait for items and payment method to load
-    await expect(page.getByTestId("checkout-items-summary")).toBeVisible({
+    // Should see two seller checkout cards
+    await expect(
+      page.getByTestId("checkout-items-summary").first(),
+    ).toBeVisible({
       timeout: ELEMENT_TIMEOUT_MS,
     });
-    await snap(page, "checkout-page-loaded");
+    await snap(page, "checkout-two-sellers-loaded");
 
-    // Select payment method
-    const methodSelect = page.getByTestId("payment-method-select").first();
-    await methodSelect.waitFor({
-      state: "visible",
+    // Count only the outer card containers (not toggle buttons or status divs)
+    const sellerCards = page.getByTestId(/^seller-checkout-[^t]/);
+    await expect(sellerCards).toHaveCount(2, { timeout: ELEMENT_TIMEOUT_MS });
+    await snap(page, "checkout-two-cards");
+
+    // ── Fill and submit Seller A's payment ─────────────────────
+    const cardASelect = page.getByTestId("payment-method-select").nth(0);
+    await expect
+      .poll(
+        async () =>
+          cardASelect.evaluate((el: HTMLSelectElement) => el.options.length),
+        { timeout: LONG_OPERATION_TIMEOUT_MS },
+      )
+      .toBeGreaterThan(1);
+    await cardASelect.selectOption({ index: 1 });
+    await snap(page, "checkout-sellerA-method-selected");
+
+    await expect(page.getByTestId(/^display-block-/).first()).toBeVisible({
       timeout: ELEMENT_TIMEOUT_MS,
     });
-    await page.waitForTimeout(MUTATION_WAIT_MS);
-    const selectedValue = await methodSelect.inputValue();
-    if (!selectedValue) {
-      await methodSelect.selectOption({ index: 1 });
-    }
-    await snap(page, "checkout-method-selected");
-
-    // Enter transfer number
-    const transferInput = page.getByTestId(/^transfer-number-/).first();
-    await transferInput.fill("TXN-E2E-12345");
-    await snap(page, "checkout-transfer-filled");
-
-    // Upload receipt photo (Bancolombia Transfer requires this)
-    const receiptInput = page.getByTestId("receipt-file-input").first();
-    await receiptInput.setInputFiles({
-      name: "receipt-proof.png",
-      mimeType: "image/png",
-      buffer: Buffer.from(
-        "iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAFklEQVQYV2P8z8BQz0AEYBxVOHIUAgBGWAgE/dLkRAAAAABJRU5ErkJggg==",
-        "base64",
-      ),
+    await expect(page.getByTestId(/^dynamic-field-/).first()).toBeVisible({
+      timeout: ELEMENT_TIMEOUT_MS,
     });
-    await page.waitForTimeout(DEBOUNCE_WAIT_MS);
-    await snap(page, "checkout-receipt-uploaded");
 
-    // Submit payment
-    const submitBtn = page.getByTestId(/^submit-payment-/).first();
-    await submitBtn.click();
+    await page
+      .getByTestId(/^dynamic-field-/)
+      .first()
+      .locator("input, textarea")
+      .first()
+      .fill("NEQUI-A-001");
+    await snap(page, "checkout-sellerA-field-filled");
 
-    // Wait for success state
+    await page
+      .getByTestId(/^submit-payment-/)
+      .first()
+      .click();
+    await snap(page, "checkout-sellerA-submitted");
+
+    // ── Fill and submit Seller B's payment ─────────────────────
+    // After Seller A submits, their card no longer has a select — Seller B's is now first
+    const cardBSelect = page.getByTestId("payment-method-select").first();
+    await expect
+      .poll(
+        async () =>
+          cardBSelect.evaluate((el: HTMLSelectElement) => el.options.length),
+        { timeout: LONG_OPERATION_TIMEOUT_MS },
+      )
+      .toBeGreaterThan(1);
+    await cardBSelect.selectOption({ index: 1 });
+    await snap(page, "checkout-sellerB-method-selected");
+
+    await expect(page.getByTestId(/^dynamic-field-/).first()).toBeVisible({
+      timeout: ELEMENT_TIMEOUT_MS,
+    });
+
+    await page
+      .getByTestId(/^dynamic-field-/)
+      .first()
+      .locator("input, textarea")
+      .first()
+      .fill("BANCO-B-002");
+    await snap(page, "checkout-sellerB-field-filled");
+
+    await page
+      .getByTestId(/^submit-payment-/)
+      .first()
+      .click();
+    await snap(page, "checkout-sellerB-submitted");
+
+    // ── Both submitted ──────────────────────────────────────────
     await expect(page.getByTestId("checkout-all-submitted")).toBeVisible({
       timeout: LONG_OPERATION_TIMEOUT_MS,
     });
-    await snap(page, "checkout-submitted");
+    await snap(page, "checkout-all-submitted");
   });
 
-  // ─── Phase 5: Buyer verifies order status ─────────────────────
+  // ─── Phase 4: Buyer sees both orders pending ──────────────────
 
-  test("Phase 5: buyer sees pending verification order", async ({
+  test("Phase 4: buyer sees both orders pending verification", async ({
     context,
     page,
   }) => {
     await injectSession(context, buyer);
-
     await page.goto(`${APP_URLS.PAYMENTS}/en/purchases`);
     await page.waitForLoadState("networkidle");
 
-    // Verify order exists with "pending_verification" status
-    await expect(
-      page.getByTestId("order-status-pending_verification"),
-    ).toBeVisible({ timeout: ELEMENT_TIMEOUT_MS });
-    await snap(page, "buyer-order-pending");
+    const pendingBadges = page.getByTestId("order-status-pending_verification");
+    await expect(pendingBadges.first()).toBeVisible({
+      timeout: ELEMENT_TIMEOUT_MS,
+    });
+    await expect(pendingBadges).toHaveCount(2, { timeout: ELEMENT_TIMEOUT_MS });
+    await snap(page, "buyer-both-orders-pending");
   });
 
-  // ─── Phase 6: Seller approves the payment ─────────────────────
+  // ─── Phase 5a: Seller A approves their order ──────────────────
 
-  test("Phase 6: seller approves the order", async ({ context, page }) => {
-    await injectSession(context, seller);
-
+  test("Phase 5a: seller A approves their order", async ({ context, page }) => {
+    await injectSession(context, sellerA);
     await page.goto(`${APP_URLS.PAYMENTS}/en/sales`);
     await page.waitForLoadState("networkidle");
 
-    // Find and click the approve button
     const approveBtn = page.getByTestId(/^order-approve-/).first();
     await expect(approveBtn).toBeVisible({ timeout: ELEMENT_TIMEOUT_MS });
-    await snap(page, "seller-order-received");
+    await snap(page, "sellerA-order-received");
 
-    // Click approve -- opens inline confirmation panel
     await approveBtn.click();
     await expect(page.getByTestId("confirm-action-panel")).toBeVisible();
-    await snap(page, "seller-approve-confirmation");
-
-    // Check the verification checkbox
     await page.getByTestId("confirm-checkbox").check();
-    await snap(page, "seller-approve-checkbox-checked");
-
-    // Click the irreversible confirm button
     await page.getByTestId("confirm-action-submit").click();
 
-    // Wait for mutation to complete, then reload
     await page.waitForTimeout(BULK_MUTATION_WAIT_MS);
     await page.reload();
     await page.waitForLoadState("networkidle");
 
-    // Approve button should be gone after approval
     await expect(page.getByTestId(/^order-approve-/).first()).not.toBeVisible({
       timeout: NAVIGATION_TIMEOUT_MS,
     });
-    await snap(page, "seller-order-approved");
+    await snap(page, "sellerA-order-approved");
   });
 
-  // ─── Phase 7: Buyer sees approval ─────────────────────────────
+  // ─── Phase 5b: Seller B approves their order ──────────────────
 
-  test("Phase 7: buyer sees approved order", async ({ context, page }) => {
+  test("Phase 5b: seller B approves their order", async ({ context, page }) => {
+    await injectSession(context, sellerB);
+    await page.goto(`${APP_URLS.PAYMENTS}/en/sales`);
+    await page.waitForLoadState("networkidle");
+
+    const approveBtn = page.getByTestId(/^order-approve-/).first();
+    await expect(approveBtn).toBeVisible({ timeout: ELEMENT_TIMEOUT_MS });
+    await snap(page, "sellerB-order-received");
+
+    await approveBtn.click();
+    await expect(page.getByTestId("confirm-action-panel")).toBeVisible();
+    await page.getByTestId("confirm-checkbox").check();
+    await page.getByTestId("confirm-action-submit").click();
+
+    await page.waitForTimeout(BULK_MUTATION_WAIT_MS);
+    await page.reload();
+    await page.waitForLoadState("networkidle");
+
+    await expect(page.getByTestId(/^order-approve-/).first()).not.toBeVisible({
+      timeout: NAVIGATION_TIMEOUT_MS,
+    });
+    await snap(page, "sellerB-order-approved");
+  });
+
+  // ─── Phase 6: Buyer sees both orders approved ─────────────────
+
+  test("Phase 6: buyer sees both orders approved", async ({
+    context,
+    page,
+  }) => {
     await injectSession(context, buyer);
-
     await page.goto(`${APP_URLS.PAYMENTS}/en/purchases`);
     await page.waitForLoadState("networkidle");
 
-    // Verify order shows approved status
-    await expect(page.getByTestId("order-status-approved")).toBeVisible({
+    const approvedBadges = page.getByTestId("order-status-approved");
+    await expect(approvedBadges.first()).toBeVisible({
       timeout: ELEMENT_TIMEOUT_MS,
     });
-    await snap(page, "buyer-order-approved");
+    await expect(approvedBadges).toHaveCount(2, {
+      timeout: ELEMENT_TIMEOUT_MS,
+    });
+    await snap(page, "buyer-both-orders-approved");
   });
 });

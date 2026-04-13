@@ -8,6 +8,7 @@ import {
 } from "@/features/payment-methods/domain/constants";
 import {
   fetchPaymentMethodTypes,
+  fetchPaymentMethods,
   fetchSellerPaymentMethods,
 } from "@/features/payment-methods/infrastructure/paymentMethodQueries";
 
@@ -22,7 +23,19 @@ export function usePaymentMethodTypes() {
   });
 }
 
-/** Fetch the seller's configured payment methods */
+/** Fetch the seller's configured payment methods (new API — requires sellerId) */
+export function usePaymentMethods(sellerId: string) {
+  const supabase = useMemo(() => createBrowserSupabaseClient(), []);
+
+  return useQuery({
+    // eslint-disable-next-line @tanstack/query/exhaustive-deps -- supabase client is stable (memoized)
+    queryKey: ["payment-methods", sellerId],
+    queryFn: () => fetchPaymentMethods(supabase, sellerId),
+    enabled: !!sellerId,
+  });
+}
+
+/** Fetch the seller's configured payment methods (legacy — reads seller from auth session) */
 export function useSellerPaymentMethods() {
   const supabase = useMemo(() => createBrowserSupabaseClient(), []);
 

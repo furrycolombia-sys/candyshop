@@ -1,5 +1,5 @@
 import { http, HttpResponse } from "msw";
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { afterEach, describe, it, expect, vi, beforeEach } from "vitest";
 
 import { fetchAuditLog, fetchAuditTableNames } from "./auditQueries";
 
@@ -25,6 +25,12 @@ const SUPABASE_URL = "http://127.0.0.1:54321";
 describe("fetchAuditLog", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", SUPABASE_URL);
+    vi.stubEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY", "test-anon-key");
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
   });
 
   it("fetches audit log entries and returns them", async () => {
@@ -113,6 +119,12 @@ describe("fetchAuditLog", () => {
 describe("fetchAuditTableNames", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", SUPABASE_URL);
+    vi.stubEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY", "test-anon-key");
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
   });
 
   it("returns unique table names", async () => {

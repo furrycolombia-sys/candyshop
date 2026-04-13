@@ -16,7 +16,15 @@ export async function fetchCheckoutPaymentMethods({
   sellerId,
   items,
 }: FetchCheckoutPaymentMethodsParams): Promise<CheckoutPaymentMethodsResponse> {
-  const response = await fetch("/api/checkout/payment-methods", {
+  // In standalone/production mode the app is served under /payments basePath.
+  // fetch() doesn't auto-prepend basePath, so we derive it from the current URL.
+  const basePath =
+    globalThis.window !== undefined &&
+    globalThis.window.location.pathname.startsWith("/payments")
+      ? "/payments"
+      : "";
+
+  const response = await fetch(`${basePath}/api/checkout/payment-methods`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

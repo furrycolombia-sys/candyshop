@@ -22,11 +22,14 @@ out/
 
 # Environment files (secrets)
 .env
+.env.e2e
+.env.staging
 .secrets
 .env.local
 .env.local.e2e
 .env.*.local
 !.env.example
+!.env.e2e.example
 !.env.local.example
 
 # Claude/AI local files (secrets and personal config)

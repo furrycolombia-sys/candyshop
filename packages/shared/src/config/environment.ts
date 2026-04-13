@@ -4,11 +4,12 @@
  * Centralized snapshot of environment variables.
  */
 
+import { appUrls } from "./appUrls";
+
 type LogLevel = "debug" | "info" | "warn" | "error";
-const DEFAULT_LANDING_URL = process.env.NEXT_PUBLIC_LANDING_URL ?? "/";
+const DEFAULT_LANDING_URL = appUrls.landing;
 const DEFAULT_AUTH_HOST_URL =
-  process.env.NEXT_PUBLIC_AUTH_HOST_URL ??
-  (process.env.NODE_ENV === "development" ? "http://localhost:5000" : "/auth");
+  process.env.NEXT_PUBLIC_AUTH_HOST_URL ?? appUrls.auth;
 
 type RuntimeEnv = {
   apiUrl: string;

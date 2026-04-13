@@ -27,6 +27,11 @@ vi.mock("auth/client", () => ({
   }),
 }));
 
+const mockReplace = vi.fn();
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ replace: mockReplace }),
+}));
+
 const mockUseProfile = vi.fn();
 vi.mock("@/features/account/application/hooks/useProfile", () => ({
   useProfile: (...args: unknown[]) => mockUseProfile(...args),
@@ -131,12 +136,6 @@ describe("AccountSettingsPage", () => {
       data: mockProfile,
       isLoading: false,
       isError: false,
-    });
-    const replaceMock = vi.fn();
-    Object.defineProperty(globalThis, "location", {
-      value: { ...globalThis.location, replace: replaceMock },
-      writable: true,
-      configurable: true,
     });
     render(<AccountSettingsPage />);
     const signOutBtn = screen.getByTestId("sign-out");

@@ -1,203 +1,142 @@
-/* eslint-disable react/button-has-type */
+/* eslint-disable react/display-name */
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen, fireEvent } from "@testing-library/react";
-import { describe, it, expect, vi } from "vitest";
+import type { ReactNode } from "react";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 
 vi.mock("next-intl", () => ({
   useTranslations: () => (key: string) => key,
-  useLocale: () => "en",
 }));
 
-vi.mock("shared", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("shared")>();
-  return {
-    ...actual,
-    tid: (id: string) => ({ "data-testid": id }),
-  };
-});
+vi.mock("shared", () => ({
+  tid: (id: string) => ({ "data-testid": id }),
+}));
 
 vi.mock("ui", () => ({
-  Button: ({
-    children,
-    onClick,
-    disabled,
-    ...rest
-  }: {
-    children: React.ReactNode;
-    onClick?: () => void;
-    disabled?: boolean;
-    "data-testid"?: string;
-    [key: string]: unknown;
-  }) => (
-    <button
-      onClick={onClick}
-      disabled={disabled}
-      data-testid={rest["data-testid"]}
-    >
-      {children}
-    </button>
-  ),
   Switch: ({
     checked,
     onCheckedChange,
-    ...rest
   }: {
     checked: boolean;
     onCheckedChange: (c: boolean) => void;
-    "data-testid"?: string;
   }) => (
     <button
+      type="button"
       role="switch"
       aria-checked={checked}
       onClick={() => onCheckedChange(!checked)}
-      data-testid={rest["data-testid"]}
     />
   ),
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- mock props
-  Textarea: (props: any) => <textarea {...props} />,
+  Textarea: (props: React.TextareaHTMLAttributes<HTMLTextAreaElement>) => (
+    <textarea {...props} />
+  ),
+}));
+
+const mockUpdateMutate = vi.fn();
+
+vi.mock(
+  "@/features/payment-methods/application/hooks/usePaymentMethodMutations",
+  () => ({
+    useUpdatePaymentMethod: () => ({
+      mutate: mockUpdateMutate,
+      isPending: false,
+    }),
+  }),
+);
+
+vi.mock("./DisplaySectionEditor", () => ({
+  DisplaySectionEditor: () => (
+    <div data-testid="display-section-editor">Display</div>
+  ),
+}));
+
+vi.mock("./FormSectionEditor", () => ({
+  FormSectionEditor: () => <div data-testid="form-section-editor">Form</div>,
 }));
 
 import { PaymentMethodEditor } from "./PaymentMethodEditor";
 
-import type { PaymentMethodType } from "@/features/payment-methods/domain/types";
+import type { SellerPaymentMethod } from "@/features/payment-methods/domain/types";
 
-const mockTypes: PaymentMethodType[] = [
-  {
-    id: "type-1",
-    name_en: "Bank Transfer",
-    name_es: "Transferencia",
-    description_en: null,
-    description_es: null,
-    icon: null,
-    requires_receipt: true,
-    requires_transfer_number: false,
-    is_active: true,
-  },
-  {
-    id: "type-2",
-    name_en: "Cash",
-    name_es: "Efectivo",
-    description_en: null,
-    description_es: null,
-    icon: null,
-    requires_receipt: false,
-    requires_transfer_number: false,
-    is_active: true,
-  },
-];
+function createWrapper() {
+  const qc = new QueryClient({
+    defaultOptions: { mutations: { retry: false } },
+  });
+  return ({ children }: { children: ReactNode }) => (
+    <QueryClientProvider client={qc}>{children}</QueryClientProvider>
+  );
+}
+
+const mockMethod: SellerPaymentMethod = {
+  id: "pm-1",
+  seller_id: "seller-1",
+  name_en: "Bank Transfer",
+  name_es: "Transferencia",
+  display_blocks: [],
+  form_fields: [],
+  is_active: true,
+  sort_order: 1,
+  created_at: "2025-01-01",
+  updated_at: "2025-01-01",
+};
 
 describe("PaymentMethodEditor", () => {
   const defaultProps = {
-    types: mockTypes,
-    onSave: vi.fn(),
-    onCancel: vi.fn(),
-    isPending: false,
+    method: mockMethod,
+    onClose: vi.fn(),
   };
 
-  it("renders in create mode by default", () => {
-    render(<PaymentMethodEditor {...defaultProps} />);
-    expect(screen.getByText("addMethod")).toBeInTheDocument();
+  beforeEach(() => {
+    vi.clearAllMocks();
   });
 
-  it("renders in edit mode when initial has type_id", () => {
-    render(
-      <PaymentMethodEditor
-        {...defaultProps}
-        initial={{
-          type_id: "type-1",
-          account_details_en: "Account 123",
-          account_details_es: "",
-          seller_note_en: "",
-          seller_note_es: "",
-          is_active: true,
-        }}
-      />,
-    );
+  it("renders name_en input with initial value", () => {
+    render(<PaymentMethodEditor {...defaultProps} />, {
+      wrapper: createWrapper(),
+    });
+    const input = screen.getByTestId(
+      "payment-method-name-en",
+    ) as HTMLInputElement;
+    expect(input.value).toBe("Bank Transfer");
+  });
+
+  it("renders name_es input with initial value", () => {
+    render(<PaymentMethodEditor {...defaultProps} />, {
+      wrapper: createWrapper(),
+    });
+    const input = screen.getByTestId(
+      "payment-method-name-es",
+    ) as HTMLInputElement;
+    expect(input.value).toBe("Transferencia");
+  });
+
+  it("renders display section editor", () => {
+    render(<PaymentMethodEditor {...defaultProps} />, {
+      wrapper: createWrapper(),
+    });
+    expect(screen.getByTestId("display-section-editor")).toBeInTheDocument();
+  });
+
+  it("renders form section editor", () => {
+    render(<PaymentMethodEditor {...defaultProps} />, {
+      wrapper: createWrapper(),
+    });
+    expect(screen.getByTestId("form-section-editor")).toBeInTheDocument();
+  });
+
+  it("shows validation error when name_en is cleared", () => {
+    render(<PaymentMethodEditor {...defaultProps} />, {
+      wrapper: createWrapper(),
+    });
+    const input = screen.getByTestId("payment-method-name-en");
+    fireEvent.change(input, { target: { value: "" } });
+    expect(screen.getByText("nameRequired")).toBeInTheDocument();
+  });
+
+  it("shows edit method heading", () => {
+    render(<PaymentMethodEditor {...defaultProps} />, {
+      wrapper: createWrapper(),
+    });
     expect(screen.getByText("editMethod")).toBeInTheDocument();
-  });
-
-  it("renders type options in the select", () => {
-    render(<PaymentMethodEditor {...defaultProps} />);
-    const select = screen.getByTestId("payment-method-type-select");
-    expect(select).toBeInTheDocument();
-    // Check type options are rendered
-    expect(screen.getByText("Bank Transfer")).toBeInTheDocument();
-    expect(screen.getByText("Cash")).toBeInTheDocument();
-  });
-
-  it("disables select in edit mode", () => {
-    render(
-      <PaymentMethodEditor
-        {...defaultProps}
-        initial={{
-          type_id: "type-1",
-          account_details_en: "",
-          account_details_es: "",
-          seller_note_en: "",
-          seller_note_es: "",
-          is_active: true,
-        }}
-      />,
-    );
-    const select = screen.getByTestId(
-      "payment-method-type-select",
-    ) as HTMLSelectElement;
-    expect(select.disabled).toBe(true);
-  });
-
-  it("disables save when no type is selected", () => {
-    render(<PaymentMethodEditor {...defaultProps} />);
-    const saveBtn = screen.getByTestId("payment-method-save");
-    expect(saveBtn).toBeDisabled();
-  });
-
-  it("calls onCancel when cancel is clicked", () => {
-    const onCancel = vi.fn();
-    render(<PaymentMethodEditor {...defaultProps} onCancel={onCancel} />);
-    fireEvent.click(screen.getByTestId("payment-method-cancel"));
-    expect(onCancel).toHaveBeenCalled();
-  });
-
-  it("calls onSave with form values when save is clicked", () => {
-    const onSave = vi.fn();
-    render(
-      <PaymentMethodEditor
-        {...defaultProps}
-        onSave={onSave}
-        initial={{
-          type_id: "type-1",
-          account_details_en: "Details",
-          account_details_es: "",
-          seller_note_en: "",
-          seller_note_es: "",
-          is_active: true,
-        }}
-      />,
-    );
-    fireEvent.click(screen.getByTestId("payment-method-save"));
-    expect(onSave).toHaveBeenCalledWith(
-      expect.objectContaining({ type_id: "type-1" }),
-    );
-  });
-
-  it("shows saving text when isPending", () => {
-    render(<PaymentMethodEditor {...defaultProps} isPending={true} />);
-    expect(screen.getByText("saving")).toBeInTheDocument();
-  });
-
-  it("renders textarea fields", () => {
-    render(<PaymentMethodEditor {...defaultProps} />);
-    expect(screen.getByTestId("payment-method-account-en")).toBeInTheDocument();
-    expect(screen.getByTestId("payment-method-account-es")).toBeInTheDocument();
-    expect(screen.getByTestId("payment-method-note-en")).toBeInTheDocument();
-    expect(screen.getByTestId("payment-method-note-es")).toBeInTheDocument();
-  });
-
-  it("updates form fields when user types", () => {
-    render(<PaymentMethodEditor {...defaultProps} />);
-    const accountEn = screen.getByTestId(
-      "payment-method-account-en",
-    ) as HTMLTextAreaElement;
-    fireEvent.change(accountEn, { target: { value: "New account details" } });
-    expect(accountEn.value).toBe("New account details");
   });
 });

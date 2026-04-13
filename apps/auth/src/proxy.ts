@@ -6,5 +6,5 @@ import { routing } from "@/shared/infrastructure/i18n";
 export default createSupabaseIntlProxy({
   routing,
   updateSession: updateSupabaseSession,
-  extraBypassPrefixes: ["/auth/callback"],
+  extraBypassPrefixes: ["/auth/callback", "/callback"],
 });

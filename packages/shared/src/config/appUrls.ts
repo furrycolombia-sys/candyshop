@@ -1,9 +1,59 @@
-export const appUrls = {
-  landing: process.env.NEXT_PUBLIC_LANDING_URL ?? "/",
-  store: process.env.NEXT_PUBLIC_STORE_URL ?? "/store",
-  studio: process.env.NEXT_PUBLIC_STUDIO_URL ?? "/studio",
-  payments: process.env.NEXT_PUBLIC_PAYMENTS_URL ?? "/payments",
-  admin: process.env.NEXT_PUBLIC_ADMIN_URL ?? "/admin",
-  auth: process.env.NEXT_PUBLIC_AUTH_URL ?? "/auth",
-  playground: process.env.NEXT_PUBLIC_PLAYGROUND_URL ?? "/playground",
-} as const;
+// eslint-disable-next-line boundaries/no-unknown, no-restricted-imports
+import appLinks from "../../../../config/app-links.json";
+
+type AppName = keyof typeof appLinks;
+
+function trimTrailingSlash(value: string) {
+  // eslint-disable-next-line sonarjs/slow-regex
+  return value.replace(/\/+$/, "");
+}
+
+function joinUrl(baseUrl: string, pathname: string) {
+  if (!pathname || pathname === "/") {
+    return trimTrailingSlash(baseUrl);
+  }
+
+  return `${trimTrailingSlash(baseUrl)}${pathname}`;
+}
+
+function getPublicOrigin() {
+  const fromE2E = process.env.E2E_PUBLIC_ORIGIN?.trim();
+  const fromSite = process.env.SITE_PUBLIC_ORIGIN?.trim();
+  return fromE2E || fromSite || "";
+}
+
+function resolveAppUrl(app: AppName) {
+  const definition = appLinks[app];
+  const explicit = process.env[definition.envKey]?.trim();
+  const publicOrigin = getPublicOrigin();
+
+  if (process.env.NODE_ENV === "production") {
+    if (publicOrigin) {
+      return definition.path === "/"
+        ? trimTrailingSlash(publicOrigin)
+        : joinUrl(publicOrigin, definition.path);
+    }
+
+    if (explicit) {
+      return explicit;
+    }
+
+    return definition.path;
+  }
+
+  if (explicit) {
+    return explicit;
+  }
+
+  return definition.devUrl;
+}
+
+export const appUrls = Object.freeze({
+  landing: resolveAppUrl("landing"),
+  store: resolveAppUrl("store"),
+  studio: resolveAppUrl("studio"),
+  payments: resolveAppUrl("payments"),
+  admin: resolveAppUrl("admin"),
+  auth: resolveAppUrl("auth"),
+  playground: resolveAppUrl("playground"),
+});

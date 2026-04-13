@@ -1,5 +1,20 @@
 import { defineConfig, devices } from "@playwright/test";
 
+function getExtraHTTPHeaders() {
+  const baseURL = process.env.DOCKER_BASE_URL || "http://localhost:8088";
+
+  try {
+    const { hostname } = new URL(baseURL);
+    if (hostname.endsWith(".loca.lt")) {
+      return { "bypass-tunnel-reminder": "true" };
+    }
+  } catch {
+    return {};
+  }
+
+  return {};
+}
+
 /**
  * Playwright config for Docker deployment smoke tests.
  *
@@ -17,7 +32,8 @@ export default defineConfig({
   reporter: [["list"]],
   timeout: 30_000,
   use: {
-    baseURL: process.env.DOCKER_BASE_URL || "http://localhost:8080",
+    baseURL: process.env.DOCKER_BASE_URL || "http://localhost:8088",
+    extraHTTPHeaders: getExtraHTTPHeaders(),
     trace: "on-first-retry",
     screenshot: "only-on-failure",
     navigationTimeout: 20_000,

@@ -137,7 +137,9 @@ test.describe.serial("Permission management", () => {
   });
 
   test.afterAll(async () => {
-    await cleanupTestData(admin.userId, target.userId);
+    if (admin && target) {
+      await cleanupTestData(admin.userId, target.userId);
+    }
   });
 
   test("shows the full permission matrix in admin", async ({
@@ -173,7 +175,12 @@ test.describe.serial("Permission management", () => {
     await expectHidden(page, "new-product-button");
     await snap(page, "studio-create-hidden");
 
+    // Clear cookies and re-inject session to force a completely fresh auth state,
+    // then navigate to the create page to verify access-denied
+    await context.clearCookies();
+    await injectSession(context, target);
     await page.goto(`${APP_URLS.STUDIO}/en/products/new`);
+    await page.waitForLoadState("networkidle");
     await expectVisible(page, "access-denied");
 
     await setPermissions(page, context, admin, target, {

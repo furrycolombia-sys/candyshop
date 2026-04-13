@@ -37,7 +37,6 @@ interface UseAuthOptions {
 export function useAuth({ supabaseClient }: UseAuthOptions): UseAuthReturn {
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const useMockSession = process.env.NEXT_PUBLIC_ENABLE_MOCKS === "true";
 
   useEffect(() => {
     let isActive = true;
@@ -51,12 +50,6 @@ export function useAuth({ supabaseClient }: UseAuthOptions): UseAuthReturn {
 
       if (!initialSession) {
         setSession(null);
-        setIsLoading(false);
-        return;
-      }
-
-      if (useMockSession) {
-        setSession(initialSession);
         setIsLoading(false);
         return;
       }
@@ -86,7 +79,7 @@ export function useAuth({ supabaseClient }: UseAuthOptions): UseAuthReturn {
       isActive = false;
       subscription.unsubscribe();
     };
-  }, [supabaseClient, useMockSession]);
+  }, [supabaseClient]);
 
   const signInWithProvider = useCallback(
     async (provider: AuthProvider, redirectTo?: string) => {

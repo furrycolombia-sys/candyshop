@@ -339,8 +339,9 @@ jobs:
         env:
           NEXT_PUBLIC_API_BASE_URL: /api
           NEXT_PUBLIC_API_PREFIX: ""
-          NEXT_PUBLIC_ENABLE_MOCKS: "true"
           NEXT_PUBLIC_ENABLE_TEST_IDS: "true"
+          NEXT_PUBLIC_SUPABASE_URL: "http://127.0.0.1:54321"
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0"
           NEXT_PUBLIC_AUTH_HOST_URL: "http://localhost:5000"
           NEXT_PUBLIC_STORE_URL: "http://localhost:5001"
           NEXT_PUBLIC_ADMIN_URL: "http://localhost:5002"
@@ -403,9 +404,7 @@ jobs:
   e2e-tests:
     name: E2E Tests
     runs-on: ubuntu-latest
-    container:
-      image: mcr.microsoft.com/playwright:v1.58.2-noble
-    timeout-minutes: 30
+    timeout-minutes: 45
     needs: [build, changes]
     defaults:
       run:
@@ -425,6 +424,13 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright browsers
+        run: pnpm --filter store exec playwright install --with-deps chromium
+
+      - name: Start Supabase
+        run: pnpm supabase start
+        timeout-minutes: 5
 
       - name: Download store build artifacts
         uses: actions/download-artifact@v4
@@ -499,8 +505,9 @@ jobs:
         env:
           NEXT_PUBLIC_API_BASE_URL: /api
           NEXT_PUBLIC_API_PREFIX: ""
-          NEXT_PUBLIC_ENABLE_MOCKS: "true"
           NEXT_PUBLIC_ENABLE_TEST_IDS: "true"
+          NEXT_PUBLIC_SUPABASE_URL: "http://127.0.0.1:54321"
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0"
           NEXT_PUBLIC_AUTH_HOST_URL: "http://localhost:5000"
           NEXT_PUBLIC_STORE_URL: "http://localhost:5001"
           NEXT_PUBLIC_ADMIN_URL: "http://localhost:5002"

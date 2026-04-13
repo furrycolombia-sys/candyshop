@@ -1,60 +1,103 @@
-import { describe, it, expect, beforeAll, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
-/**
- * Verifies that all NEXT_PUBLIC_*_URL env vars produce absolute URLs
- * in appUrls. If any URL is relative (e.g. "/studio"), cross-app
- * navigation breaks — links resolve against the current app's origin
- * instead of the target app's origin.
- */
+const EXPECTED_DEV_URLS = {
+  landing: "http://localhost:5004",
+  store: "http://localhost:5001",
+  studio: "http://localhost:5006",
+  payments: "http://localhost:5005",
+  admin: "http://localhost:5002",
+  auth: "http://localhost:5000",
+  playground: "http://localhost:5003",
+} as const;
+
+const EXPECTED_PROD_PATHS = {
+  landing: "/",
+  store: "/store",
+  studio: "/studio",
+  payments: "/payments",
+  admin: "/admin",
+  auth: "/auth",
+  playground: "/playground",
+} as const;
+
+/** Clear all app-URL env vars so the module falls back to defaults. */
+function clearAppUrlEnvVars() {
+  vi.stubEnv("SITE_PUBLIC_ORIGIN", "");
+  vi.stubEnv("E2E_PUBLIC_ORIGIN", "");
+  vi.stubEnv("NEXT_PUBLIC_LANDING_URL", "");
+  vi.stubEnv("NEXT_PUBLIC_STORE_URL", "");
+  vi.stubEnv("NEXT_PUBLIC_STUDIO_URL", "");
+  vi.stubEnv("NEXT_PUBLIC_PAYMENTS_URL", "");
+  vi.stubEnv("NEXT_PUBLIC_ADMIN_URL", "");
+  vi.stubEnv("NEXT_PUBLIC_AUTH_URL", "");
+  vi.stubEnv("NEXT_PUBLIC_PLAYGROUND_URL", "");
+}
+
+async function importFreshAppUrls() {
+  vi.resetModules();
+  return import("./appUrls");
+}
+
+afterEach(() => {
+  vi.unstubAllEnvs();
+  vi.resetModules();
+});
+
 describe("appUrls", () => {
-  const EXPECTED_PORTS: Record<string, string> = {
-    landing: "5004",
-    store: "5001",
-    studio: "5006",
-    payments: "5005",
-    admin: "5002",
-    auth: "5000",
-    playground: "5003",
-  };
+  it("uses local app URLs by default in development", async () => {
+    vi.stubEnv("NODE_ENV", "development");
+    clearAppUrlEnvVars();
 
-  beforeAll(() => {
-    // Simulate the env vars that .env.example provides
-    for (const [app, port] of Object.entries(EXPECTED_PORTS)) {
-      const key = `NEXT_PUBLIC_${app.toUpperCase()}_URL`;
-      vi.stubEnv(key, `http://localhost:${port}`);
-    }
+    const { appUrls } = await importFreshAppUrls();
+    expect(appUrls).toEqual(EXPECTED_DEV_URLS);
   });
 
-  it("all app URLs are absolute (start with http)", async () => {
-    const { appUrls } = await import("./appUrls");
+  it("uses relative same-domain paths by default in production", async () => {
+    vi.stubEnv("NODE_ENV", "production");
+    clearAppUrlEnvVars();
 
-    for (const [app, url] of Object.entries(appUrls)) {
-      expect(
-        url,
-        `appUrls.${app} is "${url}" — must be absolute (http://...) not relative`,
-      ).toMatch(/^https?:\/\//);
-    }
+    const { appUrls } = await importFreshAppUrls();
+    expect(appUrls).toEqual(EXPECTED_PROD_PATHS);
   });
 
-  it("each app URL points to its expected port", async () => {
-    const { appUrls } = await import("./appUrls");
+  it("derives public absolute URLs from SITE_PUBLIC_ORIGIN for production", async () => {
+    vi.stubEnv("NODE_ENV", "production");
+    clearAppUrlEnvVars();
+    vi.stubEnv("SITE_PUBLIC_ORIGIN", "https://shop.example.com/");
 
-    for (const [app, url] of Object.entries(appUrls)) {
-      const port = EXPECTED_PORTS[app];
-      expect(url, `appUrls.${app} should contain port ${port}`).toContain(
-        `:${port}`,
-      );
-    }
+    const { appUrls } = await importFreshAppUrls();
+    expect(appUrls).toEqual({
+      landing: "https://shop.example.com",
+      store: "https://shop.example.com/store",
+      studio: "https://shop.example.com/studio",
+      payments: "https://shop.example.com/payments",
+      admin: "https://shop.example.com/admin",
+      auth: "https://shop.example.com/auth",
+      playground: "https://shop.example.com/playground",
+    });
   });
 
-  it("no app URL falls back to a relative path", async () => {
-    const { appUrls } = await import("./appUrls");
+  it("lets explicit NEXT_PUBLIC app URLs override the defaults", async () => {
+    vi.stubEnv("NODE_ENV", "production");
+    clearAppUrlEnvVars();
+    vi.stubEnv("NEXT_PUBLIC_STORE_URL", "https://store.example.com");
+    vi.stubEnv("NEXT_PUBLIC_AUTH_URL", "/auth");
 
-    for (const [app, url] of Object.entries(appUrls)) {
-      expect(
-        url,
-        `appUrls.${app} is "${url}" — relative fallback detected, env var missing`,
-      ).not.toMatch(/^\//);
-    }
+    const { appUrls } = await importFreshAppUrls();
+    expect(appUrls.store).toBe("https://store.example.com");
+    expect(appUrls.auth).toBe("/auth");
+    expect(appUrls.admin).toBe("/admin");
+  });
+
+  it("prefers SITE_PUBLIC_ORIGIN over explicit app URLs in production", async () => {
+    vi.stubEnv("NODE_ENV", "production");
+    clearAppUrlEnvVars();
+    vi.stubEnv("SITE_PUBLIC_ORIGIN", "https://shop.example.com/");
+    vi.stubEnv("NEXT_PUBLIC_STORE_URL", "http://localhost:5001");
+    vi.stubEnv("NEXT_PUBLIC_AUTH_URL", "http://localhost:5000");
+
+    const { appUrls } = await importFreshAppUrls();
+    expect(appUrls.store).toBe("https://shop.example.com/store");
+    expect(appUrls.auth).toBe("https://shop.example.com/auth");
   });
 });
