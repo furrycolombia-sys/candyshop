@@ -72,6 +72,7 @@ describe("fetchSellerPaymentMethods", () => {
           icon: "bank",
           requires_receipt: true,
           requires_transfer_number: true,
+          required_buyer_fields: [],
         },
       },
     ];
@@ -91,6 +92,7 @@ describe("fetchSellerPaymentMethods", () => {
       type_icon: "bank",
       requires_receipt: true,
       requires_transfer_number: true,
+      required_buyer_fields: [],
       account_details_en: "Bank ABC 123",
       account_details_es: "Banco ABC 123",
       seller_note_en: "Note EN",

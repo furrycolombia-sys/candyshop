@@ -24,6 +24,7 @@ interface PaymentMethodRow {
     icon: string | null;
     requires_receipt: boolean;
     requires_transfer_number: boolean;
+    required_buyer_fields: unknown;
   };
 }
 
@@ -48,7 +49,8 @@ export async function fetchSellerPaymentMethods(
         name_es,
         icon,
         requires_receipt,
-        requires_transfer_number
+        requires_transfer_number,
+        required_buyer_fields
       )
     `,
     )
@@ -58,13 +60,19 @@ export async function fetchSellerPaymentMethods(
 
   if (error) throw error;
 
-  return ((data ?? []) as PaymentMethodRow[]).map((row) => ({
+  return ((data ?? []) as unknown as PaymentMethodRow[]).map((row) => ({
     id: row.id,
     type_name_en: row.payment_method_types.name_en,
     type_name_es: row.payment_method_types.name_es,
     type_icon: row.payment_method_types.icon,
     requires_receipt: row.payment_method_types.requires_receipt,
     requires_transfer_number: row.payment_method_types.requires_transfer_number,
+    required_buyer_fields: Array.isArray(
+      row.payment_method_types.required_buyer_fields,
+    )
+      ? (row.payment_method_types
+          .required_buyer_fields as SellerPaymentMethodWithType["required_buyer_fields"])
+      : [],
     account_details_en: row.account_details_en,
     account_details_es: row.account_details_es,
     seller_note_en: row.seller_note_en,

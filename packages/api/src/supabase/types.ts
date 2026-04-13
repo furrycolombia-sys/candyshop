@@ -296,6 +296,7 @@ export type Database = {
       };
       orders: {
         Row: {
+          buyer_info: Json | null;
           checkout_session_id: string | null;
           created_at: string;
           expires_at: string | null;
@@ -311,6 +312,7 @@ export type Database = {
           user_id: string;
         };
         Insert: {
+          buyer_info?: Json | null;
           checkout_session_id?: string | null;
           created_at?: string;
           expires_at?: string | null;
@@ -326,6 +328,7 @@ export type Database = {
           user_id: string;
         };
         Update: {
+          buyer_info?: Json | null;
           checkout_session_id?: string | null;
           created_at?: string;
           expires_at?: string | null;
@@ -360,6 +363,7 @@ export type Database = {
           is_active: boolean;
           name_en: string;
           name_es: string;
+          required_buyer_fields: Json;
           requires_receipt: boolean;
           requires_transfer_number: boolean;
           sort_order: number;
@@ -374,6 +378,7 @@ export type Database = {
           is_active?: boolean;
           name_en: string;
           name_es: string;
+          required_buyer_fields?: Json;
           requires_receipt?: boolean;
           requires_transfer_number?: boolean;
           sort_order?: number;
@@ -388,6 +393,7 @@ export type Database = {
           is_active?: boolean;
           name_en?: string;
           name_es?: string;
+          required_buyer_fields?: Json;
           requires_receipt?: boolean;
           requires_transfer_number?: boolean;
           sort_order?: number;
@@ -416,6 +422,7 @@ export type Database = {
       permissions: {
         Row: {
           created_at: string;
+          depends_on: string | null;
           description_en: string;
           description_es: string;
           id: string;
@@ -425,6 +432,7 @@ export type Database = {
         };
         Insert: {
           created_at?: string;
+          depends_on?: string | null;
           description_en?: string;
           description_es?: string;
           id?: string;
@@ -434,6 +442,7 @@ export type Database = {
         };
         Update: {
           created_at?: string;
+          depends_on?: string | null;
           description_en?: string;
           description_es?: string;
           id?: string;
@@ -876,6 +885,14 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      grant_default_buyer_permissions: {
+        Args: { p_granted_by: string; p_reason?: string; p_user_id: string };
+        Returns: undefined;
+      };
+      has_permission: {
+        Args: { p_permission_key: string; p_user_id: string };
+        Returns: boolean;
+      };
       release_stock: {
         Args: { p_product_id: string; p_quantity: number };
         Returns: undefined;
@@ -883,6 +900,22 @@ export type Database = {
       reserve_stock: {
         Args: { p_product_id: string; p_quantity: number };
         Returns: boolean;
+      };
+      resubmit_evidence: {
+        Args: {
+          p_order_id: string;
+          p_receipt_url: string;
+          p_transfer_number: string;
+        };
+        Returns: undefined;
+      };
+      update_order_status: {
+        Args: {
+          p_new_status: string;
+          p_order_id: string;
+          p_seller_note?: string;
+        };
+        Returns: undefined;
       };
     };
     Enums: {
