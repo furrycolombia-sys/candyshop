@@ -8,7 +8,7 @@
 --   4. The expected RLS policies are present
 --
 -- Run against the local DB:
---   psql postgresql://postgres:postgres@localhost:54322/postgres -f supabase/tests/20260413100000_customizable_payment_methods_smoke.sql
+--   psql -h localhost -p 54322 -U postgres -d postgres -f supabase/tests/20260413100000_customizable_payment_methods_smoke.sql
 -- =============================================================================
 
 do $$

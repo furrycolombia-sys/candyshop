@@ -253,7 +253,7 @@ dynamic display blocks and form fields. Implement full validation, file upload, 
   - Display fields in the same order as the payment method's `form_fields` array
   - _Requirements: 9.1, 9.2, 9.3_
 
-- [-] 15. Final checkpoint — Ensure all tests pass
+- [x] 15. Final checkpoint — Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
 ## Notes

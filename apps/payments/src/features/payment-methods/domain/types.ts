@@ -66,7 +66,7 @@ export interface SellerPaymentMethod {
   id: string;
   seller_id: string;
   name_en: string;
-  name_es: string;
+  name_es: string | null;
   display_blocks: DisplayBlock[];
   form_fields: FormField[];
   is_active: boolean;
