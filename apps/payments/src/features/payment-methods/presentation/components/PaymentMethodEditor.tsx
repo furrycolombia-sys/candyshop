@@ -127,7 +127,10 @@ export function PaymentMethodEditor({ method }: PaymentMethodEditorProps) {
             htmlFor="payment-method-name-es-input"
             className="font-display text-xs font-bold uppercase tracking-wider"
           >
-            Name (ES)
+            Name (ES) —{" "}
+            <span className="font-normal normal-case text-muted-foreground">
+              {t("optional")}
+            </span>
           </label>
           <input
             id="payment-method-name-es-input"

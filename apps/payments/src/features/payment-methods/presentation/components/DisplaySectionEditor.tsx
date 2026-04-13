@@ -1,18 +1,17 @@
+/* eslint-disable sonarjs/no-nested-functions -- @hello-pangea/dnd render props require nested function callbacks */
 /* eslint-disable i18next/no-literal-string -- aria-labels and language code labels are UI chrome, not user-facing content */
 /* eslint-disable react/no-multi-comp -- private helper components co-located with their parent */
 "use client";
 
 import {
-  ChevronDown,
-  ChevronUp,
-  FileText,
-  Image,
-  Link,
-  Video,
-  X,
-} from "lucide-react";
+  DragDropContext,
+  Draggable,
+  Droppable,
+  type DropResult,
+} from "@hello-pangea/dnd";
+import { FileText, GripVertical, Image, Link, Video, X } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { tid } from "shared";
 import { Textarea } from "ui";
 
@@ -79,19 +78,18 @@ export function DisplaySectionEditor({
     onChange(blocks.map((b) => (b.id === updated.id ? updated : b)));
   };
 
-  const moveUp = (index: number) => {
-    if (index === 0) return;
-    const next = [...blocks];
-    [next[index - 1], next[index]] = [next[index], next[index - 1]];
-    onChange(next);
-  };
+  const handleDragEnd = useCallback(
+    (result: DropResult) => {
+      const { source, destination } = result;
+      if (!destination || source.index === destination.index) return;
 
-  const moveDown = (index: number) => {
-    if (index === blocks.length - 1) return;
-    const next = [...blocks];
-    [next[index], next[index + 1]] = [next[index + 1], next[index]];
-    onChange(next);
-  };
+      const reordered = [...blocks];
+      const [moved] = reordered.splice(source.index, 1);
+      reordered.splice(destination.index, 0, moved);
+      onChange(reordered);
+    },
+    [blocks, onChange],
+  );
 
   return (
     <div className="flex flex-col gap-4" {...tid("display-section-editor")}>
@@ -131,56 +129,59 @@ export function DisplaySectionEditor({
         </div>
       )}
 
-      {blocks.map((block, index) => (
-        <div
-          key={block.id}
-          className="flex gap-3 border-l-4 border-brand bg-muted/10 p-3"
-          {...tid(`display-block-${block.id}`)}
-        >
-          {/* Reorder */}
-          <div className="flex flex-col gap-1 pt-1">
-            <button
-              type="button"
-              disabled={index === 0}
-              onClick={() => moveUp(index)}
-              className="rounded-sm p-1 text-muted-foreground hover:bg-muted disabled:opacity-30"
-              aria-label="Move block up"
-              {...tid(`display-block-up-${block.id}`)}
+      <DragDropContext onDragEnd={handleDragEnd}>
+        <Droppable droppableId="display-blocks">
+          {(provided) => (
+            <div
+              ref={provided.innerRef}
+              {...provided.droppableProps}
+              className="flex flex-col gap-4"
             >
-              <ChevronUp className="size-3" />
-            </button>
-            <button
-              type="button"
-              disabled={index === blocks.length - 1}
-              onClick={() => moveDown(index)}
-              className="rounded-sm p-1 text-muted-foreground hover:bg-muted disabled:opacity-30"
-              aria-label="Move block down"
-              {...tid(`display-block-down-${block.id}`)}
-            >
-              <ChevronDown className="size-3" />
-            </button>
-          </div>
+              {blocks.map((block, index) => (
+                <Draggable key={block.id} draggableId={block.id} index={index}>
+                  {(dragProvided) => (
+                    <div
+                      ref={dragProvided.innerRef}
+                      {...dragProvided.draggableProps}
+                      className="flex gap-3 border-l-4 border-brand bg-muted/10 p-3"
+                      {...tid(`display-block-${block.id}`)}
+                    >
+                      {/* Drag handle */}
+                      <div
+                        {...dragProvided.dragHandleProps}
+                        className="cursor-grab self-start pt-1 text-muted-foreground hover:text-foreground"
+                        aria-label={t("dragToReorder")}
+                      >
+                        <GripVertical className="size-4" />
+                      </div>
 
-          {/* Block editor */}
-          <div className="flex-1 min-w-0">
-            <p className="mb-2 font-display text-xs font-bold uppercase tracking-wider text-brand">
-              {t(`blockTypes.${block.type}`)}
-            </p>
-            <BlockEditor block={block} onChange={updateBlock} />
-          </div>
+                      {/* Block editor */}
+                      <div className="flex-1 min-w-0">
+                        <p className="mb-2 font-display text-xs font-bold uppercase tracking-wider text-brand">
+                          {t(`blockTypes.${block.type}`)}
+                        </p>
+                        <BlockEditor block={block} onChange={updateBlock} />
+                      </div>
 
-          {/* Remove */}
-          <button
-            type="button"
-            onClick={() => removeBlock(block.id)}
-            className="self-start rounded-sm p-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-            aria-label="Remove block"
-            {...tid(`display-block-remove-${block.id}`)}
-          >
-            <X className="size-4" />
-          </button>
-        </div>
-      ))}
+                      {/* Remove */}
+                      <button
+                        type="button"
+                        onClick={() => removeBlock(block.id)}
+                        className="self-start rounded-sm p-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                        aria-label="Remove block"
+                        {...tid(`display-block-remove-${block.id}`)}
+                      >
+                        <X className="size-4" />
+                      </button>
+                    </div>
+                  )}
+                </Draggable>
+              ))}
+              {provided.placeholder}
+            </div>
+          )}
+        </Droppable>
+      </DragDropContext>
     </div>
   );
 }
@@ -200,6 +201,7 @@ function BlockEditor({
   onChange: (block: DisplayBlock) => void;
 }) {
   const t = useTranslations("paymentMethods");
+  const optionalLabel = t("optional");
 
   switch (block.type) {
     case "text": {
@@ -214,7 +216,7 @@ function BlockEditor({
           />
           <Textarea
             rows={2}
-            placeholder={t("contentEs")}
+            placeholder={`${t("contentEs")} (${optionalLabel})`}
             value={b.content_es ?? ""}
             onChange={(e) =>
               onChange({ ...b, content_es: e.target.value || undefined })
@@ -245,7 +247,7 @@ function BlockEditor({
           />
           <input
             type="text"
-            placeholder={t("altTextEs")}
+            placeholder={`${t("altTextEs")} (${optionalLabel})`}
             value={b.alt_es ?? ""}
             onChange={(e) =>
               onChange({ ...b, alt_es: e.target.value || undefined })
@@ -279,7 +281,7 @@ function BlockEditor({
           />
           <input
             type="text"
-            placeholder={t("linkLabelEs")}
+            placeholder={`${t("linkLabelEs")} (${optionalLabel})`}
             value={b.label_es ?? ""}
             onChange={(e) =>
               onChange({ ...b, label_es: e.target.value || undefined })
@@ -311,7 +313,7 @@ function BlockEditor({
           />
           <input
             type="text"
-            placeholder={t("linkLabelEs")}
+            placeholder={`${t("linkLabelEs")} (${optionalLabel})`}
             value={b.label_es ?? ""}
             onChange={(e) =>
               onChange({ ...b, label_es: e.target.value || undefined })

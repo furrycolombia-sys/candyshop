@@ -224,7 +224,9 @@
     "invalidYoutubeUrl": "Please enter a valid YouTube URL",
     "saved": "Saved",
     "nameRequired": "Name (EN) is required",
-    "newMethodDefault": "New Payment Method"
+    "newMethodDefault": "New Payment Method",
+    "optional": "optional",
+    "dragToReorder": "Drag to reorder"
   },
   "common": {
     "loading": "Loading...",

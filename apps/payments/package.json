@@ -15,6 +15,7 @@
     "test:e2e:ui": "echo 'Run e2e from root: pnpm test:e2e:ui'"
   },
   "dependencies": {
+    "@hello-pangea/dnd": "^18.0.1",
     "@monorepo/app-components": "workspace:*",
     "@tanstack/react-query": "^5.91.0",
     "api": "workspace:*",

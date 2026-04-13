@@ -1,9 +1,27 @@
+/* eslint-disable react-hooks/refs -- @hello-pangea/dnd requires ref access during render for drag-and-drop binding */
 /* eslint-disable i18next/no-literal-string -- aria-labels and language code labels are UI chrome, not user-facing content */
 /* eslint-disable react/no-multi-comp -- FieldEditor is a private helper co-located with its parent */
 "use client";
 
-import { ChevronDown, ChevronUp, ClipboardList, X } from "lucide-react";
+import {
+  DragDropContext,
+  Draggable,
+  Droppable,
+  type DropResult,
+  type DraggableProvided,
+} from "@hello-pangea/dnd";
+import {
+  AlignLeft,
+  ClipboardList,
+  GripVertical,
+  Hash,
+  Mail,
+  Type,
+  Upload,
+  X,
+} from "lucide-react";
 import { useTranslations } from "next-intl";
+import { useCallback } from "react";
 import { tid } from "shared";
 import { Switch } from "ui";
 
@@ -17,18 +35,18 @@ interface FormSectionEditorProps {
   onChange: (fields: FormField[]) => void;
 }
 
-const FIELD_TYPES: FormFieldType[] = [
-  "text",
-  "email",
-  "number",
-  "file",
-  "textarea",
-];
+const FIELD_TYPE_ICONS: Record<FormFieldType, typeof Type> = {
+  text: Type,
+  email: Mail,
+  number: Hash,
+  file: Upload,
+  textarea: AlignLeft,
+};
 
-function createField(): FormField {
+function createField(type: FormFieldType): FormField {
   return {
     id: crypto.randomUUID(),
-    type: "text",
+    type,
     label_en: "",
     required: true,
   };
@@ -39,78 +57,42 @@ const inputClass =
 
 interface FieldRowProps {
   field: FormField;
-  index: number;
-  isFirst: boolean;
-  isLast: boolean;
   onUpdate: (updated: FormField) => void;
   onRemove: (id: string) => void;
-  onMoveUp: (index: number) => void;
-  onMoveDown: (index: number) => void;
+  dragProvided: DraggableProvided;
 }
 
-function FieldRow({
-  field,
-  index,
-  isFirst,
-  isLast,
-  onUpdate,
-  onRemove,
-  onMoveUp,
-  onMoveDown,
-}: FieldRowProps) {
+function FieldRow({ field, onUpdate, onRemove, dragProvided }: FieldRowProps) {
   const t = useTranslations("paymentMethods");
+  const optionalLabel = t("optional");
 
   return (
     <div
+      ref={dragProvided.innerRef}
+      {...dragProvided.draggableProps}
       className="flex gap-3 border-l-4 border-brand bg-muted/10 p-3"
       {...tid(`form-field-${field.id}`)}
     >
-      {/* Reorder */}
-      <div className="flex flex-col gap-1 pt-1">
-        <button
-          type="button"
-          disabled={isFirst}
-          onClick={() => onMoveUp(index)}
-          className="rounded-sm p-1 text-muted-foreground hover:bg-muted disabled:opacity-30"
-          aria-label="Move field up"
-          {...tid(`form-field-up-${field.id}`)}
-        >
-          <ChevronUp className="size-3" />
-        </button>
-        <button
-          type="button"
-          disabled={isLast}
-          onClick={() => onMoveDown(index)}
-          className="rounded-sm p-1 text-muted-foreground hover:bg-muted disabled:opacity-30"
-          aria-label="Move field down"
-          {...tid(`form-field-down-${field.id}`)}
-        >
-          <ChevronDown className="size-3" />
-        </button>
+      {/* Drag handle */}
+      <div
+        {...dragProvided.dragHandleProps}
+        className="cursor-grab self-start pt-1 text-muted-foreground hover:text-foreground"
+        aria-label={t("dragToReorder")}
+      >
+        <GripVertical className="size-4" />
       </div>
 
       {/* Field editor */}
       <div className="flex-1 min-w-0 flex flex-col gap-3">
-        {/* Type + Required row */}
+        {/* Type badge + Required row */}
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2">
-            <label className="font-display text-xs font-bold uppercase tracking-wider shrink-0">
-              {t("fieldType")}
-            </label>
-            <select
-              value={field.type}
-              onChange={(e) =>
-                onUpdate({ ...field, type: e.target.value as FormFieldType })
-              }
-              className="flex h-8 border-strong border-foreground bg-background px-2 py-1 text-xs shadow-brutal-sm focus:outline-none focus:ring-2 focus:ring-brand"
-            >
-              {FIELD_TYPES.map((type) => (
-                <option key={type} value={type}>
-                  {t(`fieldTypes.${type}`)}
-                </option>
-              ))}
-            </select>
-          </div>
+          <span className="inline-flex items-center gap-1.5 border-strong border-foreground bg-background px-2 py-0.5 text-xs font-bold uppercase tracking-wider shadow-brutal-sm">
+            {(() => {
+              const Icon = FIELD_TYPE_ICONS[field.type];
+              return <Icon className="size-3" />;
+            })()}
+            {t(`fieldTypes.${field.type}`)}
+          </span>
           <div className="flex items-center gap-2 ml-auto">
             <label className="font-display text-xs font-bold uppercase tracking-wider">
               {t("fieldRequired")}
@@ -140,7 +122,7 @@ function FieldRow({
           </div>
           <div className="flex flex-col gap-1">
             <label className="font-display text-xs font-bold uppercase tracking-wider">
-              {t("fieldLabelEs")}
+              {t("fieldLabelEs")} ({optionalLabel})
             </label>
             <input
               type="text"
@@ -149,7 +131,7 @@ function FieldRow({
                 onUpdate({ ...field, label_es: e.target.value || undefined })
               }
               className={inputClass}
-              placeholder={t("fieldLabelEs")}
+              placeholder={`${t("fieldLabelEs")} (${optionalLabel})`}
             />
           </div>
         </div>
@@ -158,7 +140,7 @@ function FieldRow({
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
           <div className="flex flex-col gap-1">
             <label className="font-display text-xs font-bold uppercase tracking-wider text-muted-foreground">
-              {t("fieldPlaceholderEn")}
+              {t("fieldPlaceholderEn")} ({optionalLabel})
             </label>
             <input
               type="text"
@@ -170,12 +152,12 @@ function FieldRow({
                 })
               }
               className={inputClass}
-              placeholder={t("fieldPlaceholderEn")}
+              placeholder={`${t("fieldPlaceholderEn")} (${optionalLabel})`}
             />
           </div>
           <div className="flex flex-col gap-1">
             <label className="font-display text-xs font-bold uppercase tracking-wider text-muted-foreground">
-              {t("fieldPlaceholderEs")}
+              {t("fieldPlaceholderEs")} ({optionalLabel})
             </label>
             <input
               type="text"
@@ -187,7 +169,7 @@ function FieldRow({
                 })
               }
               className={inputClass}
-              placeholder={t("fieldPlaceholderEs")}
+              placeholder={`${t("fieldPlaceholderEs")} (${optionalLabel})`}
             />
           </div>
         </div>
@@ -213,8 +195,8 @@ export function FormSectionEditor({
 }: FormSectionEditorProps) {
   const t = useTranslations("paymentMethods");
 
-  const addField = () => {
-    onChange([...fields, createField()]);
+  const addField = (type: FormFieldType) => {
+    onChange([...fields, createField(type)]);
   };
 
   const removeField = (id: string) => {
@@ -225,19 +207,18 @@ export function FormSectionEditor({
     onChange(fields.map((f) => (f.id === updated.id ? updated : f)));
   };
 
-  const moveUp = (index: number) => {
-    if (index === 0) return;
-    const next = [...fields];
-    [next[index - 1], next[index]] = [next[index], next[index - 1]];
-    onChange(next);
-  };
+  const handleDragEnd = useCallback(
+    (result: DropResult) => {
+      const { source, destination } = result;
+      if (!destination || source.index === destination.index) return;
 
-  const moveDown = (index: number) => {
-    if (index === fields.length - 1) return;
-    const next = [...fields];
-    [next[index], next[index + 1]] = [next[index + 1], next[index]];
-    onChange(next);
-  };
+      const reordered = [...fields];
+      const [moved] = reordered.splice(source.index, 1);
+      reordered.splice(destination.index, 0, moved);
+      onChange(reordered);
+    },
+    [fields, onChange],
+  );
 
   return (
     <div className="flex flex-col gap-4" {...tid("form-section-editor")}>
@@ -245,14 +226,27 @@ export function FormSectionEditor({
         <h3 className="font-display text-xs font-bold uppercase tracking-wider">
           {t("formSection")}
         </h3>
-        <button
-          type="button"
-          onClick={addField}
-          className="button-brutal inline-flex items-center gap-1.5 border-strong border-foreground bg-background px-3 py-1.5 text-xs font-bold uppercase tracking-wider shadow-brutal-sm hover:bg-muted"
-          {...tid("add-form-field")}
-        >
-          + {t("addField")}
-        </button>
+      </div>
+
+      {/* Field type buttons row */}
+      <div className="flex flex-wrap gap-2" {...tid("add-form-field")}>
+        {(
+          ["text", "email", "number", "file", "textarea"] as FormFieldType[]
+        ).map((type) => {
+          const Icon = FIELD_TYPE_ICONS[type];
+          return (
+            <button
+              key={type}
+              type="button"
+              onClick={() => addField(type)}
+              className="button-brutal inline-flex items-center gap-1.5 border-strong border-foreground bg-background px-3 py-1.5 text-xs font-bold uppercase tracking-wider shadow-brutal-sm hover:bg-muted"
+              {...tid(`add-field-type-${type}`)}
+            >
+              <Icon className="size-3.5" />
+              {t(`fieldTypes.${type}`)}
+            </button>
+          );
+        })}
       </div>
 
       {fields.length === 0 && (
@@ -264,19 +258,31 @@ export function FormSectionEditor({
         </div>
       )}
 
-      {fields.map((field, index) => (
-        <FieldRow
-          key={field.id}
-          field={field}
-          index={index}
-          isFirst={index === 0}
-          isLast={index === fields.length - 1}
-          onUpdate={updateField}
-          onRemove={removeField}
-          onMoveUp={moveUp}
-          onMoveDown={moveDown}
-        />
-      ))}
+      <DragDropContext onDragEnd={handleDragEnd}>
+        <Droppable droppableId="form-fields">
+          {(provided) => (
+            <div
+              ref={provided.innerRef}
+              {...provided.droppableProps}
+              className="flex flex-col gap-4"
+            >
+              {fields.map((field, index) => (
+                <Draggable key={field.id} draggableId={field.id} index={index}>
+                  {(dragProvided) => (
+                    <FieldRow
+                      field={field}
+                      onUpdate={updateField}
+                      onRemove={removeField}
+                      dragProvided={dragProvided}
+                    />
+                  )}
+                </Draggable>
+              ))}
+              {provided.placeholder}
+            </div>
+          )}
+        </Droppable>
+      </DragDropContext>
     </div>
   );
 }
