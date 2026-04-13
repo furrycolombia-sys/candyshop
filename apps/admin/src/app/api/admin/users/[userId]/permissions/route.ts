@@ -2,7 +2,9 @@
 import { createServerSupabaseClient } from "api/supabase/server";
 import { NextResponse } from "next/server";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+// Dynamic key access prevents Turbopack from inlining at build time.
+const supabaseUrl =
+  process.env["SUPABASE_URL_INTERNAL"] || process.env.NEXT_PUBLIC_SUPABASE_URL;
 const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const FORBIDDEN_ERROR = "Forbidden";
 const INVALID_PAYLOAD_ERROR = "Invalid payload";

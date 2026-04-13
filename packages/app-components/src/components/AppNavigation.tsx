@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
 
 import { tid } from "../utils/tid";
@@ -119,10 +118,6 @@ export function AppNavigation({
     return matchesPermissions(grantedKeys, rule.required, rule.mode ?? "all");
   });
 
-  function isAbsoluteUrl(url: string): boolean {
-    return /^https?:\/\//.test(url);
-  }
-
   return (
     <nav
       {...tid("app-navigation")}
@@ -143,22 +138,8 @@ export function AppNavigation({
                 : "text-foreground/60 hover:text-foreground",
             ].join(" ");
 
-            if (isAbsoluteUrl(urls[id])) {
-              return (
-                <a
-                  key={id}
-                  {...tid(`nav-link-${id}`)}
-                  href={href}
-                  className={className}
-                  aria-current={isActive ? "page" : undefined}
-                >
-                  {t(labelKey)}
-                </a>
-              );
-            }
-
             return (
-              <Link
+              <a
                 key={id}
                 {...tid(`nav-link-${id}`)}
                 href={href}
@@ -166,7 +147,7 @@ export function AppNavigation({
                 aria-current={isActive ? "page" : undefined}
               >
                 {t(labelKey)}
-              </Link>
+              </a>
             );
           })}
         </div>

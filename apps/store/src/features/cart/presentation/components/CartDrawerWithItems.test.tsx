@@ -64,7 +64,6 @@ vi.mock("./CartItemRow", () => ({
 vi.mock("@/features/cart/application/CartContext", () => ({
   useCart: () => ({
     items: cartItems,
-    total: 20,
     itemCount: 2,
     removeItem: vi.fn(),
     updateQuantity: vi.fn(),
@@ -102,11 +101,6 @@ describe("CartDrawer with items", () => {
     render(<CartDrawer />);
     expect(screen.getByTestId("cart-drawer-items")).toBeInTheDocument();
     expect(screen.getByTestId("cart-item-item-1")).toBeInTheDocument();
-  });
-
-  it("renders total", () => {
-    render(<CartDrawer />);
-    expect(screen.getByTestId("cart-drawer-total")).toBeInTheDocument();
   });
 
   it("renders checkout link", () => {

@@ -16,7 +16,7 @@ vi.mock("shared", () => ({
 }));
 
 vi.mock("@/shared/application/utils/formatCop", () => ({
-  formatCop: (amount: number) => `$${amount.toLocaleString()} COP`,
+  formatCop: (amount: number) => `${amount.toLocaleString()} COP`,
 }));
 
 vi.mock(
@@ -86,7 +86,7 @@ describe("SellerCheckoutCard", () => {
   it("renders seller name and subtotal", () => {
     render(<SellerCheckoutCard {...defaultProps} />);
     expect(screen.getByText("Test Seller")).toBeInTheDocument();
-    expect(screen.getByText(/\$10,000 COP/)).toBeInTheDocument();
+    expect(screen.getByText(/10,000 COP/)).toBeInTheDocument();
   });
 
   it("shows item count", () => {

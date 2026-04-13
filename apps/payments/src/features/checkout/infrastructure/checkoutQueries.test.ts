@@ -62,17 +62,11 @@ describe("fetchSellerPaymentMethods", () => {
     const rawData = [
       {
         id: "pm-1",
-        account_details_en: "Bank ABC 123",
-        account_details_es: "Banco ABC 123",
-        seller_note_en: "Note EN",
-        seller_note_es: "Note ES",
-        payment_method_types: {
-          name_en: "Bank Transfer",
-          name_es: "Transferencia",
-          icon: "bank",
-          requires_receipt: true,
-          requires_transfer_number: true,
-        },
+        name_en: "Bank Transfer",
+        name_es: "Transferencia",
+        display_blocks: [],
+        form_fields: [],
+        is_active: true,
       },
     ];
 
@@ -86,15 +80,11 @@ describe("fetchSellerPaymentMethods", () => {
     expect(result).toHaveLength(1);
     expect(result[0]).toEqual({
       id: "pm-1",
-      type_name_en: "Bank Transfer",
-      type_name_es: "Transferencia",
-      type_icon: "bank",
-      requires_receipt: true,
-      requires_transfer_number: true,
-      account_details_en: "Bank ABC 123",
-      account_details_es: "Banco ABC 123",
-      seller_note_en: "Note EN",
-      seller_note_es: "Note ES",
+      name_en: "Bank Transfer",
+      name_es: "Transferencia",
+      display_blocks: [],
+      form_fields: [],
+      is_active: true,
     });
   });
 

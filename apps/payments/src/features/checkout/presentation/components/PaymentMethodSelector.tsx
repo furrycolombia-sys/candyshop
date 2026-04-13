@@ -23,16 +23,8 @@ export function PaymentMethodSelector({
   const locale = useLocale();
   const selectId = useId();
 
-  const getTypeName = (method: SellerPaymentMethodWithType) =>
-    i18nField(method, "type_name", locale);
-
-  const selected = methods.find((m) => m.id === selectedId);
-
-  const getAccountDetails = (method: SellerPaymentMethodWithType) =>
-    i18nField(method, "account_details", locale);
-
-  const getSellerNote = (method: SellerPaymentMethodWithType) =>
-    i18nField(method, "seller_note", locale);
+  const getMethodName = (method: SellerPaymentMethodWithType) =>
+    i18nField(method, "name", locale) || method.name_en;
 
   return (
     <div className="space-y-3" {...tid("payment-method-selector")}>
@@ -53,41 +45,10 @@ export function PaymentMethodSelector({
         <option value="">{t("selectMethodPlaceholder")}</option>
         {methods.map((method) => (
           <option key={method.id} value={method.id}>
-            {getTypeName(method)}
+            {getMethodName(method)}
           </option>
         ))}
       </select>
-
-      {selected && (
-        <div className="space-y-2 border-2 border-foreground/20 bg-muted/30 p-3">
-          {getAccountDetails(selected) && (
-            <div>
-              <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                {t("accountDetails")}
-              </p>
-              <p
-                className="mt-1 whitespace-pre-wrap text-sm"
-                {...tid("payment-account-details")}
-              >
-                {getAccountDetails(selected)}
-              </p>
-            </div>
-          )}
-          {getSellerNote(selected) && (
-            <div>
-              <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                {t("sellerNote")}
-              </p>
-              <p
-                className="mt-1 whitespace-pre-wrap text-sm italic"
-                {...tid("payment-seller-note")}
-              >
-                {getSellerNote(selected)}
-              </p>
-            </div>
-          )}
-        </div>
-      )}
     </div>
   );
 }

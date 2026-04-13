@@ -20,7 +20,7 @@ pnpm site:prod
 # Start the Dockerized local production build + Cloudflare tunnel
 pnpm site:prod:cloudflare
 
-# Start the current public-subdomain production stack on this Windows machine
+# Compatibility alias for the Docker + Cloudflare production stack
 pnpm site:prod:public
 
 
@@ -108,21 +108,28 @@ pnpm setup:cloudflare --token <your-token>
 pnpm site:prod:cloudflare
 ```
 
-If you want the existing public subdomains already defined in the local
-`cloudflared` config (`landing.*`, `store.*`, `admin.*`, etc.), use:
+For public traffic, the recommended path is the same Dockerized stack with the
+optional Cloudflare sidecar:
+
+```bash
+pnpm site:prod:cloudflare
+```
+
+That command:
+
+- builds the combined production Docker image
+- starts one container serving all apps on the same domain
+- optionally starts the Cloudflare tunnel as a sidecar in the same Docker stack
+
+The legacy Windows entrypoint is still available for compatibility:
 
 ```bash
 pnpm site:prod:public
 ```
 
-That command:
+It now delegates to the same Dockerized stack as `pnpm site:prod:cloudflare`.
 
-- starts Supabase if needed
-- builds the apps for production
-- starts each app with `next start` on ports `5000-5006`
-- starts `cloudflared` using the local `~/.cloudflared/config.yml`
-
-To stop that public stack:
+To stop the public stack:
 
 ```bash
 pnpm site:prod:public:stop
@@ -142,6 +149,8 @@ Notes:
   `/admin`, `/payments`, `/studio`, `/auth`, and `/playground`.
 - If `AUTH_PROVIDER_MODE=supabase`, do not leave `NEXT_PUBLIC_SUPABASE_URL`
   pointed at `localhost` for public traffic.
+- The canonical production runtime is now Docker Compose, not separate
+  `next start` processes per app.
 
 ## Architecture
 

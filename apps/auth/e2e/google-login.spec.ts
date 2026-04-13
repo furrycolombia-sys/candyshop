@@ -3,8 +3,13 @@ import { existsSync, readFileSync } from "node:fs";
 
 import { chromium, expect, test } from "@playwright/test";
 
-// eslint-disable-next-line @typescript-eslint/no-require-imports
+/* eslint-disable @typescript-eslint/no-require-imports */
 const { loadRootEnv } = require("../../../scripts/load-root-env.js");
+const {
+  getE2EExtraHTTPHeaders,
+  resolveE2EAppUrls,
+} = require("../../../scripts/app-url-resolver.js");
+/* eslint-enable @typescript-eslint/no-require-imports */
 loadRootEnv();
 
 function loadLocalE2EEnv(filePath: string) {
@@ -27,17 +32,15 @@ function loadLocalE2EEnv(filePath: string) {
 }
 
 loadLocalE2EEnv(path.resolve(__dirname, "../../../.env.local.e2e"));
-const AUTH_URL = process.env.NEXT_PUBLIC_AUTH_URL || "http://localhost:5000";
-const STORE_URL = process.env.NEXT_PUBLIC_STORE_URL || "http://localhost:5001";
-const ADMIN_URL = process.env.NEXT_PUBLIC_ADMIN_URL || "http://localhost:5002";
-const PLAYGROUND_URL =
-  process.env.NEXT_PUBLIC_PLAYGROUND_URL || "http://localhost:5003";
-const LANDING_URL =
-  process.env.NEXT_PUBLIC_LANDING_URL || "http://localhost:5004";
-const PAYMENTS_URL =
-  process.env.NEXT_PUBLIC_PAYMENTS_URL || "http://localhost:5005";
-const STUDIO_URL =
-  process.env.NEXT_PUBLIC_STUDIO_URL || "http://localhost:5006";
+const {
+  auth: AUTH_URL,
+  store: STORE_URL,
+  admin: ADMIN_URL,
+  playground: PLAYGROUND_URL,
+  landing: LANDING_URL,
+  payments: PAYMENTS_URL,
+  studio: STUDIO_URL,
+} = resolveE2EAppUrls();
 const IGNORABLE_REQUEST_FAILURE_PATTERNS = ["/cdn-cgi/rum?"];
 
 const APP_CHECKS = [
@@ -159,6 +162,7 @@ test("Google OAuth login flow", async () => {
   });
   const context = await browser.newContext({
     viewport: { width: 1280, height: 720 },
+    extraHTTPHeaders: getE2EExtraHTTPHeaders(),
   });
   context.on("request", (request) => {
     if (request.url().includes("localhost")) {

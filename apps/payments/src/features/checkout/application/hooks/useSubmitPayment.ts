@@ -9,7 +9,6 @@ import {
   createOrder,
   submitReceipt,
 } from "@/features/checkout/infrastructure/checkoutQueries";
-import { uploadReceipt } from "@/features/checkout/infrastructure/receiptStorage";
 
 interface SubmitPaymentParams {
   userId: string;
@@ -18,15 +17,14 @@ interface SubmitPaymentParams {
   items: CartItem[];
   totalCop: number;
   checkoutSessionId: string;
-  transferNumber: string | null;
-  receiptFile: File | null;
+  /** Key = FormField.id, value = string (file fields store the Supabase Storage URL) */
+  buyerInfo: Record<string, string>;
 }
 
 /**
  * Mutation that:
  * 1. Creates the order (reserves stock)
- * 2. Uploads receipt to storage (if provided)
- * 3. Updates order with receipt URL + transfer number
+ * 2. Submits buyer info and moves to pending_verification
  * Returns the order ID.
  */
 export function useSubmitPayment() {
@@ -41,8 +39,7 @@ export function useSubmitPayment() {
         items,
         totalCop,
         checkoutSessionId,
-        transferNumber,
-        receiptFile,
+        buyerInfo,
       } = params;
 
       // 1. Create order and reserve stock
@@ -55,14 +52,9 @@ export function useSubmitPayment() {
         checkoutSessionId,
       });
 
-      // 2. Upload receipt if provided
-      let receiptUrl: string | null = null;
-      if (receiptFile) {
-        receiptUrl = await uploadReceipt(supabase, receiptFile, orderId);
-      }
-
-      // 3. Submit receipt info and move to pending_verification
-      await submitReceipt(supabase, orderId, transferNumber, receiptUrl);
+      // 2. Submit buyer info and move to pending_verification
+      // File fields store URLs (uploaded client-side); transfer_number and receipt_url are null
+      await submitReceipt(supabase, orderId, null, null, buyerInfo);
 
       return orderId;
     },

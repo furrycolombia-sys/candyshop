@@ -6,6 +6,7 @@ import { createRequire } from "node:module";
 
 const require = createRequire(import.meta.url);
 const { loadRootEnv } = require("./load-root-env.js");
+const { resolveRuntimeAppUrls } = require("./app-url-resolver.js");
 
 loadRootEnv();
 
@@ -97,15 +98,7 @@ function killChild(child) {
   child.kill("SIGTERM");
 }
 
-const localUrls = [
-  process.env.NEXT_PUBLIC_AUTH_URL,
-  process.env.NEXT_PUBLIC_STORE_URL,
-  process.env.NEXT_PUBLIC_LANDING_URL,
-  process.env.NEXT_PUBLIC_PAYMENTS_URL,
-  process.env.NEXT_PUBLIC_ADMIN_URL,
-  process.env.NEXT_PUBLIC_STUDIO_URL,
-  process.env.NEXT_PUBLIC_PLAYGROUND_URL,
-].filter(Boolean);
+const localUrls = Object.values(resolveRuntimeAppUrls());
 
 log("Starting Supabase...");
 const supabaseResult = runSync(pnpmBin, ["supabase:start"]);

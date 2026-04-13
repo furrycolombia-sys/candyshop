@@ -13,6 +13,7 @@ vi.mock(
   () => ({
     fetchPaymentMethodTypes: vi.fn(),
     fetchSellerPaymentMethods: vi.fn(),
+    fetchPaymentMethods: vi.fn(),
   }),
 );
 
@@ -73,11 +74,10 @@ describe("useSellerPaymentMethods", () => {
         {
           id: "m1",
           seller_id: "s1",
-          type_id: "1",
-          account_details_en: null,
-          account_details_es: null,
-          seller_note_en: null,
-          seller_note_es: null,
+          name_en: "Bank Transfer",
+          name_es: "Transferencia",
+          display_blocks: [],
+          form_fields: [],
           is_active: true,
           sort_order: 0,
           created_at: "2025-01-01",

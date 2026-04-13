@@ -1,7 +1,20 @@
 import { type BrowserContext, chromium, expect, test } from "@playwright/test";
 import * as path from "node:path";
 
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { resolveE2EAppUrls } = require(
+  path.resolve(__dirname, "../../../scripts/app-url-resolver.js"),
+);
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { getE2EExtraHTTPHeaders } = require(
+  path.resolve(__dirname, "../../../scripts/app-url-resolver.js"),
+);
+
 const PROFILE_DIR = path.join(__dirname, ".auth", "chrome-profile");
+const AUTH_URL = resolveE2EAppUrls().auth;
+const AUTH_HOST_PATTERN = new RegExp(
+  new URL(AUTH_URL).hostname.replace(/\./g, "\\."),
+);
 
 test("Discord OAuth login flow", async () => {
   const discordEmail = process.env.DISCORD_TEST_EMAIL;
@@ -20,6 +33,7 @@ test("Discord OAuth login flow", async () => {
       headless: false,
       channel: "chrome",
       viewport: { width: 1280, height: 720 },
+      extraHTTPHeaders: getE2EExtraHTTPHeaders(),
       args: ["--disable-blink-features=AutomationControlled"],
     },
   );
@@ -28,7 +42,7 @@ test("Discord OAuth login flow", async () => {
 
   try {
     // 1. Login page
-    await page.goto("http://localhost:5000/en/login");
+    await page.goto(`${AUTH_URL}/en/login`);
     await expect(page.getByTestId("login-card")).toBeVisible();
     console.log("[e2e] ✓ Login page loaded");
 
@@ -55,7 +69,7 @@ test("Discord OAuth login flow", async () => {
 
     // Determine what Discord is showing
     let firstVisible: "login" | "authorize" | "redirected";
-    if (page.url().includes("localhost:5000")) {
+    if (AUTH_HOST_PATTERN.test(page.url())) {
       firstVisible = "redirected";
     } else if (page.url().includes("/login")) {
       await emailInput.waitFor({ state: "visible", timeout: 30000 });
@@ -93,7 +107,7 @@ test("Discord OAuth login flow", async () => {
           .waitFor({ state: "visible", timeout: 30000 })
           .then(() => "authorize" as const),
         page
-          .waitForURL(/localhost:5000/, { timeout: 30000 })
+          .waitForURL(AUTH_HOST_PATTERN, { timeout: 30000 })
           .then(() => "redirected" as const),
       ]);
 
@@ -103,13 +117,13 @@ test("Discord OAuth login flow", async () => {
         });
         await authorizeBtn.click();
         console.log("[e2e] ✓ Clicked Authorize");
-        await page.waitForURL(/localhost:5000/, { timeout: 30000 });
+        await page.waitForURL(AUTH_HOST_PATTERN, { timeout: 30000 });
       }
     } else if (firstVisible === "authorize") {
       await page.screenshot({ path: "e2e/screenshots/discord-authorize.png" });
       await authorizeBtn.click();
       console.log("[e2e] ✓ Clicked Authorize");
-      await page.waitForURL(/localhost:5000/, { timeout: 30000 });
+      await page.waitForURL(AUTH_HOST_PATTERN, { timeout: 30000 });
     }
     // else: already redirected back
 

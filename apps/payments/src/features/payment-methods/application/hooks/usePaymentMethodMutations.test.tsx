@@ -48,11 +48,10 @@ describe("useInsertSellerPaymentMethod", () => {
     vi.mocked(insertSellerPaymentMethod).mockResolvedValue({
       id: "m1",
       seller_id: "s1",
-      type_id: "1",
-      account_details_en: null,
-      account_details_es: null,
-      seller_note_en: null,
-      seller_note_es: null,
+      name_en: "Payment Method",
+      name_es: "",
+      display_blocks: [],
+      form_fields: [],
       is_active: true,
       sort_order: 0,
       created_at: "2025-01-01",
@@ -85,11 +84,10 @@ describe("useUpdateSellerPaymentMethod", () => {
     vi.mocked(updateSellerPaymentMethod).mockResolvedValue({
       id: "m1",
       seller_id: "s1",
-      type_id: "1",
-      account_details_en: "Jane",
-      account_details_es: "Jane",
-      seller_note_en: null,
-      seller_note_es: null,
+      name_en: "Payment Method",
+      name_es: "",
+      display_blocks: [],
+      form_fields: [],
       is_active: true,
       sort_order: 0,
       created_at: "2025-01-01",
@@ -117,7 +115,7 @@ describe("useUpdateSellerPaymentMethod", () => {
     expect(updateSellerPaymentMethod).toHaveBeenCalledWith(
       expect.anything(),
       "m1",
-      expect.objectContaining({ account_details_en: "Jane" }),
+      expect.objectContaining({ is_active: true }),
     );
   });
 });

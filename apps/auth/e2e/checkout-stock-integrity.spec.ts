@@ -4,7 +4,6 @@ import { cleanupTestData } from "./helpers/cleanup";
 import { APP_URLS, ELEMENT_TIMEOUT_MS } from "./helpers/constants";
 import {
   adminInsert,
-  adminQuery,
   createTestUser,
   injectSession,
   type TestUser,
@@ -31,11 +30,6 @@ test.describe.serial("Checkout stock integrity", () => {
     buyer = await createTestUser("stock-buyer");
     sellerId = seller.userId;
 
-    const [paymentMethodType] = await adminQuery(
-      "payment_method_types",
-      "select=id&order=sort_order.asc&limit=1",
-    );
-
     const product = await adminInsert("products", {
       seller_id: seller.userId,
       slug: `stock-guard-${Date.now()}`,
@@ -59,11 +53,20 @@ test.describe.serial("Checkout stock integrity", () => {
 
     await adminInsert("seller_payment_methods", {
       seller_id: seller.userId,
-      type_id: paymentMethodType.id,
-      account_details_en: "Sensitive Account 123",
-      account_details_es: "Cuenta Sensible 123",
-      seller_note_en: "Sensitive note",
-      seller_note_es: "Nota sensible",
+      name_en: "Stock Guard Method",
+      name_es: "Método Stock Guard",
+      display_blocks: [
+        { id: "b1", type: "text", content: "Sensitive Account 123" },
+      ],
+      form_fields: [
+        {
+          id: "f1",
+          type: "text",
+          label: "Reference",
+          required: true,
+          placeholder: "",
+        },
+      ],
       is_active: true,
       sort_order: 0,
     });
@@ -118,20 +121,27 @@ test.describe.serial("Checkout stock integrity", () => {
     await expect(
       page.getByTestId(/^seller-checkout-error-/).first(),
     ).toBeVisible({ timeout: ELEMENT_TIMEOUT_MS });
-    await expect(page.getByTestId("payment-method-selector")).not.toBeVisible();
+    await expect(page.getByTestId("payment-method-select")).not.toBeVisible();
     await expect(page.getByTestId(/^submit-payment-/)).not.toBeVisible();
-    await expect(page.getByTestId("payment-account-details")).not.toBeVisible();
-    await expect(page.getByTestId("payment-seller-note")).not.toBeVisible();
+    await expect(page.getByTestId(/^display-block-/)).not.toBeVisible();
+    await expect(page.getByTestId(/^dynamic-field-/)).not.toBeVisible();
 
     const apiResponse = await page.evaluate(
       async (payload) => {
-        const response = await fetch("/api/checkout/payment-methods", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
+        // Derive basePath from current URL (e.g. /payments in Docker)
+        const basePath = window.location.pathname.startsWith("/payments")
+          ? "/payments"
+          : "";
+        const response = await fetch(
+          `${basePath}/api/checkout/payment-methods`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(payload),
           },
-          body: JSON.stringify(payload),
-        });
+        );
 
         return {
           status: response.status,

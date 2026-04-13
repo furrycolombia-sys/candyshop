@@ -1,149 +1,185 @@
 param(
   [switch]$Stop,
-  [switch]$NoBuild
+  [switch]$NoBuild,
+  [switch]$Fresh
 )
 
 $ErrorActionPreference = "Stop"
 
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $RootDir = Split-Path -Parent $ScriptDir
-$StateDir = Join-Path $RootDir ".tmp"
-$StatePath = Join-Path $StateDir "site-prod-public.json"
-$LogDir = Join-Path $RootDir ".logs"
-$CloudflaredConfig = Join-Path $env:USERPROFILE ".cloudflared\config.yml"
+$NodeScript = Join-Path $ScriptDir "site-prod.mjs"
+$CloudflareConfig = Join-Path $RootDir "docker\cloudflared-candystore.generated.yml"
+$CloudflareOutLog = Join-Path $RootDir ".tmp-cloudflared-domain.out.log"
+$CloudflareErrLog = Join-Path $RootDir ".tmp-cloudflared-domain.err.log"
 
-$Apps = @(
-  @{ Name = "auth-app"; Port = 5000; Url = $env:NEXT_PUBLIC_AUTH_URL },
-  @{ Name = "store"; Port = 5001; Url = $env:NEXT_PUBLIC_STORE_URL },
-  @{ Name = "admin"; Port = 5002; Url = $env:NEXT_PUBLIC_ADMIN_URL },
-  @{ Name = "playground"; Port = 5003; Url = $env:NEXT_PUBLIC_PLAYGROUND_URL },
-  @{ Name = "landing"; Port = 5004; Url = $env:NEXT_PUBLIC_LANDING_URL },
-  @{ Name = "payments"; Port = 5005; Url = $env:NEXT_PUBLIC_PAYMENTS_URL },
-  @{ Name = "studio"; Port = 5006; Url = $env:NEXT_PUBLIC_STUDIO_URL }
-)
+function Resolve-PublicHost {
+  param(
+    [string]$ExplicitValue,
+    [string]$Prefix,
+    [switch]$UseBaseDomain
+  )
 
-function Write-Log($Message) {
-  Write-Host "[site-prod-public] $Message"
+  if (-not [string]::IsNullOrWhiteSpace($ExplicitValue)) {
+    return $ExplicitValue.Trim()
+  }
+
+  $baseDomain = if ($env:PUBLIC_BASE_DOMAIN) { $env:PUBLIC_BASE_DOMAIN.Trim() } else { "ffxivbe.org" }
+  if ($UseBaseDomain) {
+    return $baseDomain
+  }
+
+  return "$Prefix.$baseDomain"
 }
 
-function Stop-ManagedProcess($ManagedProcessId) {
-  if (-not $ManagedProcessId) { return }
-  try {
-    Stop-Process -Id $ManagedProcessId -Force -ErrorAction Stop
-  } catch {
+$RootHost = Resolve-PublicHost -ExplicitValue $env:PUBLIC_ROOT_HOST -UseBaseDomain
+$WwwHost = Resolve-PublicHost -ExplicitValue $env:PUBLIC_WWW_HOST -Prefix "www"
+$LandingHost = Resolve-PublicHost -ExplicitValue $env:PUBLIC_LANDING_HOST -Prefix "landing"
+$AuthHost = Resolve-PublicHost -ExplicitValue $env:PUBLIC_AUTH_HOST -Prefix "auth"
+$StoreHost = Resolve-PublicHost -ExplicitValue $env:PUBLIC_STORE_HOST -Prefix "store"
+$AdminHost = Resolve-PublicHost -ExplicitValue $env:PUBLIC_ADMIN_HOST -Prefix "admin"
+$PlaygroundHost = Resolve-PublicHost -ExplicitValue $env:PUBLIC_PLAYGROUND_HOST -Prefix "playground"
+$PaymentsHost = Resolve-PublicHost -ExplicitValue $env:PUBLIC_PAYMENTS_HOST -Prefix "payments"
+$StudioHost = Resolve-PublicHost -ExplicitValue $env:PUBLIC_STUDIO_HOST -Prefix "studio"
+$SupabaseHost = Resolve-PublicHost -ExplicitValue $env:PUBLIC_SUPABASE_HOST -Prefix "supabase"
+$SupabaseStudioHost = Resolve-PublicHost -ExplicitValue $env:PUBLIC_SUPABASE_STUDIO_HOST -Prefix "supabase-studio"
+$MailpitHost = Resolve-PublicHost -ExplicitValue $env:PUBLIC_MAILPIT_HOST -Prefix "mailpit"
+$PublicOrigin = if ($env:SITE_PUBLIC_ORIGIN) { $env:SITE_PUBLIC_ORIGIN } else { "https://$StoreHost" }
+
+function Stop-CandystoreCloudflareTunnel {
+  Get-CimInstance Win32_Process |
+    Where-Object { $_.CommandLine -like "*cloudflared-candystore.generated.yml*" } |
+    ForEach-Object {
+      Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue
+    }
+}
+
+function Write-CloudflareConfig {
+  $lines = @(
+    "tunnel: c552cb9c-62bd-4c8b-9ec6-16627b1b8af3",
+    "credentials-file: C:\Users\Heiner\.cloudflared\c552cb9c-62bd-4c8b-9ec6-16627b1b8af3.json",
+    "protocol: http2",
+    "",
+    "ingress:",
+    "  - hostname: $RootHost",
+    "    service: $(if ($env:CLOUDFLARE_SERVICE_ROOT) { $env:CLOUDFLARE_SERVICE_ROOT } else { 'http://127.0.0.1:9000' })",
+    "  - hostname: $WwwHost",
+    "    service: $(if ($env:CLOUDFLARE_SERVICE_WWW) { $env:CLOUDFLARE_SERVICE_WWW } else { 'http://127.0.0.1:9000' })",
+    "  - hostname: $LandingHost",
+    "    service: $(if ($env:CLOUDFLARE_SERVICE_LANDING) { $env:CLOUDFLARE_SERVICE_LANDING } else { 'http://127.0.0.1:5004' })",
+    "  - hostname: $AuthHost",
+    "    service: $(if ($env:CLOUDFLARE_SERVICE_AUTH) { $env:CLOUDFLARE_SERVICE_AUTH } else { 'http://127.0.0.1:5000' })",
+    "  - hostname: $StoreHost",
+    "    service: $(if ($env:CLOUDFLARE_SERVICE_STORE) { $env:CLOUDFLARE_SERVICE_STORE } else { 'http://127.0.0.1:8088' })",
+    "  - hostname: $AdminHost",
+    "    service: $(if ($env:CLOUDFLARE_SERVICE_ADMIN) { $env:CLOUDFLARE_SERVICE_ADMIN } else { 'http://127.0.0.1:5002' })",
+    "  - hostname: $PlaygroundHost",
+    "    service: $(if ($env:CLOUDFLARE_SERVICE_PLAYGROUND) { $env:CLOUDFLARE_SERVICE_PLAYGROUND } else { 'http://127.0.0.1:5003' })",
+    "  - hostname: $PaymentsHost",
+    "    service: $(if ($env:CLOUDFLARE_SERVICE_PAYMENTS) { $env:CLOUDFLARE_SERVICE_PAYMENTS } else { 'http://127.0.0.1:5005' })",
+    "  - hostname: $StudioHost",
+    "    service: $(if ($env:CLOUDFLARE_SERVICE_STUDIO) { $env:CLOUDFLARE_SERVICE_STUDIO } else { 'http://127.0.0.1:5006' })",
+    "  - hostname: $SupabaseHost",
+    "    service: $(if ($env:CLOUDFLARE_SERVICE_SUPABASE) { $env:CLOUDFLARE_SERVICE_SUPABASE } else { 'http://127.0.0.1:54321' })",
+    "  - hostname: $SupabaseStudioHost",
+    "    service: $(if ($env:CLOUDFLARE_SERVICE_SUPABASE_STUDIO) { $env:CLOUDFLARE_SERVICE_SUPABASE_STUDIO } else { 'http://127.0.0.1:54323' })",
+    "  - hostname: $MailpitHost",
+    "    service: $(if ($env:CLOUDFLARE_SERVICE_MAILPIT) { $env:CLOUDFLARE_SERVICE_MAILPIT } else { 'http://127.0.0.1:54324' })",
+    "  - service: http_status:404"
+  )
+
+  Set-Content -Path $CloudflareConfig -Value $lines
+}
+
+function Wait-ForPublicHealth {
+  param(
+    [string]$Url
+  )
+
+  $deadline = (Get-Date).AddMinutes(2)
+  while ((Get-Date) -lt $deadline) {
     try {
-      taskkill /pid $ManagedProcessId /t /f | Out-Null
-    } catch {}
+      $response = Invoke-WebRequest -UseBasicParsing $Url
+      if ($response.StatusCode -eq 200) {
+        return
+      }
+    } catch {
+      Start-Sleep -Seconds 2
+      continue
+    }
+
+    Start-Sleep -Seconds 2
   }
+
+  throw "Public health check did not reach 200 at $Url within 2 minutes."
 }
-
-function Clear-Port($Port) {
-  $pids = Get-NetTCPConnection -State Listen -LocalPort $Port -ErrorAction SilentlyContinue |
-    Select-Object -ExpandProperty OwningProcess -Unique
-  foreach ($procId in $pids) {
-    Stop-ManagedProcess $procId
-  }
-}
-
-function Clear-Cloudflared {
-  $procs = Get-Process -Name "cloudflared" -ErrorAction SilentlyContinue
-  foreach ($proc in $procs) {
-    Stop-ManagedProcess $proc.Id
-  }
-}
-
-function Read-State {
-  if (-not (Test-Path $StatePath)) { return $null }
-  return Get-Content $StatePath -Raw | ConvertFrom-Json
-}
-
-function Stop-StateProcesses {
-  $state = Read-State
-  if ($null -eq $state) { return }
-  foreach ($proc in $state.processes) {
-    Stop-ManagedProcess $proc.pid
-  }
-  Remove-Item $StatePath -Force -ErrorAction SilentlyContinue
-}
-
-function Ensure-Command($Command, $Hint) {
-  if (Get-Command $Command -ErrorAction SilentlyContinue) { return }
-  throw "`$Command not found. $Hint"
-}
-
-function Start-BackgroundProcess($FilePath, $Arguments, $Name) {
-  $outLog = Join-Path $LogDir "$Name.out.log"
-  $errLog = Join-Path $LogDir "$Name.err.log"
-
-  return Start-Process `
-    -FilePath $FilePath `
-    -ArgumentList $Arguments `
-    -WorkingDirectory $RootDir `
-    -RedirectStandardOutput $outLog `
-    -RedirectStandardError $errLog `
-    -PassThru
-}
-
-Ensure-Command "pnpm" "Install pnpm first."
-Ensure-Command "cloudflared.exe" "Install cloudflared first or add it to PATH."
 
 if ($Stop) {
-  Stop-StateProcesses
-  foreach ($app in $Apps) {
-    Clear-Port $app.Port
+  Write-Host "[site-prod-public] Stopping named Cloudflare tunnel..."
+  Stop-CandystoreCloudflareTunnel
+  Write-Host "[site-prod-public] Stopping Docker production stack..."
+  & node $NodeScript --stop
+  exit $LASTEXITCODE
+}
+
+$env:SITE_PUBLIC_ORIGIN = $PublicOrigin
+$env:SUPABASE_AUTH_SITE_URL = "https://$StoreHost/auth/callback"
+$env:SUPABASE_AUTH_REDIRECT_URL_AUTH = "https://$AuthHost/auth/callback"
+$env:SUPABASE_AUTH_REDIRECT_URL_STORE = "https://$StoreHost/auth/callback"
+$env:SUPABASE_AUTH_REDIRECT_URL_ADMIN = "https://$AdminHost/auth/callback"
+$env:SUPABASE_AUTH_REDIRECT_URL_PAYMENTS = "https://$PaymentsHost/auth/callback"
+$env:SUPABASE_AUTH_REDIRECT_URL_PLAYGROUND = "https://$PlaygroundHost/auth/callback"
+$env:SUPABASE_AUTH_REDIRECT_URL_LANDING = "https://$LandingHost/auth/callback"
+$env:SUPABASE_AUTH_REDIRECT_URL_STUDIO = "https://$StudioHost/auth/callback"
+$env:SUPABASE_AUTH_EXTERNAL_REDIRECT_URI = "https://$SupabaseHost/auth/v1/callback"
+
+if ([string]::IsNullOrWhiteSpace($env:NEXT_PUBLIC_ENABLE_TEST_IDS)) {
+  $env:NEXT_PUBLIC_ENABLE_TEST_IDS = "true"
+}
+
+if (
+  ($env:AUTH_PROVIDER_MODE -eq "supabase" -or [string]::IsNullOrWhiteSpace($env:AUTH_PROVIDER_MODE)) -and
+  ([string]::IsNullOrWhiteSpace($env:NEXT_PUBLIC_SUPABASE_URL) -or
+   $env:NEXT_PUBLIC_SUPABASE_URL -match "^https?://(localhost|127\.0\.0\.1)(:\d+)?/?$")
+) {
+  $env:NEXT_PUBLIC_SUPABASE_URL = "https://$SupabaseHost"
+}
+
+$ArgsList = @()
+if ($NoBuild) {
+  $ArgsList += "--no-build"
+}
+if ($Fresh) {
+  $ArgsList += "--fresh"
+}
+
+Write-Host "[site-prod-public] Building and starting Docker production stack..."
+& node $NodeScript @ArgsList
+if ($LASTEXITCODE -ne 0) {
+  exit $LASTEXITCODE
+}
+
+Write-Host "[site-prod-public] Restarting named Cloudflare tunnel..."
+Stop-CandystoreCloudflareTunnel
+Start-Sleep -Seconds 2
+Write-CloudflareConfig
+
+foreach ($logPath in @($CloudflareOutLog, $CloudflareErrLog)) {
+  if (Test-Path $logPath) {
+    try {
+      Remove-Item $logPath -Force -ErrorAction Stop
+    } catch {
+      Write-Host "[site-prod-public] Skipping locked log file: $logPath"
+    }
   }
-  Clear-Cloudflared
-  Write-Log "Stopped public production processes."
-  exit 0
 }
 
-New-Item -ItemType Directory -Force -Path $StateDir | Out-Null
-New-Item -ItemType Directory -Force -Path $LogDir | Out-Null
+$command = 'cloudflared --config "' + $CloudflareConfig + '" tunnel run ffxivbe-tunnel 1>"' + $CloudflareOutLog + '" 2>"' + $CloudflareErrLog + '"'
+Start-Process -FilePath "cmd.exe" -ArgumentList "/d", "/s", "/c", $command -WorkingDirectory $RootDir | Out-Null
 
-Stop-StateProcesses
-foreach ($app in $Apps) {
-  Clear-Port $app.Port
-}
-Clear-Cloudflared
+Wait-ForPublicHealth "$PublicOrigin/health"
 
-Write-Log "Starting Supabase..."
-try {
-  & pnpm supabase:start
-} catch {
-  Write-Log "Supabase start returned non-zero. Continuing because it may already be running."
-}
-$global:LASTEXITCODE = 0
-
-if (-not $NoBuild) {
-  Write-Log "Building all apps..."
-  & pnpm build
-  $global:LASTEXITCODE = 0
-}
-
-$Started = @()
-foreach ($app in $Apps) {
-  $proc = Start-BackgroundProcess "pnpm.cmd" @("--filter", $app.Name, "start") $app.Name
-  $Started += @{ name = $app.Name; pid = $proc.Id; port = $app.Port }
-}
-
-if (-not (Test-Path $CloudflaredConfig)) {
-  throw "Cloudflared config not found at $CloudflaredConfig"
-}
-
-$cloudflared = Start-BackgroundProcess "cloudflared.exe" @("tunnel", "--config", $CloudflaredConfig, "run") "cloudflared"
-$Started += @{ name = "cloudflared"; pid = $cloudflared.Id; port = 0 }
-
-$State = @{
-  startedAt = (Get-Date).ToString("o")
-  processes = $Started
-}
-$State | ConvertTo-Json -Depth 4 | Set-Content -Path $StatePath
-
-Write-Log "Public production stack is up."
-foreach ($app in $Apps) {
-  $publicUrl = if ($app.Url) { " -> $($app.Url)" } else { "" }
-  Write-Log "$($app.Name): http://127.0.0.1:$($app.Port)$publicUrl"
-}
-Write-Log "Stop it with: pnpm site:prod:public:stop"
-$global:LASTEXITCODE = 0
-exit 0
+Write-Host "[site-prod-public] Public site is live:"
+Write-Host "[site-prod-public]   $PublicOrigin"
+Write-Host "[site-prod-public]   $PublicOrigin/store"
+Write-Host "[site-prod-public]   $PublicOrigin/auth"

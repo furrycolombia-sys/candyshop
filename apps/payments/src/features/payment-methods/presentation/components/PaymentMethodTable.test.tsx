@@ -12,6 +12,14 @@ vi.mock("shared", async (importOriginal) => {
   return {
     ...actual,
     tid: (id: string) => ({ "data-testid": id }),
+    i18nField: (
+      obj: Record<string, unknown>,
+      field: string,
+      locale: string,
+    ) => {
+      const key = `${field}_${locale}`;
+      return (obj[key] as string) ?? (obj[`${field}_en`] as string) ?? "";
+    },
   };
 });
 
@@ -39,34 +47,16 @@ vi.mock("ui", () => ({
 
 import { PaymentMethodTable } from "./PaymentMethodTable";
 
-import type {
-  PaymentMethodType,
-  SellerPaymentMethod,
-} from "@/features/payment-methods/domain/types";
-
-const mockTypes: PaymentMethodType[] = [
-  {
-    id: "type-1",
-    name_en: "Bank Transfer",
-    name_es: "Transferencia",
-    description_en: null,
-    description_es: null,
-    icon: null,
-    requires_receipt: true,
-    requires_transfer_number: false,
-    is_active: true,
-  },
-];
+import type { SellerPaymentMethod } from "@/features/payment-methods/domain/types";
 
 const mockMethods: SellerPaymentMethod[] = [
   {
     id: "pm-1",
     seller_id: "seller-1",
-    type_id: "type-1",
-    account_details_en: "Account 123",
-    account_details_es: "Cuenta 123",
-    seller_note_en: null,
-    seller_note_es: null,
+    name_en: "Bank Transfer",
+    name_es: "Transferencia",
+    display_blocks: [],
+    form_fields: [],
     is_active: true,
     sort_order: 1,
     created_at: "2025-01-01",
@@ -77,7 +67,6 @@ const mockMethods: SellerPaymentMethod[] = [
 describe("PaymentMethodTable", () => {
   const defaultProps = {
     methods: mockMethods,
-    types: mockTypes,
     onEdit: vi.fn(),
     onDelete: vi.fn(),
     onToggleActive: vi.fn(),
@@ -106,7 +95,7 @@ describe("PaymentMethodTable", () => {
     expect(screen.getByTestId("payment-methods-table")).toBeInTheDocument();
   });
 
-  it("displays the payment type name", () => {
+  it("displays the payment method name", () => {
     render(<PaymentMethodTable {...defaultProps} />);
     expect(screen.getByText("Bank Transfer")).toBeInTheDocument();
   });
@@ -142,9 +131,14 @@ describe("PaymentMethodTable", () => {
     vi.restoreAllMocks();
   });
 
-  it("falls back to type_id when type is not found", () => {
-    const unknownMethod = { ...mockMethods[0], type_id: "unknown-type" };
-    render(<PaymentMethodTable {...defaultProps} methods={[unknownMethod]} />);
-    expect(screen.getByText("unknown-type")).toBeInTheDocument();
+  it("falls back to name_en when name_es is not available", () => {
+    const methodNoEs: SellerPaymentMethod = {
+      ...mockMethods[0],
+      id: "pm-2",
+      name_en: "Cash",
+      name_es: "",
+    };
+    render(<PaymentMethodTable {...defaultProps} methods={[methodNoEs]} />);
+    expect(screen.getByText("Cash")).toBeInTheDocument();
   });
 });

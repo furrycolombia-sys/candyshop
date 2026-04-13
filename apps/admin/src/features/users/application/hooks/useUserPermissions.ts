@@ -6,9 +6,16 @@ export function useUserPermissions(userId: string | null) {
   return useQuery({
     queryKey: [USER_PERMISSIONS_QUERY_KEY, userId],
     queryFn: async () => {
-      const response = await fetch(`/api/admin/users/${userId}/permissions`, {
-        credentials: "same-origin",
-      });
+      const basePath =
+        globalThis.window !== undefined &&
+        globalThis.window.location.pathname.startsWith("/admin")
+          ? "/admin"
+          : "";
+
+      const response = await fetch(
+        `${basePath}/api/admin/users/${userId}/permissions`,
+        { credentials: "same-origin" },
+      );
 
       if (!response.ok) {
         throw new Error("Failed to load user permissions");

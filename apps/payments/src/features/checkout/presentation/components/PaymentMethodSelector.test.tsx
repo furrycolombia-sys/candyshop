@@ -13,6 +13,14 @@ vi.mock("shared", async (importOriginal) => {
   return {
     ...actual,
     tid: (id: string) => ({ "data-testid": id }),
+    i18nField: (
+      obj: Record<string, unknown>,
+      field: string,
+      locale: string,
+    ) => {
+      const key = `${field}_${locale}`;
+      return (obj[key] as string) ?? (obj[`${field}_en`] as string) ?? "";
+    },
   };
 });
 
@@ -22,27 +30,19 @@ import { PaymentMethodSelector } from "./PaymentMethodSelector";
 const mockMethods: SellerPaymentMethodWithType[] = [
   {
     id: "pm-1",
-    type_name_en: "Bank Transfer",
-    type_name_es: "Transferencia",
-    type_icon: "bank",
-    requires_receipt: true,
-    requires_transfer_number: true,
-    account_details_en: "Bank ABC Account 12345",
-    account_details_es: "Banco ABC Cuenta 12345",
-    seller_note_en: "Please use your name as reference",
-    seller_note_es: "Usa tu nombre como referencia",
+    name_en: "Bank Transfer",
+    name_es: "Transferencia",
+    display_blocks: [],
+    form_fields: [],
+    is_active: true,
   },
   {
     id: "pm-2",
-    type_name_en: "Cash",
-    type_name_es: "Efectivo",
-    type_icon: null,
-    requires_receipt: false,
-    requires_transfer_number: false,
-    account_details_en: null,
-    account_details_es: null,
-    seller_note_en: null,
-    seller_note_es: null,
+    name_en: "Cash",
+    name_es: "Efectivo",
+    display_blocks: [],
+    form_fields: [],
+    is_active: true,
   },
 ];
 
@@ -99,23 +99,6 @@ describe("PaymentMethodSelector", () => {
     expect(mockOnSelect).toHaveBeenCalledWith("pm-1");
   });
 
-  it("shows account details and seller note when a method is selected", () => {
-    render(
-      <PaymentMethodSelector
-        methods={mockMethods}
-        selectedId="pm-1"
-        onSelect={mockOnSelect}
-      />,
-    );
-
-    expect(screen.getByTestId("payment-account-details")).toHaveTextContent(
-      "Bank ABC Account 12345",
-    );
-    expect(screen.getByTestId("payment-seller-note")).toHaveTextContent(
-      "Please use your name as reference",
-    );
-  });
-
   it("does not show details when no method is selected", () => {
     render(
       <PaymentMethodSelector
@@ -128,22 +111,6 @@ describe("PaymentMethodSelector", () => {
     expect(
       screen.queryByTestId("payment-account-details"),
     ).not.toBeInTheDocument();
-    expect(screen.queryByTestId("payment-seller-note")).not.toBeInTheDocument();
-  });
-
-  it("does not show details section for method without account details", () => {
-    render(
-      <PaymentMethodSelector
-        methods={mockMethods}
-        selectedId="pm-2"
-        onSelect={mockOnSelect}
-      />,
-    );
-
-    expect(
-      screen.queryByTestId("payment-account-details"),
-    ).not.toBeInTheDocument();
-    expect(screen.queryByTestId("payment-seller-note")).not.toBeInTheDocument();
   });
 
   it("disables the select when disabled prop is true", () => {
