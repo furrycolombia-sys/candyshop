@@ -99,7 +99,10 @@ export default defineConfig({
             url: "http://localhost:5004",
             reuseExistingServer: !process.env.CI,
             timeout: 120_000,
-            env: buildServerEnv(),
+            env: {
+              ...buildServerEnv(),
+              NEXT_PUBLIC_ENABLE_MOCKS: process.env.CI ? "true" : "false",
+            },
           },
         ],
 });
