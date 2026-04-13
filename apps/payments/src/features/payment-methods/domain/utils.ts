@@ -1,5 +1,4 @@
 /* eslint-disable i18next/no-literal-string -- internal validation error messages, not user-facing */
-import { i18nField } from "shared";
 
 import type {
   BuyerSubmission,
@@ -7,7 +6,6 @@ import type {
   DisplayBlockType,
   FormField,
   FormFieldType,
-  PaymentMethodType,
 } from "./types";
 
 const VALID_BLOCK_TYPES: DisplayBlockType[] = [
@@ -145,17 +143,4 @@ export function validateBuyerSubmission(
 /** Returns true if the file size is within the 10 MB limit. */
 export function validateFileSize(bytes: number): boolean {
   return bytes <= MAX_FILE_BYTES;
-}
-
-// ─── Legacy helpers (kept for backward compat during migration) ───────────────
-
-/** @deprecated Resolve the localized name for a payment method type */
-export function getPaymentTypeName(
-  types: PaymentMethodType[],
-  typeId: string,
-  locale: string,
-): string {
-  const type = types.find((pt) => pt.id === typeId);
-  if (!type) return typeId;
-  return i18nField(type, "name", locale) || typeId;
 }

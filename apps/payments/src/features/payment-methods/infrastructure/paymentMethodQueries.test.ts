@@ -1,7 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
 
 import {
-  fetchPaymentMethodTypes,
   fetchSellerPaymentMethods,
   insertSellerPaymentMethod,
   updateSellerPaymentMethod,
@@ -40,22 +39,6 @@ function createMockSupabase(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } as any;
 }
-
-describe("fetchPaymentMethodTypes", () => {
-  it("returns payment method types", async () => {
-    const mockData = [{ id: "1", name_en: "Cash" }];
-    const supabase = createMockSupabase({ data: mockData });
-
-    const result = await fetchPaymentMethodTypes(supabase);
-    expect(result).toEqual(mockData);
-    expect(supabase.from).toHaveBeenCalledWith("payment_method_types");
-  });
-
-  it("throws on error", async () => {
-    const supabase = createMockSupabase({ error: new Error("fail") });
-    await expect(fetchPaymentMethodTypes(supabase)).rejects.toThrow("fail");
-  });
-});
 
 describe("fetchSellerPaymentMethods", () => {
   it("returns seller payment methods", async () => {

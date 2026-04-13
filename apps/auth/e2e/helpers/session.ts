@@ -156,10 +156,6 @@ export const ADMIN_PERMISSIONS = [
   ...new Set([
     ...BUYER_PERMISSIONS,
     ...SELLER_PERMISSIONS,
-    "payment_method_types.create",
-    "payment_method_types.read",
-    "payment_method_types.update",
-    "payment_method_types.delete",
     "payment_settings.read",
     "payment_settings.update",
     "templates.create",

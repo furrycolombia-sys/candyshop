@@ -4,7 +4,6 @@ import { matchesPermissions, useCurrentUserPermissions } from "auth/client";
 import {
   ChevronLeft,
   ChevronRight,
-  CreditCard,
   FileText,
   Layers,
   LayoutDashboard,
@@ -50,12 +49,6 @@ const NAV_SECTIONS: readonly NavSection[] = [
         href: "/templates",
         icon: Layers,
         required: ["templates.read"],
-      },
-      {
-        key: "paymentMethods" as const,
-        href: "/payment-methods",
-        icon: CreditCard,
-        required: ["payment_method_types.read"],
       },
     ],
   },

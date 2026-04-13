@@ -2,17 +2,12 @@ import { describe, it, expect } from "vitest";
 
 import {
   PAYMENT_METHODS_QUERY_KEY,
-  PAYMENT_TYPES_QUERY_KEY,
   SELLER_PAYMENT_METHOD_DEFAULTS,
 } from "./constants";
 
 describe("payment-methods domain constants", () => {
   it("defines PAYMENT_METHODS_QUERY_KEY", () => {
     expect(PAYMENT_METHODS_QUERY_KEY).toBe("seller-payment-methods");
-  });
-
-  it("defines PAYMENT_TYPES_QUERY_KEY", () => {
-    expect(PAYMENT_TYPES_QUERY_KEY).toBe("payment-method-types");
   });
 
   describe("SELLER_PAYMENT_METHOD_DEFAULTS", () => {

@@ -1,7 +1,6 @@
 /* eslint-disable i18next/no-literal-string -- SQL table/column identifiers and internal error messages */
 /* eslint-disable @typescript-eslint/no-explicit-any -- tables not in generated types yet */
 import type {
-  PaymentMethodType,
   SellerPaymentMethod,
   SellerPaymentMethodFormValues,
 } from "@/features/payment-methods/domain/types";
@@ -93,19 +92,6 @@ export async function deletePaymentMethod(
 }
 
 // ─── Legacy functions (kept for backward compat) ──────────────────────────────
-
-/** @deprecated Use fetchPaymentMethods instead */
-export async function fetchPaymentMethodTypes(
-  supabase: SupabaseDB,
-): Promise<PaymentMethodType[]> {
-  const { data, error } = await (supabase.from as any)("payment_method_types")
-    .select("*")
-    .eq("is_active", true)
-    .order("sort_order", { ascending: true });
-
-  if (error) throw error;
-  return data as PaymentMethodType[];
-}
 
 /** @deprecated Use fetchPaymentMethods instead */
 export async function fetchSellerPaymentMethods(

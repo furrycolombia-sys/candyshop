@@ -64,7 +64,6 @@ const APP_ACCESS_RULES: Partial<
   admin: {
     required: [
       "templates.read",
-      "payment_method_types.read",
       "payment_settings.read",
       "audit.read",
       "user_permissions.read",

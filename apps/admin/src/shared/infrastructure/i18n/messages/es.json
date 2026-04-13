@@ -29,7 +29,6 @@
     "system": "Sistema",
     "version": "v0.1.0",
     "status": "Todos los sistemas nominales",
-    "paymentMethods": "Metodos de Pago",
     "settings": "Configuracion",
     "configuration": "Configuracion",
     "users": "Usuarios",
@@ -135,25 +134,6 @@
     "removeItem": "Eliminar elemento",
     "removeSection": "Eliminar seccion",
     "deleteTemplate": "Eliminar plantilla"
-  },
-  "paymentMethodTypes": {
-    "title": "Tipos de Metodo de Pago",
-    "subtitle": "Administra las opciones de pago disponibles para vendedores",
-    "addType": "Agregar Tipo",
-    "editType": "Editar Tipo",
-    "name": "Nombre",
-    "description": "Descripcion",
-    "icon": "Icono",
-    "requiresReceipt": "Requiere Comprobante",
-    "requiresTransferNumber": "Requiere Numero de Transferencia",
-    "active": "Activo",
-    "noTypes": "Sin tipos de metodo de pago aun",
-    "deleteConfirm": "Desactivar este tipo de metodo de pago? Los vendedores que lo usen ya no podran aceptar nuevos pagos con el.",
-    "save": "Guardar",
-    "saving": "Guardando...",
-    "cancel": "Cancelar",
-    "editPaymentType": "Editar tipo de pago",
-    "deletePaymentType": "Eliminar tipo de pago"
   },
   "settings": {
     "title": "Configuracion de Plataforma",
@@ -263,12 +243,6 @@
       "read": "Ver Metodos de Pago del Vendedor",
       "update": "Editar Metodos de Pago del Vendedor",
       "delete": "Eliminar Metodos de Pago del Vendedor"
-    },
-    "payment_method_types": {
-      "create": "Crear Tipos de Pago",
-      "read": "Ver Tipos de Pago",
-      "update": "Editar Tipos de Pago",
-      "delete": "Eliminar Tipos de Pago"
     },
     "payment_settings": {
       "read": "Ver Configuracion de Pagos",
