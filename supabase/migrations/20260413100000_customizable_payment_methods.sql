@@ -102,3 +102,9 @@ alter table public.orders
   foreign key (payment_method_id)
   references public.seller_payment_methods(id)
   on delete set null;
+
+-- ---------------------------------------------------------------------------
+-- 10. Add buyer_info to orders (stores buyer-submitted form data as JSON)
+-- ---------------------------------------------------------------------------
+alter table public.orders
+  add column if not exists buyer_info jsonb;

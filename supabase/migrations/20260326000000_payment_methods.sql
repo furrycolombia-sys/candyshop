@@ -123,12 +123,7 @@ insert into public.payment_settings (key, value) values
   ('timeout_pending_verification_hours', '72'),
   ('timeout_evidence_requested_hours', '24');
 
--- Seed payment method types for Colombian market
-insert into public.payment_method_types (name_en, name_es, description_en, description_es, icon, requires_receipt, requires_transfer_number, sort_order) values
-  ('Bancolombia Transfer', 'Transferencia Bancolombia', 'Bank transfer via Bancolombia', 'Transferencia bancaria via Bancolombia', 'Building', true, true, 1),
-  ('Nequi', 'Nequi', 'Mobile payment via Nequi', 'Pago movil via Nequi', 'Smartphone', true, true, 2),
-  ('Daviplata', 'Daviplata', 'Mobile payment via Daviplata', 'Pago movil via Daviplata', 'Smartphone', true, true, 3),
-  ('Davivienda Transfer', 'Transferencia Davivienda', 'Bank transfer via Davivienda', 'Transferencia bancaria via Davivienda', 'Building', true, true, 4),
-  ('BBVA Transfer', 'Transferencia BBVA', 'Bank transfer via BBVA Colombia', 'Transferencia bancaria via BBVA Colombia', 'Building', true, true, 5),
-  ('PayPal', 'PayPal', 'International payment via PayPal', 'Pago internacional via PayPal', 'Globe', true, false, 6),
-  ('TuLlave / BREB', 'TuLlave / BREB', 'Bogota transit card top-up as payment', 'Recarga de tarjeta de transporte de Bogota como pago', 'CreditCard', true, true, 7);
+-- Note: payment_method_types seed data removed.
+-- The payment_method_types table is dropped in migration
+-- 20260413100000_customizable_payment_methods.sql which replaces
+-- the fixed-type system with a fully flexible seller-owned schema.
