@@ -13,11 +13,6 @@ import type { Database } from "./types";
  */
 export async function updateSupabaseSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
-  const useMockSession = process.env.NEXT_PUBLIC_ENABLE_MOCKS === "true";
-
-  if (useMockSession) {
-    return supabaseResponse;
-  }
 
   const supabase = createServerClient<Database>(
     SUPABASE_URL,
