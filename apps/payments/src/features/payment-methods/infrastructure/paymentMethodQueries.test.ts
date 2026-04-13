@@ -1,24 +1,22 @@
 import { describe, it, expect, vi } from "vitest";
 
 import {
-  fetchSellerPaymentMethods,
-  insertSellerPaymentMethod,
-  updateSellerPaymentMethod,
-  deleteSellerPaymentMethod,
-  toggleSellerPaymentMethodActive,
+  fetchPaymentMethods,
+  createPaymentMethod,
+  updatePaymentMethod,
+  deletePaymentMethod,
 } from "./paymentMethodQueries";
 
 function createMockSupabase(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Supabase mock uses dynamic data shapes
-  opts: { data?: any; error?: any; userId?: string } = {},
+  opts: { data?: any; error?: any } = {},
 ) {
-  const { data = [], error = null, userId = "user-1" } = opts;
+  const { data = [], error = null } = opts;
 
   const chain = {
     select: vi.fn().mockReturnThis(),
     eq: vi.fn().mockReturnThis(),
     order: vi.fn().mockReturnThis(),
-    limit: vi.fn().mockReturnThis(),
     single: vi.fn().mockReturnValue({ data, error }),
     insert: vi.fn().mockReturnThis(),
     update: vi.fn().mockReturnThis(),
@@ -30,108 +28,76 @@ function createMockSupabase(
   chain.eq.mockReturnValue({ data, error, ...chain });
 
   return {
-    auth: {
-      getUser: vi.fn().mockResolvedValue({
-        data: { user: { id: userId } },
-      }),
-    },
     from: vi.fn().mockReturnValue(chain),
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } as any;
 }
 
-describe("fetchSellerPaymentMethods", () => {
-  it("returns seller payment methods", async () => {
-    const mockData = [{ id: "m1" }];
+describe("fetchPaymentMethods", () => {
+  it("returns payment methods for a seller", async () => {
+    const mockData = [{ id: "m1", seller_id: "s1" }];
     const supabase = createMockSupabase({ data: mockData });
 
-    const result = await fetchSellerPaymentMethods(supabase);
+    const result = await fetchPaymentMethods(supabase, "s1");
     expect(result).toEqual(mockData);
     expect(supabase.from).toHaveBeenCalledWith("seller_payment_methods");
   });
 
   it("throws on error", async () => {
     const supabase = createMockSupabase({ error: new Error("fail") });
-    await expect(fetchSellerPaymentMethods(supabase)).rejects.toThrow("fail");
+    await expect(fetchPaymentMethods(supabase, "s1")).rejects.toThrow("fail");
   });
 });
 
-describe("insertSellerPaymentMethod", () => {
+describe("createPaymentMethod", () => {
   it("inserts a payment method", async () => {
-    const mockData = { id: "m2" };
+    const mockData = { id: "m2", name_en: "Bank Transfer" };
     const supabase = createMockSupabase({ data: mockData });
 
-    const result = await insertSellerPaymentMethod(supabase, {
-      type_id: "1",
-      account_details_en: "Account EN",
-      account_details_es: "Account ES",
-      seller_note_en: "",
-      seller_note_es: "",
-      is_active: true,
-    });
-
+    const result = await createPaymentMethod(supabase, "s1", "Bank Transfer");
     expect(result).toEqual(mockData);
+    expect(supabase.from).toHaveBeenCalledWith("seller_payment_methods");
   });
 
   it("throws on error", async () => {
     const supabase = createMockSupabase({ error: new Error("insert fail") });
-    await expect(
-      insertSellerPaymentMethod(supabase, {
-        type_id: "1",
-        account_details_en: "",
-        account_details_es: "",
-        seller_note_en: "",
-        seller_note_es: "",
-        is_active: true,
-      }),
-    ).rejects.toThrow("insert fail");
+    await expect(createPaymentMethod(supabase, "s1", "Test")).rejects.toThrow(
+      "insert fail",
+    );
   });
 });
 
-describe("updateSellerPaymentMethod", () => {
+describe("updatePaymentMethod", () => {
   it("updates a payment method", async () => {
-    const mockData = { id: "m1" };
+    const mockData = { id: "m1", name_en: "Updated" };
     const supabase = createMockSupabase({ data: mockData });
 
-    const result = await updateSellerPaymentMethod(supabase, "m1", {
-      type_id: "1",
-      account_details_en: "Updated",
-      account_details_es: "Actualizado",
-      seller_note_en: "",
-      seller_note_es: "",
-      is_active: true,
+    const result = await updatePaymentMethod(supabase, "m1", {
+      name_en: "Updated",
     });
-
     expect(result).toEqual(mockData);
+    expect(supabase.from).toHaveBeenCalledWith("seller_payment_methods");
+  });
+
+  it("throws on error", async () => {
+    const supabase = createMockSupabase({ error: new Error("update fail") });
+    await expect(
+      updatePaymentMethod(supabase, "m1", { name_en: "X" }),
+    ).rejects.toThrow("update fail");
   });
 });
 
-describe("deleteSellerPaymentMethod", () => {
+describe("deletePaymentMethod", () => {
   it("deletes a payment method", async () => {
     const supabase = createMockSupabase();
-    await deleteSellerPaymentMethod(supabase, "m1");
+    await deletePaymentMethod(supabase, "m1");
     expect(supabase.from).toHaveBeenCalledWith("seller_payment_methods");
   });
 
   it("throws on error", async () => {
     const supabase = createMockSupabase({ error: new Error("delete fail") });
-    await expect(deleteSellerPaymentMethod(supabase, "m1")).rejects.toThrow(
+    await expect(deletePaymentMethod(supabase, "m1")).rejects.toThrow(
       "delete fail",
     );
-  });
-});
-
-describe("toggleSellerPaymentMethodActive", () => {
-  it("toggles active state", async () => {
-    const supabase = createMockSupabase();
-    await toggleSellerPaymentMethodActive(supabase, "m1", false);
-    expect(supabase.from).toHaveBeenCalledWith("seller_payment_methods");
-  });
-
-  it("throws on error", async () => {
-    const supabase = createMockSupabase({ error: new Error("toggle fail") });
-    await expect(
-      toggleSellerPaymentMethodActive(supabase, "m1", true),
-    ).rejects.toThrow("toggle fail");
   });
 });

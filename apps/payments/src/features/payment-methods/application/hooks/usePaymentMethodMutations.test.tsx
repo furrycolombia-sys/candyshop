@@ -11,25 +11,22 @@ vi.mock("api/supabase", () => ({
 vi.mock(
   "@/features/payment-methods/infrastructure/paymentMethodQueries",
   () => ({
-    insertSellerPaymentMethod: vi.fn(),
-    updateSellerPaymentMethod: vi.fn(),
-    deleteSellerPaymentMethod: vi.fn(),
-    toggleSellerPaymentMethodActive: vi.fn(),
+    createPaymentMethod: vi.fn(),
+    updatePaymentMethod: vi.fn(),
+    deletePaymentMethod: vi.fn(),
   }),
 );
 
 import {
-  useInsertSellerPaymentMethod,
-  useUpdateSellerPaymentMethod,
-  useDeleteSellerPaymentMethod,
-  useToggleSellerPaymentMethodActive,
+  useCreatePaymentMethod,
+  useUpdatePaymentMethod,
+  useDeletePaymentMethod,
 } from "./usePaymentMethodMutations";
 
 import {
-  insertSellerPaymentMethod,
-  updateSellerPaymentMethod,
-  deleteSellerPaymentMethod,
-  toggleSellerPaymentMethodActive,
+  createPaymentMethod,
+  updatePaymentMethod,
+  deletePaymentMethod,
 } from "@/features/payment-methods/infrastructure/paymentMethodQueries";
 
 function createWrapper() {
@@ -41,15 +38,15 @@ function createWrapper() {
   );
 }
 
-describe("useInsertSellerPaymentMethod", () => {
+describe("useCreatePaymentMethod", () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it("calls insertSellerPaymentMethod on mutate", async () => {
-    vi.mocked(insertSellerPaymentMethod).mockResolvedValue({
+  it("calls createPaymentMethod on mutate", async () => {
+    vi.mocked(createPaymentMethod).mockResolvedValue({
       id: "m1",
       seller_id: "s1",
-      name_en: "Payment Method",
-      name_es: "",
+      name_en: "Bank Transfer",
+      name_es: null,
       display_blocks: [],
       form_fields: [],
       is_active: true,
@@ -58,34 +55,30 @@ describe("useInsertSellerPaymentMethod", () => {
       updated_at: "2025-01-01",
     });
 
-    const { result } = renderHook(() => useInsertSellerPaymentMethod(), {
+    const { result } = renderHook(() => useCreatePaymentMethod(), {
       wrapper: createWrapper(),
     });
 
     await act(() =>
       result.current.mutateAsync({
-        type_id: "1",
-        account_details_en: "John",
-        account_details_es: "John",
-        seller_note_en: "",
-        seller_note_es: "",
-        is_active: true,
+        sellerId: "s1",
+        nameEn: "Bank Transfer",
       }),
     );
 
-    expect(insertSellerPaymentMethod).toHaveBeenCalled();
+    expect(createPaymentMethod).toHaveBeenCalled();
   });
 });
 
-describe("useUpdateSellerPaymentMethod", () => {
+describe("useUpdatePaymentMethod", () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it("calls updateSellerPaymentMethod on mutate", async () => {
-    vi.mocked(updateSellerPaymentMethod).mockResolvedValue({
+  it("calls updatePaymentMethod on mutate", async () => {
+    vi.mocked(updatePaymentMethod).mockResolvedValue({
       id: "m1",
       seller_id: "s1",
-      name_en: "Payment Method",
-      name_es: "",
+      name_en: "Updated",
+      name_es: null,
       display_blocks: [],
       form_fields: [],
       is_active: true,
@@ -94,66 +87,36 @@ describe("useUpdateSellerPaymentMethod", () => {
       updated_at: "2025-01-01",
     });
 
-    const { result } = renderHook(() => useUpdateSellerPaymentMethod(), {
+    const { result } = renderHook(() => useUpdatePaymentMethod(), {
       wrapper: createWrapper(),
     });
 
     await act(() =>
       result.current.mutateAsync({
         id: "m1",
-        values: {
-          type_id: "1",
-          account_details_en: "Jane",
-          account_details_es: "Jane",
-          seller_note_en: "",
-          seller_note_es: "",
-          is_active: true,
-        },
+        patch: { name_en: "Updated" },
       }),
     );
 
-    expect(updateSellerPaymentMethod).toHaveBeenCalledWith(
+    expect(updatePaymentMethod).toHaveBeenCalledWith(
       expect.anything(),
       "m1",
-      expect.objectContaining({ is_active: true }),
+      expect.objectContaining({ name_en: "Updated" }),
     );
   });
 });
 
-describe("useDeleteSellerPaymentMethod", () => {
+describe("useDeletePaymentMethod", () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it("calls deleteSellerPaymentMethod on mutate", async () => {
-    vi.mocked(deleteSellerPaymentMethod).mockResolvedValue();
+  it("calls deletePaymentMethod on mutate", async () => {
+    vi.mocked(deletePaymentMethod).mockResolvedValue();
 
-    const { result } = renderHook(() => useDeleteSellerPaymentMethod(), {
+    const { result } = renderHook(() => useDeletePaymentMethod(), {
       wrapper: createWrapper(),
     });
 
     await act(() => result.current.mutateAsync("m1"));
-    expect(deleteSellerPaymentMethod).toHaveBeenCalledWith(
-      expect.anything(),
-      "m1",
-    );
-  });
-});
-
-describe("useToggleSellerPaymentMethodActive", () => {
-  beforeEach(() => vi.clearAllMocks());
-
-  it("calls toggleSellerPaymentMethodActive on mutate", async () => {
-    vi.mocked(toggleSellerPaymentMethodActive).mockResolvedValue();
-
-    const { result } = renderHook(() => useToggleSellerPaymentMethodActive(), {
-      wrapper: createWrapper(),
-    });
-
-    await act(() => result.current.mutateAsync({ id: "m1", isActive: false }));
-
-    expect(toggleSellerPaymentMethodActive).toHaveBeenCalledWith(
-      expect.anything(),
-      "m1",
-      false,
-    );
+    expect(deletePaymentMethod).toHaveBeenCalledWith(expect.anything(), "m1");
   });
 });

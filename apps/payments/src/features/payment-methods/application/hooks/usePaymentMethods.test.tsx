@@ -11,14 +11,13 @@ vi.mock("api/supabase", () => ({
 vi.mock(
   "@/features/payment-methods/infrastructure/paymentMethodQueries",
   () => ({
-    fetchSellerPaymentMethods: vi.fn(),
     fetchPaymentMethods: vi.fn(),
   }),
 );
 
-import { useSellerPaymentMethods } from "./usePaymentMethods";
+import { usePaymentMethods } from "./usePaymentMethods";
 
-import { fetchSellerPaymentMethods } from "@/features/payment-methods/infrastructure/paymentMethodQueries";
+import { fetchPaymentMethods } from "@/features/payment-methods/infrastructure/paymentMethodQueries";
 
 function createWrapper() {
   const qc = new QueryClient({
@@ -29,10 +28,10 @@ function createWrapper() {
   );
 }
 
-describe("useSellerPaymentMethods", () => {
+describe("usePaymentMethods", () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it("returns seller methods on success", async () => {
+  it("returns payment methods for a seller", async () => {
     const mock: import("@/features/payment-methods/domain/types").SellerPaymentMethod[] =
       [
         {
@@ -48,13 +47,22 @@ describe("useSellerPaymentMethods", () => {
           updated_at: "2025-01-01",
         },
       ];
-    vi.mocked(fetchSellerPaymentMethods).mockResolvedValue(mock);
+    vi.mocked(fetchPaymentMethods).mockResolvedValue(mock);
 
-    const { result } = renderHook(() => useSellerPaymentMethods(), {
+    const { result } = renderHook(() => usePaymentMethods("s1"), {
       wrapper: createWrapper(),
     });
 
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     expect(result.current.data).toEqual(mock);
+  });
+
+  it("does not fetch when sellerId is empty", () => {
+    const { result } = renderHook(() => usePaymentMethods(""), {
+      wrapper: createWrapper(),
+    });
+
+    expect(result.current.isFetching).toBe(false);
+    expect(fetchPaymentMethods).not.toHaveBeenCalled();
   });
 });

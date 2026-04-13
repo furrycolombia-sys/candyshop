@@ -79,15 +79,3 @@ export interface SellerPaymentMethod {
 
 /** Key = FormField.id, value = string (file fields store the Supabase Storage URL) */
 export type BuyerSubmission = Record<string, string>;
-
-// ─── Legacy types (kept for backward compat during migration) ─────────────────
-
-/** @deprecated Use SellerPaymentMethod instead */
-export interface SellerPaymentMethodFormValues {
-  type_id: string;
-  account_details_en: string;
-  account_details_es: string;
-  seller_note_en: string;
-  seller_note_es: string;
-  is_active: boolean;
-}
