@@ -66,6 +66,19 @@
     "methodRequired": "Por favor selecciona un metodo de pago",
     "receiptRequired": "Por favor sube un comprobante",
     "transferRequired": "Por favor ingresa un numero de transferencia",
+    "buyerFieldRequired": "Por favor completa: {field}",
+    "buyerFields": {
+      "cedula": "Cedula",
+      "cedulaHint": "Tu numero de cedula",
+      "email": "Correo electronico",
+      "emailHint": "Tu correo electronico",
+      "tracking": "Datos de tracking / reserva",
+      "trackingHint": "Numero de referencia o reserva de la transaccion",
+      "name": "Tu nombre",
+      "nameHint": "Alias o nombre real — como quieres ser identificado",
+      "sender_name": "Nombre del titular Nequi",
+      "sender_nameHint": "Nombre completo de quien envia el dinero"
+    },
     "receiptPreview": "Vista previa del comprobante",
     "removeReceipt": "Eliminar comprobante",
     "errorOccurred": "Ocurrio un error"
@@ -142,7 +155,14 @@
     "confirmApprove": "Confirmar Aprobacion — Irreversible",
     "rejectWarning": "Esto liberara el inventario reservado y cancelara el pedido permanentemente. El comprador sera notificado.",
     "rejectCheckbox": "Entiendo que esto no se puede deshacer",
-    "confirmReject": "Confirmar Rechazo — Irreversible"
+    "confirmReject": "Confirmar Rechazo — Irreversible",
+    "buyerFields": {
+      "cedula": "Cedula",
+      "email": "Correo",
+      "tracking": "Tracking / Ref",
+      "name": "Nombre",
+      "sender_name": "Titular"
+    }
   },
   "paymentMethods": {
     "title": "Mis Metodos de Pago",

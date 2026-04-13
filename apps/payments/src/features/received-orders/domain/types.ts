@@ -11,6 +11,7 @@ export interface ReceivedOrder {
   transfer_number: string | null;
   receipt_url: string | null;
   seller_note: string | null;
+  buyer_info: Record<string, string> | null;
   expires_at: string | null;
   checkout_session_id: string | null;
   created_at: string;

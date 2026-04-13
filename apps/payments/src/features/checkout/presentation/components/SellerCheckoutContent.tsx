@@ -6,6 +6,7 @@ import { useId } from "react";
 import { tid } from "shared";
 import { Input } from "ui";
 
+import { BuyerField } from "./BuyerField";
 import { CheckoutItemsSummary } from "./CheckoutItemsSummary";
 import { PaymentMethodSelector } from "./PaymentMethodSelector";
 import { ReceiptUpload } from "./ReceiptUpload";
@@ -31,10 +32,12 @@ interface SellerCheckoutContentProps {
   selectedMethod: SellerPaymentMethodWithType | undefined;
   transferNumber: string;
   receiptFile: File | null;
+  buyerInfo: Record<string, string>;
   validationError: string | null;
   onSelectMethod: (id: string | null) => void;
   onTransferNumberChange: (value: string) => void;
   onReceiptFileChange: (file: File | null) => void;
+  onBuyerInfoChange: (key: string, value: string) => void;
   onSubmit: () => void;
 }
 
@@ -54,10 +57,12 @@ export function SellerCheckoutContent({
   selectedMethod,
   transferNumber,
   receiptFile,
+  buyerInfo,
   validationError,
   onSelectMethod,
   onTransferNumberChange,
   onReceiptFileChange,
+  onBuyerInfoChange,
   onSubmit,
 }: SellerCheckoutContentProps) {
   const t = useTranslations("checkout");
@@ -140,6 +145,19 @@ export function SellerCheckoutContent({
               />
             </div>
           )}
+
+          {/* Dynamic buyer fields (e.g. Nequi: cédula, email, tracking, name, sender) */}
+          {(selectedMethod?.required_buyer_fields ?? []).map((field) => (
+            <BuyerField
+              key={field.key}
+              fieldKey={field.key}
+              fieldType={field.type}
+              value={buyerInfo[field.key] ?? ""}
+              onChange={(v) => onBuyerInfoChange(field.key, v)}
+              disabled={isDisabled}
+              sellerId={sellerId}
+            />
+          ))}
 
           {selectedMethod?.requires_receipt && (
             <ReceiptUpload

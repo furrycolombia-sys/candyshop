@@ -27,6 +27,7 @@ interface SellerCheckoutCardProps {
     paymentMethodId: string;
     transferNumber: string | null;
     receiptFile: File | null;
+    buyerInfo: Record<string, string>;
   }) => void;
 }
 
@@ -45,6 +46,7 @@ export function SellerCheckoutCard({
   const [selectedMethodId, setSelectedMethodId] = useState<string | null>(null);
   const [transferNumber, setTransferNumber] = useState("");
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
+  const [buyerInfo, setBuyerInfo] = useState<Record<string, string>>({});
   const [validationError, setValidationError] = useState<string | null>(null);
 
   const { data, isLoading: isLoadingMethods } = useSellerPaymentMethods(
@@ -83,17 +85,29 @@ export function SellerCheckoutCard({
       return;
     }
 
+    // Validate required buyer fields
+    for (const field of selectedMethod.required_buyer_fields ?? []) {
+      if (field.required && !buyerInfo[field.key]?.trim()) {
+        setValidationError(
+          t("buyerFieldRequired", { field: t(`buyerFields.${field.key}`) }),
+        );
+        return;
+      }
+    }
+
     setValidationError(null);
     onSubmit({
       paymentMethodId: effectiveSelectedMethodId,
       transferNumber: transferNumber.trim() || null,
       receiptFile,
+      buyerInfo,
     });
   }, [
     effectiveSelectedMethodId,
     selectedMethod,
     receiptFile,
     transferNumber,
+    buyerInfo,
     onSubmit,
     hasStockIssues,
     t,
@@ -151,10 +165,14 @@ export function SellerCheckoutCard({
           selectedMethod={selectedMethod}
           transferNumber={transferNumber}
           receiptFile={receiptFile}
+          buyerInfo={buyerInfo}
           validationError={validationError}
           onSelectMethod={setSelectedMethodId}
           onTransferNumberChange={setTransferNumber}
           onReceiptFileChange={setReceiptFile}
+          onBuyerInfoChange={(key, value) =>
+            setBuyerInfo((prev) => ({ ...prev, [key]: value }))
+          }
           onSubmit={handleSubmit}
         />
       )}

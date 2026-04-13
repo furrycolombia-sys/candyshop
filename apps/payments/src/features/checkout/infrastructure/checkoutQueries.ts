@@ -184,12 +184,14 @@ export async function submitReceipt(
   orderId: string,
   transferNumber: string | null,
   receiptUrl: string | null,
+  buyerInfo: Record<string, string> = {},
 ): Promise<void> {
   const { error } = await supabase
     .from("orders")
     .update({
       transfer_number: transferNumber,
       receipt_url: receiptUrl,
+      buyer_info: Object.keys(buyerInfo).length > 0 ? buyerInfo : null,
       payment_status: "pending_verification",
     })
     .eq("id", orderId);

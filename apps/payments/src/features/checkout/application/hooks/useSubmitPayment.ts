@@ -20,6 +20,7 @@ interface SubmitPaymentParams {
   checkoutSessionId: string;
   transferNumber: string | null;
   receiptFile: File | null;
+  buyerInfo: Record<string, string>;
 }
 
 /**
@@ -43,6 +44,7 @@ export function useSubmitPayment() {
         checkoutSessionId,
         transferNumber,
         receiptFile,
+        buyerInfo,
       } = params;
 
       // 1. Create order and reserve stock
@@ -62,7 +64,13 @@ export function useSubmitPayment() {
       }
 
       // 3. Submit receipt info and move to pending_verification
-      await submitReceipt(supabase, orderId, transferNumber, receiptUrl);
+      await submitReceipt(
+        supabase,
+        orderId,
+        transferNumber,
+        receiptUrl,
+        buyerInfo,
+      );
 
       return orderId;
     },

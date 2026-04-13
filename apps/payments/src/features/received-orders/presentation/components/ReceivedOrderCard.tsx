@@ -119,6 +119,20 @@ export function ReceivedOrderCard({
         />
       </div>
 
+      {/* Buyer info (e.g. Nequi fields) */}
+      {order.buyer_info && Object.keys(order.buyer_info).length > 0 && (
+        <div className="border-b-2 border-dashed border-muted-foreground/30 px-4 py-3 space-y-1">
+          {Object.entries(order.buyer_info).map(([key, value]) => (
+            <div key={key} className="flex items-center gap-2 text-sm">
+              <span className="font-display text-xs font-bold uppercase tracking-widest text-muted-foreground min-w-24">
+                {t(`buyerFields.${key}` as Parameters<typeof t>[0])}
+              </span>
+              <span className="font-mono text-xs">{value}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
       {/* Seller note */}
       {order.seller_note && (
         <div className="border-b-2 border-dashed border-muted-foreground/30 px-4 py-3">

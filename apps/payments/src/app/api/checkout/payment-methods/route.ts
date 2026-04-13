@@ -23,6 +23,7 @@ type PaymentMethodRow = {
     icon: string | null;
     requires_receipt: boolean;
     requires_transfer_number: boolean;
+    required_buyer_fields: unknown;
   };
 };
 
@@ -146,6 +147,12 @@ function mapPaymentMethod(row: PaymentMethodRow): SellerPaymentMethodWithType {
     type_icon: row.payment_method_types.icon,
     requires_receipt: row.payment_method_types.requires_receipt,
     requires_transfer_number: row.payment_method_types.requires_transfer_number,
+    required_buyer_fields: Array.isArray(
+      row.payment_method_types.required_buyer_fields,
+    )
+      ? (row.payment_method_types
+          .required_buyer_fields as SellerPaymentMethodWithType["required_buyer_fields"])
+      : [],
     account_details_en: row.account_details_en,
     account_details_es: row.account_details_es,
     seller_note_en: row.seller_note_en,
@@ -190,7 +197,7 @@ async function fetchPaymentMethodsBySeller(sellerId: string) {
       is_active: "eq.true",
       order: "sort_order.asc",
       select:
-        "id,account_details_en,account_details_es,seller_note_en,seller_note_es,payment_method_types!inner(name_en,name_es,icon,requires_receipt,requires_transfer_number)",
+        "id,account_details_en,account_details_es,seller_note_en,seller_note_es,payment_method_types!inner(name_en,name_es,icon,requires_receipt,requires_transfer_number,required_buyer_fields)",
     }),
   );
 }

@@ -43,6 +43,7 @@ const baseParams = {
   checkoutSessionId: "sess-1",
   transferNumber: null,
   receiptFile: null,
+  buyerInfo: {},
 };
 
 describe("useSubmitPayment", () => {
@@ -65,6 +66,7 @@ describe("useSubmitPayment", () => {
       "order-1",
       null,
       null,
+      {},
     );
     expect(uploadReceipt).not.toHaveBeenCalled();
   });
@@ -98,6 +100,7 @@ describe("useSubmitPayment", () => {
       "order-2",
       "TXN-123",
       "https://storage/receipt.jpg",
+      {},
     );
   });
 });
