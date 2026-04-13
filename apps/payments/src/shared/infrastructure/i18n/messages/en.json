@@ -222,7 +222,10 @@
     "invalidYoutubeUrl": "Please enter a valid YouTube URL",
     "saved": "Saved",
     "saving2": "Saving...",
-    "nameRequired": "Name (EN) is required"
+    "nameRequired": "Name (EN) is required",
+    "newMethodDefault": "New Payment Method",
+    "clickToExpand": "Click to edit",
+    "clickToCollapse": "Click to collapse"
   },
   "common": {
     "loading": "Loading...",
