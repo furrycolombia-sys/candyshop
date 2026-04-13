@@ -170,6 +170,8 @@
     "subtitle": "Configure how buyers can pay you",
     "addMethod": "Add Method",
     "editMethod": "Edit Method",
+    "emptyDisplayHint": "Add payment instructions, images, or videos for your buyers",
+    "emptyFormHint": "Add fields that buyers need to fill out (name, email, transfer number, etc.)",
     "selectType": "Payment Type",
     "selectTypePlaceholder": "Choose a payment method...",
     "accountDetails": "Account Details",
@@ -221,8 +223,10 @@
     "altTextEs": "Alt Text (ES)",
     "invalidYoutubeUrl": "Please enter a valid YouTube URL",
     "saved": "Saved",
-    "saving2": "Saving...",
-    "nameRequired": "Name (EN) is required"
+    "nameRequired": "Name (EN) is required",
+    "newMethodDefault": "New Payment Method",
+    "optional": "optional",
+    "dragToReorder": "Drag to reorder"
   },
   "common": {
     "loading": "Loading...",

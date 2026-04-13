@@ -1,9 +1,14 @@
 /* eslint-disable i18next/no-literal-string -- aria-labels and language code labels are UI chrome, not user-facing content */
-/* eslint-disable react/no-multi-comp -- CreateMethodForm is a private helper co-located with its parent */
 "use client";
 
 import { useSupabaseAuth } from "auth/client";
-import { ChevronDown, ChevronUp, Plus, Trash2 } from "lucide-react";
+import {
+  ChevronDown,
+  ChevronRight,
+  ChevronUp,
+  Plus,
+  Trash2,
+} from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useState } from "react";
 import { i18nField, tid } from "shared";
@@ -15,13 +20,7 @@ import {
   useUpdatePaymentMethod,
 } from "@/features/payment-methods/application/hooks/usePaymentMethodMutations";
 import { usePaymentMethods } from "@/features/payment-methods/application/hooks/usePaymentMethods";
-import type { SellerPaymentMethod } from "@/features/payment-methods/domain/types";
 import { PaymentMethodEditor } from "@/features/payment-methods/presentation/components/PaymentMethodEditor";
-
-type EditorState =
-  | { mode: "closed" }
-  | { mode: "create" }
-  | { mode: "edit"; method: SellerPaymentMethod };
 
 interface PaymentMethodsPageContentProps {
   canCreate: boolean;
@@ -46,19 +45,31 @@ export function PaymentMethodsPageContent({
   const updateMutation = useUpdatePaymentMethod();
   const deleteMutation = useDeletePaymentMethod();
 
-  const [editor, setEditor] = useState<EditorState>({ mode: "closed" });
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
-  const handleEdit = useCallback((method: SellerPaymentMethod) => {
-    setEditor({ mode: "edit", method });
+  const handleToggleExpand = useCallback((id: string) => {
+    setExpandedId((prev) => (prev === id ? null : id));
   }, []);
+
+  const handleCreate = useCallback(() => {
+    createMutation.mutate(
+      { sellerId, nameEn: t("newMethodDefault") },
+      {
+        onSuccess: (method) => {
+          setExpandedId(method.id);
+        },
+      },
+    );
+  }, [createMutation, sellerId, t]);
 
   const handleDelete = useCallback(
     (id: string) => {
       if (globalThis.confirm(t("deleteConfirm"))) {
+        if (expandedId === id) setExpandedId(null);
         deleteMutation.mutate(id);
       }
     },
-    [deleteMutation, t],
+    [deleteMutation, expandedId, t],
   );
 
   const handleToggleActive = useCallback(
@@ -102,20 +113,6 @@ export function PaymentMethodsPageContent({
     [methods, updateMutation],
   );
 
-  const handleCreate = useCallback(
-    (nameEn: string, nameEs?: string) => {
-      createMutation.mutate(
-        { sellerId, nameEn, nameEs },
-        { onSuccess: (method) => setEditor({ mode: "edit", method }) },
-      );
-    },
-    [createMutation, sellerId],
-  );
-
-  const handleEditorClose = useCallback(() => {
-    setEditor({ mode: "closed" });
-  }, []);
-
   if (isLoading) {
     return (
       <main className="flex flex-1 flex-col surface-grid-dots">
@@ -141,70 +138,49 @@ export function PaymentMethodsPageContent({
               {t("subtitle")}
             </p>
           </div>
-          {editor.mode === "closed" && canCreate && (
+          {canCreate && (
             <Button
               type="button"
               className="button-brutal shadow-brutal-md button-press-sm rounded-xl border-strong bg-brand px-6 py-3 text-brand-foreground hover:bg-brand-hover"
-              onClick={() => setEditor({ mode: "create" })}
+              onClick={handleCreate}
+              disabled={createMutation.isPending}
               {...tid("add-payment-method-button")}
             >
               <Plus className="size-5" />
-              {t("addMethod")}
+              {createMutation.isPending ? tCommon("loading") : t("addMethod")}
             </Button>
           )}
         </header>
 
-        {/* Create flow */}
-        {editor.mode === "create" && (
-          <CreateMethodForm
-            onCreate={handleCreate}
-            onCancel={handleEditorClose}
-            isPending={createMutation.isPending}
-          />
-        )}
-
-        {/* Edit flow */}
-        {editor.mode === "edit" && (
-          <div className="flex flex-col gap-4">
-            <Button
-              type="button"
-              variant="outline"
-              className="self-start rounded-xl border-strong px-4 py-2 text-sm"
-              onClick={handleEditorClose}
-              {...tid("back-to-list")}
-            >
-              ← {t("cancel")}
-            </Button>
-            <PaymentMethodEditor
-              method={editor.method}
-              onClose={handleEditorClose}
-            />
+        {/* Empty state */}
+        {(!methods || methods.length === 0) && (
+          <div
+            className="flex flex-col items-center justify-center gap-2 rounded-xl border-strong border-dashed border-border bg-muted/30 py-16"
+            {...tid("payment-methods-empty-state")}
+          >
+            <p className="font-display text-lg font-bold uppercase">
+              {t("noMethods")}
+            </p>
+            <p className="text-sm text-muted-foreground">
+              {t("noMethodsHint")}
+            </p>
           </div>
         )}
 
-        {/* List */}
-        {editor.mode === "closed" && (
-          <>
-            {!methods || methods.length === 0 ? (
-              <div
-                className="flex flex-col items-center justify-center gap-2 rounded-xl border-strong border-dashed border-border bg-muted/30 py-16"
-                {...tid("payment-methods-empty-state")}
-              >
-                <p className="font-display text-lg font-bold uppercase">
-                  {t("noMethods")}
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  {t("noMethodsHint")}
-                </p>
-              </div>
-            ) : (
-              <div className="flex flex-col gap-3">
-                {methods.map((method, index) => (
-                  <div
-                    key={method.id}
-                    className="flex items-center gap-3 rounded-xl border-strong border-border bg-background p-4 shadow-brutal-sm"
-                    {...tid("payment-method-row")}
-                  >
+        {/* Method list — each item expands inline to show the full builder */}
+        {methods && methods.length > 0 && (
+          <div className="flex flex-col gap-4">
+            {methods.map((method, index) => {
+              const isExpanded = expandedId === method.id;
+
+              return (
+                <div
+                  key={method.id}
+                  className={`rounded-xl border-strong border-foreground bg-background shadow-brutal-sm overflow-hidden ${isExpanded ? "bg-muted/30" : ""}`}
+                  {...tid("payment-method-row")}
+                >
+                  {/* Collapsed header row */}
+                  <div className="flex items-center gap-3 p-4">
                     {/* Reorder buttons */}
                     <div className="flex flex-col gap-1">
                       <button
@@ -229,15 +205,22 @@ export function PaymentMethodsPageContent({
                       </button>
                     </div>
 
-                    {/* Name */}
-                    <div className="flex-1 min-w-0">
-                      <p
-                        className="font-display text-sm font-bold uppercase tracking-wide truncate"
-                        {...tid("payment-method-name")}
-                      >
+                    {/* Name — clickable to expand */}
+                    <button
+                      type="button"
+                      className="flex flex-1 min-w-0 items-center gap-2 text-left"
+                      onClick={() => handleToggleExpand(method.id)}
+                      {...tid("payment-method-name")}
+                    >
+                      {isExpanded ? (
+                        <ChevronDown className="size-4 shrink-0 text-muted-foreground" />
+                      ) : (
+                        <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
+                      )}
+                      <p className="font-display text-sm font-bold uppercase tracking-wide truncate">
                         {i18nField(method, "name", locale) || method.name_en}
                       </p>
-                    </div>
+                    </button>
 
                     {/* Active toggle */}
                     {canUpdate && (
@@ -248,19 +231,6 @@ export function PaymentMethodsPageContent({
                         }
                         {...tid("payment-method-active-toggle")}
                       />
-                    )}
-
-                    {/* Edit button */}
-                    {canUpdate && (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        className="rounded-lg border-strong px-3 py-1.5 text-xs"
-                        onClick={() => handleEdit(method)}
-                        {...tid("payment-method-edit")}
-                      >
-                        {t("editMethod")}
-                      </Button>
                     )}
 
                     {/* Delete button */}
@@ -276,104 +246,19 @@ export function PaymentMethodsPageContent({
                       </button>
                     )}
                   </div>
-                ))}
-              </div>
-            )}
-          </>
+
+                  {/* Expanded builder */}
+                  {isExpanded && (
+                    <div className="border-t border-border px-4 pb-4">
+                      <PaymentMethodEditor method={method} />
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
         )}
       </div>
     </main>
-  );
-}
-
-// ─── Create Method Form ───────────────────────────────────────────────────────
-
-interface CreateMethodFormProps {
-  onCreate: (nameEn: string, nameEs?: string) => void;
-  onCancel: () => void;
-  isPending: boolean;
-}
-
-function CreateMethodForm({
-  onCreate,
-  onCancel,
-  isPending,
-}: CreateMethodFormProps) {
-  const t = useTranslations("paymentMethods");
-  const [nameEn, setNameEn] = useState("");
-  const [nameEs, setNameEs] = useState("");
-  const [error, setError] = useState<string | null>(null);
-
-  const handleSubmit = () => {
-    if (!nameEn.trim()) {
-      setError(t("nameRequired"));
-      return;
-    }
-    setError(null);
-    onCreate(nameEn.trim(), nameEs.trim() || undefined);
-  };
-
-  return (
-    <div className="flex flex-col gap-4 rounded-xl border-strong border-border bg-background p-6 shadow-brutal-md">
-      <h2 className="font-display text-xl font-bold uppercase tracking-tight">
-        {t("addMethod")}
-      </h2>
-
-      <div className="flex flex-col gap-2">
-        <label
-          htmlFor="create-method-name-en"
-          className="text-sm font-semibold"
-        >
-          Name (EN) *
-        </label>
-        <input
-          id="create-method-name-en"
-          type="text"
-          value={nameEn}
-          onChange={(e) => setNameEn(e.target.value)}
-          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-          {...tid("payment-method-name-en")}
-        />
-        {error && <p className="text-sm text-destructive">{error}</p>}
-      </div>
-
-      <div className="flex flex-col gap-2">
-        <label
-          htmlFor="create-method-name-es"
-          className="text-sm font-semibold"
-        >
-          Name (ES)
-        </label>
-        <input
-          id="create-method-name-es"
-          type="text"
-          value={nameEs}
-          onChange={(e) => setNameEs(e.target.value)}
-          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-          {...tid("payment-method-name-es")}
-        />
-      </div>
-
-      <div className="flex items-center gap-3">
-        <Button
-          type="button"
-          className="button-brutal shadow-brutal-md button-press-sm rounded-xl border-strong bg-brand px-6 py-3 text-brand-foreground hover:bg-brand-hover"
-          disabled={isPending}
-          onClick={handleSubmit}
-          {...tid("create-method-save")}
-        >
-          {isPending ? t("saving") : t("save")}
-        </Button>
-        <Button
-          type="button"
-          variant="outline"
-          className="rounded-xl border-strong px-6 py-3"
-          onClick={onCancel}
-          {...tid("create-method-cancel")}
-        >
-          {t("cancel")}
-        </Button>
-      </div>
-    </div>
   );
 }

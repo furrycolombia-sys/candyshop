@@ -170,6 +170,8 @@
     "subtitle": "Configura como los compradores pueden pagarte",
     "addMethod": "Agregar Metodo",
     "editMethod": "Editar Metodo",
+    "emptyDisplayHint": "Agrega instrucciones de pago, imagenes o videos para tus compradores",
+    "emptyFormHint": "Agrega campos que los compradores deben completar (nombre, correo, numero de transferencia, etc.)",
     "selectType": "Tipo de Pago",
     "selectTypePlaceholder": "Elige un metodo de pago...",
     "accountDetails": "Datos de la Cuenta",
@@ -221,8 +223,10 @@
     "altTextEs": "Texto Alternativo (ES)",
     "invalidYoutubeUrl": "Por favor ingresa una URL de YouTube valida",
     "saved": "Guardado",
-    "saving2": "Guardando...",
-    "nameRequired": "El nombre (EN) es requerido"
+    "nameRequired": "El nombre (EN) es requerido",
+    "newMethodDefault": "Nuevo Metodo de Pago",
+    "optional": "opcional",
+    "dragToReorder": "Arrastra para reordenar"
   },
   "common": {
     "loading": "Cargando...",

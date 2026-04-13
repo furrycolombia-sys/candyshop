@@ -36,12 +36,14 @@ vi.mock("ui", () => ({
   Button: ({
     children,
     onClick,
+    disabled,
     ...props
   }: {
     children: React.ReactNode;
     onClick?: () => void;
+    disabled?: boolean;
   }) => (
-    <button type="button" onClick={onClick} {...props}>
+    <button type="button" onClick={onClick} disabled={disabled} {...props}>
       {children}
     </button>
   ),
@@ -105,13 +107,7 @@ vi.mock(
 vi.mock(
   "@/features/payment-methods/presentation/components/PaymentMethodEditor",
   () => ({
-    PaymentMethodEditor: (props: Record<string, unknown>) => (
-      <div data-testid="editor-mock">
-        <button type="button" onClick={() => (props.onClose as () => void)()}>
-          Close
-        </button>
-      </div>
-    ),
+    PaymentMethodEditor: () => <div data-testid="editor-mock">Editor</div>,
   }),
 );
 
@@ -129,9 +125,10 @@ describe("PaymentMethodsPage", () => {
     ];
   });
 
-  it("renders page content", () => {
+  it("renders page content with method list", () => {
     render(<PaymentMethodsPage />);
     expect(screen.getByTestId("payment-methods-page")).toBeInTheDocument();
+    expect(screen.getByText("Cash")).toBeInTheDocument();
   });
 
   it("shows add button when canCreate", () => {
@@ -139,18 +136,28 @@ describe("PaymentMethodsPage", () => {
     expect(screen.getByTestId("add-payment-method-button")).toBeInTheDocument();
   });
 
-  it("shows method list", () => {
-    render(<PaymentMethodsPage />);
-    expect(screen.getByText("Cash")).toBeInTheDocument();
-  });
-
-  it("opens create form when add button is clicked", () => {
+  it("calls create mutation when add button is clicked", () => {
     render(<PaymentMethodsPage />);
     fireEvent.click(screen.getByTestId("add-payment-method-button"));
-    // Create form should appear (no longer shows editor-mock directly)
-    expect(
-      screen.queryByTestId("add-payment-method-button"),
-    ).not.toBeInTheDocument();
+    expect(mockCreate.mutate).toHaveBeenCalledWith(
+      { sellerId: "seller-1", nameEn: "newMethodDefault" },
+      expect.objectContaining({ onSuccess: expect.any(Function) }),
+    );
+  });
+
+  it("expands editor inline when method name is clicked", () => {
+    render(<PaymentMethodsPage />);
+    expect(screen.queryByTestId("editor-mock")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByTestId("payment-method-name"));
+    expect(screen.getByTestId("editor-mock")).toBeInTheDocument();
+  });
+
+  it("collapses editor when same method name is clicked again", () => {
+    render(<PaymentMethodsPage />);
+    fireEvent.click(screen.getByTestId("payment-method-name"));
+    expect(screen.getByTestId("editor-mock")).toBeInTheDocument();
+    fireEvent.click(screen.getByTestId("payment-method-name"));
+    expect(screen.queryByTestId("editor-mock")).not.toBeInTheDocument();
   });
 
   it("shows loading state when methods are loading", () => {
@@ -165,12 +172,7 @@ describe("PaymentMethodsPage", () => {
     expect(screen.getByTestId("access-denied")).toBeInTheDocument();
   });
 
-  it("shows edit buttons for each method when canUpdate", () => {
-    render(<PaymentMethodsPage />);
-    expect(screen.getByTestId("payment-method-edit")).toBeInTheDocument();
-  });
-
-  it("shows delete buttons for each method when canDelete", () => {
+  it("shows delete button for each method when canDelete", () => {
     render(<PaymentMethodsPage />);
     expect(screen.getByTestId("payment-method-delete")).toBeInTheDocument();
   });
@@ -178,5 +180,12 @@ describe("PaymentMethodsPage", () => {
   it("shows active toggle for each method when canUpdate", () => {
     render(<PaymentMethodsPage />);
     expect(screen.getByRole("switch")).toBeInTheDocument();
+  });
+
+  it("add button stays visible alongside the list", () => {
+    render(<PaymentMethodsPage />);
+    // Both the add button and the method list are visible simultaneously
+    expect(screen.getByTestId("add-payment-method-button")).toBeInTheDocument();
+    expect(screen.getByTestId("payment-method-row")).toBeInTheDocument();
   });
 });
