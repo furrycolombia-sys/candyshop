@@ -1,12 +1,12 @@
 /* eslint-disable i18next/no-literal-string -- infrastructure file: Supabase table/column names are SQL identifiers, not user-facing text */
-import {
-  getReceiptUrl,
-  uploadReceipt,
-} from "@/features/checkout/infrastructure/receiptStorage";
 import type { OrderWithItems } from "@/features/orders/domain/types";
 import { FALLBACK_SELLER_NAME } from "@/shared/domain/constants";
 import type { OrderRow, SupabaseClient } from "@/shared/domain/types";
 import { fetchUserDisplayNames } from "@/shared/infrastructure/fetchUserDisplayNames";
+import {
+  getReceiptUrl,
+  uploadReceipt,
+} from "@/shared/infrastructure/receiptStorage";
 
 interface BuyerOrderRow extends OrderRow {
   payment_method_id: string | null;

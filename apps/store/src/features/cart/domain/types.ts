@@ -1,4 +1,4 @@
-import type { Tables } from "api/types/database";
+import type { Tables } from "api/supabase/types";
 
 /** A cart item is the full product row + a quantity */
 export interface CartItem extends Tables<"products"> {

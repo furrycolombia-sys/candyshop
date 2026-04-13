@@ -66,7 +66,6 @@ describe("AdminSidebar", () => {
       createPermissionsState([
         "admin.access",
         "templates.read",
-        "payment_method_types.read",
         "audit.read",
         "user_permissions.read",
         "payment_settings.read",
@@ -78,7 +77,6 @@ describe("AdminSidebar", () => {
 
     expect(screen.getByTestId("sidebar-dashboard")).toBeInTheDocument();
     expect(screen.getByTestId("sidebar-templates")).toBeInTheDocument();
-    expect(screen.getByTestId("sidebar-paymentMethods")).toBeInTheDocument();
 
     // Check active state
     expect(screen.getByTestId("sidebar-templates")).toHaveAttribute(

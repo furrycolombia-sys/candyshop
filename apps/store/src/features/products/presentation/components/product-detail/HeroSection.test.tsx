@@ -3,8 +3,8 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 import { HeroSection } from "./HeroSection";
 
+import { useAddToCart } from "@/features/cart/application/hooks/useAddToCart";
 import type { Product } from "@/features/products/domain/types";
-import { useAddToCart } from "@/shared/application/hooks/useAddToCart";
 
 // ---------------------------------------------------------------------------
 // Mocks
@@ -32,7 +32,7 @@ vi.mock("shared", () => ({
     obj[`${field}_${locale}`] ?? obj[`${field}_en`] ?? "",
 }));
 
-vi.mock("@/shared/application/hooks/useAddToCart", () => ({
+vi.mock("@/features/cart/application/hooks/useAddToCart", () => ({
   useAddToCart: vi.fn(() => ({
     added: false,
     quantityInCart: 0,

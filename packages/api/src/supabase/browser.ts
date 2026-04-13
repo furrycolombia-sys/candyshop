@@ -18,8 +18,8 @@ export function createBrowserSupabaseClient() {
   }
 
   browserClient = createBrowserClient<Database>(
-    SUPABASE_URL || "http://localhost:54321",
-    SUPABASE_ANON_KEY || "placeholder",
+    SUPABASE_URL,
+    SUPABASE_ANON_KEY,
   );
 
   return browserClient;

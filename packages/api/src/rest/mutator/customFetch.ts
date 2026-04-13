@@ -1,5 +1,8 @@
 import Axios, { type AxiosError, type AxiosRequestConfig } from "axios";
 
+// eslint-disable-next-line no-restricted-imports -- relative import needed for cross-package typecheck compatibility
+import { getTokenFromCookie } from "../../auth/token";
+
 import {
   API_CANCEL_MESSAGE,
   API_TIMEOUT,
@@ -21,21 +24,6 @@ let accessTokenGetter: AccessTokenGetter = null;
 
 export function setAccessTokenGetter(getter: AccessTokenGetter): void {
   accessTokenGetter = getter;
-}
-
-const ACCESS_TOKEN_COOKIE_NAME = "auth_access_token";
-
-function getTokenFromCookie(): string | null {
-  if (typeof document === "undefined") return null;
-  const name = `${ACCESS_TOKEN_COOKIE_NAME}=`;
-  const decoded = decodeURIComponent(document.cookie);
-  for (const part of decoded.split(";")) {
-    const trimmed = part.trim();
-    if (trimmed.startsWith(name)) {
-      return trimmed.slice(name.length).trim() || null;
-    }
-  }
-  return null;
 }
 
 export type OnUnauthorized = (() => void | Promise<void>) | null;

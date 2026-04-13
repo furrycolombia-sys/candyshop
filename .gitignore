@@ -45,6 +45,9 @@ tmpclaude-*
 # Supabase local
 supabase/.temp/
 supabase/.branches/
+supabase-e2e/supabase/.temp/
+supabase-e2e/supabase/.branches/
+supabase-e2e/supabase/snippets/
 
 # IDE
 .idea/

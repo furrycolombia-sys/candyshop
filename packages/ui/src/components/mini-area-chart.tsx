@@ -6,7 +6,7 @@ import { AreaChart, Area, Tooltip, ResponsiveContainer } from "recharts";
 import { UI_CONSTANTS } from "@ui/constants/ui-constants";
 import { cn } from "@ui/utils/cn";
 
-export interface MiniAreaChartDataPoint {
+interface MiniAreaChartDataPoint {
   value: number;
   label?: string;
 }
@@ -59,7 +59,9 @@ function CustomTooltip({
   );
 }
 
-export function MiniAreaChart({
+export type { MiniAreaChartDataPoint };
+
+function MiniAreaChart({
   data,
   color = "var(--brand)",
   height = UI_CONSTANTS.CHART.SPARKLINE_HEIGHT_DEFAULT,
@@ -85,12 +87,12 @@ export function MiniAreaChart({
               <stop
                 offset="0%"
                 stopColor={color}
-                stopOpacity={UI_CONSTANTS.AREA_GRADIENT_START_OPACITY}
+                stopOpacity={UI_CONSTANTS.CHART.AREA_GRADIENT_START_OPACITY}
               />
               <stop
                 offset="100%"
                 stopColor={color}
-                stopOpacity={UI_CONSTANTS.AREA_GRADIENT_END_OPACITY}
+                stopOpacity={UI_CONSTANTS.CHART.AREA_GRADIENT_END_OPACITY}
               />
             </linearGradient>
           </defs>
@@ -111,3 +113,5 @@ export function MiniAreaChart({
     </div>
   );
 }
+
+export { MiniAreaChart };

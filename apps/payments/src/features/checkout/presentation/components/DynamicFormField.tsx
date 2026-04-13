@@ -6,8 +6,8 @@ import { useLocale } from "next-intl";
 import { useId } from "react";
 import { i18nField, tid } from "shared";
 
-import type { FormField } from "@/features/payment-methods/domain/types";
-import { validateFileSize } from "@/features/payment-methods/domain/utils";
+import type { FormField } from "@/shared/domain/paymentMethodTypes";
+import { validateFileSize } from "@/shared/domain/paymentMethodUtils";
 
 interface DynamicFormFieldProps {
   field: FormField;

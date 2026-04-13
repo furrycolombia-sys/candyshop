@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { USER_PERMISSIONS_QUERY_KEY } from "@/features/users/domain/constants";
+import { getApiBasePath } from "@/shared/application/utils/getApiBasePath";
 
 interface ToggleParams {
   userId: string;
@@ -13,11 +14,7 @@ export function useTogglePermission() {
 
   return useMutation({
     mutationFn: async ({ userId, permissionKey, grant }: ToggleParams) => {
-      const basePath =
-        globalThis.window !== undefined &&
-        globalThis.window.location.pathname.startsWith("/admin")
-          ? "/admin"
-          : "";
+      const basePath = getApiBasePath();
 
       const response = await fetch(
         `${basePath}/api/admin/users/${userId}/permissions`,

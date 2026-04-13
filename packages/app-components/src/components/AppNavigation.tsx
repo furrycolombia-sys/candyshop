@@ -64,7 +64,6 @@ const APP_ACCESS_RULES: Partial<
   admin: {
     required: [
       "templates.read",
-      "payment_method_types.read",
       "payment_settings.read",
       "audit.read",
       "user_permissions.read",
@@ -102,11 +101,6 @@ export function AppNavigation({
 
   /** Append current locale to cross-app URL so the target app opens in the same language */
   function localizedHref(baseUrl: string): string {
-    // For absolute URLs (http://...), append /{locale} path
-    if (/^https?:\/\//.test(baseUrl)) {
-      return `${baseUrl.replace(/\/$/, "")}/${locale}`;
-    }
-    // For relative URLs (/store, /admin), append /{locale}
     return `${baseUrl.replace(/\/$/, "")}/${locale}`;
   }
 

@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Database } from "api/types/database";
+import type { Database } from "api/supabase/types";
 
 import type { ProductFilters } from "@/features/products/domain/types";
 

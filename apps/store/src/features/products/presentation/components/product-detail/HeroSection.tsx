@@ -8,11 +8,11 @@ import { ImageGallery } from "./ImageGallery";
 import { PriceBlock } from "./PriceBlock";
 import { RatingStars } from "./RatingStars";
 
+import { useAddToCart } from "@/features/cart";
 import {
   isProductAvailable,
   type Product,
 } from "@/features/products/domain/types";
-import { useAddToCart } from "@/shared/application/hooks/useAddToCart";
 import type { CategoryTheme } from "@/shared/domain/categoryConstants";
 
 interface HeroSectionProps {

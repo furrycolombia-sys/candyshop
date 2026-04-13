@@ -1,6 +1,6 @@
 "use client";
 
-import { deleteCookie, getCookie, setCookie } from "cookies-next";
+import { getCookie } from "cookies-next";
 import {
   createContext,
   useCallback,
@@ -11,150 +11,20 @@ import {
   useRef,
 } from "react";
 
+import {
+  COOKIE_KEY,
+  persistCartCookie,
+  removeCartCookie,
+} from "./cartCookiePersistence";
+import {
+  addItemToItems,
+  cartReducer,
+  initialState,
+  updateItemQuantity,
+} from "./cartReducer";
+import { isValidCartItems } from "./cartValidation";
+
 import type { CartItem, CartState } from "@/features/cart/domain/types";
-
-function isValidCartItem(item: unknown): item is CartItem {
-  if (typeof item !== "object" || item === null) return false;
-  const record = item as Record<string, unknown>;
-  // Check the essential fields — the rest comes from the full product row
-  return (
-    typeof record.id === "string" &&
-    typeof record.price_usd === "number" &&
-    typeof record.quantity === "number"
-  );
-}
-
-/** Validates that parsed cookie data is an array of cart items with required fields */
-function isValidCartItems(data: unknown): data is CartItem[] {
-  return Array.isArray(data) && data.every((item) => isValidCartItem(item));
-}
-
-const COOKIE_KEY = "candystore-cart";
-const DAYS = 30;
-const HOURS_PER_DAY = 24;
-const MINUTES_PER_HOUR = 60;
-const SECONDS_PER_MINUTE = 60;
-const MINIMUM_DOMAIN_SEGMENTS = 2;
-const DOMAIN_SUFFIX_SEGMENT_OFFSET = -2;
-/** Cookie lives for 30 days */
-const COOKIE_MAX_AGE_S =
-  DAYS * HOURS_PER_DAY * MINUTES_PER_HOUR * SECONDS_PER_MINUTE;
-
-function getSharedCookieDomain(hostname: string): string | undefined {
-  if (hostname === "localhost" || hostname === "127.0.0.1") return undefined;
-
-  const parts = hostname.split(".");
-  if (parts.length < MINIMUM_DOMAIN_SEGMENTS) return undefined;
-
-  return `.${parts.slice(DOMAIN_SUFFIX_SEGMENT_OFFSET).join(".")}`;
-}
-
-function getCartCookieOptions() {
-  const isSecure =
-    globalThis.window !== undefined &&
-    globalThis.location.protocol === "https:";
-  let sharedDomain: string | undefined;
-  if (globalThis.window !== undefined) {
-    sharedDomain = getSharedCookieDomain(globalThis.location.hostname);
-  }
-
-  return {
-    path: "/",
-    ...(sharedDomain ? { domain: sharedDomain } : {}),
-    sameSite: "lax" as const,
-    secure: isSecure,
-  };
-}
-
-function persistCartCookie(items: CartItem[]) {
-  const cookieOptions = getCartCookieOptions();
-
-  if (cookieOptions.domain) {
-    deleteCookie(COOKIE_KEY, { path: "/" });
-  }
-
-  setCookie(COOKIE_KEY, JSON.stringify(items), {
-    ...cookieOptions,
-    maxAge: COOKIE_MAX_AGE_S,
-  });
-}
-
-function removeCartCookie() {
-  const cookieOptions = getCartCookieOptions();
-  deleteCookie(COOKIE_KEY, cookieOptions);
-
-  if (cookieOptions.domain !== undefined) {
-    deleteCookie(COOKIE_KEY, { path: "/" });
-  }
-}
-
-function addItemToItems(
-  items: CartItem[],
-  payload: Omit<CartItem, "quantity"> & { quantity?: number },
-): CartItem[] {
-  const { quantity = 1, ...rest } = payload;
-  const existingIndex = items.findIndex((item) => item.id === rest.id);
-
-  if (existingIndex !== -1) {
-    return items.map((item, index) =>
-      index === existingIndex
-        ? {
-            ...item,
-            quantity:
-              item.max_quantity === null
-                ? item.quantity + quantity
-                : Math.min(item.quantity + quantity, item.max_quantity),
-          }
-        : item,
-    );
-  }
-
-  return [
-    ...items,
-    {
-      ...rest,
-      quantity:
-        rest.max_quantity === null
-          ? quantity
-          : Math.min(quantity, rest.max_quantity),
-    },
-  ];
-}
-
-function updateItemQuantity(
-  items: CartItem[],
-  id: string,
-  quantity: number,
-): CartItem[] {
-  if (quantity <= 0) {
-    return items.filter((item) => item.id !== id);
-  }
-
-  return items.map((item) =>
-    item.id === id
-      ? {
-          ...item,
-          quantity:
-            item.max_quantity === null
-              ? quantity
-              : Math.min(quantity, item.max_quantity),
-        }
-      : item,
-  );
-}
-
-type CartAction =
-  | {
-      type: "ADD_ITEM";
-      payload: Omit<CartItem, "quantity"> & { quantity?: number };
-    }
-  | { type: "REMOVE_ITEM"; payload: { id: string } }
-  | {
-      type: "UPDATE_QUANTITY";
-      payload: { id: string; quantity: number };
-    }
-  | { type: "CLEAR_CART" }
-  | { type: "HYDRATE"; payload: CartItem[] };
 
 interface CartContextValue extends CartState {
   addItem: (
@@ -163,98 +33,6 @@ interface CartContextValue extends CartState {
   removeItem: (id: string) => void;
   updateQuantity: (id: string, quantity: number) => void;
   clearCart: () => void;
-}
-
-function deriveState(items: CartItem[]): CartState {
-  return {
-    items,
-    itemCount: items.reduce((sum, item) => sum + item.quantity, 0),
-    total: items.reduce((sum, item) => sum + item.price_usd * item.quantity, 0),
-  };
-}
-
-const initialState: CartState = {
-  items: [],
-  itemCount: 0,
-  total: 0,
-};
-
-function cartReducer(state: CartState, action: CartAction): CartState {
-  switch (action.type) {
-    case "ADD_ITEM": {
-      const { quantity = 1, ...rest } = action.payload;
-      const existingIndex = state.items.findIndex(
-        (item) => item.id === rest.id,
-      );
-
-      if (existingIndex !== -1) {
-        const updatedItems = state.items.map((item, index) =>
-          index === existingIndex
-            ? {
-                ...item,
-                quantity:
-                  item.max_quantity === null
-                    ? item.quantity + quantity
-                    : Math.min(item.quantity + quantity, item.max_quantity),
-              }
-            : item,
-        );
-        return deriveState(updatedItems);
-      }
-
-      return deriveState([
-        ...state.items,
-        {
-          ...rest,
-          quantity:
-            rest.max_quantity === null
-              ? quantity
-              : Math.min(quantity, rest.max_quantity),
-        },
-      ]);
-    }
-
-    case "REMOVE_ITEM": {
-      const filtered = state.items.filter(
-        (item) => item.id !== action.payload.id,
-      );
-      return deriveState(filtered);
-    }
-
-    case "UPDATE_QUANTITY": {
-      const { id, quantity } = action.payload;
-
-      if (quantity <= 0) {
-        const filtered = state.items.filter((item) => item.id !== id);
-        return deriveState(filtered);
-      }
-
-      const updatedItems = state.items.map((item) =>
-        item.id === id
-          ? {
-              ...item,
-              quantity:
-                item.max_quantity === null
-                  ? quantity
-                  : Math.min(quantity, item.max_quantity),
-            }
-          : item,
-      );
-      return deriveState(updatedItems);
-    }
-
-    case "CLEAR_CART": {
-      return initialState;
-    }
-
-    case "HYDRATE": {
-      return deriveState(action.payload);
-    }
-
-    default: {
-      return state;
-    }
-  }
 }
 
 const CartContext = createContext<CartContextValue | null>(null);
