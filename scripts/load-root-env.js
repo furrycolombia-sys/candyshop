@@ -19,9 +19,9 @@ const rootDir = resolve(__dirname, "..");
 /**
  * Parse a .env file and set vars into process.env.
  * @param {string} filePath - Absolute path to the env file
- * @param {boolean} override - If true, overwrite existing process.env values
+ * @param {(key: string) => boolean} canSet - Returns true when the env var may be written
  */
-function loadEnvFile(filePath, override = false) {
+function loadEnvFile(filePath, canSet = () => true) {
   if (!existsSync(filePath)) return;
   const content = readFileSync(filePath, "utf-8");
   for (const line of content.split("\n")) {
@@ -34,7 +34,7 @@ function loadEnvFile(filePath, override = false) {
       .slice(eqIndex + 1)
       .trim()
       .replace(/^["']|["']$/g, "");
-    if (override || !process.env[key]) {
+    if (canSet(key)) {
       process.env[key] = value;
     }
   }
@@ -45,10 +45,15 @@ function loadEnvFile(filePath, override = false) {
  * Call this before reading any process.env values.
  */
 function loadRootEnv() {
+  const protectedKeys = new Set(Object.keys(process.env));
+
   // Load defaults first (lowest precedence)
-  loadEnvFile(resolve(rootDir, ".env.example"), false);
-  // Load local overrides (higher precedence, but never overwrites CLI/CI vars)
-  loadEnvFile(resolve(rootDir, ".env"), true);
+  loadEnvFile(resolve(rootDir, ".env.example"), (key) => !process.env[key]);
+  // Load local overrides next, but never overwrite CLI/CI vars.
+  loadEnvFile(
+    resolve(rootDir, ".env"),
+    (key) => !protectedKeys.has(key) || !process.env[key],
+  );
 }
 
 module.exports = { loadRootEnv };

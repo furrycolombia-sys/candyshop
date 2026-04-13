@@ -4,14 +4,19 @@ import path from "node:path";
 const { loadRootEnv } = require(
   path.resolve(__dirname, "../../../../scripts/load-root-env.js"),
 );
+// eslint-disable-next-line @typescript-eslint/no-require-imports -- shared Node helper
+const { resolveE2EAppUrls } = require(
+  path.resolve(__dirname, "../../../../scripts/app-url-resolver.js"),
+);
 loadRootEnv();
+const appUrls = resolveE2EAppUrls();
 
 export const APP_URLS = {
-  AUTH: process.env.NEXT_PUBLIC_AUTH_URL || "http://localhost:5000",
-  STORE: process.env.NEXT_PUBLIC_STORE_URL || "http://localhost:5001",
-  ADMIN: process.env.NEXT_PUBLIC_ADMIN_URL || "http://localhost:5002",
-  PAYMENTS: process.env.NEXT_PUBLIC_PAYMENTS_URL || "http://localhost:5005",
-  STUDIO: process.env.NEXT_PUBLIC_STUDIO_URL || "http://localhost:5006",
+  AUTH: appUrls.auth,
+  STORE: appUrls.store,
+  ADMIN: appUrls.admin,
+  PAYMENTS: appUrls.payments,
+  STUDIO: appUrls.studio,
 } as const;
 
 /** Time to wait for input debounce to fire (ms). */

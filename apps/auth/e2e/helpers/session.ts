@@ -7,11 +7,42 @@ import { createClient } from "@supabase/supabase-js";
 const { loadRootEnv } = require(
   path.resolve(__dirname, "../../../../scripts/load-root-env.js"),
 );
+// eslint-disable-next-line @typescript-eslint/no-require-imports -- local Supabase env resolver
+const { getLocalSupabaseEnv } = require(
+  path.resolve(__dirname, "../../../../scripts/local-supabase-env.js"),
+);
+// eslint-disable-next-line @typescript-eslint/no-require-imports -- shared Node helper
+const { resolveE2EAppUrls } = require(
+  path.resolve(__dirname, "../../../../scripts/app-url-resolver.js"),
+);
 loadRootEnv();
 
+const localSupabaseEnv = getLocalSupabaseEnv();
+
+function isPlaceholder(value: string | undefined) {
+  return !value || value.startsWith("YOUR_");
+}
+
+// Always prefer local Supabase credentials — the live site tunnels through
+// the same local instance, so local keys are valid for both local and live E2E.
 const SUPABASE_URL =
-  process.env.NEXT_PUBLIC_SUPABASE_URL || "http://127.0.0.1:54321";
-const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
+  localSupabaseEnv.API_URL ||
+  (isPlaceholder(process.env.NEXT_PUBLIC_SUPABASE_URL)
+    ? "http://127.0.0.1:54321"
+    : process.env.NEXT_PUBLIC_SUPABASE_URL) ||
+  "http://127.0.0.1:54321";
+const SERVICE_ROLE_KEY =
+  localSupabaseEnv.SERVICE_ROLE_KEY ||
+  (isPlaceholder(process.env.SUPABASE_SERVICE_ROLE_KEY)
+    ? ""
+    : process.env.SUPABASE_SERVICE_ROLE_KEY) ||
+  "";
+const AUTH_URL = resolveE2EAppUrls().auth;
+
+export const hasAdminTestEnv =
+  Boolean(SERVICE_ROLE_KEY) &&
+  SERVICE_ROLE_KEY !== "YOUR_SUPABASE_SERVICE_ROLE_KEY" &&
+  SERVICE_ROLE_KEY.split(".").length === 3;
 
 /** Session token lifetime in seconds for injected cookies. */
 const SESSION_EXPIRY_SECONDS = 3600;
@@ -169,13 +200,26 @@ export async function grantPermissions(
     );
     if (!rp) continue;
 
-    await adminInsert("user_permissions", {
-      user_id: userId,
-      resource_permission_id: rp.id,
-      mode: "grant",
-      granted_by: userId,
-      reason: "E2E test setup",
-    });
+    try {
+      await adminInsert("user_permissions", {
+        user_id: userId,
+        resource_permission_id: rp.id,
+        mode: "grant",
+        granted_by: userId,
+        reason: "E2E test setup",
+      });
+    } catch (error) {
+      if (
+        error instanceof Error &&
+        error.message.includes(
+          "user_permissions_user_id_resource_permission_id_key",
+        )
+      ) {
+        continue;
+      }
+
+      throw error;
+    }
   }
 }
 
@@ -196,6 +240,12 @@ export async function createTestUser(
   label: string,
   permissions: string[] = [],
 ): Promise<TestUser> {
+  if (!hasAdminTestEnv) {
+    throw new Error(
+      "E2E admin setup is unavailable. Start local Supabase or configure a valid SUPABASE_SERVICE_ROLE_KEY.",
+    );
+  }
+
   const email = `e2e-${label}-${Date.now()}@test.invalid`;
   const password = `test-${Date.now()}-${label}`;
 
@@ -239,9 +289,7 @@ export async function injectSession(
 ): Promise<void> {
   const projectRef = new URL(SUPABASE_URL).hostname.split(".")[0];
   const cookieBase = `sb-${projectRef}-auth-token`;
-  const authHost = new URL(
-    process.env.NEXT_PUBLIC_AUTH_URL || "http://localhost:5000",
-  );
+  const authHost = new URL(AUTH_URL);
   const isLocalhost =
     authHost.hostname === "localhost" || authHost.hostname === "127.0.0.1";
   const hostParts = authHost.hostname.split(".");

@@ -1,19 +1,17 @@
+import path from "node:path";
+
 import { expect, test } from "./fixtures/auth.fixture";
 
-const APPS = {
-  auth: "http://localhost:5000",
-  store: "http://localhost:5001",
-  admin: "http://localhost:5002",
-  playground: "http://localhost:5003",
-  landing: "http://localhost:5004",
-  payments: "http://localhost:5005",
-  studio: "http://localhost:5006",
-} as const;
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { resolveE2EAppUrls } = require(
+  path.resolve(__dirname, "../../../scripts/app-url-resolver.js"),
+);
+
+const APPS = resolveE2EAppUrls() as Record<string, string>;
 
 test.describe("Smoke test â€” all apps", () => {
   test("auth app: login page renders with social buttons", async ({ page }) => {
     await page.goto(`${APPS.auth}/en/login`);
-    await page.waitForLoadState("networkidle");
 
     await expect(page.getByTestId("login-card")).toBeVisible();
     await expect(page.getByTestId("login-google")).toBeVisible();

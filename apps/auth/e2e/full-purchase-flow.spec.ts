@@ -50,7 +50,9 @@ test.describe.serial("Full purchase flow: seller -> buyer -> approval", () => {
   });
 
   test.afterAll(async () => {
-    await cleanupTestData(seller.userId, buyer.userId);
+    if (seller && buyer) {
+      await cleanupTestData(seller.userId, buyer.userId);
+    }
   });
 
   // ─── Phase 1: Seller creates a product in Studio ───────────────

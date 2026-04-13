@@ -8,12 +8,35 @@ import { test as setup } from "@playwright/test";
 const { loadRootEnv } = require(
   path.resolve(__dirname, "../../../scripts/load-root-env.js"),
 );
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { getLocalSupabaseEnv } = require(
+  path.resolve(__dirname, "../../../scripts/local-supabase-env.js"),
+);
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { resolveE2EAppUrls } = require(
+  path.resolve(__dirname, "../../../scripts/app-url-resolver.js"),
+);
 loadRootEnv();
 
+const prefersExistingStack =
+  process.env.PLAYWRIGHT_USE_EXISTING_STACK === "true" &&
+  Boolean(process.env.E2E_PUBLIC_ORIGIN);
+const localSupabaseEnv = getLocalSupabaseEnv();
 const SUPABASE_URL =
-  process.env.NEXT_PUBLIC_SUPABASE_URL || "http://127.0.0.1:54321";
-const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
+  (prefersExistingStack
+    ? process.env.NEXT_PUBLIC_SUPABASE_URL
+    : localSupabaseEnv.API_URL || process.env.NEXT_PUBLIC_SUPABASE_URL) ||
+  "http://127.0.0.1:54321";
+const SERVICE_ROLE_KEY =
+  (prefersExistingStack
+    ? process.env.SUPABASE_SERVICE_ROLE_KEY
+    : localSupabaseEnv.SERVICE_ROLE_KEY ||
+      process.env.SUPABASE_SERVICE_ROLE_KEY) || "";
 const AUTH_FILE = "e2e/.auth/session.json";
+const { store: STORE_URL } = resolveE2EAppUrls();
+const storeHost = new URL(STORE_URL);
+const isLocalhost =
+  storeHost.hostname === "localhost" || storeHost.hostname === "127.0.0.1";
 
 /**
  * Global setup: authenticates a test user and saves the session as storageState.
@@ -27,7 +50,9 @@ setup("authenticate", async ({ context, page }) => {
   const cookieBase = `sb-${projectRef}-auth-token`;
 
   const hasSupabase =
-    SERVICE_ROLE_KEY && SERVICE_ROLE_KEY !== "YOUR_SUPABASE_SERVICE_ROLE_KEY";
+    SERVICE_ROLE_KEY &&
+    SERVICE_ROLE_KEY !== "YOUR_SUPABASE_SERVICE_ROLE_KEY" &&
+    SERVICE_ROLE_KEY.split(".").length === 3;
 
   if (hasSupabase) {
     // Real Supabase available: create test user via admin API
@@ -57,10 +82,10 @@ setup("authenticate", async ({ context, page }) => {
       {
         name: `${cookieBase}.0`,
         value: `base64-${btoa(JSON.stringify({ access_token: session.session!.access_token, refresh_token: session.session!.refresh_token, token_type: "bearer", expires_in: 3600, expires_at: Math.floor(Date.now() / 1000) + 3600, user: user.user }))}`,
-        domain: "localhost",
+        domain: storeHost.hostname,
         path: "/",
         httpOnly: false,
-        secure: false,
+        secure: !isLocalhost,
         sameSite: "Lax",
       },
     ]);
@@ -90,10 +115,10 @@ setup("authenticate", async ({ context, page }) => {
       {
         name: `${cookieBase}.0`,
         value: `base64-${btoa(JSON.stringify(mockSession))}`,
-        domain: "localhost",
+        domain: storeHost.hostname,
         path: "/",
         httpOnly: false,
-        secure: false,
+        secure: !isLocalhost,
         sameSite: "Lax",
       },
     ]);
@@ -101,6 +126,6 @@ setup("authenticate", async ({ context, page }) => {
 
   // Save authenticated state for all test projects
   fs.mkdirSync(path.dirname(AUTH_FILE), { recursive: true });
-  await page.goto("http://localhost:5001/en");
+  await page.goto(`${STORE_URL}/en`);
   await context.storageState({ path: AUTH_FILE });
 });

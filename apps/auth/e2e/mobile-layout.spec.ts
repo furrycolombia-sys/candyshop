@@ -12,11 +12,13 @@ import {
 const { loadRootEnv } = require(
   path.resolve(__dirname, "../../../scripts/load-root-env.js"),
 );
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { resolveE2EAppUrls } = require(
+  path.resolve(__dirname, "../../../scripts/app-url-resolver.js"),
+);
 loadRootEnv();
 
-const STORE_URL = process.env.NEXT_PUBLIC_STORE_URL || "http://localhost:5001";
-const PAYMENTS_URL =
-  process.env.NEXT_PUBLIC_PAYMENTS_URL || "http://localhost:5005";
+const { store: STORE_URL, payments: PAYMENTS_URL } = resolveE2EAppUrls();
 
 test.use({
   ...devices["iPhone 12"],

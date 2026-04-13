@@ -151,16 +151,16 @@ max_indexes = 5
 enabled = true
 # The base URL of your website. Used as an allow-list for redirects and for constructing URLs used
 # in emails.
-site_url = "https://auth.ffxivbe.org"
+site_url = "env(SUPABASE_AUTH_SITE_URL)"
 # A list of *exact* URLs that auth providers are permitted to redirect to post authentication.
 additional_redirect_urls = [
-  "https://auth.ffxivbe.org/auth/callback",
-  "https://store.ffxivbe.org/auth/callback",
-  "https://admin.ffxivbe.org/auth/callback",
-  "https://payments.ffxivbe.org/auth/callback",
-  "https://playground.ffxivbe.org/auth/callback",
-  "https://landing.ffxivbe.org/auth/callback",
-  "https://studio.ffxivbe.org/auth/callback",
+  "env(SUPABASE_AUTH_REDIRECT_URL_AUTH)",
+  "env(SUPABASE_AUTH_REDIRECT_URL_STORE)",
+  "env(SUPABASE_AUTH_REDIRECT_URL_ADMIN)",
+  "env(SUPABASE_AUTH_REDIRECT_URL_PAYMENTS)",
+  "env(SUPABASE_AUTH_REDIRECT_URL_PLAYGROUND)",
+  "env(SUPABASE_AUTH_REDIRECT_URL_LANDING)",
+  "env(SUPABASE_AUTH_REDIRECT_URL_STUDIO)",
   "http://localhost:5000/auth/callback",
   "http://localhost:5001/auth/callback",
   "http://localhost:5002/auth/callback",
@@ -321,7 +321,7 @@ max_frequency = "5s"
 enabled = true
 client_id = "env(SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID)"
 secret = "env(SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET)"
-redirect_uri = "https://supabase.ffxivbe.org/auth/v1/callback"
+redirect_uri = "env(SUPABASE_AUTH_EXTERNAL_REDIRECT_URI)"
 url = ""
 skip_nonce_check = true
 email_optional = false
@@ -330,7 +330,7 @@ email_optional = false
 enabled = true
 client_id = "env(SUPABASE_AUTH_EXTERNAL_DISCORD_CLIENT_ID)"
 secret = "env(SUPABASE_AUTH_EXTERNAL_DISCORD_SECRET)"
-redirect_uri = "https://supabase.ffxivbe.org/auth/v1/callback"
+redirect_uri = "env(SUPABASE_AUTH_EXTERNAL_REDIRECT_URI)"
 url = ""
 skip_nonce_check = false
 email_optional = false

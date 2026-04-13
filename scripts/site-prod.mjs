@@ -1,22 +1,22 @@
-import { spawn, spawnSync } from "node:child_process";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createRequire } from "node:module";
+import { spawnSync } from "node:child_process";
 
 const require = createRequire(import.meta.url);
 const { loadRootEnv } = require("./load-root-env.js");
+const {
+  resolveAuthHostUrl,
+  resolvePublicAppUrls,
+} = require("./app-url-resolver.js");
 
 loadRootEnv();
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const rootDir = resolve(__dirname, "..");
+const composeFile = resolve(rootDir, "docker", "compose.yml");
 const isWindows = process.platform === "win32";
 const dockerBin = isWindows ? "docker.exe" : "docker";
-const defaultCloudflaredBin = process.env.CLOUDFLARED_BIN?.trim()
-  ? process.env.CLOUDFLARED_BIN.trim()
-  : isWindows
-    ? "cloudflared.exe"
-    : "cloudflared";
 
 const args = new Set(process.argv.slice(2));
 const wantsCloudflare = args.has("--cloudflare");
@@ -24,8 +24,6 @@ const wantsStop = args.has("--stop");
 const skipBuild = args.has("--no-build");
 const wantsHelp = args.has("--help") || args.has("-h");
 
-const containerName =
-  process.env.SITE_PROD_CONTAINER_NAME?.trim() || "candyshop-prod";
 const imageName =
   process.env.SITE_PROD_IMAGE_NAME?.trim() || "candyshop-local-prod";
 const port = process.env.SITE_PROD_PORT?.trim() || "8088";
@@ -74,15 +72,6 @@ function runCapture(command, commandArgs) {
   });
 }
 
-function trimTrailingSlash(value) {
-  return value.replace(/\/+$/, "");
-}
-
-function joinUrl(baseUrl, path = "") {
-  if (!path) return baseUrl;
-  return `${trimTrailingSlash(baseUrl)}${path}`;
-}
-
 function isLocalhostUrl(value) {
   if (!value) return false;
 
@@ -100,67 +89,16 @@ function isLocalhostUrl(value) {
   }
 }
 
-function resolvePublicUrls() {
-  const publicOrigin = process.env.SITE_PUBLIC_ORIGIN?.trim()
-    ? trimTrailingSlash(process.env.SITE_PUBLIC_ORIGIN.trim())
-    : "";
-
-  return {
-    NEXT_PUBLIC_LANDING_URL:
-      process.env.NEXT_PUBLIC_LANDING_URL?.trim() || publicOrigin,
-    NEXT_PUBLIC_STORE_URL:
-      process.env.NEXT_PUBLIC_STORE_URL?.trim() ||
-      (publicOrigin ? joinUrl(publicOrigin, "/store") : ""),
-    NEXT_PUBLIC_ADMIN_URL:
-      process.env.NEXT_PUBLIC_ADMIN_URL?.trim() ||
-      (publicOrigin ? joinUrl(publicOrigin, "/admin") : ""),
-    NEXT_PUBLIC_PLAYGROUND_URL:
-      process.env.NEXT_PUBLIC_PLAYGROUND_URL?.trim() ||
-      (publicOrigin ? joinUrl(publicOrigin, "/playground") : ""),
-    NEXT_PUBLIC_PAYMENTS_URL:
-      process.env.NEXT_PUBLIC_PAYMENTS_URL?.trim() ||
-      (publicOrigin ? joinUrl(publicOrigin, "/payments") : ""),
-    NEXT_PUBLIC_STUDIO_URL:
-      process.env.NEXT_PUBLIC_STUDIO_URL?.trim() ||
-      (publicOrigin ? joinUrl(publicOrigin, "/studio") : ""),
-    NEXT_PUBLIC_AUTH_URL:
-      process.env.NEXT_PUBLIC_AUTH_URL?.trim() ||
-      (publicOrigin ? joinUrl(publicOrigin, "/auth") : ""),
-    NEXT_PUBLIC_AUTH_HOST_URL:
-      process.env.NEXT_PUBLIC_AUTH_HOST_URL?.trim() ||
-      (publicOrigin ? joinUrl(publicOrigin, "/auth") : ""),
-  };
+function hasCloudflareConfig() {
+  return Boolean(
+    process.env.CLOUDFLARED_ARGS?.trim() ||
+    process.env.CLOUDFLARE_TUNNEL_TOKEN?.trim() ||
+    process.env.CLOUDFLARE_TUNNEL_NAME?.trim(),
+  );
 }
 
-function getCloudflareCommand() {
-  const rawArgs = process.env.CLOUDFLARED_ARGS?.trim();
-  if (rawArgs) {
-    return {
-      command: defaultCloudflaredBin,
-      args: rawArgs.split(/\s+/),
-      description: `${defaultCloudflaredBin} ${rawArgs}`,
-    };
-  }
-
-  const token = process.env.CLOUDFLARE_TUNNEL_TOKEN?.trim();
-  if (token) {
-    return {
-      command: defaultCloudflaredBin,
-      args: ["tunnel", "run", "--token", token],
-      description: `${defaultCloudflaredBin} tunnel run --token *****`,
-    };
-  }
-
-  const tunnelName = process.env.CLOUDFLARE_TUNNEL_NAME?.trim();
-  if (tunnelName) {
-    return {
-      command: defaultCloudflaredBin,
-      args: ["tunnel", "run", tunnelName],
-      description: `${defaultCloudflaredBin} tunnel run ${tunnelName}`,
-    };
-  }
-
-  return null;
+function buildComposeArgs(commandArgs) {
+  return ["compose", "-f", composeFile, ...commandArgs];
 }
 
 async function waitForHealth(url) {
@@ -173,7 +111,7 @@ async function waitForHealth(url) {
       const response = await fetch(url);
       if (response.ok) return;
     } catch {
-      // Container still starting.
+      // Stack is still starting.
     }
 
     await new Promise((resolvePromise) => {
@@ -181,7 +119,7 @@ async function waitForHealth(url) {
     });
   }
 
-  fail(`Container did not become healthy at ${url} within 90s.`);
+  fail(`Stack did not become healthy at ${url} within 90s.`);
 }
 
 if (wantsHelp) {
@@ -191,9 +129,9 @@ if (wantsHelp) {
   pnpm site:prod:stop
 
 Options:
-  --cloudflare  Build/start the local production container, then run cloudflared
+  --cloudflare  Start the Docker production stack plus the Cloudflare sidecar
   --no-build    Reuse the existing Docker image instead of rebuilding it
-  --stop        Stop and remove the local production container
+  --stop        Stop and remove the Docker production stack
 
 Environment:
   SITE_PROD_PORT=8088
@@ -202,13 +140,12 @@ Environment:
   SITE_PUBLIC_ORIGIN=https://shop.example.com
 
 Cloudflare:
-  CLOUDFLARED_BIN=cloudflared
   CLOUDFLARE_TUNNEL_TOKEN=...
   CLOUDFLARE_TUNNEL_NAME=...
   CLOUDFLARED_ARGS="tunnel run my-tunnel"
 
 Notes:
-  - This command runs the Dockerized production build, not \`pnpm dev\`.
+  - This command runs the Dockerized production stack via Docker Compose.
   - If you expose the site publicly, set SITE_PUBLIC_ORIGIN or explicit NEXT_PUBLIC_* app URLs.
   - If AUTH_PROVIDER_MODE=supabase, NEXT_PUBLIC_SUPABASE_URL must also be public.`);
   process.exit(0);
@@ -219,25 +156,17 @@ ensureRequiredCommand(
   "Install Docker Desktop and make sure it is running.",
 );
 
-if (wantsStop) {
-  log(`Stopping container \`${containerName}\` if it exists...`);
-  spawnSync(dockerBin, ["rm", "-f", containerName], {
-    cwd: rootDir,
-    stdio: "ignore",
-    env: process.env,
-  });
-  log("Done.");
-  process.exit(0);
-}
-
-if (wantsCloudflare) {
-  ensureRequiredCommand(
-    defaultCloudflaredBin,
-    "Install Cloudflare Tunnel first or set CLOUDFLARED_BIN.",
-  );
-}
-
-const publicUrls = resolvePublicUrls();
+const resolvedAppUrls = resolvePublicAppUrls();
+const publicUrls = {
+  NEXT_PUBLIC_LANDING_URL: resolvedAppUrls.landing,
+  NEXT_PUBLIC_STORE_URL: resolvedAppUrls.store,
+  NEXT_PUBLIC_ADMIN_URL: resolvedAppUrls.admin,
+  NEXT_PUBLIC_PLAYGROUND_URL: resolvedAppUrls.playground,
+  NEXT_PUBLIC_PAYMENTS_URL: resolvedAppUrls.payments,
+  NEXT_PUBLIC_STUDIO_URL: resolvedAppUrls.studio,
+  NEXT_PUBLIC_AUTH_URL: resolvedAppUrls.auth,
+  NEXT_PUBLIC_AUTH_HOST_URL: resolveAuthHostUrl("public"),
+};
 const publicUrlEntries = Object.entries(publicUrls);
 
 if (wantsCloudflare) {
@@ -269,6 +198,19 @@ if (wantsCloudflare) {
       "AUTH_PROVIDER_MODE=supabase requires NEXT_PUBLIC_SUPABASE_URL to be publicly reachable when using Cloudflare.",
     );
   }
+
+  if (!hasCloudflareConfig()) {
+    fail(
+      "Cloudflare startup requires CLOUDFLARED_ARGS, CLOUDFLARE_TUNNEL_TOKEN, or CLOUDFLARE_TUNNEL_NAME.",
+    );
+  }
+}
+
+if (wantsStop) {
+  log("Stopping Docker production stack...");
+  run(dockerBin, buildComposeArgs(["down", "--remove-orphans"]));
+  log("Done.");
+  process.exit(0);
 }
 
 const buildArgEnvKeys = [
@@ -285,11 +227,8 @@ const buildArgEnvKeys = [
   "NEXT_PUBLIC_SUPABASE_URL",
   "NEXT_PUBLIC_SUPABASE_ANON_KEY",
   "SUPABASE_SERVICE_ROLE_KEY",
+  "SITE_PUBLIC_ORIGIN",
   "BASE_PATH_PREFIX",
-];
-
-const runtimeEnvKeys = [
-  ...buildArgEnvKeys,
   "NEXT_PUBLIC_LANDING_URL",
   "NEXT_PUBLIC_STORE_URL",
   "NEXT_PUBLIC_PAYMENTS_URL",
@@ -300,70 +239,65 @@ const runtimeEnvKeys = [
   "NEXT_PUBLIC_AUTH_HOST_URL",
 ];
 
-const resolvedEnv = {
-  ...publicUrls,
-};
+const resolvedEnv = { ...publicUrls };
+const publicOrigin = process.env.SITE_PUBLIC_ORIGIN?.trim();
+const publicUrlKeys = new Set([
+  "NEXT_PUBLIC_LANDING_URL",
+  "NEXT_PUBLIC_STORE_URL",
+  "NEXT_PUBLIC_PAYMENTS_URL",
+  "NEXT_PUBLIC_ADMIN_URL",
+  "NEXT_PUBLIC_PLAYGROUND_URL",
+  "NEXT_PUBLIC_STUDIO_URL",
+  "NEXT_PUBLIC_AUTH_URL",
+  "NEXT_PUBLIC_AUTH_HOST_URL",
+  "NEXT_PUBLIC_SUPABASE_URL",
+  "NEXT_PUBLIC_API_URL",
+  "NEXT_PUBLIC_KEYCLOAK_URL",
+]);
 
 for (const key of buildArgEnvKeys) {
   if (process.env[key] !== undefined) {
+    if (
+      publicOrigin &&
+      publicUrlKeys.has(key) &&
+      isLocalhostUrl(process.env[key])
+    ) {
+      continue;
+    }
+
     resolvedEnv[key] = process.env[key];
   }
 }
 
+Object.assign(process.env, resolvedEnv);
+
+log("Replacing existing Docker production stack if needed...");
+run(dockerBin, buildComposeArgs(["down", "--remove-orphans"]));
+
+const composeUpArgs = [];
+if (wantsCloudflare) {
+  composeUpArgs.push("--profile", "cloudflare");
+}
+
+composeUpArgs.push("up", "-d");
+
 if (!skipBuild) {
+  composeUpArgs.push("--build");
   log(`Building Docker image \`${imageName}\`...`);
-  const buildArgs = ["build", "-t", imageName];
-
-  for (const key of [...buildArgEnvKeys, ...Object.keys(publicUrls)]) {
-    const value = resolvedEnv[key];
-    if (value !== undefined && value !== "") {
-      buildArgs.push("--build-arg", `${key}=${value}`);
-    }
-  }
-
-  buildArgs.push(".");
-  run(dockerBin, buildArgs);
 } else {
   log(`Reusing existing Docker image \`${imageName}\`.`);
 }
 
-log(`Replacing container \`${containerName}\` if it already exists...`);
-spawnSync(dockerBin, ["rm", "-f", containerName], {
-  cwd: rootDir,
-  stdio: "ignore",
-  env: process.env,
-});
-
-log(`Starting production container on ${localBaseUrl}...`);
-const runArgs = [
-  "run",
-  "-d",
-  "--restart",
-  "unless-stopped",
-  "--name",
-  containerName,
-  "-p",
-  `${port}:80`,
-];
-
-for (const key of runtimeEnvKeys) {
-  const value = resolvedEnv[key];
-  if (value !== undefined && value !== "") {
-    runArgs.push("-e", `${key}=${value}`);
-  }
-}
-
-runArgs.push(imageName);
-const runResult = runCapture(dockerBin, runArgs);
-
-if (runResult.status !== 0) {
-  process.stderr.write(runResult.stderr || "");
-  process.exit(runResult.status ?? 1);
+log(`Starting Docker production stack on ${localBaseUrl}...`);
+const composeResult = runCapture(dockerBin, buildComposeArgs(composeUpArgs));
+if (composeResult.status !== 0) {
+  process.stderr.write(composeResult.stderr || "");
+  process.exit(composeResult.status ?? 1);
 }
 
 await waitForHealth(`${localBaseUrl}/health`);
 
-log(`Container is healthy.`);
+log("Docker stack is healthy.");
 log(`Landing:   ${localBaseUrl}`);
 log(`Store:     ${localBaseUrl}/store`);
 log(`Admin:     ${localBaseUrl}/admin`);
@@ -372,34 +306,8 @@ log(`Studio:    ${localBaseUrl}/studio`);
 log(`Auth:      ${localBaseUrl}/auth`);
 log(`Health:    ${localBaseUrl}/health`);
 
-if (!wantsCloudflare) {
-  log(`Stop it with: pnpm site:prod:stop`);
-  process.exit(0);
+if (wantsCloudflare) {
+  log("Cloudflare sidecar is running inside the Docker Compose stack.");
 }
 
-const cloudflareCommand = getCloudflareCommand();
-if (!cloudflareCommand) {
-  fail(
-    "Cloudflare requested but no tunnel config was found. Set CLOUDFLARED_ARGS, CLOUDFLARE_TUNNEL_TOKEN, or CLOUDFLARE_TUNNEL_NAME.",
-  );
-}
-
-log(`Starting Cloudflare tunnel: ${cloudflareCommand.description}`);
-log(`The production container will keep running if this tunnel process stops.`);
-
-const cloudflareChild = spawn(
-  cloudflareCommand.command,
-  cloudflareCommand.args,
-  {
-    cwd: rootDir,
-    stdio: "inherit",
-    env: process.env,
-  },
-);
-
-cloudflareChild.on("exit", (code) => {
-  process.exit(code ?? 0);
-});
-
-process.on("SIGINT", () => process.exit(0));
-process.on("SIGTERM", () => process.exit(0));
+log("Stop it with: pnpm site:prod:stop");

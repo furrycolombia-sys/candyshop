@@ -21,6 +21,11 @@ const ALLOWED_ORIGINS = [
   process.env.NEXT_PUBLIC_LANDING_URL,
 ].filter(Boolean);
 
+function trimTrailingSlash(value: string) {
+  // eslint-disable-next-line sonarjs/slow-regex
+  return value.replace(/\/+$/, "");
+}
+
 function getRequestOrigin(request: NextRequest): string {
   const fallback = new URL(request.url).origin;
   const forwardedHost = request.headers.get("x-forwarded-host");
@@ -57,6 +62,28 @@ function isSafeRedirect(url: string): boolean {
   }
 }
 
+function getAuthAppBaseUrl(request: NextRequest) {
+  const explicit = process.env.NEXT_PUBLIC_AUTH_URL?.trim();
+  if (explicit) {
+    return explicit;
+  }
+
+  return getRequestOrigin(request);
+}
+
+function buildRedirectUrl(destination: string, request: NextRequest): URL {
+  if (!destination.startsWith("/")) {
+    return new URL(destination);
+  }
+
+  const appBaseUrl = new URL(getAuthAppBaseUrl(request));
+  const appBasePath =
+    appBaseUrl.pathname === "/" ? "" : trimTrailingSlash(appBaseUrl.pathname);
+  const nextPath = destination === "/" ? "" : destination;
+
+  return new URL(`${appBasePath}${nextPath || "/"}`, appBaseUrl.origin);
+}
+
 /**
  * Handles the OAuth callback code exchange in a Route Handler.
  *
@@ -68,16 +95,15 @@ function isSafeRedirect(url: string): boolean {
  */
 export async function handleOAuthCallback(request: NextRequest) {
   const { searchParams } = new URL(request.url);
-  const origin = getRequestOrigin(request);
   const code = searchParams.get("code");
   const next = searchParams.get("next") ?? "/en";
   const destination = isSafeRedirect(next) ? next : "/en";
 
   if (!code) {
-    return NextResponse.redirect(new URL("/en/login", origin));
+    return NextResponse.redirect(buildRedirectUrl("/en/login", request));
   }
 
-  const redirectUrl = new URL(destination, origin);
+  const redirectUrl = buildRedirectUrl(destination, request);
   let response = NextResponse.redirect(redirectUrl);
 
   const supabase = createServerClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
@@ -105,7 +131,7 @@ export async function handleOAuthCallback(request: NextRequest) {
 
   if (error) {
     console.error("[auth/callback] Code exchange failed:", error.message);
-    return NextResponse.redirect(new URL("/en/login", origin));
+    return NextResponse.redirect(buildRedirectUrl("/en/login", request));
   }
 
   return response;

@@ -1,12 +1,17 @@
+import path from "node:path";
+
 import { expect, test } from "./fixtures/auth.fixture";
 
-const AUTH_URL = "http://localhost:5000";
-const STORE_URL = "http://localhost:5001";
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { resolveE2EAppUrls } = require(
+  path.resolve(__dirname, "../../../scripts/app-url-resolver.js"),
+);
+
+const { auth: AUTH_URL, store: STORE_URL } = resolveE2EAppUrls();
 
 test.describe("Auth session", () => {
   test("login page renders with social buttons", async ({ page }) => {
     await page.goto(`${AUTH_URL}/en/login`);
-    await page.waitForLoadState("networkidle");
 
     await expect(page.getByTestId("login-card")).toBeVisible();
     await expect(page.getByTestId("login-google")).toBeVisible();
@@ -15,7 +20,6 @@ test.describe("Auth session", () => {
 
   test("Discord button redirects to Discord OAuth", async ({ page }) => {
     await page.goto(`${AUTH_URL}/en/login`);
-    await page.waitForLoadState("networkidle");
 
     await page.getByTestId("login-discord").click();
 

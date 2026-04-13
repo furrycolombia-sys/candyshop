@@ -137,7 +137,9 @@ test.describe.serial("Permission management", () => {
   });
 
   test.afterAll(async () => {
-    await cleanupTestData(admin.userId, target.userId);
+    if (admin && target) {
+      await cleanupTestData(admin.userId, target.userId);
+    }
   });
 
   test("shows the full permission matrix in admin", async ({
