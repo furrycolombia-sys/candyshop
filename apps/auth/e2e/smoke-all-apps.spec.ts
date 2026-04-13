@@ -9,14 +9,14 @@ const { resolveE2EAppUrls } = require(
 
 const APPS = resolveE2EAppUrls() as Record<string, string>;
 
-test.describe("Smoke test â€” all apps", () => {
+test.describe("Smoke test -- all apps", () => {
   test("auth app: login page renders with social buttons", async ({ page }) => {
     await page.goto(`${APPS.auth}/en/login`);
 
     await expect(page.getByTestId("login-card")).toBeVisible();
     await expect(page.getByTestId("login-google")).toBeVisible();
     await expect(page.getByTestId("login-discord")).toBeVisible();
-    console.log("[smoke] âœ“ Auth login page with social buttons");
+    console.log("[smoke] Auth login page with social buttons");
   });
 
   test("auth app: shows account page when authenticated", async ({
@@ -27,13 +27,15 @@ test.describe("Smoke test â€” all apps", () => {
     await page.goto(`${APPS.auth}/en`);
     await page.waitForLoadState("networkidle");
 
-    await expect(page.getByTestId("account-settings-page")).toBeVisible();
+    await expect(page.getByTestId("account-settings-page")).toBeVisible({
+      timeout: 10000,
+    });
     await expect(page.getByTestId("profile-email")).not.toBeEmpty();
     await expect(page.getByTestId("profile-provider")).not.toBeEmpty();
-    console.log("[smoke] âœ“ Auth account page shows user data");
+    console.log("[smoke] Auth account page shows user data");
 
     await expect(page.getByTestId("nav-user-email")).toBeVisible();
-    console.log("[smoke] âœ“ Auth navbar shows email");
+    console.log("[smoke] Auth navbar shows email");
   });
 
   test("auth app: sign out works", async ({ page, authenticatedPage }) => {
@@ -41,13 +43,21 @@ test.describe("Smoke test â€” all apps", () => {
     await page.goto(`${APPS.auth}/en`);
     await page.waitForLoadState("networkidle");
 
-    await expect(page.getByTestId("account-settings-page")).toBeVisible();
+    // Verify we are actually on the authenticated page before signing out
+    await expect(page.getByTestId("account-settings-page")).toBeVisible({
+      timeout: 10000,
+    });
 
     await page.getByTestId("sign-out").click();
-    await page.waitForURL(/\/login/, { timeout: 10000 });
 
-    await expect(page.getByTestId("login-card")).toBeVisible();
-    console.log("[smoke] âœ“ Sign out redirects to login");
+    // After sign-out the app redirects to the login page.
+    // In Docker the path includes the basePath (e.g. /auth/en/login).
+    await page.waitForURL(/login/, { timeout: 15000 });
+
+    await expect(page.getByTestId("login-card")).toBeVisible({
+      timeout: 10000,
+    });
+    console.log("[smoke] Sign out redirects to login");
   });
 
   test("navbar shows user email across all apps", async ({
@@ -55,31 +65,44 @@ test.describe("Smoke test â€” all apps", () => {
     authenticatedPage,
   }) => {
     expect(authenticatedPage.email).toBeTruthy();
+
+    // First verify the session is actually working on the auth app
+    await page.goto(`${APPS.auth}/en`);
+    await page.waitForLoadState("networkidle");
+    await expect(page.getByTestId("nav-user-email")).toBeVisible({
+      timeout: 10000,
+    });
+
     for (const [appName, url] of Object.entries(APPS)) {
       const response = await page.goto(`${url}/en`).catch(() => null);
 
       if (!response || response.status() >= 400) {
-        console.log(
-          `[smoke] âš  ${appName} not reachable at ${url} â€” skipped`,
-        );
+        console.log(`[smoke] ${appName} not reachable at ${url} -- skipped`);
         continue;
       }
 
       await page.waitForLoadState("networkidle");
 
+      // Verify we actually landed on the app and didn't get redirected
+      // to a login page (which would mean the session didn't carry over)
+      const currentUrl = page.url();
+      if (currentUrl.includes("/login")) {
+        throw new Error(
+          `[smoke] ${appName} redirected to login -- session not persisted: ${currentUrl}`,
+        );
+      }
+
       const navEmail = page.getByTestId("nav-user-email");
       const isVisible = await navEmail
-        .isVisible({ timeout: 3000 })
+        .isVisible({ timeout: 5000 })
         .catch(() => false);
 
       if (isVisible) {
         await expect(navEmail).not.toBeEmpty();
-        console.log(
-          `[smoke] âœ“ ${appName} (${url}) â€” navbar shows user email`,
-        );
+        console.log(`[smoke] ${appName} (${url}) -- navbar shows user email`);
       } else {
         console.log(
-          `[smoke] âš  ${appName} (${url}) â€” navbar does NOT show user email`,
+          `[smoke] ${appName} (${url}) -- navbar does NOT show user email`,
         );
       }
     }
@@ -93,7 +116,7 @@ test.describe("Smoke test â€” all apps", () => {
       const response = await page.goto(`${url}/en`).catch(() => null);
 
       if (!response) {
-        console.log(`[smoke] âš  ${appName} not reachable at ${url}`);
+        console.log(`[smoke] ${appName} not reachable at ${url}`);
         continue;
       }
 
@@ -109,12 +132,9 @@ test.describe("Smoke test â€” all apps", () => {
       await expect(nav).toBeVisible();
 
       if (errors.length > 0) {
-        console.log(
-          `[smoke] âš  ${appName} has JS errors:`,
-          errors.slice(0, 3),
-        );
+        console.log(`[smoke] ${appName} has JS errors:`, errors.slice(0, 3));
       } else {
-        console.log(`[smoke] âœ“ ${appName} (${url}) â€” loads OK`);
+        console.log(`[smoke] ${appName} (${url}) -- loads OK`);
       }
     }
   });

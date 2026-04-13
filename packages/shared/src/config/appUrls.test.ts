@@ -20,6 +20,19 @@ const EXPECTED_PROD_PATHS = {
   playground: "/playground",
 } as const;
 
+/** Clear all app-URL env vars so the module falls back to defaults. */
+function clearAppUrlEnvVars() {
+  vi.stubEnv("SITE_PUBLIC_ORIGIN", "");
+  vi.stubEnv("E2E_PUBLIC_ORIGIN", "");
+  vi.stubEnv("NEXT_PUBLIC_LANDING_URL", "");
+  vi.stubEnv("NEXT_PUBLIC_STORE_URL", "");
+  vi.stubEnv("NEXT_PUBLIC_STUDIO_URL", "");
+  vi.stubEnv("NEXT_PUBLIC_PAYMENTS_URL", "");
+  vi.stubEnv("NEXT_PUBLIC_ADMIN_URL", "");
+  vi.stubEnv("NEXT_PUBLIC_AUTH_URL", "");
+  vi.stubEnv("NEXT_PUBLIC_PLAYGROUND_URL", "");
+}
+
 async function importFreshAppUrls() {
   vi.resetModules();
   return import("./appUrls");
@@ -33,6 +46,7 @@ afterEach(() => {
 describe("appUrls", () => {
   it("uses local app URLs by default in development", async () => {
     vi.stubEnv("NODE_ENV", "development");
+    clearAppUrlEnvVars();
 
     const { appUrls } = await importFreshAppUrls();
     expect(appUrls).toEqual(EXPECTED_DEV_URLS);
@@ -40,8 +54,7 @@ describe("appUrls", () => {
 
   it("uses relative same-domain paths by default in production", async () => {
     vi.stubEnv("NODE_ENV", "production");
-    vi.stubEnv("SITE_PUBLIC_ORIGIN", "");
-    vi.stubEnv("E2E_PUBLIC_ORIGIN", "");
+    clearAppUrlEnvVars();
 
     const { appUrls } = await importFreshAppUrls();
     expect(appUrls).toEqual(EXPECTED_PROD_PATHS);
@@ -49,8 +62,8 @@ describe("appUrls", () => {
 
   it("derives public absolute URLs from SITE_PUBLIC_ORIGIN for production", async () => {
     vi.stubEnv("NODE_ENV", "production");
+    clearAppUrlEnvVars();
     vi.stubEnv("SITE_PUBLIC_ORIGIN", "https://shop.example.com/");
-    vi.stubEnv("E2E_PUBLIC_ORIGIN", "");
 
     const { appUrls } = await importFreshAppUrls();
     expect(appUrls).toEqual({
@@ -66,8 +79,7 @@ describe("appUrls", () => {
 
   it("lets explicit NEXT_PUBLIC app URLs override the defaults", async () => {
     vi.stubEnv("NODE_ENV", "production");
-    vi.stubEnv("SITE_PUBLIC_ORIGIN", "");
-    vi.stubEnv("E2E_PUBLIC_ORIGIN", "");
+    clearAppUrlEnvVars();
     vi.stubEnv("NEXT_PUBLIC_STORE_URL", "https://store.example.com");
     vi.stubEnv("NEXT_PUBLIC_AUTH_URL", "/auth");
 
@@ -79,8 +91,8 @@ describe("appUrls", () => {
 
   it("prefers SITE_PUBLIC_ORIGIN over explicit app URLs in production", async () => {
     vi.stubEnv("NODE_ENV", "production");
+    clearAppUrlEnvVars();
     vi.stubEnv("SITE_PUBLIC_ORIGIN", "https://shop.example.com/");
-    vi.stubEnv("E2E_PUBLIC_ORIGIN", "");
     vi.stubEnv("NEXT_PUBLIC_STORE_URL", "http://localhost:5001");
     vi.stubEnv("NEXT_PUBLIC_AUTH_URL", "http://localhost:5000");
 

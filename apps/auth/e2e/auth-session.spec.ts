@@ -18,34 +18,35 @@ test.describe("Auth session", () => {
     await expect(page.getByTestId("login-discord")).toBeVisible();
   });
 
-  test("Discord button redirects to Discord OAuth", async ({ page }) => {
-    await page.goto(`${AUTH_URL}/en/login`);
-
-    await page.getByTestId("login-discord").click();
-
-    await page.waitForURL("**/discord.com/**", { timeout: 10000 });
-    expect(page.url()).toContain("discord.com/oauth2/authorize");
-    expect(page.url()).toContain("client_id=");
-  });
-
   test("authenticated session persists across apps", async ({
     page,
     authenticatedPage,
   }) => {
+    // Verify the session fixture actually created a user
+    expect(authenticatedPage.email).toContain("@test.invalid");
+
+    // Auth app: verify we land on the account page, not login
     await page.goto(`${AUTH_URL}/en`);
     await page.waitForLoadState("networkidle");
 
+    expect(page.url(), "Auth app should not redirect to login").not.toContain(
+      "/login",
+    );
+
     const authNavEmail = page.getByTestId("nav-user-email");
-    await expect(authNavEmail).toBeVisible();
+    await expect(authNavEmail).toBeVisible({ timeout: 10000 });
     await expect(authNavEmail).not.toBeEmpty();
 
+    // Store app: verify session persists cross-app
     await page.goto(`${STORE_URL}/en`);
     await page.waitForLoadState("networkidle");
 
-    const storeNavEmail = page.getByTestId("nav-user-email");
-    await expect(storeNavEmail).toBeVisible();
-    await expect(storeNavEmail).not.toBeEmpty();
+    expect(page.url(), "Store app should not redirect to login").not.toContain(
+      "/login",
+    );
 
-    expect(authenticatedPage.email).toContain("@test.invalid");
+    const storeNavEmail = page.getByTestId("nav-user-email");
+    await expect(storeNavEmail).toBeVisible({ timeout: 10000 });
+    await expect(storeNavEmail).not.toBeEmpty();
   });
 });

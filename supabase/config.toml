@@ -168,6 +168,13 @@ additional_redirect_urls = [
   "http://localhost:5004/auth/callback",
   "http://localhost:5005/auth/callback",
   "http://localhost:5006/auth/callback",
+  # Docker e2e container (port 8089, nginx reverse proxy with base paths)
+  "http://localhost:8089/auth/callback",
+  "http://localhost:8089/store/auth/callback",
+  "http://localhost:8089/admin/auth/callback",
+  "http://localhost:8089/payments/auth/callback",
+  "http://localhost:8089/playground/auth/callback",
+  "http://localhost:8089/studio/auth/callback",
 ]
 # How long tokens are valid for, in seconds. Defaults to 3600 (1 hour), maximum 604,800 (1 week).
 jwt_expiry = 3600

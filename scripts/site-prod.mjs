@@ -99,7 +99,7 @@ function hasCloudflareConfig() {
 }
 
 function buildComposeArgs(commandArgs) {
-  return ["compose", "-f", composeFile, ...commandArgs];
+  return ["compose", "-p", "candyshop-prod", "-f", composeFile, ...commandArgs];
 }
 
 async function waitForHealth(url) {
