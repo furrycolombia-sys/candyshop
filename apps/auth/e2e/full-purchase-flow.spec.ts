@@ -116,16 +116,14 @@ test.describe.serial("Full purchase flow: two sellers, one buyer", () => {
     await page.goto(`${APP_URLS.PAYMENTS}/en/payment-methods`);
     await page.waitForLoadState("networkidle");
 
+    // New builder UX: "Add Method" instantly creates and expands inline
     await page.getByTestId("add-payment-method-button").click();
 
+    // The editor is now expanded inline — fill the name
     const nameInput = page.getByTestId("payment-method-name-en");
     await nameInput.waitFor({ state: "visible", timeout: ELEMENT_TIMEOUT_MS });
+    await nameInput.clear();
     await nameInput.fill(methodName);
-    await page.getByTestId("create-method-save").click();
-
-    await expect(page.getByTestId("payment-method-name-en")).toBeVisible({
-      timeout: ELEMENT_TIMEOUT_MS,
-    });
     await page.waitForTimeout(MUTATION_WAIT_MS);
 
     // Add text display block with payment instructions
@@ -148,7 +146,7 @@ test.describe.serial("Full purchase flow: two sellers, one buyer", () => {
     await page.waitForTimeout(MUTATION_WAIT_MS);
     await snap(page, `${snapPrefix}-method-configured`);
 
-    await page.getByTestId("back-to-list").click();
+    // No navigation needed — builder is inline on the list page
     await expect(page.getByTestId("payment-methods-page")).toBeVisible({
       timeout: ELEMENT_TIMEOUT_MS,
     });
