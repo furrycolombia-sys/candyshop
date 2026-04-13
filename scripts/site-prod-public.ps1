@@ -1,6 +1,7 @@
 param(
   [switch]$Stop,
-  [switch]$NoBuild
+  [switch]$NoBuild,
+  [switch]$Fresh
 )
 
 $ErrorActionPreference = "Stop"
@@ -147,6 +148,9 @@ if (
 $ArgsList = @()
 if ($NoBuild) {
   $ArgsList += "--no-build"
+}
+if ($Fresh) {
+  $ArgsList += "--fresh"
 }
 
 Write-Host "[site-prod-public] Building and starting Docker production stack..."

@@ -22,6 +22,7 @@ const args = new Set(process.argv.slice(2));
 const wantsCloudflare = args.has("--cloudflare");
 const wantsStop = args.has("--stop");
 const skipBuild = args.has("--no-build");
+const wantsFresh = args.has("--fresh");
 const wantsHelp = args.has("--help") || args.has("-h");
 
 const imageName =
@@ -131,6 +132,7 @@ if (wantsHelp) {
 Options:
   --cloudflare  Start the Docker production stack plus the Cloudflare sidecar
   --no-build    Reuse the existing Docker image instead of rebuilding it
+  --fresh       Rebuild with --no-cache --pull always (fully fresh image)
   --stop        Stop and remove the Docker production stack
 
 Environment:
@@ -283,7 +285,12 @@ composeUpArgs.push("up", "-d");
 
 if (!skipBuild) {
   composeUpArgs.push("--build");
-  log(`Building Docker image \`${imageName}\`...`);
+  if (wantsFresh) {
+    composeUpArgs.push("--no-cache", "--pull", "always");
+    log(`Building Docker image \`${imageName}\` (fresh, no cache)...`);
+  } else {
+    log(`Building Docker image \`${imageName}\`...`);
+  }
 } else {
   log(`Reusing existing Docker image \`${imageName}\`.`);
 }
