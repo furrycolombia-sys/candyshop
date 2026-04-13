@@ -25,12 +25,7 @@ insert into public.events (
   'Estelar Paipa Hotel & Convention Center, Boyaca, Colombia',
   '2026-07-10T14:00:00-05:00',
   '2026-07-13T12:00:00-05:00'
-);
+) on conflict (slug) do nothing;
 
--- -----------------------------------------------------------------------------
--- Products
--- -----------------------------------------------------------------------------
--- Intentionally left empty.
--- Products should be created manually by users in the app, not by the seed.
-
+-- Products are created manually by users in the app, not by the seed.
 -- Resource permissions are seeded by the permissions migrations, not here.
