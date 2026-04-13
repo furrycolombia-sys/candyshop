@@ -5,13 +5,12 @@ import { useQueryStates } from "nuqs";
 import { useMemo } from "react";
 import { i18nField, tid } from "shared";
 
-import { CategoryFilter } from "../components/CategoryFilter";
-import { ProductGrid } from "../components/ProductGrid";
-import { SearchBar } from "../components/SearchBar";
-import { TypeFilter } from "../components/TypeFilter";
-
 import { useStoreProducts } from "@/features/products/application/useStoreProducts";
 import { catalogSearchParams } from "@/features/products/domain/searchParams";
+import { CategoryFilter } from "@/features/products/presentation/components/CategoryFilter";
+import { ProductGrid } from "@/features/products/presentation/components/ProductGrid";
+import { SearchBar } from "@/features/products/presentation/components/SearchBar";
+import { TypeFilter } from "@/features/products/presentation/components/TypeFilter";
 import type {
   ProductCategory,
   ProductType,

@@ -14,7 +14,7 @@ import type {
   TextBlock,
   UrlBlock,
   VideoBlock,
-} from "@/features/payment-methods/domain/types";
+} from "@/shared/domain/paymentMethodTypes";
 
 interface DisplayBlockRendererProps {
   block: DisplayBlock;

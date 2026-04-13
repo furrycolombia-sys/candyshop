@@ -15,7 +15,7 @@ vi.mock("shared", () => ({
   i18nPrice: () => "$25",
 }));
 
-vi.mock("@/shared/application/hooks/useAddToCart", () => ({
+vi.mock("@/features/cart/application/hooks/useAddToCart", () => ({
   useAddToCart: () => ({
     added: false,
     quantityInCart: 0,

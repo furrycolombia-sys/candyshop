@@ -58,7 +58,7 @@ export default async function LocaleLayout({
               locales={routing.locales}
               userEmail={userEmail}
             />
-            <ProtectedRoute>
+            <ProtectedRoute locale={locale}>
               <div className="flex flex-1 overflow-hidden">
                 <AdminSidebar />
                 <div className="flex flex-1 flex-col overflow-y-auto">

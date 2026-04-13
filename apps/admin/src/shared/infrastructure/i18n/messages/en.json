@@ -29,7 +29,6 @@
     "system": "System",
     "version": "v0.1.0",
     "status": "All systems nominal",
-    "paymentMethods": "Payment Methods",
     "settings": "Settings",
     "configuration": "Configuration",
     "users": "Users",
@@ -135,25 +134,6 @@
     "removeItem": "Remove item",
     "removeSection": "Remove section",
     "deleteTemplate": "Delete template"
-  },
-  "paymentMethodTypes": {
-    "title": "Payment Method Types",
-    "subtitle": "Manage payment options available to sellers",
-    "addType": "Add Type",
-    "editType": "Edit Type",
-    "name": "Name",
-    "description": "Description",
-    "icon": "Icon",
-    "requiresReceipt": "Requires Receipt",
-    "requiresTransferNumber": "Requires Transfer Number",
-    "active": "Active",
-    "noTypes": "No payment method types yet",
-    "deleteConfirm": "Deactivate this payment method type? Sellers using it will no longer be able to accept new payments with it.",
-    "save": "Save",
-    "saving": "Saving...",
-    "cancel": "Cancel",
-    "editPaymentType": "Edit payment type",
-    "deletePaymentType": "Delete payment type"
   },
   "settings": {
     "title": "Platform Settings",
@@ -261,12 +241,6 @@
       "read": "View Seller Payment Methods",
       "update": "Edit Seller Payment Methods",
       "delete": "Delete Seller Payment Methods"
-    },
-    "payment_method_types": {
-      "create": "Create Payment Types",
-      "read": "View Payment Types",
-      "update": "Edit Payment Types",
-      "delete": "Delete Payment Types"
     },
     "payment_settings": {
       "read": "View Payment Settings",

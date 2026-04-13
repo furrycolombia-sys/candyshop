@@ -1,9 +1,9 @@
 import { render, screen, fireEvent } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
+import { useAddToCart } from "@/features/cart/application/hooks/useAddToCart";
 import type { Product } from "@/features/products/domain/types";
 import { ProductCard } from "@/features/products/presentation/components/ProductCard";
-import { useAddToCart } from "@/shared/application/hooks/useAddToCart";
 
 // ---------------------------------------------------------------------------
 // Mocks
@@ -40,7 +40,7 @@ vi.mock("@/shared/infrastructure/i18n", () => ({
   ),
 }));
 
-vi.mock("@/shared/application/hooks/useAddToCart", () => ({
+vi.mock("@/features/cart/application/hooks/useAddToCart", () => ({
   useAddToCart: vi.fn(() => ({
     added: false,
     quantityInCart: 0,

@@ -43,11 +43,8 @@ function readRuntimeEnv() {
   } as RuntimeEnv;
 }
 
-let runtimeEnv = readRuntimeEnv();
-
 export function getRuntimeEnv(): RuntimeEnv {
-  runtimeEnv = readRuntimeEnv();
-  return runtimeEnv;
+  return readRuntimeEnv();
 }
 
 export function getMockApiBaseUrl(): string {
@@ -87,5 +84,3 @@ export const environment = {
     return env.nodeEnv === "test" || env.vitest === "true";
   },
 };
-
-export { runtimeEnv };

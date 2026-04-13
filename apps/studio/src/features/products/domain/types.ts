@@ -1,4 +1,4 @@
-import type { Tables } from "api/types/database";
+import type { Tables } from "api/supabase/types";
 
 /** Product row from Supabase */
 export type Product = Tables<"products">;

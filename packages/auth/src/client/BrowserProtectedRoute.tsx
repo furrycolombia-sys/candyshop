@@ -1,7 +1,6 @@
 "use client";
 
 import { createBrowserSupabaseClient } from "api/supabase";
-import { useLocale } from "next-intl";
 import type { ReactNode } from "react";
 import { useMemo } from "react";
 
@@ -9,14 +8,15 @@ import { ProtectedRoute } from "./ProtectedRoute";
 
 interface BrowserProtectedRouteProps {
   authUrl: string;
+  locale: string;
   children: ReactNode;
 }
 
 export function BrowserProtectedRoute({
   authUrl,
+  locale,
   children,
 }: BrowserProtectedRouteProps) {
-  const locale = useLocale();
   const supabaseClient = useMemo(() => createBrowserSupabaseClient(), []);
 
   return (

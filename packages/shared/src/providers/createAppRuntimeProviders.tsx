@@ -1,10 +1,9 @@
 "use client";
 
-import type { ComponentType, ReactNode } from "react";
+import type { ReactNode } from "react";
 
 import { AppRuntimeProviders } from "./AppRuntimeProviders";
-
-type WrapperComponent = ComponentType<{ children: ReactNode }>;
+import type { WrapperComponent } from "./types";
 
 interface CreateAppRuntimeProvidersOptions {
   authHostUrl: string;

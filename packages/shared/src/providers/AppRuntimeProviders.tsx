@@ -3,12 +3,11 @@
 import { AuthSessionBootstrap } from "auth";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import * as React from "react";
-import { Suspense, type ComponentType, type ReactNode } from "react";
+import { Suspense, type ReactNode } from "react";
 
 import { ApiAuthBootstrap } from "./ApiAuthBootstrap";
 import { QueryProvider } from "./QueryProvider";
-
-type WrapperComponent = ComponentType<{ children: ReactNode }>;
+import type { WrapperComponent } from "./types";
 
 interface AppRuntimeProvidersProps {
   authHostUrl: string;

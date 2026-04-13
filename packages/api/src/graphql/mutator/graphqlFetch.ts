@@ -1,3 +1,6 @@
+// eslint-disable-next-line no-restricted-imports -- relative import needed for cross-package typecheck compatibility
+import { getTokenFromCookie } from "../../auth/token";
+
 import {
   API_CANCEL_MESSAGE,
   API_TIMEOUT,
@@ -24,26 +27,14 @@ import type { GraphqlApiError } from "./types";
 
 /** Get GraphQL endpoint URL from environment */
 function getGraphqlUrl(): string {
-  return (
-    process.env.NEXT_PUBLIC_GRAPHQL_URL ||
-    process.env.NEXT_PUBLIC_API_URL + "/graphql"
-  );
-}
-
-const ACCESS_TOKEN_COOKIE_NAME = "auth_access_token";
-
-/** Read the auth token from the cookie set by the auth app */
-function getTokenFromCookie(): string | null {
-  if (typeof document === "undefined") return null;
-  const name = `${ACCESS_TOKEN_COOKIE_NAME}=`;
-  const decoded = decodeURIComponent(document.cookie);
-  for (const part of decoded.split(";")) {
-    const trimmed = part.trim();
-    if (trimmed.startsWith(name)) {
-      return trimmed.slice(name.length).trim() || null;
-    }
+  if (process.env.NEXT_PUBLIC_GRAPHQL_URL) {
+    return process.env.NEXT_PUBLIC_GRAPHQL_URL;
   }
-  return null;
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+  if (apiUrl) {
+    return apiUrl + "/graphql";
+  }
+  return "/graphql";
 }
 
 /** Handle GraphQL-level errors from the response body */

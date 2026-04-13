@@ -13,8 +13,8 @@ import type {
   CheckoutSellerStatus,
   SellerPaymentMethodWithType,
 } from "@/features/checkout/domain/types";
-import type { FormField } from "@/features/payment-methods/domain/types";
 import { formatCop } from "@/shared/application/utils/formatCop";
+import type { FormField } from "@/shared/domain/paymentMethodTypes";
 
 interface SellerCheckoutCardProps {
   sellerId: string;

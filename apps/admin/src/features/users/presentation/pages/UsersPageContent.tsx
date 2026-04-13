@@ -8,13 +8,13 @@ import { tid } from "shared";
 
 import { useLogExport } from "@/features/audit/application/useAuditLog";
 import { useUsers } from "@/features/users/application/hooks/useUsers";
-import { USER_SEARCH_DEBOUNCE_MS } from "@/features/users/domain/constants";
-import { usersSearchParams } from "@/features/users/domain/searchParams";
-import { UserTable } from "@/features/users/presentation/components/UserTable";
 import {
   exportUsersToCsv,
   downloadCsv,
-} from "@/features/users/utils/export-csv";
+} from "@/features/users/application/utils/export-csv";
+import { USER_SEARCH_DEBOUNCE_MS } from "@/features/users/domain/constants";
+import { usersSearchParams } from "@/features/users/domain/searchParams";
+import { UserTable } from "@/features/users/presentation/components/UserTable";
 import { useRouter } from "@/shared/infrastructure/i18n";
 
 export function UsersPageContent() {
