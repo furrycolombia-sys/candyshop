@@ -195,7 +195,6 @@ test.describe.serial("Full purchase flow: seller -> buyer -> approval", () => {
         timeout: NAVIGATION_TIMEOUT_MS,
       },
     );
-    await page.waitForLoadState("networkidle");
 
     // Wait for items and payment method to load
     await expect(page.getByTestId("checkout-items-summary")).toBeVisible({
@@ -203,13 +202,23 @@ test.describe.serial("Full purchase flow: seller -> buyer -> approval", () => {
     });
     await snap(page, "checkout-page-loaded");
 
-    // Select payment method
+    // Select payment method — wait until options are loaded (beyond placeholder)
     const methodSelect = page.getByTestId("payment-method-select").first();
     await methodSelect.waitFor({
       state: "visible",
       timeout: ELEMENT_TIMEOUT_MS,
     });
-    await page.waitForTimeout(MUTATION_WAIT_MS);
+    await expect
+      .poll(
+        async () => {
+          const count = await methodSelect.evaluate(
+            (el: HTMLSelectElement) => el.options.length,
+          );
+          return count;
+        },
+        { timeout: LONG_OPERATION_TIMEOUT_MS },
+      )
+      .toBeGreaterThan(1);
     const selectedValue = await methodSelect.inputValue();
     if (!selectedValue) {
       await methodSelect.selectOption({ index: 1 });

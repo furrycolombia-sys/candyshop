@@ -287,7 +287,13 @@ export async function injectSession(
   context: BrowserContext,
   user: TestUser,
 ): Promise<void> {
-  const projectRef = new URL(SUPABASE_URL).hostname.split(".")[0];
+  // When running against the live site, use the public Supabase URL for the
+  // project ref so the cookie name matches what the production app expects.
+  const supabaseUrlForRef =
+    process.env.E2E_PUBLIC_ORIGIN && process.env.NEXT_PUBLIC_SUPABASE_URL
+      ? process.env.NEXT_PUBLIC_SUPABASE_URL
+      : SUPABASE_URL;
+  const projectRef = new URL(supabaseUrlForRef).hostname.split(".")[0];
   const cookieBase = `sb-${projectRef}-auth-token`;
   const authHost = new URL(AUTH_URL);
   const isLocalhost =
