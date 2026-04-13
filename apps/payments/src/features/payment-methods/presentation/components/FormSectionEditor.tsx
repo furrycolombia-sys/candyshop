@@ -1,8 +1,8 @@
-/* eslint-disable i18next/no-literal-string -- aria-labels and empty state text are UI chrome, not user-facing content */
+/* eslint-disable i18next/no-literal-string -- aria-labels and language code labels are UI chrome, not user-facing content */
 /* eslint-disable react/no-multi-comp -- FieldEditor is a private helper co-located with its parent */
 "use client";
 
-import { ChevronDown, ChevronUp, X } from "lucide-react";
+import { ChevronDown, ChevronUp, ClipboardList, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { tid } from "shared";
 import { Switch } from "ui";
@@ -34,6 +34,9 @@ function createField(): FormField {
   };
 }
 
+const inputClass =
+  "flex h-8 w-full border-strong border-foreground bg-background px-2 py-1 text-sm shadow-brutal-sm focus:outline-none focus:ring-2 focus:ring-brand";
+
 interface FieldRowProps {
   field: FormField;
   index: number;
@@ -59,7 +62,7 @@ function FieldRow({
 
   return (
     <div
-      className="flex gap-2 rounded-lg border border-border bg-muted/20 p-3"
+      className="flex gap-3 border-l-4 border-brand bg-muted/10 p-3"
       {...tid(`form-field-${field.id}`)}
     >
       {/* Reorder */}
@@ -87,106 +90,106 @@ function FieldRow({
       </div>
 
       {/* Field editor */}
-      <div className="flex-1 min-w-0 flex flex-col gap-2">
-        {/* Type selector */}
-        <div className="flex items-center gap-2">
-          <label className="text-xs font-semibold text-muted-foreground w-16 shrink-0">
-            {t("fieldType")}
-          </label>
-          <select
-            value={field.type}
-            onChange={(e) =>
-              onUpdate({ ...field, type: e.target.value as FormFieldType })
-            }
-            className="flex h-8 rounded-md border border-input bg-background px-2 py-1 text-xs"
-          >
-            {FIELD_TYPES.map((type) => (
-              <option key={type} value={type}>
-                {t(`fieldTypes.${type}`)}
-              </option>
-            ))}
-          </select>
+      <div className="flex-1 min-w-0 flex flex-col gap-3">
+        {/* Type + Required row */}
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            <label className="font-display text-xs font-bold uppercase tracking-wider shrink-0">
+              {t("fieldType")}
+            </label>
+            <select
+              value={field.type}
+              onChange={(e) =>
+                onUpdate({ ...field, type: e.target.value as FormFieldType })
+              }
+              className="flex h-8 border-strong border-foreground bg-background px-2 py-1 text-xs shadow-brutal-sm focus:outline-none focus:ring-2 focus:ring-brand"
+            >
+              {FIELD_TYPES.map((type) => (
+                <option key={type} value={type}>
+                  {t(`fieldTypes.${type}`)}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="flex items-center gap-2 ml-auto">
+            <label className="font-display text-xs font-bold uppercase tracking-wider">
+              {t("fieldRequired")}
+            </label>
+            <Switch
+              checked={field.required}
+              onCheckedChange={(checked: boolean) =>
+                onUpdate({ ...field, required: checked })
+              }
+            />
+          </div>
         </div>
 
-        {/* Label EN */}
-        <div className="flex items-center gap-2">
-          <label className="text-xs font-semibold text-muted-foreground w-16 shrink-0">
-            {t("fieldLabelEn")}
-          </label>
-          <input
-            type="text"
-            value={field.label_en}
-            onChange={(e) => onUpdate({ ...field, label_en: e.target.value })}
-            className="flex h-8 flex-1 rounded-md border border-input bg-background px-2 py-1 text-sm"
-            placeholder={t("fieldLabelEn")}
-          />
+        {/* Labels — 2-column grid on wider screens */}
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          <div className="flex flex-col gap-1">
+            <label className="font-display text-xs font-bold uppercase tracking-wider">
+              {t("fieldLabelEn")}
+            </label>
+            <input
+              type="text"
+              value={field.label_en}
+              onChange={(e) => onUpdate({ ...field, label_en: e.target.value })}
+              className={inputClass}
+              placeholder={t("fieldLabelEn")}
+            />
+          </div>
+          <div className="flex flex-col gap-1">
+            <label className="font-display text-xs font-bold uppercase tracking-wider">
+              {t("fieldLabelEs")}
+            </label>
+            <input
+              type="text"
+              value={field.label_es ?? ""}
+              onChange={(e) =>
+                onUpdate({ ...field, label_es: e.target.value || undefined })
+              }
+              className={inputClass}
+              placeholder={t("fieldLabelEs")}
+            />
+          </div>
         </div>
 
-        {/* Label ES */}
-        <div className="flex items-center gap-2">
-          <label className="text-xs font-semibold text-muted-foreground w-16 shrink-0">
-            {t("fieldLabelEs")}
-          </label>
-          <input
-            type="text"
-            value={field.label_es ?? ""}
-            onChange={(e) =>
-              onUpdate({ ...field, label_es: e.target.value || undefined })
-            }
-            className="flex h-8 flex-1 rounded-md border border-input bg-background px-2 py-1 text-sm"
-            placeholder={t("fieldLabelEs")}
-          />
-        </div>
-
-        {/* Placeholder EN */}
-        <div className="flex items-center gap-2">
-          <label className="text-xs font-semibold text-muted-foreground w-16 shrink-0">
-            {t("fieldPlaceholderEn")}
-          </label>
-          <input
-            type="text"
-            value={field.placeholder_en ?? ""}
-            onChange={(e) =>
-              onUpdate({
-                ...field,
-                placeholder_en: e.target.value || undefined,
-              })
-            }
-            className="flex h-8 flex-1 rounded-md border border-input bg-background px-2 py-1 text-sm"
-            placeholder={t("fieldPlaceholderEn")}
-          />
-        </div>
-
-        {/* Placeholder ES */}
-        <div className="flex items-center gap-2">
-          <label className="text-xs font-semibold text-muted-foreground w-16 shrink-0">
-            {t("fieldPlaceholderEs")}
-          </label>
-          <input
-            type="text"
-            value={field.placeholder_es ?? ""}
-            onChange={(e) =>
-              onUpdate({
-                ...field,
-                placeholder_es: e.target.value || undefined,
-              })
-            }
-            className="flex h-8 flex-1 rounded-md border border-input bg-background px-2 py-1 text-sm"
-            placeholder={t("fieldPlaceholderEs")}
-          />
-        </div>
-
-        {/* Required toggle */}
-        <div className="flex items-center gap-2">
-          <label className="text-xs font-semibold text-muted-foreground w-16 shrink-0">
-            {t("fieldRequired")}
-          </label>
-          <Switch
-            checked={field.required}
-            onCheckedChange={(checked: boolean) =>
-              onUpdate({ ...field, required: checked })
-            }
-          />
+        {/* Placeholders — 2-column grid on wider screens */}
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          <div className="flex flex-col gap-1">
+            <label className="font-display text-xs font-bold uppercase tracking-wider text-muted-foreground">
+              {t("fieldPlaceholderEn")}
+            </label>
+            <input
+              type="text"
+              value={field.placeholder_en ?? ""}
+              onChange={(e) =>
+                onUpdate({
+                  ...field,
+                  placeholder_en: e.target.value || undefined,
+                })
+              }
+              className={inputClass}
+              placeholder={t("fieldPlaceholderEn")}
+            />
+          </div>
+          <div className="flex flex-col gap-1">
+            <label className="font-display text-xs font-bold uppercase tracking-wider text-muted-foreground">
+              {t("fieldPlaceholderEs")}
+            </label>
+            <input
+              type="text"
+              value={field.placeholder_es ?? ""}
+              onChange={(e) =>
+                onUpdate({
+                  ...field,
+                  placeholder_es: e.target.value || undefined,
+                })
+              }
+              className={inputClass}
+              placeholder={t("fieldPlaceholderEs")}
+            />
+          </div>
         </div>
       </div>
 
@@ -239,13 +242,13 @@ export function FormSectionEditor({
   return (
     <div className="flex flex-col gap-4" {...tid("form-section-editor")}>
       <div className="flex items-center justify-between">
-        <h3 className="font-display text-sm font-bold uppercase tracking-wide">
+        <h3 className="font-display text-xs font-bold uppercase tracking-wider">
           {t("formSection")}
         </h3>
         <button
           type="button"
           onClick={addField}
-          className="rounded-lg border border-border bg-background px-3 py-1.5 text-xs font-semibold hover:bg-muted"
+          className="button-brutal inline-flex items-center gap-1.5 border-strong border-foreground bg-background px-3 py-1.5 text-xs font-bold uppercase tracking-wider shadow-brutal-sm hover:bg-muted"
           {...tid("add-form-field")}
         >
           + {t("addField")}
@@ -253,9 +256,12 @@ export function FormSectionEditor({
       </div>
 
       {fields.length === 0 && (
-        <p className="text-sm text-muted-foreground italic">
-          No fields yet. Add one above.
-        </p>
+        <div className="flex flex-col items-center justify-center gap-2 border-2 border-dashed border-muted-foreground/30 py-8 px-4">
+          <ClipboardList className="size-6 text-muted-foreground/50" />
+          <p className="text-sm text-muted-foreground text-center">
+            {t("emptyFormHint")}
+          </p>
+        </div>
       )}
 
       {fields.map((field, index) => (

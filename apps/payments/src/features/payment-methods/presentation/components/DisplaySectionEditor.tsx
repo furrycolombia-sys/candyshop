@@ -1,8 +1,16 @@
-/* eslint-disable i18next/no-literal-string -- aria-labels and empty state text are UI chrome, not user-facing content */
+/* eslint-disable i18next/no-literal-string -- aria-labels and language code labels are UI chrome, not user-facing content */
 /* eslint-disable react/no-multi-comp -- private helper components co-located with their parent */
 "use client";
 
-import { ChevronDown, ChevronUp, X } from "lucide-react";
+import {
+  ChevronDown,
+  ChevronUp,
+  FileText,
+  Image,
+  Link,
+  Video,
+  X,
+} from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { tid } from "shared";
@@ -18,18 +26,11 @@ import type {
   VideoBlock,
 } from "@/features/payment-methods/domain/types";
 import { toYouTubeEmbedUrl } from "@/features/payment-methods/domain/youtubeEmbed";
+
 interface DisplaySectionEditorProps {
   blocks: DisplayBlock[];
   onChange: (blocks: DisplayBlock[]) => void;
 }
-
-const BLOCK_TYPES: DisplayBlockType[] = [
-  "text",
-  "image",
-  "video",
-  "link",
-  "url",
-];
 
 function createBlock(type: DisplayBlockType): DisplayBlock {
   const id = crypto.randomUUID();
@@ -51,6 +52,14 @@ function createBlock(type: DisplayBlockType): DisplayBlock {
     }
   }
 }
+
+const BLOCK_TYPE_ICONS: Record<DisplayBlockType, typeof FileText> = {
+  text: FileText,
+  image: Image,
+  video: Video,
+  link: Link,
+  url: Link,
+};
 
 export function DisplaySectionEditor({
   blocks,
@@ -87,22 +96,45 @@ export function DisplaySectionEditor({
   return (
     <div className="flex flex-col gap-4" {...tid("display-section-editor")}>
       <div className="flex items-center justify-between">
-        <h3 className="font-display text-sm font-bold uppercase tracking-wide">
+        <h3 className="font-display text-xs font-bold uppercase tracking-wider">
           {t("displaySection")}
         </h3>
-        <AddBlockDropdown onAdd={addBlock} />
+      </div>
+
+      {/* Block type buttons row */}
+      <div className="flex flex-wrap gap-2" {...tid("add-display-block")}>
+        {(["text", "image", "video", "link", "url"] as DisplayBlockType[]).map(
+          (type) => {
+            const Icon = BLOCK_TYPE_ICONS[type];
+            return (
+              <button
+                key={type}
+                type="button"
+                onClick={() => addBlock(type)}
+                className="button-brutal inline-flex items-center gap-1.5 border-strong border-foreground bg-background px-3 py-1.5 text-xs font-bold uppercase tracking-wider shadow-brutal-sm hover:bg-muted"
+                {...tid(`add-block-type-${type}`)}
+              >
+                <Icon className="size-3.5" />
+                {t(`blockTypes.${type}`)}
+              </button>
+            );
+          },
+        )}
       </div>
 
       {blocks.length === 0 && (
-        <p className="text-sm text-muted-foreground italic">
-          No blocks yet. Add one above.
-        </p>
+        <div className="flex flex-col items-center justify-center gap-2 border-2 border-dashed border-muted-foreground/30 py-8 px-4">
+          <FileText className="size-6 text-muted-foreground/50" />
+          <p className="text-sm text-muted-foreground text-center">
+            {t("emptyDisplayHint")}
+          </p>
+        </div>
       )}
 
       {blocks.map((block, index) => (
         <div
           key={block.id}
-          className="flex gap-2 rounded-lg border border-border bg-muted/20 p-3"
+          className="flex gap-3 border-l-4 border-brand bg-muted/10 p-3"
           {...tid(`display-block-${block.id}`)}
         >
           {/* Reorder */}
@@ -131,7 +163,7 @@ export function DisplaySectionEditor({
 
           {/* Block editor */}
           <div className="flex-1 min-w-0">
-            <p className="mb-2 text-xs font-bold uppercase text-muted-foreground">
+            <p className="mb-2 font-display text-xs font-bold uppercase tracking-wider text-brand">
               {t(`blockTypes.${block.type}`)}
             </p>
             <BlockEditor block={block} onChange={updateBlock} />
@@ -153,47 +185,10 @@ export function DisplaySectionEditor({
   );
 }
 
-// ─── Add Block Dropdown ───────────────────────────────────────────────────────
+// ─── Neobrutalist input class ─────────────────────────────────────────────────
 
-function AddBlockDropdown({
-  onAdd,
-}: {
-  onAdd: (type: DisplayBlockType) => void;
-}) {
-  const t = useTranslations("paymentMethods");
-  const [open, setOpen] = useState(false);
-
-  return (
-    <div className="relative">
-      <button
-        type="button"
-        onClick={() => setOpen((v) => !v)}
-        className="rounded-lg border border-border bg-background px-3 py-1.5 text-xs font-semibold hover:bg-muted"
-        {...tid("add-display-block")}
-      >
-        + {t("addBlock")}
-      </button>
-      {open && (
-        <div className="absolute right-0 top-full z-10 mt-1 w-40 rounded-lg border border-border bg-background shadow-md">
-          {BLOCK_TYPES.map((type) => (
-            <button
-              key={type}
-              type="button"
-              className="w-full px-3 py-2 text-left text-sm hover:bg-muted"
-              onClick={() => {
-                onAdd(type);
-                setOpen(false);
-              }}
-              {...tid(`add-block-type-${type}`)}
-            >
-              {t(`blockTypes.${type}`)}
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
+const inputClass =
+  "flex h-9 w-full border-strong border-foreground bg-background px-3 py-1 text-sm shadow-brutal-sm focus:outline-none focus:ring-2 focus:ring-brand";
 
 // ─── Block Editor ─────────────────────────────────────────────────────────────
 
@@ -237,7 +232,7 @@ function BlockEditor({
             placeholder={t("imageUrl")}
             value={b.url}
             onChange={(e) => onChange({ ...b, url: e.target.value })}
-            className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
+            className={inputClass}
           />
           <input
             type="text"
@@ -246,7 +241,7 @@ function BlockEditor({
             onChange={(e) =>
               onChange({ ...b, alt_en: e.target.value || undefined })
             }
-            className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
+            className={inputClass}
           />
           <input
             type="text"
@@ -255,7 +250,7 @@ function BlockEditor({
             onChange={(e) =>
               onChange({ ...b, alt_es: e.target.value || undefined })
             }
-            className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
+            className={inputClass}
           />
         </div>
       );
@@ -273,14 +268,14 @@ function BlockEditor({
             placeholder={t("linkUrl")}
             value={b.url}
             onChange={(e) => onChange({ ...b, url: e.target.value })}
-            className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
+            className={inputClass}
           />
           <input
             type="text"
             placeholder={t("linkLabelEn")}
             value={b.label_en}
             onChange={(e) => onChange({ ...b, label_en: e.target.value })}
-            className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
+            className={inputClass}
           />
           <input
             type="text"
@@ -289,7 +284,7 @@ function BlockEditor({
             onChange={(e) =>
               onChange({ ...b, label_es: e.target.value || undefined })
             }
-            className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
+            className={inputClass}
           />
         </div>
       );
@@ -303,7 +298,7 @@ function BlockEditor({
             placeholder={t("linkUrl")}
             value={b.url}
             onChange={(e) => onChange({ ...b, url: e.target.value })}
-            className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
+            className={inputClass}
           />
           <input
             type="text"
@@ -312,7 +307,7 @@ function BlockEditor({
             onChange={(e) =>
               onChange({ ...b, label_en: e.target.value || undefined })
             }
-            className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
+            className={inputClass}
           />
           <input
             type="text"
@@ -321,7 +316,7 @@ function BlockEditor({
             onChange={(e) =>
               onChange({ ...b, label_es: e.target.value || undefined })
             }
-            className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
+            className={inputClass}
           />
         </div>
       );
@@ -365,7 +360,7 @@ function VideoBlockEditor({
         placeholder={t("videoUrl")}
         value={rawUrl}
         onChange={(e) => handleChange(e.target.value)}
-        className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
+        className={inputClass}
       />
       {urlError && <p className="text-xs text-destructive">{urlError}</p>}
     </div>

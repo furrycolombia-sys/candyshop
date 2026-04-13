@@ -89,71 +89,65 @@ export function PaymentMethodEditor({ method }: PaymentMethodEditorProps) {
   }, []);
 
   return (
-    <div className="flex flex-col gap-6 rounded-xl border-strong border-border bg-background p-6 shadow-brutal-md">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <h2 className="font-display text-2xl font-bold uppercase tracking-tight">
-          {t("editMethod")}
-        </h2>
+    <div className="flex flex-col gap-6 pt-4">
+      {/* Save status indicator */}
+      <div className="flex items-center gap-2">
         {saveStatus === "saving" && (
-          <span className="text-xs text-muted-foreground">{t("saving")}</span>
+          <span className="size-2 animate-pulse rounded-full bg-warning" />
         )}
         {saveStatus === "saved" && (
-          <span className="text-xs text-success">{t("saved")}</span>
+          <span className="size-2 rounded-full bg-success" />
         )}
       </div>
 
-      {/* Name EN */}
-      <div className="flex flex-col gap-2">
-        <label
-          htmlFor="payment-method-name-en-input"
-          className="text-sm font-semibold"
-        >
-          Name (EN) *
-        </label>
-        <input
-          id="payment-method-name-en-input"
-          type="text"
-          value={nameEn}
-          onChange={(e) => setNameEn(e.target.value)}
-          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-          {...tid("payment-method-name-en")}
-        />
-        {nameEnError && (
-          <p className="text-sm text-destructive">{nameEnError}</p>
-        )}
-      </div>
+      {/* Name fields — 2-column grid on wider screens */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="flex flex-col gap-1.5">
+          <label
+            htmlFor="payment-method-name-en-input"
+            className="font-display text-xs font-bold uppercase tracking-wider"
+          >
+            Name (EN) *
+          </label>
+          <input
+            id="payment-method-name-en-input"
+            type="text"
+            value={nameEn}
+            onChange={(e) => setNameEn(e.target.value)}
+            className="flex h-10 w-full border-strong border-foreground bg-background px-3 py-2 text-sm shadow-brutal-sm focus:outline-none focus:ring-2 focus:ring-brand"
+            {...tid("payment-method-name-en")}
+          />
+          {nameEnError && (
+            <p className="text-sm text-destructive">{nameEnError}</p>
+          )}
+        </div>
 
-      {/* Name ES */}
-      <div className="flex flex-col gap-2">
-        <label
-          htmlFor="payment-method-name-es-input"
-          className="text-sm font-semibold"
-        >
-          Name (ES)
-        </label>
-        <input
-          id="payment-method-name-es-input"
-          type="text"
-          value={nameEs}
-          onChange={(e) => setNameEs(e.target.value)}
-          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-          {...tid("payment-method-name-es")}
-        />
+        <div className="flex flex-col gap-1.5">
+          <label
+            htmlFor="payment-method-name-es-input"
+            className="font-display text-xs font-bold uppercase tracking-wider"
+          >
+            Name (ES)
+          </label>
+          <input
+            id="payment-method-name-es-input"
+            type="text"
+            value={nameEs}
+            onChange={(e) => setNameEs(e.target.value)}
+            className="flex h-10 w-full border-strong border-foreground bg-background px-3 py-2 text-sm shadow-brutal-sm focus:outline-none focus:ring-2 focus:ring-brand"
+            {...tid("payment-method-name-es")}
+          />
+        </div>
       </div>
 
       {/* Display Section */}
-      <div className="rounded-lg border border-border p-4">
-        <DisplaySectionEditor
-          blocks={displayBlocks}
-          onChange={setDisplayBlocks}
-        />
-      </div>
+      <DisplaySectionEditor
+        blocks={displayBlocks}
+        onChange={setDisplayBlocks}
+      />
 
       {/* Form Section */}
-      <div className="rounded-lg border border-border p-4">
-        <FormSectionEditor fields={formFields} onChange={setFormFields} />
-      </div>
+      <FormSectionEditor fields={formFields} onChange={setFormFields} />
     </div>
   );
 }

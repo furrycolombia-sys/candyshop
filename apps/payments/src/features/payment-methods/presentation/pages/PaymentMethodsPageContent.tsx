@@ -2,7 +2,13 @@
 "use client";
 
 import { useSupabaseAuth } from "auth/client";
-import { ChevronDown, ChevronUp, Plus, Trash2 } from "lucide-react";
+import {
+  ChevronDown,
+  ChevronRight,
+  ChevronUp,
+  Plus,
+  Trash2,
+} from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useState } from "react";
 import { i18nField, tid } from "shared";
@@ -170,7 +176,7 @@ export function PaymentMethodsPageContent({
               return (
                 <div
                   key={method.id}
-                  className="rounded-xl border-strong border-border bg-background shadow-brutal-sm overflow-hidden"
+                  className={`rounded-xl border-strong border-foreground bg-background shadow-brutal-sm overflow-hidden ${isExpanded ? "bg-muted/30" : ""}`}
                   {...tid("payment-method-row")}
                 >
                   {/* Collapsed header row */}
@@ -202,15 +208,17 @@ export function PaymentMethodsPageContent({
                     {/* Name — clickable to expand */}
                     <button
                       type="button"
-                      className="flex-1 min-w-0 text-left"
+                      className="flex flex-1 min-w-0 items-center gap-2 text-left"
                       onClick={() => handleToggleExpand(method.id)}
                       {...tid("payment-method-name")}
                     >
+                      {isExpanded ? (
+                        <ChevronDown className="size-4 shrink-0 text-muted-foreground" />
+                      ) : (
+                        <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
+                      )}
                       <p className="font-display text-sm font-bold uppercase tracking-wide truncate">
                         {i18nField(method, "name", locale) || method.name_en}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {isExpanded ? t("clickToCollapse") : t("clickToExpand")}
                       </p>
                     </button>
 
