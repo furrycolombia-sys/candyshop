@@ -275,6 +275,71 @@
       "update": "Deshacer Check-in"
     }
   },
+  "permissionHints": {
+    "products": {
+      "create": "Crear nuevos productos en el catalogo de la tienda",
+      "read": "Ver detalles de productos, precios e inventario",
+      "update": "Editar nombres, descripciones, precios y stock de productos",
+      "delete": "Eliminar productos permanentemente del catalogo"
+    },
+    "product_images": {
+      "create": "Subir imagenes a las galerias de productos",
+      "read": "Ver imagenes de la galeria de productos",
+      "delete": "Eliminar imagenes de las galerias de productos"
+    },
+    "product_reviews": {
+      "create": "Escribir resenas sobre productos comprados",
+      "read": "Ver resenas dejadas por otros compradores",
+      "update": "Editar resenas propias despues de publicarlas",
+      "delete": "Eliminar resenas propias"
+    },
+    "orders": {
+      "create": "Realizar nuevas ordenes e iniciar el pago",
+      "read": "Ver historial de ordenes y estado",
+      "update": "Aprobar, rechazar o solicitar evidencia en ordenes"
+    },
+    "receipts": {
+      "create": "Subir comprobantes de pago como prueba",
+      "read": "Ver comprobantes de pago subidos",
+      "delete": "Eliminar comprobantes de pago subidos"
+    },
+    "seller_payment_methods": {
+      "create": "Agregar nuevos metodos de pago para compradores",
+      "read": "Ver metodos de pago configurados",
+      "update": "Editar detalles y campos de metodos de pago",
+      "delete": "Eliminar metodos de pago"
+    },
+    "payment_settings": {
+      "read": "Ver configuracion de tiempos de pago de la plataforma",
+      "update": "Cambiar tiempos de expiracion y configuracion de pagos"
+    },
+    "templates": {
+      "create": "Crear plantillas de permisos para asignacion rapida de roles",
+      "read": "Ver plantillas de permisos disponibles",
+      "update": "Editar configuraciones de plantillas de permisos",
+      "delete": "Eliminar plantillas de permisos"
+    },
+    "audit": {
+      "read": "Ver el registro de auditoria de todos los cambios en la base de datos"
+    },
+    "user_permissions": {
+      "create": "Otorgar permisos a otros usuarios",
+      "read": "Ver que permisos tienen los usuarios",
+      "update": "Modificar permisos otorgados existentes",
+      "delete": "Revocar permisos de usuarios"
+    },
+    "events": {
+      "create": "Crear nuevos eventos en el sistema",
+      "read": "Ver detalles y horarios de eventos",
+      "update": "Editar informacion y configuracion de eventos",
+      "delete": "Eliminar eventos del sistema"
+    },
+    "check_ins": {
+      "create": "Registrar asistentes en eventos",
+      "read": "Ver registros de asistencia y check-in",
+      "update": "Deshacer o modificar registros de check-in"
+    }
+  },
   "common": {
     "loading": "Cargando...",
     "accessDenied": "Acceso denegado",

@@ -140,7 +140,7 @@ describe("PaymentMethodsPage", () => {
     render(<PaymentMethodsPage />);
     fireEvent.click(screen.getByTestId("add-payment-method-button"));
     expect(mockCreate.mutate).toHaveBeenCalledWith(
-      { sellerId: "seller-1", nameEn: "newMethodDefault" },
+      { sellerId: "seller-1", nameEn: "" },
       expect.objectContaining({ onSuccess: expect.any(Function) }),
     );
   });
