@@ -1,7 +1,11 @@
 import { createServerClient } from "@supabase/ssr";
 import { type NextRequest, NextResponse } from "next/server";
 
-import { SUPABASE_ANON_KEY, SUPABASE_URL } from "./config";
+import {
+  SUPABASE_ANON_KEY,
+  SUPABASE_COOKIE_KEY,
+  SUPABASE_REST_URL,
+} from "./config";
 import { mergeSupabaseCookieOptions } from "./cookies";
 
 const LOCAL_HOST = "localhost";
@@ -106,7 +110,10 @@ export async function handleOAuthCallback(request: NextRequest) {
   const redirectUrl = buildRedirectUrl(destination, request);
   let response = NextResponse.redirect(redirectUrl);
 
-  const supabase = createServerClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+  const supabase = createServerClient(SUPABASE_REST_URL, SUPABASE_ANON_KEY, {
+    auth: {
+      storageKey: SUPABASE_COOKIE_KEY,
+    },
     cookies: {
       getAll() {
         return request.cookies.getAll();

@@ -10,67 +10,20 @@ const { resolveE2EAppUrls } = require(
 const { getE2EExtraHTTPHeaders } = require(
   path.resolve(__dirname, "../../scripts/app-url-resolver.js"),
 );
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const { getLocalSupabaseEnv } = require(
-  path.resolve(__dirname, "../../scripts/local-supabase-env.js"),
-);
 
-const WEB_SERVER_TIMEOUT_MS = 120_000;
 const appUrls = resolveE2EAppUrls();
 const extraHTTPHeaders = getE2EExtraHTTPHeaders();
-const localSupabaseEnv = getLocalSupabaseEnv();
 
-interface AppServerConfig {
-  port: number;
-  /** Relative path from this config file to the app directory. Omit for current app. */
-  relativeCwd?: string;
-}
-
-const APP_SERVERS: AppServerConfig[] = [
-  { port: 5000 },
-  { port: 5001, relativeCwd: "../store" },
-  { port: 5003, relativeCwd: "../playground" },
-  { port: 5004, relativeCwd: "../landing" },
-  { port: 5005, relativeCwd: "../payments" },
-  { port: 5002, relativeCwd: "../admin" },
-  { port: 5006, relativeCwd: "../studio" },
-];
-
-function buildServerEnv() {
-  const env = Object.fromEntries(
-    Object.entries(process.env).filter(
-      (entry): entry is [string, string] => typeof entry[1] === "string",
-    ),
-  );
-
-  if (process.env.PLAYWRIGHT_USE_EXISTING_STACK === "true") {
-    return env;
-  }
-
-  return {
-    ...env,
-    NEXT_PUBLIC_SUPABASE_URL:
-      localSupabaseEnv.API_URL || env.NEXT_PUBLIC_SUPABASE_URL || "",
-    NEXT_PUBLIC_SUPABASE_ANON_KEY:
-      localSupabaseEnv.ANON_KEY || env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "",
-    SUPABASE_SERVICE_ROLE_KEY:
-      localSupabaseEnv.SERVICE_ROLE_KEY || env.SUPABASE_SERVICE_ROLE_KEY || "",
-  };
-}
-
-function buildWebServers() {
-  return APP_SERVERS.map(({ port, relativeCwd }) => ({
-    command: process.env.CI
-      ? `npx next start --port ${port}`
-      : `npx next dev --port ${port}`,
-    ...(relativeCwd ? { cwd: path.resolve(__dirname, relativeCwd) } : {}),
-    url: `http://localhost:${port}`,
-    reuseExistingServer: true,
-    timeout: WEB_SERVER_TIMEOUT_MS,
-    env: buildServerEnv(),
-  }));
-}
-
+/**
+ * Playwright config for E2E tests.
+ *
+ * All e2e tests run against the Docker e2e container (port 8089).
+ * Set E2E_PUBLIC_ORIGIN and PLAYWRIGHT_USE_EXISTING_STACK=true
+ * (handled automatically by `pnpm test:e2e`).
+ *
+ * No webServer — the Docker container is managed externally by
+ * `scripts/e2e-docker.mjs`.
+ */
 export default defineConfig({
   testDir: "./e2e",
   fullyParallel: true,
@@ -87,8 +40,5 @@ export default defineConfig({
     navigationTimeout: 45_000,
   },
   projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
-  webServer:
-    process.env.PLAYWRIGHT_USE_EXISTING_STACK === "true"
-      ? undefined
-      : buildWebServers(),
+  // No webServer — Docker container is managed by pnpm test:e2e
 });

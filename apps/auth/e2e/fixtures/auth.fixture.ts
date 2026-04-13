@@ -55,7 +55,13 @@ const supabaseAdmin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
  * into the browser context. No OAuth flow needed.
  */
 async function createTestSession(context: BrowserContext) {
-  const projectRef = new URL(SUPABASE_URL).hostname.split(".")[0];
+  // For localhost/127.0.0.1 URLs, use "localhost" as the project ref to match
+  // what the Supabase JS client in the browser uses.
+  const refHostname = new URL(SUPABASE_URL).hostname;
+  const projectRef =
+    refHostname === "localhost" || refHostname === "127.0.0.1"
+      ? "localhost"
+      : refHostname.split(".")[0];
   const cookieBase = `sb-${projectRef}-auth-token`;
   const authHost = new URL(AUTH_URL);
   const isLocalhost =

@@ -177,13 +177,13 @@ dynamic display blocks and form fields. Implement full validation, file upload, 
   - Add `useFileUpload()` hook wrapping the file upload helper
   - _Requirements: 6.1, 7.1_
 
-- [ ] 12. Checkout API routes
-  - [ ] 12.1 Update `apps/payments/src/app/api/checkout/payment-methods/route.ts`
+- [x] 12. Checkout API routes
+  - [x] 12.1 Update `apps/payments/src/app/api/checkout/payment-methods/route.ts`
     - Query `seller_payment_methods` with service role; filter `is_active = true`
     - Return the new flat shape
     - _Requirements: 4.4, 5.5, 6.1_
 
-  - [ ] 12.2 Create `apps/payments/src/app/api/checkout/orders/route.ts`
+  - [x] 12.2 Create `apps/payments/src/app/api/checkout/orders/route.ts`
     - Accept `{ payment_method_id, buyer_submission }` in POST body
     - Validate all `required: true` form fields have non-empty values; return 422 with missing labels
       if not
