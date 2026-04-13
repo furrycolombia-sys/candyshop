@@ -9,7 +9,6 @@ describe("UI_CONSTANTS", () => {
     expect(UI_CONSTANTS.Z_INDEX).toBeDefined();
     expect(UI_CONSTANTS.NAVIGATION).toBeDefined();
     expect(UI_CONSTANTS.CHART).toBeDefined();
-    expect(UI_CONSTANTS.PROCESS_FLOW).toBeDefined();
   });
 
   it("has numeric z-index values", () => {
@@ -43,13 +42,5 @@ describe("UI_CONSTANTS", () => {
       left: 0,
       bottom: 0,
     });
-  });
-
-  it("has process flow constants", () => {
-    expect(typeof UI_CONSTANTS.PROCESS_FLOW.MAX_QUEUE_SIZE).toBe("number");
-    expect(typeof UI_CONSTANTS.PROCESS_FLOW.QUEUE_HEALTH_THRESHOLD).toBe(
-      "number",
-    );
-    expect(UI_CONSTANTS.PROCESS_FLOW.SLA_CATEGORIES).toBeDefined();
   });
 });

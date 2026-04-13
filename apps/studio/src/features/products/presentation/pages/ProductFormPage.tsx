@@ -1,6 +1,7 @@
 "use client";
 
 import { useCurrentUserPermissions } from "auth/client";
+import { useTranslations } from "next-intl";
 import { tid } from "shared";
 import { Skeleton } from "ui";
 
@@ -21,6 +22,7 @@ export function ProductFormPage({ productId }: ProductFormPageProps) {
   const isEdit = !!productId;
   const { isLoading: permissionsLoading, hasPermission } =
     useCurrentUserPermissions();
+  const t = useTranslations("common");
 
   const { data: product, isLoading } = useProductById(productId);
   const insertMutation = useInsertProduct();
@@ -34,7 +36,12 @@ export function ProductFormPage({ productId }: ProductFormPageProps) {
     (isEdit && !hasPermission("products.update")) ||
     (!isEdit && !hasPermission("products.create"))
   ) {
-    return <AccessDeniedState />;
+    return (
+      <AccessDeniedState
+        title={t("accessDenied")}
+        hint={t("accessDeniedHint")}
+      />
+    );
   }
 
   if (isEdit && isLoading) {

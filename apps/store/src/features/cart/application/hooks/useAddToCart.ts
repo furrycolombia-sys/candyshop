@@ -2,8 +2,9 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import { useCart } from "@/features/cart/application/CartContext";
-import { useFlyToCartContext } from "@/features/cart/application/FlyToCartContext";
+import { useCart } from "../CartContext";
+import { useFlyToCartContext } from "../FlyToCartContext";
+
 import type { Product } from "@/features/products/domain/types";
 import { getCategoryColor } from "@/shared/domain/categoryConstants";
 
@@ -17,7 +18,7 @@ interface UseAddToCartReturn {
 }
 
 /**
- * Shared add-to-cart hook. Passes the full product to the cart
+ * Add-to-cart hook. Passes the full product to the cart
  * (CartItem = Product + quantity — same shape, no mapping).
  */
 export function useAddToCart(product: Product): UseAddToCartReturn {

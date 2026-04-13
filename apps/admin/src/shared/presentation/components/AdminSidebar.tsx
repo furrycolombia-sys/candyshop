@@ -17,7 +17,7 @@ import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { tid } from "shared";
 
-import { ADMIN_APP_ACCESS_KEYS } from "@/features/users/domain/constants";
+import { ADMIN_APP_ACCESS_KEYS } from "@/shared/domain/constants";
 import { Link } from "@/shared/infrastructure/i18n";
 
 type NavItem = {

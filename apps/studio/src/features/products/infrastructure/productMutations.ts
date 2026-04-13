@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Database } from "api/types/database";
+import type { Database } from "api/supabase/types";
 
 type SupabaseDB = SupabaseClient<Database>;
 type ProductInsert = Database["public"]["Tables"]["products"]["Insert"];

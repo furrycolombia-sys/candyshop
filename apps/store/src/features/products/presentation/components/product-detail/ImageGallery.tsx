@@ -1,3 +1,4 @@
+/* eslint-disable sonarjs/no-duplicate-string -- Tailwind classes must stay inline per styling policy */
 "use client";
 
 import Image from "next/image";
@@ -12,7 +13,6 @@ import { FeaturedRibbon } from "@/features/products/presentation/components/Feat
 const TID_GALLERY = "image-gallery";
 const TID_GALLERY_MAIN = "image-gallery-main";
 const COUNTER_SEPARATOR = " / ";
-const ACTIVE_THUMB_CLASS = "border-foreground shadow-brutal-sm";
 
 interface ImageGalleryProps {
   product: Product;
@@ -92,7 +92,9 @@ export function ImageGallery({ product, theme }: ImageGalleryProps) {
           >
             {images.map((img, idx) => {
               const isActive = idx === activeIndex;
-              const activeCls = isActive ? ACTIVE_THUMB_CLASS : thumbInactive;
+              const activeCls = isActive
+                ? "border-foreground shadow-brutal-sm"
+                : thumbInactive;
               return (
                 <button
                   type="button"
@@ -212,7 +214,9 @@ export function ImageGallery({ product, theme }: ImageGalleryProps) {
           >
             {images.map((img, idx) => {
               const isActive = idx === activeIndex;
-              const activeCls = isActive ? ACTIVE_THUMB_CLASS : thumbInactive;
+              const activeCls = isActive
+                ? "border-foreground shadow-brutal-sm"
+                : thumbInactive;
               return (
                 <button
                   type="button"

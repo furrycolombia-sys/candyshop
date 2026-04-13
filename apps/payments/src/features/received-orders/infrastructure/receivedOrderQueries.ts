@@ -1,5 +1,4 @@
 /* eslint-disable i18next/no-literal-string -- infrastructure file: Supabase table/column names are SQL identifiers, not user-facing text */
-import { getReceiptUrl } from "@/features/checkout/infrastructure/receiptStorage";
 import type {
   ReceivedOrder,
   SellerAction,
@@ -11,6 +10,7 @@ import type {
   SupabaseClient,
 } from "@/shared/domain/types";
 import { fetchUserDisplayNames } from "@/shared/infrastructure/fetchUserDisplayNames";
+import { getReceiptUrl } from "@/shared/infrastructure/receiptStorage";
 
 /**
  * Fetch orders where the current user is the seller.

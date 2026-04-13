@@ -16,6 +16,10 @@ vi.mock("@/shared/presentation/components/AccessDeniedState", () => ({
   AccessDeniedState: () => <div data-testid="access-denied">Denied</div>,
 }));
 
+vi.mock("next-intl", () => ({
+  useTranslations: () => (key: string) => key,
+}));
+
 describe("UsersPage", () => {
   it("renders nothing while loading", () => {
     vi.mocked(useCurrentUserPermissions).mockReturnValue({

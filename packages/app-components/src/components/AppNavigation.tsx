@@ -101,11 +101,6 @@ export function AppNavigation({
 
   /** Append current locale to cross-app URL so the target app opens in the same language */
   function localizedHref(baseUrl: string): string {
-    // For absolute URLs (http://...), append /{locale} path
-    if (/^https?:\/\//.test(baseUrl)) {
-      return `${baseUrl.replace(/\/$/, "")}/${locale}`;
-    }
-    // For relative URLs (/store, /admin), append /{locale}
     return `${baseUrl.replace(/\/$/, "")}/${locale}`;
   }
 

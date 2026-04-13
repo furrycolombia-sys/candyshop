@@ -4,7 +4,6 @@
 export {
   environment,
   featureFlags,
-  runtimeEnv,
   getRuntimeEnv,
   getMockApiBaseUrl,
   getApiPrefix,

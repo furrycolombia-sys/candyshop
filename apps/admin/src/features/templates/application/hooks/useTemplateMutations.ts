@@ -1,6 +1,4 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { createBrowserSupabaseClient } from "api/supabase";
-import { useMemo } from "react";
 
 import { TEMPLATES_QUERY_KEY } from "@/features/templates/domain/constants";
 import type { TemplateFormValues } from "@/features/templates/domain/types";
@@ -10,10 +8,11 @@ import {
   toggleTemplateActive,
   updateTemplate,
 } from "@/features/templates/infrastructure/templateQueries";
+import { useSupabase } from "@/shared/application/hooks/useSupabase";
 
 export function useInsertTemplate() {
   const queryClient = useQueryClient();
-  const supabase = useMemo(() => createBrowserSupabaseClient(), []);
+  const supabase = useSupabase();
 
   return useMutation({
     mutationFn: (values: TemplateFormValues) =>
@@ -26,7 +25,7 @@ export function useInsertTemplate() {
 
 export function useUpdateTemplate() {
   const queryClient = useQueryClient();
-  const supabase = useMemo(() => createBrowserSupabaseClient(), []);
+  const supabase = useSupabase();
 
   return useMutation({
     mutationFn: ({
@@ -44,7 +43,7 @@ export function useUpdateTemplate() {
 
 export function useDeleteTemplate() {
   const queryClient = useQueryClient();
-  const supabase = useMemo(() => createBrowserSupabaseClient(), []);
+  const supabase = useSupabase();
 
   return useMutation({
     mutationFn: (id: string) => deleteTemplate(supabase, id),
@@ -56,7 +55,7 @@ export function useDeleteTemplate() {
 
 export function useToggleTemplateActive() {
   const queryClient = useQueryClient();
-  const supabase = useMemo(() => createBrowserSupabaseClient(), []);
+  const supabase = useSupabase();
 
   return useMutation({
     mutationFn: ({ id, isActive }: { id: string; isActive: boolean }) =>

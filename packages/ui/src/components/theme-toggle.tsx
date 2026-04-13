@@ -19,10 +19,6 @@ export interface ThemeToggleProps {
   testId?: string;
 }
 
-function testIdProps(testId: string) {
-  return { "data-testid": testId };
-}
-
 /**
  * Pure ThemeToggle component for switching between light and dark themes.
  *
@@ -43,7 +39,7 @@ function testIdProps(testId: string) {
  * />
  * ```
  */
-export function ThemeToggle({
+function ThemeToggle({
   effectiveTheme,
   onToggle,
   mounted,
@@ -59,7 +55,7 @@ export function ThemeToggle({
         size="icon"
         aria-label={disabledAriaLabel}
         disabled
-        {...testIdProps(testId)}
+        data-testid={testId} // eslint-disable-line no-restricted-syntax -- UI package cannot import tid() from shared (circular dep); testId is injected by consuming apps
       >
         <Sun className="size-4" />
       </Button>
@@ -72,7 +68,7 @@ export function ThemeToggle({
       size="icon"
       onClick={onToggle}
       aria-label={ariaLabel}
-      {...testIdProps(testId)}
+      data-testid={testId} // eslint-disable-line no-restricted-syntax -- UI package cannot import tid() from shared (circular dep); testId is injected by consuming apps
     >
       {effectiveTheme === "light" ? (
         <Sun className="size-4" />
@@ -82,3 +78,5 @@ export function ThemeToggle({
     </Button>
   );
 }
+
+export { ThemeToggle };

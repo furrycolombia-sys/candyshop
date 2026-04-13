@@ -2,8 +2,8 @@
 import { createServerSupabaseClient } from "api/supabase/server";
 import { NextResponse } from "next/server";
 
-import type { FormField } from "@/features/payment-methods/domain/types";
-import { validateBuyerSubmission } from "@/features/payment-methods/domain/utils";
+import type { FormField } from "@/shared/domain/paymentMethodTypes";
+import { validateBuyerSubmission } from "@/shared/domain/paymentMethodUtils";
 
 // Dynamic key access prevents Turbopack from inlining at build time.
 const supabaseUrl =

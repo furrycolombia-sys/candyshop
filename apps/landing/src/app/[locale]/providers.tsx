@@ -4,7 +4,7 @@ import { AuthSessionBootstrap } from "auth";
 import { Suspense, type ReactNode } from "react";
 import { ApiAuthBootstrap } from "shared";
 
-import { runtimeEnv } from "@/shared/infrastructure/config/environment";
+import { getRuntimeEnv } from "@/shared/infrastructure/config/environment";
 import { QueryProvider } from "@/shared/infrastructure/providers";
 
 interface ProvidersProps {
@@ -12,11 +12,12 @@ interface ProvidersProps {
 }
 
 export function Providers({ children }: ProvidersProps) {
+  const { authHostUrl } = getRuntimeEnv();
   return (
     <Suspense>
       <QueryProvider>
-        <AuthSessionBootstrap authHostUrl={runtimeEnv.authHostUrl} />
-        <ApiAuthBootstrap authHostUrl={runtimeEnv.authHostUrl} />
+        <AuthSessionBootstrap authHostUrl={authHostUrl} />
+        <ApiAuthBootstrap authHostUrl={authHostUrl} />
         {children}
       </QueryProvider>
     </Suspense>

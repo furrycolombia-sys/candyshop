@@ -2,8 +2,8 @@
 
 import { MobileBar } from "./MobileBar";
 
+import { useAddToCart } from "@/features/cart";
 import type { Product } from "@/features/products/domain/types";
-import { useAddToCart } from "@/shared/application/hooks/useAddToCart";
 import type { CategoryTheme } from "@/shared/domain/categoryConstants";
 
 interface MobileBarWithCartProps {
