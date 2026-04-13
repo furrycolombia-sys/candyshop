@@ -1,7 +1,11 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-import { SUPABASE_ANON_KEY, SUPABASE_URL } from "./config";
+import {
+  SUPABASE_ANON_KEY,
+  SUPABASE_COOKIE_KEY,
+  SUPABASE_REST_URL,
+} from "./config";
 import { mergeSupabaseCookieOptions } from "./cookies";
 import type { Database } from "./types";
 
@@ -13,16 +17,14 @@ import type { Database } from "./types";
  */
 export async function updateSupabaseSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
-  const useMockSession = process.env.NEXT_PUBLIC_ENABLE_MOCKS === "true";
-
-  if (useMockSession) {
-    return supabaseResponse;
-  }
 
   const supabase = createServerClient<Database>(
-    SUPABASE_URL,
+    SUPABASE_REST_URL,
     SUPABASE_ANON_KEY,
     {
+      auth: {
+        storageKey: SUPABASE_COOKIE_KEY,
+      },
       cookies: {
         getAll() {
           return request.cookies.getAll();

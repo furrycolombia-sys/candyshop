@@ -24,15 +24,11 @@ describe("useSellerPaymentMethods", () => {
       [
         {
           id: "pm1",
-          type_name_en: "Cash",
-          type_name_es: "Efectivo",
-          type_icon: null,
-          requires_receipt: false,
-          requires_transfer_number: false,
-          account_details_en: null,
-          account_details_es: null,
-          seller_note_en: null,
-          seller_note_es: null,
+          name_en: "Cash",
+          name_es: "Efectivo",
+          display_blocks: [],
+          form_fields: [],
+          is_active: true,
         },
       ];
     vi.mocked(fetch).mockResolvedValue({

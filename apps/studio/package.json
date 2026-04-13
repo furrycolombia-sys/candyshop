@@ -10,7 +10,7 @@
     "test": "vitest run --passWithNoTests",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
-    "test:e2e": "echo 'No E2E tests yet'"
+    "test:e2e": "echo 'Run e2e from root: pnpm test:e2e'"
   },
   "dependencies": {
     "@hello-pangea/dnd": "^18.0.1",

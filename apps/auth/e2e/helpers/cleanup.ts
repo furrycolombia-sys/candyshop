@@ -11,31 +11,37 @@ export async function cleanupTestData(
 ): Promise<void> {
   try {
     // 1. Delete order items for buyer's orders
-    const orders = await adminQuery("orders", `user_id=eq.${buyerUserId}`);
-    for (const order of orders) {
-      await adminDelete("order_items", `order_id=eq.${order.id}`);
+    if (buyerUserId) {
+      const orders = await adminQuery("orders", `user_id=eq.${buyerUserId}`);
+      for (const order of orders) {
+        await adminDelete("order_items", `order_id=eq.${order.id}`);
+      }
+      // 2. Delete orders
+      await adminDelete("orders", `user_id=eq.${buyerUserId}`);
+      // 5. Delete buyer permissions
+      await adminDelete("user_permissions", `user_id=eq.${buyerUserId}`);
+      // 6. Delete buyer user
+      await supabaseAdmin.auth.admin.deleteUser(buyerUserId);
     }
 
-    // 2. Delete orders
-    await adminDelete("orders", `user_id=eq.${buyerUserId}`);
-
-    // 3. Delete seller's payment methods
-    await adminDelete("seller_payment_methods", `seller_id=eq.${sellerUserId}`);
-
-    // 4. Delete seller's products
-    await adminDelete("products", `seller_id=eq.${sellerUserId}`);
-
-    // 5. Delete user permissions
-    await adminDelete("user_permissions", `user_id=eq.${sellerUserId}`);
-    await adminDelete("user_permissions", `user_id=eq.${buyerUserId}`);
-
-    // 6. Delete both users
-    await supabaseAdmin.auth.admin.deleteUser(sellerUserId);
-    await supabaseAdmin.auth.admin.deleteUser(buyerUserId);
+    if (sellerUserId) {
+      // 3. Delete seller's payment methods
+      await adminDelete(
+        "seller_payment_methods",
+        `seller_id=eq.${sellerUserId}`,
+      );
+      // 4. Delete seller's products
+      await adminDelete("products", `seller_id=eq.${sellerUserId}`);
+      // 5. Delete seller permissions
+      await adminDelete("user_permissions", `user_id=eq.${sellerUserId}`);
+      // 6. Delete seller user
+      await supabaseAdmin.auth.admin.deleteUser(sellerUserId);
+    }
   } catch (error) {
     console.error("[E2E cleanup] Error during cleanup:", error);
-    // Still try to delete users even if data cleanup fails
-    await supabaseAdmin.auth.admin.deleteUser(sellerUserId).catch(() => {});
-    await supabaseAdmin.auth.admin.deleteUser(buyerUserId).catch(() => {});
+    if (sellerUserId)
+      await supabaseAdmin.auth.admin.deleteUser(sellerUserId).catch(() => {});
+    if (buyerUserId)
+      await supabaseAdmin.auth.admin.deleteUser(buyerUserId).catch(() => {});
   }
 }

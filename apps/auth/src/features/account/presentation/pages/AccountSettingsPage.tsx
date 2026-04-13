@@ -1,6 +1,7 @@
 "use client";
 
 import { useSupabaseAuth } from "auth/client";
+import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { tid } from "shared";
 import { Skeleton } from "ui";
@@ -15,6 +16,7 @@ export function AccountSettingsPage() {
   const tAuth = useTranslations("auth");
   const locale = useLocale();
   const { user, signOut } = useSupabaseAuth();
+  const router = useRouter();
   const { data: profile, isLoading, isError } = useProfile(user?.id);
   const updateMutation = useUpdateProfile(user?.id ?? "");
 
@@ -70,7 +72,7 @@ export function AccountSettingsPage() {
             type="button"
             onClick={async () => {
               await signOut();
-              globalThis.location.replace(`/${locale}/login`);
+              router.replace(`/${locale}/login`);
             }}
             className="button-brutal button-press-sm w-full justify-center border-2 border-foreground px-6 py-3 text-sm"
             {...tid("sign-out")}

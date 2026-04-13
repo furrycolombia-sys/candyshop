@@ -1,186 +1,158 @@
+/* eslint-disable i18next/no-literal-string -- language code labels (EN/ES) are UI chrome, not user-facing content */
 "use client";
 
-import { useLocale, useTranslations } from "next-intl";
-import { useState } from "react";
+import { useTranslations } from "next-intl";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { tid } from "shared";
-import { Button, Switch, Textarea } from "ui";
 
-import { SELLER_PAYMENT_METHOD_DEFAULTS } from "@/features/payment-methods/domain/constants";
+import { DisplaySectionEditor } from "./DisplaySectionEditor";
+import { FormSectionEditor } from "./FormSectionEditor";
+
+import { useUpdatePaymentMethod } from "@/features/payment-methods/application/hooks/usePaymentMethodMutations";
 import type {
-  PaymentMethodType,
-  SellerPaymentMethodFormValues,
+  DisplayBlock,
+  FormField,
+  SellerPaymentMethod,
 } from "@/features/payment-methods/domain/types";
-import { getPaymentTypeName } from "@/features/payment-methods/domain/utils";
+
+const DEBOUNCE_MS = 500;
 
 interface PaymentMethodEditorProps {
-  types: PaymentMethodType[];
-  initial?: SellerPaymentMethodFormValues;
-  onSave: (values: SellerPaymentMethodFormValues) => void;
-  onCancel: () => void;
-  isPending: boolean;
+  method: SellerPaymentMethod;
+  onClose?: () => void;
 }
 
-export function PaymentMethodEditor({
-  types,
-  initial,
-  onSave,
-  onCancel,
-  isPending,
-}: PaymentMethodEditorProps) {
+export function PaymentMethodEditor({ method }: PaymentMethodEditorProps) {
   const t = useTranslations("paymentMethods");
-  const locale = useLocale();
-  const isEditing = !!initial?.type_id;
+  const updateMutation = useUpdatePaymentMethod();
 
-  const [form, setForm] = useState<SellerPaymentMethodFormValues>(
-    initial ?? SELLER_PAYMENT_METHOD_DEFAULTS,
+  const [nameEn, setNameEn] = useState(method.name_en);
+  const [nameEs, setNameEs] = useState(method.name_es ?? "");
+  const [displayBlocks, setDisplayBlocks] = useState<DisplayBlock[]>(
+    method.display_blocks ?? [],
+  );
+  const [formFields, setFormFields] = useState<FormField[]>(
+    method.form_fields ?? [],
+  );
+  const [nameEnError, setNameEnError] = useState<string | null>(null);
+  const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved">(
+    "idle",
   );
 
-  const handleChange = (
-    field: keyof SellerPaymentMethodFormValues,
-    value: string | boolean,
-  ) => {
-    setForm((prev) => ({ ...prev, [field]: value }));
-  };
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const handleSubmit = () => {
-    onSave(form);
-  };
+  const triggerSave = useCallback(
+    (patch: Parameters<typeof updateMutation.mutate>[0]["patch"]) => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+      setSaveStatus("saving");
+      debounceRef.current = setTimeout(() => {
+        updateMutation.mutate(
+          { id: method.id, patch },
+          {
+            onSuccess: () => setSaveStatus("saved"),
+            onError: () => setSaveStatus("idle"),
+          },
+        );
+      }, DEBOUNCE_MS);
+    },
+    [method.id, updateMutation],
+  );
+
+  // Auto-save name changes
+  useEffect(() => {
+    if (!nameEn.trim()) {
+      setNameEnError(t("nameRequired"));
+      return;
+    }
+    setNameEnError(null);
+    triggerSave({ name_en: nameEn, name_es: nameEs || undefined });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional: only trigger on name changes
+  }, [nameEn, nameEs]);
+
+  // Auto-save display blocks
+  useEffect(() => {
+    triggerSave({ display_blocks: displayBlocks });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional: only trigger on block changes
+  }, [displayBlocks]);
+
+  // Auto-save form fields
+  useEffect(() => {
+    triggerSave({ form_fields: formFields });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional: only trigger on field changes
+  }, [formFields]);
+
+  // Cleanup debounce on unmount
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, []);
 
   return (
-    <div
-      className="flex flex-col gap-6 rounded-xl border-strong border-border bg-background p-6 shadow-brutal-md"
-      {...tid("payment-method-editor")}
-    >
-      <h2 className="font-display text-2xl font-bold uppercase tracking-tight">
-        {isEditing ? t("editMethod") : t("addMethod")}
-      </h2>
+    <div className="flex flex-col gap-6 rounded-xl border-strong border-border bg-background p-6 shadow-brutal-md">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <h2 className="font-display text-2xl font-bold uppercase tracking-tight">
+          {t("editMethod")}
+        </h2>
+        {saveStatus === "saving" && (
+          <span className="text-xs text-muted-foreground">{t("saving")}</span>
+        )}
+        {saveStatus === "saved" && (
+          <span className="text-xs text-success">{t("saved")}</span>
+        )}
+      </div>
 
-      {/* Payment Type */}
+      {/* Name EN */}
       <div className="flex flex-col gap-2">
         <label
-          htmlFor="type_id"
+          htmlFor="payment-method-name-en-input"
           className="text-sm font-semibold"
-          {...tid("payment-method-type-label")}
         >
-          {t("selectType")}
+          Name (EN) *
         </label>
-        <select
-          id="type_id"
-          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-xs disabled:cursor-not-allowed disabled:opacity-50"
-          value={form.type_id}
-          onChange={(e) => handleChange("type_id", e.target.value)}
-          disabled={isEditing}
-          {...tid("payment-method-type-select")}
+        <input
+          id="payment-method-name-en-input"
+          type="text"
+          value={nameEn}
+          onChange={(e) => setNameEn(e.target.value)}
+          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+          {...tid("payment-method-name-en")}
+        />
+        {nameEnError && (
+          <p className="text-sm text-destructive">{nameEnError}</p>
+        )}
+      </div>
+
+      {/* Name ES */}
+      <div className="flex flex-col gap-2">
+        <label
+          htmlFor="payment-method-name-es-input"
+          className="text-sm font-semibold"
         >
-          <option value="">{t("selectTypePlaceholder")}</option>
-          {types.map((type) => (
-            <option key={type.id} value={type.id}>
-              {getPaymentTypeName(types, type.id, locale)}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      {/* Account Details (EN) */}
-      <div className="flex flex-col gap-2">
-        <label htmlFor="account_details_en" className="text-sm font-semibold">
-          {t("accountDetails")}{" "}
-          {/* eslint-disable-next-line i18next/no-literal-string -- language code */}
-          {"(EN)"}
+          Name (ES)
         </label>
-        <Textarea
-          id="account_details_en"
-          rows={3}
-          placeholder={t("accountDetailsHint")}
-          value={form.account_details_en}
-          onChange={(e) => handleChange("account_details_en", e.target.value)}
-          {...tid("payment-method-account-en")}
+        <input
+          id="payment-method-name-es-input"
+          type="text"
+          value={nameEs}
+          onChange={(e) => setNameEs(e.target.value)}
+          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+          {...tid("payment-method-name-es")}
         />
       </div>
 
-      {/* Account Details (ES) */}
-      <div className="flex flex-col gap-2">
-        <label htmlFor="account_details_es" className="text-sm font-semibold">
-          {t("accountDetails")}{" "}
-          {/* eslint-disable-next-line i18next/no-literal-string -- language code */}
-          {"(ES)"}
-        </label>
-        <Textarea
-          id="account_details_es"
-          rows={3}
-          placeholder={t("accountDetailsHint")}
-          value={form.account_details_es}
-          onChange={(e) => handleChange("account_details_es", e.target.value)}
-          {...tid("payment-method-account-es")}
+      {/* Display Section */}
+      <div className="rounded-lg border border-border p-4">
+        <DisplaySectionEditor
+          blocks={displayBlocks}
+          onChange={setDisplayBlocks}
         />
       </div>
 
-      {/* Seller Note (EN) */}
-      <div className="flex flex-col gap-2">
-        <label htmlFor="seller_note_en" className="text-sm font-semibold">
-          {t("sellerNote")}{" "}
-          {/* eslint-disable-next-line i18next/no-literal-string -- language code */}
-          {"(EN)"}
-        </label>
-        <Textarea
-          id="seller_note_en"
-          rows={2}
-          placeholder={t("sellerNoteHint")}
-          value={form.seller_note_en}
-          onChange={(e) => handleChange("seller_note_en", e.target.value)}
-          {...tid("payment-method-note-en")}
-        />
-      </div>
-
-      {/* Seller Note (ES) */}
-      <div className="flex flex-col gap-2">
-        <label htmlFor="seller_note_es" className="text-sm font-semibold">
-          {t("sellerNote")}{" "}
-          {/* eslint-disable-next-line i18next/no-literal-string -- language code */}
-          {"(ES)"}
-        </label>
-        <Textarea
-          id="seller_note_es"
-          rows={2}
-          placeholder={t("sellerNoteHint")}
-          value={form.seller_note_es}
-          onChange={(e) => handleChange("seller_note_es", e.target.value)}
-          {...tid("payment-method-note-es")}
-        />
-      </div>
-
-      {/* Active toggle */}
-      <div className="flex items-center gap-3">
-        <Switch
-          checked={form.is_active}
-          onCheckedChange={(checked: boolean) =>
-            handleChange("is_active", checked)
-          }
-          {...tid("payment-method-active-toggle")}
-        />
-        <label className="text-sm font-semibold">{t("active")}</label>
-      </div>
-
-      {/* Actions */}
-      <div className="flex items-center gap-3">
-        <Button
-          type="button"
-          className="button-brutal shadow-brutal-md button-press-sm rounded-xl border-strong bg-brand px-6 py-3 text-brand-foreground hover:bg-brand-hover"
-          disabled={isPending || !form.type_id}
-          onClick={handleSubmit}
-          {...tid("payment-method-save")}
-        >
-          {isPending ? t("saving") : t("save")}
-        </Button>
-        <Button
-          type="button"
-          variant="outline"
-          className="rounded-xl border-strong px-6 py-3"
-          onClick={onCancel}
-          {...tid("payment-method-cancel")}
-        >
-          {t("cancel")}
-        </Button>
+      {/* Form Section */}
+      <div className="rounded-lg border border-border p-4">
+        <FormSectionEditor fields={formFields} onChange={setFormFields} />
       </div>
     </div>
   );

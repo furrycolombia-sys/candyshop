@@ -10,6 +10,7 @@ let mockGrantedPermissions = [
 
 vi.mock("next-intl", () => ({
   useTranslations: () => (key: string) => key,
+  useLocale: () => "en",
 }));
 
 vi.mock("auth/client", () => ({
@@ -20,10 +21,15 @@ vi.mock("auth/client", () => ({
       return requiredKeys.every((key) => mockGrantedPermissions.includes(key));
     },
   }),
+  useSupabaseAuth: () => ({ user: { id: "seller-1" } }),
 }));
 
 vi.mock("shared", () => ({
   tid: (id: string) => ({ "data-testid": id }),
+  i18nField: (obj: Record<string, unknown>, field: string, locale: string) => {
+    const key = `${field}_${locale}`;
+    return (obj[key] as string) ?? (obj[`${field}_en`] as string) ?? "";
+  },
 }));
 
 vi.mock("ui", () => ({
@@ -40,52 +46,55 @@ vi.mock("ui", () => ({
     </button>
   ),
   Skeleton: () => <div data-testid="skeleton" />,
+  Switch: ({
+    checked,
+    onCheckedChange,
+  }: {
+    checked: boolean;
+    onCheckedChange: (c: boolean) => void;
+  }) => (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      onClick={() => onCheckedChange(!checked)}
+    />
+  ),
 }));
 
-const mockInsert = { mutate: vi.fn(), isPending: false };
+const mockCreate = { mutate: vi.fn(), isPending: false };
 const mockUpdate = { mutate: vi.fn(), isPending: false };
 const mockDelete = { mutate: vi.fn() };
-const mockToggle = { mutate: vi.fn() };
 
 vi.mock(
   "@/features/payment-methods/application/hooks/usePaymentMethodMutations",
   () => ({
-    useInsertSellerPaymentMethod: () => mockInsert,
-    useUpdateSellerPaymentMethod: () => mockUpdate,
-    useDeleteSellerPaymentMethod: () => mockDelete,
-    useToggleSellerPaymentMethodActive: () => mockToggle,
+    useCreatePaymentMethod: () => mockCreate,
+    useUpdatePaymentMethod: () => mockUpdate,
+    useDeletePaymentMethod: () => mockDelete,
   }),
 );
 
-let mockTypesLoading = false;
 let mockMethodsLoading = false;
 
 vi.mock(
   "@/features/payment-methods/application/hooks/usePaymentMethods",
   () => ({
-    usePaymentMethodTypes: () => ({
-      data: mockTypesLoading
-        ? undefined
-        : [
-            {
-              id: "t1",
-              name_en: "Cash",
-              name_es: "Efectivo",
-              icon: null,
-              is_active: true,
-            },
-          ],
-      isLoading: mockTypesLoading,
-    }),
-    useSellerPaymentMethods: () => ({
+    usePaymentMethods: () => ({
       data: mockMethodsLoading
         ? undefined
         : [
             {
               id: "m1",
-              type_id: "t1",
-              account_details_en: "Details",
+              seller_id: "seller-1",
+              name_en: "Cash",
+              name_es: "Efectivo",
+              display_blocks: [],
+              form_fields: [],
               is_active: true,
+              sort_order: 1,
+              created_at: "2025-01-01",
+              updated_at: "2025-01-01",
             },
           ],
       isLoading: mockMethodsLoading,
@@ -98,52 +107,8 @@ vi.mock(
   () => ({
     PaymentMethodEditor: (props: Record<string, unknown>) => (
       <div data-testid="editor-mock">
-        <button type="button" onClick={() => (props.onCancel as () => void)()}>
-          Cancel
-        </button>
-        <button
-          type="button"
-          onClick={() =>
-            (props.onSave as (v: unknown) => void)({
-              type_id: "t1",
-              is_active: true,
-            })
-          }
-        >
-          Save
-        </button>
-      </div>
-    ),
-  }),
-);
-
-vi.mock(
-  "@/features/payment-methods/presentation/components/PaymentMethodTable",
-  () => ({
-    PaymentMethodTable: (props: Record<string, unknown>) => (
-      <div data-testid="table-mock">
-        <button
-          type="button"
-          onClick={() => (props.onEdit as (m: unknown) => void)({ id: "m1" })}
-        >
-          Edit
-        </button>
-        <button
-          type="button"
-          onClick={() => (props.onDelete as (id: string) => void)("m1")}
-        >
-          Delete
-        </button>
-        <button
-          type="button"
-          onClick={() =>
-            (props.onToggleActive as (id: string, a: boolean) => void)(
-              "m1",
-              false,
-            )
-          }
-        >
-          Toggle
+        <button type="button" onClick={() => (props.onClose as () => void)()}>
+          Close
         </button>
       </div>
     ),
@@ -155,7 +120,6 @@ import { PaymentMethodsPage } from "./PaymentMethodsPage";
 describe("PaymentMethodsPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockTypesLoading = false;
     mockMethodsLoading = false;
     mockGrantedPermissions = [
       "seller_payment_methods.read",
@@ -165,73 +129,54 @@ describe("PaymentMethodsPage", () => {
     ];
   });
 
-  it("renders page title", () => {
+  it("renders page content", () => {
     render(<PaymentMethodsPage />);
-    expect(screen.getByTestId("payment-methods-title")).toBeInTheDocument();
+    expect(screen.getByTestId("payment-methods-page")).toBeInTheDocument();
   });
 
-  it("shows table in closed mode", () => {
+  it("shows add button when canCreate", () => {
     render(<PaymentMethodsPage />);
-    expect(screen.getByTestId("table-mock")).toBeInTheDocument();
+    expect(screen.getByTestId("add-payment-method-button")).toBeInTheDocument();
   });
 
-  it("opens editor when add button is clicked", () => {
+  it("shows method list", () => {
     render(<PaymentMethodsPage />);
-    fireEvent.click(screen.getByTestId("add-payment-method-button"));
-    expect(screen.getByTestId("editor-mock")).toBeInTheDocument();
+    expect(screen.getByText("Cash")).toBeInTheDocument();
   });
 
-  it("opens editor in edit mode", () => {
-    render(<PaymentMethodsPage />);
-    fireEvent.click(screen.getByText("Edit"));
-    expect(screen.getByTestId("editor-mock")).toBeInTheDocument();
-  });
-
-  it("closes editor on cancel", () => {
+  it("opens create form when add button is clicked", () => {
     render(<PaymentMethodsPage />);
     fireEvent.click(screen.getByTestId("add-payment-method-button"));
-    fireEvent.click(screen.getByText("Cancel"));
-    expect(screen.getByTestId("table-mock")).toBeInTheDocument();
+    // Create form should appear (no longer shows editor-mock directly)
+    expect(
+      screen.queryByTestId("add-payment-method-button"),
+    ).not.toBeInTheDocument();
   });
 
-  it("calls insertMutation on save in create mode", () => {
-    render(<PaymentMethodsPage />);
-    fireEvent.click(screen.getByTestId("add-payment-method-button"));
-    fireEvent.click(screen.getByText("Save"));
-    expect(mockInsert.mutate).toHaveBeenCalled();
-  });
-
-  it("calls updateMutation on save in edit mode", () => {
-    render(<PaymentMethodsPage />);
-    fireEvent.click(screen.getByText("Edit"));
-    fireEvent.click(screen.getByText("Save"));
-    expect(mockUpdate.mutate).toHaveBeenCalled();
-  });
-
-  it("calls deleteMutation on delete", () => {
-    render(<PaymentMethodsPage />);
-    fireEvent.click(screen.getByText("Delete"));
-    expect(mockDelete.mutate).toHaveBeenCalledWith("m1");
-  });
-
-  it("shows loading state when types are loading", () => {
-    mockTypesLoading = true;
+  it("shows loading state when methods are loading", () => {
+    mockMethodsLoading = true;
     render(<PaymentMethodsPage />);
     expect(screen.getByText("loading")).toBeInTheDocument();
-  });
-
-  it("calls toggleMutation on toggle", () => {
-    render(<PaymentMethodsPage />);
-    fireEvent.click(screen.getByText("Toggle"));
-    expect(mockToggle.mutate).toHaveBeenCalledWith({
-      id: "m1",
-      isActive: false,
-    });
   });
 
   it("shows access denied without read permission", () => {
     mockGrantedPermissions = [];
     render(<PaymentMethodsPage />);
     expect(screen.getByTestId("access-denied")).toBeInTheDocument();
+  });
+
+  it("shows edit buttons for each method when canUpdate", () => {
+    render(<PaymentMethodsPage />);
+    expect(screen.getByTestId("payment-method-edit")).toBeInTheDocument();
+  });
+
+  it("shows delete buttons for each method when canDelete", () => {
+    render(<PaymentMethodsPage />);
+    expect(screen.getByTestId("payment-method-delete")).toBeInTheDocument();
+  });
+
+  it("shows active toggle for each method when canUpdate", () => {
+    render(<PaymentMethodsPage />);
+    expect(screen.getByRole("switch")).toBeInTheDocument();
   });
 });

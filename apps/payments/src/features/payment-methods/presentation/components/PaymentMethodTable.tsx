@@ -2,21 +2,16 @@
 
 import { Pencil, Trash2 } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
-import { tid } from "shared";
+import { i18nField, tid } from "shared";
 import { Skeleton, Switch } from "ui";
 
-import type {
-  PaymentMethodType,
-  SellerPaymentMethod,
-} from "@/features/payment-methods/domain/types";
-import { getPaymentTypeName } from "@/features/payment-methods/domain/utils";
+import type { SellerPaymentMethod } from "@/features/payment-methods/domain/types";
 
 const ZEBRA_MODULO = 2;
 const SKELETON_ROWS = 3;
 
 interface PaymentMethodTableProps {
   methods: SellerPaymentMethod[];
-  types: PaymentMethodType[];
   onEdit?: (method: SellerPaymentMethod) => void;
   onDelete?: (id: string) => void;
   onToggleActive?: (id: string, isActive: boolean) => void;
@@ -25,7 +20,6 @@ interface PaymentMethodTableProps {
 
 export function PaymentMethodTable({
   methods,
-  types,
   onEdit,
   onDelete,
   onToggleActive,
@@ -34,8 +28,8 @@ export function PaymentMethodTable({
   const t = useTranslations("paymentMethods");
   const locale = useLocale();
 
-  const getTypeName = (typeId: string): string =>
-    getPaymentTypeName(types, typeId, locale);
+  const getTypeName = (method: SellerPaymentMethod): string =>
+    i18nField(method, "name", locale) || method.name_en;
 
   if (isLoading) {
     return (
@@ -94,7 +88,7 @@ export function PaymentMethodTable({
               {...tid(`payment-method-row-${method.id}`)}
             >
               <td className="px-4 py-3 text-sm font-medium">
-                {getTypeName(method.type_id)}
+                {getTypeName(method)}
               </td>
               <td className="px-4 py-3 text-center">
                 {onToggleActive ? (

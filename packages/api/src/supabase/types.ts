@@ -296,6 +296,7 @@ export type Database = {
       };
       orders: {
         Row: {
+          buyer_info: Json | null;
           checkout_session_id: string | null;
           created_at: string;
           expires_at: string | null;
@@ -311,6 +312,7 @@ export type Database = {
           user_id: string;
         };
         Insert: {
+          buyer_info?: Json | null;
           checkout_session_id?: string | null;
           created_at?: string;
           expires_at?: string | null;
@@ -326,6 +328,7 @@ export type Database = {
           user_id: string;
         };
         Update: {
+          buyer_info?: Json | null;
           checkout_session_id?: string | null;
           created_at?: string;
           expires_at?: string | null;
@@ -350,51 +353,6 @@ export type Database = {
           },
         ];
       };
-      payment_method_types: {
-        Row: {
-          created_at: string;
-          description_en: string | null;
-          description_es: string | null;
-          icon: string | null;
-          id: string;
-          is_active: boolean;
-          name_en: string;
-          name_es: string;
-          requires_receipt: boolean;
-          requires_transfer_number: boolean;
-          sort_order: number;
-          updated_at: string;
-        };
-        Insert: {
-          created_at?: string;
-          description_en?: string | null;
-          description_es?: string | null;
-          icon?: string | null;
-          id?: string;
-          is_active?: boolean;
-          name_en: string;
-          name_es: string;
-          requires_receipt?: boolean;
-          requires_transfer_number?: boolean;
-          sort_order?: number;
-          updated_at?: string;
-        };
-        Update: {
-          created_at?: string;
-          description_en?: string | null;
-          description_es?: string | null;
-          icon?: string | null;
-          id?: string;
-          is_active?: boolean;
-          name_en?: string;
-          name_es?: string;
-          requires_receipt?: boolean;
-          requires_transfer_number?: boolean;
-          sort_order?: number;
-          updated_at?: string;
-        };
-        Relationships: [];
-      };
       payment_settings: {
         Row: {
           key: string;
@@ -416,6 +374,7 @@ export type Database = {
       permissions: {
         Row: {
           created_at: string;
+          depends_on: string | null;
           description_en: string;
           description_es: string;
           id: string;
@@ -425,6 +384,7 @@ export type Database = {
         };
         Insert: {
           created_at?: string;
+          depends_on?: string | null;
           description_en?: string;
           description_es?: string;
           id?: string;
@@ -434,6 +394,7 @@ export type Database = {
         };
         Update: {
           created_at?: string;
+          depends_on?: string | null;
           description_en?: string;
           description_es?: string;
           id?: string;
@@ -696,53 +657,42 @@ export type Database = {
       };
       seller_payment_methods: {
         Row: {
-          account_details_en: string | null;
-          account_details_es: string | null;
           created_at: string;
+          display_blocks: Json;
+          form_fields: Json;
           id: string;
           is_active: boolean;
+          name_en: string;
+          name_es: string | null;
           seller_id: string;
-          seller_note_en: string | null;
-          seller_note_es: string | null;
           sort_order: number;
-          type_id: string;
           updated_at: string;
         };
         Insert: {
-          account_details_en?: string | null;
-          account_details_es?: string | null;
           created_at?: string;
+          display_blocks?: Json;
+          form_fields?: Json;
           id?: string;
           is_active?: boolean;
+          name_en: string;
+          name_es?: string | null;
           seller_id: string;
-          seller_note_en?: string | null;
-          seller_note_es?: string | null;
           sort_order?: number;
-          type_id: string;
           updated_at?: string;
         };
         Update: {
-          account_details_en?: string | null;
-          account_details_es?: string | null;
           created_at?: string;
+          display_blocks?: Json;
+          form_fields?: Json;
           id?: string;
           is_active?: boolean;
+          name_en?: string;
+          name_es?: string | null;
           seller_id?: string;
-          seller_note_en?: string | null;
-          seller_note_es?: string | null;
           sort_order?: number;
-          type_id?: string;
           updated_at?: string;
         };
-        Relationships: [
-          {
-            foreignKeyName: "seller_payment_methods_type_id_fkey";
-            columns: ["type_id"];
-            isOneToOne: false;
-            referencedRelation: "payment_method_types";
-            referencedColumns: ["id"];
-          },
-        ];
+        Relationships: [];
       };
       ticket_transfers: {
         Row: {
@@ -876,6 +826,14 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      grant_default_buyer_permissions: {
+        Args: { p_granted_by: string; p_reason?: string; p_user_id: string };
+        Returns: undefined;
+      };
+      has_permission: {
+        Args: { p_permission_key: string; p_user_id: string };
+        Returns: boolean;
+      };
       release_stock: {
         Args: { p_product_id: string; p_quantity: number };
         Returns: undefined;
@@ -883,6 +841,22 @@ export type Database = {
       reserve_stock: {
         Args: { p_product_id: string; p_quantity: number };
         Returns: boolean;
+      };
+      resubmit_evidence: {
+        Args: {
+          p_order_id: string;
+          p_receipt_url: string;
+          p_transfer_number: string;
+        };
+        Returns: undefined;
+      };
+      update_order_status: {
+        Args: {
+          p_new_status: string;
+          p_order_id: string;
+          p_seller_note?: string;
+        };
+        Returns: undefined;
       };
     };
     Enums: {

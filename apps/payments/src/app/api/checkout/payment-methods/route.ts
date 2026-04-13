@@ -7,23 +7,20 @@ import type {
   SellerPaymentMethodWithType,
 } from "@/features/checkout/domain/types";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+// Dynamic key access prevents Turbopack from inlining at build time,
+// allowing the runtime env var to be read when the server starts.
+const supabaseUrl =
+  process.env["SUPABASE_URL_INTERNAL"] || process.env.NEXT_PUBLIC_SUPABASE_URL;
 const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const REQUIRED_PERMISSION_KEYS = ["orders.create", "receipts.create"] as const;
 
 type PaymentMethodRow = {
   id: string;
-  account_details_en: string | null;
-  account_details_es: string | null;
-  seller_note_en: string | null;
-  seller_note_es: string | null;
-  payment_method_types: {
-    name_en: string;
-    name_es: string;
-    icon: string | null;
-    requires_receipt: boolean;
-    requires_transfer_number: boolean;
-  };
+  name_en: string;
+  name_es: string | null;
+  display_blocks: unknown;
+  form_fields: unknown;
+  is_active: boolean;
 };
 
 type ProductStockRow = {
@@ -141,15 +138,15 @@ function sanitizeItems(items: unknown): CheckoutItemPayload[] | null {
 function mapPaymentMethod(row: PaymentMethodRow): SellerPaymentMethodWithType {
   return {
     id: row.id,
-    type_name_en: row.payment_method_types.name_en,
-    type_name_es: row.payment_method_types.name_es,
-    type_icon: row.payment_method_types.icon,
-    requires_receipt: row.payment_method_types.requires_receipt,
-    requires_transfer_number: row.payment_method_types.requires_transfer_number,
-    account_details_en: row.account_details_en,
-    account_details_es: row.account_details_es,
-    seller_note_en: row.seller_note_en,
-    seller_note_es: row.seller_note_es,
+    name_en: row.name_en,
+    name_es: row.name_es ?? null,
+    display_blocks: Array.isArray(row.display_blocks)
+      ? (row.display_blocks as SellerPaymentMethodWithType["display_blocks"])
+      : [],
+    form_fields: Array.isArray(row.form_fields)
+      ? (row.form_fields as SellerPaymentMethodWithType["form_fields"])
+      : [],
+    is_active: row.is_active,
   };
 }
 
@@ -189,8 +186,7 @@ async function fetchPaymentMethodsBySeller(sellerId: string) {
       seller_id: `eq.${sellerId}`,
       is_active: "eq.true",
       order: "sort_order.asc",
-      select:
-        "id,account_details_en,account_details_es,seller_note_en,seller_note_es,payment_method_types!inner(name_en,name_es,icon,requires_receipt,requires_transfer_number)",
+      select: "id,name_en,name_es,display_blocks,form_fields,is_active",
     }),
   );
 }

@@ -1,3 +1,6 @@
+/* eslint-disable i18next/no-literal-string -- alt text and buyer info labels are dynamic/internal, not user-facing UI strings */
+/* eslint-disable @next/next/no-img-element -- dynamic user-uploaded images, no Next.js Image optimization needed */
+/* eslint-disable react/no-multi-comp -- BuyerInfoValue is a private helper co-located with its parent */
 "use client";
 
 import { Clock } from "lucide-react";
@@ -22,6 +25,46 @@ const TICK_INTERVAL_MS = 60_000;
 
 function getItemName(item: OrderItem, locale: string): string {
   return i18nField(item.metadata, "name", locale) || item.product_id;
+}
+
+function isUrl(value: string): boolean {
+  return value.startsWith("https://");
+}
+
+function isImageUrl(value: string): boolean {
+  return isUrl(value) && /\.(jpg|jpeg|png|gif|webp|svg)(\?|$)/i.test(value);
+}
+
+function BuyerInfoValue({ value }: { value: string }) {
+  if (isImageUrl(value)) {
+    return (
+      <a
+        href={value}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="block"
+      >
+        <img
+          src={value}
+          alt="Uploaded file"
+          className="max-h-32 max-w-xs rounded-sm border border-border object-contain"
+        />
+      </a>
+    );
+  }
+  if (isUrl(value)) {
+    return (
+      <a
+        href={value}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="font-mono text-xs text-primary underline underline-offset-2 hover:opacity-80 break-all"
+      >
+        {value}
+      </a>
+    );
+  }
+  return <span className="font-mono text-xs break-all">{value}</span>;
 }
 
 interface ReceivedOrderCardProps {
@@ -118,6 +161,20 @@ export function ReceivedOrderCard({
           receiptUrl={order.receipt_url}
         />
       </div>
+
+      {/* Buyer info (e.g. Nequi fields) */}
+      {order.buyer_info && Object.keys(order.buyer_info).length > 0 && (
+        <div className="border-b-2 border-dashed border-muted-foreground/30 px-4 py-3 space-y-1">
+          {Object.entries(order.buyer_info).map(([key, value]) => (
+            <div key={key} className="flex items-start gap-2 text-sm">
+              <span className="font-display text-xs font-bold uppercase tracking-widest text-muted-foreground min-w-24 pt-0.5">
+                {key}
+              </span>
+              <BuyerInfoValue value={value} />
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Seller note */}
       {order.seller_note && (

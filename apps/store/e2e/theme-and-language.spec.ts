@@ -1,7 +1,12 @@
 import { test, expect } from "@playwright/test";
+import path from "node:path";
 
-const STORE_URL = "http://localhost:5001";
-const LANDING_URL = "http://localhost:5004";
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { resolveE2EAppUrls } = require(
+  path.resolve(__dirname, "../../../scripts/app-url-resolver.js"),
+);
+
+const { store: STORE_URL, landing: LANDING_URL } = resolveE2EAppUrls();
 
 /** Clear only theme and locale cookies, preserving auth session */
 async function clearNonAuthCookies(

@@ -12,12 +12,21 @@ export function useApplyTemplate() {
 
   return useMutation({
     mutationFn: async ({ userId, permissionKeys }: ApplyTemplateParams) => {
-      const response = await fetch(`/api/admin/users/${userId}/permissions`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        credentials: "same-origin",
-        body: JSON.stringify({ permissionKeys }),
-      });
+      const basePath =
+        globalThis.window !== undefined &&
+        globalThis.window.location.pathname.startsWith("/admin")
+          ? "/admin"
+          : "";
+
+      const response = await fetch(
+        `${basePath}/api/admin/users/${userId}/permissions`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          credentials: "same-origin",
+          body: JSON.stringify({ permissionKeys }),
+        },
+      );
 
       if (!response.ok) {
         throw new Error("Failed to apply permission template");
