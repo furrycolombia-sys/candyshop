@@ -23,16 +23,21 @@ function isPlaceholder(value: string | undefined) {
   return !value || value.startsWith("YOUR_");
 }
 
+// When running in e2e mode (E2E_PUBLIC_ORIGIN is set), prefer the env vars
+// from .env.e2e over local supabase status — the e2e Supabase runs on a
+// different port (64321) than dev (54321).
+const isE2EMode = Boolean(process.env.E2E_PUBLIC_ORIGIN);
+
 // Always prefer local Supabase credentials — the live site tunnels through
 // the same local instance, so local keys are valid for both local and live E2E.
 const SUPABASE_URL =
-  localSupabaseEnv.API_URL ||
+  (!isE2EMode && localSupabaseEnv.API_URL) ||
   (isPlaceholder(process.env.NEXT_PUBLIC_SUPABASE_URL)
     ? "http://127.0.0.1:54321"
     : process.env.NEXT_PUBLIC_SUPABASE_URL) ||
   "http://127.0.0.1:54321";
 const SERVICE_ROLE_KEY =
-  localSupabaseEnv.SERVICE_ROLE_KEY ||
+  (!isE2EMode && localSupabaseEnv.SERVICE_ROLE_KEY) ||
   (isPlaceholder(process.env.SUPABASE_SERVICE_ROLE_KEY)
     ? ""
     : process.env.SUPABASE_SERVICE_ROLE_KEY) ||
