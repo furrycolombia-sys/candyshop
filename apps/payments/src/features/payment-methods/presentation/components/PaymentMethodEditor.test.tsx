@@ -133,10 +133,13 @@ describe("PaymentMethodEditor", () => {
     expect(screen.getByText("nameRequired")).toBeInTheDocument();
   });
 
-  it("shows edit method heading", () => {
+  it("renders both name inputs and section editors", () => {
     render(<PaymentMethodEditor {...defaultProps} />, {
       wrapper: createWrapper(),
     });
-    expect(screen.getByText("editMethod")).toBeInTheDocument();
+    expect(screen.getByTestId("payment-method-name-en")).toBeInTheDocument();
+    expect(screen.getByTestId("payment-method-name-es")).toBeInTheDocument();
+    expect(screen.getByTestId("display-section-editor")).toBeInTheDocument();
+    expect(screen.getByTestId("form-section-editor")).toBeInTheDocument();
   });
 });
