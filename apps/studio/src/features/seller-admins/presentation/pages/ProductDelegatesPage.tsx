@@ -6,6 +6,7 @@ import { useCallback } from "react";
 import { tid } from "shared";
 
 import { useSupabaseAuth } from "@/features/auth/application/hooks/useSupabaseAuth";
+import { useProductById } from "@/features/products/application/useProductForm";
 import {
   useAddDelegate,
   useRemoveDelegate,
@@ -18,34 +19,43 @@ import { AccessDeniedState } from "@/shared/presentation/components/AccessDenied
 
 const SELLER_ADMINS_READ_PERMISSION = "seller_admins.read";
 
-export function DelegateManagementPage() {
+interface ProductDelegatesPageProps {
+  productId: string;
+}
+
+export function ProductDelegatesPage({ productId }: ProductDelegatesPageProps) {
   const { isLoading: permLoading, hasPermission } = useCurrentUserPermissions();
   const { user } = useSupabaseAuth();
   const t = useTranslations("sellerAdmins");
   const tCommon = useTranslations("common");
 
   const sellerId = user?.id;
-  const { data: delegates = [], isLoading } = useDelegates(sellerId);
+  const { data: product, isLoading: productLoading } =
+    useProductById(productId);
+  const { data: delegates = [], isLoading: delegatesLoading } = useDelegates(
+    sellerId,
+    productId,
+  );
   const addMutation = useAddDelegate();
   const removeMutation = useRemoveDelegate();
 
   const handleAdd = useCallback(
     (adminUserId: string, permissions: DelegatePermission[]) => {
       if (!sellerId) return;
-      addMutation.mutate({ sellerId, adminUserId, permissions, productId: "" });
+      addMutation.mutate({ sellerId, adminUserId, permissions, productId });
     },
-    [sellerId, addMutation],
+    [sellerId, productId, addMutation],
   );
 
   const handleRemove = useCallback(
     (adminUserId: string) => {
       if (!sellerId) return;
-      removeMutation.mutate({ sellerId, adminUserId, productId: "" });
+      removeMutation.mutate({ sellerId, adminUserId, productId });
     },
-    [sellerId, removeMutation],
+    [sellerId, productId, removeMutation],
   );
 
-  if (permLoading || isLoading) return null;
+  if (permLoading || delegatesLoading || productLoading) return null;
 
   if (!hasPermission(SELLER_ADMINS_READ_PERMISSION)) {
     return (
@@ -56,12 +66,16 @@ export function DelegateManagementPage() {
     );
   }
 
+  const productName = product?.name_en ?? "";
+
   return (
     <div
-      {...tid("delegate-management-page")}
+      {...tid("product-delegates-page")}
       className="mx-auto w-full max-w-2xl space-y-6 p-6"
     >
-      <h1 className="text-xl font-semibold">{t("title")}</h1>
+      <h1 className="text-xl font-semibold">
+        {t("title")} — {productName}
+      </h1>
 
       <section>
         <h2 className="mb-3 text-base font-medium">{t("currentDelegates")}</h2>
@@ -74,7 +88,11 @@ export function DelegateManagementPage() {
 
       <section>
         <h2 className="mb-3 text-base font-medium">{t("addDelegate")}</h2>
-        <AddDelegateForm onAdd={handleAdd} isAdding={addMutation.isPending} />
+        <AddDelegateForm
+          onAdd={handleAdd}
+          isAdding={addMutation.isPending}
+          productId={productId}
+        />
       </section>
     </div>
   );

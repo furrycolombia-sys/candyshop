@@ -68,6 +68,7 @@ export const productImageSchema = z.object({
   url: z.string().url(),
   alt: z.string().optional().default(""),
   sort_order: z.number().int().nonnegative(),
+  is_cover: z.boolean().optional().default(false),
 });
 
 export type ProductImage = z.infer<typeof productImageSchema>;

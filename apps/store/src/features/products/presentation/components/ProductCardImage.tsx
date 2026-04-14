@@ -1,13 +1,12 @@
 import { ShoppingCart } from "lucide-react";
 import Image from "next/image";
-import { tid } from "shared";
+import { getCoverImageUrl, tid } from "shared";
 
 import { FeaturedRibbon } from "./FeaturedRibbon";
 
 import {
   isProductAvailable,
   type Product,
-  type ProductImage,
 } from "@/features/products/domain/types";
 import { getCategoryTheme } from "@/shared/domain/categoryConstants";
 
@@ -23,15 +22,6 @@ interface ProductCardImageProps {
   inCartLabel?: string;
 }
 
-/** Extract the first image URL from the JSONB images field */
-function getFirstImageUrl(images: unknown): string | null {
-  if (!Array.isArray(images) || images.length === 0) return null;
-  const first = images[0] as ProductImage | string;
-  if (typeof first === "string") return first;
-  if (first && typeof first === "object" && "url" in first) return first.url;
-  return null;
-}
-
 export function ProductCardImage({
   product,
   categoryColor,
@@ -43,7 +33,7 @@ export function ProductCardImage({
   quantityInCart = 0,
   inCartLabel,
 }: ProductCardImageProps) {
-  const imageUrl = getFirstImageUrl(product.images);
+  const imageUrl = getCoverImageUrl(product.images);
 
   return (
     <div

@@ -74,7 +74,9 @@
     "inStock": "En Stock",
     "outOfStock": "Agotado",
     "refundable": "Reembolsable",
-    "nonRefundable": "No reembolsable"
+    "nonRefundable": "No reembolsable",
+    "hasDelegates": "Tiene delegados",
+    "manageDelegates": "Administrar Delegados"
   },
   "productTypes": {
     "merch": "Merch",
@@ -190,6 +192,8 @@
       "templateSectionSingular": "seccion",
       "templateSectionPlural": "secciones",
       "imageNumber": "Imagen {number}",
+      "setAsCover": "Establecer como portada",
+      "dragToReorder": "Arrastra para reordenar",
       "chooseIcon": "Elegir ícono",
       "searchIcons": "Buscar íconos...",
       "noIconsFound": "No se encontraron íconos",
