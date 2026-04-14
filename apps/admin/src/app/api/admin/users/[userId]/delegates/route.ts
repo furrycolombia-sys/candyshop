@@ -1,69 +1,16 @@
 /* eslint-disable i18next/no-literal-string */
-import { createServerSupabaseClient } from "api/supabase/server";
 import { NextResponse } from "next/server";
 
-const supabaseUrl =
-  process.env["SUPABASE_URL_INTERNAL"] || process.env.NEXT_PUBLIC_SUPABASE_URL;
-const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-const FORBIDDEN_ERROR = "Forbidden";
+import {
+  adminFetch,
+  FORBIDDEN_ERROR,
+  getAuthorizedAdmin,
+  INTERNAL_SERVER_ERROR_STATUS,
+  validateUuid,
+} from "@/app/api/admin/_shared/adminRest";
+
 const SELLER_ADMINS_READ = "seller_admins.read";
 const SELLER_ADMINS_DELETE = "seller_admins.delete";
-const UUID_PATTERN =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-
-function getRestHeaders() {
-  if (!supabaseUrl || !serviceRoleKey) {
-    throw new Error("Supabase admin REST client is not configured");
-  }
-  return {
-    apikey: serviceRoleKey,
-    Authorization: `Bearer ${serviceRoleKey}`,
-    "Content-Type": "application/json",
-  };
-}
-
-function getRestUrl(path: string) {
-  if (!supabaseUrl) throw new Error("Supabase URL is not configured");
-  return `${supabaseUrl}/rest/v1/${path}`;
-}
-
-function validateUserId(userId: string) {
-  if (!UUID_PATTERN.test(userId)) throw new Error("Invalid user ID");
-  return userId;
-}
-
-async function adminFetch(path: string, init?: RequestInit) {
-  const response = await fetch(getRestUrl(path), {
-    ...init,
-    headers: { ...getRestHeaders(), ...init?.headers },
-    cache: "no-store",
-  });
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(errorText || `Admin API failed for ${path}`);
-  }
-  return response;
-}
-
-async function fetchGrantedPermissionKeys(userId: string): Promise<string[]> {
-  const response = await adminFetch(
-    `user_permissions?user_id=eq.${userId}&mode=eq.grant&select=resource_permissions!inner(permissions!inner(key))`,
-  );
-  const rows = (await response.json()) as Array<{
-    resource_permissions: { permissions: { key: string } };
-  }>;
-  return rows.map((r) => r.resource_permissions.permissions.key);
-}
-
-async function getAuthorizedAdmin(requiredKeys: string[]) {
-  const sessionSupabase = await createServerSupabaseClient();
-  const {
-    data: { user },
-  } = await sessionSupabase.auth.getUser();
-  if (!user) return null;
-  const grantedKeys = await fetchGrantedPermissionKeys(user.id);
-  return requiredKeys.every((k) => grantedKeys.includes(k)) ? user.id : null;
-}
 
 /** Delegate row shape returned by the API */
 interface DelegateRow {
@@ -75,7 +22,6 @@ interface DelegateRow {
   created_at: string;
 }
 
-/** Profile shape for joined user data */
 interface ProfileShape {
   id: string;
   email: string;
@@ -83,7 +29,6 @@ interface ProfileShape {
   avatar_url: string | null;
 }
 
-/** Product shape for joined product data */
 interface ProductShape {
   id: string;
   name_en: string;
@@ -118,7 +63,7 @@ export async function GET(
 
   try {
     const { userId } = await context.params;
-    const validId = validateUserId(userId);
+    const validId = validateUuid(userId);
 
     const [asSellerRes, asDelegateRes] = await Promise.all([
       adminFetch(
@@ -136,7 +81,7 @@ export async function GET(
   } catch {
     return NextResponse.json(
       { error: "Failed to load delegates" },
-      { status: 500 },
+      { status: INTERNAL_SERVER_ERROR_STATUS },
     );
   }
 }
@@ -157,17 +102,12 @@ export async function DELETE(
   }
 
   try {
-    await context.params; // validate route param exists
+    await context.params;
     const { delegateRowId } = (await request.json()) as {
       delegateRowId: string;
     };
 
-    if (!UUID_PATTERN.test(delegateRowId)) {
-      return NextResponse.json(
-        { error: "Invalid delegate row ID" },
-        { status: 400 },
-      );
-    }
+    validateUuid(delegateRowId);
 
     await adminFetch(`seller_admins?id=eq.${delegateRowId}`, {
       method: "DELETE",
@@ -178,7 +118,7 @@ export async function DELETE(
   } catch {
     return NextResponse.json(
       { error: "Failed to remove delegate" },
-      { status: 500 },
+      { status: INTERNAL_SERVER_ERROR_STATUS },
     );
   }
 }
