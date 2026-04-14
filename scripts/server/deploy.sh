@@ -1,20 +1,38 @@
 #!/bin/bash
 set -euo pipefail
 
-# =============================================================================
+# ==============================================================================
 # Server-side deploy script (called by webhook receiver)
-# Pulls latest code, rebuilds Docker container (no cache), restarts.
-# =============================================================================
+# Pulls latest code, rebuilds Docker container, restarts.
+# Limits build to half the CPU cores to keep the running site responsive.
+# ==============================================================================
 
 DEPLOY_DIR="/home/furrycolombia/candyshop"
 REPO_URL="${REPO_URL:-https://github.com/furrycolombia-sys/candyshop.git}"
 BRANCH="${BRANCH:-main}"
 ENV_FILE="${ENV_FILE:-/home/furrycolombia/.env.prod}"
 COMPOSE_FILE="$DEPLOY_DIR/docker/compose.yml"
+LOCKFILE="/tmp/candyshop-deploy.lock"
+MAX_BUILD_CPUS=4
 
 log()  { echo "[DEPLOY] $1"; }
 warn() { echo "[WARN] $1"; }
 err()  { echo "[ERROR] $1"; exit 1; }
+
+# Kill any previous stuck deploy
+if [ -f "$LOCKFILE" ]; then
+  OLD_PID=$(cat "$LOCKFILE" 2>/dev/null || true)
+  if [ -n "$OLD_PID" ] && kill -0 "$OLD_PID" 2>/dev/null; then
+    warn "Killing previous deploy (PID $OLD_PID)"
+    kill -TERM "$OLD_PID" 2>/dev/null || true
+    sleep 3
+    kill -9 "$OLD_PID" 2>/dev/null || true
+  fi
+  rm -f "$LOCKFILE"
+fi
+
+echo $$ > "$LOCKFILE"
+trap 'rm -f "$LOCKFILE"' EXIT
 
 log "Starting deploy at $(date -u +%Y-%m-%dT%H:%M:%SZ)"
 
@@ -26,9 +44,10 @@ git checkout -B "$BRANCH" FETCH_HEAD
 git clean -fd
 log "Checked out $(git log --oneline -1)"
 
-# Rebuild container from scratch (no cache)
-log "Building Docker image (no cache)..."
-docker compose -f "$COMPOSE_FILE" --env-file "$ENV_FILE" build --no-cache
+# Rebuild container — limit CPU so the running site stays responsive
+log "Building Docker image (max ${MAX_BUILD_CPUS} CPUs)..."
+DOCKER_BUILDKIT=1 docker compose -f "$COMPOSE_FILE" --env-file "$ENV_FILE" \
+  build --no-cache --build-arg BUILDKIT_CPU_LIMIT=$MAX_BUILD_CPUS
 
 # Stop old container and start new one
 log "Restarting container..."
@@ -37,13 +56,13 @@ docker compose -f "$COMPOSE_FILE" --env-file "$ENV_FILE" up -d
 
 # Wait for health
 log "Waiting for health check..."
-for i in $(seq 1 30); do
+for i in $(seq 1 60); do
   if curl -sf http://localhost:9090/health > /dev/null 2>&1; then
     log "Container healthy after ${i}s"
     break
   fi
-  if [ "$i" -eq 30 ]; then
-    warn "Container not healthy after 30s"
+  if [ "$i" -eq 60 ]; then
+    warn "Container not healthy after 60s"
     docker logs candyshop-prod --tail 20
   fi
   sleep 1
