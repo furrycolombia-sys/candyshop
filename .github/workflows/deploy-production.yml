@@ -119,6 +119,7 @@ jobs:
           NEXT_PUBLIC_STUDIO_URL=${{ secrets.NEXT_PUBLIC_STUDIO_URL }}
           NEXT_PUBLIC_PLAYGROUND_URL=${{ secrets.NEXT_PUBLIC_PLAYGROUND_URL }}
           NEXT_PUBLIC_ENABLE_MOCKS=false
+          NEXT_PUBLIC_ENABLE_TEST_IDS=${{ secrets.NEXT_PUBLIC_ENABLE_TEST_IDS }}
           ENVEOF'
 
       - name: Copy deploy script to server
