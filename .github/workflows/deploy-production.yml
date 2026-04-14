@@ -123,9 +123,8 @@ jobs:
 
       - name: Copy deploy script to server
         run: |
-          scp -F ~/.ssh/config \
-            scripts/deploy-production.sh \
-            ${{ secrets.PROD_SERVER_HOST }}:/tmp/deploy-production.sh
+          cat scripts/deploy-production.sh | ssh ${{ secrets.PROD_SERVER_HOST }} \
+            'cat > /tmp/deploy-production.sh && chmod +x /tmp/deploy-production.sh'
 
       - name: Run deployment
         run: |
