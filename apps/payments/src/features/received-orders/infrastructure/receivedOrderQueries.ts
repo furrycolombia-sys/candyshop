@@ -12,9 +12,6 @@ import type {
 import { fetchUserDisplayNames } from "@/shared/infrastructure/fetchUserDisplayNames";
 import { getReceiptUrl } from "@/shared/infrastructure/receiptStorage";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- table not in generated types yet
-const SELLER_ADMINS_TABLE = "seller_admins" as any;
-
 const ORDER_SELECT = `
   id,
   user_id,
@@ -91,13 +88,11 @@ async function fetchDelegatedOrderRows(
   filter?: string,
 ): Promise<{ rows: OrderRow[]; sellerNameMap: Record<string, string> }> {
   const { data: delegations } = await supabase
-    .from(SELLER_ADMINS_TABLE)
+    .from("seller_admins")
     .select("seller_id")
     .eq("admin_user_id", userId);
 
-  const delegatedSellerIds = (
-    (delegations ?? []) as unknown as Array<{ seller_id: string }>
-  ).map((d) => d.seller_id);
+  const delegatedSellerIds = (delegations ?? []).map((d) => d.seller_id);
 
   if (delegatedSellerIds.length === 0) {
     return { rows: [], sellerNameMap: {} };

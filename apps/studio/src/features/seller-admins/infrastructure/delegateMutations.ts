@@ -8,9 +8,6 @@ import { validateDelegateInput } from "@/features/seller-admins/domain/validatio
 
 type SupabaseClient = ReturnType<typeof createBrowserSupabaseClient>;
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- table not in generated types yet
-const SELLER_ADMINS_TABLE = "seller_admins" as any;
-
 /**
  * Add a new delegate for a seller.
  * Validates input before inserting into `seller_admins`.
@@ -24,7 +21,7 @@ export async function addDelegate(
   validateDelegateInput(sellerId, adminUserId, permissions);
 
   const { data, error } = await supabase
-    .from(SELLER_ADMINS_TABLE)
+    .from("seller_admins")
     .insert({
       seller_id: sellerId,
       admin_user_id: adminUserId,
@@ -50,7 +47,7 @@ export async function updateDelegatePermissions(
   validateDelegateInput(sellerId, adminUserId, permissions);
 
   const { error } = await supabase
-    .from(SELLER_ADMINS_TABLE)
+    .from("seller_admins")
     .update({ permissions })
     .eq("seller_id", sellerId)
     .eq("admin_user_id", adminUserId);
@@ -67,7 +64,7 @@ export async function removeDelegate(
   adminUserId: string,
 ): Promise<void> {
   const { error } = await supabase
-    .from(SELLER_ADMINS_TABLE)
+    .from("seller_admins")
     .delete()
     .eq("seller_id", sellerId)
     .eq("admin_user_id", adminUserId);
