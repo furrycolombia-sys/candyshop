@@ -32,11 +32,10 @@ vi.mock("next/link", () => ({
 import { DelegateNav } from "./DelegateNav";
 
 describe("DelegateNav", () => {
-  it("renders all 3 navigation links", () => {
+  it("renders navigation links for products and delegates", () => {
     render(<DelegateNav />);
     expect(screen.getByTestId("nav-products")).toBeInTheDocument();
     expect(screen.getByTestId("nav-delegates")).toBeInTheDocument();
-    expect(screen.getByTestId("nav-delegated-orders")).toBeInTheDocument();
   });
 
   it("links have correct hrefs", () => {
@@ -45,10 +44,6 @@ describe("DelegateNav", () => {
     expect(screen.getByTestId("nav-delegates")).toHaveAttribute(
       "href",
       "/en/delegates",
-    );
-    expect(screen.getByTestId("nav-delegated-orders")).toHaveAttribute(
-      "href",
-      "/en/delegated-orders",
     );
   });
 
@@ -61,10 +56,5 @@ describe("DelegateNav", () => {
 
     const productsLink = screen.getByTestId("nav-products");
     expect(productsLink.className).toContain("text-muted-foreground");
-  });
-
-  it("renders a visual separator between own and admin sections", () => {
-    render(<DelegateNav />);
-    expect(screen.getByRole("separator")).toBeInTheDocument();
   });
 });

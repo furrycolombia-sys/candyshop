@@ -5,7 +5,7 @@ import { useMemo } from "react";
 import { SELLER_ADMINS_QUERY_KEY } from "@/features/seller-admins/domain/constants";
 import { fetchDelegates } from "@/features/seller-admins/infrastructure/delegateQueries";
 
-export function useDelegates(sellerId: string | undefined) {
+export function useDelegates(sellerId?: string) {
   const supabase = useMemo(() => createBrowserSupabaseClient(), []);
 
   return useQuery({

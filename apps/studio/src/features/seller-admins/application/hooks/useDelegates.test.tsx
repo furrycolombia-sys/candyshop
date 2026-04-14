@@ -34,7 +34,7 @@ describe("useDelegates", () => {
         id: "d1",
         seller_id: "s1",
         admin_user_id: "a1",
-        permissions: ["orders.approve"],
+        permissions: ["orders.approve" as const],
         created_at: "2024-01-01",
         updated_at: "2024-01-01",
         admin_profile: {
