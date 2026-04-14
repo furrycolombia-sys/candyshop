@@ -165,4 +165,4 @@ log("Saved Cloudflare recovery settings to `.env`.");
 log("Recovery flow for a fresh machine:");
 log("  1. pnpm install");
 log("  2. pnpm setup:cloudflare --help  (optional reference)");
-log("  3. pnpm site:up:cloudflare");
+log("  3. pnpm dev:up:tunnel");
