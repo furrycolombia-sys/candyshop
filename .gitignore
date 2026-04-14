@@ -115,3 +115,9 @@ specs/*
 .claude/version.json
 coverage-report.json
 .superpowers/
+
+# SSH credentials
+.ssh-credentials.json
+
+# Production env (contains secrets)
+scripts/server/production.env
