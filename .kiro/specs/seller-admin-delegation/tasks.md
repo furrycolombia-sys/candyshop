@@ -93,3 +93,17 @@ Wire up the feature module exports and add routes in the Studio app.
 - [ ] 10.3 Add route for delegated orders page in Studio app router
 - [ ] 10.4 Add navigation links to Studio sidebar/nav for delegate management and delegated orders
 - [ ] 10.5 Add i18n translation keys for all user-facing strings in the feature
+
+## Task 11: E2E Test — Delegated Admin Purchase Flow
+
+Create an E2E test in `apps/auth/e2e/` covering the full delegation lifecycle: a product exists, a buyer purchases it, the seller assigns a delegate (user C) to administrate their sales, user C sees the pending order and requests more proof, the buyer resubmits evidence, and user C approves the order.
+
+- [ ] 11.1 Create `apps/auth/e2e/delegated-admin-flow.spec.ts` with a serial test suite using the existing E2E helpers (`createTestUser`, `injectSession`, `cleanupTestData`, `createSnapHelper`, `APP_URLS`, constants). Create three test users: seller (with `SELLER_PERMISSIONS` + delegation permissions), buyer (with `BUYER_PERMISSIONS`), and delegate (user C, with minimal permissions). Add `seller_admins` cleanup to `afterAll`.
+- [ ] 11.2 Phase 1 — Seller creates a product: Seller creates a product in Studio using the existing `createProduct` helper pattern (navigate to Studio, click new-product-button, fill name/price, save).
+- [ ] 11.3 Phase 2 — Seller configures a payment method: Seller creates a payment method in Payments using the existing `createPaymentMethod` helper pattern (navigate to payment-methods, add method, fill name/instructions/field).
+- [ ] 11.4 Phase 3 — Buyer purchases the product: Buyer navigates to Store, searches for the product, adds to cart, checks out, selects the seller's payment method, fills the form field, and submits payment. Verify order shows as `pending_verification`.
+- [ ] 11.5 Phase 4 — Seller delegates user C: Seller navigates to the delegate management page in Studio, searches for user C by email, selects `orders.approve` and `orders.request_proof` permissions, and adds the delegate. Verify user C appears in the delegate list.
+- [ ] 11.6 Phase 5 — Delegate (user C) requests more proof: User C navigates to the delegated orders page in Studio, sees the buyer's pending order grouped under the seller, clicks the request-proof action, enters a seller note (e.g., "Please upload a clearer receipt photo"), and submits. Verify the order status changes to `evidence_requested`.
+- [ ] 11.7 Phase 6 — Buyer resubmits evidence: Buyer navigates to Payments purchases page, sees the order with `evidence_requested` status and the seller note, fills in a new transfer number in the resubmit form (`resubmit-transfer-{orderId}`), and submits (`resubmit-submit-{orderId}`). Verify the order returns to `pending_verification`.
+- [ ] 11.8 Phase 7 — Delegate (user C) approves the order: User C navigates back to delegated orders, sees the resubmitted order, clicks approve, confirms via the confirmation panel, and verifies the order status is now `approved`.
+- [ ] 11.9 Phase 8 — Buyer sees order approved: Buyer navigates to Payments purchases page and verifies the order shows `approved` status.
