@@ -42,7 +42,11 @@ const { loadRootEnv } = require("./load-root-env.js");
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const rootDir = resolve(__dirname, "..");
-const composeFile = resolve(rootDir, "docker", "compose.e2e.yml");
+const composeFile = resolve(
+  rootDir,
+  "docker",
+  envName === "e2e" ? "compose.e2e.yml" : "compose.yml",
+);
 const isWindows = process.platform === "win32";
 const docker = isWindows ? "docker.exe" : "docker";
 const pnpm = isWindows ? "pnpm.cmd" : "pnpm";
@@ -399,11 +403,15 @@ function runTests() {
 
 // ---- Main ----
 
+// Only the e2e environment needs its own isolated Supabase instance.
+// Staging and other envs use the main local Supabase (already running).
+const needsE2ESupabase = envName === "e2e";
+
 log(`Environment: .env.${envName} -> ${baseUrl}`);
 
 if (wantsDown) {
   teardownContainer();
-  if (!keepSupabase) {
+  if (needsE2ESupabase && !keepSupabase) {
     stopE2ESupabase();
   }
   log("Done.");
@@ -411,7 +419,9 @@ if (wantsDown) {
 }
 
 if (wantsBuild) {
-  await ensureSupabaseReady();
+  if (needsE2ESupabase) {
+    await ensureSupabaseReady();
+  }
   buildAndStart();
   const healthy = await waitForHealth();
   if (!healthy) {
@@ -438,7 +448,9 @@ if (wantsBuild) {
 }
 
 // Full cycle: Supabase -> container -> tests -> teardown -> restore
-await ensureSupabaseReady();
+if (needsE2ESupabase) {
+  await ensureSupabaseReady();
+}
 await ensureContainerReady();
 
 const testExitCode = runTests();
@@ -448,7 +460,11 @@ if (headed || uiMode || debugMode) {
     `Container still running at ${baseUrl}. Tear down with: pnpm test:e2e:down`,
   );
 } else {
-  fullTeardown();
+  teardownContainer();
+  if (needsE2ESupabase && !keepSupabase) {
+    stopE2ESupabase();
+  }
+  log("Done.");
 }
 
 process.exit(testExitCode);
