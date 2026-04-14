@@ -273,5 +273,38 @@
         "ticketsRemainingPlaceholder": "340"
       }
     }
+  },
+  "sellerAdmins": {
+    "title": "Gestión de Delegados",
+    "currentDelegates": "Delegados Actuales",
+    "addDelegate": "Agregar Delegado",
+    "noDelegates": "Aún no hay delegados",
+    "removeDelegate": "Eliminar delegado",
+    "searchPlaceholder": "Buscar por correo o nombre...",
+    "searchUsers": "Buscar usuarios",
+    "searching": "Buscando...",
+    "selectedUser": "Usuario seleccionado",
+    "permissionsLabel": "Permisos",
+    "adding": "Agregando...",
+    "editPermissionsFor": "Editar permisos para {name}",
+    "savePermissions": "Guardar",
+    "cancel": "Cancelar",
+    "delegatedOrders": "Órdenes Delegadas",
+    "noOrders": "No hay órdenes delegadas",
+    "unknownSeller": "Vendedor Desconocido",
+    "orderId": "Orden",
+    "approve": "Aprobar",
+    "requestProof": "Solicitar Prueba",
+    "sellerNotePlaceholder": "Escribe una nota para el comprador...",
+    "confirmApprove": "Confirmo que esta orden debe ser aprobada",
+    "confirmSubmit": "Confirmar Aprobación",
+    "navProducts": "Mis Productos",
+    "navDelegates": "Mis Delegados",
+    "navDelegatedOrders": "Órdenes Delegadas (Admin)",
+    "navigation": "Navegación del estudio",
+    "permissions": {
+      "orders.approve": "Aprobar Órdenes",
+      "orders.request_proof": "Solicitar Prueba"
+    }
   }
 }
