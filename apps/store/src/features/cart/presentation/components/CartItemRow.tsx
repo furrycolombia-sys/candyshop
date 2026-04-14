@@ -1,6 +1,6 @@
 import { Minus, Plus, X } from "lucide-react";
 import Image from "next/image";
-import { i18nField, i18nPrice, tid } from "shared";
+import { getCoverImageUrl, i18nField, i18nPrice, tid } from "shared";
 
 import type { CartItem } from "@/features/cart/domain/types";
 import {
@@ -49,21 +49,22 @@ export function CartItemRow({
         className="relative size-20 shrink-0 overflow-hidden border-strong border-foreground"
         style={{ backgroundColor: itemColor }}
       >
-        {Array.isArray(item.images) &&
-        item.images.length > 0 &&
-        typeof (item.images[0] as { url?: string })?.url === "string" ? (
-          <Image
-            src={(item.images[0] as { url: string }).url}
-            alt={name}
-            fill
-            className="object-cover"
-            sizes="80px"
-          />
-        ) : (
-          <span className="flex size-full items-center justify-center font-display text-ui-xs font-extrabold uppercase tracking-widest text-muted-foreground">
-            {tTypes(item.type)}
-          </span>
-        )}
+        {(() => {
+          const thumbUrl = getCoverImageUrl(item.images);
+          return thumbUrl ? (
+            <Image
+              src={thumbUrl}
+              alt={name}
+              fill
+              className="object-cover"
+              sizes="80px"
+            />
+          ) : (
+            <span className="flex size-full items-center justify-center font-display text-ui-xs font-extrabold uppercase tracking-widest text-muted-foreground">
+              {tTypes(item.type)}
+            </span>
+          );
+        })()}
       </div>
 
       {/* Item details */}

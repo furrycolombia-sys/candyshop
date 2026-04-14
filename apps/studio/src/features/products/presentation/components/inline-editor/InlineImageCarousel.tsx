@@ -6,13 +6,13 @@ import {
   Droppable,
   type DropResult,
 } from "@hello-pangea/dnd";
-import { ImageOff, Plus, X } from "lucide-react";
+import { GripVertical, ImageOff, Plus, Star, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useCallback, useState } from "react";
 import type { Control } from "react-hook-form";
 import { useFieldArray, useWatch } from "react-hook-form";
 import { tid } from "shared";
-import { Input } from "ui";
+import { cn, Input } from "ui";
 
 import type { ProductFormValues } from "@/features/products/domain/validationSchema";
 import { getCategoryTheme } from "@/shared/domain/categoryConstants";
@@ -25,7 +25,7 @@ interface InlineImageCarouselProps {
 export function InlineImageCarousel({ control }: InlineImageCarouselProps) {
   const t = useTranslations("form.inlineEditor");
 
-  const { fields, append, remove, move } = useFieldArray({
+  const { fields, append, remove, move, replace } = useFieldArray({
     control,
     name: "images",
   });
@@ -69,7 +69,7 @@ export function InlineImageCarousel({ control }: InlineImageCarouselProps) {
   );
 
   const handleAdd = useCallback(() => {
-    append({ url: "", alt: "", sort_order: fields.length });
+    append({ url: "", alt: "", sort_order: fields.length, is_cover: false });
     setActiveIndex(fields.length);
     setEditingMain(true);
   }, [append, fields.length]);
@@ -103,6 +103,17 @@ export function InlineImageCarousel({ control }: InlineImageCarouselProps) {
       return next;
     });
   }, []);
+
+  const handleSetCover = useCallback(
+    (index: number) => {
+      const updated = (watchedImages ?? []).map((img, i) => ({
+        ...img,
+        is_cover: i === index,
+      }));
+      replace(updated);
+    },
+    [watchedImages, replace],
+  );
 
   const toggleEditMain = useCallback(() => {
     setEditingMain((prev) => !prev);
@@ -167,6 +178,24 @@ export function InlineImageCarousel({ control }: InlineImageCarouselProps) {
           {...tid("image-thumb-remove")}
         >
           <X className="size-3" />
+        </button>
+
+        {/* Set as cover button */}
+        <button
+          type="button"
+          onClick={() => handleSetCover(index)}
+          aria-label={t("setAsCover")}
+          className="absolute -bottom-1.5 -right-1.5 z-10 flex size-5 items-center justify-center rounded-full bg-background border border-foreground/20"
+          {...tid(`image-thumb-cover-${String(index)}`)}
+        >
+          <Star
+            className={cn(
+              "size-3",
+              watchedImages?.[index]?.is_cover
+                ? "fill-current text-yellow-500"
+                : "text-muted-foreground",
+            )}
+          />
         </button>
       </>
     );
@@ -329,10 +358,16 @@ export function InlineImageCarousel({ control }: InlineImageCarouselProps) {
                       <div
                         ref={dragProvided.innerRef}
                         {...dragProvided.draggableProps}
-                        {...dragProvided.dragHandleProps}
-                        className="relative group"
+                        className="relative group flex items-center gap-1"
                         {...tid(`image-thumb-${String(index)}`)}
                       >
+                        <div
+                          {...dragProvided.dragHandleProps}
+                          className="cursor-grab text-muted-foreground hover:text-foreground"
+                          aria-label={t("dragToReorder")}
+                        >
+                          <GripVertical className="size-3" />
+                        </div>
                         {renderThumbContent(field, index)}
                       </div>
                     )}

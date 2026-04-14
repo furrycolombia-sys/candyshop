@@ -35,6 +35,7 @@ const mockDelegate: DelegateWithProfile = {
   id: "del-1",
   seller_id: "seller-1",
   admin_user_id: "admin-1",
+  product_id: "product-1",
   permissions: ["orders.approve"],
   created_at: "2024-01-01T00:00:00Z",
   updated_at: "2024-01-01T00:00:00Z",

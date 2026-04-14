@@ -13,19 +13,22 @@ export function escapeLikePattern(input: string): string {
 }
 
 /**
- * Fetch all delegates for a seller, joined with their user profiles.
+ * Fetch all delegates for a seller scoped to a specific product,
+ * joined with their user profiles.
  * Results are ordered by `created_at` ascending.
  */
 export async function fetchDelegates(
   supabase: SupabaseClient,
   sellerId: string,
+  productId: string,
 ): Promise<DelegateWithProfile[]> {
   const { data, error } = await supabase
     .from("seller_admins")
     .select(
-      "id, seller_id, admin_user_id, permissions, created_at, updated_at, admin_profile:user_profiles!admin_user_id(id, email, display_name, avatar_url)",
+      "id, seller_id, admin_user_id, product_id, permissions, created_at, updated_at, admin_profile:user_profiles!admin_user_id(id, email, display_name, avatar_url)",
     )
     .eq("seller_id", sellerId)
+    .eq("product_id", productId)
     .order("created_at", { ascending: true });
 
   if (error) throw error;
@@ -64,4 +67,28 @@ export async function searchUsers(
   if (error) throw error;
 
   return data ?? [];
+}
+
+/**
+ * Fetch delegate counts grouped by product for a seller.
+ * Returns a `Record<string, number>` mapping each `product_id` to its delegate count.
+ */
+export async function fetchDelegateCountsByProduct(
+  supabase: SupabaseClient,
+  sellerId: string,
+): Promise<Record<string, number>> {
+  const { data, error } = await supabase
+    .from("seller_admins")
+    .select("product_id")
+    .eq("seller_id", sellerId);
+
+  if (error) throw error;
+
+  const counts: Record<string, number> = {};
+  for (const row of data ?? []) {
+    const pid = (row as { product_id: string }).product_id;
+    counts[pid] = (counts[pid] ?? 0) + 1;
+  }
+
+  return counts;
 }

@@ -10,6 +10,18 @@ vi.mock("shared", () => ({
   tid: (id: string) => ({ "data-testid": id }),
   i18nField: (obj: Record<string, unknown>, field: string, locale: string) =>
     obj[`${field}_${locale}`] ?? obj[`${field}_en`],
+  getCoverImageUrl: (images: unknown) => {
+    if (!Array.isArray(images) || images.length === 0) return null;
+    const cover =
+      (images as { is_cover?: boolean }[]).find(
+        (img) => img.is_cover === true,
+      ) ?? images[0];
+    if (typeof cover === "string") return cover;
+    if (cover && typeof cover === "object" && "url" in cover) {
+      return String((cover as { url: string }).url);
+    }
+    return null;
+  },
 }));
 
 vi.mock("next/image", () => ({
@@ -258,5 +270,104 @@ describe("ProductTableRow", () => {
       </table>,
     );
     expect(screen.queryByTestId("product-image")).not.toBeInTheDocument();
+  });
+
+  it("renders delegate badge when delegateCount > 0", () => {
+    render(
+      <table>
+        <tbody>
+          <ProductTableRow {...defaultProps} delegateCount={3} />
+        </tbody>
+      </table>,
+    );
+    expect(screen.getByLabelText("products.hasDelegates")).toBeInTheDocument();
+  });
+
+  it("does not render delegate badge when delegateCount is 0", () => {
+    render(
+      <table>
+        <tbody>
+          <ProductTableRow {...defaultProps} delegateCount={0} />
+        </tbody>
+      </table>,
+    );
+    expect(
+      screen.queryByLabelText("products.hasDelegates"),
+    ).not.toBeInTheDocument();
+  });
+
+  it("does not render delegate badge when delegateCount is undefined", () => {
+    render(
+      <table>
+        <tbody>
+          <ProductTableRow {...defaultProps} />
+        </tbody>
+      </table>,
+    );
+    expect(
+      screen.queryByLabelText("products.hasDelegates"),
+    ).not.toBeInTheDocument();
+  });
+
+  it("renders manage delegates button when canUpdate is true", () => {
+    render(
+      <table>
+        <tbody>
+          <ProductTableRow {...defaultProps} canUpdate={true} />
+        </tbody>
+      </table>,
+    );
+    expect(screen.getByTestId("manage-delegates-p1")).toBeInTheDocument();
+  });
+
+  it("does not render manage delegates button when canUpdate is false", () => {
+    render(
+      <table>
+        <tbody>
+          <ProductTableRow {...defaultProps} canUpdate={false} />
+        </tbody>
+      </table>,
+    );
+    expect(screen.queryByTestId("manage-delegates-p1")).not.toBeInTheDocument();
+  });
+
+  it("manage delegates button links to correct URL", () => {
+    render(
+      <table>
+        <tbody>
+          <ProductTableRow {...defaultProps} canUpdate={true} />
+        </tbody>
+      </table>,
+    );
+    const link = screen.getByTestId("manage-delegates-p1").closest("a"); // eslint-disable-line testing-library/no-node-access -- checking link href requires DOM traversal
+    expect(link).toHaveAttribute("href", "/products/p1/delegates");
+  });
+
+  it("uses cover image when is_cover is set", () => {
+    const productWithCover = {
+      ...mockProduct,
+      images: [
+        { url: "https://example.com/a.jpg", alt: "", sort_order: 0 },
+        {
+          url: "https://example.com/b.jpg",
+          alt: "",
+          sort_order: 1,
+          is_cover: true,
+        },
+      ],
+    };
+    render(
+      <table>
+        <tbody>
+          <ProductTableRow
+            {...defaultProps}
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            product={productWithCover as any}
+          />
+        </tbody>
+      </table>,
+    );
+    const img = screen.getByTestId("product-image");
+    expect(img).toHaveAttribute("src", "https://example.com/b.jpg");
   });
 });
