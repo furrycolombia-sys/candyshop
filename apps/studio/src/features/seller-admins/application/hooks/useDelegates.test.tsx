@@ -34,6 +34,7 @@ describe("useDelegates", () => {
         id: "d1",
         seller_id: "s1",
         admin_user_id: "a1",
+        product_id: "p1",
         permissions: ["orders.approve" as const],
         created_at: "2024-01-01",
         updated_at: "2024-01-01",
@@ -47,17 +48,26 @@ describe("useDelegates", () => {
     ];
     vi.mocked(fetchDelegates).mockResolvedValue(mock);
 
-    const { result } = renderHook(() => useDelegates("s1"), {
+    const { result } = renderHook(() => useDelegates("s1", "p1"), {
       wrapper: createWrapper(),
     });
 
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     expect(result.current.data).toEqual(mock);
-    expect(fetchDelegates).toHaveBeenCalledWith(expect.anything(), "s1");
+    expect(fetchDelegates).toHaveBeenCalledWith(expect.anything(), "s1", "p1");
   });
 
   it("does not fetch when sellerId is undefined", () => {
-    const { result } = renderHook(() => useDelegates(), {
+    const { result } = renderHook(() => useDelegates(undefined, "p1"), {
+      wrapper: createWrapper(),
+    });
+
+    expect(result.current.fetchStatus).toBe("idle");
+    expect(fetchDelegates).not.toHaveBeenCalled();
+  });
+
+  it("does not fetch when productId is undefined", () => {
+    const { result } = renderHook(() => useDelegates("s1"), {
       wrapper: createWrapper(),
     });
 
@@ -68,7 +78,7 @@ describe("useDelegates", () => {
   it("handles error", async () => {
     vi.mocked(fetchDelegates).mockRejectedValue(new Error("fail"));
 
-    const { result } = renderHook(() => useDelegates("s1"), {
+    const { result } = renderHook(() => useDelegates("s1", "p1"), {
       wrapper: createWrapper(),
     });
 

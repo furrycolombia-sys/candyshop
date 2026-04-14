@@ -83,12 +83,12 @@ const EVENT = {
 };
 
 const IMAGES = [
-  { url: `${IMG_BASE}/BANNER_WEB.webp`, alt_en: "Moonfest 2026 banner", alt_es: "Banner Moonfest 2026", sort_order: 0 },
-  { url: `${IMG_BASE}/hero-bath-preview.webp`, alt_en: "Estelar Paipa Hotel thermal pool", alt_es: "Piscina termal Hotel Estelar Paipa", sort_order: 1 },
-  { url: `${IMG_BASE}/photo_2026-03-02_21-15-08.jpg`, alt_en: "Moonfest community gathering", alt_es: "Encuentro comunidad Moonfest", sort_order: 2 },
-  { url: `${IMG_BASE}/chia.webp`, alt_en: "Chia fursuit at Moonfest", alt_es: "Fursuit Chia en Moonfest", sort_order: 3 },
-  { url: `${IMG_BASE}/moka.webp`, alt_en: "Moka fursuit at Moonfest", alt_es: "Fursuit Moka en Moonfest", sort_order: 4 },
-  { url: `${IMG_BASE}/Patron_nuevo.webp`, alt_en: "Moonfest pattern design", alt_es: "Diseno patron Moonfest", sort_order: 5 },
+  { url: `${IMG_BASE}/BANNER_WEB.webp`, alt_en: "Moonfest 2026 banner", alt_es: "Banner Moonfest 2026", sort_order: 0, is_cover: true },
+  { url: `${IMG_BASE}/hero-bath-preview.webp`, alt_en: "Estelar Paipa Hotel thermal pool", alt_es: "Piscina termal Hotel Estelar Paipa", sort_order: 1, is_cover: false },
+  { url: `${IMG_BASE}/photo_2026-03-02_21-15-08.jpg`, alt_en: "Moonfest community gathering", alt_es: "Encuentro comunidad Moonfest", sort_order: 2, is_cover: false },
+  { url: `${IMG_BASE}/chia.webp`, alt_en: "Chia fursuit at Moonfest", alt_es: "Fursuit Chia en Moonfest", sort_order: 3, is_cover: false },
+  { url: `${IMG_BASE}/moka.webp`, alt_en: "Moka fursuit at Moonfest", alt_es: "Fursuit Moka en Moonfest", sort_order: 4, is_cover: false },
+  { url: `${IMG_BASE}/Patron_nuevo.webp`, alt_en: "Moonfest pattern design", alt_es: "Diseno patron Moonfest", sort_order: 5, is_cover: false },
 ];
 
 const SECTIONS = [

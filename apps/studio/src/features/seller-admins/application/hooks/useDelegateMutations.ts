@@ -19,11 +19,13 @@ export function useAddDelegate() {
       sellerId,
       adminUserId,
       permissions,
+      productId,
     }: {
       sellerId: string;
       adminUserId: string;
       permissions: DelegatePermission[];
-    }) => addDelegate(supabase, sellerId, adminUserId, permissions),
+      productId: string;
+    }) => addDelegate(supabase, sellerId, adminUserId, permissions, productId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [SELLER_ADMINS_QUERY_KEY] });
     },
@@ -59,10 +61,12 @@ export function useRemoveDelegate() {
     mutationFn: ({
       sellerId,
       adminUserId,
+      productId,
     }: {
       sellerId: string;
       adminUserId: string;
-    }) => removeDelegate(supabase, sellerId, adminUserId),
+      productId: string;
+    }) => removeDelegate(supabase, sellerId, adminUserId, productId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [SELLER_ADMINS_QUERY_KEY] });
     },

@@ -3,15 +3,17 @@ import { createBrowserSupabaseClient } from "api/supabase";
 import { useMemo } from "react";
 
 import { SELLER_ADMINS_QUERY_KEY } from "@/features/seller-admins/domain/constants";
-import { fetchDelegates } from "@/features/seller-admins/infrastructure/delegateQueries";
+import { fetchDelegateCountsByProduct } from "@/features/seller-admins/infrastructure/delegateQueries";
 
-export function useDelegates(sellerId?: string, productId?: string) {
+const DELEGATE_COUNTS_KEY = "delegate-counts";
+
+export function useDelegateCountsByProduct(sellerId?: string) {
   const supabase = useMemo(() => createBrowserSupabaseClient(), []);
 
   return useQuery({
     // eslint-disable-next-line @tanstack/query/exhaustive-deps -- supabase client is stable (memoized)
-    queryKey: [SELLER_ADMINS_QUERY_KEY, sellerId, productId],
-    queryFn: () => fetchDelegates(supabase, sellerId ?? "", productId ?? ""),
-    enabled: !!sellerId && !!productId,
+    queryKey: [SELLER_ADMINS_QUERY_KEY, DELEGATE_COUNTS_KEY, sellerId],
+    queryFn: () => fetchDelegateCountsByProduct(supabase, sellerId ?? ""),
+    enabled: !!sellerId,
   });
 }

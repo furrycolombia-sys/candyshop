@@ -12,8 +12,10 @@ import { tid } from "shared";
 
 import { ProductTableRow } from "./ProductTableRow";
 
+import { useSupabaseAuth } from "@/features/auth/application/hooks/useSupabaseAuth";
 import { useReorderProducts } from "@/features/products/application/useProductMutations";
 import type { Product } from "@/features/products/domain/types";
+import { useDelegateCountsByProduct } from "@/features/seller-admins/application/hooks/useDelegateCountsByProduct";
 
 const ZEBRA_MODULO = 2;
 
@@ -35,6 +37,8 @@ export function ProductTable({
 }: ProductTableProps) {
   const t = useTranslations();
   const reorderMutation = useReorderProducts();
+  const { user } = useSupabaseAuth();
+  const { data: delegateCounts } = useDelegateCountsByProduct(user?.id);
 
   const canReorder = !isFiltered && products.length > 1;
 
@@ -139,6 +143,7 @@ export function ProductTable({
                         canDelete={canDelete}
                         dragProvided={dragProvided}
                         isDragging={snapshot.isDragging}
+                        delegateCount={delegateCounts?.[product.id] ?? 0}
                       />
                     )}
                   </Draggable>

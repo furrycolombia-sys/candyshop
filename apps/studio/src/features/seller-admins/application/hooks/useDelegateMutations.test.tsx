@@ -38,11 +38,12 @@ function createWrapper() {
 describe("useAddDelegate", () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it("calls addDelegate on mutate", async () => {
+  it("calls addDelegate with productId on mutate", async () => {
     vi.mocked(addDelegate).mockResolvedValue({
       id: "d1",
       seller_id: "s1",
       admin_user_id: "a1",
+      product_id: "p1",
       permissions: ["orders.approve"],
       created_at: "2024-01-01",
       updated_at: "2024-01-01",
@@ -57,12 +58,17 @@ describe("useAddDelegate", () => {
         sellerId: "s1",
         adminUserId: "a1",
         permissions: ["orders.approve"],
+        productId: "p1",
       }),
     );
 
-    expect(addDelegate).toHaveBeenCalledWith(expect.anything(), "s1", "a1", [
-      "orders.approve",
-    ]);
+    expect(addDelegate).toHaveBeenCalledWith(
+      expect.anything(),
+      "s1",
+      "a1",
+      ["orders.approve"],
+      "p1",
+    );
   });
 });
 
@@ -96,7 +102,7 @@ describe("useUpdateDelegatePermissions", () => {
 describe("useRemoveDelegate", () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it("calls removeDelegate on mutate", async () => {
+  it("calls removeDelegate with productId on mutate", async () => {
     vi.mocked(removeDelegate).mockResolvedValue();
 
     const { result } = renderHook(() => useRemoveDelegate(), {
@@ -107,9 +113,15 @@ describe("useRemoveDelegate", () => {
       result.current.mutateAsync({
         sellerId: "s1",
         adminUserId: "a1",
+        productId: "p1",
       }),
     );
 
-    expect(removeDelegate).toHaveBeenCalledWith(expect.anything(), "s1", "a1");
+    expect(removeDelegate).toHaveBeenCalledWith(
+      expect.anything(),
+      "s1",
+      "a1",
+      "p1",
+    );
   });
 });

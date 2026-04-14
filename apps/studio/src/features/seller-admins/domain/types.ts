@@ -11,6 +11,7 @@ export interface SellerAdmin {
   id: string;
   seller_id: string;
   admin_user_id: string;
+  product_id: string;
   permissions: DelegatePermission[];
   created_at: string;
   updated_at: string;
