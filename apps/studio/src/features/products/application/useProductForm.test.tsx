@@ -111,7 +111,12 @@ describe("productToFormValues", () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const result = productToFormValues(mockProduct as any);
     expect(result.images).toEqual([
-      { url: "https://example.com/img.png", alt: "alt text", sort_order: 0 },
+      {
+        url: "https://example.com/img.png",
+        alt: "alt text",
+        sort_order: 0,
+        is_cover: false,
+      },
     ]);
   });
 

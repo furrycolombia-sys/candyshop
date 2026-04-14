@@ -16,6 +16,7 @@ const MIN_SEARCH_LENGTH = 2;
 interface AddDelegateFormProps {
   onAdd: (adminUserId: string, permissions: DelegatePermission[]) => void;
   isAdding?: boolean;
+  productId?: string;
 }
 
 export function AddDelegateForm({ onAdd, isAdding }: AddDelegateFormProps) {

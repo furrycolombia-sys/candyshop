@@ -661,6 +661,7 @@ export type Database = {
           created_at: string;
           id: string;
           permissions: string[];
+          product_id: string;
           seller_id: string;
           updated_at: string;
         };
@@ -669,6 +670,7 @@ export type Database = {
           created_at?: string;
           id?: string;
           permissions?: string[];
+          product_id: string;
           seller_id: string;
           updated_at?: string;
         };
@@ -677,6 +679,7 @@ export type Database = {
           created_at?: string;
           id?: string;
           permissions?: string[];
+          product_id?: string;
           seller_id?: string;
           updated_at?: string;
         };
@@ -686,6 +689,13 @@ export type Database = {
             columns: ["admin_user_id"];
             isOneToOne: false;
             referencedRelation: "user_profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "seller_admins_product_id_fkey";
+            columns: ["product_id"];
+            isOneToOne: false;
+            referencedRelation: "products";
             referencedColumns: ["id"];
           },
           {

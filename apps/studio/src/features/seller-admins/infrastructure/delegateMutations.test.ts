@@ -45,20 +45,25 @@ function createMockSupabase(overrides: {
 /* ------------------------------------------------------------------ */
 
 describe("addDelegate", () => {
-  it("inserts a delegation row and returns it", async () => {
+  it("inserts a delegation row with product_id and returns it", async () => {
     const mockRow = {
       id: "d1",
       seller_id: "seller-1",
       admin_user_id: "admin-1",
+      product_id: "product-1",
       permissions: ["orders.approve"],
       created_at: "2024-01-01",
       updated_at: "2024-01-01",
     };
 
     const supabase = createMockSupabase({ data: mockRow });
-    const result = await addDelegate(supabase, "seller-1", "admin-1", [
-      "orders.approve",
-    ]);
+    const result = await addDelegate(
+      supabase,
+      "seller-1",
+      "admin-1",
+      ["orders.approve"],
+      "product-1",
+    );
 
     expect(result).toEqual(mockRow);
     expect(supabase.from).toHaveBeenCalledWith("seller_admins");
@@ -66,6 +71,7 @@ describe("addDelegate", () => {
       seller_id: "seller-1",
       admin_user_id: "admin-1",
       permissions: ["orders.approve"],
+      product_id: "product-1",
     });
   });
 
@@ -73,7 +79,7 @@ describe("addDelegate", () => {
     const supabase = createMockSupabase({ data: null });
 
     await expect(
-      addDelegate(supabase, "user-1", "user-1", ["orders.approve"]),
+      addDelegate(supabase, "user-1", "user-1", ["orders.approve"], "prod-1"),
     ).rejects.toThrow("Cannot delegate to yourself");
 
     expect(supabase.from).not.toHaveBeenCalled();
@@ -83,7 +89,7 @@ describe("addDelegate", () => {
     const supabase = createMockSupabase({ data: null });
 
     await expect(
-      addDelegate(supabase, "seller-1", "admin-1", []),
+      addDelegate(supabase, "seller-1", "admin-1", [], "product-1"),
     ).rejects.toThrow("At least one permission is required");
 
     expect(supabase.from).not.toHaveBeenCalled();
@@ -93,7 +99,13 @@ describe("addDelegate", () => {
     const supabase = createMockSupabase({ data: null });
 
     await expect(
-      addDelegate(supabase, "seller-1", "admin-1", ["invalid.perm" as never]),
+      addDelegate(
+        supabase,
+        "seller-1",
+        "admin-1",
+        ["invalid.perm" as never],
+        "product-1",
+      ),
     ).rejects.toThrow("Invalid permission: invalid.perm");
   });
 
@@ -103,7 +115,13 @@ describe("addDelegate", () => {
     });
 
     await expect(
-      addDelegate(supabase, "seller-1", "admin-1", ["orders.approve"]),
+      addDelegate(
+        supabase,
+        "seller-1",
+        "admin-1",
+        ["orders.approve"],
+        "product-1",
+      ),
     ).rejects.toEqual({
       message: "unique constraint violation",
       code: "23505",
@@ -161,14 +179,15 @@ describe("updateDelegatePermissions", () => {
 /* ------------------------------------------------------------------ */
 
 describe("removeDelegate", () => {
-  it("deletes the correct seller-admin row", async () => {
+  it("deletes the correct seller-admin-product row", async () => {
     const supabase = createMockSupabase({ data: null });
-    await removeDelegate(supabase, "seller-1", "admin-1");
+    await removeDelegate(supabase, "seller-1", "admin-1", "product-1");
 
     expect(supabase.from).toHaveBeenCalledWith("seller_admins");
     expect(supabase._chain.delete).toHaveBeenCalled();
     expect(supabase._chain.eq).toHaveBeenCalledWith("seller_id", "seller-1");
     expect(supabase._chain.eq).toHaveBeenCalledWith("admin_user_id", "admin-1");
+    expect(supabase._chain.eq).toHaveBeenCalledWith("product_id", "product-1");
   });
 
   it("throws on supabase error", async () => {
@@ -177,7 +196,7 @@ describe("removeDelegate", () => {
     });
 
     await expect(
-      removeDelegate(supabase, "seller-1", "admin-1"),
+      removeDelegate(supabase, "seller-1", "admin-1", "product-1"),
     ).rejects.toEqual({ message: "delete failed" });
   });
 });

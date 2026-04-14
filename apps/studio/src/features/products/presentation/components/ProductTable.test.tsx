@@ -57,10 +57,30 @@ vi.mock("@/features/products/application/useProductMutations", () => ({
   useReorderProducts: () => ({ mutate: vi.fn() }),
 }));
 
+vi.mock("@/features/auth/application/hooks/useSupabaseAuth", () => ({
+  useSupabaseAuth: () => ({ user: { id: "seller-1" } }),
+}));
+
+vi.mock(
+  "@/features/seller-admins/application/hooks/useDelegateCountsByProduct",
+  () => ({
+    useDelegateCountsByProduct: () => ({
+      data: { p1: 2, p2: 0 },
+    }),
+  }),
+);
+
 vi.mock("./ProductTableRow", () => ({
-  ProductTableRow: ({ product }: { product: { name_en: string } }) => (
+  ProductTableRow: ({
+    product,
+    delegateCount,
+  }: {
+    product: { name_en: string };
+    delegateCount?: number;
+  }) => (
     <tr data-testid={`product-row-${product.name_en}`}>
       <td>{product.name_en}</td>
+      <td data-testid={`delegate-count-${product.name_en}`}>{delegateCount}</td>
     </tr>
   ),
 }));
@@ -164,5 +184,24 @@ describe("ProductTable", () => {
     );
     expect(screen.getByTestId("product-row-Product 1")).toBeInTheDocument();
     expect(screen.getByTestId("product-row-Product 2")).toBeInTheDocument();
+  });
+
+  it("passes delegate counts to product rows", () => {
+    render(
+      <ProductTable
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        products={mockProducts as any}
+        isLoading={false}
+        isFiltered={false}
+        canUpdate={true}
+        canDelete={true}
+      />,
+    );
+    expect(screen.getByTestId("delegate-count-Product 1")).toHaveTextContent(
+      "2",
+    );
+    expect(screen.getByTestId("delegate-count-Product 2")).toHaveTextContent(
+      "0",
+    );
   });
 });
