@@ -655,6 +655,48 @@ export type Database = {
           },
         ];
       };
+      seller_admins: {
+        Row: {
+          admin_user_id: string;
+          created_at: string;
+          id: string;
+          permissions: string[];
+          seller_id: string;
+          updated_at: string;
+        };
+        Insert: {
+          admin_user_id: string;
+          created_at?: string;
+          id?: string;
+          permissions?: string[];
+          seller_id: string;
+          updated_at?: string;
+        };
+        Update: {
+          admin_user_id?: string;
+          created_at?: string;
+          id?: string;
+          permissions?: string[];
+          seller_id?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "seller_admins_admin_user_id_fkey";
+            columns: ["admin_user_id"];
+            isOneToOne: false;
+            referencedRelation: "user_profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "seller_admins_seller_id_fkey";
+            columns: ["seller_id"];
+            isOneToOne: false;
+            referencedRelation: "user_profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       seller_payment_methods: {
         Row: {
           created_at: string;
