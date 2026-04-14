@@ -112,3 +112,32 @@ on conflict (permission_id, resource_type, resource_id) do nothing;
 create trigger set_seller_admins_updated_at
   before update on public.seller_admins
   for each row execute function trigger_set_updated_at();
+
+-- =============================================================================
+-- 6. Delegate access to orders (payment actions ONLY)
+-- =============================================================================
+-- Delegates can ONLY see and act on orders that are pending payment review.
+-- They cannot see order history, approved orders, or any other data.
+-- This is strictly scoped to the payment verification workflow.
+
+-- Delegates can read ONLY actionable orders (pending_verification / evidence_requested)
+create policy "orders_delegate_read" on public.orders
+  for select using (
+    payment_status in ('pending_verification', 'evidence_requested')
+    and exists (
+      select 1 from public.seller_admins sa
+      where sa.admin_user_id = auth.uid()
+        and sa.seller_id = orders.seller_id
+    )
+  );
+
+-- Delegates can update ONLY actionable orders (to approve, reject, or request evidence)
+create policy "orders_delegate_update" on public.orders
+  for update using (
+    payment_status in ('pending_verification', 'evidence_requested')
+    and exists (
+      select 1 from public.seller_admins sa
+      where sa.admin_user_id = auth.uid()
+        and sa.seller_id = orders.seller_id
+    )
+  );

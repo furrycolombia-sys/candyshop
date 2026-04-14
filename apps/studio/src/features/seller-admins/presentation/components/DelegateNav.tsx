@@ -20,14 +20,6 @@ export function DelegateNav() {
     },
   ];
 
-  const adminLinks = [
-    {
-      href: `/${locale}/delegated-orders`,
-      label: t("navDelegatedOrders"),
-      tid: "nav-delegated-orders",
-    },
-  ];
-
   const linkClass = (href: string) =>
     cn(
       "text-sm transition-colors hover:text-foreground",
@@ -42,23 +34,6 @@ export function DelegateNav() {
       aria-label={t("navigation")}
     >
       {myLinks.map((link) => (
-        <Link
-          key={link.href}
-          href={link.href}
-          {...tid(link.tid)}
-          className={linkClass(link.href)}
-        >
-          {link.label}
-        </Link>
-      ))}
-
-      <span
-        className="mx-2 h-4 w-px bg-border"
-        role="separator"
-        aria-orientation="vertical"
-      />
-
-      {adminLinks.map((link) => (
         <Link
           key={link.href}
           href={link.href}

@@ -335,44 +335,45 @@ test.describe.serial("Delegated admin purchase flow", () => {
     page,
   }) => {
     await injectSession(context, delegate);
-    await page.goto(`${APP_URLS.STUDIO}/en/delegated-orders`);
+    await page.goto(`${APP_URLS.PAYMENTS}/en/sales`);
     await page.waitForLoadState("networkidle");
 
-    await expect(page.getByTestId("delegated-orders-page")).toBeVisible({
+    await expect(page.getByTestId("received-orders-page")).toBeVisible({
       timeout: ELEMENT_TIMEOUT_MS,
     });
     await snap(page, "delegate-orders-page");
 
     // Verify orders are visible in the list
-    const ordersList = page.getByTestId("delegated-orders-list");
+    const ordersList = page.getByTestId("received-orders-list");
     await expect(ordersList).toBeVisible({ timeout: ELEMENT_TIMEOUT_MS });
 
-    // Find the order — match delegated-order-{uuid} (not delegated-order-group-)
-    const orderElement = page
-      .getByTestId(/^delegated-order-(?!group-)/)
-      .first();
+    // Find the order — match received-order-{uuid}
+    const orderElement = page.getByTestId(/^received-order-[0-9a-f]/).first();
     await expect(orderElement).toBeVisible({ timeout: ELEMENT_TIMEOUT_MS });
     const orderTestId = await orderElement.getAttribute("data-testid");
-    const orderId = orderTestId!.replace("delegated-order-", "");
+    const orderId = orderTestId!.replace("received-order-", "");
     await snap(page, "delegate-order-found");
 
-    // Fill seller note for requesting proof
-    const noteInput = page.getByTestId("delegate-seller-note-input");
-    await noteInput.fill("Please upload a clearer receipt photo");
+    // Click request evidence button
+    await page.getByTestId(`order-evidence-${orderId}`).click();
+
+    // Fill seller note in the SellerNoteInput component
+    const noteTextarea = page.getByTestId("seller-note-textarea");
+    await expect(noteTextarea).toBeVisible({ timeout: ELEMENT_TIMEOUT_MS });
+    await noteTextarea.fill("Please upload a clearer receipt photo");
     await snap(page, "delegate-note-filled");
 
-    // Click request proof button
-    await page.getByTestId(`delegate-action-request-proof-${orderId}`).click();
+    // Submit the note
+    await page.getByTestId("seller-note-submit").click();
     await page.waitForTimeout(MUTATION_WAIT_MS);
     await snap(page, "delegate-proof-requested");
 
-    // Reload and verify status changed
+    // Reload and verify the order is still visible (evidence_requested is actionable)
     await page.reload();
     await page.waitForLoadState("networkidle");
 
-    // The order should still be visible (evidence_requested is actionable)
     await expect(
-      page.getByTestId(/^delegated-order-(?!group-)/).first(),
+      page.getByTestId(/^received-order-[0-9a-f]/).first(),
     ).toBeVisible({ timeout: ELEMENT_TIMEOUT_MS });
     await snap(page, "delegate-order-evidence-requested");
   });
@@ -429,29 +430,28 @@ test.describe.serial("Delegated admin purchase flow", () => {
     page,
   }) => {
     await injectSession(context, delegate);
-    await page.goto(`${APP_URLS.STUDIO}/en/delegated-orders`);
+    await page.goto(`${APP_URLS.PAYMENTS}/en/sales`);
     await page.waitForLoadState("networkidle");
 
-    await expect(page.getByTestId("delegated-orders-page")).toBeVisible({
+    await expect(page.getByTestId("received-orders-page")).toBeVisible({
       timeout: ELEMENT_TIMEOUT_MS,
     });
 
     // Find the order
-    const orderElement = page
-      .getByTestId(/^delegated-order-(?!group-)/)
-      .first();
+    const orderElement = page.getByTestId(/^received-order-[0-9a-f]/).first();
     await expect(orderElement).toBeVisible({ timeout: ELEMENT_TIMEOUT_MS });
     const orderTestId = await orderElement.getAttribute("data-testid");
-    const orderId = orderTestId!.replace("delegated-order-", "");
+    const orderId = orderTestId!.replace("received-order-", "");
     await snap(page, "delegate-order-resubmitted");
 
     // Click approve
-    await page.getByTestId(`delegate-action-approve-${orderId}`).click();
+    await page.getByTestId(`order-approve-${orderId}`).click();
     await snap(page, "delegate-approve-clicked");
 
     // Confirm via the confirmation panel
-    await page.getByTestId("delegate-confirm-checkbox").check();
-    await page.getByTestId("delegate-confirm-submit").click();
+    await expect(page.getByTestId("confirm-action-panel")).toBeVisible();
+    await page.getByTestId("confirm-checkbox").check();
+    await page.getByTestId("confirm-action-submit").click();
     await page.waitForTimeout(MUTATION_WAIT_MS);
     await snap(page, "delegate-order-approved");
 
@@ -459,9 +459,9 @@ test.describe.serial("Delegated admin purchase flow", () => {
     await page.reload();
     await page.waitForLoadState("networkidle");
 
-    // After approval, the order should no longer appear (only pending/evidence_requested shown)
+    // After approval, the order should no longer appear (only pending/evidence_requested shown for delegates)
     await expect(
-      page.getByTestId(/^delegated-order-(?!group-)/).first(),
+      page.getByTestId(/^received-order-[0-9a-f]/).first(),
     ).not.toBeVisible({ timeout: ELEMENT_TIMEOUT_MS });
     await snap(page, "delegate-no-more-orders");
   });
