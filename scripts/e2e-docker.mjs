@@ -312,7 +312,7 @@ function buildAndStart() {
 
 function startExisting() {
   log("Starting container from existing image...");
-  const code = compose("up", "-d");
+  const code = compose("up", "-d", "--build", "--force-recreate");
   if (code !== 0) {
     log("Failed to start container.");
     process.exit(code);
