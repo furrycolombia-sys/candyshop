@@ -64,20 +64,5 @@ services:
     depends_on:
       - app
     environment:
-      CLOUDFLARED_ARGS: ${CLOUDFLARED_ARGS:-}
-      CLOUDFLARE_TUNNEL_TOKEN: ${CLOUDFLARE_TUNNEL_TOKEN:-}
-      CLOUDFLARE_TUNNEL_NAME: ${CLOUDFLARE_TUNNEL_NAME:-}
-    entrypoint:
-      - /bin/sh
-      - -lc
-    command: >
-      if [ -n "$$CLOUDFLARED_ARGS" ]; then
-        exec cloudflared $$CLOUDFLARED_ARGS;
-      elif [ -n "$$CLOUDFLARE_TUNNEL_TOKEN" ]; then
-        exec cloudflared tunnel --no-autoupdate run --token "$$CLOUDFLARE_TUNNEL_TOKEN";
-      elif [ -n "$$CLOUDFLARE_TUNNEL_NAME" ]; then
-        exec cloudflared tunnel --no-autoupdate run "$$CLOUDFLARE_TUNNEL_NAME";
-      else
-        echo "Missing Cloudflare tunnel configuration";
-        exit 1;
-      fi
+      TUNNEL_TOKEN: ${CLOUDFLARE_TUNNEL_TOKEN:-}
+    command: ["tunnel", "--no-autoupdate", "run"]
