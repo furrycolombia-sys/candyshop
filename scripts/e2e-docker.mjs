@@ -42,11 +42,6 @@ const { loadRootEnv } = require("./load-root-env.js");
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const rootDir = resolve(__dirname, "..");
-const composeFile = resolve(
-  rootDir,
-  "docker",
-  envName === "e2e" ? "compose.e2e.yml" : "compose.yml",
-);
 const isWindows = process.platform === "win32";
 const docker = isWindows ? "docker.exe" : "docker";
 const pnpm = isWindows ? "pnpm.cmd" : "pnpm";
@@ -87,6 +82,11 @@ function getArgValue(name) {
 
 const envName = getArgValue("--env") || "e2e";
 const specFile = getArgValue("--spec");
+const composeFile = resolve(
+  rootDir,
+  "docker",
+  envName === "e2e" ? "compose.e2e.yml" : "compose.yml",
+);
 
 // ---- Env loading (via load-root-env.js) ----
 
