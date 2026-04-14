@@ -1,0 +1,163 @@
+/**
+ * Shared Color Variables — Neobrutalist Candy Shop
+ *
+ * Bubblegum candy colors for light (:root) and dark (.dark) modes.
+ * Single source of truth for ALL apps in the monorepo.
+ */
+
+:root {
+  --font-sans: var(--font-dm-sans);
+  --font-display: var(--font-syne);
+  --background: #fff;
+  --foreground: #1a1a1a;
+  --surface: #fff;
+  --card: var(--surface);
+  --card-foreground: #1a1a1a;
+
+  /* Brand — bubblegum pink */
+  --brand: #ff4890;
+  --brand-hover: #e0407e;
+  --brand-text: #ff4890;
+  --brand-alpha: rgb(255 72 144 / 10%);
+  --brand-foreground: #1a1a1a;
+  --primary: var(--brand);
+  --primary-foreground: var(--brand-foreground);
+  --secondary: #f8f0ff;
+  --secondary-foreground: #1a1a1a;
+  --muted: #f0f0f0;
+  --muted-foreground: #666;
+  --accent: #5ee0a8;
+  --accent-foreground: #1a1a1a;
+  --border: #1a1a1a;
+  --input: #1a1a1a;
+  --ring: #f54d90;
+
+  /* Candy palette — vivid fills (dark text passes WCAG 4.5:1+) */
+  --pink: #ff4890;
+  --mint: #20c888;
+  --lilac: #9868f0;
+  --lemon: #ffe040;
+  --sky: #2890c8;
+  --peach: #ff7840;
+  --candy-text: #1a1a1a;
+  --candy-text-on-lemon: #1a1a1a;
+  --google-blue: #4285f4;
+  --google-green: #34a853;
+  --google-yellow: #fbbc05;
+  --google-red: #ea4335;
+
+  /* Shared theme compatibility */
+  --popover: #fff;
+  --popover-foreground: #1a1a1a;
+  --destructive: #e11d48;
+  --destructive-foreground: #fff;
+  --success: #16a34a;
+  --success-foreground: #fff;
+  --warning: #d97706;
+  --warning-foreground: #fff;
+  --info: #2563eb;
+  --info-foreground: #fff;
+  --chart-1: var(--pink);
+  --chart-2: var(--mint);
+  --chart-3: var(--lilac);
+  --chart-4: var(--lemon);
+  --chart-5: var(--sky);
+  --sidebar: var(--surface);
+  --sidebar-foreground: var(--foreground);
+  --sidebar-accent: var(--accent);
+  --sidebar-accent-foreground: var(--accent-foreground);
+  --sidebar-border: var(--border);
+  --sidebar-ring: var(--ring);
+  --surface-inset: #f5f5f5;
+  --chip: #e8e8e8;
+  --radius: 0.5rem;
+
+  /* Process status colors */
+  --status-healthy: #dcfce7;
+  --status-attention: #fef9c3;
+
+  /* Shadows */
+  --shadow-card: 3px 3px 0 0 #1a1a1a;
+
+  /* Neobrutalist tokens */
+  --border-strong: 3px solid #1a1a1a;
+  --shadow-brutal-sm: 3px 3px 0 0 #1a1a1a;
+  --shadow-brutal-md: 5px 5px 0 0 #1a1a1a;
+  --shadow-brutal-lg: 8px 8px 0 0 #1a1a1a;
+}
+
+.dark {
+  --background: #0e0e10;
+  --foreground: #f5f5f5;
+  --surface: #1a1a1e;
+  --card: var(--surface);
+  --card-foreground: #f5f5f5;
+  --brand: #b83068;
+  --brand-hover: #a02858;
+  --brand-text: #ff68a8;
+  --brand-alpha: rgb(184 48 104 / 12%);
+  --brand-foreground: #f5f5f5;
+  --primary: var(--brand);
+  --primary-foreground: var(--brand-foreground);
+  --secondary: #1e1a24;
+  --secondary-foreground: #d0c8d8;
+  --muted: #1a1a1e;
+  --muted-foreground: #888;
+  --accent: #50e0a0;
+  --accent-foreground: #0e0e10;
+  --border: #f5f5f5;
+  --input: #f5f5f5;
+  --ring: #ff68a8;
+
+  /* Candy palette — deep fills for dark mode (white text passes WCAG 4.5:1+) */
+  --pink: #b83068;
+  --mint: #187848;
+  --lilac: #6848a8;
+  --lemon: #8a6800;
+  --sky: #206088;
+  --peach: #a05828;
+  --candy-text: #f5f5f5;
+  --candy-text-on-lemon: #f5f5f5;
+  --google-blue: #4285f4;
+  --google-green: #34a853;
+  --google-yellow: #fbbc05;
+  --google-red: #ea4335;
+
+  /* Shared theme compatibility — dark mode */
+  --popover: #1a1a1e;
+  --popover-foreground: #f5f5f5;
+  --destructive: #f43f5e;
+  --destructive-foreground: #0e0e10;
+  --success: #22c55e;
+  --success-foreground: #0e0e10;
+  --warning: #f59e0b;
+  --warning-foreground: #0e0e10;
+  --info: #3b82f6;
+  --info-foreground: #0e0e10;
+  --chart-1: var(--pink);
+  --chart-2: var(--mint);
+  --chart-3: var(--lilac);
+  --chart-4: var(--lemon);
+  --chart-5: var(--sky);
+  --sidebar: var(--surface);
+  --sidebar-foreground: var(--foreground);
+  --sidebar-accent: var(--accent);
+  --sidebar-accent-foreground: var(--accent-foreground);
+  --sidebar-border: var(--border);
+  --sidebar-ring: var(--ring);
+  --surface-inset: #141418;
+  --chip: #2a2a2e;
+
+  /* Process status colors */
+  --status-healthy: #313d4f;
+  --status-attention: #3d3520;
+
+  /* Shadows */
+  --shadow-card: 3px 3px 0 0 #f5f5f5;
+
+  /* Neobrutalist tokens */
+  --border-strong: 3px solid #f5f5f5;
+  --shadow-brutal-sm: 3px 3px 0 0 #f5f5f5;
+  --shadow-brutal-md: 5px 5px 0 0 #f5f5f5;
+  --shadow-brutal-lg: 8px 8px 0 0 #f5f5f5;
+}

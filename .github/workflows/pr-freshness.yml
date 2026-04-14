@@ -1,0 +1,209 @@
+name: PR Freshness Guard
+
+on:
+  pull_request_target:
+    branches: [develop, main]
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: pr-freshness-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  freshness-check:
+    name: PR Freshness
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout base branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.ref }}
+          fetch-depth: 0
+
+      - name: Fetch PR branch (metadata only)
+        run: |
+          git fetch origin ${{ github.event.pull_request.head.sha }} --depth=1
+
+      - name: Check branch freshness
+        id: freshness
+        run: |
+          BASE_SHA=${{ github.event.pull_request.base.sha }}
+          HEAD_SHA=${{ github.event.pull_request.head.sha }}
+
+          # Find merge base
+          git fetch --deepen=500
+          MERGE_BASE=$(git merge-base $BASE_SHA $HEAD_SHA 2>/dev/null || echo "")
+
+          if [ -z "$MERGE_BASE" ]; then
+            git fetch --unshallow || true
+            MERGE_BASE=$(git merge-base $BASE_SHA $HEAD_SHA)
+          fi
+
+          BEHIND=$(git rev-list --count $MERGE_BASE..$BASE_SHA)
+          echo "commits_behind=$BEHIND" >> $GITHUB_OUTPUT
+
+          if [ "$BEHIND" -gt 50 ]; then
+            echo "status=fail" >> $GITHUB_OUTPUT
+            echo "message=Branch is $BEHIND commits behind (limit: 50). Update your branch." >> $GITHUB_OUTPUT
+          elif [ "$BEHIND" -gt 20 ]; then
+            echo "status=warn" >> $GITHUB_OUTPUT
+            echo "message=Branch is $BEHIND commits behind. Consider updating soon." >> $GITHUB_OUTPUT
+          else
+            echo "status=pass" >> $GITHUB_OUTPUT
+            echo "message=Branch is $BEHIND commits behind (within threshold)." >> $GITHUB_OUTPUT
+          fi
+
+      - name: Check config drift
+        id: drift
+        run: |
+          BASE_REF=${{ github.event.pull_request.base.ref }}
+          HEAD_SHA=${{ github.event.pull_request.head.sha }}
+
+          # Critical config files that MUST stay in sync
+          CONFIG_FILES=(
+            "eslint.config.mjs"
+            "tsconfig.base.json"
+            "package.json"
+            "pnpm-lock.yaml"
+            "pnpm-workspace.yaml"
+            ".github/workflows/ci.yml"
+            ".github/workflows/pr-checks.yml"
+            ".github/workflows/pr-freshness.yml"
+            "orval.config.ts"
+          )
+
+          STALE_LIST=()
+          INTENTIONAL_LIST=()
+          DRIFT_COUNT=0
+
+          # Get files the PR explicitly changed
+          MERGE_BASE=$(git merge-base ${{ github.event.pull_request.base.sha }} $HEAD_SHA)
+          PR_CHANGED=$(git diff --name-only $MERGE_BASE $HEAD_SHA 2>/dev/null || echo "")
+
+          for FILE in "${CONFIG_FILES[@]}"; do
+            # Get hash from base branch (latest)
+            BASE_HASH=$(git show "$BASE_REF:$FILE" 2>/dev/null | git hash-object --stdin 2>/dev/null || echo "missing")
+
+            # Get hash from PR branch
+            HEAD_HASH=$(git show "$HEAD_SHA:$FILE" 2>/dev/null | git hash-object --stdin 2>/dev/null || echo "missing")
+
+            if [ "$BASE_HASH" != "$HEAD_HASH" ]; then
+              # Check if the PR intentionally modified this file
+              if echo "$PR_CHANGED" | grep -qx "$FILE"; then
+                INTENTIONAL_LIST+=("$FILE")
+              else
+                STALE_LIST+=("$FILE")
+                DRIFT_COUNT=$((DRIFT_COUNT + 1))
+              fi
+            fi
+          done
+
+          echo "drift_count=$DRIFT_COUNT" >> $GITHUB_OUTPUT
+
+          if [ "$DRIFT_COUNT" -gt 0 ]; then
+            echo "status=fail" >> $GITHUB_OUTPUT
+            {
+              echo "message<<EOF"
+              echo "$DRIFT_COUNT config file(s) are stale (differ from $BASE_REF without intentional changes):"
+              for f in "${STALE_LIST[@]}"; do
+                echo "  - $f"
+              done
+              echo "EOF"
+            } >> $GITHUB_OUTPUT
+          else
+            echo "status=pass" >> $GITHUB_OUTPUT
+            if [ "${#INTENTIONAL_LIST[@]}" -gt 0 ]; then
+              {
+                echo "message<<EOF"
+                echo "No stale config drift. Intentional changes detected:"
+                for f in "${INTENTIONAL_LIST[@]}"; do
+                  echo "  - $f (intentionally modified in PR)"
+                done
+                echo "EOF"
+              } >> $GITHUB_OUTPUT
+            else
+              echo "message=All config files match $BASE_REF." >> $GITHUB_OUTPUT
+            fi
+          fi
+
+      - name: Post summary comment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const freshness = {
+              status: '${{ steps.freshness.outputs.status }}',
+              message: `${{ steps.freshness.outputs.message }}`,
+              behind: '${{ steps.freshness.outputs.commits_behind }}'
+            };
+            const drift = {
+              status: '${{ steps.drift.outputs.status }}',
+              message: `${{ steps.drift.outputs.message }}`,
+              count: '${{ steps.drift.outputs.drift_count }}'
+            };
+
+            const icon = (s) => s === 'pass' ? ':white_check_mark:' : s === 'warn' ? ':warning:' : ':x:';
+            const overall = (freshness.status === 'fail' || drift.status === 'fail') ? 'FAIL' :
+                            (freshness.status === 'warn') ? 'WARN' : 'PASS';
+
+            const body = [
+              `## PR Freshness Guard ${overall === 'FAIL' ? ':x:' : overall === 'WARN' ? ':warning:' : ':white_check_mark:'}`,
+              '',
+              `| Check | Status | Details |`,
+              `|-------|--------|---------|`,
+              `| Branch freshness | ${icon(freshness.status)} | ${freshness.message} |`,
+              `| Config drift | ${icon(drift.status)} | ${drift.message.split('\n')[0]} |`,
+              '',
+            ];
+
+            if (overall === 'FAIL') {
+              body.push('### :rotating_light: Action Required');
+              body.push('');
+              body.push('Update your branch before merging:');
+              body.push('```bash');
+              body.push('git fetch origin ${{ github.event.pull_request.base.ref }}');
+              body.push('git merge origin/${{ github.event.pull_request.base.ref }}');
+              body.push('git push');
+              body.push('```');
+              body.push('Or use: `/sync-with-develop`');
+            }
+
+            // Find and update existing comment or create new
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.pull_request.number,
+            });
+            const existing = comments.find(c => c.body?.includes('PR Freshness Guard'));
+
+            const commentBody = body.join('\n');
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body: commentBody,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.payload.pull_request.number,
+                body: commentBody,
+              });
+            }
+
+      - name: Fail if stale
+        if: steps.freshness.outputs.status == 'fail' || steps.drift.outputs.status == 'fail'
+        run: |
+          echo "::error::PR branch is stale. Update your branch before merging."
+          echo ""
+          echo "Freshness: ${{ steps.freshness.outputs.message }}"
+          echo "Config drift: ${{ steps.drift.outputs.message }}"
+          echo ""
+          echo "Run: git merge origin/${{ github.event.pull_request.base.ref }}"
+          exit 1

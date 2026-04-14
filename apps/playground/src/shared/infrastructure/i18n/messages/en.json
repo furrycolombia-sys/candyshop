@@ -1,0 +1,32 @@
+{
+  "meta": {
+    "title": "Candy Shop - Playground",
+    "description": "Experiment with components and features"
+  },
+  "playground": {
+    "title": "Playground",
+    "subtitle": "Experiment with components and features"
+  },
+  "nav": {
+    "brand": "Candy Shop",
+    "landing": "Home",
+    "store": "Store",
+    "studio": "Studio",
+    "payments": "Payments",
+    "admin": "Admin",
+    "auth": "Account",
+    "playground": "Playground"
+  },
+  "common": {
+    "error": "An error occurred",
+    "retry": "Try again",
+    "theme": {
+      "switchToDark": "Switch to dark mode",
+      "switchToLight": "Switch to light mode",
+      "toggle": "Toggle theme"
+    },
+    "language": {
+      "select": "Select language"
+    }
+  }
+}

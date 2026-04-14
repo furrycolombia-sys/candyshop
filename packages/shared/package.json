@@ -1,0 +1,54 @@
+{
+  "name": "shared",
+  "version": "0.1.0",
+  "private": true,
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./app-root-layout": "./src/components/AppRootLayout.tsx",
+    "./utils": "./src/utils/index.ts",
+    "./hooks": "./src/hooks/index.ts",
+    "./hooks/*": "./src/hooks/*.ts",
+    "./i18n/createAppI18n": "./src/i18n/createAppI18n.ts",
+    "./i18n/createAppRouting": "./src/i18n/createAppRouting.ts",
+    "./i18n/createAppRequestConfig": "./src/i18n/createAppRequestConfig.ts",
+    "./i18n/createIntlProxy": "./src/i18n/createIntlProxy.ts",
+    "./providers": "./src/providers/index.ts",
+    "./components": "./src/components/index.ts",
+    "./types": "./src/types/index.ts",
+    "./config": "./src/config/index.ts",
+    "./config/*": "./src/config/*.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "devDependencies": {
+    "@tanstack/react-query": "^5.91.0",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@types/node": "^22.15.0",
+    "@types/react": "^19.2.14",
+    "@vitejs/plugin-react": "^5.2.0",
+    "@vitest/coverage-v8": "^3.2.4",
+    "jsdom": "^26.1.0",
+    "typescript": "^5",
+    "vitest": "^3.2.4"
+  },
+  "peerDependencies": {
+    "@tanstack/react-query": "^5.91.0",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
+  },
+  "dependencies": {
+    "api": "workspace:*",
+    "auth": "workspace:*",
+    "cookies-next": "^6.1.1",
+    "lucide-react": "^0.511.0",
+    "next": "16.2.0",
+    "next-intl": "^4.1.4",
+    "nuqs": "^2.4.5"
+  }
+}

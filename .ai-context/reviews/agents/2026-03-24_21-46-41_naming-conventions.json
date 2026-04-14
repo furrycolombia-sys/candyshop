@@ -1,0 +1,124 @@
+{
+  "agent": "naming-conventions",
+  "review_id": "2026-03-24_21-46-41",
+  "outputFile": ".ai-context/reviews/agents/2026-03-24_21-46-41_naming-conventions.json",
+  "scope": "apps/store/src/",
+  "issues": [
+    {
+      "id": "NAME-001",
+      "severity": "suggestion",
+      "file": "apps/store/src/features/products/presentation/components/product-detail/lucideIconMap.ts",
+      "line": 0,
+      "title": "Utility file uses camelCase but exports a constant map",
+      "description": "The file `lucideIconMap.ts` is named in camelCase which is correct for a utility file. However, the file primarily exports a constant `ICON_MAP` and a utility function `getIcon`. The naming is consistent with conventions (SCREAMING_SNAKE for the exported constant, camelCase for the function). No issue here upon closer inspection.",
+      "rule": "naming-conventions.md#files--folders",
+      "fix": "No fix needed — naming is correct."
+    },
+    {
+      "id": "NAME-002",
+      "severity": "warning",
+      "file": "apps/store/src/features/products/presentation/components/product-detail/ImageGallery.tsx",
+      "line": 17,
+      "title": "Duplicate GalleryView interface defined in two files",
+      "description": "The `GalleryView` interface is defined in both `ImageGallery.tsx` (line 17) and `GalleryOverlays.tsx` (line 6) with identical shape `{ label: string; index: number }`. While not strictly a naming issue, this creates a maintenance concern — the type should be defined once and shared.",
+      "rule": "naming-conventions.md (type reuse), dry-principle.md",
+      "fix": "Extract `GalleryView` to a shared types file (e.g., `product-detail/types.ts`) and import from both components."
+    },
+    {
+      "id": "NAME-003",
+      "severity": "suggestion",
+      "file": "apps/store/src/features/products/domain/buildSpecRows.ts",
+      "line": 3,
+      "title": "Local type alias `TFn` uses abbreviation",
+      "description": "The type alias `TFn` is an abbreviation that reduces readability. Convention prefers descriptive PascalCase names for types. A clearer name would be `TranslationFn` or `TranslateFn`.",
+      "rule": "naming-conventions.md#types--interfaces",
+      "fix": "Rename `TFn` to `TranslationFn` or `TranslateFn` for clarity."
+    },
+    {
+      "id": "NAME-004",
+      "severity": "suggestion",
+      "file": "apps/store/src/features/products/presentation/components/ProductCard.tsx",
+      "line": 8,
+      "title": "Import order: same-directory imports before absolute imports",
+      "description": "In ProductCard.tsx, the same-directory imports (`./ProductCardImage`, `./ProductCardMeta`) appear at lines 8-9 before the feature/shared absolute imports at lines 11-14. Convention expects: React -> Third-party -> Shared -> Feature -> Local. Local (same-directory) imports should come last.",
+      "rule": "naming-conventions.md#import-order",
+      "fix": "Move same-directory imports (`./ProductCardImage`, `./ProductCardMeta`) below the `@/features/...` and `@/shared/...` imports."
+    },
+    {
+      "id": "NAME-005",
+      "severity": "suggestion",
+      "file": "apps/store/src/features/products/presentation/components/product-detail/ImageGallery.tsx",
+      "line": 7,
+      "title": "Import order: same-directory import before absolute imports",
+      "description": "In ImageGallery.tsx, the same-directory import `./GalleryOverlays` (line 7) appears before absolute imports `@/features/...` (lines 9-10). Same-directory imports should come after absolute imports.",
+      "rule": "naming-conventions.md#import-order",
+      "fix": "Move `import { GalleryOverlays } from './GalleryOverlays'` below the `@/features/...` imports."
+    },
+    {
+      "id": "NAME-006",
+      "severity": "suggestion",
+      "file": "apps/store/src/features/products/presentation/components/product-detail/HeroSection.tsx",
+      "line": 8,
+      "title": "Import order: same-directory imports before absolute imports",
+      "description": "Same-directory imports (`./ImageGallery`, `./PriceBlock`, `./RatingStars`) appear at lines 8-10, before feature-level absolute imports at lines 12-14.",
+      "rule": "naming-conventions.md#import-order",
+      "fix": "Move same-directory imports after the `@/features/...` imports."
+    },
+    {
+      "id": "NAME-007",
+      "severity": "suggestion",
+      "file": "apps/store/src/features/products/presentation/pages/ProductCatalogPage.tsx",
+      "line": 8,
+      "title": "Import order: relative imports before absolute imports",
+      "description": "Relative imports from `../components/` (lines 8-11) appear before absolute imports `@/features/...` and `@/mocks/...` (lines 13-17). By convention, relative imports should come after absolute imports.",
+      "rule": "naming-conventions.md#import-order",
+      "fix": "Move `../components/*` imports after the `@/features/...` and `@/mocks/...` imports."
+    },
+    {
+      "id": "NAME-008",
+      "severity": "info",
+      "file": "apps/store/src/features/products/presentation/components/product-detail/",
+      "line": 0,
+      "title": "Component grouping folder uses kebab-case — correct",
+      "description": "The `product-detail/` folder groups related product detail components. Using kebab-case for this grouping folder is correct per naming conventions (feature folders use kebab-case). All individual component files within use PascalCase correctly.",
+      "rule": "naming-conventions.md#files--folders",
+      "fix": "No fix needed — naming is correct."
+    },
+    {
+      "id": "NAME-009",
+      "severity": "info",
+      "file": "apps/store/src/features/cart/application/CartContext.tsx",
+      "line": 0,
+      "title": "Well-structured naming: Context + Provider + Hook pattern",
+      "description": "CartContext.tsx exports `CartProvider` and `useCart` following the naming convention perfectly: Provider suffix for the provider component, `use` prefix for the hook. Constants use SCREAMING_SNAKE_CASE (`COOKIE_KEY`, `COOKIE_MAX_AGE_S`). Action types use SCREAMING_SNAKE string literals.",
+      "rule": "naming-conventions.md",
+      "fix": "No fix needed — exemplary naming."
+    },
+    {
+      "id": "NAME-010",
+      "severity": "info",
+      "file": "apps/store/src/features/products/domain/types.ts",
+      "line": 0,
+      "title": "Domain types follow PascalCase convention consistently",
+      "description": "All interfaces (`Product`, `ProductImage`, `PhysicalDetails`, `CommissionDetails`, `TicketDetails`, `DigitalDetails`, `ProductHighlight`, `ProductScreenshot`, `ProductFaq`, `ProductSeller`, `ProductReview`, `ProductSpec`) and type aliases (`ProductType`, `ProductCategory`) use PascalCase correctly. Props interfaces use the `Props` suffix where applicable.",
+      "rule": "naming-conventions.md#types--interfaces",
+      "fix": "No fix needed — exemplary naming."
+    },
+    {
+      "id": "NAME-011",
+      "severity": "info",
+      "file": "apps/store/src/features/products/domain/constants.ts",
+      "line": 0,
+      "title": "Exported constants use SCREAMING_SNAKE_CASE correctly",
+      "description": "`PRODUCT_TYPES`, `CATEGORY_THEMES`, `PRODUCT_CATEGORIES` all use SCREAMING_SNAKE_CASE for exported global constants. The `CategoryTheme` interface uses PascalCase. The utility function `getCategoryTheme` uses camelCase with a verb prefix. All correct.",
+      "rule": "naming-conventions.md#constants",
+      "fix": "No fix needed."
+    }
+  ],
+  "summary": {
+    "critical": 0,
+    "warning": 1,
+    "suggestion": 5,
+    "info": 4
+  }
+}

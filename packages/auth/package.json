@@ -1,0 +1,36 @@
+{
+  "name": "auth",
+  "version": "0.1.0",
+  "private": true,
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./client": "./src/client/index.ts",
+    "./domain": "./src/domain/index.ts",
+    "./server": "./src/server/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "api": "workspace:*",
+    "next-intl": "^4.1.4"
+  },
+  "devDependencies": {
+    "@supabase/supabase-js": "^2.99.2",
+    "@types/node": "^22.15.0",
+    "@types/react": "^19.2.14",
+    "@vitejs/plugin-react": "^5.2.0",
+    "@vitest/coverage-v8": "^3.2.4",
+    "typescript": "^5",
+    "vitest": "^3.2.4"
+  },
+  "peerDependencies": {
+    "@supabase/supabase-js": "^2.99.2",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
+  }
+}

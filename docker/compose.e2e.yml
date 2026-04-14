@@ -1,0 +1,53 @@
+# Generic E2E compose — fully driven by environment variables.
+#
+# The e2e-docker.mjs script loads .env then layers .env.{name} on top,
+# so every value here comes from the merged environment.
+#
+# To create a new environment, copy .env.e2e to .env.myenv, tweak the
+# values, and run: pnpm test:e2e --env myenv
+
+services:
+  app:
+    container_name: ${SITE_PROD_CONTAINER_NAME:-candyshop-e2e}
+    image: ${SITE_PROD_IMAGE_NAME:-candyshop-e2e}
+    build:
+      context: ..
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-}
+        NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-}
+        NEXT_PUBLIC_BUILD_HASH: ${NEXT_PUBLIC_BUILD_HASH:-e2e}
+        NEXT_PUBLIC_ENABLE_TEST_IDS: ${NEXT_PUBLIC_ENABLE_TEST_IDS:-true}
+        NEXT_PUBLIC_PROJECT_ID: ${NEXT_PUBLIC_PROJECT_ID:-candyshop-dev-001}
+        NEXT_PUBLIC_TENANT: ${NEXT_PUBLIC_TENANT:-candyshop}
+        AUTH_PROVIDER_MODE: ${AUTH_PROVIDER_MODE:-supabase}
+        NEXT_PUBLIC_KEYCLOAK_URL: ${NEXT_PUBLIC_KEYCLOAK_URL:-}
+        NEXT_PUBLIC_KEYCLOAK_REALM: ${NEXT_PUBLIC_KEYCLOAK_REALM:-}
+        NEXT_PUBLIC_KEYCLOAK_CLIENT_ID: ${NEXT_PUBLIC_KEYCLOAK_CLIENT_ID:-}
+        NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL}
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY}
+        SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY}
+        SITE_PUBLIC_ORIGIN: ${SITE_PUBLIC_ORIGIN}
+        BASE_PATH_PREFIX: ${BASE_PATH_PREFIX:-}
+        NEXT_PUBLIC_LANDING_URL: ${NEXT_PUBLIC_LANDING_URL}
+        NEXT_PUBLIC_STORE_URL: ${NEXT_PUBLIC_STORE_URL}
+        NEXT_PUBLIC_PAYMENTS_URL: ${NEXT_PUBLIC_PAYMENTS_URL}
+        NEXT_PUBLIC_ADMIN_URL: ${NEXT_PUBLIC_ADMIN_URL}
+        NEXT_PUBLIC_PLAYGROUND_URL: ${NEXT_PUBLIC_PLAYGROUND_URL}
+        NEXT_PUBLIC_STUDIO_URL: ${NEXT_PUBLIC_STUDIO_URL}
+        NEXT_PUBLIC_AUTH_URL: ${NEXT_PUBLIC_AUTH_URL}
+        NEXT_PUBLIC_AUTH_HOST_URL: ${NEXT_PUBLIC_AUTH_HOST_URL}
+        SUPABASE_URL_INTERNAL: ${SUPABASE_URL_INTERNAL:-}
+    restart: "no"
+    ports:
+      - "${SITE_PROD_PORT:-8089}:80"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:
+      # Server-side REST calls: API routes inside the container reach
+      # the host's Supabase via Docker networking, not localhost.
+      # NEXT_PUBLIC_SUPABASE_URL stays as built (localhost:54321) so
+      # cookie names match between client and server.
+      SUPABASE_URL_INTERNAL: ${SUPABASE_URL_INTERNAL:-${NEXT_PUBLIC_SUPABASE_URL}}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY}
+      SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY}

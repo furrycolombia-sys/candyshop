@@ -1,0 +1,48 @@
+# ls-lint configuration
+# Enforces file naming conventions across the monorepo
+
+ls:
+  # General source files
+  # Using regex to allow:
+  # - kebab-case: my-file
+  # - camelCase with acronyms: useAIData, aiDataRepository
+  # - PascalCase with acronyms: AIOptimization, MSWProvider
+  apps/*/src:
+    .ts: kebab-case | regex:^[a-z][a-zA-Z0-9]*$ | regex:^[A-Z][A-Za-z0-9]*$
+    .tsx: kebab-case | regex:^[a-z][a-zA-Z0-9]*$ | regex:^[A-Z][A-Za-z0-9]*$
+    .js: kebab-case | regex:^[a-z][a-zA-Z0-9]*$
+    .css: kebab-case
+    .json: kebab-case
+
+  # E2E test files
+  apps/*/e2e:
+    .ts: kebab-case | regex:^[a-z][a-zA-Z0-9]*$
+    .spec.ts: kebab-case | regex:^[a-z][a-zA-Z0-9]*$
+
+  # Packages source
+  packages/*/src:
+    .ts: kebab-case | regex:^[a-z][a-zA-Z0-9]*$ | regex:^[A-Z][A-Za-z0-9]*$
+    .tsx: kebab-case | regex:^[a-z][a-zA-Z0-9]*$ | regex:^[A-Z][A-Za-z0-9]*$
+
+ignore:
+  - node_modules
+  - .next
+  - .git
+  - dist
+  - build
+  - coverage
+  - playwright-report
+  - test-results
+  - .turbo
+  - .pnpm-store
+  - .ai-context
+  - .claude
+  - .github
+  - .husky
+  - .vscode
+  - .playwright-mcp
+  - specs
+  - public
+  # Generated files
+  - "**/generated/**"
+  - "**/types/generated/**"

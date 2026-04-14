@@ -1,0 +1,20 @@
+import "@testing-library/jest-dom/vitest";
+import { cleanup } from "@testing-library/react";
+import { beforeAll, afterEach, afterAll } from "vitest";
+
+import { server } from "@/mocks/server";
+
+beforeAll(() => {
+  server.listen({ onUnhandledRequest: "error" });
+
+  Object.defineProperty(HTMLCanvasElement.prototype, "getContext", {
+    value: () => null,
+    writable: true,
+    configurable: true,
+  });
+});
+afterEach(() => {
+  cleanup();
+  server.resetHandlers();
+});
+afterAll(() => server.close());
