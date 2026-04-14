@@ -163,7 +163,8 @@
       "tracking": "Tracking / Ref",
       "name": "Name",
       "sender_name": "Sender"
-    }
+    },
+    "onBehalfOf": "On behalf of: {sellerName}"
   },
   "paymentMethods": {
     "title": "My Payment Methods",

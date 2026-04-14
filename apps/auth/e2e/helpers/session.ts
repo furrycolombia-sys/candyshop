@@ -155,6 +155,10 @@ export const SELLER_PERMISSIONS = [
   "seller_payment_methods.read",
   "seller_payment_methods.update",
   "seller_payment_methods.delete",
+  "seller_admins.create",
+  "seller_admins.read",
+  "seller_admins.update",
+  "seller_admins.delete",
 ];
 
 export const ADMIN_PERMISSIONS = [
@@ -179,6 +183,8 @@ export const ADMIN_PERMISSIONS = [
     "check_ins.create",
     "check_ins.read",
     "check_ins.update",
+    "orders.approve",
+    "orders.request_proof",
   ]),
 ];
 

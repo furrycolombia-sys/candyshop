@@ -35,28 +35,30 @@ test.describe("Auth session", () => {
 
     const authorizeUrl = new URL(request.url());
 
-    // The authorize request must go to the LOCAL Supabase instance
-    // (localhost:54321), not the production tunnel (supabase.ffxivbe.org).
-    // If this fails, the OAuth callback will redirect to the wrong host
-    // and the user will never land back on the app.
+    // The authorize request must go to the Supabase instance configured
+    // for this environment. In local/e2e mode that's localhost:54321;
+    // against production it's the Supabase Cloud host (e.g. *.supabase.co).
+    const expectedSupabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+      ? new URL(process.env.NEXT_PUBLIC_SUPABASE_URL).hostname
+      : "localhost";
     expect(
       authorizeUrl.hostname,
-      `Supabase authorize URL should hit localhost, got ${authorizeUrl.hostname}`,
-    ).toBe("localhost");
+      `Supabase authorize URL should hit ${expectedSupabaseUrl}, got ${authorizeUrl.hostname}`,
+    ).toBe(expectedSupabaseUrl);
 
     // The redirect_to parameter tells Supabase where to send the user
     // after the OAuth flow completes. It must point back to the app
-    // under test, not the production site.
+    // under test (e2e container or production site).
     const redirectTo = authorizeUrl.searchParams.get("redirect_to");
     expect(
       redirectTo,
       "redirect_to parameter must be present in the authorize URL",
     ).toBeTruthy();
 
-    // The redirect_to should contain the auth callback path for this app
+    // The redirect_to should contain the auth callback path
     expect(
       redirectTo,
-      `redirect_to should point to the e2e container, got: ${redirectTo}`,
+      `redirect_to should contain /auth/callback, got: ${redirectTo}`,
     ).toContain("/auth/callback");
   });
 

@@ -63,6 +63,7 @@ function makeOrder(overrides: Partial<ReceivedOrder> = {}): ReceivedOrder {
         metadata: { name_en: "Widget" },
       },
     ],
+    seller_name: null,
     ...overrides,
   };
 }

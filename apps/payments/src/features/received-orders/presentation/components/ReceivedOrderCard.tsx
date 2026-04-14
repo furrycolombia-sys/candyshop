@@ -123,6 +123,11 @@ export function ReceivedOrderCard({
             </span>
             <ReceivedStatusBadge status={order.payment_status} />
           </div>
+          {order.seller_name && (
+            <span className="inline-flex items-center rounded-md bg-muted px-2 py-0.5 font-display text-xs font-bold text-muted-foreground">
+              {t("onBehalfOf", { sellerName: order.seller_name })}
+            </span>
+          )}
           <span className="font-mono text-xs text-muted-foreground">
             {new Date(order.created_at).toLocaleString()}
           </span>
