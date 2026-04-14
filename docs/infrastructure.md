@@ -31,6 +31,32 @@ GitHub (push to main)
                     Cloudflare Tunnel → store.furrycolombia.com (SSL)
 ```
 
+## Development Environments
+
+Three environments with clear separation: dev (local Vite), staging (local Docker), and prod (remote server).
+
+| Environment      | Command               | Description                                           |
+| ---------------- | --------------------- | ----------------------------------------------------- |
+| Dev              | `pnpm dev`            | Vite dev servers on ports 5000–5006                   |
+| Dev + Supabase   | `pnpm dev:up`         | Dev servers + local Supabase start                    |
+| Dev + Tunnel     | `pnpm dev:up:tunnel`  | Dev + Supabase + Cloudflare tunnel to ffxivbe.org     |
+| Staging          | `pnpm staging`        | Docker container on port 8088                         |
+| Staging (fresh)  | `pnpm staging:fresh`  | Rebuild Docker from scratch (no cache)                |
+| Staging + Tunnel | `pnpm staging:tunnel` | Docker + Cloudflare sidecar in compose                |
+| Staging Public   | `pnpm staging:public` | Docker + named Cloudflare tunnel to store.ffxivbe.org |
+| Staging Stop     | `pnpm staging:stop`   | Stop staging Docker container                         |
+| Prod Deploy      | `pnpm prod:deploy`    | SSH deploy to production server via deploy.sh         |
+| Prod Logs        | `pnpm prod:logs`      | Tail production Docker logs (candyshop-prod)          |
+| Prod Status      | `pnpm prod:status`    | Check production container status                     |
+
+Environment files:
+
+- `.env.example` — committed defaults for local dev
+- `.env` — local overrides (gitignored), secrets and OAuth keys
+- `.env.staging` — committed staging overrides (container name, public URLs)
+- `.env.e2e` — committed E2E test overrides (isolated Supabase, port 8089)
+- `.env.prod` — committed prod E2E overrides (points at live site + Supabase Cloud)
+
 ## Server
 
 | Property      | Value                               |

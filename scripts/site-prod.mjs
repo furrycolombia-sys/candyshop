@@ -125,21 +125,21 @@ async function waitForHealth(url) {
 
 if (wantsHelp) {
   console.log(`Usage:
-  pnpm site:prod
-  pnpm site:prod:cloudflare
-  pnpm site:prod:stop
+  pnpm staging
+  pnpm staging:tunnel
+  pnpm staging:stop
 
 Options:
-  --cloudflare  Start the Docker production stack plus the Cloudflare sidecar
+  --cloudflare  Start the Docker staging stack plus the Cloudflare sidecar
   --no-build    Reuse the existing Docker image instead of rebuilding it
   --fresh       Rebuild with --no-cache --pull always (fully fresh image)
-  --stop        Stop and remove the Docker production stack
+  --stop        Stop and remove the Docker staging stack
 
 Environment:
   SITE_PROD_PORT=8088
-  SITE_PROD_CONTAINER_NAME=candyshop-prod
-  SITE_PROD_IMAGE_NAME=candyshop-local-prod
-  SITE_PUBLIC_ORIGIN=https://shop.example.com
+  SITE_PROD_CONTAINER_NAME=candyshop-staging
+  SITE_PROD_IMAGE_NAME=candyshop-staging
+  SITE_PUBLIC_ORIGIN=https://store.ffxivbe.org
 
 Cloudflare:
   CLOUDFLARE_TUNNEL_TOKEN=...
@@ -147,7 +147,7 @@ Cloudflare:
   CLOUDFLARED_ARGS="tunnel run my-tunnel"
 
 Notes:
-  - This command runs the Dockerized production stack via Docker Compose.
+  - This command runs the Dockerized staging stack via Docker Compose.
   - If you expose the site publicly, set SITE_PUBLIC_ORIGIN or explicit NEXT_PUBLIC_* app URLs.
   - If AUTH_PROVIDER_MODE=supabase, NEXT_PUBLIC_SUPABASE_URL must also be public.`);
   process.exit(0);
@@ -317,4 +317,4 @@ if (wantsCloudflare) {
   log("Cloudflare sidecar is running inside the Docker Compose stack.");
 }
 
-log("Stop it with: pnpm site:prod:stop");
+log("Stop it with: pnpm staging:stop");
