@@ -1,5 +1,6 @@
 // Pages
 export { DelegateManagementPage } from "./presentation/pages/DelegateManagementPage";
+export { ProductDelegatesPage } from "./presentation/pages/ProductDelegatesPage";
 
 // Hooks
 export { useDelegates } from "./application/hooks/useDelegates";

@@ -47,13 +47,19 @@ export function useProductById(productId?: string) {
 /** Convert a Product row to form values for editing */
 export function productToFormValues(product: Product): ProductFormValues {
   const rawImages = product.images as
-    | Array<{ url: string; alt?: string; sort_order?: number }>
+    | Array<{
+        url: string;
+        alt?: string;
+        sort_order?: number;
+        is_cover?: boolean;
+      }>
     | null
     | undefined;
   const images = (rawImages ?? []).map((img, idx) => ({
     url: img.url ?? "",
     alt: img.alt ?? "",
     sort_order: img.sort_order ?? idx,
+    is_cover: img.is_cover ?? false,
   }));
 
   const rawSections = product.sections as

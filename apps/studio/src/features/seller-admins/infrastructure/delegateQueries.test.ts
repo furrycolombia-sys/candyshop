@@ -2,6 +2,7 @@ import { describe, it, expect, vi } from "vitest";
 
 import {
   fetchDelegates,
+  fetchDelegateCountsByProduct,
   searchUsers,
   escapeLikePattern,
 } from "./delegateQueries";
@@ -76,6 +77,7 @@ describe("fetchDelegates", () => {
         id: "d1",
         seller_id: "seller-1",
         admin_user_id: "admin-1",
+        product_id: "product-1",
         permissions: ["orders.approve"],
         created_at: "2024-01-01",
         updated_at: "2024-01-01",
@@ -89,22 +91,23 @@ describe("fetchDelegates", () => {
     ];
 
     const supabase = createMockSupabase({ data: mockDelegates });
-    const result = await fetchDelegates(supabase, "seller-1");
+    const result = await fetchDelegates(supabase, "seller-1", "product-1");
 
     expect(result).toEqual(mockDelegates);
     expect(supabase.from).toHaveBeenCalledWith("seller_admins");
   });
 
-  it("queries with correct seller_id filter", async () => {
+  it("queries with correct seller_id and product_id filters", async () => {
     const supabase = createMockSupabase({ data: [] });
-    await fetchDelegates(supabase, "seller-42");
+    await fetchDelegates(supabase, "seller-42", "product-99");
 
     expect(supabase._chain.eq).toHaveBeenCalledWith("seller_id", "seller-42");
+    expect(supabase._chain.eq).toHaveBeenCalledWith("product_id", "product-99");
   });
 
   it("orders results by created_at ascending", async () => {
     const supabase = createMockSupabase({ data: [] });
-    await fetchDelegates(supabase, "seller-1");
+    await fetchDelegates(supabase, "seller-1", "product-1");
 
     expect(supabase._chain.order).toHaveBeenCalledWith("created_at", {
       ascending: true,
@@ -116,16 +119,64 @@ describe("fetchDelegates", () => {
       error: { message: "RLS violation" },
     });
 
-    await expect(fetchDelegates(supabase, "seller-1")).rejects.toEqual({
+    await expect(
+      fetchDelegates(supabase, "seller-1", "product-1"),
+    ).rejects.toEqual({
       message: "RLS violation",
     });
   });
 
   it("returns empty array when no delegates exist", async () => {
     const supabase = createMockSupabase({ data: [] });
-    const result = await fetchDelegates(supabase, "seller-1");
+    const result = await fetchDelegates(supabase, "seller-1", "product-1");
 
     expect(result).toEqual([]);
+  });
+});
+
+/* ------------------------------------------------------------------ */
+/*  fetchDelegateCountsByProduct                                       */
+/* ------------------------------------------------------------------ */
+
+describe("fetchDelegateCountsByProduct", () => {
+  it("returns counts grouped by product_id", async () => {
+    const mockRows = [
+      { product_id: "p1" },
+      { product_id: "p1" },
+      { product_id: "p2" },
+      { product_id: "p1" },
+      { product_id: "p3" },
+    ];
+
+    const supabase = createMockSupabase({ data: mockRows });
+    const result = await fetchDelegateCountsByProduct(supabase, "seller-1");
+
+    expect(result).toEqual({ p1: 3, p2: 1, p3: 1 });
+  });
+
+  it("queries seller_admins with correct seller_id filter", async () => {
+    const supabase = createMockSupabase({ data: [] });
+    await fetchDelegateCountsByProduct(supabase, "seller-42");
+
+    expect(supabase.from).toHaveBeenCalledWith("seller_admins");
+    expect(supabase._chain.eq).toHaveBeenCalledWith("seller_id", "seller-42");
+  });
+
+  it("returns empty object when no delegates exist", async () => {
+    const supabase = createMockSupabase({ data: [] });
+    const result = await fetchDelegateCountsByProduct(supabase, "seller-1");
+
+    expect(result).toEqual({});
+  });
+
+  it("throws on supabase error", async () => {
+    const supabase = createMockSupabase({
+      error: { message: "query failed" },
+    });
+
+    await expect(
+      fetchDelegateCountsByProduct(supabase, "seller-1"),
+    ).rejects.toEqual({ message: "query failed" });
   });
 });
 

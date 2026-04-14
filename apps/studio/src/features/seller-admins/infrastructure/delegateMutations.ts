@@ -9,7 +9,7 @@ import { validateDelegateInput } from "@/features/seller-admins/domain/validatio
 type SupabaseClient = ReturnType<typeof createBrowserSupabaseClient>;
 
 /**
- * Add a new delegate for a seller.
+ * Add a new delegate for a seller, scoped to a specific product.
  * Validates input before inserting into `seller_admins`.
  */
 export async function addDelegate(
@@ -17,6 +17,7 @@ export async function addDelegate(
   sellerId: string,
   adminUserId: string,
   permissions: DelegatePermission[],
+  productId: string,
 ): Promise<SellerAdmin> {
   validateDelegateInput(sellerId, adminUserId, permissions);
 
@@ -26,6 +27,7 @@ export async function addDelegate(
       seller_id: sellerId,
       admin_user_id: adminUserId,
       permissions,
+      product_id: productId,
     })
     .select()
     .single();
@@ -56,18 +58,21 @@ export async function updateDelegatePermissions(
 }
 
 /**
- * Remove a delegate by deleting the `seller_admins` row.
+ * Remove a delegate by deleting the `seller_admins` row
+ * matching the `(seller_id, admin_user_id, product_id)` triple.
  */
 export async function removeDelegate(
   supabase: SupabaseClient,
   sellerId: string,
   adminUserId: string,
+  productId: string,
 ): Promise<void> {
   const { error } = await supabase
     .from("seller_admins")
     .delete()
     .eq("seller_id", sellerId)
-    .eq("admin_user_id", adminUserId);
+    .eq("admin_user_id", adminUserId)
+    .eq("product_id", productId);
 
   if (error) throw error;
 }
