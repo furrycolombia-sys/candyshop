@@ -22,9 +22,6 @@ out/
 
 # Environment files (secrets)
 .env
-.env.e2e
-.env.prod
-.env.staging
 .secrets
 .env.local
 .env.local.e2e
@@ -32,6 +29,10 @@ out/
 !.env.example
 !.env.e2e.example
 !.env.local.example
+!.env.dev
+!.env.staging
+!.env.e2e
+!.env.prod
 
 # Claude/AI local files (secrets and personal config)
 .claude/tools/.env.local

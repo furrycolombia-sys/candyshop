@@ -14,9 +14,10 @@
  * hardcoded auth URLs and a separate project_id so Docker container names
  * never collide with the dev instance.
  *
- * Environment layering:
- *   .env  ->  base values (production)
- *   .env.{name}  ->  overrides for the target environment
+ * Environment layering (handled by load-root-env.js):
+ *   .env.example  ->  base defaults
+ *   .env.{name}   ->  environment-specific overrides
+ *   .secrets      ->  $secret: reference resolution
  *
  * Usage:
  *   node scripts/e2e-docker.mjs                          # run all tests
@@ -31,10 +32,13 @@
  *   node scripts/e2e-docker.mjs --env staging            # use .env.staging
  *   node scripts/e2e-docker.mjs --keep-supabase          # don't stop e2e Supabase after
  */
-import { readFileSync, existsSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { createRequire } from "node:module";
+
+const require = createRequire(import.meta.url);
+const { loadRootEnv } = require("./load-root-env.js");
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const rootDir = resolve(__dirname, "..");
@@ -80,45 +84,14 @@ function getArgValue(name) {
 const envName = getArgValue("--env") || "e2e";
 const specFile = getArgValue("--spec");
 
-// ---- Env loading ----
+// ---- Env loading (via load-root-env.js) ----
 
-function parseEnvFile(filePath) {
-  if (!existsSync(filePath)) return {};
-  const vars = {};
-  for (const line of readFileSync(filePath, "utf8").split(/\r?\n/)) {
-    const trimmed = line.trim();
-    if (!trimmed || trimmed.startsWith("#")) continue;
-    const eqIdx = trimmed.indexOf("=");
-    if (eqIdx === -1) continue;
-    const key = trimmed.slice(0, eqIdx).trim();
-    let value = trimmed.slice(eqIdx + 1).trim();
-    if (
-      (value.startsWith('"') && value.endsWith('"')) ||
-      (value.startsWith("'") && value.endsWith("'"))
-    ) {
-      value = value.slice(1, -1);
-    }
-    vars[key] = value;
-  }
-  return vars;
-}
+loadRootEnv({ targetEnv: envName });
 
-const baseEnvFile = resolve(rootDir, ".env");
-const overlayEnvFile = resolve(rootDir, `.env.${envName}`);
-
-if (!existsSync(overlayEnvFile)) {
-  console.error(`[e2e-docker] Missing env file: .env.${envName}`);
-  console.error(`[e2e-docker] Create it or use --env <name> to pick another.`);
-  process.exit(1);
-}
-
-const baseEnv = parseEnvFile(baseEnvFile);
-const overlayEnv = parseEnvFile(overlayEnvFile);
-const mergedEnv = { ...process.env, ...baseEnv, ...overlayEnv };
-
-const containerName = mergedEnv.SITE_PROD_CONTAINER_NAME || `candyshop-${envName}`;
-const imageName = mergedEnv.SITE_PROD_IMAGE_NAME || `candyshop-${envName}`;
-const port = mergedEnv.SITE_PROD_PORT || "8089";
+const containerName =
+  process.env.SITE_PROD_CONTAINER_NAME || `candyshop-${envName}`;
+const imageName = process.env.SITE_PROD_IMAGE_NAME || `candyshop-${envName}`;
+const port = process.env.SITE_PROD_PORT || "8089";
 const baseUrl = `http://localhost:${port}`;
 const projectName = `candyshop-${envName}`;
 
@@ -132,7 +105,7 @@ function run(cmd, cmdArgs, opts = {}) {
   const result = spawnSync(cmd, cmdArgs, {
     cwd: rootDir,
     stdio: "inherit",
-    env: mergedEnv,
+    env: process.env,
     ...opts,
   });
   // On Windows, spawnSync may return null for status on success
@@ -143,14 +116,19 @@ function runSilent(cmd, cmdArgs, opts = {}) {
   return spawnSync(cmd, cmdArgs, {
     cwd: rootDir,
     encoding: "utf8",
-    env: mergedEnv,
+    env: process.env,
     ...opts,
   });
 }
 
 function compose(...cmdArgs) {
   return run(docker, [
-    "compose", "-p", projectName, "-f", composeFile, ...cmdArgs,
+    "compose",
+    "-p",
+    projectName,
+    "-f",
+    composeFile,
+    ...cmdArgs,
   ]);
 }
 
@@ -173,32 +151,42 @@ function imageExistsLocally() {
 
 function isDevSupabaseRunning() {
   const result = runSilent(docker, [
-    "ps", "-q", "-f", "name=supabase_db_candystore",
+    "ps",
+    "-q",
+    "-f",
+    "name=supabase_db_candystore",
   ]);
   // Filter out e2e containers
   const ids = (result.stdout || "").trim();
   if (!ids) return false;
   // Check if any non-e2e supabase containers are running
   const check = runSilent(docker, [
-    "ps", "--format", "{{.Names}}", "-f", "name=supabase_db_candystore",
+    "ps",
+    "--format",
+    "{{.Names}}",
+    "-f",
+    "name=supabase_db_candystore",
   ]);
-  return (check.stdout || "").includes("supabase_db_candystore\n") ||
+  return (
+    (check.stdout || "").includes("supabase_db_candystore\n") ||
     ((check.stdout || "").includes("supabase_db_candystore") &&
-     !(check.stdout || "").includes("supabase_db_candystore-e2e"));
+      !(check.stdout || "").includes("supabase_db_candystore-e2e"))
+  );
 }
 
 function isE2ESupabaseRunning() {
   const result = runSilent(docker, [
-    "ps", "-q", "-f", "name=supabase_db_supabase-e2e",
+    "ps",
+    "-q",
+    "-f",
+    "name=supabase_db_supabase-e2e",
   ]);
   return (result.stdout || "").trim().length > 0;
 }
 
 function stopDevSupabase() {
   log("Stopping dev Supabase...");
-  run(supabaseBin, ["supabase", "stop", "--no-backup"], {
-    env: { ...process.env, ...baseEnv },
-  });
+  run(supabaseBin, ["supabase", "stop", "--no-backup"]);
   // Clean up stuck containers
   runSilent(docker, ["rm", "-f", "supabase_vector_candystore"]);
 }
@@ -207,7 +195,12 @@ function startE2ESupabase() {
   log("Starting e2e Supabase (project: candystore-e2e)...");
   // Clean up any stuck containers from previous runs
   runSilent(docker, ["rm", "-f", "supabase_vector_candystore-e2e"]);
-  const code = run(supabaseBin, ["supabase", "start", "--workdir", "supabase-e2e"]);
+  const code = run(supabaseBin, [
+    "supabase",
+    "start",
+    "--workdir",
+    "supabase-e2e",
+  ]);
   if (code !== 0) {
     log("Failed to start e2e Supabase.");
     process.exit(code);
@@ -216,34 +209,42 @@ function startE2ESupabase() {
 
 function stopE2ESupabase() {
   log("Stopping e2e Supabase...");
-  run(supabaseBin, ["supabase", "stop", "--workdir", "supabase-e2e", "--no-backup"]);
+  run(supabaseBin, [
+    "supabase",
+    "stop",
+    "--workdir",
+    "supabase-e2e",
+    "--no-backup",
+  ]);
   // Clean up stuck vector container (uses project_id from config.toml)
   runSilent(docker, ["rm", "-f", "supabase_vector_candystore-e2e"]);
 }
 
 function restoreDevSupabase() {
   log("Restoring dev Supabase...");
-  run(supabaseBin, ["supabase", "start"], {
-    env: { ...process.env, ...baseEnv },
-  });
+  run(supabaseBin, ["supabase", "start"]);
 }
 
 async function waitForSupabase() {
-  const supabasePort = mergedEnv.NEXT_PUBLIC_SUPABASE_URL
-    ? new URL(mergedEnv.NEXT_PUBLIC_SUPABASE_URL).port || "54321"
+  const supabasePort = process.env.NEXT_PUBLIC_SUPABASE_URL
+    ? new URL(process.env.NEXT_PUBLIC_SUPABASE_URL).port || "54321"
     : "54321";
   const url = `http://127.0.0.1:${supabasePort}/rest/v1/`;
   const start = Date.now();
-  const key = mergedEnv.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
   log("Waiting for Supabase...");
   while (Date.now() - start < SUPABASE_HEALTH_TIMEOUT_MS) {
     try {
       const res = await fetch(url, { headers: { apikey: key } });
       if (res.ok) {
-        log(`Supabase ready after ${Math.round((Date.now() - start) / 1000)}s.`);
+        log(
+          `Supabase ready after ${Math.round((Date.now() - start) / 1000)}s.`,
+        );
         return true;
       }
-    } catch { /* not ready */ }
+    } catch {
+      /* not ready */
+    }
     await new Promise((r) => setTimeout(r, HEALTH_POLL_MS));
   }
   log("Supabase did not become ready in time.");
@@ -263,7 +264,9 @@ async function waitForHealth() {
         log(`Healthy after ${Math.round((Date.now() - start) / 1000)}s.`);
         return true;
       }
-    } catch { /* not ready */ }
+    } catch {
+      /* not ready */
+    }
     await new Promise((r) => setTimeout(r, HEALTH_POLL_MS));
   }
   log(`Container did not become healthy within ${HEALTH_TIMEOUT_MS / 1000}s.`);
@@ -281,20 +284,29 @@ function buildAndStart() {
   if (forceRebuild) {
     log("Building Docker image from scratch (no cache)...");
     const buildCode = compose("build", "--no-cache", "--pull");
-    if (buildCode !== 0) { log("Failed to build image."); process.exit(buildCode); }
+    if (buildCode !== 0) {
+      log("Failed to build image.");
+      process.exit(buildCode);
+    }
   } else {
     log("Building Docker image...");
   }
   const upArgs = ["up", "-d"];
   if (!forceRebuild) upArgs.push("--build");
   const code = compose(...upArgs);
-  if (code !== 0) { log("Failed to start container."); process.exit(code); }
+  if (code !== 0) {
+    log("Failed to start container.");
+    process.exit(code);
+  }
 }
 
 function startExisting() {
   log("Starting container from existing image...");
   const code = compose("up", "-d");
-  if (code !== 0) { log("Failed to start container."); process.exit(code); }
+  if (code !== 0) {
+    log("Failed to start container.");
+    process.exit(code);
+  }
 }
 
 async function ensureContainerReady() {
@@ -311,8 +323,10 @@ async function ensureContainerReady() {
   }
   const healthy = await waitForHealth();
   if (!healthy) {
-    log("Container logs:"); compose("logs", "--tail=40");
-    teardownContainer(); process.exit(1);
+    log("Container logs:");
+    compose("logs", "--tail=40");
+    teardownContainer();
+    process.exit(1);
   }
 }
 
@@ -361,7 +375,13 @@ function runTests() {
   if (debugMode) playwrightArgs.push("--debug");
   playwrightArgs.push("--reporter=list");
 
-  const modeLabel = uiMode ? "UI mode" : debugMode ? "debug mode" : headed ? "headed" : "headless";
+  const modeLabel = uiMode
+    ? "UI mode"
+    : debugMode
+      ? "debug mode"
+      : headed
+        ? "headed"
+        : "headless";
   log(`Running Playwright (${modeLabel}) against ${baseUrl}`);
   if (smokeOnly) log("Smoke tests only");
   else if (specFile) log(`Spec: ${specFile}`);
@@ -369,7 +389,7 @@ function runTests() {
 
   return run(pnpm, playwrightArgs, {
     env: {
-      ...mergedEnv,
+      ...process.env,
       E2E_PUBLIC_ORIGIN: baseUrl,
       PLAYWRIGHT_USE_EXISTING_STACK: "true",
       ...(debugMode ? { PWDEBUG: "1" } : {}),
@@ -395,12 +415,16 @@ if (wantsBuild) {
   buildAndStart();
   const healthy = await waitForHealth();
   if (!healthy) {
-    log("Container logs:"); compose("logs", "--tail=40");
-    teardownContainer(); process.exit(1);
+    log("Container logs:");
+    compose("logs", "--tail=40");
+    teardownContainer();
+    process.exit(1);
   }
   log("");
   log(`E2E stack ready at ${baseUrl}`);
-  log(`Supabase: http://localhost:54321 (e2e instance, project: candystore-e2e)`);
+  log(
+    `Supabase: http://localhost:54321 (e2e instance, project: candystore-e2e)`,
+  );
   log("");
   log("Commands:");
   log("  pnpm test:e2e                    Run all tests headless");
@@ -420,7 +444,9 @@ await ensureContainerReady();
 const testExitCode = runTests();
 
 if (headed || uiMode || debugMode) {
-  log(`Container still running at ${baseUrl}. Tear down with: pnpm test:e2e:down`);
+  log(
+    `Container still running at ${baseUrl}. Tear down with: pnpm test:e2e:down`,
+  );
 } else {
   fullTeardown();
 }
