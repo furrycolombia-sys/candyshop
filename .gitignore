@@ -23,6 +23,7 @@ out/
 # Environment files (secrets)
 .env
 .env.e2e
+.env.prod
 .env.staging
 .secrets
 .env.local
@@ -121,3 +122,4 @@ coverage-report.json
 
 # Production env (contains secrets)
 scripts/server/production.env
+scripts/server/docker-prod.env

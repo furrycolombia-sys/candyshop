@@ -90,6 +90,18 @@ export const PERMISSION_GROUPS: PermissionGroup[] = [
     labelKey: "checkins",
     permissions: ["check_ins.create", "check_ins.read", "check_ins.update"],
   },
+  {
+    key: "sellerAdmins",
+    labelKey: "sellerAdmins",
+    permissions: [
+      "seller_admins.create",
+      "seller_admins.read",
+      "seller_admins.update",
+      "seller_admins.delete",
+      "orders.approve",
+      "orders.request_proof",
+    ],
+  },
 ];
 
 export const ALL_PERMISSION_KEYS: string[] = PERMISSION_GROUPS.flatMap(
@@ -125,6 +137,10 @@ export const PERMISSION_TEMPLATES: Record<string, string[]> = {
     "seller_payment_methods.read",
     "seller_payment_methods.update",
     "seller_payment_methods.delete",
+    "seller_admins.create",
+    "seller_admins.read",
+    "seller_admins.update",
+    "seller_admins.delete",
   ],
   admin: ALL_PERMISSION_KEYS,
   events: [

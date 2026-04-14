@@ -70,4 +70,4 @@ Run-Step "pnpm" $setupArgs $RepoPath
 Write-Step "Machine ready"
 Write-Host ""
 Write-Host "Next command to bring the public stack up:"
-Write-Host "  pnpm site:up:cloudflare"
+Write-Host "  pnpm dev:up:tunnel"
