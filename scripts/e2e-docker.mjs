@@ -392,6 +392,7 @@ function runTests() {
   else log(`${CORE_SPECS.length} spec files`);
 
   return run(pnpm, playwrightArgs, {
+    shell: true,
     env: {
       ...process.env,
       E2E_PUBLIC_ORIGIN: baseUrl,
