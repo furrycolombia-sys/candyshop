@@ -42,12 +42,7 @@ const APP_ACCESS_RULES: Partial<
   Record<AppId, { required: readonly string[]; mode?: "all" | "any" }>
 > = {
   studio: {
-    required: [
-      "products.read",
-      "products.create",
-      "products.update",
-      "products.delete",
-    ],
+    required: ["products.create", "products.update", "products.delete"],
     mode: "any",
   },
   payments: {

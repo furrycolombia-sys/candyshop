@@ -17,6 +17,8 @@ export interface ReceivedOrder {
   created_at: string;
   buyer_name: string;
   items: OrderItem[];
+  /** Non-null when the order belongs to a seller who delegated to the current user */
+  seller_name: string | null;
 }
 
 export type SellerAction = "approved" | "rejected" | "evidence_requested";

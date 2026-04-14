@@ -11,17 +11,17 @@ pnpm install
 # Start all apps in development mode
 pnpm dev
 
-# Start local stack + Cloudflare tunnel (if configured in .env)
-pnpm site:up:cloudflare
+# Start local dev + Supabase + Cloudflare tunnel (if configured in .env)
+pnpm dev:up:tunnel
 
-# Start the Dockerized local production build
-pnpm site:prod
+# Start the Dockerized staging build
+pnpm staging
 
-# Start the Dockerized local production build + Cloudflare tunnel
-pnpm site:prod:cloudflare
+# Start the Dockerized staging build + Cloudflare tunnel
+pnpm staging:tunnel
 
-# Compatibility alias for the Docker + Cloudflare production stack
-pnpm site:prod:public
+# Full staging with named Cloudflare tunnel (PowerShell)
+pnpm staging:public
 
 
 # Start individual apps
@@ -40,7 +40,7 @@ If this PC gets formatted and you need to bring the public site back up:
 ```bash
 pnpm install
 pnpm setup:cloudflare --token <your-token>
-pnpm site:up:cloudflare
+pnpm dev:up:tunnel
 ```
 
 You can use `--name` or `--args` instead of `--token` depending on how your
@@ -50,27 +50,27 @@ On Windows, you can also use:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\scripts\setup-machine.ps1 -TunnelToken <your-token>
-pnpm site:up:cloudflare
+pnpm dev:up:tunnel
 ```
 
 Or from `cmd.exe` / a double-clickable batch file entrypoint:
 
 ```bat
 scripts\setup-machine.bat -TunnelToken <your-token>
-pnpm site:up:cloudflare
+pnpm dev:up:tunnel
 ```
 
 If you want a dedicated recovery template, use:
 
 - [.env.recovery.example](/Z:/Github/candystore/.env.recovery.example)
 
-## Local Production On This Machine
+## Local Staging On This Machine
 
 For a production-oriented local setup, use the Dockerized runtime instead of
 `pnpm dev`:
 
 ```bash
-pnpm site:prod
+pnpm staging
 ```
 
 That command:
@@ -98,21 +98,21 @@ The canonical rule is:
 To stop it:
 
 ```bash
-pnpm site:prod:stop
+pnpm staging:stop
 ```
 
 To expose it through Cloudflare Tunnel:
 
 ```bash
 pnpm setup:cloudflare --token <your-token>
-pnpm site:prod:cloudflare
+pnpm staging:tunnel
 ```
 
 For public traffic, the recommended path is the same Dockerized stack with the
 optional Cloudflare sidecar:
 
 ```bash
-pnpm site:prod:cloudflare
+pnpm staging:tunnel
 ```
 
 That command:
@@ -124,15 +124,15 @@ That command:
 The legacy Windows entrypoint is still available for compatibility:
 
 ```bash
-pnpm site:prod:public
+pnpm staging:public
 ```
 
-It now delegates to the same Dockerized stack as `pnpm site:prod:cloudflare`.
+It now delegates to the same Dockerized stack as `pnpm staging:tunnel`.
 
 To stop the public stack:
 
 ```bash
-pnpm site:prod:public:stop
+pnpm staging:public:stop
 ```
 
 Recommended `.env` values for public use:

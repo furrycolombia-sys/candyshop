@@ -5,177 +5,143 @@
 ## Architecture Overview
 
 ```
-GitHub (main branch)
+GitHub (push to main)
   │
-  ├─ CI Gate (lint, typecheck, test, build)
-  │
-  └─ Deploy via SSH ──► hestia.local (192.168.2.71)
-                            │
-                            ├─ Nginx (port 9090) ── reverse proxy
-                            │   ├─ /          → landing  :5004
-                            │   ├─ /store     → store    :5001
-                            │   ├─ /admin     → admin    :5002
-                            │   ├─ /auth      → auth     :5000
-                            │   ├─ /payments  → payments :5005
-                            │   ├─ /playground→ playground:5003
-                            │   └─ /studio    → studio   :5006
-                            │
-                            ├─ PM2 (process manager, 7 Next.js apps)
-                            │
-                            └─ Hestia CP (port 8083)
-                                ├─ store.furrycolombia.com → proxy to :9090
-                                └─ SSL via Let's Encrypt
+  └─ Webhook POST ──► deploy.furrycolombia.com
+                          │
+                          ▼
+                    Webhook receiver (PM2, port 9091)
+                          │
+                          ▼
+                    Docker build --no-cache
+                          │
+                          ▼
+                    candyshop-prod container (port 9090)
+                      ├─ Nginx :80 (inside container)
+                      │   ├─ /          → landing  :5004
+                      │   ├─ /store     → store    :5001
+                      │   ├─ /admin     → admin    :5002
+                      │   ├─ /auth      → auth     :5000
+                      │   ├─ /payments  → payments :5005
+                      │   ├─ /playground→ playground:5003
+                      │   └─ /studio    → studio   :5006
+                      └─ supervisord (7 Next.js standalone servers)
+                          │
+                          ▼
+                    Cloudflare Tunnel → store.furrycolombia.com (SSL)
 ```
 
-All apps are served under a single domain: `https://store.furrycolombia.com`
+## Development Environments
 
-## Server Specs
+Three environments with clear separation: dev (local Vite), staging (local Docker), and prod (remote server).
 
-| Property      | Value                             |
-| ------------- | --------------------------------- |
-| Hostname      | hestia.local                      |
-| LAN IP        | 192.168.2.71                      |
-| OS            | Ubuntu 24.04 (Linux 6.8)          |
-| RAM           | 8 GB                              |
-| Disk          | 915 GB (SSD)                      |
-| Control Panel | Hestia CP                         |
-| SSH User      | furrycolombia                     |
-| SSH Auth      | ED25519 key (`candystore-deploy`) |
+| Environment      | Command               | Description                                           |
+| ---------------- | --------------------- | ----------------------------------------------------- |
+| Dev              | `pnpm dev`            | Vite dev servers on ports 5000–5006                   |
+| Dev + Supabase   | `pnpm dev:up`         | Dev servers + local Supabase start                    |
+| Dev + Tunnel     | `pnpm dev:up:tunnel`  | Dev + Supabase + Cloudflare tunnel to ffxivbe.org     |
+| Staging          | `pnpm staging`        | Docker container on port 8088                         |
+| Staging (fresh)  | `pnpm staging:fresh`  | Rebuild Docker from scratch (no cache)                |
+| Staging + Tunnel | `pnpm staging:tunnel` | Docker + Cloudflare sidecar in compose                |
+| Staging Public   | `pnpm staging:public` | Docker + named Cloudflare tunnel to store.ffxivbe.org |
+| Staging Stop     | `pnpm staging:stop`   | Stop staging Docker container                         |
+| Prod Deploy      | `pnpm prod:deploy`    | SSH deploy to production server via deploy.sh         |
+| Prod Logs        | `pnpm prod:logs`      | Tail production Docker logs (candyshop-prod)          |
+| Prod Status      | `pnpm prod:status`    | Check production container status                     |
 
-## Software Stack (on server)
+Environment files:
 
-| Tool    | Version | Install method             |
-| ------- | ------- | -------------------------- |
-| Node.js | 22.x    | nvm (userspace)            |
-| pnpm    | 10.x    | npm global (via nvm)       |
-| PM2     | 6.x     | npm global (via nvm)       |
-| Nginx   | 1.29.x  | System (managed by Hestia) |
-| Git     | 2.43    | System                     |
+- `.env.example` — committed defaults for local dev
+- `.env` — local overrides (gitignored), secrets and OAuth keys
+- `.env.staging` — committed staging overrides (container name, public URLs)
+- `.env.e2e` — committed E2E test overrides (isolated Supabase, port 8089)
+- `.env.prod` — committed prod E2E overrides (points at live site + Supabase Cloud)
 
-## Port Map
+## Server
 
-| App        | Port | Path        | PM2 Name             |
-| ---------- | ---- | ----------- | -------------------- |
-| auth       | 5000 | /auth       | candyshop-auth       |
-| store      | 5001 | /store      | candyshop-store      |
-| admin      | 5002 | /admin      | candyshop-admin      |
-| playground | 5003 | /playground | candyshop-playground |
-| landing    | 5004 | / (root)    | candyshop-landing    |
-| payments   | 5005 | /payments   | candyshop-payments   |
-| studio     | 5006 | /studio     | candyshop-studio     |
+| Property      | Value                               |
+| ------------- | ----------------------------------- |
+| Hostname      | hestia.local                        |
+| LAN IP        | 192.168.2.71                        |
+| Public IP     | 186.29.35.212 (dynamic, behind NAT) |
+| OS            | Ubuntu 24.04 (Linux 6.8)            |
+| RAM           | 8 GB                                |
+| Disk          | 915 GB                              |
+| Control Panel | Hestia CP (port 8083)               |
+| SSH user      | furrycolombia                       |
+| SSH auth      | ED25519 key (`candystore-deploy`)   |
+| SSH password  | Same as sudo password               |
 
-## CI/CD Pipeline
+## Software on Server
 
-### Trigger
+| Tool           | Version  | Install method       |
+| -------------- | -------- | -------------------- |
+| Node.js        | 22.x     | nvm (`~/.nvm`)       |
+| pnpm           | 10.x     | npm global (via nvm) |
+| PM2            | 6.x      | npm global (via nvm) |
+| Docker         | 29.x     | `get.docker.com`     |
+| Docker Compose | 5.x      | Bundled with Docker  |
+| Nginx          | 1.29.x   | System (Hestia)      |
+| cloudflared    | 2026.3.x | Cloudflare apt repo  |
+| Git            | 2.43     | System               |
 
-Push to `main` branch (paths: `apps/**`, `packages/**`, `package.json`, `pnpm-lock.yaml`)
-Also available via manual `workflow_dispatch`.
+## Domain & Networking
 
-### Workflow: `.github/workflows/deploy-production.yml`
+| Domain                   | Routes to                 | Purpose                         |
+| ------------------------ | ------------------------- | ------------------------------- |
+| store.furrycolombia.com  | Cloudflare tunnel → :9090 | Production app                  |
+| deploy.furrycolombia.com | Cloudflare tunnel → :9091 | Webhook deploy receiver         |
+| ssh.furrycolombia.com    | Cloudflare tunnel → :22   | SSH access (for GitHub Actions) |
 
-1. **CI Gate** — typecheck, lint, unit tests, build (with `STANDALONE=true`)
-2. **Deploy** — SSH into server, run `scripts/deploy-production.sh`
-   - Pulls latest code
-   - `pnpm install --frozen-lockfile`
-   - Builds all apps with `STANDALONE=true` (enables path-based routing)
-   - Restarts all PM2 processes
-   - Runs health checks
+**⚠️ Only these 3 subdomains belong to this project. `furrycolombia.com` and `moonfest.furrycolombia.com` are separate sites. Never modify their DNS records.**
 
-### GitHub Secrets Required
+## Cloudflare Tunnel
 
-| Secret                          | Description                    | Example                                      |
-| ------------------------------- | ------------------------------ | -------------------------------------------- |
-| `PROD_SERVER_HOST`              | Server IP                      | `192.168.2.71`                               |
-| `PROD_SERVER_USER`              | SSH username                   | `furrycolombia`                              |
-| `PROD_SERVER_SSH_KEY`           | ED25519 private key (full PEM) | `-----BEGIN OPENSSH...`                      |
-| `NEXT_PUBLIC_STORE_URL`         | Store app URL                  | `https://store.furrycolombia.com/store`      |
-| `NEXT_PUBLIC_ADMIN_URL`         | Admin app URL                  | `https://store.furrycolombia.com/admin`      |
-| `NEXT_PUBLIC_AUTH_HOST_URL`     | Auth app URL                   | `https://store.furrycolombia.com/auth`       |
-| `NEXT_PUBLIC_AUTH_URL`          | Auth app URL (alias)           | `https://store.furrycolombia.com/auth`       |
-| `NEXT_PUBLIC_LANDING_URL`       | Landing app URL                | `https://store.furrycolombia.com`            |
-| `NEXT_PUBLIC_PAYMENTS_URL`      | Payments app URL               | `https://store.furrycolombia.com/payments`   |
-| `NEXT_PUBLIC_STUDIO_URL`        | Studio app URL                 | `https://store.furrycolombia.com/studio`     |
-| `NEXT_PUBLIC_PLAYGROUND_URL`    | Playground app URL             | `https://store.furrycolombia.com/playground` |
-| `NEXT_PUBLIC_API_PREFIX`        | API route prefix               | `/api`                                       |
-| `NEXT_PUBLIC_API_BASE_URL`      | API base URL                   | (empty for same-origin)                      |
-| `NEXT_PUBLIC_ENABLE_MOCKS`      | Disable mocks in prod          | `false`                                      |
-| `NEXT_PUBLIC_SUPABASE_URL`      | Supabase project URL           | `https://xxx.supabase.co`                    |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anon key              | `eyJ...`                                     |
+| Property    | Value                                                                          |
+| ----------- | ------------------------------------------------------------------------------ |
+| Tunnel name | candyshop-prod                                                                 |
+| Tunnel ID   | af85209b-fcfb-477a-9b95-81180f6901f2                                           |
+| Service     | systemd (`cloudflared.service`), auto-starts on boot                           |
+| Config      | `/etc/cloudflared/config.yml`                                                  |
+| Credentials | `/etc/cloudflared/af85209b-fcfb-477a-9b95-81180f6901f2.json`                   |
+| Cert        | `/home/furrycolombia/.cloudflared/cert.pem` (authorized for furrycolombia.com) |
 
----
+Current ingress rules:
 
-## Fresh Server Setup (Migration Runbook)
-
-Follow these steps to reproduce the environment on a new server.
-
-### 1. OS & Prerequisites
-
-```bash
-# Ubuntu 22.04+ recommended
-sudo apt update && sudo apt upgrade -y
-sudo apt install -y git curl nginx
+```yaml
+ingress:
+  - hostname: deploy.furrycolombia.com
+    service: http://127.0.0.1:9091
+  - hostname: ssh.furrycolombia.com
+    service: ssh://localhost:22
+  - hostname: store.furrycolombia.com
+    service: http://127.0.0.1:9090
+  - service: http_status:404
 ```
 
-### 2. Create deploy user
+## Docker Production Container
 
-```bash
-sudo adduser furrycolombia
-sudo usermod -aG sudo furrycolombia
-```
+| Property       | Value                                                     |
+| -------------- | --------------------------------------------------------- |
+| Container name | candyshop-prod                                            |
+| Image          | candyshop-prod:latest                                     |
+| Port mapping   | 9090:80                                                   |
+| Compose file   | `docker/compose.yml`                                      |
+| Env file       | `/home/furrycolombia/.env.prod` (outside repo, chmod 600) |
+| Restart policy | unless-stopped                                            |
 
-### 3. SSH Key Auth
+The container runs Nginx + supervisord with 7 standalone Next.js servers inside. This is the same image used for local Docker E2E tests.
 
-From your local machine:
+### Production env file (`/home/furrycolombia/.env.prod`)
 
-```bash
-# Generate key (if you don't have one)
-ssh-keygen -t ed25519 -C "candystore-deploy"
-
-# Copy public key to server
-type %USERPROFILE%\.ssh\id_ed25519.pub | ssh furrycolombia@<SERVER_IP> "mkdir -p ~/.ssh && cat >> ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys && chmod 700 ~/.ssh"
-```
-
-### 4. Install Node.js via nvm
-
-```bash
-curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
-source ~/.bashrc
-nvm install 22
-```
-
-### 5. Install pnpm & PM2
-
-```bash
-npm install -g pnpm pm2
-```
-
-### 6. Configure PM2 auto-startup
-
-```bash
-pm2 startup
-# Copy and run the sudo command it outputs, e.g.:
-# sudo env PATH=$PATH:/home/furrycolombia/.nvm/versions/node/v22.22.2/bin \
-#   /home/furrycolombia/.nvm/versions/node/v22.22.2/lib/node_modules/pm2/bin/pm2 \
-#   startup systemd -u furrycolombia --hp /home/furrycolombia
-```
-
-### 7. Deploy the application
-
-```bash
-# Clone the repo
-git clone --branch main --depth 1 https://github.com/furrycolombia-sys/candyshop.git /home/furrycolombia/candyshop
-
-cd /home/furrycolombia/candyshop
-
-# Install deps
-pnpm install --frozen-lockfile --prod=false
-
-# Write production .env (deleted after build)
-cat > .env << EOF
-STANDALONE=true
-BASE_PATH_PREFIX=
-NEXT_PUBLIC_SUPABASE_URL=<your-supabase-url>
-NEXT_PUBLIC_SUPABASE_ANON_KEY=<your-anon-key>
+```env
+SITE_PROD_CONTAINER_NAME=candyshop-prod
+SITE_PROD_IMAGE_NAME=candyshop-prod
+SITE_PROD_PORT=9090
+SITE_PUBLIC_ORIGIN=https://store.furrycolombia.com
+NEXT_PUBLIC_SUPABASE_URL=<supabase-url>
+NEXT_PUBLIC_SUPABASE_ANON_KEY=<supabase-anon-key>
+AUTH_PROVIDER_MODE=supabase
 NEXT_PUBLIC_STORE_URL=https://store.furrycolombia.com/store
 NEXT_PUBLIC_ADMIN_URL=https://store.furrycolombia.com/admin
 NEXT_PUBLIC_AUTH_HOST_URL=https://store.furrycolombia.com/auth
@@ -186,52 +152,155 @@ NEXT_PUBLIC_STUDIO_URL=https://store.furrycolombia.com/studio
 NEXT_PUBLIC_PLAYGROUND_URL=https://store.furrycolombia.com/playground
 NEXT_PUBLIC_API_PREFIX=/api
 NEXT_PUBLIC_ENABLE_MOCKS=false
-EOF
-
-# Build in standalone mode
-STANDALONE=true pnpm run build
-
-# Delete .env (secrets must not persist)
-rm .env
-
-# Copy static assets into standalone dirs + start with PM2
-for app in auth store admin playground landing payments studio; do
-  STANDALONE_DIR="apps/$app/.next/standalone"
-  cp -r "apps/$app/.next/static" "$STANDALONE_DIR/apps/$app/.next/static"
-  cp -r "apps/$app/public" "$STANDALONE_DIR/apps/$app/public" 2>/dev/null || true
-done
-
-# Start all apps (standalone server.js, NOT pnpm start)
-PORT=5000 HOSTNAME=0.0.0.0 pm2 start apps/auth/.next/standalone/apps/auth/server.js --name candyshop-auth
-PORT=5001 HOSTNAME=0.0.0.0 pm2 start apps/store/.next/standalone/apps/store/server.js --name candyshop-store
-PORT=5002 HOSTNAME=0.0.0.0 pm2 start apps/admin/.next/standalone/apps/admin/server.js --name candyshop-admin
-PORT=5003 HOSTNAME=0.0.0.0 pm2 start apps/playground/.next/standalone/apps/playground/server.js --name candyshop-playground
-PORT=5004 HOSTNAME=0.0.0.0 pm2 start apps/landing/.next/standalone/apps/landing/server.js --name candyshop-landing
-PORT=5005 HOSTNAME=0.0.0.0 pm2 start apps/payments/.next/standalone/apps/payments/server.js --name candyshop-payments
-PORT=5006 HOSTNAME=0.0.0.0 pm2 start apps/studio/.next/standalone/apps/studio/server.js --name candyshop-studio
-
-pm2 save
 ```
 
-**IMPORTANT:** Apps must be started with `node server.js` (standalone output), NOT `pnpm start` / `next start`. The standalone server properly handles `basePath` for path-based routing.
+A template is committed at `scripts/server/docker-prod.env.example`.
 
-### 8. Nginx Reverse Proxy
+## Webhook Deploy Receiver
 
-The deploy script writes two files:
+| Property      | Value                                       |
+| ------------- | ------------------------------------------- |
+| URL           | `https://deploy.furrycolombia.com/deploy`   |
+| Health        | `https://deploy.furrycolombia.com/health`   |
+| Port          | 9091                                        |
+| PM2 name      | candyshop-webhook                           |
+| Script        | `/home/furrycolombia/webhook-deploy.mjs`    |
+| Deploy script | `/home/furrycolombia/deploy.sh`             |
+| Secret        | Stored in GitHub webhook settings + PM2 env |
+| Trigger       | Push to `main` branch                       |
 
-- `/home/furrycolombia/candyshop-nginx.conf` — server block listening on port 9090
-- `/home/furrycolombia/candyshop-proxy.inc` — shared proxy headers
+When you push to `main`, GitHub sends a POST to the webhook. The receiver verifies the HMAC signature, pulls latest code, rebuilds the Docker container with `--no-cache`, and restarts it.
 
-To activate manually (if not using Hestia):
+## Supabase (Cloud)
+
+| Property  | Value                                                         |
+| --------- | ------------------------------------------------------------- |
+| Provider  | Supabase Cloud (free tier)                                    |
+| Project   | candyshop-prod                                                |
+| Ref       | olafyajipvsltohagiah                                          |
+| Region    | South America (São Paulo)                                     |
+| URL       | `https://olafyajipvsltohagiah.supabase.co`                    |
+| Dashboard | `https://supabase.com/dashboard/project/olafyajipvsltohagiah` |
+| RLS       | Enabled (automatic)                                           |
+| Site URL  | `https://store.furrycolombia.com`                             |
+
+### Auth redirect URLs (configured in Supabase dashboard)
+
+- `https://store.furrycolombia.com/auth/callback`
+- `https://store.furrycolombia.com/store/auth/callback`
+
+### OAuth providers (configured in Supabase dashboard, not via code)
+
+| Provider | Status         | Redirect URI                                                |
+| -------- | -------------- | ----------------------------------------------------------- |
+| Google   | Enabled        | `https://olafyajipvsltohagiah.supabase.co/auth/v1/callback` |
+| Discord  | Not configured | —                                                           |
+
+Google credentials are also registered in Google Cloud Console with the Supabase callback as an authorized redirect URI.
+
+## GitHub Secrets
+
+| Secret                          | Value                                        |
+| ------------------------------- | -------------------------------------------- |
+| `PROD_SERVER_HOST`              | `ssh.furrycolombia.com`                      |
+| `PROD_SERVER_USER`              | `furrycolombia`                              |
+| `PROD_SERVER_SSH_KEY`           | ED25519 private key (full PEM)               |
+| `WEBHOOK_SECRET`                | HMAC secret shared with GitHub webhook       |
+| `NEXT_PUBLIC_STORE_URL`         | `https://store.furrycolombia.com/store`      |
+| `NEXT_PUBLIC_ADMIN_URL`         | `https://store.furrycolombia.com/admin`      |
+| `NEXT_PUBLIC_AUTH_HOST_URL`     | `https://store.furrycolombia.com/auth`       |
+| `NEXT_PUBLIC_AUTH_URL`          | `https://store.furrycolombia.com/auth`       |
+| `NEXT_PUBLIC_LANDING_URL`       | `https://store.furrycolombia.com`            |
+| `NEXT_PUBLIC_PAYMENTS_URL`      | `https://store.furrycolombia.com/payments`   |
+| `NEXT_PUBLIC_STUDIO_URL`        | `https://store.furrycolombia.com/studio`     |
+| `NEXT_PUBLIC_PLAYGROUND_URL`    | `https://store.furrycolombia.com/playground` |
+| `NEXT_PUBLIC_API_PREFIX`        | `/api`                                       |
+| `NEXT_PUBLIC_ENABLE_MOCKS`      | `false`                                      |
+| `NEXT_PUBLIC_SUPABASE_URL`      | `https://olafyajipvsltohagiah.supabase.co`   |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anon key                            |
+
+## GitHub Webhook
+
+| Property         | Value                                     |
+| ---------------- | ----------------------------------------- |
+| Payload URL      | `https://deploy.furrycolombia.com/deploy` |
+| Content type     | application/json                          |
+| Secret           | Same as `WEBHOOK_SECRET`                  |
+| SSL verification | Enabled                                   |
+| Events           | Just the push event                       |
+| Active           | Yes                                       |
+
+## Hestia CP
+
+| Property   | Value                                                       |
+| ---------- | ----------------------------------------------------------- |
+| Admin URL  | `https://server.furrycolombia.com:8083`                     |
+| Admin user | useradmin                                                   |
+| Domain     | store.furrycolombia.com (custom `candyshop` nginx template) |
+| Template   | Proxies to `127.0.0.1:9090` (Docker container)              |
+
+## File Locations on Server
+
+| Path                                       | Purpose                                              |
+| ------------------------------------------ | ---------------------------------------------------- |
+| `/home/furrycolombia/candyshop/`           | Git repo clone                                       |
+| `/home/furrycolombia/.env.prod`            | Docker env file (secrets, chmod 600)                 |
+| `/home/furrycolombia/deploy.sh`            | Deploy script (called by webhook)                    |
+| `/home/furrycolombia/webhook-deploy.mjs`   | Webhook receiver                                     |
+| `/home/furrycolombia/candyshop-nginx.conf` | Standalone nginx config (unused, Docker has its own) |
+| `/home/furrycolombia/candyshop-proxy.inc`  | Nginx proxy headers (unused, Docker has its own)     |
+| `/etc/cloudflared/config.yml`              | Cloudflare tunnel config                             |
+| `/etc/cloudflared/af85209b-*.json`         | Tunnel credentials                                   |
+
+## PM2 Processes
+
+| Name              | Script                                   | Purpose                 |
+| ----------------- | ---------------------------------------- | ----------------------- |
+| candyshop-webhook | `/home/furrycolombia/webhook-deploy.mjs` | GitHub webhook receiver |
+
+The 7 Next.js apps run inside the Docker container (managed by supervisord), not PM2.
+
+---
+
+## Fresh Server Setup (Migration Runbook)
+
+### 1. OS & user
 
 ```bash
-sudo ln -sf /home/furrycolombia/candyshop-nginx.conf /etc/nginx/conf.d/candyshop.conf
-sudo nginx -t && sudo systemctl reload nginx
+sudo apt update && sudo apt upgrade -y
+sudo apt install -y git curl
+sudo adduser furrycolombia
+sudo usermod -aG sudo furrycolombia
 ```
 
-If using Hestia CP, configure the domain `store.furrycolombia.com` to proxy to `127.0.0.1:9090`.
+### 2. SSH key auth
 
-### 9. Cloudflare Tunnel (replaces traditional DNS + SSL)
+From your local machine:
+
+```bash
+ssh-keygen -t ed25519 -C "candystore-deploy"
+type %USERPROFILE%\.ssh\id_ed25519.pub | ssh furrycolombia@<SERVER_IP> "mkdir -p ~/.ssh && cat >> ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys && chmod 700 ~/.ssh"
+```
+
+### 3. Docker
+
+```bash
+curl -fsSL https://get.docker.com | sh
+sudo usermod -aG docker furrycolombia
+# Log out and back in for group to take effect
+```
+
+### 4. Node.js + nvm + PM2
+
+```bash
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+source ~/.bashrc
+nvm install 22
+npm install -g pnpm pm2
+pm2 startup  # Run the sudo command it outputs
+```
+
+### 5. Cloudflare tunnel
 
 ```bash
 # Install cloudflared
@@ -245,184 +314,191 @@ cloudflared tunnel login
 
 # Create tunnel
 cloudflared tunnel create candyshop-prod
-# Note the tunnel ID from the output
 
-# Route DNS (ONLY store.furrycolombia.com — do NOT touch other subdomains)
+# Route DNS (ONLY these 3 subdomains)
 cloudflared tunnel route dns candyshop-prod store.furrycolombia.com
+cloudflared tunnel route dns candyshop-prod deploy.furrycolombia.com
+cloudflared tunnel route dns candyshop-prod ssh.furrycolombia.com
 
-# Write config
-cat > ~/.cloudflared/config.yml << EOF
+# Write config (replace <TUNNEL_ID>)
+sudo mkdir -p /etc/cloudflared
+sudo tee /etc/cloudflared/config.yml << EOF
 tunnel: <TUNNEL_ID>
-credentials-file: /home/furrycolombia/.cloudflared/<TUNNEL_ID>.json
+credentials-file: /etc/cloudflared/<TUNNEL_ID>.json
 protocol: http2
 
 ingress:
+  - hostname: deploy.furrycolombia.com
+    service: http://127.0.0.1:9091
+  - hostname: ssh.furrycolombia.com
+    service: ssh://localhost:22
   - hostname: store.furrycolombia.com
     service: http://127.0.0.1:9090
   - service: http_status:404
 EOF
 
-# Install as system service
-sudo mkdir -p /etc/cloudflared
-sudo cp ~/.cloudflared/config.yml /etc/cloudflared/config.yml
-sudo cp ~/.cloudflared/<TUNNEL_ID>.json /etc/cloudflared/<TUNNEL_ID>.json
+sudo cp ~/.cloudflared/<TUNNEL_ID>.json /etc/cloudflared/
 sudo cloudflared service install
 ```
 
-**⚠️ WARNING: Only `store.furrycolombia.com` belongs to this project. `furrycolombia.com` and `moonfest.furrycolombia.com` are separate sites. Never modify their DNS records.**
+**⚠️ Only `store`, `deploy`, and `ssh` subdomains. Never touch `furrycolombia.com` or `moonfest.furrycolombia.com`.**
 
-### 11. GitHub Secrets
-
-Update all secrets listed in the "GitHub Secrets Required" table above.
-Use the GitHub CLI:
+### 6. Clone repo and create env file
 
 ```bash
-gh secret set PROD_SERVER_HOST --body "<NEW_SERVER_IP>"
+git clone --branch main --depth 1 https://github.com/furrycolombia-sys/candyshop.git ~/candyshop
+
+# Create env file OUTSIDE the repo (won't be wiped by git clean)
+cat > ~/.env.prod << 'EOF'
+SITE_PROD_CONTAINER_NAME=candyshop-prod
+SITE_PROD_IMAGE_NAME=candyshop-prod
+SITE_PROD_PORT=9090
+SITE_PUBLIC_ORIGIN=https://store.furrycolombia.com
+NEXT_PUBLIC_SUPABASE_URL=<supabase-url>
+NEXT_PUBLIC_SUPABASE_ANON_KEY=<supabase-anon-key>
+AUTH_PROVIDER_MODE=supabase
+NEXT_PUBLIC_STORE_URL=https://store.furrycolombia.com/store
+NEXT_PUBLIC_ADMIN_URL=https://store.furrycolombia.com/admin
+NEXT_PUBLIC_AUTH_HOST_URL=https://store.furrycolombia.com/auth
+NEXT_PUBLIC_AUTH_URL=https://store.furrycolombia.com/auth
+NEXT_PUBLIC_LANDING_URL=https://store.furrycolombia.com
+NEXT_PUBLIC_PAYMENTS_URL=https://store.furrycolombia.com/payments
+NEXT_PUBLIC_STUDIO_URL=https://store.furrycolombia.com/studio
+NEXT_PUBLIC_PLAYGROUND_URL=https://store.furrycolombia.com/playground
+NEXT_PUBLIC_API_PREFIX=/api
+NEXT_PUBLIC_ENABLE_MOCKS=false
+EOF
+chmod 600 ~/.env.prod
+```
+
+### 7. Build and start the container
+
+```bash
+cd ~/candyshop
+docker compose -f docker/compose.yml --env-file ~/.env.prod build --no-cache
+docker compose -f docker/compose.yml --env-file ~/.env.prod up -d
+```
+
+### 8. Deploy webhook receiver
+
+```bash
+# Upload webhook-deploy.mjs and deploy.sh to ~/
+# Then start with PM2:
+WEBHOOK_SECRET=<secret> DEPLOY_SCRIPT=/home/furrycolombia/deploy.sh \
+  pm2 start ~/webhook-deploy.mjs --name candyshop-webhook
+pm2 save
+```
+
+### 9. GitHub webhook
+
+In repo Settings → Webhooks → Add webhook:
+
+- Payload URL: `https://deploy.furrycolombia.com/deploy`
+- Content type: `application/json`
+- Secret: same as `WEBHOOK_SECRET`
+- Events: Just the push event
+- SSL verification: enabled
+
+### 10. GitHub secrets
+
+```bash
+gh secret set PROD_SERVER_HOST --body "ssh.furrycolombia.com"
+gh secret set PROD_SERVER_USER --body "furrycolombia"
 gh secret set PROD_SERVER_SSH_KEY < ~/.ssh/id_ed25519
-# ... etc for all NEXT_PUBLIC_* vars
+# ... all NEXT_PUBLIC_* secrets (see table above)
 ```
 
 ---
 
 ## Operational Commands
 
-### PM2
+### Docker
 
 ```bash
-# View all processes
-pm2 list
+# View running container
+docker ps
 
-# View logs (all apps)
-pm2 logs
+# View logs
+docker logs candyshop-prod -f
 
-# View logs for one app
-pm2 logs candyshop-store
+# Restart
+docker compose -f ~/candyshop/docker/compose.yml --env-file ~/.env.prod restart
 
-# Restart all
-pm2 restart all
+# Rebuild and restart (no cache)
+docker compose -f ~/candyshop/docker/compose.yml --env-file ~/.env.prod up -d --build --no-cache
 
-# Restart one app
-pm2 restart candyshop-store
-
-# Monitor (live dashboard)
-pm2 monit
+# Stop
+docker compose -f ~/candyshop/docker/compose.yml --env-file ~/.env.prod down
 ```
 
-### Manual deploy (without CI)
+### Webhook
+
+```bash
+pm2 logs candyshop-webhook
+pm2 restart candyshop-webhook
+curl https://deploy.furrycolombia.com/health
+```
+
+### Cloudflare tunnel
+
+```bash
+sudo systemctl status cloudflared
+sudo systemctl restart cloudflared
+sudo journalctl -u cloudflared -f
+```
+
+### Manual deploy
 
 ```bash
 ssh furrycolombia@192.168.2.71
-cd ~/candyshop
-git pull origin main
-pnpm install --frozen-lockfile --prod=false
-STANDALONE=true BASE_PATH_PREFIX="" pnpm run build
-pm2 restart all
-```
-
-### Nginx
-
-```bash
-# Test config
-sudo nginx -t
-
-# Reload after config change
-sudo systemctl reload nginx
-
-# View error logs
-sudo tail -f /var/log/nginx/error.log
+bash ~/deploy.sh
 ```
 
 ---
 
-## Webhook Deploy Receiver
+## E2E Against Production
 
-| Property | Value                                          |
-| -------- | ---------------------------------------------- |
-| URL      | `https://deploy.furrycolombia.com/deploy`      |
-| Health   | `https://deploy.furrycolombia.com/health`      |
-| Port     | 9091 (behind Cloudflare tunnel)                |
-| PM2 name | candyshop-webhook                              |
-| Secret   | Stored in GitHub webhook settings + server env |
-| Trigger  | Push to `main` branch                          |
+To run E2E tests against the live site (with test IDs enabled):
 
-The webhook receiver replaces GitHub Actions for deployment. When you push to `main`, GitHub sends a webhook to the server, which pulls, builds, and restarts all apps automatically.
-
-## Cloudflare Tunnel
-
-| Property    | Value                                                        |
-| ----------- | ------------------------------------------------------------ |
-| Tunnel name | candyshop-prod                                               |
-| Tunnel ID   | af85209b-fcfb-477a-9b95-81180f6901f2                         |
-| Hostname    | store.furrycolombia.com                                      |
-| Routes to   | http://127.0.0.1:9090 (Nginx reverse proxy)                  |
-| SSL         | Automatic via Cloudflare (no Let's Encrypt needed)           |
-| Service     | systemd (`cloudflared.service`), auto-starts on boot         |
-| Config      | `/etc/cloudflared/config.yml`                                |
-| Credentials | `/etc/cloudflared/af85209b-fcfb-477a-9b95-81180f6901f2.json` |
-
-**IMPORTANT: Only `store.furrycolombia.com` is managed by this tunnel. Do NOT modify DNS records for `furrycolombia.com`, `moonfest.furrycolombia.com`, or any other subdomain — those are separate sites.**
-
-Traffic flow:
-
-```
-Browser → Cloudflare CDN (SSL) → cloudflared tunnel → 127.0.0.1:9090 (Nginx) → app ports
-```
-
-## Supabase (Cloud)
-
-| Property  | Value                                                         |
-| --------- | ------------------------------------------------------------- |
-| Provider  | Supabase Cloud (free tier)                                    |
-| Project   | candyshop-prod                                                |
-| Region    | South America (São Paulo)                                     |
-| URL       | `https://olafyajipvsltohagiah.supabase.co`                    |
-| Dashboard | `https://supabase.com/dashboard/project/olafyajipvsltohagiah` |
-| RLS       | Enabled (automatic)                                           |
-
-**What's included (free tier):**
-
-- 500 MB database
-- 1 GB file storage
-- 50K monthly active users
-- 2 GB bandwidth
-- Auto backups (7-day retention)
-
-**Migrations:** Run against the cloud project with:
+1. Rebuild with test IDs:
 
 ```bash
-supabase link --project-ref olafyajipvsltohagiah
-supabase db push
+# Add to .env.prod temporarily
+echo "NEXT_PUBLIC_ENABLE_TEST_IDS=true" >> ~/.env.prod
+docker compose -f ~/candyshop/docker/compose.yml --env-file ~/.env.prod up -d --build
 ```
 
----
+2. Run tests locally:
 
-## Cloud Migration Path
+```bash
+E2E_PUBLIC_ORIGIN=https://store.furrycolombia.com \
+PLAYWRIGHT_USE_EXISTING_STACK=true \
+NEXT_PUBLIC_SUPABASE_URL=https://olafyajipvsltohagiah.supabase.co \
+SUPABASE_SERVICE_ROLE_KEY=<service-role-key> \
+pnpm --filter store exec playwright test --reporter=list
+```
 
-When ready to move from the local server to cloud, the main changes are:
+3. Remove test IDs after:
 
-1. **Compute**: Provision a VM (AWS EC2 t3.medium, DigitalOcean 4GB, etc.)
-2. **Run the migration runbook** above on the new VM
-3. **DNS**: Update `store.furrycolombia.com` A record to the new public IP
-4. **GitHub Secrets**: Update `PROD_SERVER_HOST` and `PROD_SERVER_SSH_KEY`
-5. **SSL**: Let's Encrypt works the same way on any server
-6. **Optional upgrades**:
-   - Add a load balancer (ALB, Cloudflare) in front
-   - Use Docker/containers instead of bare PM2
-   - Add a CDN for static assets
-   - Move to container orchestration (ECS, Kubernetes) for auto-scaling
+```bash
+sed -i '/ENABLE_TEST_IDS/d' ~/.env.prod
+docker compose -f ~/candyshop/docker/compose.yml --env-file ~/.env.prod up -d --build --no-cache
+```
 
-The CI/CD pipeline (`deploy-production.yml`) works identically — it just SSHs into whatever IP is in the secrets.
+Production deploys via webhook never include test IDs.
 
 ---
 
 ## Troubleshooting
 
-| Symptom                    | Check                                            |
-| -------------------------- | ------------------------------------------------ |
-| App not responding         | `pm2 logs candyshop-<app>`                       |
-| 502 Bad Gateway            | Is the app running? `pm2 list`                   |
-| Build fails on server      | Check Node version: `node --version` (needs 22+) |
-| SSH connection refused     | Check `~/.ssh/authorized_keys` on server         |
-| Nginx config error         | `sudo nginx -t`                                  |
-| PM2 not starting on reboot | Re-run `pm2 startup` and `pm2 save`              |
-| Disk full                  | `df -h` and clean old builds: `git clean -fdx`   |
+| Symptom                    | Check                                                      |
+| -------------------------- | ---------------------------------------------------------- |
+| Site down                  | `docker ps` — is the container running?                    |
+| 502 from Cloudflare        | `curl localhost:9090/health` on the server                 |
+| Container crash loop       | `docker logs candyshop-prod --tail 50`                     |
+| Webhook not triggering     | `pm2 logs candyshop-webhook`                               |
+| Tunnel down                | `sudo systemctl status cloudflared`                        |
+| Can't SSH                  | Check cloudflared is running + `ssh.furrycolombia.com` DNS |
+| Build fails                | Check Docker disk space: `df -h` and `docker system prune` |
+| Auth redirect to localhost | Check Supabase Site URL setting in dashboard               |
+| OAuth provider error       | Check provider is enabled in Supabase dashboard            |

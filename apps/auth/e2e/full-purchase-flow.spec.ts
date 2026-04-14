@@ -395,6 +395,7 @@ test.describe.serial("Full purchase flow: two sellers, one buyer", () => {
       )
       .toBeGreaterThan(1);
     await cardASelect.selectOption({ index: 1 });
+    await page.waitForTimeout(MUTATION_WAIT_MS);
     await snap(page, "checkout-sellerA-method-selected");
 
     await expect(page.getByTestId(/^display-block-/).first()).toBeVisible({
@@ -412,10 +413,9 @@ test.describe.serial("Full purchase flow: two sellers, one buyer", () => {
       .fill("NEQUI-A-001");
     await snap(page, "checkout-sellerA-field-filled");
 
-    await page
-      .getByTestId(/^submit-payment-/)
-      .first()
-      .click();
+    const submitBtnA = page.getByTestId(/^submit-payment-/).first();
+    await expect(submitBtnA).toBeEnabled({ timeout: ELEMENT_TIMEOUT_MS });
+    await submitBtnA.click();
     await snap(page, "checkout-sellerA-submitted");
 
     // ── Fill and submit Seller B's payment ─────────────────────
@@ -429,6 +429,7 @@ test.describe.serial("Full purchase flow: two sellers, one buyer", () => {
       )
       .toBeGreaterThan(1);
     await cardBSelect.selectOption({ index: 1 });
+    await page.waitForTimeout(MUTATION_WAIT_MS);
     await snap(page, "checkout-sellerB-method-selected");
 
     await expect(page.getByTestId(/^dynamic-field-/).first()).toBeVisible({
@@ -443,10 +444,9 @@ test.describe.serial("Full purchase flow: two sellers, one buyer", () => {
       .fill("BANCO-B-002");
     await snap(page, "checkout-sellerB-field-filled");
 
-    await page
-      .getByTestId(/^submit-payment-/)
-      .first()
-      .click();
+    const submitBtnB = page.getByTestId(/^submit-payment-/).first();
+    await expect(submitBtnB).toBeEnabled({ timeout: ELEMENT_TIMEOUT_MS });
+    await submitBtnB.click();
     await snap(page, "checkout-sellerB-submitted");
 
     // ── Both submitted ──────────────────────────────────────────

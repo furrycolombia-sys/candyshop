@@ -273,5 +273,28 @@
         "ticketsRemainingPlaceholder": "340"
       }
     }
+  },
+  "sellerAdmins": {
+    "title": "Delegate Management",
+    "currentDelegates": "Current Delegates",
+    "addDelegate": "Add Delegate",
+    "noDelegates": "No delegates yet",
+    "removeDelegate": "Remove delegate",
+    "searchPlaceholder": "Search by email or name...",
+    "searchUsers": "Search users",
+    "searching": "Searching...",
+    "selectedUser": "Selected user",
+    "permissionsLabel": "Permissions",
+    "adding": "Adding...",
+    "editPermissionsFor": "Edit permissions for {name}",
+    "savePermissions": "Save",
+    "cancel": "Cancel",
+    "navProducts": "My Products",
+    "navDelegates": "My Delegates",
+    "navigation": "Studio navigation",
+    "permissions": {
+      "orders.approve": "Approve Orders",
+      "orders.request_proof": "Request Proof"
+    }
   }
 }
