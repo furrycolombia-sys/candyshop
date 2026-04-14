@@ -47,9 +47,12 @@ pnpm run build
 # Clean env
 rm -f "$DEPLOY_DIR/.env"
 
-# Stop all PM2 apps
+# Stop all app PM2 processes (keep webhook alive)
 log "Restarting applications..."
-pm2 delete all 2>/dev/null || true
+for entry in $APPS; do
+  app=${entry%%:*}
+  pm2 delete "candyshop-$app" 2>/dev/null || true
+done
 
 # Copy static assets and start standalone servers
 APPS="auth:5000 store:5001 admin:5002 playground:5003 landing:5004 payments:5005 studio:5006"
