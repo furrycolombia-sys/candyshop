@@ -99,12 +99,24 @@ function getRepoSlug() {
 
 // ── Workflow trigger and polling ────────────────────────────────
 
+function getCurrentBranch() {
+  const result = spawnSync("git", ["branch", "--show-current"], {
+    cwd: rootDir,
+    encoding: "utf8",
+  });
+  return result.stdout?.trim() || "main";
+}
+
 function triggerWorkflow(passphrase) {
   log("Triggering sync-secrets workflow...");
+  const branch = getCurrentBranch();
+  log(`Using branch: ${branch}`);
   const result = gh([
     "workflow",
     "run",
     WORKFLOW_FILE,
+    "--ref",
+    branch,
     "--field",
     `passphrase=${passphrase}`,
   ]);
