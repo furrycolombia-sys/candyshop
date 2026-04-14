@@ -85,6 +85,13 @@ RUN pnpm install --frozen-lockfile
 # Copy shared scripts (load-root-env.js used by next.config.ts)
 COPY scripts ./scripts
 
+# Copy env files for load-root-env.js resolution
+COPY .env.example .env.dev .env.staging .env.e2e .env.prod ./
+
+# Accept TARGET_ENV to select the correct env file during build
+ARG TARGET_ENV=staging
+ENV TARGET_ENV=$TARGET_ENV
+
 # Copy source files
 COPY apps/store ./apps/store
 COPY apps/studio ./apps/studio

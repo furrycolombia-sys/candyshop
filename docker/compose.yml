@@ -6,6 +6,7 @@ services:
       context: ..
       dockerfile: Dockerfile
       args:
+        TARGET_ENV: ${TARGET_ENV:-staging}
         NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-}
         NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-}
         NEXT_PUBLIC_BUILD_HASH: ${NEXT_PUBLIC_BUILD_HASH:-}
