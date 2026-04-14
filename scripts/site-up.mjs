@@ -26,8 +26,8 @@ const wantsHelp = args.has("--help") || args.has("-h");
 
 if (wantsHelp) {
   console.log(`Usage:
-  pnpm site:up
-  pnpm site:up:cloudflare
+  pnpm dev:up
+  pnpm dev:up:tunnel
 
 Environment for Cloudflare:
   CLOUDFLARED_BIN=cloudflared
