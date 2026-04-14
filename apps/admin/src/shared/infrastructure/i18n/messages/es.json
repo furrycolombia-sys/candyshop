@@ -190,7 +190,8 @@
       "adminConfig": "Configuracion Admin",
       "adminUsers": "Permisos de Usuario",
       "checkins": "Check-ins",
-      "events": "Eventos"
+      "events": "Eventos",
+      "sellerAdmins": "Gestion de Delegados"
     },
     "lastSeen": {
       "justNow": "justo ahora",
@@ -208,6 +209,20 @@
       "backToUsers": "Volver a Usuarios",
       "viewProfile": "Ver Perfil",
       "permissionsCount": "{count, plural, one {# permiso} other {# permisos}}"
+    },
+    "delegates": {
+      "title": "Relaciones de Delegados",
+      "loading": "Cargando delegados...",
+      "empty": "No se encontraron relaciones de delegados para este usuario.",
+      "asSeller": "Delegados a otros",
+      "asDelegate": "Delegado por otros",
+      "delegatedBy": "por",
+      "confirm": "Confirmar",
+      "cancel": "Cancelar",
+      "perm": {
+        "orders.approve": "Aprobar Ordenes",
+        "orders.request_proof": "Solicitar Comprobante"
+      }
     }
   },
   "permissions": {
@@ -273,6 +288,12 @@
       "create": "Registrar Entrada",
       "read": "Ver Check-ins",
       "update": "Deshacer Check-in"
+    },
+    "seller_admins": {
+      "create": "Agregar Delegados",
+      "read": "Ver Delegados",
+      "update": "Editar Delegados",
+      "delete": "Eliminar Delegados"
     }
   },
   "permissionHints": {
@@ -338,6 +359,12 @@
       "create": "Registrar asistentes en eventos",
       "read": "Ver registros de asistencia y check-in",
       "update": "Deshacer o modificar registros de check-in"
+    },
+    "seller_admins": {
+      "create": "Permitir al usuario agregar delegados para sus productos",
+      "read": "Permitir al usuario ver sus delegados de productos",
+      "update": "Permitir al usuario editar permisos de delegados",
+      "delete": "Permitir al usuario eliminar delegados de sus productos"
     }
   },
   "common": {

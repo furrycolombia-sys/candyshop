@@ -98,8 +98,6 @@ export const PERMISSION_GROUPS: PermissionGroup[] = [
       "seller_admins.read",
       "seller_admins.update",
       "seller_admins.delete",
-      "orders.approve",
-      "orders.request_proof",
     ],
   },
 ];

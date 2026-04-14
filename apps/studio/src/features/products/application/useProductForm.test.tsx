@@ -116,6 +116,8 @@ describe("productToFormValues", () => {
         alt: "alt text",
         sort_order: 0,
         is_cover: false,
+        is_store_cover: false,
+        fit: "cover",
       },
     ]);
   });

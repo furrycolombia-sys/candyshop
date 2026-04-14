@@ -131,7 +131,9 @@ export function ImageGallery({ product, theme }: ImageGalleryProps) {
             src={activeImage.url}
             alt={activeImage.alt ?? product.name_en}
             fill
-            className="object-cover"
+            className={
+              activeImage.fit === "contain" ? "object-contain" : "object-cover"
+            }
             sizes="(min-width: 1024px) 55vw, 100vw"
           />
 
@@ -174,7 +176,9 @@ export function ImageGallery({ product, theme }: ImageGalleryProps) {
             src={activeImage.url}
             alt={activeImage.alt ?? product.name_en}
             fill
-            className="object-cover"
+            className={
+              activeImage.fit === "contain" ? "object-contain" : "object-cover"
+            }
             sizes="100vw"
           />
 

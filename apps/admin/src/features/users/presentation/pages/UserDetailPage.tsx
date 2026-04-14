@@ -30,6 +30,7 @@ export function UserDetailPage({ userId }: UserDetailPageProps) {
       userId={userId}
       canCreate={hasPermission("user_permissions.create")}
       canDelete={hasPermission("user_permissions.delete")}
+      canManageDelegates={hasPermission("seller_admins.read")}
     />
   );
 }

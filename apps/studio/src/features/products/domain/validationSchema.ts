@@ -69,6 +69,8 @@ export const productImageSchema = z.object({
   alt: z.string().optional().default(""),
   sort_order: z.number().int().nonnegative(),
   is_cover: z.boolean().optional().default(false),
+  is_store_cover: z.boolean().optional().default(false),
+  fit: z.enum(["cover", "contain"]).optional().default("cover"),
 });
 
 export type ProductImage = z.infer<typeof productImageSchema>;
