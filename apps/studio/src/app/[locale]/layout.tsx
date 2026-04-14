@@ -9,7 +9,6 @@ import {
 
 import { Providers } from "@/app/[locale]/providers";
 import { ProtectedRoute } from "@/features/auth";
-import { DelegateNav } from "@/features/seller-admins/presentation/components/DelegateNav";
 import { appUrls } from "@/shared/infrastructure/config";
 import { routing } from "@/shared/infrastructure/i18n";
 import { ThemeProvider } from "@/shared/infrastructure/providers";
@@ -59,7 +58,6 @@ export default async function LocaleLayout({
               userEmail={userEmail}
             />
             <ProtectedRoute locale={locale}>
-              <DelegateNav />
               <div className="flex flex-1">{children}</div>
             </ProtectedRoute>
           </div>
