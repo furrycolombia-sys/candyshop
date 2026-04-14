@@ -125,15 +125,21 @@ function runSilent(cmd, cmdArgs, opts = {}) {
   });
 }
 
+// Staging uses the cloudflare profile to start the tunnel sidecar
+const needsCloudflare = envName === "staging" && !!process.env.CLOUDFLARE_TUNNEL_TOKEN;
+
 function compose(...cmdArgs) {
-  return run(docker, [
+  const baseArgs = [
     "compose",
     "-p",
     projectName,
     "-f",
     composeFile,
-    ...cmdArgs,
-  ]);
+  ];
+  if (needsCloudflare) {
+    baseArgs.push("--profile", "cloudflare");
+  }
+  return run(docker, [...baseArgs, ...cmdArgs]);
 }
 
 function isContainerRunning() {
