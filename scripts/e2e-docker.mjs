@@ -32,7 +32,7 @@
  *   node scripts/e2e-docker.mjs --env staging            # use .env.staging
  *   node scripts/e2e-docker.mjs --keep-supabase          # don't stop e2e Supabase after
  */
-import { spawnSync } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createRequire } from "node:module";
@@ -391,14 +391,20 @@ function runTests() {
   else if (specFile) log(`Spec: ${specFile}`);
   else log(`${CORE_SPECS.length} spec files`);
 
-  return run(pnpm, playwrightArgs, {
-    shell: true,
-    env: {
-      ...process.env,
-      E2E_PUBLIC_ORIGIN: baseUrl,
-      PLAYWRIGHT_USE_EXISTING_STACK: "true",
-      ...(debugMode ? { PWDEBUG: "1" } : {}),
-    },
+  return new Promise((resolvePromise) => {
+    const child = spawn(pnpm, playwrightArgs, {
+      cwd: rootDir,
+      stdio: "inherit",
+      shell: true,
+      env: {
+        ...process.env,
+        E2E_PUBLIC_ORIGIN: baseUrl,
+        PLAYWRIGHT_USE_EXISTING_STACK: "true",
+        ...(debugMode ? { PWDEBUG: "1" } : {}),
+      },
+    });
+    child.on("close", (code) => resolvePromise(code ?? 0));
+    child.on("error", () => resolvePromise(1));
   });
 }
 
@@ -454,7 +460,7 @@ if (needsE2ESupabase) {
 }
 await ensureContainerReady();
 
-const testExitCode = runTests();
+const testExitCode = await runTests();
 
 if (headed || uiMode || debugMode) {
   log(
