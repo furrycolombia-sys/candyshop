@@ -1,0 +1,38 @@
+{
+  "mcpServers": {
+    "shadcn": {
+      "command": "npx",
+      "args": ["-y", "shadcn@latest", "mcp"]
+    },
+    "next-devtools": {
+      "command": "npx",
+      "args": ["-y", "next-devtools-mcp@latest"]
+    },
+    "playwright": {
+      "command": "npx",
+      "args": ["-y", "@playwright/mcp@latest"]
+    },
+    "chrome-devtools": {
+      "command": "npx",
+      "args": ["-y", "chrome-devtools-mcp@latest"],
+      "disabled": true,
+      "_note": "DevTools integration. Enable for performance traces or when playwright insufficient."
+    },
+    "github": {
+      "command": "node",
+      "args": [".claude/tools/github-unified-mcp.mjs"],
+      "_note": "Unified GitHub MCP: combines official @modelcontextprotocol/server-github (26 tools) with custom PR update tool (github_update_pull_request)"
+    },
+    "git": {
+      "command": "node",
+      "args": [".claude/tools/git-mcp.mjs"],
+      "_note": "Git operations wrapper using @cyanheads/git-mcp-server (27 tools). Uses GITHUB_PERSONAL_ACCESS_TOKEN from .env.local for authenticated push/pull/fetch operations. Secure GIT_ASKPASS authentication - token never exposed in command line."
+    },
+    "github-setup": {
+      "command": "node",
+      "args": [".claude/tools/github-setup-mcp.mjs"],
+      "disabled": true,
+      "_note": "Repository setup tools (branch protection). Enable when needed for repo configuration."
+    }
+  }
+}

@@ -1,0 +1,42 @@
+import path from "node:path";
+
+import { defineConfig, devices } from "@playwright/test";
+
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { resolveE2EAppUrls } = require(
+  path.resolve(__dirname, "../../scripts/app-url-resolver.js"),
+);
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { getE2EExtraHTTPHeaders } = require(
+  path.resolve(__dirname, "../../scripts/app-url-resolver.js"),
+);
+
+const appUrls = resolveE2EAppUrls();
+const extraHTTPHeaders = getE2EExtraHTTPHeaders();
+
+export default defineConfig({
+  testDir: "./e2e",
+  fullyParallel: true,
+  forbidOnly: !!process.env.CI,
+  retries: process.env.CI ? 2 : 0,
+  workers: process.env.CI ? 1 : 3,
+  reporter: [["html", { open: "never" }], ["list"]],
+  timeout: 60_000,
+  use: {
+    baseURL: appUrls.landing,
+    extraHTTPHeaders,
+    trace: "on-first-retry",
+    screenshot: "only-on-failure",
+    navigationTimeout: 45_000,
+  },
+  projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
+  webServer:
+    process.env.PLAYWRIGHT_USE_EXISTING_STACK === "true"
+      ? undefined
+      : {
+          command: process.env.CI ? "pnpm start" : "pnpm dev",
+          url: "http://localhost:5004",
+          reuseExistingServer: !process.env.CI,
+          timeout: process.env.CI ? 60_000 : 120_000,
+        },
+});

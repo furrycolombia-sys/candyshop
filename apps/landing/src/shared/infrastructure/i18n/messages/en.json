@@ -1,0 +1,72 @@
+{
+  "meta": {
+    "title": "Candy Shop — Where Furry Art Lives",
+    "description": "A creative marketplace for furry artists, makers, and collectors"
+  },
+  "landing": {
+    "hero": {
+      "above": "A marketplace for the fandom",
+      "title": "Where furry art lives.",
+      "subtitle": "Commissions. Prints. Fursuits. Digital art. Built by artists, for everyone who loves what they make.",
+      "cta": "Enter the store"
+    },
+    "sections": {
+      "categories": "Categories",
+      "categoriesTitle": "Browse the shop by lane.",
+      "categoriesIntro": "A quick read on what you can find inside the store.",
+      "categoriesEyebrow": "Store index",
+      "categoriesNote": "Six corners of the catalog, each with its own rhythm.",
+      "categoriesCardKicker": "Inside the shop",
+      "roles": "For creators and collectors"
+    },
+    "categories": {
+      "commissions": "Commissions",
+      "fursuits": "Fursuit crafts",
+      "events": "Events & cons",
+      "merch": "Merch & prints",
+      "digital": "Digital art",
+      "deals": "Drops & deals"
+    },
+    "split": {
+      "artists": {
+        "label": "For creators",
+        "title": "Your art deserves a real home.",
+        "description": "Sell commissions, manage your queue, ship merch, and grow your audience — without platform fees eating your work.",
+        "cta": "Start selling"
+      },
+      "fans": {
+        "label": "For collectors",
+        "title": "Find your next favorite artist.",
+        "description": "Commission your dream piece, collect prints, discover new creators, and support the artists who make the fandom what it is.",
+        "cta": "Start browsing"
+      }
+    },
+    "cta": {
+      "title": "The gallery is open.",
+      "cta": "Come in",
+      "payments": "Make a payment"
+    }
+  },
+  "nav": {
+    "brand": "Candy Shop",
+    "landing": "Home",
+    "store": "Store",
+    "studio": "Studio",
+    "payments": "Payments",
+    "admin": "Admin",
+    "auth": "Account",
+    "playground": "Playground"
+  },
+  "common": {
+    "error": "An error occurred",
+    "retry": "Try again",
+    "theme": {
+      "switchToDark": "Switch to dark mode",
+      "switchToLight": "Switch to light mode",
+      "toggle": "Toggle theme"
+    },
+    "language": {
+      "select": "Select language"
+    }
+  }
+}

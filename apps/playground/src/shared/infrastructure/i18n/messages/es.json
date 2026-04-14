@@ -1,0 +1,32 @@
+{
+  "meta": {
+    "title": "Candy Shop - Zona de Pruebas",
+    "description": "Experimenta con componentes y funcionalidades"
+  },
+  "playground": {
+    "title": "Zona de Pruebas",
+    "subtitle": "Experimenta con componentes y funcionalidades"
+  },
+  "nav": {
+    "brand": "Candy Shop",
+    "landing": "Inicio",
+    "store": "Tienda",
+    "studio": "Estudio",
+    "payments": "Pagos",
+    "admin": "Admin",
+    "auth": "Cuenta",
+    "playground": "Playground"
+  },
+  "common": {
+    "error": "Ocurrió un error",
+    "retry": "Intentar de nuevo",
+    "theme": {
+      "switchToDark": "Cambiar a modo oscuro",
+      "switchToLight": "Cambiar a modo claro",
+      "toggle": "Cambiar tema"
+    },
+    "language": {
+      "select": "Seleccionar idioma"
+    }
+  }
+}

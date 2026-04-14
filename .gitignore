@@ -1,36 +1,123 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
-
-# dependencies
-/node_modules
+# Dependencies
+node_modules/
 /.pnp
-.pnp.js
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
 
-# testing
-/coverage
+# Build outputs
+dist/
+build/
+.next/
+out/
 
-# next.js
-/.next/
-/out/
+# Turbo
+.turbo/
 
-# production
-/build
+# Vercel
+.vercel
 
-# misc
+# Environment files (secrets)
+.env
+.env.e2e
+.env.staging
+.secrets
+.env.local
+.env.local.e2e
+.env.*.local
+!.env.example
+!.env.e2e.example
+!.env.local.example
+
+# Claude/AI local files (secrets and personal config)
+.claude/tools/.env.local
+.claude/settings.local.json
+.claude/portability-exceptions.json
+accounts.md
+tmpclaude-*
+
+# AI context reports (keep reviews/reports gitignored, task outputs are committed)
+.ai-context/reports/
+
+# Supabase local
+supabase/.temp/
+supabase/.branches/
+supabase-e2e/supabase/.temp/
+supabase-e2e/supabase/.branches/
+supabase-e2e/supabase/snippets/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
 .DS_Store
-*.pem
 
-# debug
+# Python virtual environments
+.venv/
+venv/
+__pycache__/
+
+# Debug logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+.pnpm-debug.log*
 
-# local env files
-.env*.local
-.env
-
-# vercel
-.vercel
-
-# typescript
+# TypeScript
 *.tsbuildinfo
 next-env.d.ts
+
+# Testing
+coverage/
+.nyc_output/
+coverage.txt
+test-results/
+test-results/.last-run.json
+apps/*/coverage/
+apps/*/test-results/
+
+# Playwright
+playwright-report/
+playwright-report/index.html
+playwright/.cache/
+test-results/
+blob-report/
+test-results.xml
+*.png
+*.webm
+*.zip
+apps/*/playwright-report/
+apps/*/blob-report/
+apps/*/e2e/.auth/chrome-profile*/
+apps/*/e2e/screenshots/
+
+# Misc
+*.log
+*.tmp
+*.temp
+.cache/
+nul
+debug-*.mjs
+
+# Specs outputs (examples, overrides, etc.)
+specs/*
+
+/.claude/sessions
+/.claude/skills/.system
+.claude/models_cache.json
+.claude/history.jsonl
+.claude/auth.json
+/.claude/tmp
+.claude/version.json
+coverage-report.json
+.superpowers/
+
+# SSH credentials
+.ssh-credentials.json
+
+# Production env (contains secrets)
+scripts/server/production.env

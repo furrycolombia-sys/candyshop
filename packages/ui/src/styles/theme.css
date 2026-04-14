@@ -1,0 +1,94 @@
+/*
+  Shared Tailwind CSS v4 Theme Configuration
+
+  This file contains the theme inline block that maps CSS variables to Tailwind utilities.
+  Import this file via ui/styles in each app's globals.css.
+*/
+
+@theme inline {
+  /* Core colors */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-brand: var(--brand);
+  --color-brand-foreground: var(--brand-foreground);
+  --color-brand-hover: var(--brand-hover);
+  --color-brand-text: var(--brand-text);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+
+  /* Semantic status colors */
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
+
+  /* Process status colors (for pills, progress bars, indicators) */
+  --color-status-healthy: var(--status-healthy);
+  --color-status-attention: var(--status-attention);
+
+  /* UI elements */
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  /* Chart colors for data visualization */
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+
+  /* Surface variants */
+  --color-surface: var(--surface);
+  --color-surface-inset: var(--surface-inset);
+  --color-chip: var(--chip);
+
+  /* Sidebar */
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  /* Candy palette */
+  --color-pink: var(--pink);
+  --color-mint: var(--mint);
+  --color-lilac: var(--lilac);
+  --color-lemon: var(--lemon);
+  --color-sky: var(--sky);
+  --color-peach: var(--peach);
+  --color-candy-text: var(--candy-text);
+  --color-candy-text-on-lemon: var(--candy-text-on-lemon);
+
+  /* Typography — Syne is the project font */
+  --font-sans: var(--font-dm-sans);
+  --font-mono: var(--font-geist-mono);
+
+  /* Custom font sizes (generates text-ui-xs utility) */
+  --text-ui-xs: 10px;
+  --text-ui-xs--line-height: 12px;
+
+  /* Border radius */
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+  --radius-4xl: calc(var(--radius) + 16px);
+}

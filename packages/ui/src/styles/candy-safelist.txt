@@ -1,0 +1,12 @@
+<!--
+  Candy color safelist — Tailwind v4 JIT scans this file to generate utilities
+  for candy palette colors composed dynamically (e.g. buildTheme("mint") → "bg-mint").
+  Without this, dynamic class names are invisible to the scanner.
+  Referenced from each app's globals.css via @source.
+-->
+bg-pink bg-mint bg-lilac bg-lemon bg-sky bg-peach
+bg-pink/5 bg-mint/5 bg-lilac/5 bg-lemon/5 bg-sky/5 bg-peach/5
+bg-pink/15 bg-mint/15 bg-lilac/15 bg-lemon/15 bg-sky/15 bg-peach/15
+text-pink text-mint text-lilac text-lemon text-sky text-peach text-candy-text
+border-pink border-mint border-lilac border-lemon border-sky border-peach
+border-pink/30 border-mint/30 border-lilac/30 border-lemon/30 border-sky/30 border-peach/30

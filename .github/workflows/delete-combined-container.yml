@@ -1,0 +1,23 @@
+name: Delete Container App
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Type "DELETE" to confirm deletion'
+        required: true
+        type: string
+
+env:
+  # TODO: Configure deployment registry and resource names
+  CONTAINER_REGISTRY: ""
+  CONTAINER_NAME: candyshop
+  RESOURCE_GROUP: ""
+
+jobs:
+  delete:
+    runs-on: ubuntu-latest
+    if: github.event.inputs.confirm == 'DELETE'
+    steps:
+      - name: Placeholder
+        run: echo "TODO - Configure deletion pipeline for your infrastructure"

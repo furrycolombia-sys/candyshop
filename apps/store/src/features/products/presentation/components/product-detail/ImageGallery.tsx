@@ -1,0 +1,244 @@
+/* eslint-disable sonarjs/no-duplicate-string -- Tailwind classes must stay inline per styling policy */
+"use client";
+
+import Image from "next/image";
+import { useTranslations } from "next-intl";
+import { useState } from "react";
+import { tid } from "shared";
+
+import type { CategoryTheme } from "@/features/products/domain/constants";
+import type { Product, ProductImage } from "@/features/products/domain/types";
+import { FeaturedRibbon } from "@/features/products/presentation/components/FeaturedRibbon";
+
+const TID_GALLERY = "image-gallery";
+const TID_GALLERY_MAIN = "image-gallery-main";
+const COUNTER_SEPARATOR = " / ";
+
+interface ImageGalleryProps {
+  product: Product;
+  theme: CategoryTheme;
+}
+
+/** Extract images array from the JSONB field */
+function getProductImages(images: unknown): ProductImage[] {
+  if (!Array.isArray(images)) return [];
+  return images
+    .map((img) => {
+      if (typeof img === "string") return { url: img };
+      if (img && typeof img === "object" && "url" in img)
+        return img as ProductImage;
+      return null;
+    })
+    .filter((img): img is ProductImage => img !== null && Boolean(img.url));
+}
+
+/**
+ * Product image gallery.
+ *
+ * Desktop: vertical thumbnail strip LEFT + main image RIGHT (Shopify pattern).
+ * Mobile: main image on top, horizontal thumbnail row below.
+ *
+ * When the product has real images, they are displayed.
+ * When no images exist, a gradient placeholder with the product type is shown.
+ */
+export function ImageGallery({ product, theme }: ImageGalleryProps) {
+  const tTypes = useTranslations("productTypes");
+  const t = useTranslations("products");
+  const images = getProductImages(product.images);
+  const hasImages = images.length > 0;
+  const [activeIndex, setActiveIndex] = useState(0);
+
+  const activeImage = images[activeIndex];
+
+  const thumbInactive =
+    "border-foreground/20 bg-background hover:border-foreground";
+
+  // Placeholder for products with no images
+  if (!hasImages) {
+    return (
+      <div
+        className="w-full max-w-full shrink-0 lg:w-3/5"
+        {...tid(TID_GALLERY)}
+      >
+        <div
+          className="relative flex aspect-square w-full max-w-full items-center justify-center overflow-hidden border-strong border-foreground shadow-brutal-lg"
+          style={{ backgroundColor: theme.bg }}
+          {...tid(TID_GALLERY_MAIN)}
+        >
+          <span className="font-display text-4xl font-extrabold uppercase tracking-widest text-foreground/10 select-none">
+            {tTypes(product.type)}
+          </span>
+          {product.featured && (
+            <FeaturedRibbon
+              label={t("featured")}
+              accentVar={theme.accent}
+              size="lg"
+            />
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="w-full max-w-full shrink-0 lg:w-3/5" {...tid(TID_GALLERY)}>
+      {/* Desktop: thumbnails left + image right */}
+      <div className="hidden lg:flex gap-3">
+        {/* Vertical thumbnails */}
+        {images.length > 1 && (
+          <div
+            className="flex flex-col gap-2 shrink-0"
+            {...tid("image-gallery-thumbs")}
+          >
+            {images.map((img, idx) => {
+              const isActive = idx === activeIndex;
+              const activeCls = isActive
+                ? "border-foreground shadow-brutal-sm"
+                : thumbInactive;
+              return (
+                <button
+                  type="button"
+                  key={img.url}
+                  onClick={() => setActiveIndex(idx)}
+                  className={`relative size-16 overflow-hidden border-strong transition-all ${activeCls}`}
+                  style={isActive ? { backgroundColor: theme.bg } : undefined}
+                  aria-label={
+                    img.alt ??
+                    t("gallery.views.viewImage", { label: String(idx + 1) })
+                  }
+                  {...tid(`image-gallery-thumb-${String(idx)}`)}
+                >
+                  <Image
+                    src={img.url}
+                    alt={img.alt ?? ""}
+                    fill
+                    className="object-cover"
+                    sizes="64px"
+                  />
+                </button>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Main image */}
+        <div
+          className="relative flex-1 aspect-square overflow-hidden border-strong border-foreground shadow-brutal-lg"
+          style={{ backgroundColor: theme.bg }}
+          {...tid(TID_GALLERY_MAIN)}
+        >
+          <Image
+            src={activeImage.url}
+            alt={activeImage.alt ?? product.name_en}
+            fill
+            className="object-cover"
+            sizes="(min-width: 1024px) 55vw, 100vw"
+          />
+
+          {/* Bottom bar: caption + counter */}
+          <div className="absolute bottom-0 inset-x-0 flex items-center justify-between bg-foreground/70 px-3 py-1.5 z-10">
+            {activeImage.alt ? (
+              <span className="text-ui-xs font-bold uppercase tracking-widest text-background truncate">
+                {activeImage.alt}
+              </span>
+            ) : (
+              <span />
+            )}
+            {images.length > 1 && (
+              <span className="text-ui-xs font-bold text-background tracking-widest shrink-0 ml-2">
+                {activeIndex + 1}
+                {COUNTER_SEPARATOR}
+                {images.length}
+              </span>
+            )}
+          </div>
+
+          {product.featured && (
+            <FeaturedRibbon
+              label={t("featured")}
+              accentVar={theme.accent}
+              size="lg"
+            />
+          )}
+        </div>
+      </div>
+
+      {/* Mobile: image on top, thumbnails below */}
+      <div className="flex w-full max-w-full flex-col gap-3 overflow-hidden lg:hidden">
+        <div
+          className="relative aspect-square w-full max-w-full overflow-hidden border-strong border-foreground shadow-brutal-lg"
+          style={{ backgroundColor: theme.bg }}
+          {...tid("image-gallery-main-mobile")}
+        >
+          <Image
+            src={activeImage.url}
+            alt={activeImage.alt ?? product.name_en}
+            fill
+            className="object-cover"
+            sizes="100vw"
+          />
+
+          {/* Bottom bar: caption + counter */}
+          <div className="absolute bottom-0 inset-x-0 flex items-center justify-between bg-foreground/70 px-3 py-1.5 z-10">
+            {activeImage.alt ? (
+              <span className="text-ui-xs font-bold uppercase tracking-widest text-background truncate">
+                {activeImage.alt}
+              </span>
+            ) : (
+              <span />
+            )}
+            {images.length > 1 && (
+              <span className="text-ui-xs font-bold text-background tracking-widest shrink-0 ml-2">
+                {activeIndex + 1}
+                {COUNTER_SEPARATOR}
+                {images.length}
+              </span>
+            )}
+          </div>
+
+          {product.featured && (
+            <FeaturedRibbon
+              label={t("featured")}
+              accentVar={theme.accent}
+              size="lg"
+            />
+          )}
+        </div>
+
+        {images.length > 1 && (
+          <div
+            className="grid w-full max-w-full gap-2"
+            style={{
+              gridTemplateColumns: `repeat(${String(images.length)}, 1fr)`,
+            }}
+          >
+            {images.map((img, idx) => {
+              const isActive = idx === activeIndex;
+              const activeCls = isActive
+                ? "border-foreground shadow-brutal-sm"
+                : thumbInactive;
+              return (
+                <button
+                  type="button"
+                  key={img.url}
+                  onClick={() => setActiveIndex(idx)}
+                  className={`relative h-16 overflow-hidden border-strong py-2 transition-all ${activeCls}`}
+                  style={isActive ? { backgroundColor: theme.bg } : undefined}
+                  aria-label={img.alt ?? String(idx + 1)}
+                >
+                  <Image
+                    src={img.url}
+                    alt={img.alt ?? ""}
+                    fill
+                    className="object-cover"
+                    sizes="20vw"
+                  />
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

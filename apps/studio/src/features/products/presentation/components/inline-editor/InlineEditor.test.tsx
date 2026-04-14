@@ -1,0 +1,149 @@
+import { render, screen } from "@testing-library/react";
+import { describe, it, expect, vi } from "vitest";
+
+vi.mock("next-intl", () => ({
+  useTranslations: () => (key: string) => key,
+}));
+
+vi.mock("shared", () => ({
+  tid: (id: string) => ({ "data-testid": id }),
+}));
+
+vi.mock("@hookform/resolvers/zod", () => ({
+  zodResolver: () => vi.fn(),
+}));
+
+vi.mock("@/features/products/domain/validationSchema", () => ({
+  createProductFormSchema: () => ({}),
+}));
+
+vi.mock("@/shared/domain/categoryConstants", () => ({
+  getCategoryTheme: () => ({
+    bg: "var(--mint)",
+    bgLight: "color-mix(in srgb, var(--mint) 15%, transparent)",
+    border: "var(--mint)",
+    text: "var(--mint)",
+    badgeBg: "var(--mint)",
+    rowEven: "color-mix(in srgb, var(--mint) 5%, transparent)",
+    rowOdd: "color-mix(in srgb, var(--mint) 15%, transparent)",
+    foreground: "var(--candy-text)",
+    accent: "--mint",
+  }),
+}));
+
+vi.mock("./EditorToolbar", () => ({
+  EditorToolbar: (props: { isEdit: boolean; isSaving: boolean }) => (
+    <div
+      data-testid="editor-toolbar"
+      data-edit={props.isEdit}
+      data-saving={props.isSaving}
+    />
+  ),
+}));
+
+vi.mock("./FormErrorBanner", () => ({
+  FormErrorBanner: () => <div data-testid="form-error-banner" />,
+}));
+
+vi.mock("./MutationErrorBanner", () => ({
+  MutationErrorBanner: ({ message }: { message: string }) => (
+    <div data-testid="mutation-error-banner">{message}</div>
+  ),
+}));
+
+vi.mock("./InlineHero", () => ({
+  InlineHero: () => <div data-testid="inline-hero" />,
+}));
+
+vi.mock("./InlineSections", () => ({
+  InlineSections: () => <div data-testid="inline-sections" />,
+}));
+
+vi.mock("./InlineTextField", () => ({
+  InlineTextField: ({ fieldNameEn }: { fieldNameEn: string }) => (
+    <div data-testid={`inline-text-${fieldNameEn}`} />
+  ),
+}));
+
+import { InlineEditor } from "./InlineEditor";
+
+describe("InlineEditor", () => {
+  const defaultProps = {
+    onSubmit: vi.fn(),
+    isSubmitting: false,
+    isEdit: false,
+  };
+
+  it("renders the form", () => {
+    render(<InlineEditor {...defaultProps} />);
+    expect(screen.getByTestId("inline-editor")).toBeInTheDocument();
+  });
+
+  it("renders the toolbar", () => {
+    render(<InlineEditor {...defaultProps} />);
+    expect(screen.getByTestId("editor-toolbar")).toBeInTheDocument();
+  });
+
+  it("renders the form error banner", () => {
+    render(<InlineEditor {...defaultProps} />);
+    expect(screen.getByTestId("form-error-banner")).toBeInTheDocument();
+  });
+
+  it("renders the hero section", () => {
+    render(<InlineEditor {...defaultProps} />);
+    expect(screen.getByTestId("inline-hero")).toBeInTheDocument();
+  });
+
+  it("renders the sections component", () => {
+    render(<InlineEditor {...defaultProps} />);
+    expect(screen.getByTestId("inline-sections")).toBeInTheDocument();
+  });
+
+  it("renders long description text field", () => {
+    render(<InlineEditor {...defaultProps} />);
+    expect(
+      screen.getByTestId("inline-text-long_description_en"),
+    ).toBeInTheDocument();
+  });
+
+  it("does not show mutation error banner when no error", () => {
+    render(<InlineEditor {...defaultProps} />);
+    expect(
+      screen.queryByTestId("mutation-error-banner"),
+    ).not.toBeInTheDocument();
+  });
+
+  it("shows mutation error banner when error is provided", () => {
+    render(
+      <InlineEditor
+        {...defaultProps}
+        mutationError={new Error("Server error")}
+      />,
+    );
+    expect(screen.getByTestId("mutation-error-banner")).toHaveTextContent(
+      "Server error",
+    );
+  });
+
+  it("passes isEdit to the toolbar", () => {
+    render(<InlineEditor {...defaultProps} isEdit={true} />);
+    expect(screen.getByTestId("editor-toolbar")).toHaveAttribute(
+      "data-edit",
+      "true",
+    );
+  });
+
+  it("passes isSaving to the toolbar", () => {
+    render(<InlineEditor {...defaultProps} isSubmitting={true} />);
+    expect(screen.getByTestId("editor-toolbar")).toHaveAttribute(
+      "data-saving",
+      "true",
+    );
+  });
+
+  it("renders as a form element", () => {
+    render(<InlineEditor {...defaultProps} />);
+    const form = screen.getByTestId("inline-editor");
+    expect(form.tagName).toBe("FORM");
+  });
+});

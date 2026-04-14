@@ -1,0 +1,41 @@
+name: Create GitHub Release
+
+on:
+  pull_request:
+    branches: [main]
+    types: [closed]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.merged == true && startsWith(github.event.pull_request.head.ref, 'release/')
+    timeout-minutes: 5
+    steps:
+      - name: Extract version from PR title
+        id: version
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          # Extract version from "chore(release): vYYYY.MM.DD.N"
+          VERSION=$(echo "$PR_TITLE" | grep -oP 'v\d{4}\.\d{2}\.\d{2}\.\d+')
+          if [ -z "$VERSION" ]; then
+            echo "::error::Could not extract version from PR title: $PR_TITLE"
+            exit 1
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Extracted version: $VERSION"
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          gh release create "$VERSION" \
+            --repo "${{ github.repository }}" \
+            --title "$VERSION" \
+            --generate-notes \
+            --target main

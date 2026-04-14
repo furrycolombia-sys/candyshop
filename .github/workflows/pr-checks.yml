@@ -1,0 +1,416 @@
+name: PR Checks
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: pr-checks-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: "20"
+
+jobs:
+  # ============================================
+  # Branch Target Validation
+  # ============================================
+  branch-target:
+    name: Branch Target
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Validate branch can target base
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const baseBranch = context.payload.pull_request.base.ref;
+            const headBranch = context.payload.pull_request.head.ref;
+
+            console.log(`PR: ${headBranch} -> ${baseBranch}`);
+
+            const isRelease = headBranch.startsWith('release/');
+            const isFix = headBranch.startsWith('fix/');
+
+            if (baseBranch === 'main') {
+              if (!isRelease && !isFix) {
+                core.setFailed(
+                  `Branch '${headBranch}' cannot target 'main'.\n\n` +
+                  `Only release/* and fix/* branches can merge to main.\n\n` +
+                  `Please change the base branch to 'develop' or rename your branch.`
+                );
+                return;
+              }
+              console.log(`Release/fix branch targeting main - OK`);
+            } else if (baseBranch === 'develop') {
+              if (isRelease) {
+                core.setFailed(
+                  `Release branch '${headBranch}' should target 'main', not 'develop'.`
+                );
+                return;
+              }
+              console.log(`Targeting develop - OK`);
+            } else {
+              console.log(`Targeting ${baseBranch} - OK`);
+            }
+
+  # ============================================
+  # PR Title Check (Conventional Commits)
+  # ============================================
+  pr-title:
+    name: PR Title
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check PR title format
+        uses: amannn/action-semantic-pull-request@v5
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          types: |
+            feat
+            fix
+            docs
+            style
+            refactor
+            perf
+            test
+            chore
+            revert
+          requireScope: false
+          subjectPattern: ^.{1,80}$
+          subjectPatternError: |
+            PR title must be less than 80 characters.
+            Example: "feat(store): add product catalog"
+
+  # ============================================
+  # Changed Files Analysis
+  # ============================================
+  changes:
+    name: Detect Changes
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      store: ${{ steps.changes.outputs.store }}
+      admin: ${{ steps.changes.outputs.admin }}
+      auth: ${{ steps.changes.outputs.auth }}
+      playground: ${{ steps.changes.outputs.playground }}
+      packages: ${{ steps.changes.outputs.packages }}
+      tests: ${{ steps.changes.outputs.tests }}
+      e2e: ${{ steps.changes.outputs.e2e }}
+      docs: ${{ steps.changes.outputs.docs }}
+      deps: ${{ steps.changes.outputs.deps }}
+      code: ${{ steps.changes.outputs.code }}
+      docs-only: ${{ steps.check.outputs.docs-only }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Detect file changes
+        uses: dorny/paths-filter@v3
+        id: changes
+        with:
+          filters: |
+            store:
+              - 'apps/store/**'
+            admin:
+              - 'apps/admin/**'
+            auth:
+              - 'apps/auth/**'
+            playground:
+              - 'apps/playground/**'
+            packages:
+              - 'packages/**'
+            tests:
+              - 'apps/*/src/**/*.test.ts'
+              - 'apps/*/src/**/*.test.tsx'
+              - 'apps/*/vitest.config.ts'
+            e2e:
+              - 'apps/*/e2e/**'
+              - 'apps/*/playwright.config.ts'
+            docs:
+              - '*.md'
+              - 'docs/**'
+              - '.claude/**'
+              - '.ai-context/**'
+            deps:
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+              - 'apps/*/package.json'
+              - 'packages/*/package.json'
+            code:
+              - 'apps/**'
+              - 'packages/**'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+
+      - name: Check if docs-only
+        id: check
+        run: |
+          if [ "${{ steps.changes.outputs.code }}" = "false" ]; then
+            echo "docs-only=true" >> $GITHUB_OUTPUT
+          else
+            echo "docs-only=false" >> $GITHUB_OUTPUT
+          fi
+
+  # ============================================
+  # Security Audit (skip for docs-only PRs)
+  # ============================================
+  security:
+    name: Security Audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: changes
+    if: needs.changes.outputs.docs-only == 'false'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "pnpm"
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Install Semgrep
+        run: python -m pip install --upgrade pip semgrep
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run security audit
+        run: pnpm audit --audit-level=high || echo "::warning::Security vulnerabilities found"
+
+      - name: Run Semgrep
+        run: pnpm semgrep
+
+      - name: Run secretlint
+        run: pnpm run secretlint
+
+  # ============================================
+  # Accessibility Check (on store/package changes)
+  # ============================================
+  accessibility:
+    name: Accessibility
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: changes
+    if: needs.changes.outputs.store == 'true' || needs.changes.outputs.packages == 'true'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Get Playwright version
+        id: playwright-version
+        run: echo "version=$(pnpm --filter store list @playwright/test --json | jq -r '.[0].devDependencies["@playwright/test"].version')" >> $GITHUB_OUTPUT
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ steps.playwright-version.outputs.version }}
+
+      - name: Install Playwright browsers
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: pnpm --filter store exec playwright install --with-deps chromium
+
+      - name: Check accessibility script
+        id: has-a11y
+        run: |
+          if jq -e '.scripts["test:a11y"]' apps/store/package.json > /dev/null; then
+            echo "value=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "value=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build store app for accessibility
+        if: steps.has-a11y.outputs.value == 'true'
+        run: pnpm --filter store build
+
+      - name: Run accessibility tests
+        if: steps.has-a11y.outputs.value == 'true'
+        run: pnpm --filter store run test:a11y
+
+      - name: Skip accessibility (script not configured)
+        if: steps.has-a11y.outputs.value != 'true'
+        run: 'echo "::notice::Skipping accessibility: apps/store/package.json has no test:a11y script"'
+
+  # ============================================
+  # Visual Regression (on store/package changes)
+  # ============================================
+  visual-regression:
+    name: Visual Regression
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: changes
+    if: needs.changes.outputs.store == 'true' || needs.changes.outputs.packages == 'true'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Get Playwright version
+        id: playwright-version
+        run: echo "version=$(pnpm --filter store list @playwright/test --json | jq -r '.[0].devDependencies["@playwright/test"].version')" >> $GITHUB_OUTPUT
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ steps.playwright-version.outputs.version }}
+
+      - name: Install Playwright browsers
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: pnpm --filter store exec playwright install --with-deps chromium
+
+      - name: Check visual script
+        id: has-visual
+        run: |
+          if jq -e '.scripts["test:visual"]' apps/store/package.json > /dev/null; then
+            echo "value=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "value=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build store app for visual regression
+        if: steps.has-visual.outputs.value == 'true'
+        run: pnpm --filter store build
+
+      - name: Run visual regression tests
+        if: steps.has-visual.outputs.value == 'true'
+        run: pnpm --filter store run test:visual
+
+      - name: Skip visual regression (script not configured)
+        if: steps.has-visual.outputs.value != 'true'
+        run: 'echo "::notice::Skipping visual regression: apps/store/package.json has no test:visual script"'
+
+      - name: Upload visual diff artifacts
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: visual-diff
+          path: apps/store/test-results/
+          retention-days: 7
+
+  # ============================================
+  # PR Summary Comment
+  # ============================================
+  summary:
+    name: PR Summary
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    needs: [changes]
+    if: always()
+    steps:
+      - name: Create or update PR comment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const changes = {
+              store: '${{ needs.changes.outputs.store }}' === 'true',
+              admin: '${{ needs.changes.outputs.admin }}' === 'true',
+              auth: '${{ needs.changes.outputs.auth }}' === 'true',
+              playground: '${{ needs.changes.outputs.playground }}' === 'true',
+              packages: '${{ needs.changes.outputs.packages }}' === 'true',
+              tests: '${{ needs.changes.outputs.tests }}' === 'true',
+              e2e: '${{ needs.changes.outputs.e2e }}' === 'true',
+              docs: '${{ needs.changes.outputs.docs }}' === 'true',
+              deps: '${{ needs.changes.outputs.deps }}' === 'true'
+            };
+
+            let summary = '## PR Analysis\n\n';
+            summary += '### Changed Areas\n';
+            summary += `| Area | Changed |\n`;
+            summary += `|------|:-------:|\n`;
+            summary += `| Store app | ${changes.store ? 'YES' : '-'} |\n`;
+            summary += `| Admin app | ${changes.admin ? 'YES' : '-'} |\n`;
+            summary += `| Auth app | ${changes.auth ? 'YES' : '-'} |\n`;
+            summary += `| Playground app | ${changes.playground ? 'YES' : '-'} |\n`;
+            summary += `| Shared packages | ${changes.packages ? 'YES' : '-'} |\n`;
+            summary += `| Unit tests | ${changes.tests ? 'YES' : '-'} |\n`;
+            summary += `| E2E tests | ${changes.e2e ? 'YES' : '-'} |\n`;
+            summary += `| Documentation | ${changes.docs ? 'YES' : '-'} |\n`;
+            summary += `| Dependencies | ${changes.deps ? 'YES' : '-'} |\n`;
+
+            if ((changes.store || changes.packages) && !changes.tests) {
+              summary += '\n### TDD Reminder\n';
+              summary += 'Source code changed but no unit tests were modified. ';
+              summary += 'Please ensure new/modified code has test coverage.\n';
+            }
+
+            if (changes.deps) {
+              summary += '\n### Dependency Changes\n';
+              summary += 'Dependencies were modified. Security audit will run automatically.\n';
+            }
+
+            if (changes.packages) {
+              summary += '\n### Shared Package Changes\n';
+              summary += 'Shared packages were modified. All apps will be rebuilt.\n';
+            }
+
+            summary += '\n---\n';
+            summary += '*This comment is automatically updated on each push.*';
+
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+
+            const botComment = comments.find(comment =>
+              comment.user.type === 'Bot' &&
+              comment.body.includes('## PR Analysis')
+            );
+
+            if (botComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: summary
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: summary
+              });
+            }

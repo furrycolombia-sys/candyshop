@@ -1,0 +1,664 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main, develop]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: "20"
+
+jobs:
+  # ============================================
+  # Detect Changes (skip CI for docs-only PRs)
+  # ============================================
+  changes:
+    name: Detect Changes
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      code: ${{ steps.filter.outputs.code }}
+      deploy: ${{ steps.filter.outputs.deploy }}
+      store: ${{ steps.filter.outputs.store }}
+      studio: ${{ steps.filter.outputs.studio }}
+      admin: ${{ steps.filter.outputs.admin }}
+      landing: ${{ steps.filter.outputs.landing }}
+      payments: ${{ steps.filter.outputs.payments }}
+      auth: ${{ steps.filter.outputs.auth }}
+      playground: ${{ steps.filter.outputs.playground }}
+      packages: ${{ steps.filter.outputs.packages }}
+      tooling: ${{ steps.filter.outputs.tooling }}
+      docs-only: ${{ steps.check.outputs.docs-only }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Detect file changes
+        uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            store:
+              - 'apps/store/**'
+            studio:
+              - 'apps/studio/**'
+            admin:
+              - 'apps/admin/**'
+            auth:
+              - 'apps/auth/**'
+            landing:
+              - 'apps/landing/**'
+            payments:
+              - 'apps/payments/**'
+            playground:
+              - 'apps/playground/**'
+            packages:
+              - 'packages/**'
+            tooling:
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+              - 'tsconfig*.json'
+              - 'eslint.config.*'
+              - 'prettier.config.*'
+            code:
+              - 'apps/**'
+              - 'packages/**'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+              - 'tsconfig*.json'
+              - 'eslint.config.*'
+              - 'prettier.config.*'
+            deploy:
+              - 'Dockerfile'
+              - '.dockerignore'
+              - 'docker/**'
+
+      - name: Check if docs-only
+        id: check
+        run: |
+          if [ "${{ steps.filter.outputs.code }}" = "false" ]; then
+            echo "docs-only=true" >> $GITHUB_OUTPUT
+            echo "Docs-only PR detected — skipping full CI"
+          else
+            echo "docs-only=false" >> $GITHUB_OUTPUT
+            echo "Code changes detected — running full CI"
+          fi
+
+  # ============================================
+  # Quality Checks (skip for docs-only PRs)
+  # ============================================
+  quality:
+    name: Quality Checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: changes
+    if: needs.changes.outputs.docs-only == 'false'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Check app registry
+        run: bash scripts/check-app-registry.sh
+
+      - name: Check formatting
+        run: pnpm run format:check
+
+      - name: Lint (scoped)
+        run: |
+          set -euo pipefail
+
+          SELECT_OUTPUT=$(bash scripts/select-workspaces.sh \
+            "${{ needs.changes.outputs.store }}" \
+            "${{ needs.changes.outputs.landing }}" \
+            "${{ needs.changes.outputs.payments }}" \
+            "${{ needs.changes.outputs.admin }}" \
+            "${{ needs.changes.outputs.auth }}" \
+            "${{ needs.changes.outputs.playground }}" \
+            "${{ needs.changes.outputs.packages }}" \
+            "${{ needs.changes.outputs.tooling }}" \
+            "${{ needs.changes.outputs.studio }}")
+
+          RUN_ALL=$(echo "$SELECT_OUTPUT" | grep '^RUN_ALL=' | cut -d= -f2-)
+          LINT_TARGETS=$(echo "$SELECT_OUTPUT" | grep '^LINT_TARGETS=' | cut -d= -f2-)
+
+          if [ "$RUN_ALL" = "true" ]; then
+            echo "Running full lint because packages/tooling changed."
+            pnpm run lint
+            exit 0
+          fi
+
+          if [ -z "$LINT_TARGETS" ]; then
+            echo "No lintable workspace changes detected. Skipping lint."
+            exit 0
+          fi
+
+          echo "Running scoped lint for:$LINT_TARGETS"
+          pnpm exec eslint $LINT_TARGETS
+
+      - name: Type check (scoped)
+        run: |
+          set -euo pipefail
+
+          SELECT_OUTPUT=$(bash scripts/select-workspaces.sh \
+            "${{ needs.changes.outputs.store }}" \
+            "${{ needs.changes.outputs.landing }}" \
+            "${{ needs.changes.outputs.payments }}" \
+            "${{ needs.changes.outputs.admin }}" \
+            "${{ needs.changes.outputs.auth }}" \
+            "${{ needs.changes.outputs.playground }}" \
+            "${{ needs.changes.outputs.packages }}" \
+            "${{ needs.changes.outputs.tooling }}" \
+            "${{ needs.changes.outputs.studio }}")
+
+          RUN_ALL=$(echo "$SELECT_OUTPUT" | grep '^RUN_ALL=' | cut -d= -f2-)
+          APPS=$(echo "$SELECT_OUTPUT" | grep '^APPS=' | cut -d= -f2-)
+
+          if [ "$RUN_ALL" = "true" ]; then
+            echo "Running full typecheck because packages/tooling changed."
+            pnpm run typecheck
+            exit 0
+          fi
+
+          [ -z "$APPS" ] && echo "No workspace apps selected for typecheck." && exit 0
+          for APP in $APPS; do
+            pnpm --filter "$APP" typecheck
+          done
+
+      - name: Monorepo checks
+        if: needs.changes.outputs.packages == 'true' || needs.changes.outputs.tooling == 'true'
+        run: |
+          pnpm run sherif
+          pnpm run syncpack:lint
+
+  # ============================================
+  # Unit Tests (Vitest) - All Apps
+  # ============================================
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: changes
+    if: needs.changes.outputs.docs-only == 'false'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run unit tests (scoped)
+        run: |
+          set -euo pipefail
+
+          SELECT_OUTPUT=$(bash scripts/select-workspaces.sh \
+            "${{ needs.changes.outputs.store }}" \
+            "${{ needs.changes.outputs.landing }}" \
+            "${{ needs.changes.outputs.payments }}" \
+            "${{ needs.changes.outputs.admin }}" \
+            "${{ needs.changes.outputs.auth }}" \
+            "${{ needs.changes.outputs.playground }}" \
+            "${{ needs.changes.outputs.packages }}" \
+            "${{ needs.changes.outputs.tooling }}" \
+            "${{ needs.changes.outputs.studio }}")
+
+          RUN_ALL=$(echo "$SELECT_OUTPUT" | grep '^RUN_ALL=' | cut -d= -f2-)
+          APPS=$(echo "$SELECT_OUTPUT" | grep '^APPS=' | cut -d= -f2-)
+
+          if [ "$RUN_ALL" = "true" ]; then
+            echo "Running full coverage because packages/tooling changed."
+            pnpm run test:coverage
+            exit 0
+          fi
+
+          [ -z "$APPS" ] && echo "No workspace apps selected for unit tests." && exit 0
+          for APP in $APPS; do
+            pnpm --filter "$APP" test:coverage
+          done
+
+      - name: Upload store coverage report
+        uses: actions/upload-artifact@v4
+        if: always() && (needs.changes.outputs.store == 'true' || needs.changes.outputs.packages == 'true' || needs.changes.outputs.tooling == 'true')
+        with:
+          name: coverage-report-store
+          path: apps/store/coverage/
+          retention-days: 7
+
+      - name: Upload admin coverage report
+        uses: actions/upload-artifact@v4
+        if: always() && (needs.changes.outputs.admin == 'true' || needs.changes.outputs.packages == 'true' || needs.changes.outputs.tooling == 'true')
+        with:
+          name: coverage-report-admin
+          path: apps/admin/coverage/
+          retention-days: 7
+
+      - name: Upload auth coverage report
+        uses: actions/upload-artifact@v4
+        if: always() && (needs.changes.outputs.auth == 'true' || needs.changes.outputs.packages == 'true' || needs.changes.outputs.tooling == 'true')
+        with:
+          name: coverage-report-auth
+          path: apps/auth/coverage/
+          retention-days: 7
+
+      - name: Upload landing coverage report
+        uses: actions/upload-artifact@v4
+        if: always() && (needs.changes.outputs.landing == 'true' || needs.changes.outputs.packages == 'true' || needs.changes.outputs.tooling == 'true')
+        with:
+          name: coverage-report-landing
+          path: apps/landing/coverage/
+          retention-days: 7
+
+      - name: Upload payments coverage report
+        uses: actions/upload-artifact@v4
+        if: always() && (needs.changes.outputs.payments == 'true' || needs.changes.outputs.packages == 'true' || needs.changes.outputs.tooling == 'true')
+        with:
+          name: coverage-report-payments
+          path: apps/payments/coverage/
+          retention-days: 7
+
+  # ============================================
+  # Build
+  # ============================================
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: changes
+    if: needs.changes.outputs.docs-only == 'false'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build applications (scoped)
+        run: |
+          set -euo pipefail
+
+          SELECT_OUTPUT=$(bash scripts/select-workspaces.sh \
+            "${{ needs.changes.outputs.store }}" \
+            "${{ needs.changes.outputs.landing }}" \
+            "${{ needs.changes.outputs.payments }}" \
+            "${{ needs.changes.outputs.admin }}" \
+            "${{ needs.changes.outputs.auth }}" \
+            "${{ needs.changes.outputs.playground }}" \
+            "${{ needs.changes.outputs.packages }}" \
+            "${{ needs.changes.outputs.tooling }}" \
+            "${{ needs.changes.outputs.studio }}")
+
+          RUN_ALL=$(echo "$SELECT_OUTPUT" | grep '^RUN_ALL=' | cut -d= -f2-)
+          APPS=$(echo "$SELECT_OUTPUT" | grep '^APPS=' | cut -d= -f2-)
+
+          if [ "$RUN_ALL" = "true" ]; then
+            echo "Running full build because packages/tooling changed."
+            pnpm run build
+            exit 0
+          fi
+
+          [ -z "$APPS" ] && echo "No workspace apps selected for build." && exit 0
+          for APP in $APPS; do
+            pnpm --filter "$APP" build
+          done
+        env:
+          NEXT_PUBLIC_API_BASE_URL: /api
+          NEXT_PUBLIC_API_PREFIX: ""
+          NEXT_PUBLIC_ENABLE_TEST_IDS: "true"
+          NEXT_PUBLIC_SUPABASE_URL: "http://127.0.0.1:54321"
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0"
+          NEXT_PUBLIC_AUTH_HOST_URL: "http://localhost:5000"
+          NEXT_PUBLIC_STORE_URL: "http://localhost:5001"
+          NEXT_PUBLIC_ADMIN_URL: "http://localhost:5002"
+          NEXT_PUBLIC_PLAYGROUND_URL: "http://localhost:5003"
+          NEXT_PUBLIC_STUDIO_URL: "http://localhost:5006"
+
+      - name: Upload store build artifacts
+        uses: actions/upload-artifact@v4
+        if: needs.changes.outputs.store == 'true' || needs.changes.outputs.packages == 'true' || needs.changes.outputs.tooling == 'true'
+        with:
+          name: build-store
+          path: apps/store/.next/
+          retention-days: 1
+          if-no-files-found: error
+          include-hidden-files: true
+
+      - name: Upload admin build artifacts
+        uses: actions/upload-artifact@v4
+        if: needs.changes.outputs.admin == 'true' || needs.changes.outputs.packages == 'true' || needs.changes.outputs.tooling == 'true'
+        with:
+          name: build-admin
+          path: apps/admin/.next/
+          retention-days: 1
+          if-no-files-found: error
+          include-hidden-files: true
+
+      - name: Upload auth build artifacts
+        uses: actions/upload-artifact@v4
+        if: needs.changes.outputs.auth == 'true' || needs.changes.outputs.packages == 'true' || needs.changes.outputs.tooling == 'true'
+        with:
+          name: build-auth
+          path: apps/auth/.next/
+          retention-days: 1
+          if-no-files-found: error
+          include-hidden-files: true
+
+      - name: Upload landing build artifacts
+        uses: actions/upload-artifact@v4
+        if: needs.changes.outputs.landing == 'true' || needs.changes.outputs.packages == 'true' || needs.changes.outputs.tooling == 'true'
+        with:
+          name: build-landing
+          path: apps/landing/.next/
+          retention-days: 1
+          if-no-files-found: error
+          include-hidden-files: true
+
+      - name: Upload payments build artifacts
+        uses: actions/upload-artifact@v4
+        if: needs.changes.outputs.payments == 'true' || needs.changes.outputs.packages == 'true' || needs.changes.outputs.tooling == 'true'
+        with:
+          name: build-payments
+          path: apps/payments/.next/
+          retention-days: 1
+          if-no-files-found: error
+          include-hidden-files: true
+
+  # ============================================
+  # E2E Tests (Playwright)
+  # ============================================
+  e2e-tests:
+    name: E2E Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    needs: [build, changes]
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright browsers
+        run: pnpm --filter store exec playwright install --with-deps chromium
+
+      - name: Start Supabase
+        run: pnpm supabase start
+        timeout-minutes: 5
+
+      - name: Download store build artifacts
+        uses: actions/download-artifact@v4
+        if: needs.changes.outputs.store == 'true' || needs.changes.outputs.packages == 'true' || needs.changes.outputs.tooling == 'true'
+        with:
+          name: build-store
+          path: apps/store/.next/
+
+      - name: Download admin build artifacts
+        uses: actions/download-artifact@v4
+        if: needs.changes.outputs.admin == 'true' || needs.changes.outputs.packages == 'true' || needs.changes.outputs.tooling == 'true'
+        with:
+          name: build-admin
+          path: apps/admin/.next/
+
+      - name: Download auth build artifacts
+        uses: actions/download-artifact@v4
+        if: needs.changes.outputs.auth == 'true' || needs.changes.outputs.packages == 'true' || needs.changes.outputs.tooling == 'true'
+        with:
+          name: build-auth
+          path: apps/auth/.next/
+
+      - name: Download landing build artifacts
+        uses: actions/download-artifact@v4
+        if: needs.changes.outputs.landing == 'true' || needs.changes.outputs.packages == 'true' || needs.changes.outputs.tooling == 'true'
+        with:
+          name: build-landing
+          path: apps/landing/.next/
+
+      - name: Download payments build artifacts
+        uses: actions/download-artifact@v4
+        if: needs.changes.outputs.payments == 'true' || needs.changes.outputs.packages == 'true' || needs.changes.outputs.tooling == 'true'
+        with:
+          name: build-payments
+          path: apps/payments/.next/
+
+      - name: Rebuild E2E apps locally
+        run: |
+          set -euo pipefail
+
+          SELECT_OUTPUT=$(bash scripts/select-workspaces.sh \
+            "${{ needs.changes.outputs.store }}" \
+            "${{ needs.changes.outputs.landing }}" \
+            "${{ needs.changes.outputs.payments }}" \
+            "${{ needs.changes.outputs.admin }}" \
+            "${{ needs.changes.outputs.auth }}" \
+            "${{ needs.changes.outputs.playground }}" \
+            "${{ needs.changes.outputs.packages }}" \
+            "${{ needs.changes.outputs.tooling }}" \
+            "${{ needs.changes.outputs.studio }}")
+
+          APPS=$(echo "$SELECT_OUTPUT" | grep '^APPS=' | cut -d= -f2-)
+          [ -z "$APPS" ] && echo "No workspace apps selected for E2E rebuild." && exit 0
+
+          BUILD_TARGETS="$APPS"
+          BUILT_APPS=""
+
+          # Store E2E starts the landing app too, so keep both builds in sync.
+          if echo " $APPS " | grep -q " store "; then
+            BUILD_TARGETS="$BUILD_TARGETS landing"
+          fi
+
+          for APP in $BUILD_TARGETS; do
+            case " $BUILT_APPS " in
+              *" $APP "*) continue ;;
+            esac
+
+            echo "Building ${APP} for E2E startup"
+            pnpm --filter "${APP}" build
+            BUILT_APPS="$BUILT_APPS $APP"
+          done
+        env:
+          NEXT_PUBLIC_API_BASE_URL: /api
+          NEXT_PUBLIC_API_PREFIX: ""
+          NEXT_PUBLIC_ENABLE_TEST_IDS: "true"
+          NEXT_PUBLIC_SUPABASE_URL: "http://127.0.0.1:54321"
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0"
+          NEXT_PUBLIC_AUTH_HOST_URL: "http://localhost:5000"
+          NEXT_PUBLIC_STORE_URL: "http://localhost:5001"
+          NEXT_PUBLIC_ADMIN_URL: "http://localhost:5002"
+          NEXT_PUBLIC_PLAYGROUND_URL: "http://localhost:5003"
+          NEXT_PUBLIC_STUDIO_URL: "http://localhost:5006"
+
+      - name: Run E2E tests (scoped)
+        run: |
+          set -euo pipefail
+
+          SELECT_OUTPUT=$(bash scripts/select-workspaces.sh \
+            "${{ needs.changes.outputs.store }}" \
+            "${{ needs.changes.outputs.landing }}" \
+            "${{ needs.changes.outputs.payments }}" \
+            "${{ needs.changes.outputs.admin }}" \
+            "${{ needs.changes.outputs.auth }}" \
+            "${{ needs.changes.outputs.playground }}" \
+            "${{ needs.changes.outputs.packages }}" \
+            "${{ needs.changes.outputs.tooling }}" \
+            "${{ needs.changes.outputs.studio }}")
+
+          APPS=$(echo "$SELECT_OUTPUT" | grep '^APPS=' | cut -d= -f2-)
+          [ -z "$APPS" ] && echo "No workspace apps selected for E2E tests." && exit 0
+          for APP in $APPS; do
+            echo "Running E2E for ${APP}"
+            if [ "$APP" = "auth-app" ]; then
+              echo "Skipping auth-app CI E2E (covered by Docker smoke tests)"
+              continue
+            fi
+            pnpm --filter "${APP}" test:e2e
+          done
+
+      - name: Upload store Playwright report
+        uses: actions/upload-artifact@v4
+        if: always() && (needs.changes.outputs.store == 'true' || needs.changes.outputs.packages == 'true' || needs.changes.outputs.tooling == 'true')
+        with:
+          name: playwright-report-store
+          path: apps/store/playwright-report/
+          retention-days: 7
+
+      - name: Upload admin Playwright report
+        uses: actions/upload-artifact@v4
+        if: always() && (needs.changes.outputs.admin == 'true' || needs.changes.outputs.packages == 'true' || needs.changes.outputs.tooling == 'true')
+        with:
+          name: playwright-report-admin
+          path: apps/admin/playwright-report/
+          retention-days: 7
+
+      - name: Upload auth Playwright report
+        uses: actions/upload-artifact@v4
+        if: always() && (needs.changes.outputs.auth == 'true' || needs.changes.outputs.packages == 'true' || needs.changes.outputs.tooling == 'true')
+        with:
+          name: playwright-report-auth
+          path: apps/auth/playwright-report/
+          retention-days: 7
+
+      - name: Upload landing Playwright report
+        uses: actions/upload-artifact@v4
+        if: always() && (needs.changes.outputs.landing == 'true' || needs.changes.outputs.packages == 'true' || needs.changes.outputs.tooling == 'true')
+        with:
+          name: playwright-report-landing
+          path: apps/landing/playwright-report/
+          retention-days: 7
+
+      - name: Upload payments Playwright report
+        uses: actions/upload-artifact@v4
+        if: always() && (needs.changes.outputs.payments == 'true' || needs.changes.outputs.packages == 'true' || needs.changes.outputs.tooling == 'true')
+        with:
+          name: playwright-report-payments
+          path: apps/payments/playwright-report/
+          retention-days: 7
+
+  # ============================================
+  # Bundle Analysis
+  # ============================================
+  bundle-analysis:
+    name: Bundle Analysis
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: changes
+    if: needs.changes.outputs.docs-only == 'false' && github.event_name == 'pull_request'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Analyze store bundle
+        run: cd apps/store && ANALYZE=true pnpm run build || true
+
+      - name: Upload bundle analysis
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: bundle-analysis
+          path: apps/store/.next/analyze/
+          retention-days: 7
+
+  # ============================================
+  # Docker Smoke Tests (only when deploy files change)
+  # ============================================
+  docker-smoke-tests:
+    name: Docker Smoke Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: changes
+    if: needs.changes.outputs.docs-only == 'false' && needs.changes.outputs.deploy == 'true'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Get Playwright version
+        id: playwright-version
+        run: echo "version=$(pnpm --filter store list @playwright/test --json | jq -r '.[0].devDependencies[\"@playwright/test\"].version')" >> $GITHUB_OUTPUT
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ steps.playwright-version.outputs.version }}
+
+      - name: Install Playwright browsers
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: pnpm --filter store exec playwright install --with-deps
+
+      - name: Install Playwright dependencies (if cached)
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        run: pnpm --filter store exec playwright install-deps
+
+      - name: Docker health check (pre-push style)
+        run: bash scripts/docker-health-check.sh

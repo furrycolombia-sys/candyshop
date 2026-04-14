@@ -1,0 +1,124 @@
+{
+  "agent": "solid",
+  "review_id": "2026-03-24_21-46-41",
+  "outputFile": ".ai-context/reviews/agents/2026-03-24_21-46-41_solid.json",
+  "scope": "apps/store/src/",
+  "issues": [
+    {
+      "id": "SOLID-001",
+      "severity": "warning",
+      "file": "apps/store/src/features/products/presentation/components/ProductCard.tsx",
+      "line": 31,
+      "title": "SRP: ProductCard owns add-to-cart logic instead of delegating",
+      "description": "ProductCard handles its own add-to-cart logic (building the cart item payload, managing the 'added' state, firing the fly-to-cart animation) instead of receiving an onAddToCart callback. The same add-to-cart construction logic (building the cart item from product fields) is duplicated in ProductCard (line 50-58), HeroSection (line 34-42), and ProductDetailPage (line 38-46). Each component independently constructs the same CartItem shape. This is both an SRP violation (presentation component owns business logic) and makes the pattern harder to extend.",
+      "rule": "S - Single Responsibility Principle",
+      "fix": "Extract a shared 'buildCartItemFromProduct(product: Product): Omit<CartItem, \"quantity\">' utility in the cart or products domain layer. Use a shared useAddToCartWithAnimation hook that encapsulates the added state, timeout, and fly-to-cart animation firing. Components would then call a single function and only handle presentation."
+    },
+    {
+      "id": "SOLID-002",
+      "severity": "warning",
+      "file": "apps/store/src/features/products/presentation/components/product-detail/HeroSection.tsx",
+      "line": 23,
+      "title": "SRP: HeroSection mixes data fetching, cart logic, and presentation",
+      "description": "HeroSection is a large (187 lines) component that handles multiple responsibilities: cart interaction (useCart, useFlyToCartContext, handleAddToCart, added state), product presentation (badges, rating, tags, price, description), and translation management (3 translation namespaces). It orchestrates cart state, animation state, and renders a complex layout all in one component.",
+      "rule": "S - Single Responsibility Principle",
+      "fix": "Extract the cart interaction into a useAddToCart(product) hook. Split the badge row, rating row, and tags into small sub-components. HeroSection should compose these pieces rather than inline all the logic and JSX."
+    },
+    {
+      "id": "SOLID-003",
+      "severity": "suggestion",
+      "file": "apps/store/src/features/products/presentation/components/product-detail/ImageGallery.tsx",
+      "line": 71,
+      "title": "SRP: ImageGallery renders duplicate mobile/desktop layouts inline",
+      "description": "ImageGallery renders the full desktop layout (lines 91-135) and the full mobile layout (lines 138-180) inline in a single component. Both layouts share thumbnail rendering logic but duplicate the JSX. The component manages view state, builds gradient styles, determines views, and renders two complete responsive layouts.",
+      "rule": "S - Single Responsibility Principle",
+      "fix": "Extract a ThumbnailStrip component that receives views, activeIndex, and onSelect. This removes the duplicated thumbnail rendering between desktop and mobile layouts and makes each layout simpler."
+    },
+    {
+      "id": "SOLID-004",
+      "severity": "suggestion",
+      "file": "apps/store/src/features/cart/presentation/components/CartDrawer.tsx",
+      "line": 23,
+      "title": "SRP: CartDrawer handles trigger, item list, and footer in one component",
+      "description": "CartDrawer (241 lines) is a single component that renders the floating trigger button, the empty state, the scrollable item list with quantity controls, and the footer with total/checkout. Each cart item rendering (lines 113-192) includes quantity controls, remove button, color thumbnail, and price calculation all inline.",
+      "rule": "S - Single Responsibility Principle",
+      "fix": "Extract a CartItemRow component for individual item rendering (thumbnail, name, quantity controls, price). Extract CartFooter for the total/checkout section. CartDrawer becomes a composition of CartTrigger + CartItemList + CartFooter."
+    },
+    {
+      "id": "SOLID-005",
+      "severity": "suggestion",
+      "file": "apps/store/src/features/products/presentation/components/product-detail/GalleryOverlays.tsx",
+      "line": 6,
+      "title": "ISP: GalleryView interface duplicated between ImageGallery and GalleryOverlays",
+      "description": "The GalleryView interface { label: string; index: number } is defined identically in both ImageGallery.tsx (line 17-20) and GalleryOverlays.tsx (line 6-9). This means consumers depend on two separate but identical type definitions.",
+      "rule": "I - Interface Segregation / DRY overlap",
+      "fix": "Extract the GalleryView interface to a shared types file (e.g., product-detail/types.ts) and import it in both components."
+    },
+    {
+      "id": "SOLID-006",
+      "severity": "suggestion",
+      "file": "apps/store/src/features/products/presentation/components/product-detail/SpecsSection.tsx",
+      "line": 21,
+      "title": "OCP: getTypeRows uses if/else chain for product types",
+      "description": "The getTypeRows function (lines 21-50) uses a chain of if-statements to determine which builder function to call based on product.type. Adding a new product type requires modifying this function rather than extending it.",
+      "rule": "O - Open/Closed Principle",
+      "fix": "Create a record mapping ProductType to its builder function: Record<ProductType, (t, details) => ProductSpec[]>. The getTypeRows function becomes a simple lookup, and new product types just need a new entry in the map."
+    },
+    {
+      "id": "SOLID-007",
+      "severity": "suggestion",
+      "file": "apps/store/src/features/products/presentation/components/ProductCardMeta.tsx",
+      "line": 12,
+      "title": "OCP: ProductCardMeta uses if/else chain for product types",
+      "description": "ProductCardMeta (lines 15-40) uses a chain of if-statements to render different metadata based on product.type. Adding a new product type requires modifying this component.",
+      "rule": "O - Open/Closed Principle",
+      "fix": "Use a strategy map: Record<ProductType, (product, t) => ReactNode>. The component selects and calls the renderer from the map, making it open for extension without modification."
+    },
+    {
+      "id": "SOLID-008",
+      "severity": "suggestion",
+      "file": "apps/store/src/features/products/presentation/components/product-detail/ImageGallery.tsx",
+      "line": 23,
+      "title": "OCP: getProductViews uses if/else chain for product types",
+      "description": "The getProductViews function (lines 23-58) uses an if/else chain to return different gallery views based on product.type. Adding a new product type requires modifying this function.",
+      "rule": "O - Open/Closed Principle",
+      "fix": "Use a Record<ProductType, (tTypes, tGallery) => GalleryView[]> lookup map. New product types simply add an entry to the map."
+    },
+    {
+      "id": "SOLID-009",
+      "severity": "info",
+      "file": "apps/store/src/features/cart/application/CartContext.tsx",
+      "line": 38,
+      "title": "ISP: CartContextValue exposes all cart operations to every consumer",
+      "description": "CartContextValue combines state (items, itemCount, total) and all mutations (addItem, removeItem, updateQuantity, clearCart) into a single interface. Every consumer gets everything, even if it only needs to read or only needs to add. For example, ProductCard only uses addItem and items, but receives the full interface.",
+      "rule": "I - Interface Segregation Principle",
+      "fix": "This is acceptable at current codebase size. If the cart grows significantly, consider splitting into useCartState() for reads and useCartActions() for mutations. Not actionable now -- KISS takes precedence."
+    },
+    {
+      "id": "SOLID-010",
+      "severity": "info",
+      "file": "apps/store/src/features/products/domain/types.ts",
+      "line": 93,
+      "title": "ISP: Product interface is large with many optional fields",
+      "description": "The Product interface has 25+ fields, many optional (longDescription, tagline, screenshots, highlights, specs, faq, seller, reviews, rating, reviewCount, physical, digital, commission, ticket). Every consumer that accepts Product gets the entire shape even if it only uses a few fields.",
+      "rule": "I - Interface Segregation Principle",
+      "fix": "This is acceptable for a domain entity at current project scale. The optional fields serve as a discriminated union by product type. If the interface grows further, consider using branded utility types like Pick<Product, 'id' | 'name' | 'price'> for components that only need a subset. Not actionable now."
+    },
+    {
+      "id": "SOLID-011",
+      "severity": "info",
+      "file": "apps/store/src/features/products/presentation/pages/ProductCatalogPage.tsx",
+      "line": 29,
+      "title": "DIP: ProductCatalogPage depends directly on mockProducts",
+      "description": "ProductCatalogPage imports mockProducts directly from the mocks layer (line 17). This is a direct dependency on a concrete data source rather than an abstraction (hook or repository). When a real API is introduced, this component will need to be modified.",
+      "rule": "D - Dependency Inversion Principle",
+      "fix": "Extract a useProducts() hook in the application layer that returns the product list. For now it can return mockProducts internally. When the API is ready, only the hook implementation changes. The same applies to ProductDetailPage (line 13, line 27)."
+    }
+  ],
+  "summary": {
+    "critical": 0,
+    "warning": 2,
+    "suggestion": 6,
+    "info": 3
+  }
+}

@@ -1,0 +1,72 @@
+{
+  "meta": {
+    "title": "Candy Shop — Dónde Vive el Arte Furry",
+    "description": "Un mercado creativo para artistas, makers y coleccionistas furry"
+  },
+  "landing": {
+    "hero": {
+      "above": "Un mercado para el fandom",
+      "title": "Donde vive el arte furry.",
+      "subtitle": "Comisiones. Prints. Fursuits. Arte digital. Construido por artistas, para todos los que aman lo que crean.",
+      "cta": "Entrar a la tienda"
+    },
+    "sections": {
+      "categories": "Categorías",
+      "categoriesTitle": "Explora la tienda por categoría.",
+      "categoriesIntro": "Un vistazo rápido a lo que encuentras dentro de la tienda.",
+      "categoriesEyebrow": "Índice de tienda",
+      "categoriesNote": "Seis rincones del catálogo, cada uno con su propio ritmo.",
+      "categoriesCardKicker": "Dentro de la tienda",
+      "roles": "Para creadores y coleccionistas"
+    },
+    "categories": {
+      "commissions": "Comisiones",
+      "fursuits": "Fursuit crafts",
+      "events": "Eventos & cons",
+      "merch": "Merch & prints",
+      "digital": "Arte digital",
+      "deals": "Drops & ofertas"
+    },
+    "split": {
+      "artists": {
+        "label": "Para creadores",
+        "title": "Tu arte merece un verdadero hogar.",
+        "description": "Vende comisiones, gestiona tu cola, envía merch y crece tu audiencia — sin que las comisiones de plataforma se coman tu trabajo.",
+        "cta": "Empezar a vender"
+      },
+      "fans": {
+        "label": "Para coleccionistas",
+        "title": "Encuentra a tu próximo artista favorito.",
+        "description": "Comisiona tu pieza soñada, colecciona prints, descubre nuevos creadores y apoya a los artistas que hacen el fandom lo que es.",
+        "cta": "Empezar a explorar"
+      }
+    },
+    "cta": {
+      "title": "La galería está abierta.",
+      "cta": "Entrar",
+      "payments": "Realizar un pago"
+    }
+  },
+  "nav": {
+    "brand": "Candy Shop",
+    "landing": "Inicio",
+    "store": "Tienda",
+    "studio": "Estudio",
+    "payments": "Pagos",
+    "admin": "Admin",
+    "auth": "Cuenta",
+    "playground": "Playground"
+  },
+  "common": {
+    "error": "Ocurrió un error",
+    "retry": "Intentar de nuevo",
+    "theme": {
+      "switchToDark": "Cambiar a modo oscuro",
+      "switchToLight": "Cambiar a modo claro",
+      "toggle": "Cambiar tema"
+    },
+    "language": {
+      "select": "Seleccionar idioma"
+    }
+  }
+}
