@@ -334,6 +334,19 @@ sudo tail -f /var/log/nginx/error.log
 
 ---
 
+## Webhook Deploy Receiver
+
+| Property | Value                                          |
+| -------- | ---------------------------------------------- |
+| URL      | `https://deploy.furrycolombia.com/deploy`      |
+| Health   | `https://deploy.furrycolombia.com/health`      |
+| Port     | 9091 (behind Cloudflare tunnel)                |
+| PM2 name | candyshop-webhook                              |
+| Secret   | Stored in GitHub webhook settings + server env |
+| Trigger  | Push to `main` branch                          |
+
+The webhook receiver replaces GitHub Actions for deployment. When you push to `main`, GitHub sends a webhook to the server, which pulls, builds, and restarts all apps automatically.
+
 ## Cloudflare Tunnel
 
 | Property    | Value                                                        |
