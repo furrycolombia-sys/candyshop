@@ -74,7 +74,9 @@
     "inStock": "In Stock",
     "outOfStock": "Out of Stock",
     "refundable": "Refundable",
-    "nonRefundable": "Non-refundable"
+    "nonRefundable": "Non-refundable",
+    "hasDelegates": "Has delegates",
+    "manageDelegates": "Manage Delegates"
   },
   "productTypes": {
     "merch": "Merch",
@@ -193,6 +195,8 @@
       "searchIcons": "Search icons...",
       "noIconsFound": "No icons found",
       "imageNumber": "Image {number}",
+      "setAsCover": "Set as cover",
+      "dragToReorder": "Drag to reorder",
       "stock": {
         "label": "Stock",
         "unlimited": "Unlimited stock",

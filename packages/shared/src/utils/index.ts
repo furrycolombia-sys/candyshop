@@ -14,3 +14,4 @@ export type {
   ServiceDetails,
   TicketDetails,
 } from "./typeDetails";
+export { getCoverImageUrl } from "./getCoverImageUrl";

@@ -2,13 +2,13 @@
 "use client";
 
 import type { DraggableProvided } from "@hello-pangea/dnd";
-import { GripVertical, Pencil, Trash2 } from "lucide-react";
+import { GripVertical, Pencil, Trash2, Users } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 import { useCallback, useState } from "react";
-import { i18nField, tid } from "shared";
+import { getCoverImageUrl, i18nField, tid } from "shared";
 import type { ProductCategory, ProductType } from "shared/types";
 import { Badge, Button, cn } from "ui";
 
@@ -33,6 +33,7 @@ interface ProductTableRowProps {
   canDelete: boolean;
   dragProvided: DraggableProvided;
   isDragging: boolean;
+  delegateCount?: number;
 }
 
 function formatCOP(value: number): string {
@@ -42,17 +43,6 @@ function formatCOP(value: number): string {
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
   }).format(value);
-}
-
-function getFirstImage(images: unknown): string | null {
-  if (Array.isArray(images) && images.length > 0) {
-    const first = images[0];
-    if (typeof first === "string") return first;
-    if (first && typeof first === "object" && "url" in first) {
-      return String((first as { url: string }).url);
-    }
-  }
-  return null;
 }
 
 function renderReadOnlyState(value: boolean) {
@@ -69,6 +59,7 @@ export function ProductTableRow({
   canDelete,
   dragProvided,
   isDragging,
+  delegateCount,
 }: ProductTableRowProps) {
   const t = useTranslations();
   const locale = useLocale();
@@ -76,7 +67,7 @@ export function ProductTableRow({
   const deleteMutation = useDeleteProduct();
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
-  const imageUrl = getFirstImage(product.images);
+  const imageUrl = getCoverImageUrl(product.images);
   const name = i18nField(
     product as unknown as Record<string, unknown>,
     "name",
@@ -194,7 +185,15 @@ export function ProductTableRow({
       </td>
 
       <td className="px-4 py-3">
-        <span className="text-table-cell font-medium">{name}</span>
+        <div className="flex items-center gap-2">
+          <span className="text-table-cell font-medium">{name}</span>
+          {!!delegateCount && delegateCount > 0 && (
+            <Users
+              className="size-3.5 text-muted-foreground"
+              aria-label={t("products.hasDelegates")}
+            />
+          )}
+        </div>
       </td>
 
       <td className="px-4 py-3">
@@ -261,6 +260,19 @@ export function ProductTableRow({
 
       <td className="px-4 py-3 text-right">
         <div className="flex items-center justify-end gap-2">
+          {canUpdate && (
+            <Link href={`/products/${product.id}/delegates`}>
+              <Button
+                variant="outline"
+                size="sm"
+                className="border-2 border-border"
+                {...tid(`manage-delegates-${product.id}`)}
+              >
+                <Users className="size-3.5" />
+                <span className="sr-only">{t("products.manageDelegates")}</span>
+              </Button>
+            </Link>
+          )}
           {canUpdate && (
             <Link href={`/products/${product.id}`}>
               <Button
