@@ -36,8 +36,9 @@ if [ ! -d "$DEPLOY_DIR/.git" ]; then
 else
   log "Pulling latest from $BRANCH..."
   cd "$DEPLOY_DIR"
+  git remote set-url origin "$REPO_URL" 2>/dev/null || true
   git fetch origin "$BRANCH" --depth 1
-  git reset --hard "origin/$BRANCH"
+  git checkout -B "$BRANCH" "FETCH_HEAD"
   git clean -fd
 fi
 
