@@ -108,7 +108,7 @@ create table public.check_ins (
   id uuid primary key default gen_random_uuid(),
   order_item_id uuid not null references public.order_items(id) on delete cascade,
   entitlement_id uuid not null references public.product_entitlements(id) on delete cascade,
-  qr_code text not null unique default encode(gen_random_bytes(16), 'hex'),
+  qr_code text not null unique default encode(extensions.gen_random_bytes(16), 'hex'),
   checked_in boolean not null default false,
   checked_in_at timestamptz,
   checked_in_by uuid references auth.users(id),
@@ -160,7 +160,7 @@ create type public.transfer_status as enum ('pending', 'claimed', 'expired');
 create table public.ticket_transfers (
   id uuid primary key default gen_random_uuid(),
   order_item_id uuid not null references public.order_items(id) on delete cascade,
-  transfer_token text not null unique default encode(gen_random_bytes(20), 'hex'),
+  transfer_token text not null unique default encode(extensions.gen_random_bytes(20), 'hex'),
   from_user_id uuid not null references auth.users(id),
   to_user_id uuid references auth.users(id),
   status public.transfer_status not null default 'pending',
