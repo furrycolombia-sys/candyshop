@@ -1,0 +1,52 @@
+{
+  "workspaces": {
+    "apps/store": {
+      "entry": ["src/app/**/*.{ts,tsx}"],
+      "project": ["src/**/*.{ts,tsx,js,jsx}"],
+      "ignore": ["**/*.test.*", "**/*.spec.*", "src/mocks/**", "src/test/**"]
+    },
+    "apps/landing": {
+      "entry": ["src/app/**/*.{ts,tsx}"],
+      "project": ["src/**/*.{ts,tsx,js,jsx}"],
+      "ignore": ["**/*.test.*", "**/*.spec.*"]
+    },
+    "apps/payments": {
+      "entry": ["src/app/**/*.{ts,tsx}"],
+      "project": ["src/**/*.{ts,tsx,js,jsx}"],
+      "ignore": ["**/*.test.*", "**/*.spec.*", "src/mocks/**", "src/test/**"]
+    },
+    "apps/admin": {
+      "entry": ["src/app/**/*.{ts,tsx}"],
+      "project": ["src/**/*.{ts,tsx,js,jsx}"],
+      "ignore": ["**/*.test.*", "**/*.spec.*"]
+    },
+    "apps/auth": {
+      "entry": ["src/app/**/*.{ts,tsx}"],
+      "project": ["src/**/*.{ts,tsx,js,jsx}"],
+      "ignore": ["**/*.test.*", "**/*.spec.*"]
+    },
+    "apps/playground": {
+      "entry": ["src/app/**/*.{ts,tsx}"],
+      "project": ["src/**/*.{ts,tsx,js,jsx}"],
+      "ignore": ["**/*.test.*", "**/*.spec.*"]
+    },
+    "packages/ui": {
+      "project": ["src/**/*.{ts,tsx}"]
+    },
+    "packages/api": {
+      "project": ["src/**/*.{ts,tsx}"],
+      "ignore": ["src/generated/**", "src/types/generated/**"]
+    },
+    "packages/shared": {
+      "project": ["src/**/*.{ts,tsx}"]
+    }
+  },
+  "ignoreFiles": ["docker/e2e/**", "orval.config.ts"],
+  "ignoreDependencies": [
+    "@faker-js/faker",
+    "orval",
+    "@secretlint/secretlint-rule-preset-recommend",
+    "tw-animate-css",
+    "tailwindcss"
+  ]
+}

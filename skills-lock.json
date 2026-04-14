@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "skills": {
+    "codex-brainstorm": {
+      "source": "smithery.ai",
+      "sourceType": "well-known",
+      "computedHash": "eb0d4e84cf80a53a89acb529fe454e4c8647a4b59729bf58575eb143bc15451a"
+    },
+    "codex-code-review": {
+      "source": "smithery.ai",
+      "sourceType": "well-known",
+      "computedHash": "7cbfbbcbd5ccceee779761c1e6610e79eaea12f28680db2f73ec8e5292075b11"
+    }
+  }
+}

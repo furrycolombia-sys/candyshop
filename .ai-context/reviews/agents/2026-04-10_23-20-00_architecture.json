@@ -1,0 +1,18 @@
+{
+  "agent": "architecture",
+  "review_id": "2026-04-10_23-20-00",
+  "scope": "src/",
+  "issues": [
+    {
+      "id": "ARCH-001",
+      "severity": "suggestion",
+      "file": "apps/admin/src/features/users/presentation/components/UserTable.tsx",
+      "line": 1,
+      "title": "Decouple state from presentational tables",
+      "description": "UserTable currently handles its own selection state ('selectedUsers') and filtering states natively. Consider hoisting list selection logic to a composite layer to keep standard UserTable purely presentational.",
+      "rule": "architecture.md#state-management",
+      "fix": "Move 'selectedUsers' and 'setFilterInput' up to 'UsersPageContent.tsx'."
+    }
+  ],
+  "summary": { "critical": 0, "warning": 0, "suggestion": 1, "info": 0 }
+}

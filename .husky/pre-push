@@ -1,0 +1,60 @@
+BASE_BRANCH="origin/develop"
+git show-ref --verify --quiet "refs/remotes/${BASE_BRANCH}" || BASE_BRANCH="@{upstream}"
+
+# Shared change detection (aligned categories for hooks/CI).
+eval "$(bash scripts/detect-changes.sh "$BASE_BRANCH" "HEAD")"
+
+if [ "$DOCS_ONLY" = "true" ]; then
+  echo "No code/deploy changes detected, skipping pre-push validation."
+  exit 0
+fi
+
+echo "Running pre-push checks..."
+
+SELECT_OUTPUT=$(bash scripts/select-workspaces.sh \
+  "$STORE_CHANGED" \
+  "$LANDING_CHANGED" \
+  "$PAYMENTS_CHANGED" \
+  "$ADMIN_CHANGED" \
+  "$AUTH_CHANGED" \
+  "$PLAYGROUND_CHANGED" \
+  "$PACKAGES_CHANGED" \
+  "$TOOLING_CHANGED")
+
+RUN_ALL=$(echo "$SELECT_OUTPUT" | grep '^RUN_ALL=' | cut -d= -f2-)
+APPS=$(echo "$SELECT_OUTPUT" | grep '^APPS=' | cut -d= -f2-)
+
+# Unit tests (scoped to changed apps)
+if [ "$RUN_ALL" = "true" ]; then
+  echo "Running all unit tests (packages/tooling changed)."
+  pnpm run test || exit 1
+else
+  [ -z "$APPS" ] && echo "No workspace apps changed, skipping tests." && exit 0
+  for APP in $APPS; do
+    echo "Running tests for $APP..."
+    pnpm --filter "$APP" test || exit 1
+  done
+fi
+
+# Docker health check (only when deploy files changed)
+if [ "$DEPLOY_CHANGED" = "true" ]; then
+  echo "Deploy-related changes detected. Running Docker health check..."
+
+  for docker_path in \
+    "/c/Program Files/Docker/Docker/resources/bin" \
+    "$HOME/AppData/Local/Docker/resources/bin" \
+    "/usr/local/bin"; do
+    if [ -d "$docker_path" ] && ! command -v docker > /dev/null 2>&1; then
+      export PATH="$docker_path:$PATH"
+    fi
+  done
+
+  if ! docker info > /dev/null 2>&1; then
+    echo "ERROR: Docker is not running. Start Docker Desktop and try again."
+    exit 1
+  fi
+
+  bash scripts/docker-health-check.sh || exit 1
+fi
+
+echo "All pre-push checks passed."

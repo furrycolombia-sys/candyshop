@@ -1,0 +1,138 @@
+name: Deploy Production
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "apps/**"
+      - "packages/**"
+      - "package.json"
+      - "pnpm-lock.yaml"
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  # ============================================
+  # Run CI checks before deploying
+  # ============================================
+  ci-gate:
+    name: CI Gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Type check
+        run: pnpm run typecheck
+
+      - name: Lint
+        run: pnpm run lint
+
+      - name: Unit tests
+        run: pnpm run test
+
+      - name: Build (validates secrets work)
+        run: pnpm run build
+        env:
+          STANDALONE: "true"
+          BASE_PATH_PREFIX: ""
+          NEXT_PUBLIC_API_BASE_URL: ${{ secrets.NEXT_PUBLIC_API_BASE_URL }}
+          NEXT_PUBLIC_API_PREFIX: ${{ secrets.NEXT_PUBLIC_API_PREFIX }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          NEXT_PUBLIC_AUTH_HOST_URL: ${{ secrets.NEXT_PUBLIC_AUTH_HOST_URL }}
+          NEXT_PUBLIC_AUTH_URL: ${{ secrets.NEXT_PUBLIC_AUTH_URL }}
+          NEXT_PUBLIC_STORE_URL: ${{ secrets.NEXT_PUBLIC_STORE_URL }}
+          NEXT_PUBLIC_ADMIN_URL: ${{ secrets.NEXT_PUBLIC_ADMIN_URL }}
+          NEXT_PUBLIC_LANDING_URL: ${{ secrets.NEXT_PUBLIC_LANDING_URL }}
+          NEXT_PUBLIC_PAYMENTS_URL: ${{ secrets.NEXT_PUBLIC_PAYMENTS_URL }}
+          NEXT_PUBLIC_PLAYGROUND_URL: ${{ secrets.NEXT_PUBLIC_PLAYGROUND_URL }}
+          NEXT_PUBLIC_STUDIO_URL: ${{ secrets.NEXT_PUBLIC_STUDIO_URL }}
+          NEXT_PUBLIC_ENABLE_MOCKS: ${{ secrets.NEXT_PUBLIC_ENABLE_MOCKS }}
+
+  # ============================================
+  # Deploy to production server via SSH
+  # ============================================
+  deploy:
+    name: Deploy to Server
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: ci-gate
+    environment: production
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.PROD_SERVER_SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H ${{ secrets.PROD_SERVER_HOST }} >> ~/.ssh/known_hosts 2>/dev/null
+
+      - name: Write ephemeral env file on server
+        run: |
+          ssh -i ~/.ssh/deploy_key \
+            ${{ secrets.PROD_SERVER_USER }}@${{ secrets.PROD_SERVER_HOST }} \
+            'cat > /tmp/.candyshop-build.env << ENVEOF
+          STANDALONE=true
+          BASE_PATH_PREFIX=
+          NEXT_PUBLIC_API_PREFIX=${{ secrets.NEXT_PUBLIC_API_PREFIX }}
+          NEXT_PUBLIC_SUPABASE_URL=${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          NEXT_PUBLIC_STORE_URL=${{ secrets.NEXT_PUBLIC_STORE_URL }}
+          NEXT_PUBLIC_ADMIN_URL=${{ secrets.NEXT_PUBLIC_ADMIN_URL }}
+          NEXT_PUBLIC_AUTH_HOST_URL=${{ secrets.NEXT_PUBLIC_AUTH_HOST_URL }}
+          NEXT_PUBLIC_AUTH_URL=${{ secrets.NEXT_PUBLIC_AUTH_URL }}
+          NEXT_PUBLIC_LANDING_URL=${{ secrets.NEXT_PUBLIC_LANDING_URL }}
+          NEXT_PUBLIC_PAYMENTS_URL=${{ secrets.NEXT_PUBLIC_PAYMENTS_URL }}
+          NEXT_PUBLIC_STUDIO_URL=${{ secrets.NEXT_PUBLIC_STUDIO_URL }}
+          NEXT_PUBLIC_PLAYGROUND_URL=${{ secrets.NEXT_PUBLIC_PLAYGROUND_URL }}
+          NEXT_PUBLIC_ENABLE_MOCKS=false
+          ENVEOF'
+
+      - name: Copy deploy script to server
+        run: |
+          scp -i ~/.ssh/deploy_key \
+            scripts/deploy-production.sh \
+            ${{ secrets.PROD_SERVER_USER }}@${{ secrets.PROD_SERVER_HOST }}:/tmp/deploy-production.sh
+
+      - name: Run deployment
+        run: |
+          ssh -i ~/.ssh/deploy_key \
+            ${{ secrets.PROD_SERVER_USER }}@${{ secrets.PROD_SERVER_HOST }} \
+            "REPO_URL='https://github.com/${{ github.repository }}.git' \
+             BRANCH='${{ github.ref_name }}' \
+             ENV_FILE='/tmp/.candyshop-build.env' \
+             bash /tmp/deploy-production.sh"
+
+      - name: Verify deployment
+        run: |
+          ssh -i ~/.ssh/deploy_key \
+            ${{ secrets.PROD_SERVER_USER }}@${{ secrets.PROD_SERVER_HOST }} \
+            'export NVM_DIR="$HOME/.nvm" && source "$NVM_DIR/nvm.sh" && pm2 list'
+
+      - name: Cleanup
+        if: always()
+        run: |
+          ssh -i ~/.ssh/deploy_key \
+            ${{ secrets.PROD_SERVER_USER }}@${{ secrets.PROD_SERVER_HOST }} \
+            'rm -f /tmp/.candyshop-build.env /tmp/deploy-production.sh' 2>/dev/null || true
+          rm -f ~/.ssh/deploy_key
