@@ -17,12 +17,14 @@ interface ProductListPageContentProps {
   canCreate: boolean;
   canUpdate: boolean;
   canDelete: boolean;
+  canManageDelegates: boolean;
 }
 
 export function ProductListPageContent({
   canCreate,
   canUpdate,
   canDelete,
+  canManageDelegates,
 }: ProductListPageContentProps) {
   const t = useTranslations();
   const [filters] = useQueryStates(productsSearchParams);
@@ -83,6 +85,7 @@ export function ProductListPageContent({
           isFiltered={isFiltered}
           canUpdate={canUpdate}
           canDelete={canDelete}
+          canManageDelegates={canManageDelegates}
         />
       </div>
     </main>

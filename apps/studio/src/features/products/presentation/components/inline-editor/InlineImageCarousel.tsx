@@ -12,7 +12,9 @@ import { useCallback, useState } from "react";
 import type { Control } from "react-hook-form";
 import { useFieldArray, useWatch } from "react-hook-form";
 import { tid } from "shared";
-import { cn, Input } from "ui";
+import { cn } from "ui";
+
+import { ImageEditBar } from "./ImageEditBar";
 
 import type { ProductFormValues } from "@/features/products/domain/validationSchema";
 import { getCategoryTheme } from "@/shared/domain/categoryConstants";
@@ -21,7 +23,6 @@ interface InlineImageCarouselProps {
   control: Control<ProductFormValues>;
 }
 
-/* eslint-disable i18next/no-literal-string -- register paths are not user-facing */
 export function InlineImageCarousel({ control }: InlineImageCarouselProps) {
   const t = useTranslations("form.inlineEditor");
 
@@ -69,7 +70,14 @@ export function InlineImageCarousel({ control }: InlineImageCarouselProps) {
   );
 
   const handleAdd = useCallback(() => {
-    append({ url: "", alt: "", sort_order: fields.length, is_cover: false });
+    append({
+      url: "",
+      alt: "",
+      sort_order: fields.length,
+      is_cover: false,
+      is_store_cover: false,
+      fit: "cover",
+    });
     setActiveIndex(fields.length);
     setEditingMain(true);
   }, [append, fields.length]);
@@ -254,13 +262,14 @@ export function InlineImageCarousel({ control }: InlineImageCarouselProps) {
             watchedImages?.[safeIndex]?.url ?? activeField?.url ?? "";
           const liveAlt =
             watchedImages?.[safeIndex]?.alt ?? activeField?.alt ?? "";
+          const liveFit = watchedImages?.[safeIndex]?.fit ?? "cover";
           return (liveUrl.trim().length ?? 0) > 0 &&
             !brokenImages.has(safeIndex) ? (
             // eslint-disable-next-line @next/next/no-img-element, jsx-a11y/no-noninteractive-element-interactions -- user-supplied URLs; onError/onLoad are load events
             <img
               src={liveUrl}
               alt={liveAlt}
-              className="relative size-full object-cover"
+              className={`relative size-full ${liveFit === "contain" ? "object-contain" : "object-cover"}`}
               onError={() => handleImageError(safeIndex)}
               onLoad={() => handleImageLoad(safeIndex)}
             />
@@ -292,43 +301,13 @@ export function InlineImageCarousel({ control }: InlineImageCarouselProps) {
   // hide visually when not editing to prevent unmount clearing values.
   const editBar =
     safeIndex >= 0 ? (
-      <div
-        className={`border-strong border-foreground bg-background p-3 ${editingMain ? "" : "hidden"}`}
-        {...tid("image-edit-bar")}
-      >
-        <div className="flex flex-col gap-2">
-          <label className="flex flex-col gap-1">
-            <span className="font-display text-ui-xs font-bold uppercase tracking-widest text-muted-foreground">
-              {t("editImageUrl")}
-            </span>
-            <Input
-              placeholder={t("imageUrlPlaceholder")}
-              aria-label={t("editImageUrl")}
-              {...tid("image-edit-url")}
-              {...control.register(`images.${safeIndex}.url`)}
-            />
-          </label>
-          <label className="flex flex-col gap-1">
-            <span className="font-display text-ui-xs font-bold uppercase tracking-widest text-muted-foreground">
-              {t("editImageAlt")}
-            </span>
-            <Input
-              placeholder={t("imageAltPlaceholder")}
-              aria-label={t("editImageAlt")}
-              {...tid("image-edit-alt")}
-              {...control.register(`images.${safeIndex}.alt`)}
-            />
-          </label>
-        </div>
-        <button
-          type="button"
-          onClick={() => setEditingMain(false)}
-          className="button-brutal button-press-sm mt-3 w-full justify-center border-strong border-foreground bg-foreground py-1.5 font-display text-xs font-bold uppercase tracking-widest text-background"
-          {...tid("image-edit-done")}
-        >
-          {t("doneEditing")}
-        </button>
-      </div>
+      <ImageEditBar
+        control={control}
+        index={safeIndex}
+        editing={editingMain}
+        onDone={() => setEditingMain(false)}
+        replace={replace}
+      />
     ) : null;
 
   return (
@@ -411,4 +390,3 @@ export function InlineImageCarousel({ control }: InlineImageCarouselProps) {
     </DragDropContext>
   );
 }
-/* eslint-enable i18next/no-literal-string */
