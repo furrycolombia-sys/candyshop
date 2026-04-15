@@ -6,6 +6,7 @@ services:
       context: ..
       dockerfile: Dockerfile
       args:
+        TARGET_ENV: ${TARGET_ENV:-staging}
         NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-}
         NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-}
         NEXT_PUBLIC_BUILD_HASH: ${NEXT_PUBLIC_BUILD_HASH:-}
@@ -29,6 +30,11 @@ services:
         NEXT_PUBLIC_STUDIO_URL: ${NEXT_PUBLIC_STUDIO_URL:-}
         NEXT_PUBLIC_AUTH_URL: ${NEXT_PUBLIC_AUTH_URL:-}
         NEXT_PUBLIC_AUTH_HOST_URL: ${NEXT_PUBLIC_AUTH_HOST_URL:-}
+        SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID: ${SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID:-}
+        SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET: ${SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET:-}
+        SUPABASE_AUTH_EXTERNAL_DISCORD_CLIENT_ID: ${SUPABASE_AUTH_EXTERNAL_DISCORD_CLIENT_ID:-}
+        SUPABASE_AUTH_EXTERNAL_DISCORD_SECRET: ${SUPABASE_AUTH_EXTERNAL_DISCORD_SECRET:-}
+        CLOUDFLARE_TUNNEL_TOKEN: ${CLOUDFLARE_TUNNEL_TOKEN:-}
     restart: unless-stopped
     ports:
       - "${SITE_PROD_PORT:-8088}:80"
@@ -63,21 +69,11 @@ services:
     restart: unless-stopped
     depends_on:
       - app
-    environment:
-      CLOUDFLARED_ARGS: ${CLOUDFLARED_ARGS:-}
-      CLOUDFLARE_TUNNEL_TOKEN: ${CLOUDFLARE_TUNNEL_TOKEN:-}
-      CLOUDFLARE_TUNNEL_NAME: ${CLOUDFLARE_TUNNEL_NAME:-}
-    entrypoint:
-      - /bin/sh
-      - -lc
-    command: >
-      if [ -n "$$CLOUDFLARED_ARGS" ]; then
-        exec cloudflared $$CLOUDFLARED_ARGS;
-      elif [ -n "$$CLOUDFLARE_TUNNEL_TOKEN" ]; then
-        exec cloudflared tunnel --no-autoupdate run --token "$$CLOUDFLARE_TUNNEL_TOKEN";
-      elif [ -n "$$CLOUDFLARE_TUNNEL_NAME" ]; then
-        exec cloudflared tunnel --no-autoupdate run "$$CLOUDFLARE_TUNNEL_NAME";
-      else
-        echo "Missing Cloudflare tunnel configuration";
-        exit 1;
-      fi
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - type: bind
+        source: ${CLOUDFLARED_CONFIG_DIR:-~/.cloudflared}
+        target: /etc/cloudflared
+        read_only: true
+    command: ["tunnel", "--config", "/etc/cloudflared/config.docker.yml", "--no-autoupdate", "run"]

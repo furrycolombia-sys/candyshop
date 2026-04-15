@@ -193,6 +193,8 @@
       "templateSectionPlural": "secciones",
       "imageNumber": "Imagen {number}",
       "setAsCover": "Establecer como portada",
+      "storeCover": "Portada de tienda",
+      "fitContain": "Ajustar dentro del cuadro",
       "dragToReorder": "Arrastra para reordenar",
       "chooseIcon": "Elegir ícono",
       "searchIcons": "Buscar íconos...",

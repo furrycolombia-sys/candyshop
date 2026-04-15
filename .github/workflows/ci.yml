@@ -337,16 +337,18 @@ jobs:
             pnpm --filter "$APP" build
           done
         env:
+          CI: "true"
+          TARGET_ENV: dev
           NEXT_PUBLIC_API_BASE_URL: /api
-          NEXT_PUBLIC_API_PREFIX: ""
           NEXT_PUBLIC_ENABLE_TEST_IDS: "true"
+          # Dev Supabase (local demo keys — safe for CI builds)
           NEXT_PUBLIC_SUPABASE_URL: "http://127.0.0.1:54321"
           NEXT_PUBLIC_SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0"
-          NEXT_PUBLIC_AUTH_HOST_URL: "http://localhost:5000"
-          NEXT_PUBLIC_STORE_URL: "http://localhost:5001"
-          NEXT_PUBLIC_ADMIN_URL: "http://localhost:5002"
-          NEXT_PUBLIC_PLAYGROUND_URL: "http://localhost:5003"
-          NEXT_PUBLIC_STUDIO_URL: "http://localhost:5006"
+          SUPABASE_SERVICE_ROLE_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU"
+          SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID: "mock"
+          SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET: "mock"
+          SUPABASE_AUTH_EXTERNAL_DISCORD_CLIENT_ID: ""
+          SUPABASE_AUTH_EXTERNAL_DISCORD_SECRET: ""
 
       - name: Upload store build artifacts
         uses: actions/upload-artifact@v4
@@ -503,16 +505,18 @@ jobs:
             BUILT_APPS="$BUILT_APPS $APP"
           done
         env:
+          CI: "true"
+          TARGET_ENV: dev
           NEXT_PUBLIC_API_BASE_URL: /api
-          NEXT_PUBLIC_API_PREFIX: ""
           NEXT_PUBLIC_ENABLE_TEST_IDS: "true"
+          # Dev Supabase (local demo keys — safe for CI builds)
           NEXT_PUBLIC_SUPABASE_URL: "http://127.0.0.1:54321"
           NEXT_PUBLIC_SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0"
-          NEXT_PUBLIC_AUTH_HOST_URL: "http://localhost:5000"
-          NEXT_PUBLIC_STORE_URL: "http://localhost:5001"
-          NEXT_PUBLIC_ADMIN_URL: "http://localhost:5002"
-          NEXT_PUBLIC_PLAYGROUND_URL: "http://localhost:5003"
-          NEXT_PUBLIC_STUDIO_URL: "http://localhost:5006"
+          SUPABASE_SERVICE_ROLE_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU"
+          SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID: "mock"
+          SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET: "mock"
+          SUPABASE_AUTH_EXTERNAL_DISCORD_CLIENT_ID: ""
+          SUPABASE_AUTH_EXTERNAL_DISCORD_SECRET: ""
 
       - name: Run E2E tests (scoped)
         run: |

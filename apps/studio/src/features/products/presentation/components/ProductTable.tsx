@@ -26,6 +26,7 @@ interface ProductTableProps {
   isFiltered: boolean;
   canUpdate: boolean;
   canDelete: boolean;
+  canManageDelegates: boolean;
 }
 
 export function ProductTable({
@@ -34,6 +35,7 @@ export function ProductTable({
   isFiltered,
   canUpdate,
   canDelete,
+  canManageDelegates,
 }: ProductTableProps) {
   const t = useTranslations();
   const reorderMutation = useReorderProducts();
@@ -141,6 +143,7 @@ export function ProductTable({
                         canReorder={canReorder}
                         canUpdate={canUpdate}
                         canDelete={canDelete}
+                        canManageDelegates={canManageDelegates}
                         dragProvided={dragProvided}
                         isDragging={snapshot.isDragging}
                         delegateCount={delegateCounts?.[product.id] ?? 0}

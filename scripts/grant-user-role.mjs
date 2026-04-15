@@ -65,6 +65,10 @@ ROLE_TEMPLATES.admin = [
     "user_permissions.read",
     "user_permissions.update",
     "user_permissions.delete",
+    "seller_admins.create",
+    "seller_admins.read",
+    "seller_admins.update",
+    "seller_admins.delete",
   ]),
 ];
 
