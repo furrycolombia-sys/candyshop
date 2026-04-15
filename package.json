@@ -53,6 +53,7 @@
     "codegen:all": "pnpm codegen && pnpm codegen:graphql && pnpm codegen:supabase",
     "user:grant-role": "node scripts/grant-user-role.mjs",
     "user:grant-admin": "node scripts/grant-user-role.mjs --email furrycolombia@gmail.com --role admin",
+    "sync-secrets": "node scripts/sync-secrets.mjs",
     "supabase:start": "supabase start",
     "supabase:stop": "supabase stop",
     "supabase:reset": "supabase db reset",

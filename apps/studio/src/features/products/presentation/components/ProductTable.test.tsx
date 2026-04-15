@@ -121,6 +121,7 @@ describe("ProductTable", () => {
         isFiltered={false}
         canUpdate={true}
         canDelete={true}
+        canManageDelegates={true}
       />,
     );
     expect(screen.getByText("common.loading")).toBeInTheDocument();
@@ -134,6 +135,7 @@ describe("ProductTable", () => {
         isFiltered={false}
         canUpdate={true}
         canDelete={true}
+        canManageDelegates={true}
       />,
     );
     expect(screen.getByTestId("products-empty-state")).toBeInTheDocument();
@@ -149,6 +151,7 @@ describe("ProductTable", () => {
         isFiltered={false}
         canUpdate={true}
         canDelete={true}
+        canManageDelegates={true}
       />,
     );
     expect(screen.getByTestId("product-table")).toBeInTheDocument();
@@ -163,6 +166,7 @@ describe("ProductTable", () => {
         isFiltered={false}
         canUpdate={true}
         canDelete={true}
+        canManageDelegates={true}
       />,
     );
     expect(screen.getByText("products.name")).toBeInTheDocument();
@@ -180,6 +184,7 @@ describe("ProductTable", () => {
         isFiltered={false}
         canUpdate={true}
         canDelete={true}
+        canManageDelegates={true}
       />,
     );
     expect(screen.getByTestId("product-row-Product 1")).toBeInTheDocument();
@@ -195,6 +200,7 @@ describe("ProductTable", () => {
         isFiltered={false}
         canUpdate={true}
         canDelete={true}
+        canManageDelegates={true}
       />,
     );
     expect(screen.getByTestId("delegate-count-Product 1")).toHaveTextContent(

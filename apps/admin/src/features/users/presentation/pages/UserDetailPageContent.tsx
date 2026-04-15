@@ -7,6 +7,7 @@ import { Button } from "ui";
 
 import { PermissionGroupCard } from "../components/PermissionGroupCard";
 import { TemplateButtons } from "../components/TemplateButtons";
+import { UserDelegatesCard } from "../components/UserDelegatesCard";
 import { UserHeader } from "../components/UserHeader";
 
 import { useApplyTemplate } from "@/features/users/application/hooks/useApplyTemplate";
@@ -24,12 +25,14 @@ interface UserDetailPageContentProps {
   userId: string;
   canCreate: boolean;
   canDelete: boolean;
+  canManageDelegates: boolean;
 }
 
 export function UserDetailPageContent({
   userId,
   canCreate,
   canDelete,
+  canManageDelegates,
 }: UserDetailPageContentProps) {
   const t = useTranslations("users");
   const router = useRouter();
@@ -130,6 +133,10 @@ export function UserDetailPageContent({
             canManage={canCreate || canDelete}
           />
         ))}
+
+        {canManageDelegates && (
+          <UserDelegatesCard userId={userId} canDelete={canDelete} />
+        )}
       </div>
     </main>
   );
