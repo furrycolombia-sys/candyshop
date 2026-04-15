@@ -397,6 +397,12 @@ function runTests() {
   else if (specFile) log(`Spec: ${specFile}`);
   else log(`${CORE_SPECS.length} spec files`);
 
+  // For staging, the container is built with the public URL baked in.
+  // OAuth callbacks redirect to the public domain, not localhost.
+  // Use SITE_PUBLIC_ORIGIN if set (staging), otherwise fall back to baseUrl.
+  const e2ePublicOrigin =
+    process.env.SITE_PUBLIC_ORIGIN?.trim() || baseUrl;
+
   return new Promise((resolvePromise) => {
     const child = spawn(pnpm, playwrightArgs, {
       cwd: rootDir,
@@ -404,7 +410,7 @@ function runTests() {
       shell: true,
       env: {
         ...process.env,
-        E2E_PUBLIC_ORIGIN: baseUrl,
+        E2E_PUBLIC_ORIGIN: e2ePublicOrigin,
         PLAYWRIGHT_USE_EXISTING_STACK: "true",
         ...(debugMode ? { PWDEBUG: "1" } : {}),
       },
