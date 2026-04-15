@@ -82,15 +82,23 @@ function getArgValue(name) {
 
 const envName = getArgValue("--env") || "e2e";
 const specFile = getArgValue("--spec");
-const composeFile = resolve(
-  rootDir,
-  "docker",
-  envName === "e2e" ? "compose.e2e.yml" : "compose.yml",
-);
 
 // ---- Env loading (via load-root-env.js) ----
+// Must happen BEFORE resolving the compose file so SUPABASE_MODE is available.
 
 loadRootEnv({ targetEnv: envName });
+
+// Pick the right compose file now that env is loaded.
+// staging with SUPABASE_MODE=docker uses compose.staging.yml (full Supabase stack).
+// e2e always uses compose.e2e.yml.
+// Everything else uses compose.yml.
+function resolveComposeFile() {
+  if (envName === "e2e") return resolve(rootDir, "docker", "compose.e2e.yml");
+  if (process.env.SUPABASE_MODE === "docker") return resolve(rootDir, "docker", "compose.staging.yml");
+  return resolve(rootDir, "docker", "compose.yml");
+}
+
+const composeFile = resolveComposeFile();
 
 const containerName =
   process.env.SITE_PROD_CONTAINER_NAME || `candyshop-${envName}`;
@@ -125,8 +133,10 @@ function runSilent(cmd, cmdArgs, opts = {}) {
   });
 }
 
-// Staging uses the cloudflare profile to start the tunnel sidecar
-const needsCloudflare = envName === "staging" && !!process.env.CLOUDFLARE_TUNNEL_TOKEN;
+// Use --profile cloudflare only when explicitly requested via --cloudflare flag.
+// The tunnel is for public exposure (pnpm staging:tunnel), not for local e2e runs.
+const wantsCloudflare = flags.has("--cloudflare");
+const needsCloudflare = wantsCloudflare && !!process.env.CLOUDFLARE_TUNNEL_TOKEN;
 
 function compose(...cmdArgs) {
   const baseArgs = [
@@ -410,6 +420,7 @@ function runTests() {
       shell: true,
       env: {
         ...process.env,
+        TARGET_ENV: envName,
         E2E_PUBLIC_ORIGIN: e2ePublicOrigin,
         PLAYWRIGHT_USE_EXISTING_STACK: "true",
         ...(debugMode ? { PWDEBUG: "1" } : {}),
@@ -422,11 +433,58 @@ function runTests() {
 
 // ---- Main ----
 
-// Only the e2e environment needs its own isolated Supabase instance.
-// Staging and other envs use the main local Supabase (already running).
+// Only the e2e environment needs its own isolated Supabase CLI instance.
+// Staging with SUPABASE_MODE=docker has Supabase as Docker services in compose.staging.yml.
+// Other envs use whatever Supabase is already running.
 const needsE2ESupabase = envName === "e2e";
+const isStagingDocker = envName === "staging" && process.env.SUPABASE_MODE === "docker";
+
+// For local staging e2e (no --cloudflare), override app URLs to localhost
+// so the build doesn't bake in the public Cloudflare domain.
+// With --cloudflare, the public URLs are used as-is.
+if (isStagingDocker && !wantsCloudflare) {
+  const localOrigin = `http://localhost:${port}`;
+  process.env.SITE_PUBLIC_ORIGIN = localOrigin;
+  process.env.NEXT_PUBLIC_LANDING_URL = localOrigin;
+  process.env.NEXT_PUBLIC_STORE_URL = `${localOrigin}/store`;
+  process.env.NEXT_PUBLIC_PAYMENTS_URL = `${localOrigin}/payments`;
+  process.env.NEXT_PUBLIC_ADMIN_URL = `${localOrigin}/admin`;
+  process.env.NEXT_PUBLIC_PLAYGROUND_URL = `${localOrigin}/playground`;
+  process.env.NEXT_PUBLIC_STUDIO_URL = `${localOrigin}/studio`;
+  process.env.NEXT_PUBLIC_AUTH_URL = `${localOrigin}/auth`;
+  process.env.NEXT_PUBLIC_AUTH_HOST_URL = `${localOrigin}/auth`;
+  // Supabase is accessed via Kong on localhost:54321 (mapped from supabase-kong:8000)
+  process.env.NEXT_PUBLIC_SUPABASE_URL = `http://localhost:54321`;
+  // Auth redirect URLs for local testing
+  process.env.SUPABASE_AUTH_SITE_URL = `${localOrigin}/auth/callback`;
+  process.env.SUPABASE_AUTH_EXTERNAL_REDIRECT_URI = `http://localhost:54321/auth/v1/callback`;
+  process.env.SUPABASE_AUTH_REDIRECT_URL_AUTH = `${localOrigin}/auth/callback`;
+  process.env.SUPABASE_AUTH_REDIRECT_URL_STORE = `${localOrigin}/store/auth/callback`;
+  process.env.SUPABASE_AUTH_REDIRECT_URL_ADMIN = `${localOrigin}/admin/auth/callback`;
+  process.env.SUPABASE_AUTH_REDIRECT_URL_PAYMENTS = `${localOrigin}/payments/auth/callback`;
+  process.env.SUPABASE_AUTH_REDIRECT_URL_PLAYGROUND = `${localOrigin}/playground/auth/callback`;
+  process.env.SUPABASE_AUTH_REDIRECT_URL_LANDING = `${localOrigin}/auth/callback`;
+  process.env.SUPABASE_AUTH_REDIRECT_URL_STUDIO = `${localOrigin}/studio/auth/callback`;
+  log(`Local staging mode: app URLs overridden to ${localOrigin}`);
+}
+
+// For staging with dockerized Supabase, stop the local CLI Supabase first
+// so it doesn't hold port 54321 (Kong) or 54324 (inbucket).
+function stopLocalSupabaseIfRunning() {
+  log("Checking for local Supabase CLI instance on port 54321...");
+  const check = runSilent(docker, ["ps", "-q", "-f", "name=supabase_db_candystore"]);
+  if ((check.stdout || "").trim().length > 0) {
+    log("Stopping local Supabase CLI (port 54321 needed by staging Kong)...");
+    run(supabaseBin, ["supabase", "stop", "--no-backup"]);
+    runSilent(docker, ["rm", "-f", "supabase_vector_candystore"]);
+  }
+}
 
 log(`Environment: .env.${envName} -> ${baseUrl}`);
+
+if (isStagingDocker) {
+  stopLocalSupabaseIfRunning();
+}
 
 if (wantsDown) {
   teardownContainer();

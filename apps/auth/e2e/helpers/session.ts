@@ -15,7 +15,7 @@ const { getLocalSupabaseEnv } = require(
 const { resolveE2EAppUrls } = require(
   path.resolve(__dirname, "../../../../scripts/app-url-resolver.js"),
 );
-loadRootEnv();
+loadRootEnv({ targetEnv: process.env.TARGET_ENV });
 
 /**
  * Encode a string as base64url (URL-safe base64, no padding).

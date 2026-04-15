@@ -50,6 +50,11 @@ test.describe.serial("Full purchase flow: two sellers, one buyer", () => {
   let sellerB: TestUser;
   let buyer: TestUser;
 
+  // Unique suffix per test run to avoid slug collisions from leftover data
+  const runId = Date.now();
+  const PRODUCT_ALPHA = `E2E Product Alpha ${runId}`;
+  const PRODUCT_BETA = `E2E Product Beta ${runId}`;
+
   test.beforeAll(async () => {
     resetCounter();
     sellerA = await createTestUser("sellerA", SELLER_PERMISSIONS);
@@ -163,7 +168,7 @@ test.describe.serial("Full purchase flow: two sellers, one buyer", () => {
       page,
       context,
       sellerA,
-      "E2E Product Alpha",
+      PRODUCT_ALPHA,
       "15000",
       "sellerA",
     );
@@ -179,7 +184,7 @@ test.describe.serial("Full purchase flow: two sellers, one buyer", () => {
       page,
       context,
       sellerB,
-      "E2E Product Beta",
+      PRODUCT_BETA,
       "20000",
       "sellerB",
     );
@@ -321,7 +326,7 @@ test.describe.serial("Full purchase flow: two sellers, one buyer", () => {
     await snap(page, "store-catalog");
 
     // ── Add Seller A's product ──────────────────────────────────
-    await page.getByTestId("search-bar-input").fill("E2E Product Alpha");
+    await page.getByTestId("search-bar-input").fill(PRODUCT_ALPHA);
     await page.waitForTimeout(DEBOUNCE_WAIT_MS);
     await snap(page, "store-search-alpha");
 
@@ -339,7 +344,7 @@ test.describe.serial("Full purchase flow: two sellers, one buyer", () => {
     await page.goto(`${APP_URLS.STORE}/en`);
     await page.waitForLoadState("networkidle");
 
-    await page.getByTestId("search-bar-input").fill("E2E Product Beta");
+    await page.getByTestId("search-bar-input").fill(PRODUCT_BETA);
     await page.waitForTimeout(DEBOUNCE_WAIT_MS);
     await snap(page, "store-search-beta");
 
