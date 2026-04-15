@@ -22,7 +22,8 @@
     },
     "dev": {
       "cache": false,
-      "persistent": true
+      "persistent": true,
+      "env": ["TARGET_ENV"]
     },
     "typecheck": {
       "dependsOn": ["^typecheck"],

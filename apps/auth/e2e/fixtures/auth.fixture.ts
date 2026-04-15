@@ -56,16 +56,30 @@ const supabaseAdmin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
 });
 
 /**
+ * Encode a string as base64url (URL-safe base64, no padding).
+ * @supabase/ssr uses base64url encoding for cookie values — standard btoa()
+ * produces base64 with +/= chars that @supabase/ssr's stringFromBase64URL
+ * will reject as invalid characters.
+ */
+function toBase64URL(str: string): string {
+  return btoa(str).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+
+/**
  * Create a test user via Supabase admin API and inject session cookies
  * into the browser context. No OAuth flow needed.
  */
 async function createTestSession(context: BrowserContext) {
   // For localhost/127.0.0.1 URLs, use "localhost" as the project ref to match
   // what the Supabase JS client in the browser uses.
+  // Must match SUPABASE_COOKIE_KEY in packages/api/src/supabase/config.ts
+  // which uses deriveProjectRef: 127.0.0.1 → "127.0.0.1", localhost → "localhost"
+  // This is also what the server callback uses via storageKey.
+  // The browser client now also uses storageKey so all three agree.
   const refHostname = new URL(SUPABASE_URL).hostname;
   const projectRef =
     refHostname === "localhost" || refHostname === "127.0.0.1"
-      ? "localhost"
+      ? refHostname
       : refHostname.split(".")[0];
   const cookieBase = `sb-${projectRef}-auth-token`;
   const authHost = new URL(AUTH_URL);
@@ -96,7 +110,7 @@ async function createTestSession(context: BrowserContext) {
     await context.addCookies([
       {
         name: `${cookieBase}.0`,
-        value: `base64-${btoa(JSON.stringify(mockSession))}`,
+        value: `base64-${toBase64URL(JSON.stringify(mockSession))}`,
         domain: sharedDomain,
         path: "/",
         httpOnly: false,
@@ -139,7 +153,7 @@ async function createTestSession(context: BrowserContext) {
   await context.addCookies([
     {
       name: `${cookieBase}.0`,
-      value: `base64-${btoa(JSON.stringify({ access_token: accessToken, refresh_token: refreshToken, token_type: "bearer", expires_in: 3600, expires_at: Math.floor(Date.now() / 1000) + 3600, user: user.user }))}`,
+      value: `base64-${toBase64URL(JSON.stringify({ access_token: accessToken, refresh_token: refreshToken, token_type: "bearer", expires_in: 3600, expires_at: Math.floor(Date.now() / 1000) + 3600, user: user.user }))}`,
       domain: sharedDomain,
       path: "/",
       httpOnly: false,

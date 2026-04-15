@@ -17,6 +17,16 @@ const { resolveE2EAppUrls } = require(
 );
 loadRootEnv();
 
+/**
+ * Encode a string as base64url (URL-safe base64, no padding).
+ * @supabase/ssr uses base64url encoding for cookie values — standard btoa()
+ * produces base64 with +/= chars that @supabase/ssr's stringFromBase64URL
+ * will reject as invalid characters.
+ */
+function toBase64URL(str: string): string {
+  return btoa(str).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+
 const localSupabaseEnv = getLocalSupabaseEnv();
 
 function isPlaceholder(value: string | undefined) {
@@ -302,12 +312,12 @@ export async function injectSession(
     process.env.E2E_PUBLIC_ORIGIN && process.env.NEXT_PUBLIC_SUPABASE_URL
       ? process.env.NEXT_PUBLIC_SUPABASE_URL
       : SUPABASE_URL;
-  // For localhost URLs the hostname is just "localhost" — use it directly.
-  // For hosted URLs like "abc.supabase.co", extract the subdomain.
+  // Must match SUPABASE_COOKIE_KEY in packages/api/src/supabase/config.ts
+  // which uses deriveProjectRef: 127.0.0.1 → "127.0.0.1", localhost → "localhost"
   const refHostname = new URL(supabaseUrlForRef).hostname;
   const projectRef =
     refHostname === "localhost" || refHostname === "127.0.0.1"
-      ? "localhost"
+      ? refHostname
       : refHostname.split(".")[0];
   const cookieBase = `sb-${projectRef}-auth-token`;
   const authHost = new URL(AUTH_URL);
@@ -329,7 +339,7 @@ export async function injectSession(
   await context.addCookies([
     {
       name: `${cookieBase}.0`,
-      value: `base64-${btoa(
+      value: `base64-${toBase64URL(
         JSON.stringify({
           access_token: user.accessToken,
           refresh_token: user.refreshToken,
