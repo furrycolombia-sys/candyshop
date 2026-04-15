@@ -75,6 +75,6 @@ describe("DelegateList", () => {
 
   it("renders permission badges", () => {
     render(<DelegateList delegates={[mockDelegate]} onRemove={vi.fn()} />);
-    expect(screen.getByText("permissions.orders.approve")).toBeInTheDocument();
+    expect(screen.getByText("permissions.orders_approve")).toBeInTheDocument();
   });
 });
