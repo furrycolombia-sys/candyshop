@@ -52,6 +52,8 @@ export function productToFormValues(product: Product): ProductFormValues {
         alt?: string;
         sort_order?: number;
         is_cover?: boolean;
+        is_store_cover?: boolean;
+        fit?: "cover" | "contain";
       }>
     | null
     | undefined;
@@ -60,6 +62,8 @@ export function productToFormValues(product: Product): ProductFormValues {
     alt: img.alt ?? "",
     sort_order: img.sort_order ?? idx,
     is_cover: img.is_cover ?? false,
+    is_store_cover: img.is_store_cover ?? false,
+    fit: img.fit ?? ("cover" as const),
   }));
 
   const rawSections = product.sections as

@@ -196,6 +196,8 @@
       "noIconsFound": "No icons found",
       "imageNumber": "Image {number}",
       "setAsCover": "Set as cover",
+      "storeCover": "Store cover",
+      "fitContain": "Fit inside box",
       "dragToReorder": "Drag to reorder",
       "stock": {
         "label": "Stock",

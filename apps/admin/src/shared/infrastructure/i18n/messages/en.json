@@ -188,7 +188,8 @@
       "adminConfig": "Admin Configuration",
       "adminUsers": "User Permissions",
       "checkins": "Check-ins",
-      "events": "Events"
+      "events": "Events",
+      "sellerAdmins": "Delegate Management"
     },
     "lastSeen": {
       "justNow": "just now",
@@ -206,6 +207,20 @@
       "backToUsers": "Back to Users",
       "viewProfile": "View Profile",
       "permissionsCount": "{count, plural, one {# permission} other {# permissions}}"
+    },
+    "delegates": {
+      "title": "Delegate Relationships",
+      "loading": "Loading delegates...",
+      "empty": "No delegate relationships found for this user.",
+      "asSeller": "Delegated to others",
+      "asDelegate": "Delegated by others",
+      "delegatedBy": "by",
+      "confirm": "Confirm",
+      "cancel": "Cancel",
+      "perm": {
+        "orders.approve": "Approve Orders",
+        "orders.request_proof": "Request Proof"
+      }
     }
   },
   "permissions": {
@@ -271,6 +286,12 @@
       "create": "Check In Attendees",
       "read": "View Check-ins",
       "update": "Undo Check-ins"
+    },
+    "seller_admins": {
+      "create": "Add Delegates",
+      "read": "View Delegates",
+      "update": "Edit Delegates",
+      "delete": "Remove Delegates"
     }
   },
   "permissionHints": {
@@ -336,6 +357,12 @@
       "create": "Check in attendees at events",
       "read": "View check-in records and attendance",
       "update": "Undo or modify check-in records"
+    },
+    "seller_admins": {
+      "create": "Allow user to add delegates for their products",
+      "read": "Allow user to view their product delegates",
+      "update": "Allow user to edit delegate permissions",
+      "delete": "Allow user to remove delegates from their products"
     }
   },
   "common": {

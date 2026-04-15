@@ -25,6 +25,7 @@ export function ProductListPage() {
       canCreate={hasPermission("products.create")}
       canUpdate={hasPermission("products.update")}
       canDelete={hasPermission("products.delete")}
+      canManageDelegates={hasPermission("seller_admins.read")}
     />
   );
 }

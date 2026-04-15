@@ -22,4 +22,7 @@ export function isProductAvailable(product: Product): boolean {
 export interface ProductImage {
   url: string;
   alt?: string;
+  is_cover?: boolean;
+  is_store_cover?: boolean;
+  fit?: "cover" | "contain";
 }
