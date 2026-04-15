@@ -31,6 +31,7 @@ interface ProductTableRowProps {
   canReorder: boolean;
   canUpdate: boolean;
   canDelete: boolean;
+  canManageDelegates: boolean;
   dragProvided: DraggableProvided;
   isDragging: boolean;
   delegateCount?: number;
@@ -57,6 +58,7 @@ export function ProductTableRow({
   canReorder,
   canUpdate,
   canDelete,
+  canManageDelegates,
   dragProvided,
   isDragging,
   delegateCount,
@@ -187,7 +189,7 @@ export function ProductTableRow({
       <td className="px-4 py-3">
         <div className="flex items-center gap-2">
           <span className="text-table-cell font-medium">{name}</span>
-          {!!delegateCount && delegateCount > 0 && (
+          {canManageDelegates && !!delegateCount && delegateCount > 0 && (
             <Users
               className="size-3.5 text-muted-foreground"
               aria-label={t("products.hasDelegates")}
@@ -260,7 +262,7 @@ export function ProductTableRow({
 
       <td className="px-4 py-3 text-right">
         <div className="flex items-center justify-end gap-2">
-          {canUpdate && (
+          {canManageDelegates && (
             <Link href={`/products/${product.id}/delegates`}>
               <Button
                 variant="outline"
