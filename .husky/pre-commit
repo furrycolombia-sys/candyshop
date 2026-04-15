@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 STAGED_FILES=$(git diff --cached --name-only)
 
 if [ -z "$STAGED_FILES" ]; then

@@ -93,6 +93,7 @@ const defaultProps = {
   canReorder: false,
   canUpdate: true,
   canDelete: true,
+  canManageDelegates: true,
   dragProvided: {
     innerRef: () => null,
     draggableProps: {},
@@ -276,7 +277,11 @@ describe("ProductTableRow", () => {
     render(
       <table>
         <tbody>
-          <ProductTableRow {...defaultProps} delegateCount={3} />
+          <ProductTableRow
+            {...defaultProps}
+            canManageDelegates={true}
+            delegateCount={3}
+          />
         </tbody>
       </table>,
     );
@@ -287,7 +292,11 @@ describe("ProductTableRow", () => {
     render(
       <table>
         <tbody>
-          <ProductTableRow {...defaultProps} delegateCount={0} />
+          <ProductTableRow
+            {...defaultProps}
+            canManageDelegates={true}
+            delegateCount={0}
+          />
         </tbody>
       </table>,
     );
@@ -300,7 +309,7 @@ describe("ProductTableRow", () => {
     render(
       <table>
         <tbody>
-          <ProductTableRow {...defaultProps} />
+          <ProductTableRow {...defaultProps} canManageDelegates={true} />
         </tbody>
       </table>,
     );
@@ -309,22 +318,39 @@ describe("ProductTableRow", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("renders manage delegates button when canUpdate is true", () => {
+  it("does not render delegate badge when canManageDelegates is false", () => {
     render(
       <table>
         <tbody>
-          <ProductTableRow {...defaultProps} canUpdate={true} />
+          <ProductTableRow
+            {...defaultProps}
+            canManageDelegates={false}
+            delegateCount={3}
+          />
+        </tbody>
+      </table>,
+    );
+    expect(
+      screen.queryByLabelText("products.hasDelegates"),
+    ).not.toBeInTheDocument();
+  });
+
+  it("renders manage delegates button when canManageDelegates is true", () => {
+    render(
+      <table>
+        <tbody>
+          <ProductTableRow {...defaultProps} canManageDelegates={true} />
         </tbody>
       </table>,
     );
     expect(screen.getByTestId("manage-delegates-p1")).toBeInTheDocument();
   });
 
-  it("does not render manage delegates button when canUpdate is false", () => {
+  it("does not render manage delegates button when canManageDelegates is false", () => {
     render(
       <table>
         <tbody>
-          <ProductTableRow {...defaultProps} canUpdate={false} />
+          <ProductTableRow {...defaultProps} canManageDelegates={false} />
         </tbody>
       </table>,
     );
@@ -335,7 +361,7 @@ describe("ProductTableRow", () => {
     render(
       <table>
         <tbody>
-          <ProductTableRow {...defaultProps} canUpdate={true} />
+          <ProductTableRow {...defaultProps} canManageDelegates={true} />
         </tbody>
       </table>,
     );

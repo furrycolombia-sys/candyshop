@@ -10,6 +10,7 @@ const {
   resolvePublicAppUrls,
 } = require("./app-url-resolver.js");
 
+process.env.TARGET_ENV = "staging";
 loadRootEnv();
 
 const __dirname = dirname(fileURLToPath(import.meta.url));

@@ -1,128 +1,24 @@
 /* eslint-disable i18next/no-literal-string, unicorn/prefer-ternary */
-import { createServerSupabaseClient } from "api/supabase/server";
 import { NextResponse } from "next/server";
 
-// Dynamic key access prevents Turbopack from inlining at build time.
-const supabaseUrl =
-  process.env["SUPABASE_URL_INTERNAL"] || process.env.NEXT_PUBLIC_SUPABASE_URL;
-const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-const FORBIDDEN_ERROR = "Forbidden";
-const INVALID_PAYLOAD_ERROR = "Invalid payload";
+import {
+  adminFetch,
+  BAD_REQUEST_STATUS,
+  createRestPath,
+  fetchGrantedPermissionKeys,
+  fetchGrantedPermissions,
+  FORBIDDEN_ERROR,
+  getAuthorizedAdmin,
+  INTERNAL_SERVER_ERROR_STATUS,
+  INVALID_PAYLOAD_ERROR,
+  MERGE_DUPLICATES_RETURN_MINIMAL,
+  RETURN_MINIMAL,
+  validateUuid,
+} from "@/app/api/admin/_shared/adminRest";
+
 const USER_PERMISSIONS_READ = "user_permissions.read";
 const USER_PERMISSIONS_CREATE = "user_permissions.create";
 const USER_PERMISSIONS_DELETE = "user_permissions.delete";
-const RETURN_MINIMAL = "return=minimal";
-const MERGE_DUPLICATES_RETURN_MINIMAL =
-  "resolution=merge-duplicates,return=minimal";
-const BAD_REQUEST_STATUS = 400;
-const INTERNAL_SERVER_ERROR_STATUS = 500;
-const UUID_PATTERN =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-
-type GrantedPermissionRow = {
-  expires_at: string | null;
-  resource_permission_id: string;
-  resource_permissions: { permissions: { key: string } };
-};
-
-function getRestHeaders() {
-  if (!supabaseUrl || !serviceRoleKey) {
-    throw new Error("Supabase admin REST client is not configured");
-  }
-
-  return {
-    apikey: serviceRoleKey,
-    Authorization: `Bearer ${serviceRoleKey}`,
-    "Content-Type": "application/json",
-  };
-}
-
-function getRestUrl(path: string) {
-  if (!supabaseUrl) {
-    throw new Error("Supabase URL is not configured");
-  }
-
-  return `${supabaseUrl}/rest/v1/${path}`;
-}
-
-function createRestPath(
-  table: string,
-  query: Record<string, string | readonly string[]> = {},
-) {
-  const searchParams = new URLSearchParams();
-
-  for (const [key, value] of Object.entries(query)) {
-    if (typeof value === "string") {
-      searchParams.set(key, value);
-      continue;
-    }
-
-    for (const item of value) {
-      searchParams.append(key, item);
-    }
-  }
-
-  const serialized = searchParams.toString();
-  return serialized ? `${table}?${serialized}` : table;
-}
-
-function validateUserId(userId: string) {
-  if (!UUID_PATTERN.test(userId)) {
-    throw new Error(INVALID_PAYLOAD_ERROR);
-  }
-
-  return userId;
-}
-
-async function adminFetch(path: string, init?: RequestInit) {
-  const response = await fetch(getRestUrl(path), {
-    ...init,
-    headers: {
-      ...getRestHeaders(),
-      ...init?.headers,
-    },
-    cache: "no-store",
-  });
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(errorText || `Admin API failed for ${path}`);
-  }
-
-  return response;
-}
-
-function getActiveGrantedPermissions(rows: GrantedPermissionRow[]) {
-  const now = Date.now();
-
-  return rows
-    .filter((row) => !row.expires_at || Date.parse(row.expires_at) > now)
-    .map((row) => ({
-      key: row.resource_permissions.permissions.key,
-      resourcePermissionId: row.resource_permission_id,
-    }));
-}
-
-async function fetchGrantedPermissions(
-  userId: string,
-): Promise<Array<{ key: string; resourcePermissionId: string }>> {
-  const response = await adminFetch(
-    createRestPath("user_permissions", {
-      user_id: `eq.${validateUserId(userId)}`,
-      mode: "eq.grant",
-      select:
-        "expires_at,resource_permission_id,resource_permissions!inner(permissions!inner(key))",
-    }),
-  );
-
-  return getActiveGrantedPermissions(
-    (await response.json()) as GrantedPermissionRow[],
-  );
-}
-
-async function fetchGrantedPermissionKeys(userId: string): Promise<string[]> {
-  return (await fetchGrantedPermissions(userId)).map((row) => row.key);
-}
 
 async function findResourcePermissionId(
   permissionKey: string,
@@ -179,7 +75,7 @@ async function grantPermissions(
       },
       body: JSON.stringify(
         resourcePermissionIds.map((resourcePermissionId) => ({
-          user_id: validateUserId(userId),
+          user_id: validateUuid(userId),
           resource_permission_id: resourcePermissionId,
           mode: "grant",
           granted_by: grantedBy,
@@ -209,7 +105,7 @@ async function revokePermissions(
 
   await adminFetch(
     createRestPath("user_permissions", {
-      user_id: `eq.${validateUserId(userId)}`,
+      user_id: `eq.${validateUuid(userId)}`,
       resource_permission_id: `in.(${resourcePermissionIds.join(",")})`,
     }),
     {
@@ -231,7 +127,7 @@ async function replacePermissions(
   permissionKeys: string[],
   grantedBy: string,
 ) {
-  const validatedUserId = validateUserId(userId);
+  const validatedUserId = validateUuid(userId);
   const desiredKeys = [...new Set(permissionKeys)];
   const [currentPermissions, desiredResourcePermissionIds] = await Promise.all([
     fetchGrantedPermissions(validatedUserId),
@@ -264,20 +160,6 @@ async function replacePermissions(
   );
 }
 
-async function getAuthorizedAdmin(requiredKeys: string[]) {
-  const sessionSupabase = await createServerSupabaseClient();
-  const {
-    data: { user },
-  } = await sessionSupabase.auth.getUser();
-
-  if (!user) return null;
-
-  const grantedKeys = await fetchGrantedPermissionKeys(user.id);
-  const authorized = requiredKeys.every((key) => grantedKeys.includes(key));
-
-  return authorized ? user.id : null;
-}
-
 export async function GET(
   _request: Request,
   context: { params: Promise<{ userId: string }> },
@@ -289,9 +171,7 @@ export async function GET(
 
   try {
     const { userId } = await context.params;
-    const grantedKeys = await fetchGrantedPermissionKeys(
-      validateUserId(userId),
-    );
+    const grantedKeys = await fetchGrantedPermissionKeys(validateUuid(userId));
 
     return NextResponse.json({ grantedKeys });
   } catch (error) {
@@ -335,7 +215,7 @@ export async function POST(
 
   try {
     const { userId } = await context.params;
-    const validatedUserId = validateUserId(userId);
+    const validatedUserId = validateUuid(userId);
 
     if (grant) {
       await grantPermission(validatedUserId, permissionKey, adminUserId);
@@ -384,11 +264,7 @@ export async function PUT(
 
   try {
     const { userId } = await context.params;
-    await replacePermissions(
-      validateUserId(userId),
-      permissionKeys,
-      adminUserId,
-    );
+    await replacePermissions(validateUuid(userId), permissionKeys, adminUserId);
 
     return NextResponse.json({ ok: true });
   } catch (error) {
