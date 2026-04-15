@@ -135,13 +135,13 @@ function loadRootEnv(options = {}) {
   const protectedKeys = new Set(Object.keys(process.env));
 
   // 1. Load defaults first (lowest precedence)
-  loadEnvFile(resolve(rootDir, ".env.example"), (key) => !process.env[key]);
+  loadEnvFile(
+    resolve(rootDir, ".env.example"),
+    (key) => !protectedKeys.has(key) && !process.env[key],
+  );
 
   // 2. Load target env file (overrides defaults, but not CLI/CI vars)
-  loadEnvFile(
-    envFilePath,
-    (key) => !protectedKeys.has(key) || !process.env[key],
-  );
+  loadEnvFile(envFilePath, (key) => !protectedKeys.has(key));
 
   // 3. Resolve $secret: references
   const isCI = process.env.CI === "true";
