@@ -48,23 +48,26 @@ jobs:
       - name: Unit tests
         run: pnpm run test
 
-      - name: Build (validates secrets work)
+      - name: Build (validates env system works with prod secrets)
         run: pnpm run build
         env:
+          CI: "true"
+          TARGET_ENV: prod
           STANDALONE: "true"
           BASE_PATH_PREFIX: ""
-          NEXT_PUBLIC_API_PREFIX: ${{ secrets.NEXT_PUBLIC_API_PREFIX }}
-          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
-          NEXT_PUBLIC_AUTH_HOST_URL: ${{ secrets.NEXT_PUBLIC_AUTH_HOST_URL }}
-          NEXT_PUBLIC_AUTH_URL: ${{ secrets.NEXT_PUBLIC_AUTH_URL }}
-          NEXT_PUBLIC_STORE_URL: ${{ secrets.NEXT_PUBLIC_STORE_URL }}
-          NEXT_PUBLIC_ADMIN_URL: ${{ secrets.NEXT_PUBLIC_ADMIN_URL }}
-          NEXT_PUBLIC_LANDING_URL: ${{ secrets.NEXT_PUBLIC_LANDING_URL }}
-          NEXT_PUBLIC_PAYMENTS_URL: ${{ secrets.NEXT_PUBLIC_PAYMENTS_URL }}
-          NEXT_PUBLIC_PLAYGROUND_URL: ${{ secrets.NEXT_PUBLIC_PLAYGROUND_URL }}
-          NEXT_PUBLIC_STUDIO_URL: ${{ secrets.NEXT_PUBLIC_STUDIO_URL }}
-          NEXT_PUBLIC_ENABLE_MOCKS: ${{ secrets.NEXT_PUBLIC_ENABLE_MOCKS }}
+          # Prod Supabase Cloud
+          NEXT_PUBLIC_SUPABASE_URL: https://olafyajipvsltohagiah.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.PROD_SUPABASE_ANON_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.PROD_SUPABASE_SERVICE_ROLE_KEY }}
+          # App URLs (prod)
+          NEXT_PUBLIC_STORE_URL: https://store.furrycolombia.com/store
+          NEXT_PUBLIC_ADMIN_URL: https://store.furrycolombia.com/admin
+          NEXT_PUBLIC_AUTH_URL: https://store.furrycolombia.com/auth
+          NEXT_PUBLIC_AUTH_HOST_URL: https://store.furrycolombia.com/auth
+          NEXT_PUBLIC_LANDING_URL: https://store.furrycolombia.com
+          NEXT_PUBLIC_PAYMENTS_URL: https://store.furrycolombia.com/payments
+          NEXT_PUBLIC_PLAYGROUND_URL: https://store.furrycolombia.com/playground
+          NEXT_PUBLIC_STUDIO_URL: https://store.furrycolombia.com/studio
 
   # ============================================
   # Deploy to production server via SSH
@@ -105,21 +108,21 @@ jobs:
         run: |
           ssh ${{ secrets.PROD_SERVER_HOST }} \
             'cat > /tmp/.candyshop-build.env << ENVEOF
+          CI=true
+          TARGET_ENV=prod
           STANDALONE=true
           BASE_PATH_PREFIX=
-          NEXT_PUBLIC_API_PREFIX=${{ secrets.NEXT_PUBLIC_API_PREFIX }}
-          NEXT_PUBLIC_SUPABASE_URL=${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-          NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
-          NEXT_PUBLIC_STORE_URL=${{ secrets.NEXT_PUBLIC_STORE_URL }}
-          NEXT_PUBLIC_ADMIN_URL=${{ secrets.NEXT_PUBLIC_ADMIN_URL }}
-          NEXT_PUBLIC_AUTH_HOST_URL=${{ secrets.NEXT_PUBLIC_AUTH_HOST_URL }}
-          NEXT_PUBLIC_AUTH_URL=${{ secrets.NEXT_PUBLIC_AUTH_URL }}
-          NEXT_PUBLIC_LANDING_URL=${{ secrets.NEXT_PUBLIC_LANDING_URL }}
-          NEXT_PUBLIC_PAYMENTS_URL=${{ secrets.NEXT_PUBLIC_PAYMENTS_URL }}
-          NEXT_PUBLIC_STUDIO_URL=${{ secrets.NEXT_PUBLIC_STUDIO_URL }}
-          NEXT_PUBLIC_PLAYGROUND_URL=${{ secrets.NEXT_PUBLIC_PLAYGROUND_URL }}
-          NEXT_PUBLIC_ENABLE_MOCKS=false
-          NEXT_PUBLIC_ENABLE_TEST_IDS=${{ secrets.NEXT_PUBLIC_ENABLE_TEST_IDS }}
+          NEXT_PUBLIC_SUPABASE_URL=https://olafyajipvsltohagiah.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.PROD_SUPABASE_ANON_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY=${{ secrets.PROD_SUPABASE_SERVICE_ROLE_KEY }}
+          NEXT_PUBLIC_STORE_URL=https://store.furrycolombia.com/store
+          NEXT_PUBLIC_ADMIN_URL=https://store.furrycolombia.com/admin
+          NEXT_PUBLIC_AUTH_URL=https://store.furrycolombia.com/auth
+          NEXT_PUBLIC_AUTH_HOST_URL=https://store.furrycolombia.com/auth
+          NEXT_PUBLIC_LANDING_URL=https://store.furrycolombia.com
+          NEXT_PUBLIC_PAYMENTS_URL=https://store.furrycolombia.com/payments
+          NEXT_PUBLIC_PLAYGROUND_URL=https://store.furrycolombia.com/playground
+          NEXT_PUBLIC_STUDIO_URL=https://store.furrycolombia.com/studio
           ENVEOF'
 
       - name: Copy deploy script to server
