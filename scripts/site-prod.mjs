@@ -20,7 +20,9 @@ const isWindows = process.platform === "win32";
 const dockerBin = isWindows ? "docker.exe" : "docker";
 
 const args = new Set(process.argv.slice(2));
-const wantsCloudflare = args.has("--cloudflare");
+// --cloudflare is kept as a CLI override to force tunnel on regardless of TUNNEL_MODE.
+// If TUNNEL_MODE=cloudflare in the env file, the tunnel starts automatically.
+const wantsCloudflare = args.has("--cloudflare") || process.env.TUNNEL_MODE === "cloudflare";
 const wantsStop = args.has("--stop");
 const skipBuild = args.has("--no-build");
 const wantsFresh = args.has("--fresh");

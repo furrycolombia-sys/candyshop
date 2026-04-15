@@ -218,8 +218,8 @@
       "confirm": "Confirm",
       "cancel": "Cancel",
       "perm": {
-        "orders.approve": "Approve Orders",
-        "orders.request_proof": "Request Proof"
+        "orders_approve": "Approve Orders",
+        "orders_request_proof": "Request Proof"
       }
     }
   },

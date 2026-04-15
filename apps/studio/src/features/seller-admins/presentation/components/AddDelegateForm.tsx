@@ -141,7 +141,7 @@ export function AddDelegateForm({ onAdd, isAdding }: AddDelegateFormProps) {
               checked={permissions.has(perm)}
               onChange={() => togglePermission(perm)}
             />
-            {t(`permissions.${perm}`)}
+            {t(`permissions.${perm.replaceAll(".", "_")}`)}
           </label>
         ))}
       </fieldset>
