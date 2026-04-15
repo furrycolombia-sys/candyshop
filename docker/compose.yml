@@ -69,6 +69,11 @@ services:
     restart: unless-stopped
     depends_on:
       - app
-    environment:
-      TUNNEL_TOKEN: ${CLOUDFLARE_TUNNEL_TOKEN:-}
-    command: ["tunnel", "--no-autoupdate", "run"]
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - type: bind
+        source: ${CLOUDFLARED_CONFIG_DIR:-~/.cloudflared}
+        target: /etc/cloudflared
+        read_only: true
+    command: ["tunnel", "--config", "/etc/cloudflared/config.docker.yml", "--no-autoupdate", "run"]
