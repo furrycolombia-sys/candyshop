@@ -43,6 +43,7 @@ trap cleanup EXIT
 
 printf "${YELLOW}Step 1/3: Building Docker image...${NC}\n"
 if ! docker build --no-cache \
+  --build-arg TARGET_ENV=dev \
   --build-arg NEXT_PUBLIC_ENABLE_TEST_IDS=true \
   --build-arg AUTH_PROVIDER_MODE=mock \
   -t "$IMAGE_NAME" .; then

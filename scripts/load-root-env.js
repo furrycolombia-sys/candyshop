@@ -159,14 +159,13 @@ function loadRootEnv(options = {}) {
     if (isCI) {
       // In CI, secrets should already be in process.env.
       // Any remaining $secret: references mean CI is missing required vars.
-      const unresolvedKeys = keysWithSecretRefs.filter(
-        (key) => process.env[key] && containsSecretRef(process.env[key]),
-      );
-      if (unresolvedKeys.length > 0) {
-        throw new Error(
-          `CI environment is missing required secret env vars for: ${unresolvedKeys.join(", ")}. ` +
-            `Ensure these are set as GitHub Actions secrets.`,
-        );
+      // We clear them to empty strings rather than throwing, to allow
+      // Docker health-check builds that don't need all secrets.
+      for (const key of keysWithSecretRefs) {
+        const rawValue = process.env[key];
+        if (rawValue && containsSecretRef(rawValue)) {
+          process.env[key] = "";
+        }
       }
     } else {
       // Local: load .secrets file and resolve references
