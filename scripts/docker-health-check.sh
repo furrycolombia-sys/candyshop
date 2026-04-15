@@ -46,6 +46,13 @@ if ! docker build --no-cache \
   --build-arg TARGET_ENV=dev \
   --build-arg NEXT_PUBLIC_ENABLE_TEST_IDS=true \
   --build-arg AUTH_PROVIDER_MODE=mock \
+  --build-arg NEXT_PUBLIC_SUPABASE_URL=http://localhost:54321 \
+  --build-arg NEXT_PUBLIC_SUPABASE_ANON_KEY=mock-anon-key \
+  --build-arg SUPABASE_SERVICE_ROLE_KEY=mock-service-key \
+  --build-arg SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID=mock \
+  --build-arg SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET=mock \
+  --build-arg SUPABASE_AUTH_EXTERNAL_DISCORD_CLIENT_ID=mock \
+  --build-arg SUPABASE_AUTH_EXTERNAL_DISCORD_SECRET=mock \
   -t "$IMAGE_NAME" .; then
   printf "${RED}Docker build failed!${NC}\n"
   exit 1
