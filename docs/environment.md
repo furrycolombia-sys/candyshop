@@ -28,13 +28,15 @@ All env files live at the monorepo root. Every file must have **exactly the same
 
 ### Key variables
 
-| Variable        | Purpose                                                           |
-| --------------- | ----------------------------------------------------------------- |
-| `TARGET_ENV`    | Which env is active (`dev`, `test`, `staging`, `prod`)            |
-| `APPS_MODE`     | `local` = Next.js dev servers, `docker` = nginx container         |
-| `SUPABASE_MODE` | `local` = CLI, `docker` = Compose stack, `cloud` = Supabase Cloud |
-| `TUNNEL_MODE`   | `none` = localhost only, `cloudflare` = public tunnel             |
-| `ENV_DEBUG`     | `true` = serialize all resolved vars into `NEXT_PUBLIC_ENV_DEBUG` |
+| Variable              | Purpose                                                                                                                                                                   |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `TARGET_ENV`          | Which env is active (`dev`, `test`, `staging`, `prod`)                                                                                                                    |
+| `APP_PUBLIC_ORIGIN`   | Browser-facing base URL (scheme + host). Used by `appUrls.ts` for nav-bar and canonical URLs in production. Empty in dev/test (per-app `NEXT_PUBLIC_*_URL` used instead). |
+| `APP_INTERNAL_ORIGIN` | Docker inter-service base URL (scheme + host + port). Server-side only; never browser-facing.                                                                             |
+| `APPS_MODE`           | `local` = Next.js dev servers, `docker` = nginx container                                                                                                                 |
+| `SUPABASE_MODE`       | `local` = CLI, `docker` = Compose stack, `cloud` = Supabase Cloud                                                                                                         |
+| `TUNNEL_MODE`         | `none` = localhost only, `cloudflare` = public tunnel                                                                                                                     |
+| `ENV_DEBUG`           | `true` = serialize all resolved vars into `NEXT_PUBLIC_ENV_DEBUG`                                                                                                         |
 
 ---
 
