@@ -53,13 +53,13 @@ echo "Using port $PORT for health check."
 # ── 3. Run container ──────────────────────────────────────────────────────────
 docker run -d \
   --name "$CONTAINER_NAME" \
-  -p "${PORT}:8088" \
+  -p "${PORT}:80" \
   "$IMAGE_NAME" > /dev/null
 
 # ── 4. Wait for /health endpoint (max 60s) ────────────────────────────────────
 echo "Waiting for /health endpoint..."
 ELAPSED=0
-until curl -sf "http://localhost:${PORT}/store/health" > /dev/null 2>&1; do
+until curl -sf "http://localhost:${PORT}/health" > /dev/null 2>&1; do
   if [ "$ELAPSED" -ge 60 ]; then
     echo "ERROR: Container did not become healthy within 60s."
     docker logs "$CONTAINER_NAME"
@@ -73,7 +73,7 @@ echo "Container is healthy."
 # ── 5. E2E smoke tests against the container ──────────────────────────────────
 echo "Running E2E smoke tests against container..."
 CONTAINER_URL="http://localhost:${PORT}" \
-  pnpm --filter store exec playwright test --project=chromium e2e/smoke.spec.ts || {
+  pnpm --filter store exec playwright test --config=docker/smoke/playwright.config.ts || {
     echo "ERROR: E2E smoke tests failed."
     docker logs "$CONTAINER_NAME"
     exit 1
