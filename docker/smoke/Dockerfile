@@ -1,17 +1,24 @@
 # =============================================================================
-# Candyshop — Store app Docker image
+# Candyshop — Store app smoke test image
 # Multi-stage build using Next.js standalone output.
-# Build: docker build -t candyshop .
-# Run:   docker run -p 8088:8088 candyshop
+# Build: docker build -f docker/smoke/Dockerfile -t candyshop-health-check .
+# Run:   docker run -p 8088:8088 candyshop-health-check
 # =============================================================================
 
-# ── Stage 1: deps ─────────────────────────────────────────────────────────────
-FROM node:22-alpine AS deps
+# ── Stage 1: builder ──────────────────────────────────────────────────────────
+FROM node:22-alpine AS builder
 RUN corepack enable && corepack prepare pnpm@latest --activate
 WORKDIR /app
 
+# Copy workspace manifests first for better layer caching
 COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
 COPY apps/store/package.json ./apps/store/
+COPY apps/auth/package.json ./apps/auth/
+COPY apps/admin/package.json ./apps/admin/
+COPY apps/landing/package.json ./apps/landing/
+COPY apps/payments/package.json ./apps/payments/
+COPY apps/playground/package.json ./apps/playground/
+COPY apps/studio/package.json ./apps/studio/
 COPY packages/api/package.json ./packages/api/
 COPY packages/ui/package.json ./packages/ui/
 COPY packages/shared/package.json ./packages/shared/
@@ -20,14 +27,7 @@ COPY packages/app-components/package.json ./packages/app-components/
 
 RUN pnpm install --frozen-lockfile
 
-# ── Stage 2: builder ──────────────────────────────────────────────────────────
-FROM node:22-alpine AS builder
-RUN corepack enable && corepack prepare pnpm@latest --activate
-WORKDIR /app
-
-COPY --from=deps /app/node_modules ./node_modules
-COPY --from=deps /app/apps/store/node_modules ./apps/store/node_modules
-
+# Copy source after install so node_modules layer is cached
 COPY . .
 
 # Build args baked into the bundle at build time
@@ -56,7 +56,7 @@ ENV STANDALONE=true
 
 RUN pnpm --filter store run build
 
-# ── Stage 3: runner ───────────────────────────────────────────────────────────
+# ── Stage 2: runner ───────────────────────────────────────────────────────────
 FROM node:22-alpine AS runner
 WORKDIR /app
 
