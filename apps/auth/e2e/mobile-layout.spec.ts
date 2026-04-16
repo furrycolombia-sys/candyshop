@@ -12,14 +12,9 @@ import {
 } from "./helpers/session";
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const { loadRootEnv } = require(
-  path.resolve(__dirname, "../../../scripts/load-root-env.js"),
-);
-// eslint-disable-next-line @typescript-eslint/no-require-imports
 const { resolveE2EAppUrls } = require(
   path.resolve(__dirname, "../../../scripts/app-url-resolver.js"),
 );
-loadRootEnv();
 
 const { store: STORE_URL, payments: PAYMENTS_URL } = resolveE2EAppUrls();
 

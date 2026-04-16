@@ -2,10 +2,8 @@ import { defineConfig } from "orval";
 import { existsSync } from "node:fs";
 import { resolve } from "node:path";
 
-// Load root .env.example (defaults) and .env (overrides) before reading config
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const { loadRootEnv } = require("./scripts/load-root-env.js");
-loadRootEnv();
+import { loadEnv } from "./scripts/load-env.mjs";
+loadEnv();
 
 /**
  * OpenAPI specification URL
@@ -50,8 +48,8 @@ export default defineConfig({
       client: "react-query",
       // Use Axios as HTTP client
       httpClient: "axios",
-      // Generate MSW mock handlers
-      mock: true,
+      // Generate MSW mock handlers — disabled, we don't use mocks
+      mock: false,
       // Clean output directory before generating
       clean: true,
       // Generate barrel exports
