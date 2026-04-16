@@ -54,7 +54,7 @@ export async function toggleProductField(
 ) {
   const { error } = await supabase
     .from("products")
-    .update({ [field]: value })
+    .update({ [field]: value } as Record<string, boolean>)
     .eq("id", id);
 
   if (error) throw error;
