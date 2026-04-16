@@ -52,10 +52,9 @@ export async function toggleProductField(
   field: "is_active" | "featured",
   value: boolean,
 ) {
-  const { error } = await supabase
-    .from("products")
-    .update({ [field]: value } as Record<string, boolean>)
-    .eq("id", id);
+  const update =
+    field === "is_active" ? { is_active: value } : { featured: value };
+  const { error } = await supabase.from("products").update(update).eq("id", id);
 
   if (error) throw error;
 }
