@@ -73,7 +73,7 @@ echo "Container is healthy."
 # ── 5. E2E smoke tests against the container ──────────────────────────────────
 echo "Running E2E smoke tests against container..."
 CONTAINER_URL="http://localhost:${PORT}" \
-  pnpm --filter store exec playwright test --config=docker/smoke/playwright.config.ts || {
+  pnpm --filter store exec playwright test --config="$(pwd)/docker/smoke/playwright.config.ts" || {
     echo "ERROR: E2E smoke tests failed."
     docker logs "$CONTAINER_NAME"
     exit 1
