@@ -4,7 +4,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { chromium, expect, test } from "@playwright/test";
 
 /* eslint-disable @typescript-eslint/no-require-imports */
-const { loadRootEnv } = require("../../../scripts/load-root-env.js");
+const { loadRootEnv } = require("../../../scripts/load-root-env.cjs");
 const {
   getE2EExtraHTTPHeaders,
   resolveE2EAppUrls,
