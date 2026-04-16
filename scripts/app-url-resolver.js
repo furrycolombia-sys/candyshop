@@ -1,7 +1,7 @@
 /**
  * Resolves app URLs for E2E tests and Playwright configs.
  *
- * Reads APP_PUBLIC_ORIGIN from the active env file (loaded by load-root-env.js).
+ * Reads APP_PUBLIC_ORIGIN from the active env file (loaded by load-root-env.cjs).
  * If set, derives each app URL by joining the origin with the app's path.
  * Falls back to NEXT_PUBLIC_*_URL env vars, then to devUrl from app-links.json.
  *
@@ -14,7 +14,7 @@
 const path = require("path");
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const { loadRootEnv } = require(path.resolve(__dirname, "./load-root-env.js"));
+const { loadRootEnv } = require(path.resolve(__dirname, "./load-root-env.cjs"));
 loadRootEnv({ targetEnv: process.env.TARGET_ENV });
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -40,7 +40,12 @@ function stripTrailingSlash(s) {
  */
 function resolveE2EAppUrls() {
   const rawOrigin = process.env.APP_PUBLIC_ORIGIN?.trim() ?? "";
-  const publicOrigin = rawOrigin ? stripTrailingSlash(rawOrigin) : null;
+  // In local dev mode (APPS_MODE=local), apps run on individual ports —
+  // APP_PUBLIC_ORIGIN points to a single-origin proxy that isn't running.
+  // Use per-app NEXT_PUBLIC_*_URL vars instead.
+  const appsMode = process.env.APPS_MODE ?? "local";
+  const publicOrigin =
+    rawOrigin && appsMode !== "local" ? stripTrailingSlash(rawOrigin) : null;
 
   /** @type {Record<string, string>} */
   const result = {};
