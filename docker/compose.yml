@@ -1,0 +1,18 @@
+# Docker Compose for the candyshop app container.
+# All values are sourced from the active env file — no hardcoded values.
+#
+# Usage (via docker-build.mjs):
+#   docker compose -f docker/compose.yml --env-file .env.<targetEnv> up -d
+#
+# Variables resolved from the env file:
+#   SITE_PROD_IMAGE_NAME     — Docker image to run (built by docker-build.mjs)
+#   SITE_PROD_CONTAINER_NAME — Name for the running container
+#   HOST_PORT                — Host port to bind (derived from APP_PUBLIC_ORIGIN by docker-build.mjs)
+
+services:
+  app:
+    image: ${SITE_PROD_IMAGE_NAME}
+    container_name: ${SITE_PROD_CONTAINER_NAME}
+    ports:
+      - "${HOST_PORT}:80"
+    restart: unless-stopped
