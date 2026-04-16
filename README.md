@@ -15,6 +15,7 @@ A multi-seller store and payment platform for selling products, services, ticket
 - [Secrets](#secrets)
 - [Code Quality](#code-quality)
 - [Architecture](#architecture)
+- [Environment Files](#environment-files)
 - [Machine Recovery](#machine-recovery)
 
 ---
@@ -347,15 +348,14 @@ The site will be live at `https://store.ffxivbe.org` once the tunnel connects.
 
 ## Environment files
 
-| File               | Purpose                            | Committed     |
-| ------------------ | ---------------------------------- | ------------- |
-| `.env.example`     | Base defaults for all environments | ✅            |
-| `.env.dev`         | Local dev overrides                | ✅            |
-| `.env.staging`     | Staging (Docker + Cloudflare)      | ✅            |
-| `.env.e2e`         | E2E isolated environment           | ✅            |
-| `.env.prod`        | Production (Supabase Cloud)        | ✅            |
-| `.secrets`         | Resolved secret values             | ❌ gitignored |
-| `.secrets.example` | Template for secrets               | ✅            |
-| `.env.local.e2e`   | Local Google test credentials      | ❌ gitignored |
+| File           | Purpose                                    | Committed |
+| -------------- | ------------------------------------------ | --------- |
+| `.env.dev`     | Local dev — Supabase CLI on port 54321     | ✅        |
+| `.env.test`    | Isolated test — Supabase CLI on port 64321 | ✅        |
+| `.env.staging` | Staging — Docker app + Docker Supabase     | ✅        |
+| `.env.prod`    | Production — Docker app + Supabase Cloud   | ✅        |
+| `.secrets`     | Resolved secret values (never committed)   | ❌        |
 
-Secrets in env files use `$secret:KEY_NAME` syntax and are resolved at runtime by `scripts/load-root-env.js`. Run `pnpm sync-secrets` to pull them from GitHub.
+Secrets in env files use `$secret:KEY_NAME` syntax and are resolved at runtime by `scripts/load-env.mjs`. Run `pnpm sync-secrets` to pull them from GitHub.
+
+See **[docs/environment.md](docs/environment.md)** for the full reference — how ports are derived, how Docker images are built, how Supabase is configured, and how the Cloudflare tunnel works.
