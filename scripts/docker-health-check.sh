@@ -16,9 +16,31 @@ cleanup() {
 }
 trap cleanup EXIT
 
+# ── Load env vars from .env.dev if not already set ────────────────────────────
+# This ensures NEXT_PUBLIC_* vars are available as Docker build args
+# even when running from a git hook that doesn't load env files.
+if [ -z "${NEXT_PUBLIC_SUPABASE_URL:-}" ]; then
+  echo "Loading env from .env.dev..."
+  eval "$(node --input-type=module <<'EOF'
+import { loadEnv } from './scripts/load-env.mjs';
+loadEnv('dev');
+for (const [k, v] of Object.entries(process.env)) {
+  if (k.startsWith('NEXT_PUBLIC_')) {
+    process.stdout.write(`export ${k}=${JSON.stringify(v)}\n`);
+  }
+}
+EOF
+)"
+fi
+
 # ── 1. Build ──────────────────────────────────────────────────────────────────
 echo "Building Docker image: $IMAGE_NAME..."
-docker build -t "$IMAGE_NAME" -f docker/smoke/Dockerfile . || { echo "ERROR: Docker build failed."; exit 1; }
+docker build \
+  -t "$IMAGE_NAME" \
+  -f docker/smoke/Dockerfile \
+  --build-arg NEXT_PUBLIC_SUPABASE_URL="$NEXT_PUBLIC_SUPABASE_URL" \
+  --build-arg NEXT_PUBLIC_SUPABASE_ANON_KEY="$NEXT_PUBLIC_SUPABASE_ANON_KEY" \
+  . || { echo "ERROR: Docker build failed."; exit 1; }
 
 # ── 2. Pick a random available port ───────────────────────────────────────────
 PORT=$(node -e "
