@@ -17,12 +17,15 @@ import { fileURLToPath } from "node:url";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const rootDir = resolve(__dirname, "..");
 
-// Keys that are intentionally only present in specific envs.
-// Add here when a key is legitimately env-scoped, not a mistake.
-const OPTIONAL_KEYS = new Set([
-  // Only local Docker envs need a base port — cloud envs use a hosted URL
-  "SUPABASE_PORT",
-]);
+// Groups of env files that must have key parity among themselves.
+// Files in different groups are allowed to have different keys.
+// Add a new group if you introduce a new topology (e.g. edge, preview).
+const PARITY_GROUPS = [
+  // Local envs: run Supabase in Docker, need SUPABASE_PORT etc.
+  [".env.dev", ".env.test"],
+  // Cloud/hosted envs: use Supabase Cloud, no local port config needed.
+  [".env.staging", ".env.prod"],
+];
 
 // ── Parse env file into a Set of key names ────────────────────────────────────
 
@@ -42,56 +45,62 @@ function parseKeys(filePath) {
 
 // ── Discover env files ────────────────────────────────────────────────────────
 
-const envFiles = readdirSync(rootDir)
+const allEnvFiles = readdirSync(rootDir)
   .filter((f) => /^\.env\.[a-z]+$/.test(f))
-  .sort()
-  .map((f) => ({ name: f, path: resolve(rootDir, f) }));
+  .sort();
 
-if (envFiles.length < 2) {
-  console.log("check-env-parity: fewer than 2 env files found, nothing to compare.");
-  process.exit(0);
-}
-
-console.log(`\n🔍 check-env-parity — comparing ${envFiles.length} env files:`);
-for (const f of envFiles) console.log(`   ${f.name}`);
+console.log(`\n🔍 check-env-parity — found ${allEnvFiles.length} env files:`);
+for (const f of allEnvFiles) console.log(`   ${f}`);
 console.log();
 
-// ── Build key map ─────────────────────────────────────────────────────────────
+// ── Check parity within each group ───────────────────────────────────────────
 
-const keyMap = new Map(); // key → Set of filenames that have it
-for (const { name, path } of envFiles) {
-  for (const key of parseKeys(path)) {
-    if (!keyMap.has(key)) keyMap.set(key, new Set());
-    keyMap.get(key).add(name);
+let totalErrors = 0;
+
+for (const group of PARITY_GROUPS) {
+  // Only check files that actually exist
+  const members = group.filter((f) => allEnvFiles.includes(f));
+  if (members.length < 2) continue;
+
+  console.log(`Checking group: ${members.join(", ")}`);
+
+  // Build key map for this group
+  const keyMap = new Map(); // key → Set of filenames that have it
+  for (const name of members) {
+    const filePath = resolve(rootDir, name);
+    for (const key of parseKeys(filePath)) {
+      if (!keyMap.has(key)) keyMap.set(key, new Set());
+      keyMap.get(key).add(name);
+    }
+  }
+
+  const memberSet = new Set(members);
+  const errors = [];
+
+  for (const [key, presentIn] of [...keyMap.entries()].sort()) {
+    if (presentIn.size === memberSet.size) continue; // all members have it ✓
+    const missing = members.filter((f) => !presentIn.has(f));
+    errors.push({ key, missing });
+  }
+
+  if (errors.length === 0) {
+    console.log(`✓ All keys match.\n`);
+  } else {
+    totalErrors += errors.length;
+    console.error(`✗ ${errors.length} key parity violation(s):\n`);
+    for (const { key, missing } of errors) {
+      console.error(`  ${key}`);
+      console.error(`    missing from: ${missing.join(", ")}`);
+    }
+    console.error();
   }
 }
 
-// ── Find mismatches ───────────────────────────────────────────────────────────
-
-const fileNames = new Set(envFiles.map((f) => f.name));
-const errors = [];
-
-for (const [key, presentIn] of [...keyMap.entries()].sort()) {
-  if (OPTIONAL_KEYS.has(key)) continue;
-  if (presentIn.size === fileNames.size) continue; // all files have it ✓
-
-  const missing = [...fileNames].filter((f) => !presentIn.has(f));
-  errors.push({ key, missing });
+if (totalErrors > 0) {
+  console.error(
+    `Fix: add the missing keys to the listed files, or move them to a different parity group in scripts/check-env-parity.mjs if intentionally env-scoped.\n`,
+  );
+  process.exit(1);
 }
 
-// ── Report ────────────────────────────────────────────────────────────────────
-
-if (errors.length === 0) {
-  console.log("✓ All env files have matching keys.\n");
-  process.exit(0);
-}
-
-console.error(`✗ Key parity violations found (${errors.length}):\n`);
-for (const { key, missing } of errors) {
-  console.error(`  ${key}`);
-  console.error(`    missing from: ${missing.join(", ")}`);
-}
-console.error(
-  `\nFix: add the missing keys to the listed files, or add to OPTIONAL_KEYS in scripts/check-env-parity.mjs if intentionally env-scoped.\n`,
-);
-process.exit(1);
+process.exit(0);
