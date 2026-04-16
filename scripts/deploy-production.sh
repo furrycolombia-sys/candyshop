@@ -58,6 +58,12 @@ ENV_FILE="${ENV_FILE:-/tmp/.candyshop-build.env}"
 if [ -f "$ENV_FILE" ]; then
   log "Loading build env from $ENV_FILE"
   cp "$ENV_FILE" "$DEPLOY_DIR/.env"
+  # Source env vars into the current shell so child processes (pnpm build) inherit them.
+  # This is required for load-env.mjs to detect CI=true and resolve $secret: references.
+  set -o allexport
+  # shellcheck source=/dev/null
+  source "$ENV_FILE"
+  set +o allexport
 else
   warn "No env file found at $ENV_FILE — building with defaults"
 fi
