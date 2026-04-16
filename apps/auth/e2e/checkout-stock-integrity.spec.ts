@@ -4,20 +4,11 @@ import { cleanupTestData } from "./helpers/cleanup";
 import { APP_URLS, ELEMENT_TIMEOUT_MS } from "./helpers/constants";
 import {
   adminInsert,
+  buildSharedCookieDomain,
   createTestUser,
   injectSession,
   type TestUser,
 } from "./helpers/session";
-
-function buildSharedCookieDomain(url: string) {
-  const host = new URL(url).hostname;
-  if (host === "localhost" || host === "127.0.0.1") {
-    return host;
-  }
-
-  const parts = host.split(".");
-  return `.${parts.slice(-2).join(".")}`;
-}
 
 test.describe.serial("Checkout stock integrity", () => {
   let seller: TestUser;

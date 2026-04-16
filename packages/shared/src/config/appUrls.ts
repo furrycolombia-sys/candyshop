@@ -13,10 +13,8 @@ function joinUrl(baseUrl: string, pathname: string) {
   return `${stripTrailingSlash(baseUrl)}${pathname}`;
 }
 
-function getPublicOrigin() {
-  const fromE2E = process.env.E2E_PUBLIC_ORIGIN?.trim();
-  const fromSite = process.env.SITE_PUBLIC_ORIGIN?.trim();
-  return fromE2E || fromSite || "";
+function getPublicOrigin(): string {
+  return process.env.APP_PUBLIC_ORIGIN?.trim() ?? "";
 }
 
 function resolveAppUrl(app: AppName) {
