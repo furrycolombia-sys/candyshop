@@ -143,6 +143,20 @@ function generateConfig() {
     process.env[key] = value;
   }
 
+  // Derive redirect URLs from the app origin vars already in process.env
+  const redirectUrls = {
+    SUPABASE_AUTH_REDIRECT_URL_AUTH: `${process.env.NEXT_PUBLIC_AUTH_URL ?? ""}/auth/callback`,
+    SUPABASE_AUTH_REDIRECT_URL_STORE: `${process.env.NEXT_PUBLIC_STORE_URL ?? ""}/auth/callback`,
+    SUPABASE_AUTH_REDIRECT_URL_ADMIN: `${process.env.NEXT_PUBLIC_ADMIN_URL ?? ""}/auth/callback`,
+    SUPABASE_AUTH_REDIRECT_URL_PAYMENTS: `${process.env.NEXT_PUBLIC_PAYMENTS_URL ?? ""}/auth/callback`,
+    SUPABASE_AUTH_REDIRECT_URL_PLAYGROUND: `${process.env.NEXT_PUBLIC_PLAYGROUND_URL ?? ""}/auth/callback`,
+    SUPABASE_AUTH_REDIRECT_URL_LANDING: `${process.env.NEXT_PUBLIC_LANDING_URL ?? ""}/auth/callback`,
+    SUPABASE_AUTH_REDIRECT_URL_STUDIO: `${process.env.NEXT_PUBLIC_STUDIO_URL ?? ""}/auth/callback`,
+  };
+  for (const [key, value] of Object.entries(redirectUrls)) {
+    process.env[key] = value;
+  }
+
   let template = readFileSync(templatePath, "utf-8");
 
   const projectId = `candystore-${targetEnv}`;

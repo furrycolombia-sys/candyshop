@@ -4,11 +4,12 @@
  * starts the container via docker compose.
  *
  * Usage:
- *   node scripts/docker-build.mjs [--env <name>] [--no-cache] [--up] [--help]
+ *   node scripts/docker-build.mjs [--env <name>] [--no-cache] [--up] [--tunnel] [--help]
  *
  *   --env <name>   Environment to load (default: prod)
  *   --no-cache     Pass --no-cache to docker build
  *   --up           Run docker compose up -d after a successful build
+ *   --tunnel       Launch Cloudflare tunnels after docker compose up (requires --up)
  *   --help         Print this help and exit
  *
  * Examples:
@@ -30,11 +31,12 @@ const args = process.argv.slice(2);
 
 if (args.includes("--help")) {
   console.log(`
-Usage: node scripts/docker-build.mjs [--env <name>] [--no-cache] [--up] [--help]
+Usage: node scripts/docker-build.mjs [--env <name>] [--no-cache] [--up] [--tunnel] [--help]
 
   --env <name>   Environment to load from .env.<name> (default: prod)
   --no-cache     Pass --no-cache to docker build (forces a clean build)
   --up           Run docker compose up -d after a successful build
+  --tunnel       Launch Cloudflare tunnels after docker compose up (requires --up)
   --help         Print this help and exit
 
 Examples:
@@ -48,6 +50,12 @@ const envFlag = args.indexOf("--env");
 const targetEnv = envFlag !== -1 ? args[envFlag + 1] : "prod";
 const noCache = args.includes("--no-cache");
 const up = args.includes("--up");
+const tunnel = args.includes("--tunnel");
+
+if (tunnel && !up) {
+  console.error("ERROR: --tunnel requires --up. Use: pnpm docker:build --up --tunnel");
+  process.exit(1);
+}
 
 // ── Load env file ─────────────────────────────────────────────────────────────
 
@@ -124,7 +132,8 @@ console.log(`   image:     ${imageName}`);
 console.log(`   container: ${containerName}`);
 console.log(`   host port: ${hostPort}`);
 console.log(`   no-cache:  ${noCache}`);
-console.log(`   up:        ${up}\n`);
+console.log(`   up:        ${up}`);
+console.log(`   tunnel:    ${tunnel}\n`);
 
 // ── docker build ──────────────────────────────────────────────────────────────
 
@@ -203,6 +212,18 @@ if (up) {
 
   console.log(`\n✓ Container is running: ${containerName} (port ${hostPort})`);
   console.log(`   → http://localhost:${hostPort}`);
+
+  if (tunnel) {
+    console.log(`\nLaunching Cloudflare tunnels ...`);
+    const tunnelResult = spawnSync("node", ["scripts/cloudflared.mjs", "--env", targetEnv], {
+      cwd: rootDir,
+      stdio: "inherit",
+      env: process.env,
+    });
+    if (tunnelResult.status !== 0) {
+      process.exit(tunnelResult.status ?? 1);
+    }
+  }
 }
 
 process.exit(0);

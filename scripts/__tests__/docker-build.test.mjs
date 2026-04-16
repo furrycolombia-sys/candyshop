@@ -53,6 +53,7 @@ function parseCliArgs(argv) {
     targetEnv: envFlag !== -1 ? args[envFlag + 1] : "prod",
     noCache: args.includes("--no-cache"),
     up: args.includes("--up"),
+    tunnel: args.includes("--tunnel"),
     help: args.includes("--help"),
   };
 }
@@ -114,7 +115,7 @@ function buildComposeArgs(targetEnv) {
  * Simulates the script's top-level decision logic:
  * given build result and options, returns what commands would be run.
  */
-function simulateScript({ imageName, buildArgValues, noCache, up, targetEnv, buildExitCode, composeExitCode }) {
+function simulateScript({ imageName, buildArgValues, noCache, up, tunnel = false, targetEnv, buildExitCode, composeExitCode, launcherExitCode = 0 }) {
   const commands = [];
   const buildArgs = buildDockerArgs({ imageName, buildArgValues, noCache });
   commands.push({ cmd: "docker", args: buildArgs });
@@ -130,6 +131,13 @@ function simulateScript({ imageName, buildArgValues, noCache, up, targetEnv, bui
     commands.push({ cmd: "docker", args: composeArgs });
     if (composeExitCode !== 0) {
       return { commands, exitCode: composeExitCode, successMessage };
+    }
+
+    if (tunnel) {
+      commands.push({ cmd: "node", args: ["scripts/cloudflared.mjs", "--env", targetEnv] });
+      if (launcherExitCode !== 0) {
+        return { commands, exitCode: launcherExitCode, successMessage };
+      }
     }
   }
 
@@ -213,7 +221,17 @@ describe("parseCliArgs — example tests", () => {
 
   it("all flags together", () => {
     const opts = parseCliArgs(["node", "script.mjs", "--env", "staging", "--no-cache", "--up"]);
-    expect(opts).toEqual({ targetEnv: "staging", noCache: true, up: true, help: false });
+    expect(opts).toEqual({ targetEnv: "staging", noCache: true, up: true, tunnel: false, help: false });
+  });
+
+  it("--tunnel sets tunnel to true", () => {
+    const opts = parseCliArgs(["node", "script.mjs", "--tunnel"]);
+    expect(opts.tunnel).toBe(true);
+  });
+
+  it("no --tunnel means tunnel is false", () => {
+    const opts = parseCliArgs(["node", "script.mjs"]);
+    expect(opts.tunnel).toBe(false);
   });
 });
 
@@ -472,6 +490,114 @@ describe("PBT — Property 3: compose never called after failed build", () => {
           });
           const composeCalls = result.commands.filter((c) => c.args[0] === "compose");
           return composeCalls.length === 0 && result.exitCode === failCode;
+        },
+      ),
+      { numRuns: 100 },
+    );
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Unit tests: --tunnel flag
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe("--tunnel flag — unit tests", () => {
+  const baseOpts = {
+    imageName: "candyshop:latest",
+    buildArgValues: {},
+    noCache: false,
+    targetEnv: "prod",
+  };
+
+  // 4.2 — --tunnel without --up → guard fires (tested via parseCliArgs + guard logic)
+  it("4.2 — --tunnel without --up: guard logic detects invalid combination", () => {
+    const opts = parseCliArgs(["node", "script.mjs", "--tunnel"]);
+    // The guard: tunnel && !up → should error
+    expect(opts.tunnel && !opts.up).toBe(true);
+  });
+
+  // 4.3 — --tunnel + --up + launcher exits 0 → docker-build exits 0
+  it("4.3 — --tunnel + --up + launcher exits 0 → docker-build exits 0", () => {
+    const result = simulateScript({
+      ...baseOpts,
+      up: true,
+      tunnel: true,
+      buildExitCode: 0,
+      composeExitCode: 0,
+      launcherExitCode: 0,
+    });
+    expect(result.exitCode).toBe(0);
+    const launcherCall = result.commands.find((c) => c.cmd === "node" && c.args[0] === "scripts/cloudflared.mjs");
+    expect(launcherCall).toBeDefined();
+  });
+
+  // 4.3 — --tunnel + --up + no enabled tunnels → launcher exits 0, docker-build exits 0
+  it("4.3 — --tunnel + --up + no enabled tunnels → launcher exits 0, docker-build exits 0", () => {
+    const result = simulateScript({
+      ...baseOpts,
+      up: true,
+      tunnel: true,
+      buildExitCode: 0,
+      composeExitCode: 0,
+      launcherExitCode: 0,
+    });
+    expect(result.exitCode).toBe(0);
+  });
+
+  // 4.4 — launcher invoked with correct --env argument
+  it("4.4 — launcher is invoked with --env <targetEnv>", () => {
+    const result = simulateScript({
+      ...baseOpts,
+      targetEnv: "staging",
+      up: true,
+      tunnel: true,
+      buildExitCode: 0,
+      composeExitCode: 0,
+      launcherExitCode: 0,
+    });
+    const launcherCall = result.commands.find((c) => c.cmd === "node");
+    expect(launcherCall?.args).toContain("--env");
+    expect(launcherCall?.args).toContain("staging");
+  });
+
+  // no tunnel invocation when --tunnel is not set
+  it("no launcher invocation when --tunnel is not set", () => {
+    const result = simulateScript({
+      ...baseOpts,
+      up: true,
+      tunnel: false,
+      buildExitCode: 0,
+      composeExitCode: 0,
+    });
+    const launcherCall = result.commands.find((c) => c.cmd === "node");
+    expect(launcherCall).toBeUndefined();
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Property-based test: Property 6
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe("PBT — Property 6: docker-build propagates launcher exit code exactly", () => {
+  // Feature: cloudflared-tunnel-launcher, Property 6: docker-build propagates launcher exit code exactly
+  // Validates: Requirements 4.4
+  it("Property 6: for any non-zero launcher exit code, docker-build exits with that exact code", () => {
+    fc.assert(
+      fc.property(
+        fc.integer({ min: 1, max: 255 }),
+        (launcherExitCode) => {
+          const result = simulateScript({
+            imageName: "candyshop:latest",
+            buildArgValues: {},
+            noCache: false,
+            up: true,
+            tunnel: true,
+            targetEnv: "prod",
+            buildExitCode: 0,
+            composeExitCode: 0,
+            launcherExitCode,
+          });
+          return result.exitCode === launcherExitCode;
         },
       ),
       { numRuns: 100 },

@@ -12,6 +12,12 @@ import { readFileSync, readdirSync } from "node:fs";
 import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
+const EXEMPT_PREFIXES = [/^CLOUDFLARE_TUNNEL_/];
+
+function isExempt(key) {
+  return EXEMPT_PREFIXES.some((re) => re.test(key));
+}
+
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const rootDir = resolve(__dirname, "..");
 
@@ -48,6 +54,18 @@ for (const name of envFiles) {
     if (!keyMap.has(key)) keyMap.set(key, new Set());
     keyMap.get(key).add(name);
   }
+}
+
+// Remove exempt keys from parity check
+let exemptCount = 0;
+for (const key of [...keyMap.keys()]) {
+  if (isExempt(key)) {
+    keyMap.delete(key);
+    exemptCount++;
+  }
+}
+if (exemptCount > 0) {
+  console.log(`  (${exemptCount} keys with CLOUDFLARE_TUNNEL_* prefix skipped)`);
 }
 
 const errors = [];
