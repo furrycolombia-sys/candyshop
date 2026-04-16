@@ -103,13 +103,15 @@ for APP_ENTRY in "${APPS[@]}"; do
   # Stop existing instance if running
   pm2 delete "$PM2_NAME" 2>/dev/null || true
 
-  # Copy static assets into standalone directory
+  # Copy static assets into standalone directory.
+  # Next.js places server.js directly at standalone/server.js when outputFileTracingRoot
+  # is not set (each app is its own tracing root).
   STANDALONE_DIR="$DEPLOY_DIR/apps/$APP_NAME/.next/standalone"
-  cp -r "$DEPLOY_DIR/apps/$APP_NAME/.next/static" "$STANDALONE_DIR/apps/$APP_NAME/.next/static" 2>/dev/null || true
-  cp -r "$DEPLOY_DIR/apps/$APP_NAME/public" "$STANDALONE_DIR/apps/$APP_NAME/public" 2>/dev/null || true
+  cp -r "$DEPLOY_DIR/apps/$APP_NAME/.next/static" "$STANDALONE_DIR/.next/static" 2>/dev/null || true
+  cp -r "$DEPLOY_DIR/apps/$APP_NAME/public" "$STANDALONE_DIR/public" 2>/dev/null || true
 
   # Start standalone server.js with PM2
-  PORT=$APP_PORT HOSTNAME=0.0.0.0 pm2 start "$STANDALONE_DIR/apps/$APP_NAME/server.js" \
+  PORT=$APP_PORT HOSTNAME=0.0.0.0 pm2 start "$STANDALONE_DIR/server.js" \
     --name "$PM2_NAME"
 done
 
