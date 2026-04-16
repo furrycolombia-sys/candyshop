@@ -17,15 +17,9 @@ const { resolveE2EAppUrls } = require(
 const { getE2EExtraHTTPHeaders } = require(
   path.resolve(__dirname, "../../scripts/app-url-resolver.js"),
 );
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const { getLocalSupabaseEnv } = require(
-  path.resolve(__dirname, "../../scripts/local-supabase-env.js"),
-);
-
 const landingDir = path.resolve(__dirname, "../landing");
 const appUrls = resolveE2EAppUrls();
 const extraHTTPHeaders = getE2EExtraHTTPHeaders();
-const localSupabaseEnv = getLocalSupabaseEnv();
 
 function buildServerEnv() {
   const env = Object.fromEntries(
@@ -34,18 +28,13 @@ function buildServerEnv() {
     ),
   );
 
-  if (process.env.PLAYWRIGHT_USE_EXISTING_STACK === "true") {
-    return env;
-  }
+  if (process.env.PLAYWRIGHT_USE_EXISTING_STACK === "true") return env;
 
   return {
     ...env,
-    NEXT_PUBLIC_SUPABASE_URL:
-      localSupabaseEnv.API_URL || env.NEXT_PUBLIC_SUPABASE_URL || "",
-    NEXT_PUBLIC_SUPABASE_ANON_KEY:
-      localSupabaseEnv.ANON_KEY || env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "",
-    SUPABASE_SERVICE_ROLE_KEY:
-      localSupabaseEnv.SERVICE_ROLE_KEY || env.SUPABASE_SERVICE_ROLE_KEY || "",
+    NEXT_PUBLIC_SUPABASE_URL: env.NEXT_PUBLIC_SUPABASE_URL ?? "",
+    NEXT_PUBLIC_SUPABASE_ANON_KEY: env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "",
+    SUPABASE_SERVICE_ROLE_KEY: env.SUPABASE_SERVICE_ROLE_KEY ?? "",
   };
 }
 

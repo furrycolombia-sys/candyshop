@@ -1,14 +1,9 @@
 import path from "node:path";
 
-// eslint-disable-next-line @typescript-eslint/no-require-imports -- CJS loader script
-const { loadRootEnv } = require(
-  path.resolve(__dirname, "../../../../scripts/load-root-env.js"),
-);
 // eslint-disable-next-line @typescript-eslint/no-require-imports -- shared Node helper
 const { resolveE2EAppUrls } = require(
   path.resolve(__dirname, "../../../../scripts/app-url-resolver.js"),
 );
-loadRootEnv({ targetEnv: process.env.TARGET_ENV });
 const appUrls = resolveE2EAppUrls();
 
 export const APP_URLS = {
