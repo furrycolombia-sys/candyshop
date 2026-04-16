@@ -10,7 +10,7 @@ const {
   resolveE2EAppUrls,
 } = require("../../../scripts/app-url-resolver.js");
 /* eslint-enable @typescript-eslint/no-require-imports */
-loadRootEnv();
+loadRootEnv({ targetEnv: process.env.TARGET_ENV });
 
 function loadLocalE2EEnv(filePath: string) {
   if (!existsSync(filePath)) return;

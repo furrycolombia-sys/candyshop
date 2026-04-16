@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/usr/bin/env sh
 STAGED_FILES=$(git diff --cached --name-only)
 
 if [ -z "$STAGED_FILES" ]; then
@@ -6,7 +6,7 @@ if [ -z "$STAGED_FILES" ]; then
   exit 0
 fi
 
-HAS_WORKSPACE=$(echo "$STAGED_FILES" | grep -E '(^|/)package\.json$|^pnpm-workspace\.yaml$|^pnpm-lock\.yaml$|^\.npmrc$' || true)
+HAS_WORKSPACE=$(echo "$STAGED_FILES" | grep -E '(^|/)package\.json$|^pnpm-workspace\.yaml$|^pnpm-lock\.yaml$|^\.npmrc' || true)
 
 echo "Running pre-commit checks..."
 echo "  Staged: $(echo "$STAGED_FILES" | wc -l | tr -d ' ') file(s)"
