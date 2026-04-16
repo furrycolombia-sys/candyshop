@@ -99,17 +99,30 @@ console.log(`   command: ${command}\n`);
 const templatePath = resolve(rootDir, "supabase/config.toml.template");
 const configPath = resolve(rootDir, "supabase/config.toml");
 
-// Default ports (used if env vars not set)
-const DEFAULT_PORTS = {
-  SUPABASE_API_PORT: "54321",
-  SUPABASE_DB_PORT: "54322",
-  SUPABASE_SHADOW_PORT: "54320",
-  SUPABASE_POOLER_PORT: "54329",
-  SUPABASE_STUDIO_PORT: "54323",
-  SUPABASE_INBUCKET_PORT: "54324",
-  SUPABASE_ANALYTICS_PORT: "54327",
-  SUPABASE_INSPECTOR_PORT: "8083",
-};
+/**
+ * Derive all Supabase service ports from a single base port.
+ * Convention matches Supabase CLI defaults (base = API port):
+ *   base+0 → API
+ *   base+1 → DB
+ *   base-1 → shadow DB
+ *   base+8 → pooler
+ *   base+2 → Studio
+ *   base+3 → Inbucket
+ *   base+6 → Analytics
+ *   inspector → base + 10000 - 21 (keeps the 8083/18083 pattern)
+ */
+function derivePorts(base) {
+  return {
+    SUPABASE_API_PORT: String(base),
+    SUPABASE_DB_PORT: String(base + 1),
+    SUPABASE_SHADOW_PORT: String(base - 1),
+    SUPABASE_POOLER_PORT: String(base + 8),
+    SUPABASE_STUDIO_PORT: String(base + 2),
+    SUPABASE_INBUCKET_PORT: String(base + 3),
+    SUPABASE_ANALYTICS_PORT: String(base + 6),
+    SUPABASE_INSPECTOR_PORT: String(base + 10000 - 21), // 54321→8300, 64321→18300
+  };
+}
 
 function generateConfig() {
   if (!existsSync(templatePath)) {
@@ -117,24 +130,30 @@ function generateConfig() {
     process.exit(1);
   }
 
+  const basePort = parseInt(process.env.SUPABASE_PORT ?? "54321", 10);
+  if (isNaN(basePort)) {
+    console.error(`ERROR: SUPABASE_PORT is not a valid number: ${process.env.SUPABASE_PORT}`);
+    process.exit(1);
+  }
+
+  const ports = derivePorts(basePort);
+
+  // Expose derived ports back onto process.env so downstream code can read them
+  for (const [key, value] of Object.entries(ports)) {
+    process.env[key] = value;
+  }
+
   let template = readFileSync(templatePath, "utf-8");
 
-  // Replace PROJECT_ID with environment-specific value
   const projectId = `candystore-${targetEnv}`;
   template = template.replace("{{PROJECT_ID}}", projectId);
 
-  // Replace all {{PORT_PLACEHOLDERS}} with env values or defaults
-  for (const [key, defaultValue] of Object.entries(DEFAULT_PORTS)) {
-    const value = process.env[key] || defaultValue;
+  for (const [key, value] of Object.entries(ports)) {
     template = template.replaceAll(`{{${key}}}`, value);
   }
 
-  // Write temporary config.toml
   writeFileSync(configPath, template, "utf-8");
-  
-  const apiPort = process.env.SUPABASE_API_PORT || DEFAULT_PORTS.SUPABASE_API_PORT;
-  const studioPort = process.env.SUPABASE_STUDIO_PORT || DEFAULT_PORTS.SUPABASE_STUDIO_PORT;
-  console.log(`✓ Generated config.toml (Project: ${projectId}, API: ${apiPort}, Studio: ${studioPort})`);
+  console.log(`✓ Generated config.toml (Project: ${projectId}, API: ${ports.SUPABASE_API_PORT}, Studio: ${ports.SUPABASE_STUDIO_PORT})`);
 }
 
 function cleanupConfig() {
@@ -232,7 +251,7 @@ function getSupabaseContainers(projectId) {
 
 if (command === "start" || command === "restart") {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const studioPort = process.env.SUPABASE_STUDIO_PORT || DEFAULT_PORTS.SUPABASE_STUDIO_PORT;
+  const studioPort = process.env.SUPABASE_STUDIO_PORT;
   console.log(`\n   Supabase URL: ${supabaseUrl ?? "(check supabase status)"}`);
   console.log(`   Studio:       http://localhost:${studioPort}`);
 }
