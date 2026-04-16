@@ -17,15 +17,15 @@ cleanup() {
 trap cleanup EXIT
 
 # ── Load env vars from .env.dev if not already set ────────────────────────────
-# This ensures NEXT_PUBLIC_* vars are available as Docker build args
-# even when running from a git hook that doesn't load env files.
+# Exports all NEXT_PUBLIC_* and APP_PUBLIC_ORIGIN so docker build args are
+# sourced from the env file — no hardcoded values here.
 if [ -z "${NEXT_PUBLIC_SUPABASE_URL:-}" ]; then
   echo "Loading env from .env.dev..."
   eval "$(node --input-type=module <<'EOF'
 import { loadEnv } from './scripts/load-env.mjs';
 loadEnv('dev');
 for (const [k, v] of Object.entries(process.env)) {
-  if (k.startsWith('NEXT_PUBLIC_')) {
+  if (k.startsWith('NEXT_PUBLIC_') || k === 'APP_PUBLIC_ORIGIN') {
     process.stdout.write(`export ${k}=${JSON.stringify(v)}\n`);
   }
 }
@@ -34,12 +34,37 @@ EOF
 fi
 
 # ── 1. Build ──────────────────────────────────────────────────────────────────
+# Build args are generated dynamically from the exported env vars — same keys
+# as docker-build.mjs uses, all sourced from the env loader above.
+BUILD_ARGS=$(node --input-type=module <<'EOF'
+const keys = [
+  'NEXT_PUBLIC_SUPABASE_URL',
+  'NEXT_PUBLIC_SUPABASE_ANON_KEY',
+  'NEXT_PUBLIC_AUTH_URL',
+  'NEXT_PUBLIC_AUTH_HOST_URL',
+  'NEXT_PUBLIC_STORE_URL',
+  'NEXT_PUBLIC_ADMIN_URL',
+  'NEXT_PUBLIC_PLAYGROUND_URL',
+  'NEXT_PUBLIC_LANDING_URL',
+  'NEXT_PUBLIC_PAYMENTS_URL',
+  'NEXT_PUBLIC_STUDIO_URL',
+  'NEXT_PUBLIC_BUILD_HASH',
+  'NEXT_PUBLIC_ENABLE_TEST_IDS',
+  'APP_PUBLIC_ORIGIN',
+  'NEXT_PUBLIC_ENV_DEBUG',
+];
+for (const k of keys) {
+  process.stdout.write(`--build-arg ${k}=${process.env[k] ?? ''}\n`);
+}
+EOF
+)
+
 echo "Building Docker image: $IMAGE_NAME..."
+# shellcheck disable=SC2086
 docker build \
   -t "$IMAGE_NAME" \
   -f docker/smoke/Dockerfile \
-  --build-arg NEXT_PUBLIC_SUPABASE_URL="$NEXT_PUBLIC_SUPABASE_URL" \
-  --build-arg NEXT_PUBLIC_SUPABASE_ANON_KEY="$NEXT_PUBLIC_SUPABASE_ANON_KEY" \
+  $BUILD_ARGS \
   . || { echo "ERROR: Docker build failed."; exit 1; }
 
 # ── 2. Pick a random available port ───────────────────────────────────────────

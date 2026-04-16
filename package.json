@@ -79,7 +79,7 @@
     "stylelint": "^17.0.0",
     "stylelint-config-standard": "^40.0.0",
     "stylelint-config-tailwindcss": "^1.0.1",
-    "supabase": "^2.81.3",
+    "supabase": "^2.92.0",
     "syncpack": "^14.2.0",
     "tailwindcss": "^4.1.18",
     "turbo": "^2.8.19",
