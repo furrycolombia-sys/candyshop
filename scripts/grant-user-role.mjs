@@ -1,9 +1,5 @@
-import { createRequire } from "node:module";
-
-const require = createRequire(import.meta.url);
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const { loadRootEnv } = require("./load-root-env.js");
-loadRootEnv();
+import { loadEnv } from "./load-env.mjs";
+loadEnv();
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
 const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || "";

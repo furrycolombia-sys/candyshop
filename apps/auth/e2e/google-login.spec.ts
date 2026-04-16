@@ -4,13 +4,13 @@ import { existsSync, readFileSync } from "node:fs";
 import { chromium, expect, test } from "@playwright/test";
 
 /* eslint-disable @typescript-eslint/no-require-imports */
-const { loadRootEnv } = require("../../../scripts/load-root-env.js");
+const { loadRootEnv } = require("../../../scripts/load-root-env.cjs");
 const {
   getE2EExtraHTTPHeaders,
   resolveE2EAppUrls,
 } = require("../../../scripts/app-url-resolver.js");
 /* eslint-enable @typescript-eslint/no-require-imports */
-loadRootEnv();
+loadRootEnv({ targetEnv: process.env.TARGET_ENV });
 
 function loadLocalE2EEnv(filePath: string) {
   if (!existsSync(filePath)) return;
@@ -41,37 +41,54 @@ const {
   payments: PAYMENTS_URL,
   studio: STUDIO_URL,
 } = resolveE2EAppUrls();
+
+// In staging, OAuth redirects go through the public tunnel URL, not localhost.
+// Accept both the local container URL and the public NEXT_PUBLIC_AUTH_URL.
+const PUBLIC_AUTH_URL = process.env.NEXT_PUBLIC_AUTH_URL ?? AUTH_URL;
+const PUBLIC_STORE_URL = process.env.NEXT_PUBLIC_STORE_URL ?? STORE_URL;
+const PUBLIC_LANDING_URL = process.env.NEXT_PUBLIC_LANDING_URL ?? LANDING_URL;
+const PUBLIC_PAYMENTS_URL =
+  process.env.NEXT_PUBLIC_PAYMENTS_URL ?? PAYMENTS_URL;
+const PUBLIC_ADMIN_URL = process.env.NEXT_PUBLIC_ADMIN_URL ?? ADMIN_URL;
+const PUBLIC_STUDIO_URL = process.env.NEXT_PUBLIC_STUDIO_URL ?? STUDIO_URL;
+const PUBLIC_PLAYGROUND_URL =
+  process.env.NEXT_PUBLIC_PLAYGROUND_URL ?? PLAYGROUND_URL;
+
+// When OAuth is used, the session cookie is on the public domain (tunnel).
+// Use public URLs for cross-app checks so the session carries over.
+const isOAuthEnv = PUBLIC_AUTH_URL !== AUTH_URL;
+
 const IGNORABLE_REQUEST_FAILURE_PATTERNS = ["/cdn-cgi/rum?"];
 
 const APP_CHECKS = [
   {
     name: "landing",
-    url: `${LANDING_URL}/en`,
+    url: `${isOAuthEnv ? PUBLIC_LANDING_URL : LANDING_URL}/en`,
     readyTestIds: ["hero-section"],
   },
   {
     name: "store",
-    url: `${STORE_URL}/en`,
+    url: `${isOAuthEnv ? PUBLIC_STORE_URL : STORE_URL}/en`,
     readyTestIds: ["product-catalog-page"],
   },
   {
     name: "playground",
-    url: `${PLAYGROUND_URL}/en`,
+    url: `${isOAuthEnv ? PUBLIC_PLAYGROUND_URL : PLAYGROUND_URL}/en`,
     readyTestIds: ["playground-page"],
   },
   {
     name: "payments",
-    url: `${PAYMENTS_URL}/en`,
+    url: `${isOAuthEnv ? PUBLIC_PAYMENTS_URL : PAYMENTS_URL}/en`,
     readyTestIds: ["payments-page", "access-denied"],
   },
   {
     name: "admin",
-    url: `${ADMIN_URL}/en`,
+    url: `${isOAuthEnv ? PUBLIC_ADMIN_URL : ADMIN_URL}/en`,
     readyTestIds: ["admin-page", "access-denied"],
   },
   {
     name: "studio",
-    url: `${STUDIO_URL}/en`,
+    url: `${isOAuthEnv ? PUBLIC_STUDIO_URL : STUDIO_URL}/en`,
     readyTestIds: ["product-list-page", "access-denied"],
   },
 ] as const;
@@ -184,7 +201,11 @@ test("Google OAuth login flow", async () => {
   );
 
   try {
-    await page.goto(`${AUTH_URL}/en/login`);
+    // Use the public URL for OAuth so the redirect_to parameter uses the
+    // tunnel-accessible URL that Supabase's allowed redirect list accepts.
+    const oauthStartUrl =
+      PUBLIC_AUTH_URL !== AUTH_URL ? PUBLIC_AUTH_URL : AUTH_URL;
+    await page.goto(`${oauthStartUrl}/en/login`);
     await expect(page.getByTestId("login-google")).toBeVisible();
     console.log("[e2e] Login page loaded");
 
@@ -270,9 +291,11 @@ test("Google OAuth login flow", async () => {
       'button[data-idom-class*="primary"]',
     ]);
 
-    await oauthPage.waitForURL((url) => url.href.startsWith(AUTH_URL), {
-      timeout: 45000,
-    });
+    await oauthPage.waitForURL(
+      (url) =>
+        url.href.startsWith(AUTH_URL) || url.href.startsWith(PUBLIC_AUTH_URL),
+      { timeout: 45000 },
+    );
     console.log("[e2e] Back on app:", oauthPage.url());
 
     await oauthPage.waitForLoadState("networkidle", { timeout: 15000 });

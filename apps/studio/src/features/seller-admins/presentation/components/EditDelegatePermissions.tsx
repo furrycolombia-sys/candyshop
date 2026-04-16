@@ -61,7 +61,7 @@ export function EditDelegatePermissions({
               checked={permissions.has(perm)}
               onChange={() => togglePermission(perm)}
             />
-            {t(`permissions.${perm}`)}
+            {t(`permissions.${perm.replaceAll(".", "_")}`)}
           </label>
         ))}
       </fieldset>

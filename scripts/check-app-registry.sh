@@ -15,8 +15,8 @@ REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 SELECT_WORKSPACES="scripts/select-workspaces.sh"
 CI_WORKFLOW=".github/workflows/ci.yml"
 ROOT_PACKAGE_JSON="package.json"
-DOCKERFILE="Dockerfile"
-NGINX_CONF="docker/nginx.conf"
+DOCKERFILE="docker/smoke/Dockerfile"
+NGINX_CONF="docker/prod/nginx.conf"
 
 errors=()
 
@@ -46,7 +46,7 @@ for app_dir in "$REPO_ROOT"/apps/*/; do
     errors+=("$app_name  missing from  $DOCKERFILE")
   fi
 
-  # --- 5. docker/nginx.conf (upstream or location block) ---
+  # --- 5. docker/prod/nginx.conf (upstream or location block) ---
   if ! grep -q "${app_name}" "$REPO_ROOT/$NGINX_CONF" 2>/dev/null; then
     errors+=("$app_name  missing from  $NGINX_CONF")
   fi

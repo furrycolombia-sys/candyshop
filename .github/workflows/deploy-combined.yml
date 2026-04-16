@@ -10,7 +10,6 @@ on:
       - "packages/**"
       - "package.json"
       - "pnpm-lock.yaml"
-      - "Dockerfile"
       - "docker/**"
       - ".github/**"
   workflow_dispatch:

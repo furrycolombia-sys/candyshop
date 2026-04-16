@@ -11,7 +11,7 @@ export function PermissionBadges({ permissions }: { permissions: string[] }) {
           key={perm}
           className="rounded-none border border-border bg-muted px-1.5 py-0.5 text-ui-xs"
         >
-          {t(`perm.${perm}` as Parameters<typeof t>[0])}
+          {t(`perm.${perm.replaceAll(".", "_")}` as Parameters<typeof t>[0])}
         </span>
       ))}
     </div>
