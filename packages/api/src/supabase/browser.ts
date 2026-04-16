@@ -1,6 +1,6 @@
 import { createBrowserClient } from "@supabase/ssr";
 
-import { SUPABASE_ANON_KEY, SUPABASE_URL } from "./config";
+import { SUPABASE_ANON_KEY, SUPABASE_COOKIE_KEY, SUPABASE_URL } from "./config";
 import type { Database } from "./types";
 
 let browserClient: ReturnType<typeof createBrowserClient<Database>> | null =
@@ -20,6 +20,11 @@ export function createBrowserSupabaseClient() {
   browserClient = createBrowserClient<Database>(
     SUPABASE_URL,
     SUPABASE_ANON_KEY,
+    {
+      auth: {
+        storageKey: SUPABASE_COOKIE_KEY,
+      },
+    },
   );
 
   return browserClient;

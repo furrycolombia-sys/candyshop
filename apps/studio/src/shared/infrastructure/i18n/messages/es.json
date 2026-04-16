@@ -299,8 +299,8 @@
     "navDelegates": "Mis Delegados",
     "navigation": "Navegación del estudio",
     "permissions": {
-      "orders.approve": "Aprobar Órdenes",
-      "orders.request_proof": "Solicitar Prueba"
+      "orders_approve": "Aprobar Órdenes",
+      "orders_request_proof": "Solicitar Prueba"
     }
   }
 }

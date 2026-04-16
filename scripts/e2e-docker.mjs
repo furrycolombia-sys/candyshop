@@ -1,26 +1,34 @@
 #!/usr/bin/env node
 /**
- * E2E Docker runner — fully isolated test environment.
+ * E2E Docker runner — topology-driven test environment.
  *
- * Manages the ENTIRE stack:
- *   1. Starts the isolated e2e Supabase (port 64321, project: candystore-e2e)
- *      — runs alongside the dev Supabase, no restart needed
- *   2. Builds and starts the Next.js Docker container
- *   3. Runs Playwright tests
- *   4. Tears down the e2e container
- *   5. Stops the e2e Supabase instance
+ * Behaviour is fully determined by the env file, not the env name.
+ * Three topology vars in the env file control everything:
  *
- * The e2e Supabase uses its own config (supabase-e2e/config.toml) with
- * hardcoded auth URLs and a separate project_id so Docker container names
- * never collide with the dev instance.
+ *   APPS_MODE      local     = Vite dev servers (not supported here — use pnpm dev)
+ *                  docker    = all apps in one nginx container
+ *
+ *   SUPABASE_MODE  local     = Supabase CLI already running (not managed here)
+ *                  isolated  = isolated Supabase CLI (supabase-e2e/, port 64321)
+ *                  docker    = Supabase as Docker Compose services
+ *                  cloud     = Supabase Cloud — no local instance needed
+ *
+ *   TUNNEL_MODE    none      = localhost only
+ *                  cloudflare= Cloudflare tunnel active, public URLs used
+ *
+ * Compose file selection (also driven by env vars):
+ *   SUPABASE_MODE=isolated → docker/compose.e2e.yml
+ *   SUPABASE_MODE=docker   → docker/compose.staging.yml
+ *   otherwise              → docker/compose.yml
  *
  * Environment layering (handled by load-root-env.js):
- *   .env.example  ->  base defaults
- *   .env.{name}   ->  environment-specific overrides
- *   .secrets      ->  $secret: reference resolution
+ *   .env.example  →  base defaults
+ *   .env.{name}   →  environment-specific overrides
+ *   .secrets      →  $secret: reference resolution
  *
  * Usage:
- *   node scripts/e2e-docker.mjs                          # run all tests
+ *   node scripts/e2e-docker.mjs                          # run all tests (default: --env e2e)
+ *   node scripts/e2e-docker.mjs --env staging            # run against staging
  *   node scripts/e2e-docker.mjs --build                  # build + start only
  *   node scripts/e2e-docker.mjs --down                   # teardown
  *   node scripts/e2e-docker.mjs --rebuild                # force rebuild
@@ -29,8 +37,7 @@
  *   node scripts/e2e-docker.mjs --debug                  # Playwright inspector
  *   node scripts/e2e-docker.mjs --spec <name>            # specific spec
  *   node scripts/e2e-docker.mjs --smoke                  # smoke tests only
- *   node scripts/e2e-docker.mjs --env staging            # use .env.staging
- *   node scripts/e2e-docker.mjs --keep-supabase          # don't stop e2e Supabase after
+ *   node scripts/e2e-docker.mjs --keep-supabase          # don't stop isolated Supabase after
  */
 import { spawn, spawnSync } from "node:child_process";
 import { dirname, resolve } from "node:path";
@@ -82,18 +89,48 @@ function getArgValue(name) {
 
 const envName = getArgValue("--env") || "e2e";
 const specFile = getArgValue("--spec");
-const composeFile = resolve(
-  rootDir,
-  "docker",
-  envName === "e2e" ? "compose.e2e.yml" : "compose.yml",
-);
 
-// ---- Env loading (via load-root-env.js) ----
+// ---- Env loading ----
+// Must happen BEFORE reading topology vars.
 
 loadRootEnv({ targetEnv: envName });
 
-const containerName =
-  process.env.SITE_PROD_CONTAINER_NAME || `candyshop-${envName}`;
+// ---- Topology — read from env file, not from env name ----
+
+const appsMode = process.env.APPS_MODE || "docker";
+const supabaseMode = process.env.SUPABASE_MODE || "local";
+const tunnelMode = process.env.TUNNEL_MODE || "none";
+
+// This script only handles Docker-based app deployments.
+// Local Vite dev servers are managed by `pnpm dev` / `pnpm dev:up`.
+if (appsMode !== "docker") {
+  console.error(
+    `[e2e-docker:${envName}] APPS_MODE="${appsMode}" — this script only runs Docker-based environments.`,
+  );
+  console.error(`  For local dev servers, use: pnpm dev`);
+  process.exit(1);
+}
+
+// Validate TUNNEL_MODE has required config when active.
+if (tunnelMode === "cloudflare" && !process.env.CLOUDFLARE_TUNNEL_TOKEN) {
+  console.error(
+    `[e2e-docker:${envName}] TUNNEL_MODE=cloudflare but CLOUDFLARE_TUNNEL_TOKEN is not set.`,
+  );
+  console.error(`  Add CLOUDFLARE_TUNNEL_TOKEN=$secret:YOUR_KEY to .env.${envName} or .secrets.`);
+  process.exit(1);
+}
+
+// ---- Compose file selection (driven by SUPABASE_MODE) ----
+
+function resolveComposeFile() {
+  if (supabaseMode === "isolated") return resolve(rootDir, "docker", "compose.e2e.yml");
+  if (supabaseMode === "docker") return resolve(rootDir, "docker", "compose.staging.yml");
+  return resolve(rootDir, "docker", "compose.yml");
+}
+
+const composeFile = resolveComposeFile();
+
+const containerName = process.env.SITE_PROD_CONTAINER_NAME || `candyshop-${envName}`;
 const imageName = process.env.SITE_PROD_IMAGE_NAME || `candyshop-${envName}`;
 const port = process.env.SITE_PROD_PORT || "8089";
 const baseUrl = `http://localhost:${port}`;
@@ -112,7 +149,6 @@ function run(cmd, cmdArgs, opts = {}) {
     env: process.env,
     ...opts,
   });
-  // On Windows, spawnSync may return null for status on success
   return result.status ?? 0;
 }
 
@@ -125,18 +161,11 @@ function runSilent(cmd, cmdArgs, opts = {}) {
   });
 }
 
-// Staging uses the cloudflare profile to start the tunnel sidecar
-const needsCloudflare = envName === "staging" && !!process.env.CLOUDFLARE_TUNNEL_TOKEN;
+const needsCloudflareProfile = tunnelMode === "cloudflare" && !!process.env.CLOUDFLARE_TUNNEL_TOKEN;
 
 function compose(...cmdArgs) {
-  const baseArgs = [
-    "compose",
-    "-p",
-    projectName,
-    "-f",
-    composeFile,
-  ];
-  if (needsCloudflare) {
+  const baseArgs = ["compose", "-p", projectName, "-f", composeFile];
+  if (needsCloudflareProfile) {
     baseArgs.push("--profile", "cloudflare");
   }
   return run(docker, [...baseArgs, ...cmdArgs]);
@@ -152,109 +181,50 @@ function imageExistsLocally() {
   return (result.stdout || "").trim().length > 0;
 }
 
-// ---- Supabase lifecycle ----
-// The e2e Supabase uses a separate workdir (supabase-e2e/) with its own
-// config.toml (Google OAuth redirect to localhost, site_url to localhost:8089).
-// It uses the same ports as dev (54321) but a different project ID
-// (candystore-e2e) so the database volume is isolated.
-// The script stops the dev Supabase before starting the e2e one.
+// ---- Supabase lifecycle (isolated mode only) ----
+// SUPABASE_MODE=isolated: a separate Supabase CLI instance in supabase-e2e/
+// with its own project_id, ports, and DB volume — never collides with dev.
 
-function isDevSupabaseRunning() {
+function isIsolatedSupabaseRunning() {
   const result = runSilent(docker, [
-    "ps",
-    "-q",
-    "-f",
-    "name=supabase_db_candystore",
-  ]);
-  // Filter out e2e containers
-  const ids = (result.stdout || "").trim();
-  if (!ids) return false;
-  // Check if any non-e2e supabase containers are running
-  const check = runSilent(docker, [
-    "ps",
-    "--format",
-    "{{.Names}}",
-    "-f",
-    "name=supabase_db_candystore",
-  ]);
-  return (
-    (check.stdout || "").includes("supabase_db_candystore\n") ||
-    ((check.stdout || "").includes("supabase_db_candystore") &&
-      !(check.stdout || "").includes("supabase_db_candystore-e2e"))
-  );
-}
-
-function isE2ESupabaseRunning() {
-  const result = runSilent(docker, [
-    "ps",
-    "-q",
-    "-f",
-    "name=supabase_db_supabase-e2e",
+    "ps", "-q", "-f", "name=supabase_db_supabase-e2e",
   ]);
   return (result.stdout || "").trim().length > 0;
 }
 
-function stopDevSupabase() {
-  log("Stopping dev Supabase...");
-  run(supabaseBin, ["supabase", "stop", "--no-backup"]);
-  // Clean up stuck containers
-  runSilent(docker, ["rm", "-f", "supabase_vector_candystore"]);
-}
-
-function startE2ESupabase() {
-  log("Starting e2e Supabase (project: candystore-e2e)...");
-  // Clean up any stuck containers from previous runs
+function startIsolatedSupabase() {
+  log("Starting isolated Supabase (project: candystore-e2e, port 64321)...");
   runSilent(docker, ["rm", "-f", "supabase_vector_candystore-e2e"]);
-  const code = run(supabaseBin, [
-    "supabase",
-    "start",
-    "--workdir",
-    "supabase-e2e",
-  ]);
+  const code = run(supabaseBin, ["supabase", "start", "--workdir", "supabase-e2e"]);
   if (code !== 0) {
-    log("Failed to start e2e Supabase.");
+    log("Failed to start isolated Supabase.");
     process.exit(code);
   }
 }
 
-function stopE2ESupabase() {
-  log("Stopping e2e Supabase...");
-  run(supabaseBin, [
-    "supabase",
-    "stop",
-    "--workdir",
-    "supabase-e2e",
-    "--no-backup",
-  ]);
-  // Clean up stuck vector container (uses project_id from config.toml)
+function stopIsolatedSupabase() {
+  log("Stopping isolated Supabase...");
+  run(supabaseBin, ["supabase", "stop", "--workdir", "supabase-e2e", "--no-backup"]);
   runSilent(docker, ["rm", "-f", "supabase_vector_candystore-e2e"]);
 }
 
-function restoreDevSupabase() {
-  log("Restoring dev Supabase...");
-  run(supabaseBin, ["supabase", "start"]);
-}
-
 async function waitForSupabase() {
-  const supabasePort = process.env.NEXT_PUBLIC_SUPABASE_URL
-    ? new URL(process.env.NEXT_PUBLIC_SUPABASE_URL).port || "54321"
-    : "54321";
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "http://127.0.0.1:54321";
+  const supabasePort = (() => {
+    try { return new URL(supabaseUrl).port || "54321"; } catch { return "54321"; }
+  })();
   const url = `http://127.0.0.1:${supabasePort}/rest/v1/`;
-  const start = Date.now();
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
-  log("Waiting for Supabase...");
+  const start = Date.now();
+  log(`Waiting for Supabase at ${url}...`);
   while (Date.now() - start < SUPABASE_HEALTH_TIMEOUT_MS) {
     try {
       const res = await fetch(url, { headers: { apikey: key } });
       if (res.ok) {
-        log(
-          `Supabase ready after ${Math.round((Date.now() - start) / 1000)}s.`,
-        );
+        log(`Supabase ready after ${Math.round((Date.now() - start) / 1000)}s.`);
         return true;
       }
-    } catch {
-      /* not ready */
-    }
+    } catch { /* not ready */ }
     await new Promise((r) => setTimeout(r, HEALTH_POLL_MS));
   }
   log("Supabase did not become ready in time.");
@@ -266,7 +236,7 @@ async function waitForSupabase() {
 async function waitForHealth() {
   const url = `${baseUrl}/health`;
   const start = Date.now();
-  log(`Waiting for ${url} ...`);
+  log(`Waiting for ${url}...`);
   while (Date.now() - start < HEALTH_TIMEOUT_MS) {
     try {
       const res = await fetch(url);
@@ -274,9 +244,7 @@ async function waitForHealth() {
         log(`Healthy after ${Math.round((Date.now() - start) / 1000)}s.`);
         return true;
       }
-    } catch {
-      /* not ready */
-    }
+    } catch { /* not ready */ }
     await new Promise((r) => setTimeout(r, HEALTH_POLL_MS));
   }
   log(`Container did not become healthy within ${HEALTH_TIMEOUT_MS / 1000}s.`);
@@ -340,31 +308,19 @@ async function ensureContainerReady() {
   }
 }
 
-// ---- Supabase setup ----
+// ---- Supabase setup (isolated mode) ----
 
-async function ensureSupabaseReady() {
-  if (isE2ESupabaseRunning()) {
-    log("E2E Supabase already running.");
+async function ensureIsolatedSupabaseReady() {
+  if (isIsolatedSupabaseRunning()) {
+    log("Isolated Supabase already running.");
   } else {
-    startE2ESupabase();
+    startIsolatedSupabase();
   }
   const ready = await waitForSupabase();
   if (!ready) {
     log("Supabase failed to start. Aborting.");
     process.exit(1);
   }
-}
-
-// ---- Full teardown ----
-
-function fullTeardown() {
-  teardownContainer();
-  if (!keepSupabase) {
-    stopE2ESupabase();
-  } else {
-    log("E2E Supabase left running (--keep-supabase).");
-  }
-  log("Done.");
 }
 
 // ---- Tests ----
@@ -385,23 +341,15 @@ function runTests() {
   if (debugMode) playwrightArgs.push("--debug");
   playwrightArgs.push("--reporter=list");
 
-  const modeLabel = uiMode
-    ? "UI mode"
-    : debugMode
-      ? "debug mode"
-      : headed
-        ? "headed"
-        : "headless";
+  const modeLabel = uiMode ? "UI mode" : debugMode ? "debug mode" : headed ? "headed" : "headless";
   log(`Running Playwright (${modeLabel}) against ${baseUrl}`);
   if (smokeOnly) log("Smoke tests only");
   else if (specFile) log(`Spec: ${specFile}`);
   else log(`${CORE_SPECS.length} spec files`);
 
-  // For staging, the container is built with the public URL baked in.
-  // OAuth callbacks redirect to the public domain, not localhost.
-  // Use SITE_PUBLIC_ORIGIN if set (staging), otherwise fall back to baseUrl.
-  const e2ePublicOrigin =
-    process.env.SITE_PUBLIC_ORIGIN?.trim() || baseUrl;
+  // E2E_PUBLIC_ORIGIN tells Playwright where the app is reachable from the browser.
+  // For tunnel mode, use the public origin. Otherwise use the local container URL.
+  const e2ePublicOrigin = process.env.SITE_PUBLIC_ORIGIN?.trim() || baseUrl;
 
   return new Promise((resolvePromise) => {
     const child = spawn(pnpm, playwrightArgs, {
@@ -410,6 +358,7 @@ function runTests() {
       shell: true,
       env: {
         ...process.env,
+        TARGET_ENV: envName,
         E2E_PUBLIC_ORIGIN: e2ePublicOrigin,
         PLAYWRIGHT_USE_EXISTING_STACK: "true",
         ...(debugMode ? { PWDEBUG: "1" } : {}),
@@ -422,24 +371,20 @@ function runTests() {
 
 // ---- Main ----
 
-// Only the e2e environment needs its own isolated Supabase instance.
-// Staging and other envs use the main local Supabase (already running).
-const needsE2ESupabase = envName === "e2e";
-
-log(`Environment: .env.${envName} -> ${baseUrl}`);
+log(`Environment: .env.${envName} | APPS_MODE=${appsMode} SUPABASE_MODE=${supabaseMode} TUNNEL_MODE=${tunnelMode} -> ${baseUrl}`);
 
 if (wantsDown) {
   teardownContainer();
-  if (needsE2ESupabase && !keepSupabase) {
-    stopE2ESupabase();
+  if (supabaseMode === "isolated" && !keepSupabase) {
+    stopIsolatedSupabase();
   }
   log("Done.");
   process.exit(0);
 }
 
 if (wantsBuild) {
-  if (needsE2ESupabase) {
-    await ensureSupabaseReady();
+  if (supabaseMode === "isolated") {
+    await ensureIsolatedSupabaseReady();
   }
   buildAndStart();
   const healthy = await waitForHealth();
@@ -450,10 +395,10 @@ if (wantsBuild) {
     process.exit(1);
   }
   log("");
-  log(`E2E stack ready at ${baseUrl}`);
-  log(
-    `Supabase: http://localhost:54321 (e2e instance, project: candystore-e2e)`,
-  );
+  log(`Stack ready at ${baseUrl}`);
+  if (supabaseMode === "isolated") {
+    log(`Supabase: http://localhost:64321 (isolated, project: candystore-e2e)`);
+  }
   log("");
   log("Commands:");
   log("  pnpm test:e2e                    Run all tests headless");
@@ -462,26 +407,24 @@ if (wantsBuild) {
   log("  pnpm test:e2e:debug              Run with Playwright inspector");
   log("  pnpm test:e2e -- --spec <name>   Run specific spec");
   log("  pnpm test:e2e -- --smoke         Smoke tests only");
-  log("  pnpm test:e2e:down               Tear down e2e stack");
+  log("  pnpm test:e2e:down               Tear down stack");
   process.exit(0);
 }
 
-// Full cycle: Supabase -> container -> tests -> teardown -> restore
-if (needsE2ESupabase) {
-  await ensureSupabaseReady();
+// Full cycle: Supabase (if needed) → container → tests → teardown
+if (supabaseMode === "isolated") {
+  await ensureIsolatedSupabaseReady();
 }
 await ensureContainerReady();
 
 const testExitCode = await runTests();
 
 if (headed || uiMode || debugMode) {
-  log(
-    `Container still running at ${baseUrl}. Tear down with: pnpm test:e2e:down`,
-  );
+  log(`Container still running at ${baseUrl}. Tear down with: pnpm test:e2e:down`);
 } else {
   teardownContainer();
-  if (needsE2ESupabase && !keepSupabase) {
-    stopE2ESupabase();
+  if (supabaseMode === "isolated" && !keepSupabase) {
+    stopIsolatedSupabase();
   }
   log("Done.");
 }
