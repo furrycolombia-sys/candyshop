@@ -55,7 +55,7 @@ if [ "$DEPLOY_CHANGED" = "true" ]; then
     exit 1
   fi
 
-  bash scripts/docker-health-check.sh || exit 1
+  sh scripts/docker-health-check.sh || exit 1
 fi
 
 echo "All pre-push checks passed."
