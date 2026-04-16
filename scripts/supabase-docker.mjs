@@ -218,26 +218,19 @@ function runSupabase(subcommand) {
   console.log(`\n✓ supabase ${subcommand} completed`);
 }
 
-if (command === "restart") {
-  // Clean up any orphaned containers before restart
+if (command === "restart" || command === "start") {
+  // Clean up any orphaned containers before start/restart
   const projectId = `candystore-${targetEnv}`;
-  console.log(`Cleaning up orphaned containers for ${projectId}...`);
-  
-  const cleanupResult = spawnSync(
-    "docker",
-    ["rm", "-f", ...getSupabaseContainers(projectId)],
-    {
-      cwd: rootDir,
-      stdio: "pipe",
-      env: process.env,
-    },
-  );
-  
-  if (cleanupResult.status === 0 && cleanupResult.stdout.toString().trim()) {
+  const orphans = getSupabaseContainers(projectId);
+  if (orphans.length > 0) {
+    console.log(`Cleaning up ${orphans.length} orphaned container(s) for ${projectId}...`);
+    spawnSync("docker", ["rm", "-f", ...orphans], { cwd: rootDir, stdio: "pipe", env: process.env });
     console.log(`✓ Removed orphaned containers`);
   }
-  
-  runSupabase("stop");
+
+  if (command === "restart") {
+    runSupabase("stop");
+  }
   runSupabase("start");
 } else {
   runSupabase(command);
