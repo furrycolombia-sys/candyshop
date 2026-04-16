@@ -20,7 +20,7 @@
     "next-intl": "^4.1.4"
   },
   "devDependencies": {
-    "@supabase/supabase-js": "^2.99.2",
+    "@supabase/supabase-js": "^2.103.3",
     "@types/node": "^22.15.0",
     "@types/react": "^19.2.14",
     "@vitejs/plugin-react": "^5.2.0",
@@ -29,7 +29,7 @@
     "vitest": "^3.2.4"
   },
   "peerDependencies": {
-    "@supabase/supabase-js": "^2.99.2",
+    "@supabase/supabase-js": "^2.103.3",
     "react": "^19.1.0",
     "react-dom": "^19.1.0"
   }

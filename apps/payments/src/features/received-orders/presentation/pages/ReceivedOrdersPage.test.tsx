@@ -1,19 +1,19 @@
 import { render, screen, fireEvent } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
+let mockGrantedPermissions = new Set([
+  "orders.read",
+  "orders.update",
+  "receipts.read",
+]);
+
 vi.mock("auth/client", () => ({
   useCurrentUserPermissions: () => ({
     isLoading: false,
-    hasPermission: (permission: string | string[]) => {
-      const granted = new Set([
-        "orders.read",
-        "orders.update",
-        "receipts.read",
-      ]);
-      return Array.isArray(permission)
-        ? permission.every((key) => granted.has(key))
-        : granted.has(permission);
-    },
+    hasPermission: (permission: string | string[]) =>
+      Array.isArray(permission)
+        ? permission.every((key) => mockGrantedPermissions.has(key))
+        : mockGrantedPermissions.has(permission),
   }),
 }));
 
@@ -93,6 +93,11 @@ function makeOrder(overrides: Partial<ReceivedOrder> = {}): ReceivedOrder {
 describe("ReceivedOrdersPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockGrantedPermissions = new Set([
+      "orders.read",
+      "orders.update",
+      "receipts.read",
+    ]);
   });
 
   it("renders loading spinner when loading", () => {
@@ -168,5 +173,17 @@ describe("ReceivedOrdersPage", () => {
 
     render(<ReceivedOrdersPage />);
     expect(screen.getByTestId("received-orders-title")).toBeInTheDocument();
+  });
+
+  it("shows access denied when orders.read is missing", () => {
+    mockGrantedPermissions = new Set(["orders.update", "receipts.read"]);
+    render(<ReceivedOrdersPage />);
+    expect(screen.getByTestId("access-denied")).toBeInTheDocument();
+  });
+
+  it("shows access denied when orders.update is missing", () => {
+    mockGrantedPermissions = new Set(["orders.read", "receipts.read"]);
+    render(<ReceivedOrdersPage />);
+    expect(screen.getByTestId("access-denied")).toBeInTheDocument();
   });
 });

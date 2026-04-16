@@ -220,8 +220,8 @@
       "confirm": "Confirmar",
       "cancel": "Cancelar",
       "perm": {
-        "orders.approve": "Aprobar Ordenes",
-        "orders.request_proof": "Solicitar Comprobante"
+        "orders_approve": "Aprobar Ordenes",
+        "orders_request_proof": "Solicitar Comprobante"
       }
     }
   },

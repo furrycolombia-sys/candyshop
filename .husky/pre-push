@@ -1,9 +1,9 @@
-#!/usr/bin/env bash
+#!/usr/bin/env sh
 BASE_BRANCH="origin/develop"
 git show-ref --verify --quiet "refs/remotes/${BASE_BRANCH}" || BASE_BRANCH="@{upstream}"
 
 # Shared change detection (aligned categories for hooks/CI).
-eval "$(bash scripts/detect-changes.sh "$BASE_BRANCH" "HEAD")"
+eval "$(sh scripts/detect-changes.sh "$BASE_BRANCH" "HEAD")"
 
 if [ "$DOCS_ONLY" = "true" ]; then
   echo "No code/deploy changes detected, skipping pre-push validation."
@@ -12,7 +12,7 @@ fi
 
 echo "Running pre-push checks..."
 
-SELECT_OUTPUT=$(bash scripts/select-workspaces.sh \
+SELECT_OUTPUT=$(sh scripts/select-workspaces.sh \
   "$STORE_CHANGED" \
   "$LANDING_CHANGED" \
   "$PAYMENTS_CHANGED" \
@@ -55,7 +55,7 @@ if [ "$DEPLOY_CHANGED" = "true" ]; then
     exit 1
   fi
 
-  bash scripts/docker-health-check.sh || exit 1
+  sh scripts/docker-health-check.sh || exit 1
 fi
 
 echo "All pre-push checks passed."

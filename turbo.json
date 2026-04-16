@@ -1,15 +1,11 @@
 {
   "$schema": "https://turborepo.dev/schema.json",
-  "ui": "tui",
+  "ui": "stream",
   "globalDependencies": ["tsconfig.base.json"],
   "globalEnv": [
     "NODE_ENV",
     "CI",
     "AUTH_PROVIDER_MODE",
-    "SITE_PUBLIC_ORIGIN",
-    "E2E_PUBLIC_ORIGIN",
-    "PLAYWRIGHT_USE_EXISTING_STACK",
-    "NEXT_PUBLIC_ENABLE_TEST_IDS",
     "NEXT_PUBLIC_SUPABASE_URL",
     "NEXT_PUBLIC_SUPABASE_ANON_KEY",
     "SUPABASE_SERVICE_ROLE_KEY"

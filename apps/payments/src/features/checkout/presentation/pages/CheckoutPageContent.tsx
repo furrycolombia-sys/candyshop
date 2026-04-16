@@ -86,7 +86,9 @@ export function CheckoutPageContent() {
         updateSellerState(sellerId, "submitted", null);
       } catch (error) {
         const message =
-          error instanceof Error ? error.message : t("errorOccurred");
+          error instanceof Error
+            ? error.message
+            : ((error as { message?: string })?.message ?? t("errorOccurred"));
         updateSellerState(sellerId, "error", message);
       }
     },
