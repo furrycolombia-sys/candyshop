@@ -43,7 +43,7 @@ until curl -sf "http://localhost:${PORT}/store/health" > /dev/null 2>&1; do
     docker logs "$CONTAINER_NAME"
     exit 1
   fi
-  sleep 2
+  node -e "setTimeout(()=>{},2000)" 2>/dev/null || true
   ELAPSED=$((ELAPSED + 2))
 done
 echo "Container is healthy."
