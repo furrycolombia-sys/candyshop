@@ -14,7 +14,7 @@ export function ReceivedOrdersPage() {
     return null;
   }
 
-  if (!hasPermission("orders.read")) {
+  if (!hasPermission(["orders.read", "orders.update"])) {
     return (
       <AccessDeniedState
         title={t("accessDenied")}

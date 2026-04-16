@@ -15,12 +15,22 @@ loadRootEnv();
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const rootDir = resolve(__dirname, "..");
-const composeFile = resolve(rootDir, "docker", "compose.yml");
 const isWindows = process.platform === "win32";
+
+// Select compose file based on SUPABASE_MODE (same logic as e2e-docker.mjs)
+const supabaseMode = process.env.SUPABASE_MODE || "local";
+const composeFile =
+  supabaseMode === "isolated"
+    ? resolve(rootDir, "docker", "compose.e2e.yml")
+    : supabaseMode === "docker"
+      ? resolve(rootDir, "docker", "compose.staging.yml")
+      : resolve(rootDir, "docker", "compose.yml");
 const dockerBin = isWindows ? "docker.exe" : "docker";
 
 const args = new Set(process.argv.slice(2));
-const wantsCloudflare = args.has("--cloudflare");
+// --cloudflare is kept as a CLI override to force tunnel on regardless of TUNNEL_MODE.
+// If TUNNEL_MODE=cloudflare in the env file, the tunnel starts automatically.
+const wantsCloudflare = args.has("--cloudflare") || process.env.TUNNEL_MODE === "cloudflare";
 const wantsStop = args.has("--stop");
 const skipBuild = args.has("--no-build");
 const wantsFresh = args.has("--fresh");
@@ -212,6 +222,17 @@ if (wantsCloudflare) {
 if (wantsStop) {
   log("Stopping Docker production stack...");
   run(dockerBin, buildComposeArgs(["down", "--remove-orphans"]));
+  // Force-remove the named container in case compose left it behind
+  // (e.g. created but never fully started — causes "name already in use" on next run).
+  const containerName = process.env.SITE_PROD_CONTAINER_NAME?.trim() || "candyshop-staging";
+  const rmResult = spawnSync(dockerBin, ["rm", "-f", containerName], {
+    cwd: rootDir,
+    encoding: "utf8",
+    env: process.env,
+  });
+  if (rmResult.status === 0 && rmResult.stdout?.trim()) {
+    log(`Removed leftover container: ${containerName}`);
+  }
   log("Done.");
   process.exit(0);
 }

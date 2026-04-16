@@ -64,11 +64,9 @@ export function useCurrentUserPermissions() {
         return;
       }
 
-      const shouldBlockOnReload = loadedUserIdRef.current !== userId;
-
-      if (shouldBlockOnReload) {
-        setIsLoading(true);
-      }
+      // Always show loading state while fetching to prevent stale permissions
+      // from briefly appearing after a session change or page navigation.
+      setIsLoading(true);
 
       const { data, error } = await supabase
         .from("user_permissions")

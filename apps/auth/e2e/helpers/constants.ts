@@ -8,7 +8,7 @@ const { loadRootEnv } = require(
 const { resolveE2EAppUrls } = require(
   path.resolve(__dirname, "../../../../scripts/app-url-resolver.js"),
 );
-loadRootEnv();
+loadRootEnv({ targetEnv: process.env.TARGET_ENV });
 const appUrls = resolveE2EAppUrls();
 
 export const APP_URLS = {

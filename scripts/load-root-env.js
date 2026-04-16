@@ -121,9 +121,14 @@ function loadEnvFile(filePath, canSet = () => true) {
  *
  * @param {object} [options]
  * @param {string} [options.targetEnv] - Override for TARGET_ENV (defaults to process.env.TARGET_ENV || 'dev')
+ * @param {boolean} [options.force] - When true, the target env file overwrites keys already present
+ *   in process.env (i.e. bypasses protectedKeys for step 2). Use this only for the `pnpm dev`
+ *   wrapper script so that stale shell vars are always replaced with local dev values.
+ *   Defaults to false — all other callers (CI, staging, dev:up) are unaffected.
  */
 function loadRootEnv(options = {}) {
   const targetEnv = options.targetEnv || process.env.TARGET_ENV || "dev";
+  const force = options.force === true;
   const envFilePath = resolve(rootDir, `.env.${targetEnv}`);
 
   if (!existsSync(envFilePath)) {
@@ -141,7 +146,8 @@ function loadRootEnv(options = {}) {
   );
 
   // 2. Load target env file (overrides defaults, but not CLI/CI vars)
-  loadEnvFile(envFilePath, (key) => !protectedKeys.has(key));
+  // When force=true, bypass protectedKeys so stale shell vars are overwritten.
+  loadEnvFile(envFilePath, (key) => force || !protectedKeys.has(key));
 
   // 3. Resolve $secret: references
   const isCI = process.env.CI === "true";

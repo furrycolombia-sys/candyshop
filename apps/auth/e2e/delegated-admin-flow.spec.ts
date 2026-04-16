@@ -44,13 +44,18 @@ test.describe.serial("Delegated admin purchase flow", () => {
   let seller: TestUser;
   let buyer: TestUser;
   let delegate: TestUser;
+  let productId: string;
 
   test.beforeAll(async () => {
     resetCounter();
     seller = await createTestUser("delegSeller", SELLER_PERMISSIONS);
     buyer = await createTestUser("delegBuyer", BUYER_PERMISSIONS);
-    // Delegate gets minimal permissions — just enough to read orders
-    delegate = await createTestUser("delegUser", ["orders.read"]);
+    // Delegate gets the permissions needed to access the sales page and act on orders
+    delegate = await createTestUser("delegUser", [
+      "orders.read",
+      "orders.update",
+      "receipts.read",
+    ]);
   });
 
   test.afterAll(async () => {
@@ -94,7 +99,7 @@ test.describe.serial("Delegated admin purchase flow", () => {
     productName: string,
     price: string,
     snapPrefix: string,
-  ) {
+  ): Promise<string> {
     await injectSession(context, user);
     await page.goto(`${APP_URLS.STUDIO}/en`);
     await page.waitForLoadState("networkidle");
@@ -120,6 +125,12 @@ test.describe.serial("Delegated admin purchase flow", () => {
       timeout: ELEMENT_TIMEOUT_MS,
     });
     await snap(page, `${snapPrefix}-product-created`);
+
+    // Extract product ID from the first product row test ID (product-row-{uuid})
+    const productRow = page.getByTestId(/^product-row-/).first();
+    await expect(productRow).toBeVisible({ timeout: ELEMENT_TIMEOUT_MS });
+    const rowTestId = await productRow.getAttribute("data-testid");
+    return rowTestId?.replace("product-row-", "") ?? "";
   }
 
   // ─── Helper: create a payment method in Payments ─────────────
@@ -176,7 +187,7 @@ test.describe.serial("Delegated admin purchase flow", () => {
     context,
     page,
   }) => {
-    await createProduct(
+    productId = await createProduct(
       page,
       context,
       seller,
@@ -289,10 +300,10 @@ test.describe.serial("Delegated admin purchase flow", () => {
     page,
   }) => {
     await injectSession(context, seller);
-    await page.goto(`${APP_URLS.STUDIO}/en/delegates`);
+    await page.goto(`${APP_URLS.STUDIO}/en/products/${productId}/delegates`);
     await page.waitForLoadState("networkidle");
 
-    await expect(page.getByTestId("delegate-management-page")).toBeVisible({
+    await expect(page.getByTestId("product-delegates-page")).toBeVisible({
       timeout: ELEMENT_TIMEOUT_MS,
     });
     await snap(page, "seller-delegate-page");

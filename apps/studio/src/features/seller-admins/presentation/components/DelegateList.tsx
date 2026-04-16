@@ -68,7 +68,7 @@ export function DelegateList({
             <div className="flex items-center gap-1.5">
               {delegate.permissions.map((perm) => (
                 <Badge key={perm} variant="secondary" className="text-xs">
-                  {t(`permissions.${perm}`)}
+                  {t(`permissions.${perm.replaceAll(".", "_")}`)}
                 </Badge>
               ))}
             </div>
