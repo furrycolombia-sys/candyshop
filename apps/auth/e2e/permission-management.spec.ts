@@ -69,6 +69,7 @@ async function navigateToUserDetail(
   targetUserId: string,
 ): Promise<void> {
   await page.goto(`${APP_URLS.ADMIN}/en/users`);
+  await page.waitForLoadState("networkidle", { timeout: 30_000 });
   await expect(page.getByTestId("users-page")).toBeVisible({
     timeout: ELEMENT_TIMEOUT_MS,
   });

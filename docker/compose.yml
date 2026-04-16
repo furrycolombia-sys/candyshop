@@ -16,3 +16,13 @@ services:
     ports:
       - "${HOST_PORT}:80"
     restart: unless-stopped
+    environment:
+      # Runtime overrides — allow the container to reach a local Supabase
+      # instance (e.g. during e2e) without a full image rebuild.
+      # These are only injected when the variables are set in the host env.
+      - SUPABASE_URL_INTERNAL=${SUPABASE_URL_INTERNAL:-}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY:-}
+    extra_hosts:
+      # Allow the container to reach host-local services (e.g. Supabase on
+      # localhost:64321) via host.docker.internal on Linux/Windows/Mac.
+      - "host.docker.internal:host-gateway"
