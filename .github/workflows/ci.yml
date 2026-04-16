@@ -76,9 +76,8 @@ jobs:
               - 'eslint.config.*'
               - 'prettier.config.*'
             deploy:
-              - 'Dockerfile'
-              - '.dockerignore'
               - 'docker/**'
+              - '.dockerignore'
 
       - name: Check if docs-only
         id: check
