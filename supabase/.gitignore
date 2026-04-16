@@ -2,6 +2,9 @@
 .branches
 .temp
 
+# Generated config (temporary, created by scripts/supabase-docker.mjs)
+config.toml
+
 # dotenvx
 .env.keys
 .env.local

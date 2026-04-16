@@ -153,6 +153,46 @@ const eslintConfig = defineConfig([
           message:
             "Use page.getByTestId('id') instead of page.locator('[data-testid=\"id\"]'). getByTestId is cleaner and more maintainable.",
         },
+        // Ban hardcoded Supabase ports and fallback URLs in e2e files
+        {
+          selector: "Literal[value=54321]",
+          message:
+            "Do not hardcode Supabase port 54321 in e2e files. Read NEXT_PUBLIC_SUPABASE_URL from process.env.",
+        },
+        {
+          selector: "Literal[value=64321]",
+          message:
+            "Do not hardcode Supabase port 64321 in e2e files. Read NEXT_PUBLIC_SUPABASE_URL from process.env.",
+        },
+        {
+          selector: "Literal[value=/127\\.0\\.0\\.1:(54321|64321)/]",
+          message:
+            "Do not hardcode Supabase fallback URLs in e2e files. Read NEXT_PUBLIC_SUPABASE_URL from process.env.",
+        },
+        {
+          selector:
+            "CallExpression[callee.name='getLocalSupabaseEnv'], CallExpression[callee.object.name='getLocalSupabaseEnv']",
+          message:
+            "getLocalSupabaseEnv() is banned in e2e files. Read credentials directly from process.env.",
+        },
+      ],
+    },
+  },
+  // E2E Tests - ban local-supabase-env imports
+  {
+    files: ["**/e2e/**/*.{ts,tsx,js,jsx}"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: ["**/local-supabase-env*", "**/local-supabase-env.js"],
+              message:
+                "local-supabase-env is banned in e2e files. Read credentials directly from process.env.",
+            },
+          ],
+        },
       ],
     },
   },

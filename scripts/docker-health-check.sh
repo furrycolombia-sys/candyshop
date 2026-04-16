@@ -1,113 +1,108 @@
-#!/usr/bin/env sh
-# Docker Health Check Script
-# Builds the Docker image, runs the container, and runs E2E smoke tests against it.
-# Used by the pre-push hook when deploy-related files change.
+#!/usr/bin/env bash
+# Docker health check — builds the image, runs it on a random port,
+# waits for /health, then cleans up.
+# Used by: .husky/pre-push (when deploy files change) + CI docker-smoke-tests job.
 
-set -eu
+set -euo pipefail
 
-# Ensure Docker is in PATH (Docker Desktop on Windows may not be in Git Bash PATH)
-for docker_path in \
-  "/c/Program Files/Docker/Docker/resources/bin" \
-  "$HOME/AppData/Local/Docker/resources/bin" \
-  "/usr/local/bin"; do
-  if [ -d "$docker_path" ] && ! command -v docker > /dev/null 2>&1; then
-    export PATH="$docker_path:$PATH"
-  fi
-done
-
-if ! command -v docker > /dev/null 2>&1; then
-  echo "ERROR: docker command not found. Install Docker Desktop and ensure it's running."
-  exit 1
-fi
-
-IMAGE_NAME="candyshop-test"
+IMAGE_NAME="candyshop-health-check"
 CONTAINER_NAME="candyshop-health-check-$$"
-MAX_WAIT=60
-POLL_INTERVAL=2
-
-# Colors for output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-NC='\033[0m'
 
 cleanup() {
-  echo ""
-  echo "Cleaning up container..."
-  docker rm -f "$CONTAINER_NAME" > /dev/null 2>&1 || true
+  if docker ps -aq -f name="^${CONTAINER_NAME}$" | grep -q .; then
+    echo "Cleaning up container $CONTAINER_NAME..."
+    docker rm -f "$CONTAINER_NAME" > /dev/null 2>&1 || true
+  fi
 }
-
 trap cleanup EXIT
 
-# ─── Step 1: Build Docker image ──────────────────────────────────────────────
-
-printf "${YELLOW}Step 1/3: Building Docker image...${NC}\n"
-if ! docker build --no-cache \
-  --build-arg TARGET_ENV=dev \
-  --build-arg NEXT_PUBLIC_ENABLE_TEST_IDS=true \
-  --build-arg AUTH_PROVIDER_MODE=mock \
-  --build-arg NEXT_PUBLIC_SUPABASE_URL=http://localhost:54321 \
-  --build-arg NEXT_PUBLIC_SUPABASE_ANON_KEY=mock-anon-key \
-  --build-arg SUPABASE_SERVICE_ROLE_KEY=mock-service-key \
-  --build-arg SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID=mock \
-  --build-arg SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET=mock \
-  --build-arg SUPABASE_AUTH_EXTERNAL_DISCORD_CLIENT_ID=mock \
-  --build-arg SUPABASE_AUTH_EXTERNAL_DISCORD_SECRET=mock \
-  -t "$IMAGE_NAME" .; then
-  printf "${RED}Docker build failed!${NC}\n"
-  exit 1
+# ── Load env vars from .env.dev if not already set ────────────────────────────
+# Always run loadEnv to fill in any missing vars (e.g. app URLs not set by CI).
+# loadEnv only writes vars NOT already in process.env, so CI vars always win.
+# In CI, all NEXT_PUBLIC_* vars are pre-set via workflow env — skip the loader.
+if [ -z "${CI:-}" ] && [ -f ".env.dev" ]; then
+  echo "Loading env from .env.dev..."
+  eval "$(node --input-type=module <<'EOF'
+import { loadEnv } from './scripts/load-env.mjs';
+loadEnv('dev');
+for (const [k, v] of Object.entries(process.env)) {
+  if (k.startsWith('NEXT_PUBLIC_') || k === 'APP_PUBLIC_ORIGIN') {
+    process.stdout.write(`export ${k}=${JSON.stringify(v)}\n`);
+  }
+}
+EOF
+)"
 fi
-printf "${GREEN}Build successful.${NC}\n"
-echo ""
 
-# ─── Step 2: Run container ───────────────────────────────────────────────────
+# ── 1. Build ──────────────────────────────────────────────────────────────────
+# Build args are generated dynamically from the exported env vars — same keys
+# as docker-build.mjs uses, all sourced from the env loader above.
+BUILD_ARGS=$(node --input-type=module <<'EOF'
+const keys = [
+  'NEXT_PUBLIC_SUPABASE_URL',
+  'NEXT_PUBLIC_SUPABASE_ANON_KEY',
+  'NEXT_PUBLIC_AUTH_URL',
+  'NEXT_PUBLIC_AUTH_HOST_URL',
+  'NEXT_PUBLIC_STORE_URL',
+  'NEXT_PUBLIC_ADMIN_URL',
+  'NEXT_PUBLIC_PLAYGROUND_URL',
+  'NEXT_PUBLIC_LANDING_URL',
+  'NEXT_PUBLIC_PAYMENTS_URL',
+  'NEXT_PUBLIC_STUDIO_URL',
+  'NEXT_PUBLIC_BUILD_HASH',
+  'NEXT_PUBLIC_ENABLE_TEST_IDS',
+  'APP_PUBLIC_ORIGIN',
+  'NEXT_PUBLIC_ENV_DEBUG',
+];
+for (const k of keys) {
+  process.stdout.write(`--build-arg ${k}=${process.env[k] ?? ''}\n`);
+}
+EOF
+)
 
-printf "${YELLOW}Step 2/3: Starting container...${NC}\n"
+echo "Building Docker image: $IMAGE_NAME..."
+# shellcheck disable=SC2086
+docker build \
+  -t "$IMAGE_NAME" \
+  -f docker/smoke/Dockerfile \
+  $BUILD_ARGS \
+  . || { echo "ERROR: Docker build failed."; exit 1; }
 
-# Use port 0 to let Docker assign a random available port
-docker run -d --name "$CONTAINER_NAME" -p 0:80 "$IMAGE_NAME" > /dev/null
+# ── 2. Pick a random available port ───────────────────────────────────────────
+PORT=$(node -e "
+  const net = require('net');
+  const s = net.createServer();
+  s.listen(0, () => { process.stdout.write(String(s.address().port)); s.close(); });
+")
+echo "Using port $PORT for health check."
 
-# Get the actual assigned port
-HOST_PORT=$(docker port "$CONTAINER_NAME" 80 | head -1 | cut -d: -f2)
-BASE_URL="http://localhost:${HOST_PORT}"
+# ── 3. Run container ──────────────────────────────────────────────────────────
+docker run -d \
+  --name "$CONTAINER_NAME" \
+  -p "${PORT}:80" \
+  "$IMAGE_NAME" > /dev/null
 
-echo "Container running on port $HOST_PORT"
-
-# Wait for the container to be ready
-echo "Waiting for container to be healthy..."
-elapsed=0
-health_status="000"
-while [ $elapsed -lt $MAX_WAIT ]; do
-  health_status=$(curl -o /dev/null -s -w "%{http_code}" --max-time 3 "${BASE_URL}/health" 2>/dev/null || echo "000")
-  if [ "$health_status" = "200" ]; then
-    printf "${GREEN}Container is healthy after ${elapsed}s.${NC}\n"
-    break
+# ── 4. Wait for /health endpoint (max 60s) ────────────────────────────────────
+echo "Waiting for /health endpoint..."
+ELAPSED=0
+until curl -sf "http://localhost:${PORT}/health" > /dev/null 2>&1; do
+  if [ "$ELAPSED" -ge 60 ]; then
+    echo "ERROR: Container did not become healthy within 60s."
+    docker logs "$CONTAINER_NAME"
+    exit 1
   fi
-  sleep $POLL_INTERVAL
-  elapsed=$((elapsed + POLL_INTERVAL))
+  node -e "setTimeout(()=>{},2000)" 2>/dev/null || true
+  ELAPSED=$((ELAPSED + 2))
 done
+echo "Container is healthy."
 
-if [ "$health_status" != "200" ]; then
-  printf "${RED}Container failed to become healthy within ${MAX_WAIT}s.${NC}\n"
-  echo "Container logs:"
-  docker logs "$CONTAINER_NAME" 2>&1 | tail -30
-  exit 1
-fi
-echo ""
+# ── 5. E2E smoke tests against the container ──────────────────────────────────
+echo "Running E2E smoke tests against container..."
+CONTAINER_URL="http://localhost:${PORT}" \
+  pnpm --filter store exec playwright test --config="$(pwd)/docker/smoke/playwright.config.ts" || {
+    echo "ERROR: E2E smoke tests failed."
+    docker logs "$CONTAINER_NAME"
+    exit 1
+  }
 
-# ─── Step 3: Run E2E smoke tests ─────────────────────────────────────────────
-
-printf "${YELLOW}Step 3/3: Running E2E smoke tests against Docker container...${NC}\n"
-echo ""
-
-# Run only the smoke tests (route health checks).
-# Auth flow tests require specific provider configuration and are tested in CI.
-if DOCKER_BASE_URL="$BASE_URL" pnpm --filter store exec playwright test --config ../../docker/e2e/playwright.config.ts --grep "Docker Smoke"; then
-  echo ""
-  printf "${GREEN}Docker smoke tests passed!${NC}\n"
-  exit 0
-else
-  echo ""
-  printf "${RED}Docker smoke tests FAILED. Push blocked.${NC}\n"
-  exit 1
-fi
+echo "Docker health check passed."

@@ -69,6 +69,7 @@ async function navigateToUserDetail(
   targetUserId: string,
 ): Promise<void> {
   await page.goto(`${APP_URLS.ADMIN}/en/users`);
+  await page.waitForLoadState("networkidle", { timeout: 30_000 });
   await expect(page.getByTestId("users-page")).toBeVisible({
     timeout: ELEMENT_TIMEOUT_MS,
   });
@@ -219,7 +220,14 @@ test.describe.serial("Permission management", () => {
     await expectHidden(page, "sidebar-paymentMethods");
     await snap(page, "payments-methods-hidden");
 
+    await context.clearCookies();
+    await injectSession(context, target);
+    // Navigate to a different app first to fully reset the Next.js router cache
+    // and force the Supabase client to re-initialize on the payments app
+    await page.goto(`${APP_URLS.AUTH}/en`);
+    await page.waitForLoadState("networkidle");
     await page.goto(`${APP_URLS.PAYMENTS}/en/payment-methods`);
+    await page.waitForLoadState("networkidle");
     await expectVisible(page, "access-denied");
 
     await setPermissions(page, context, admin, target, {
@@ -234,7 +242,12 @@ test.describe.serial("Permission management", () => {
     await expectHidden(page, "sidebar-checkout");
     await snap(page, "payments-checkout-hidden");
 
+    await context.clearCookies();
+    await injectSession(context, target);
+    await page.goto(`${APP_URLS.AUTH}/en`);
+    await page.waitForLoadState("networkidle");
     await page.goto(`${APP_URLS.PAYMENTS}/en/checkout`);
+    await page.waitForLoadState("networkidle");
     await expectVisible(page, "access-denied");
 
     await setPermissions(page, context, admin, target, {
@@ -249,7 +262,12 @@ test.describe.serial("Permission management", () => {
     await expectHidden(page, "sidebar-sales");
     await snap(page, "payments-sales-hidden");
 
+    await context.clearCookies();
+    await injectSession(context, target);
+    await page.goto(`${APP_URLS.AUTH}/en`);
+    await page.waitForLoadState("networkidle");
     await page.goto(`${APP_URLS.PAYMENTS}/en/sales`);
+    await page.waitForLoadState("networkidle");
     await expectVisible(page, "access-denied");
 
     await setPermissions(page, context, admin, target, {

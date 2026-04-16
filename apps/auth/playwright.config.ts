@@ -5,9 +5,9 @@ import { defineConfig, devices } from "@playwright/test";
 // Load env vars (resolves $secret: refs and sets TARGET_ENV-specific config)
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { loadRootEnv } = require(
-  path.resolve(__dirname, "../../scripts/load-root-env.js"),
+  path.resolve(__dirname, "../../scripts/load-root-env.cjs"),
 );
-loadRootEnv();
+loadRootEnv({ targetEnv: process.env.TARGET_ENV });
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { resolveE2EAppUrls } = require(

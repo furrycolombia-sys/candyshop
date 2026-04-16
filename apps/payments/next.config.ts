@@ -1,10 +1,6 @@
 import type { NextConfig } from "next";
 import createNextIntlPlugin from "next-intl/plugin";
 
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const { loadRootEnv } = require("../../scripts/load-root-env.js");
-loadRootEnv();
-
 const withNextIntl = createNextIntlPlugin(
   "./src/shared/infrastructure/i18n/request.ts",
 );

@@ -3,54 +3,51 @@ import path from "node:path";
 import type { BrowserContext } from "@playwright/test";
 import { createClient } from "@supabase/supabase-js";
 
-// eslint-disable-next-line @typescript-eslint/no-require-imports -- CJS loader script
-const { loadRootEnv } = require(
-  path.resolve(__dirname, "../../../../scripts/load-root-env.js"),
-);
-// eslint-disable-next-line @typescript-eslint/no-require-imports -- local Supabase env resolver
-const { getLocalSupabaseEnv } = require(
-  path.resolve(__dirname, "../../../../scripts/local-supabase-env.js"),
-);
 // eslint-disable-next-line @typescript-eslint/no-require-imports -- shared Node helper
 const { resolveE2EAppUrls } = require(
   path.resolve(__dirname, "../../../../scripts/app-url-resolver.js"),
 );
-loadRootEnv();
 
-const localSupabaseEnv = getLocalSupabaseEnv();
-
-function isPlaceholder(value: string | undefined) {
-  return !value || value.startsWith("YOUR_");
+/**
+ * Encode a string as base64url (URL-safe base64, no padding).
+ * @supabase/ssr uses base64url encoding for cookie values — standard btoa()
+ * produces base64 with +/= chars that @supabase/ssr's stringFromBase64URL
+ * will reject as invalid characters.
+ */
+function toBase64URL(str: string): string {
+  return btoa(str).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 }
 
-// When running in e2e mode (E2E_PUBLIC_ORIGIN is set), prefer the env vars
-// from .env.e2e over local supabase status — the e2e Supabase runs on a
-// different port (64321) than dev (54321).
-const isE2EMode = Boolean(process.env.E2E_PUBLIC_ORIGIN);
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
+if (!SUPABASE_URL)
+  throw new Error(
+    "NEXT_PUBLIC_SUPABASE_URL is not set. Ensure the correct .env.* file is loaded.",
+  );
 
-// Always prefer local Supabase credentials — the live site tunnels through
-// the same local instance, so local keys are valid for both local and live E2E.
-const SUPABASE_URL =
-  (!isE2EMode && localSupabaseEnv.API_URL) ||
-  (isPlaceholder(process.env.NEXT_PUBLIC_SUPABASE_URL)
-    ? "http://127.0.0.1:54321"
-    : process.env.NEXT_PUBLIC_SUPABASE_URL) ||
-  "http://127.0.0.1:54321";
-const SERVICE_ROLE_KEY =
-  (!isE2EMode && localSupabaseEnv.SERVICE_ROLE_KEY) ||
-  (isPlaceholder(process.env.SUPABASE_SERVICE_ROLE_KEY)
-    ? ""
-    : process.env.SUPABASE_SERVICE_ROLE_KEY) ||
-  "";
+const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+if (!SERVICE_ROLE_KEY)
+  throw new Error(
+    "SUPABASE_SERVICE_ROLE_KEY is not set. Ensure the correct .env.* file is loaded.",
+  );
+
 const AUTH_URL = resolveE2EAppUrls().auth;
 
-export const hasAdminTestEnv =
-  Boolean(SERVICE_ROLE_KEY) &&
-  SERVICE_ROLE_KEY !== "YOUR_SUPABASE_SERVICE_ROLE_KEY" &&
-  SERVICE_ROLE_KEY.split(".").length === 3;
+export const hasAdminTestEnv = SERVICE_ROLE_KEY.split(".").length === 3;
 
 /** Session token lifetime in seconds for injected cookies. */
-const SESSION_EXPIRY_SECONDS = 3600;
+export const SESSION_EXPIRY_SECONDS = 3600;
+
+/**
+ * Derive the shared cookie domain from an app URL.
+ * For localhost/127.0.0.1, returns the hostname as-is.
+ * For production domains, returns the root domain with a leading dot.
+ */
+export function buildSharedCookieDomain(url: string): string {
+  const host = new URL(url).hostname;
+  if (host === "localhost" || host === "127.0.0.1") return host;
+  const parts = host.split(".");
+  return `.${parts.slice(-2).join(".")}`;
+}
 
 /** Reusable headers for admin REST API calls. */
 function adminHeaders(extra?: Record<string, string>): Record<string, string> {
@@ -294,30 +291,18 @@ export async function injectSession(
   context: BrowserContext,
   user: TestUser,
 ): Promise<void> {
-  // When running against the Docker e2e container, the app was built with
-  // NEXT_PUBLIC_SUPABASE_URL=http://localhost:54321, so the cookie name must
-  // use "localhost" as the project ref. When running against the live site,
-  // use the public Supabase URL for the project ref.
-  const supabaseUrlForRef =
-    process.env.E2E_PUBLIC_ORIGIN && process.env.NEXT_PUBLIC_SUPABASE_URL
-      ? process.env.NEXT_PUBLIC_SUPABASE_URL
-      : SUPABASE_URL;
-  // For localhost URLs the hostname is just "localhost" — use it directly.
-  // For hosted URLs like "abc.supabase.co", extract the subdomain.
-  const refHostname = new URL(supabaseUrlForRef).hostname;
+  // Derive project ref from SUPABASE_URL (already resolved from env file above).
+  // Must match SUPABASE_COOKIE_KEY in packages/api/src/supabase/config.ts
+  // which uses deriveProjectRef: 127.0.0.1 → "127.0.0.1", localhost → "localhost"
+  const refHostname = new URL(SUPABASE_URL).hostname;
   const projectRef =
     refHostname === "localhost" || refHostname === "127.0.0.1"
-      ? "localhost"
+      ? refHostname
       : refHostname.split(".")[0];
   const cookieBase = `sb-${projectRef}-auth-token`;
-  const authHost = new URL(AUTH_URL);
+  const sharedDomain = buildSharedCookieDomain(AUTH_URL);
   const isLocalhost =
-    authHost.hostname === "localhost" || authHost.hostname === "127.0.0.1";
-  const hostParts = authHost.hostname.split(".");
-  const sharedDomain =
-    !isLocalhost && hostParts.length >= 2
-      ? `.${hostParts.slice(-2).join(".")}`
-      : authHost.hostname;
+    sharedDomain === "localhost" || sharedDomain === "127.0.0.1";
 
   // Clear existing auth cookies first
   const cookies = await context.cookies();
@@ -329,7 +314,7 @@ export async function injectSession(
   await context.addCookies([
     {
       name: `${cookieBase}.0`,
-      value: `base64-${btoa(
+      value: `base64-${toBase64URL(
         JSON.stringify({
           access_token: user.accessToken,
           refresh_token: user.refreshToken,

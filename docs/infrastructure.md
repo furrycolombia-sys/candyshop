@@ -33,21 +33,31 @@ GitHub (push to main)
 
 ## Development Environments
 
-Three environments with clear separation: dev (local Vite), staging (local Docker), and prod (remote server).
+Three environments with clear separation: dev (local), e2e (Docker + isolated Supabase), staging (full Docker stack + Cloudflare), and prod (remote server).
 
-| Environment      | Command               | Description                                           |
-| ---------------- | --------------------- | ----------------------------------------------------- |
-| Dev              | `pnpm dev`            | Vite dev servers on ports 5000–5006                   |
-| Dev + Supabase   | `pnpm dev:up`         | Dev servers + local Supabase start                    |
-| Dev + Tunnel     | `pnpm dev:up:tunnel`  | Dev + Supabase + Cloudflare tunnel to ffxivbe.org     |
-| Staging          | `pnpm staging`        | Docker container on port 8088                         |
-| Staging (fresh)  | `pnpm staging:fresh`  | Rebuild Docker from scratch (no cache)                |
-| Staging + Tunnel | `pnpm staging:tunnel` | Docker + Cloudflare sidecar in compose                |
-| Staging Public   | `pnpm staging:public` | Docker + named Cloudflare tunnel to store.ffxivbe.org |
-| Staging Stop     | `pnpm staging:stop`   | Stop staging Docker container                         |
-| Prod Deploy      | `pnpm prod:deploy`    | SSH deploy to production server via deploy.sh         |
-| Prod Logs        | `pnpm prod:logs`      | Tail production Docker logs (candyshop-prod)          |
-| Prod Status      | `pnpm prod:status`    | Check production container status                     |
+| Environment      | Command                                       | Description                                             |
+| ---------------- | --------------------------------------------- | ------------------------------------------------------- |
+| Dev              | `pnpm dev`                                    | Vite dev servers on ports 5000–5006 + local Supabase    |
+| Dev + Supabase   | `pnpm dev:up`                                 | Dev servers + local Supabase start                      |
+| Dev + Tunnel     | `pnpm dev:up:tunnel`                          | Dev + Supabase + Cloudflare tunnel to ffxivbe.org       |
+| E2E              | `pnpm test:e2e`                               | Docker app (port 8089) + isolated Supabase (port 64321) |
+| Staging          | `pnpm staging`                                | Docker app + full Supabase stack (port 8088)            |
+| Staging + Tunnel | `pnpm staging:tunnel`                         | Staging + Cloudflare sidecar (public URLs)              |
+| Staging E2E      | `pnpm test:e2e -- --env staging --cloudflare` | E2E tests against staging via Cloudflare tunnel         |
+| Staging (fresh)  | `pnpm staging:fresh`                          | Rebuild Docker from scratch (no cache)                  |
+| Staging Stop     | `pnpm staging:stop`                           | Stop staging Docker container                           |
+| Prod Deploy      | `pnpm prod:deploy`                            | SSH deploy to production server via deploy.sh           |
+| Prod Logs        | `pnpm prod:logs`                              | Tail production Docker logs (candyshop-prod)            |
+| Prod Status      | `pnpm prod:status`                            | Check production container status                       |
+
+### Environment summary
+
+| Env     | Apps                    | Supabase             | Port | Auth redirects                             |
+| ------- | ----------------------- | -------------------- | ---- | ------------------------------------------ |
+| dev     | Vite local (5000–5006)  | Local CLI (54321)    | —    | localhost:5000–5006                        |
+| e2e     | Docker container        | Isolated CLI (64321) | 8089 | localhost:8089                             |
+| staging | Docker container        | Docker Compose       | 8088 | https://store.ffxivbe.org (via Cloudflare) |
+| prod    | Docker on remote server | Supabase Cloud       | 9090 | https://store.furrycolombia.com            |
 
 Environment files:
 
@@ -137,8 +147,8 @@ The container runs Nginx + supervisord with 7 standalone Next.js servers inside.
 ```env
 SITE_PROD_CONTAINER_NAME=candyshop-prod
 SITE_PROD_IMAGE_NAME=candyshop-prod
-SITE_PROD_PORT=9090
-SITE_PUBLIC_ORIGIN=https://store.furrycolombia.com
+APP_PUBLIC_ORIGIN=https://store.furrycolombia.com
+APP_INTERNAL_ORIGIN=http://candyshop-prod:80
 NEXT_PUBLIC_SUPABASE_URL=<supabase-url>
 NEXT_PUBLIC_SUPABASE_ANON_KEY=<supabase-anon-key>
 AUTH_PROVIDER_MODE=supabase
@@ -352,8 +362,8 @@ git clone --branch main --depth 1 https://github.com/furrycolombia-sys/candyshop
 cat > ~/.env.prod << 'EOF'
 SITE_PROD_CONTAINER_NAME=candyshop-prod
 SITE_PROD_IMAGE_NAME=candyshop-prod
-SITE_PROD_PORT=9090
-SITE_PUBLIC_ORIGIN=https://store.furrycolombia.com
+APP_PUBLIC_ORIGIN=https://store.furrycolombia.com
+APP_INTERNAL_ORIGIN=http://candyshop-prod:80
 NEXT_PUBLIC_SUPABASE_URL=<supabase-url>
 NEXT_PUBLIC_SUPABASE_ANON_KEY=<supabase-anon-key>
 AUTH_PROVIDER_MODE=supabase
@@ -471,10 +481,8 @@ docker compose -f ~/candyshop/docker/compose.yml --env-file ~/.env.prod up -d --
 2. Run tests locally:
 
 ```bash
-E2E_PUBLIC_ORIGIN=https://store.furrycolombia.com \
+TARGET_ENV=prod \
 PLAYWRIGHT_USE_EXISTING_STACK=true \
-NEXT_PUBLIC_SUPABASE_URL=https://olafyajipvsltohagiah.supabase.co \
-SUPABASE_SERVICE_ROLE_KEY=<service-role-key> \
 pnpm --filter store exec playwright test --reporter=list
 ```
 

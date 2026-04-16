@@ -37,8 +37,13 @@ candyshop/
 │   ├── shared/                    # Shared utilities and hooks
 │   ├── auth/                      # Auth domain logic, providers
 │   └── app-components/            # App-level shared components (uses next-intl)
+├── scripts/                       # Dev tooling scripts
+│   ├── start.mjs                  # Entry point for pnpm dev
+│   ├── build.mjs                  # Entry point for pnpm build
+│   ├── load-env.mjs               # Env loader with $secret: resolution
+│   ├── lint-envs.mjs              # Verifies all .env.X files are in sync
+│   └── supabase-cmd.mjs           # Supabase CLI wrapper
 ├── orval.config.ts                # Orval code generation config
-├── graphql-codegen.ts             # GraphQL code generation config
 ├── eslint.config.mjs              # Monorepo-wide ESLint
 ├── package.json                   # Root workspace config
 └── pnpm-workspace.yaml            # Workspace definition
@@ -109,7 +114,6 @@ This project follows **Clean Architecture** at two levels: repository-level (pac
 | **Vitest**          | Unit testing      |
 | **Testing Library** | Component testing |
 | **Playwright**      | E2E testing       |
-| **MSW**             | API mocking       |
 
 ---
 
@@ -181,34 +185,37 @@ Prefer the simplest solution. If DRY and KISS conflict, favor KISS.
 
 ### Environment Variables
 
-The project runs out-of-the-box with **no `.env.local` setup required**:
+See [Environment System](docs/environment.md) for the full reference.
 
-| File           | Purpose                        | Committed? |
-| -------------- | ------------------------------ | ---------- |
-| `.env.example` | Safe defaults (mocks enabled)  | Yes        |
-| `.env`         | Local overrides (real backend) | No         |
+| Command                    | Description                             |
+| -------------------------- | --------------------------------------- |
+| `pnpm dev`                 | Start all apps with `.env.dev`          |
+| `pnpm dev --env test`      | Start all apps with `.env.test`         |
+| `pnpm build`               | Build with `.env.prod`                  |
+| `pnpm build --env staging` | Build with `.env.staging`               |
+| `pnpm lint:env`            | Verify all env files have the same keys |
+| `pnpm sync-secrets`        | Sync `.secrets` from GitHub             |
 
-- `.env.example` contains non-secret defaults (`ENABLE_MOCKS=true`, localhost API)
-- `.env` overrides `.env.example` (for connecting to real backends, gitignored)
+Debug viewer: http://localhost:5003/en/env (requires `ENV_DEBUG=true` in env file)
 
 ### Workspace Commands
 
-| Command             | Description                                          |
-| ------------------- | ---------------------------------------------------- |
-| `pnpm dev`          | Start all apps                                       |
-| `pnpm dev:store`    | Start store app                                      |
-| `pnpm dev:landing`  | Start landing page                                   |
-| `pnpm dev:payments` | Start payments app                                   |
-| `pnpm dev:admin`    | Start admin app                                      |
-| `pnpm dev:auth`     | Start auth app                                       |
-| `pnpm dev:studio`   | Start studio app                                     |
-| `pnpm build`        | Build all workspaces                                 |
-| `pnpm lint`         | Lint all workspaces                                  |
-| `pnpm typecheck`    | Type-check all workspaces                            |
-| `pnpm test`         | Run all tests                                        |
-| `pnpm test:store`   | Run store tests                                      |
-| `pnpm smoke`        | Smoke test all apps (requires `pnpm dev` + Supabase) |
-| `pnpm codegen`      | Generate API clients                                 |
+| Command                 | Description                             |
+| ----------------------- | --------------------------------------- |
+| `pnpm dev`              | Start all apps with `.env.dev`          |
+| `pnpm dev --env X`      | Start all apps with `.env.X`            |
+| `pnpm build`            | Build all apps with `.env.prod`         |
+| `pnpm build --env X`    | Build all apps with `.env.X`            |
+| `pnpm lint`             | Lint all workspaces                     |
+| `pnpm lint:env`         | Verify all env files have the same keys |
+| `pnpm typecheck`        | Type-check all workspaces               |
+| `pnpm test`             | Run all tests                           |
+| `pnpm codegen`          | Generate API clients (Orval)            |
+| `pnpm codegen:supabase` | Regenerate Supabase types               |
+| `pnpm supabase:start`   | Start local Supabase CLI instance       |
+| `pnpm supabase:stop`    | Stop local Supabase CLI instance        |
+| `pnpm supabase:reset`   | Reset local Supabase DB                 |
+| `pnpm sync-secrets`     | Sync `.secrets` from GitHub             |
 
 ### App Ports
 

@@ -17,7 +17,7 @@
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
     "@monorepo/app-components": "workspace:*",
-    "@supabase/supabase-js": "^2.99.2",
+    "@supabase/supabase-js": "^2.103.3",
     "@tanstack/react-query": "^5.91.0",
     "api": "workspace:*",
     "auth": "workspace:*",

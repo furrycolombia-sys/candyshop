@@ -1,142 +1,75 @@
-/* eslint-disable @typescript-eslint/no-require-imports */
-const fs = require("node:fs");
-const path = require("node:path");
+/**
+ * Resolves app URLs for E2E tests and Playwright configs.
+ *
+ * Reads APP_PUBLIC_ORIGIN from the active env file (loaded by load-root-env.cjs).
+ * If set, derives each app URL by joining the origin with the app's path.
+ * Falls back to NEXT_PUBLIC_*_URL env vars, then to devUrl from app-links.json.
+ *
+ * No E2E mode detection. No isE2EMode flag. The env file IS the configuration.
+ * To run E2E against prod, load .env.prod — no code changes needed.
+ */
 
-const configPath = path.resolve(__dirname, "../config/app-links.json");
-const appLinkDefinitions = JSON.parse(fs.readFileSync(configPath, "utf8"));
+// @ts-check
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const path = require("path");
 
-function trimTrailingSlash(value) {
-  return value.replace(/\/+$/, "");
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { loadRootEnv } = require(path.resolve(__dirname, "./load-root-env.cjs"));
+loadRootEnv({ targetEnv: process.env.TARGET_ENV });
+
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const appLinks = require("../config/app-links.json");
+
+/**
+ * @param {string} s
+ * @returns {string}
+ */
+function stripTrailingSlash(s) {
+  return s.replace(/\/+$/, "");
 }
 
-function joinUrl(baseUrl, pathname = "") {
-  if (!pathname || pathname === "/") {
-    return trimTrailingSlash(baseUrl);
-  }
+/**
+ * Resolves all app URLs for the active environment.
+ *
+ * Resolution order:
+ *   1. APP_PUBLIC_ORIGIN + app.path  (when APP_PUBLIC_ORIGIN is set)
+ *   2. NEXT_PUBLIC_<APP>_URL         (per-app override)
+ *   3. app.devUrl                    (hardcoded localhost port from app-links.json)
+ *
+ * @returns {Record<string, string>}
+ */
+function resolveE2EAppUrls() {
+  const rawOrigin = process.env.APP_PUBLIC_ORIGIN?.trim() ?? "";
+  // In local dev mode (APPS_MODE=local), apps run on individual ports —
+  // APP_PUBLIC_ORIGIN points to a single-origin proxy that isn't running.
+  // Use per-app NEXT_PUBLIC_*_URL vars instead.
+  const appsMode = process.env.APPS_MODE ?? "local";
+  const publicOrigin =
+    rawOrigin && appsMode !== "local" ? stripTrailingSlash(rawOrigin) : null;
 
-  return `${trimTrailingSlash(baseUrl)}${pathname}`;
-}
+  /** @type {Record<string, string>} */
+  const result = {};
 
-function normalizeEnvValue(value) {
-  return typeof value === "string" ? value.trim() : "";
-}
-
-function getPublicOrigin(env = process.env) {
-  return (
-    normalizeEnvValue(env.E2E_PUBLIC_ORIGIN) ||
-    normalizeEnvValue(env.SITE_PUBLIC_ORIGIN)
-  );
-}
-
-function resolveFromOrigin(origin, pathname) {
-  if (!origin) return "";
-  return pathname === "/"
-    ? trimTrailingSlash(origin)
-    : joinUrl(origin, pathname);
-}
-
-function resolveUrls(target = "runtime", env = process.env) {
-  const publicOrigin = getPublicOrigin(env);
-  const isProduction = normalizeEnvValue(env.NODE_ENV) === "production";
-  const shouldPreferPublicOrigin =
-    Boolean(publicOrigin) && (target === "public" || isProduction);
-
-  return Object.fromEntries(
-    Object.entries(appLinkDefinitions).map(([app, definition]) => {
-      if (target === "e2e" && normalizeEnvValue(env.E2E_PUBLIC_ORIGIN)) {
-        return [app, resolveFromOrigin(publicOrigin, definition.path)];
-      }
-
-      const explicit = normalizeEnvValue(env[definition.envKey]);
-
-      if (shouldPreferPublicOrigin) {
-        return [app, resolveFromOrigin(publicOrigin, definition.path)];
-      }
-
-      if (explicit) {
-        return [app, explicit];
-      }
-
-      if (target === "e2e") {
-        return [
-          app,
-          resolveFromOrigin(publicOrigin, definition.path) || definition.devUrl,
-        ];
-      }
-
-      if (target === "public") {
-        return [
-          app,
-          resolveFromOrigin(publicOrigin, definition.path) || definition.path,
-        ];
-      }
-
-      if (isProduction) {
-        return [
-          app,
-          resolveFromOrigin(publicOrigin, definition.path) || definition.path,
-        ];
-      }
-
-      return [app, definition.devUrl];
-    }),
-  );
-}
-
-function resolveRuntimeAppUrls(env = process.env) {
-  return resolveUrls("runtime", env);
-}
-
-function resolvePublicAppUrls(env = process.env) {
-  return resolveUrls("public", env);
-}
-
-function resolveE2EAppUrls(env = process.env) {
-  return resolveUrls("e2e", env);
-}
-
-function getE2EExtraHTTPHeaders(env = process.env) {
-  const publicOrigin = getPublicOrigin(env);
-  if (!publicOrigin) {
-    return {};
-  }
-
-  try {
-    const { hostname } = new URL(publicOrigin);
-    if (hostname.endsWith(".loca.lt")) {
-      return {
-        "bypass-tunnel-reminder": "true",
-      };
+  for (const [name, app] of Object.entries(appLinks)) {
+    if (publicOrigin) {
+      result[name] =
+        app.path === "/" ? publicOrigin : `${publicOrigin}${app.path}`;
+    } else {
+      result[name] = process.env[app.envKey] ?? app.devUrl;
     }
-  } catch {
-    return {};
   }
 
+  return result;
+}
+
+/**
+ * Returns extra HTTP headers for Playwright requests.
+ * No E2E-specific headers needed — returns an empty object.
+ *
+ * @returns {Record<string, string>}
+ */
+function getE2EExtraHTTPHeaders() {
   return {};
 }
 
-function resolveAuthHostUrl(target = "runtime", env = process.env) {
-  if (
-    getPublicOrigin(env) &&
-    (target === "public" || normalizeEnvValue(env.NODE_ENV) === "production")
-  ) {
-    return resolveUrls(target, env).auth;
-  }
-
-  const explicit = normalizeEnvValue(env.NEXT_PUBLIC_AUTH_HOST_URL);
-  if (explicit) {
-    return explicit;
-  }
-
-  return resolveUrls(target, env).auth;
-}
-
-module.exports = {
-  appLinkDefinitions,
-  getPublicOrigin,
-  getE2EExtraHTTPHeaders,
-  resolveAuthHostUrl,
-  resolveE2EAppUrls,
-  resolvePublicAppUrls,
-  resolveRuntimeAppUrls,
-};
+module.exports = { resolveE2EAppUrls, getE2EExtraHTTPHeaders };
