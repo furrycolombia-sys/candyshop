@@ -17,9 +17,10 @@ cleanup() {
 trap cleanup EXIT
 
 # ── Load env vars from .env.dev if not already set ────────────────────────────
-# Exports all NEXT_PUBLIC_* and APP_PUBLIC_ORIGIN so docker build args are
-# sourced from the env file — no hardcoded values here.
-if [ -z "${NEXT_PUBLIC_SUPABASE_URL:-}" ]; then
+# Always run loadEnv to fill in any missing vars (e.g. app URLs not set by CI).
+# loadEnv only writes vars NOT already in process.env, so CI vars always win.
+# In CI, all NEXT_PUBLIC_* vars are pre-set via workflow env — skip the loader.
+if [ -z "${CI:-}" ] && [ -f ".env.dev" ]; then
   echo "Loading env from .env.dev..."
   eval "$(node --input-type=module <<'EOF'
 import { loadEnv } from './scripts/load-env.mjs';
