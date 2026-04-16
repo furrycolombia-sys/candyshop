@@ -1,28 +1,22 @@
 #!/usr/bin/env node
-// Runs any supabase CLI command with env loaded.
-// Usage: node scripts/supabase-cmd.mjs start | stop | db reset | ...
-// Usage with env: node scripts/supabase-cmd.mjs --env staging start
+// Builds all apps via Turborepo with the specified env loaded.
+// Usage: node scripts/build.mjs --env prod
 import { spawnSync } from "node:child_process";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { loadEnv } from "./load-env.mjs";
 
 const envFlag = process.argv.indexOf("--env");
-const targetEnv = envFlag !== -1 ? process.argv[envFlag + 1] : "dev";
+const targetEnv = envFlag !== -1 ? process.argv[envFlag + 1] : "prod";
 loadEnv(targetEnv);
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const rootDir = resolve(__dirname, "..");
 const isWindows = process.platform === "win32";
 
-// Strip --env <name> before forwarding args to supabase
-const supabaseArgs = process.argv.slice(2).filter((a, i, arr) =>
-  a !== "--env" && arr[i - 1] !== "--env"
-);
-
 const result = spawnSync(
-  isWindows ? "pnpm.cmd" : "pnpm",
-  ["supabase", ...supabaseArgs],
+  isWindows ? `"${resolve(rootDir, "node_modules", ".bin", "turbo.cmd")}"` : resolve(rootDir, "node_modules", ".bin", "turbo"),
+  ["build"],
   { cwd: rootDir, stdio: "inherit", env: process.env, shell: isWindows },
 );
 

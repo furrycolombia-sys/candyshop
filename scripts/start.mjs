@@ -1,8 +1,14 @@
 #!/usr/bin/env node
 // Starts all apps in dev mode via Turborepo.
+// Loads .env.dev (with $secret: resolution) before starting.
 import { spawn } from "node:child_process";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { loadEnv } from "./load-env.mjs";
+
+const envFlag = process.argv.indexOf("--env");
+const targetEnv = envFlag !== -1 ? process.argv[envFlag + 1] : "dev";
+loadEnv(targetEnv);
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const rootDir = resolve(__dirname, "..");

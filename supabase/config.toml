@@ -155,16 +155,16 @@ max_indexes = 5
 enabled = true
 # The base URL of your website. Used as an allow-list for redirects and for constructing URLs used
 # in emails.
-site_url = "http://localhost:5000/auth/callback"
+site_url = "env(SUPABASE_AUTH_SITE_URL)"
 # A list of *exact* URLs that auth providers are permitted to redirect to post authentication.
 additional_redirect_urls = [
-  "http://localhost:5000/auth/callback",
-  "http://localhost:5001/auth/callback",
-  "http://localhost:5002/auth/callback",
-  "http://localhost:5003/auth/callback",
-  "http://localhost:5004/auth/callback",
-  "http://localhost:5005/auth/callback",
-  "http://localhost:5006/auth/callback",
+  "env(SUPABASE_AUTH_REDIRECT_URL_AUTH)",
+  "env(SUPABASE_AUTH_REDIRECT_URL_STORE)",
+  "env(SUPABASE_AUTH_REDIRECT_URL_ADMIN)",
+  "env(SUPABASE_AUTH_REDIRECT_URL_PAYMENTS)",
+  "env(SUPABASE_AUTH_REDIRECT_URL_PLAYGROUND)",
+  "env(SUPABASE_AUTH_REDIRECT_URL_LANDING)",
+  "env(SUPABASE_AUTH_REDIRECT_URL_STUDIO)",
 ]
 # How long tokens are valid for, in seconds. Defaults to 3600 (1 hour), maximum 604,800 (1 week).
 jwt_expiry = 3600
@@ -318,7 +318,7 @@ max_frequency = "5s"
 enabled = true
 client_id = "env(SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID)"
 secret = "env(SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET)"
-redirect_uri = "http://127.0.0.1:54321/auth/v1/callback"
+redirect_uri = "env(SUPABASE_AUTH_EXTERNAL_REDIRECT_URI)"
 url = ""
 skip_nonce_check = true
 email_optional = false
@@ -327,7 +327,7 @@ email_optional = false
 enabled = true
 client_id = "env(SUPABASE_AUTH_EXTERNAL_DISCORD_CLIENT_ID)"
 secret = "env(SUPABASE_AUTH_EXTERNAL_DISCORD_SECRET)"
-redirect_uri = "http://127.0.0.1:54321/auth/v1/callback"
+redirect_uri = "env(SUPABASE_AUTH_EXTERNAL_REDIRECT_URI)"
 url = ""
 skip_nonce_check = false
 email_optional = false
