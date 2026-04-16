@@ -121,6 +121,7 @@ COPY packages/shared ./packages/shared
 
 # Build all apps with standalone output for Docker deployment
 ENV STANDALONE=true
+ENV NODE_ENV=production
 RUN pnpm --filter store build
 RUN pnpm --filter studio build
 RUN pnpm --filter landing build
