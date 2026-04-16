@@ -73,6 +73,12 @@ fi
 # =============================================================================
 log "Building all applications in standalone mode..."
 export STANDALONE=true
+
+# Clear the local Turborepo cache to ensure a fresh standalone build.
+# Without this, a prior non-standalone cache hit would restore output that
+# lacks the .next/standalone directory.
+rm -rf "$DEPLOY_DIR/.turbo"
+
 pnpm run build
 
 # Clean up env file (secrets should not persist on disk)
@@ -103,15 +109,24 @@ for APP_ENTRY in "${APPS[@]}"; do
   # Stop existing instance if running
   pm2 delete "$PM2_NAME" 2>/dev/null || true
 
-  # Copy static assets into standalone directory.
-  # Next.js places server.js directly at standalone/server.js when outputFileTracingRoot
-  # is not set (each app is its own tracing root).
   STANDALONE_DIR="$DEPLOY_DIR/apps/$APP_NAME/.next/standalone"
-  cp -r "$DEPLOY_DIR/apps/$APP_NAME/.next/static" "$STANDALONE_DIR/.next/static" 2>/dev/null || true
-  cp -r "$DEPLOY_DIR/apps/$APP_NAME/public" "$STANDALONE_DIR/public" 2>/dev/null || true
+
+  # Locate server.js — Next.js places it at standalone/server.js when
+  # outputFileTracingRoot is the app root, or standalone/apps/<name>/server.js
+  # when outputFileTracingRoot is the monorepo root (auto-detected in monorepos).
+  SERVER_JS=$(find "$STANDALONE_DIR" -name "server.js" -maxdepth 4 2>/dev/null | head -1)
+  if [ -z "$SERVER_JS" ]; then
+    err "Cannot find server.js for $APP_NAME in $STANDALONE_DIR"
+  fi
+  SERVER_DIR=$(dirname "$SERVER_JS")
+  log "server.js found at: $SERVER_JS"
+
+  # Copy static assets into the directory that server.js lives in
+  cp -r "$DEPLOY_DIR/apps/$APP_NAME/.next/static" "$SERVER_DIR/.next/static" 2>/dev/null || true
+  cp -r "$DEPLOY_DIR/apps/$APP_NAME/public" "$SERVER_DIR/public" 2>/dev/null || true
 
   # Start standalone server.js with PM2
-  PORT=$APP_PORT HOSTNAME=0.0.0.0 pm2 start "$STANDALONE_DIR/server.js" \
+  PORT=$APP_PORT HOSTNAME=0.0.0.0 pm2 start "$SERVER_JS" \
     --name "$PM2_NAME"
 done
 
