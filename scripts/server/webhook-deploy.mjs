@@ -18,7 +18,8 @@ import { readFileSync } from "node:fs";
 
 const PORT = process.env.WEBHOOK_PORT || 9091;
 const SECRET = process.env.WEBHOOK_SECRET || "";
-const DEPLOY_SCRIPT = process.env.DEPLOY_SCRIPT || "/home/furrycolombia/deploy.sh";
+const DEPLOY_SCRIPT =
+  process.env.DEPLOY_SCRIPT || "/home/furrycolombia/deploy.sh";
 const BRANCH = process.env.DEPLOY_BRANCH || "main";
 
 let deploying = false;
@@ -44,25 +45,30 @@ function runDeploy() {
   deploying = true;
   log("Starting deployment...");
 
-  execFile("bash", [DEPLOY_SCRIPT], {
-    env: {
-      ...process.env,
-      BRANCH,
-      REPO_URL: "https://github.com/furrycolombia-sys/candyshop.git",
-      ENV_FILE: "/home/furrycolombia/candyshop-build.env",
+  execFile(
+    "bash",
+    [DEPLOY_SCRIPT],
+    {
+      env: {
+        ...process.env,
+        BRANCH,
+        REPO_URL: "https://github.com/furrycolombia-sys/candyshop.git",
+        ENV_FILE: "/home/furrycolombia/candyshop-build.env",
+      },
+      timeout: 15 * 60 * 1000, // 15 min max
+      maxBuffer: 10 * 1024 * 1024,
     },
-    timeout: 15 * 60 * 1000, // 15 min max
-    maxBuffer: 10 * 1024 * 1024,
-  }, (err, stdout, stderr) => {
-    deploying = false;
-    if (err) {
-      log(`Deploy FAILED: ${err.message}`);
-      if (stderr) log(`stderr: ${stderr.slice(-500)}`);
-    } else {
-      log("Deploy completed successfully");
-    }
-    if (stdout) log(`stdout (last 500): ${stdout.slice(-500)}`);
-  });
+    (err, stdout, stderr) => {
+      deploying = false;
+      if (err) {
+        log(`Deploy FAILED: ${err.message}`);
+        if (stderr) log(`stderr: ${stderr.slice(-500)}`);
+      } else {
+        log("Deploy completed successfully");
+      }
+      if (stdout) log(`stdout (last 500): ${stdout.slice(-500)}`);
+    },
+  );
 }
 
 const server = createServer((req, res) => {
@@ -76,7 +82,9 @@ const server = createServer((req, res) => {
   // Deploy endpoint
   if (req.method === "POST" && req.url === "/deploy") {
     let body = "";
-    req.on("data", (chunk) => { body += chunk; });
+    req.on("data", (chunk) => {
+      body += chunk;
+    });
     req.on("end", () => {
       const signature = req.headers["x-hub-signature-256"];
 
@@ -105,7 +113,9 @@ const server = createServer((req, res) => {
         return;
       }
 
-      log(`Push to ${BRANCH} by ${payload.pusher?.name || "unknown"}: ${payload.head_commit?.message || "no message"}`);
+      log(
+        `Push to ${BRANCH} by ${payload.pusher?.name || "unknown"}: ${payload.head_commit?.message || "no message"}`,
+      );
       runDeploy();
 
       res.writeHead(200, { "Content-Type": "text/plain" });

@@ -58,7 +58,9 @@ function runLauncher({ env, spawnFn }) {
   const spawnCalls = [];
 
   if (tunnelNames.length === 0) {
-    stdoutMessages.push("No CLOUDFLARE_TUNNEL_*_ENABLED keys found — nothing to launch.");
+    stdoutMessages.push(
+      "No CLOUDFLARE_TUNNEL_*_ENABLED keys found — nothing to launch.",
+    );
     return { spawnCalls, stderrMessages, stdoutMessages, exitCode: 0 };
   }
 
@@ -70,7 +72,9 @@ function runLauncher({ env, spawnFn }) {
 
     const token = env[`CLOUDFLARE_TUNNEL_${name}_TOKEN`] ?? "";
     if (!token) {
-      stderrMessages.push(`ERROR: CLOUDFLARE_TUNNEL_${name}_TOKEN is not set — skipping`);
+      stderrMessages.push(
+        `ERROR: CLOUDFLARE_TUNNEL_${name}_TOKEN is not set — skipping`,
+      );
       continue;
     }
 
@@ -97,7 +101,12 @@ function runLauncher({ env, spawnFn }) {
 function makeMockSpawn() {
   const calls = [];
   const spawnFn = (cmd, args, opts) => {
-    const child = { unrefCalled: false, unref() { this.unrefCalled = true; } };
+    const child = {
+      unrefCalled: false,
+      unref() {
+        this.unrefCalled = true;
+      },
+    };
     calls.push({ cmd, args, opts, child });
     return child;
   };
@@ -115,7 +124,9 @@ describe("parseCliArgs", () => {
   });
 
   it("parses --env staging", () => {
-    expect(parseCliArgs(["node", "script.mjs", "--env", "staging"]).targetEnv).toBe("staging");
+    expect(
+      parseCliArgs(["node", "script.mjs", "--env", "staging"]).targetEnv,
+    ).toBe("staging");
   });
 
   it("parses --help", () => {
@@ -133,11 +144,16 @@ describe("parseCliArgs", () => {
 
 describe("discoverTunnels", () => {
   it("returns empty array when no CLOUDFLARE_TUNNEL_*_ENABLED keys", () => {
-    expect(discoverTunnels({ TARGET_ENV: "dev", APPS_MODE: "local" })).toEqual([]);
+    expect(discoverTunnels({ TARGET_ENV: "dev", APPS_MODE: "local" })).toEqual(
+      [],
+    );
   });
 
   it("discovers a single tunnel name", () => {
-    const env = { CLOUDFLARE_TUNNEL_APP_ENABLED: "true", CLOUDFLARE_TUNNEL_APP_TOKEN: "tok" };
+    const env = {
+      CLOUDFLARE_TUNNEL_APP_ENABLED: "true",
+      CLOUDFLARE_TUNNEL_APP_TOKEN: "tok",
+    };
     expect(discoverTunnels(env)).toContain("APP");
   });
 
@@ -160,10 +176,15 @@ describe("runLauncher — example paths", () => {
   // 2.5 — no CLOUDFLARE_TUNNEL_*_ENABLED keys → informational message + exit 0
   it("2.5 — no tunnel keys found → informational message + exit 0", () => {
     const mockSpawn = makeMockSpawn();
-    const result = runLauncher({ env: { TARGET_ENV: "prod" }, spawnFn: mockSpawn });
+    const result = runLauncher({
+      env: { TARGET_ENV: "prod" },
+      spawnFn: mockSpawn,
+    });
     expect(result.exitCode).toBe(0);
     expect(result.spawnCalls).toHaveLength(0);
-    expect(result.stdoutMessages.some((m) => m.includes("nothing to launch"))).toBe(true);
+    expect(
+      result.stdoutMessages.some((m) => m.includes("nothing to launch")),
+    ).toBe(true);
   });
 
   // 2.3 — all discovered tunnels have ENABLED=false → no spawns + exit 0
@@ -176,7 +197,9 @@ describe("runLauncher — example paths", () => {
     const result = runLauncher({ env, spawnFn: mockSpawn });
     expect(result.exitCode).toBe(0);
     expect(result.spawnCalls).toHaveLength(0);
-    expect(result.stdoutMessages.some((m) => m.includes("nothing launched"))).toBe(true);
+    expect(
+      result.stdoutMessages.some((m) => m.includes("nothing launched")),
+    ).toBe(true);
   });
 
   // 3.1, 3.2, 3.3 — single tunnel ENABLED=true with valid token → one spawn + .unref() + exit 0
@@ -203,8 +226,14 @@ describe("runLauncher — example paths", () => {
     const result = runLauncher({ env, spawnFn: mockSpawn });
     expect(result.exitCode).toBe(0);
     expect(result.spawnCalls).toHaveLength(0);
-    expect(result.stderrMessages.some((m) => m.includes("CLOUDFLARE_TUNNEL_APP_TOKEN"))).toBe(true);
-    expect(result.stderrMessages.some((m) => m.includes("skipping"))).toBe(true);
+    expect(
+      result.stderrMessages.some((m) =>
+        m.includes("CLOUDFLARE_TUNNEL_APP_TOKEN"),
+      ),
+    ).toBe(true);
+    expect(result.stderrMessages.some((m) => m.includes("skipping"))).toBe(
+      true,
+    );
   });
 
   // 2.4, 6.5 — two tunnels: one valid, one missing token → one spawn + one stderr error + exit 0
@@ -245,7 +274,12 @@ describe("runLauncher — example paths", () => {
       CLOUDFLARE_TUNNEL_APP_TOKEN: "exact-token",
     };
     runLauncher({ env, spawnFn: mockSpawn });
-    expect(mockSpawn.calls[0].args).toEqual(["tunnel", "run", "--token", "exact-token"]);
+    expect(mockSpawn.calls[0].args).toEqual([
+      "tunnel",
+      "run",
+      "--token",
+      "exact-token",
+    ]);
   });
 
   // spawn options: detached: true, stdio: 'ignore'
@@ -256,7 +290,10 @@ describe("runLauncher — example paths", () => {
       CLOUDFLARE_TUNNEL_APP_TOKEN: "tok",
     };
     runLauncher({ env, spawnFn: mockSpawn });
-    expect(mockSpawn.calls[0].opts).toMatchObject({ detached: true, stdio: "ignore" });
+    expect(mockSpawn.calls[0].opts).toMatchObject({
+      detached: true,
+      stdio: "ignore",
+    });
   });
 });
 
@@ -272,7 +309,11 @@ describe("PBT — Property 1: Token passthrough is exact", () => {
       fc.property(
         fc.array(
           fc.record({
-            name: fc.string({ minLength: 1, maxLength: 20 }).map((s) => s.toUpperCase().replace(/[^A-Z0-9_]/g, "X") || "TUNNEL"),
+            name: fc
+              .string({ minLength: 1, maxLength: 20 })
+              .map(
+                (s) => s.toUpperCase().replace(/[^A-Z0-9_]/g, "X") || "TUNNEL",
+              ),
             token: fc.string({ minLength: 1, maxLength: 200 }),
           }),
           { minLength: 1, maxLength: 5 },
@@ -323,13 +364,19 @@ describe("PBT — Property 2: Per-tunnel token error is non-fatal", () => {
           const mockSpawn = makeMockSpawn();
           const env = {};
           for (const { name, token, enabled } of withValid) {
-            env[`CLOUDFLARE_TUNNEL_${name}_ENABLED`] = enabled ? "true" : "false";
+            env[`CLOUDFLARE_TUNNEL_${name}_ENABLED`] = enabled
+              ? "true"
+              : "false";
             env[`CLOUDFLARE_TUNNEL_${name}_TOKEN`] = token;
           }
           const result = runLauncher({ env, spawnFn: mockSpawn });
 
-          const validCount = withValid.filter((t) => t.enabled && t.token).length;
-          const invalidCount = withValid.filter((t) => t.enabled && !t.token).length;
+          const validCount = withValid.filter(
+            (t) => t.enabled && t.token,
+          ).length;
+          const invalidCount = withValid.filter(
+            (t) => t.enabled && !t.token,
+          ).length;
 
           return (
             result.exitCode === 0 &&
@@ -350,16 +397,23 @@ describe("PBT — Property 3: loadEnv error message propagation", () => {
     fc.assert(
       fc.property(
         fc.string({ minLength: 1, maxLength: 200 }),
-        fc.string({ minLength: 1, maxLength: 20 }).filter((s) => /^[a-z]+$/.test(s)),
+        fc
+          .string({ minLength: 1, maxLength: 20 })
+          .filter((s) => /^[a-z]+$/.test(s)),
         (errorMessage, envName) => {
           // Simulate the error handling logic from the script
           const stderrMessages = [];
           try {
             throw new Error(errorMessage);
           } catch (err) {
-            stderrMessages.push(`ERROR: Failed to load .env.${envName}: ${err.message}`);
+            stderrMessages.push(
+              `ERROR: Failed to load .env.${envName}: ${err.message}`,
+            );
           }
-          return stderrMessages[0].includes(errorMessage) && stderrMessages[0].includes(envName);
+          return (
+            stderrMessages[0].includes(errorMessage) &&
+            stderrMessages[0].includes(envName)
+          );
         },
       ),
       { numRuns: 100 },
@@ -385,11 +439,15 @@ describe("PBT — Property 4: Spawn count matches enabled tunnels", () => {
           const env = {};
           tunnelConfigs.forEach(({ enabled, token }, i) => {
             const name = `TUNNEL${i}`;
-            env[`CLOUDFLARE_TUNNEL_${name}_ENABLED`] = enabled ? "true" : "false";
+            env[`CLOUDFLARE_TUNNEL_${name}_ENABLED`] = enabled
+              ? "true"
+              : "false";
             env[`CLOUDFLARE_TUNNEL_${name}_TOKEN`] = token;
           });
           runLauncher({ env, spawnFn: mockSpawn });
-          const expectedSpawnCount = tunnelConfigs.filter((t) => t.enabled && t.token).length;
+          const expectedSpawnCount = tunnelConfigs.filter(
+            (t) => t.enabled && t.token,
+          ).length;
           return mockSpawn.calls.length === expectedSpawnCount;
         },
       ),
@@ -416,12 +474,16 @@ describe("PBT — Property 5: unref called on every spawned process", () => {
           const env = {};
           tunnelConfigs.forEach(({ enabled, token }, i) => {
             const name = `TUNNEL${i}`;
-            env[`CLOUDFLARE_TUNNEL_${name}_ENABLED`] = enabled ? "true" : "false";
+            env[`CLOUDFLARE_TUNNEL_${name}_ENABLED`] = enabled
+              ? "true"
+              : "false";
             env[`CLOUDFLARE_TUNNEL_${name}_TOKEN`] = token;
           });
           runLauncher({ env, spawnFn: mockSpawn });
           // Every spawned child must have had .unref() called
-          return mockSpawn.calls.every((call) => call.child.unrefCalled === true);
+          return mockSpawn.calls.every(
+            (call) => call.child.unrefCalled === true,
+          );
         },
       ),
       { numRuns: 100 },

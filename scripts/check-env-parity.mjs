@@ -39,7 +39,9 @@ const envFiles = readdirSync(rootDir)
   .sort();
 
 if (envFiles.length < 2) {
-  console.log("check-env-parity: fewer than 2 env files found, nothing to compare.");
+  console.log(
+    "check-env-parity: fewer than 2 env files found, nothing to compare.",
+  );
   process.exit(0);
 }
 
@@ -65,7 +67,9 @@ for (const key of [...keyMap.keys()]) {
   }
 }
 if (exemptCount > 0) {
-  console.log(`  (${exemptCount} keys with CLOUDFLARE_TUNNEL_* prefix skipped)`);
+  console.log(
+    `  (${exemptCount} keys with CLOUDFLARE_TUNNEL_* prefix skipped)`,
+  );
 }
 
 const errors = [];
@@ -85,5 +89,7 @@ for (const { key, missing } of errors) {
   console.error(`  ${key}`);
   console.error(`    missing from: ${missing.join(", ")}`);
 }
-console.error(`\nFix: add the missing keys to all listed files. Use N/A as the value if the key doesn't apply to that environment.\n`);
+console.error(
+  `\nFix: add the missing keys to all listed files. Use N/A as the value if the key doesn't apply to that environment.\n`,
+);
 process.exit(1);
