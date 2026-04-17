@@ -71,9 +71,15 @@ for (const name of tunnelNames) {
   let result;
   if (isWindows) {
     // On Windows, kill all cloudflared.exe processes (token matching not available)
-    result = spawnSync("taskkill", ["/F", "/IM", "cloudflared.exe"], { stdio: "pipe" });
+    result = spawnSync("taskkill", ["/F", "/IM", "cloudflared.exe"], {
+      stdio: "pipe",
+    });
   } else {
-    result = spawnSync("pkill", ["-f", `cloudflared tunnel run --token ${token}`], { stdio: "pipe" });
+    result = spawnSync(
+      "pkill",
+      ["-f", `cloudflared tunnel run --token ${token}`],
+      { stdio: "pipe" },
+    );
   }
 
   if (result.status === 0) {

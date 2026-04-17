@@ -7,7 +7,7 @@
 # Variables resolved from the env file:
 #   SITE_PROD_IMAGE_NAME     — Docker image to run (built by docker-build.mjs)
 #   SITE_PROD_CONTAINER_NAME — Name for the running container
-#   HOST_PORT                — Host port to bind (derived from APP_PUBLIC_ORIGIN by docker-build.mjs)
+#   HOST_PORT                — Host port to bind the container on
 
 services:
   app:

@@ -55,7 +55,7 @@ SITE_PROD_IMAGE_NAME=candyshop-staging
 SITE_PROD_CONTAINER_NAME=candyshop-staging
 
 # ─── App origins ──────────────────────────────────────────────────
-APP_PUBLIC_ORIGIN=http://localhost:3000   # host port for Docker container
+HOST_PORT=3000   # host port for Docker container
 APP_INTERNAL_ORIGIN=http://candyshop-staging:80  # internal nginx address
 
 # ─── Supabase ─────────────────────────────────────────────────────
@@ -136,13 +136,13 @@ NEXT_PUBLIC_STUDIO_URL=http://localhost:5006
 
 ### Docker container port
 
-The host port for the Docker container is derived from `APP_PUBLIC_ORIGIN`:
+The host port for the Docker container is set explicitly with `HOST_PORT`:
 
 ```dotenv
-APP_PUBLIC_ORIGIN=http://localhost:3000   → container binds to host port 3000
+HOST_PORT=3000   -> container binds to host port 3000
 ```
 
-`scripts/docker-build.mjs` parses the port from this URL and sets `HOST_PORT` before passing it to `docker compose`.
+`scripts/docker-build.mjs` reads `HOST_PORT` from the env file and passes it to `docker compose`.
 
 ### Supabase port derivation
 
@@ -163,11 +163,11 @@ This derivation happens in `scripts/supabase-docker.mjs` → `derivePorts(base)`
 
 ### Choosing base ports per environment
 
-| Environment | `SUPABASE_PORT` | App port (`APP_PUBLIC_ORIGIN`) |
-| ----------- | --------------- | ------------------------------ |
-| dev         | 54321           | 8088                           |
-| test        | 64321           | 8088                           |
-| staging     | 3030            | 3000                           |
+| Environment | `SUPABASE_PORT` | App port (`HOST_PORT`) |
+| ----------- | --------------- | ---------------------- |
+| dev         | 54321           | 8088                   |
+| test        | 64321           | 8088                   |
+| staging     | 3030            | 3000                   |
 
 Dev and test use the Supabase CLI defaults. Staging uses lower ports to avoid conflicts with the CLI instances.
 
@@ -204,7 +204,7 @@ pnpm docker:build --env staging --up --tunnel  # build + start + tunnel
 
 1. Calls `loadEnv(targetEnv)`
 2. Reads `SITE_PROD_IMAGE_NAME` and `SITE_PROD_CONTAINER_NAME` from env
-3. Derives `HOST_PORT` from `APP_PUBLIC_ORIGIN`
+3. Reads `HOST_PORT` from env
 4. Runs `docker build` passing all `NEXT_PUBLIC_*` vars as `--build-arg` flags — these are baked into the Next.js build at compile time
 5. If `--up`: removes any existing container with the same name, then runs `docker compose up -d` using `docker/compose.yml`
 6. If `--tunnel`: spawns `scripts/cloudflared.mjs` after compose succeeds
@@ -271,7 +271,7 @@ pnpm tunnel:stop --env staging   # stop tunnel processes
 1. Calls `loadEnv(targetEnv)`
 2. If `CLOUDFLARE_TUNNEL_ID` is set in the env:
    - Derives the credentials file path as `~/.cloudflared/<tunnel-id>.json` (no hardcoded paths)
-   - Reads `APP_PUBLIC_ORIGIN` for the app port — **fails with an error if missing or has no port**
+   - Reads `HOST_PORT` for the app port � **fails with an error if missing or invalid**
    - Reads `SUPABASE_PORT` for the Supabase port — **fails with an error if missing or `N/A`**
    - Derives the public hostname from `SUPABASE_AUTH_SITE_URL` — **fails if missing**
    - Generates `~/.cloudflared/config.yml` with all ingress rules pointing to the correct local ports
@@ -286,7 +286,7 @@ The generated `~/.cloudflared/config.yml` maps all public hostnames to local por
 ```yaml
 ingress:
   - hostname: store.ffxivbe.org
-    service: http://127.0.0.1:3000 # from APP_PUBLIC_ORIGIN
+    service: http://127.0.0.1:3000 # from HOST_PORT
   - hostname: supabase.ffxivbe.org
     service: http://127.0.0.1:3030 # from SUPABASE_PORT
   - hostname: supabase-studio.ffxivbe.org
@@ -348,9 +348,8 @@ pnpm lint:env
 | -------------------------- | -------------------------------------------- |
 | `SITE_PROD_IMAGE_NAME`     | Docker image name for `docker build -t`      |
 | `SITE_PROD_CONTAINER_NAME` | Docker container name                        |
-| `APP_PUBLIC_ORIGIN`        | Public URL — port used for host binding      |
+| `HOST_PORT`                | Explicit host port used for app container    |
 | `APP_INTERNAL_ORIGIN`      | Internal nginx address inside Docker network |
-| `HOST_PORT`                | Derived from `APP_PUBLIC_ORIGIN` at runtime  |
 
 ### Supabase keys
 
