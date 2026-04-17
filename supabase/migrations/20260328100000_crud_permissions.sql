@@ -57,9 +57,6 @@ insert into public.permissions (key, name_en, name_es, description_en, descripti
   ('products.read',            'Read Products',            'Ver Productos',               'Browse and view products',                     'Navegar y ver productos',                         null),
   ('products.update',          'Update Products',          'Editar Productos',            'Edit own products',                            'Editar productos propios',                        null),
   ('products.delete',          'Delete Products',          'Eliminar Productos',          'Delete own products',                          'Eliminar productos propios',                      null),
-  ('product_images.create',    'Upload Product Images',    'Subir Imagenes de Producto',  'Upload product images',                        'Subir imagenes de producto',                      'products.create'),
-  ('product_images.read',      'View Product Images',      'Ver Imagenes de Producto',    'View product images',                          'Ver imagenes de producto',                        null),
-  ('product_images.delete',    'Delete Product Images',    'Eliminar Imagenes',           'Delete product images',                        'Eliminar imagenes de producto',                   'products.create'),
   ('product_reviews.create',   'Write Reviews',            'Escribir Resenas',            'Write product reviews',                        'Escribir resenas de producto',                    'orders.create'),
   ('product_reviews.read',     'Read Reviews',             'Ver Resenas',                 'Read product reviews',                         'Ver resenas de producto',                         null),
   ('product_reviews.update',   'Edit Reviews',             'Editar Resenas',              'Edit own review',                              'Editar resena propia',                            null),
@@ -114,7 +111,6 @@ select p.id, 'global', null
 from public.permissions p
 where p.key in (
   'products.create', 'products.read', 'products.update', 'products.delete',
-  'product_images.create', 'product_images.read', 'product_images.delete',
   'product_reviews.create', 'product_reviews.read', 'product_reviews.update', 'product_reviews.delete',
   'orders.create', 'orders.read', 'orders.update',
   'receipts.create', 'receipts.read', 'receipts.delete',
@@ -154,10 +150,6 @@ drop policy if exists "reviews_public_read"                  on public.product_r
 drop policy if exists "reviews_own_insert"                   on public.product_reviews;
 drop policy if exists "reviews_own_update"                   on public.product_reviews;
 drop policy if exists "reviews_own_delete"                   on public.product_reviews;
-drop policy if exists "product_images_public_read"           on storage.objects;
-drop policy if exists "product_images_auth_upload"           on storage.objects;
-drop policy if exists "product_images_auth_delete"           on storage.objects;
-
 -- ---- seller_id.sql policies ----
 drop policy if exists "Products: update own"                 on public.products;
 drop policy if exists "Products: delete own"                 on public.products;
@@ -479,24 +471,6 @@ create policy "settings_update" on public.payment_settings
 -- ---------------------------------------------------------------------------
 create policy "audit_read" on audit.logged_actions
   for select using (has_permission(auth.uid(), 'audit.read'));
-
--- ---------------------------------------------------------------------------
--- Storage: Product Images (public read, permission-gated writes)
--- ---------------------------------------------------------------------------
-create policy "product_images_public_read" on storage.objects
-  for select using (bucket_id = 'product-images');
-
-create policy "product_images_upload" on storage.objects
-  for insert with check (
-    bucket_id = 'product-images'
-    and has_permission(auth.uid(), 'product_images.create')
-  );
-
-create policy "product_images_delete" on storage.objects
-  for delete using (
-    bucket_id = 'product-images'
-    and has_permission(auth.uid(), 'product_images.delete')
-  );
 
 -- ---------------------------------------------------------------------------
 -- Storage: Receipts (permission-gated)
