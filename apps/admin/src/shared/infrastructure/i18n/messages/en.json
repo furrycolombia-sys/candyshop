@@ -230,11 +230,6 @@
       "update": "Edit Products",
       "delete": "Delete Products"
     },
-    "product_images": {
-      "create": "Upload Product Images",
-      "read": "View Product Images",
-      "delete": "Delete Product Images"
-    },
     "product_reviews": {
       "create": "Write Reviews",
       "read": "View Reviews",
@@ -300,11 +295,6 @@
       "read": "View product details, prices, and inventory",
       "update": "Edit product names, descriptions, prices, and stock",
       "delete": "Permanently remove products from the catalog"
-    },
-    "product_images": {
-      "create": "Upload images to product galleries",
-      "read": "View product gallery images",
-      "delete": "Remove images from product galleries"
     },
     "product_reviews": {
       "create": "Write reviews on purchased products",
