@@ -125,7 +125,6 @@ export async function adminDelete(
 
 export const BUYER_PERMISSIONS = [
   "products.read",
-  "product_images.read",
   "product_reviews.create",
   "product_reviews.read",
   "product_reviews.update",
@@ -138,16 +137,15 @@ export const BUYER_PERMISSIONS = [
 
 export const SELLER_PERMISSIONS = [
   "products.read",
-  "product_images.read",
   "product_reviews.read",
   "orders.read",
+  "orders.update",
+  "orders.approve",
+  "orders.request_proof",
   "receipts.read",
   "products.create",
   "products.update",
   "products.delete",
-  "product_images.create",
-  "product_images.delete",
-  "orders.update",
   "seller_payment_methods.create",
   "seller_payment_methods.read",
   "seller_payment_methods.update",
