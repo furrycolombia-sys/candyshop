@@ -61,14 +61,9 @@ const tunnelId = process.env.CLOUDFLARE_TUNNEL_ID;
 if (tunnelId) {
   const credentialsFile = resolve(homedir(), ".cloudflared", `${tunnelId}.json`);
 
-  const appOrigin = process.env.APP_PUBLIC_ORIGIN;
-  if (!appOrigin) {
-    console.error("ERROR: APP_PUBLIC_ORIGIN is not set — cannot generate tunnel config");
-    process.exit(1);
-  }
-  const appPort = Number.parseInt(new URL(appOrigin).port, 10);
+  const appPort = Number.parseInt(process.env.HOST_PORT ?? "", 10);
   if (Number.isNaN(appPort)) {
-    console.error(`ERROR: APP_PUBLIC_ORIGIN has no port: ${appOrigin}`);
+    console.error("ERROR: HOST_PORT is not set — cannot generate tunnel config");
     process.exit(1);
   }
 

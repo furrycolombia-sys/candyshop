@@ -85,20 +85,11 @@ if (!containerName) {
   process.exit(1);
 }
 
-// ── Parse HOST_PORT from APP_PUBLIC_ORIGIN ────────────────────────────────────
-
-function parseHostPort(appPublicOrigin) {
-  try {
-    const url = new URL(appPublicOrigin ?? "");
-    const port = Number.parseInt(url.port, 10);
-    return Number.isNaN(port) ? 8088 : port;
-  } catch {
-    return 8088;
-  }
+const hostPort = Number.parseInt(process.env.HOST_PORT ?? "", 10);
+if (Number.isNaN(hostPort)) {
+  console.error("ERROR: HOST_PORT is not set to a valid number in the env file.");
+  process.exit(1);
 }
-
-const hostPort = parseHostPort(process.env.APP_PUBLIC_ORIGIN);
-process.env.HOST_PORT = String(hostPort);
 
 // ── Build args — all sourced from process.env ─────────────────────────────────
 
@@ -115,7 +106,6 @@ const BUILD_ARG_KEYS = [
   "NEXT_PUBLIC_STUDIO_URL",
   "NEXT_PUBLIC_BUILD_HASH",
   "NEXT_PUBLIC_ENABLE_TEST_IDS",
-  "APP_PUBLIC_ORIGIN",
   "NEXT_PUBLIC_ENV_DEBUG",
 ];
 

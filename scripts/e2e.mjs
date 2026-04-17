@@ -115,8 +115,7 @@ if (targetEnv === "staging") {
   if (tunnelResult.status !== 0) process.exit(tunnelResult.status ?? 1);
 
   // Wait for the local container port to be ready
-  const origin = process.env.APP_PUBLIC_ORIGIN ?? "http://localhost:7542";
-  const port = Number.parseInt(new URL(origin).port, 10) || 7542;
+  const port = Number.parseInt(process.env.HOST_PORT ?? "", 10) || 7542;
   console.log(`\n   Waiting for staging app on :${port}...`);
   await waitForPort(port, 120_000);
   console.log("✓ Staging app ready\n");

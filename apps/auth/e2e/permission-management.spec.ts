@@ -123,6 +123,20 @@ async function expectHidden(page: Page, testId: string): Promise<void> {
   });
 }
 
+async function navigateWithFreshSession(
+  context: BrowserContext,
+  page: Page,
+  user: TestUser,
+  url: string,
+): Promise<void> {
+  await context.clearCookies();
+  await injectSession(context, user);
+  await page.goto(`${APP_URLS.AUTH}/en`);
+  await page.waitForLoadState("networkidle");
+  await page.goto(url);
+  await page.waitForLoadState("networkidle");
+}
+
 test.describe.serial("Permission management", () => {
   let admin: TestUser;
   let target: TestUser;
@@ -202,8 +216,12 @@ test.describe.serial("Permission management", () => {
   });
 
   test("turns payments sections off and on", async ({ context, page }) => {
-    await injectSession(context, target);
-    await page.goto(`${APP_URLS.PAYMENTS}/en/checkout`);
+    await navigateWithFreshSession(
+      context,
+      page,
+      target,
+      `${APP_URLS.PAYMENTS}/en/checkout`,
+    );
     await expectVisible(page, "sidebar-checkout");
     await expectVisible(page, "sidebar-myPurchases");
     await expectVisible(page, "sidebar-paymentMethods");
@@ -214,20 +232,22 @@ test.describe.serial("Permission management", () => {
       "seller_payment_methods.read": false,
     });
 
-    await injectSession(context, target);
-    await page.goto(`${APP_URLS.PAYMENTS}/en/purchases`);
+    await navigateWithFreshSession(
+      context,
+      page,
+      target,
+      `${APP_URLS.PAYMENTS}/en/purchases`,
+    );
     await expectVisible(page, "sidebar-myPurchases");
     await expectHidden(page, "sidebar-paymentMethods");
     await snap(page, "payments-methods-hidden");
 
-    await context.clearCookies();
-    await injectSession(context, target);
-    // Navigate to a different app first to fully reset the Next.js router cache
-    // and force the Supabase client to re-initialize on the payments app
-    await page.goto(`${APP_URLS.AUTH}/en`);
-    await page.waitForLoadState("networkidle");
-    await page.goto(`${APP_URLS.PAYMENTS}/en/payment-methods`);
-    await page.waitForLoadState("networkidle");
+    await navigateWithFreshSession(
+      context,
+      page,
+      target,
+      `${APP_URLS.PAYMENTS}/en/payment-methods`,
+    );
     await expectVisible(page, "access-denied");
 
     await setPermissions(page, context, admin, target, {
@@ -236,18 +256,22 @@ test.describe.serial("Permission management", () => {
       "receipts.create": false,
     });
 
-    await injectSession(context, target);
-    await page.goto(`${APP_URLS.PAYMENTS}/en/purchases`);
+    await navigateWithFreshSession(
+      context,
+      page,
+      target,
+      `${APP_URLS.PAYMENTS}/en/purchases`,
+    );
     await expectVisible(page, "sidebar-myPurchases");
     await expectHidden(page, "sidebar-checkout");
     await snap(page, "payments-checkout-hidden");
 
-    await context.clearCookies();
-    await injectSession(context, target);
-    await page.goto(`${APP_URLS.AUTH}/en`);
-    await page.waitForLoadState("networkidle");
-    await page.goto(`${APP_URLS.PAYMENTS}/en/checkout`);
-    await page.waitForLoadState("networkidle");
+    await navigateWithFreshSession(
+      context,
+      page,
+      target,
+      `${APP_URLS.PAYMENTS}/en/checkout`,
+    );
     await expectVisible(page, "access-denied");
 
     await setPermissions(page, context, admin, target, {
@@ -256,18 +280,22 @@ test.describe.serial("Permission management", () => {
       "orders.update": false,
     });
 
-    await injectSession(context, target);
-    await page.goto(`${APP_URLS.PAYMENTS}/en/purchases`);
+    await navigateWithFreshSession(
+      context,
+      page,
+      target,
+      `${APP_URLS.PAYMENTS}/en/purchases`,
+    );
     await expectVisible(page, "sidebar-myPurchases");
     await expectHidden(page, "sidebar-sales");
     await snap(page, "payments-sales-hidden");
 
-    await context.clearCookies();
-    await injectSession(context, target);
-    await page.goto(`${APP_URLS.AUTH}/en`);
-    await page.waitForLoadState("networkidle");
-    await page.goto(`${APP_URLS.PAYMENTS}/en/sales`);
-    await page.waitForLoadState("networkidle");
+    await navigateWithFreshSession(
+      context,
+      page,
+      target,
+      `${APP_URLS.PAYMENTS}/en/sales`,
+    );
     await expectVisible(page, "access-denied");
 
     await setPermissions(page, context, admin, target, {
@@ -277,8 +305,12 @@ test.describe.serial("Permission management", () => {
       "orders.update": true,
     });
 
-    await injectSession(context, target);
-    await page.goto(`${APP_URLS.PAYMENTS}/en/checkout`);
+    await navigateWithFreshSession(
+      context,
+      page,
+      target,
+      `${APP_URLS.PAYMENTS}/en/checkout`,
+    );
     await expectVisible(page, "sidebar-checkout");
     await expectVisible(page, "sidebar-paymentMethods");
     await expectVisible(page, "sidebar-sales");

@@ -29,17 +29,11 @@ import fc from "fast-check";
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * Parses the host port from APP_PUBLIC_ORIGIN.
- * Defaults to 8088 if no port is present or the URL is invalid.
+ * Parses HOST_PORT from the env.
+ * Returns NaN when the value is missing or invalid.
  */
-function parseHostPort(appPublicOrigin) {
-  try {
-    const url = new URL(appPublicOrigin ?? "");
-    const port = Number.parseInt(url.port, 10);
-    return Number.isNaN(port) ? 8088 : port;
-  } catch {
-    return 8088;
-  }
+function parseHostPort(hostPort) {
+  return Number.parseInt(hostPort ?? "", 10);
 }
 
 /**
@@ -71,7 +65,6 @@ const BUILD_ARG_KEYS = [
   "NEXT_PUBLIC_STUDIO_URL",
   "NEXT_PUBLIC_BUILD_HASH",
   "NEXT_PUBLIC_ENABLE_TEST_IDS",
-  "APP_PUBLIC_ORIGIN",
 ];
 
 /**
@@ -149,29 +142,25 @@ function simulateScript({ imageName, buildArgValues, noCache, up, tunnel = false
 // ─────────────────────────────────────────────────────────────────────────────
 
 describe("parseHostPort — example tests", () => {
-  it("parses explicit port from http URL", () => {
-    expect(parseHostPort("http://localhost:8088")).toBe(8088);
+  it("parses numeric HOST_PORT", () => {
+    expect(parseHostPort("8088")).toBe(8088);
   });
 
-  it("defaults to 8088 when URL has no port (https)", () => {
-    expect(parseHostPort("https://store.furrycolombia.com")).toBe(8088);
+  it("parses a different numeric HOST_PORT", () => {
+    expect(parseHostPort("9090")).toBe(9090);
   });
 
-  it("parses a non-default port", () => {
-    expect(parseHostPort("http://localhost:9090")).toBe(9090);
+  it("returns NaN for empty string", () => {
+    expect(Number.isNaN(parseHostPort(""))).toBe(true);
   });
 
-  it("defaults to 8088 for empty string", () => {
-    expect(parseHostPort("")).toBe(8088);
+  it("returns NaN for invalid input", () => {
+    expect(Number.isNaN(parseHostPort("not-a-number"))).toBe(true);
   });
 
-  it("defaults to 8088 for invalid URL", () => {
-    expect(parseHostPort("not-a-url")).toBe(8088);
-  });
-
-  it("defaults to 8088 for null/undefined", () => {
-    expect(parseHostPort(null)).toBe(8088);
-    expect(parseHostPort(undefined)).toBe(8088);
+  it("returns NaN for null/undefined", () => {
+    expect(Number.isNaN(parseHostPort(null))).toBe(true);
+    expect(Number.isNaN(parseHostPort(undefined))).toBe(true);
   });
 });
 
@@ -343,36 +332,33 @@ describe("Script decision logic — example tests", () => {
 // ─────────────────────────────────────────────────────────────────────────────
 
 describe("PBT — parseHostPort properties", () => {
-  it("always returns a number", () => {
+  it("returns the parsed integer for numeric strings", () => {
     fc.assert(
-      fc.property(fc.string(), (s) => {
-        const result = parseHostPort(s);
-        return typeof result === "number" && !Number.isNaN(result);
-      }),
+      fc.property(fc.integer({ min: 1, max: 65535 }), (port) => parseHostPort(String(port)) === port),
       { numRuns: 200 },
     );
   });
 
-  it("always returns 8088 for URLs without explicit ports", () => {
+  it("returns NaN for non-numeric inputs", () => {
     fc.assert(
       fc.property(
         fc.oneof(
           fc.constant(""),
-          fc.constant("not-a-url"),
+          fc.constant("not-a-number"),
           fc.constant("https://example.com"),
-          fc.constant("https://store.furrycolombia.com"),
+          fc.constant("localhost:9090"),
         ),
-        (origin) => parseHostPort(origin) === 8088,
+        (value) => Number.isNaN(parseHostPort(value)),
       ),
       { numRuns: 100 },
     );
   });
 
-  it("always returns the explicit port for http://localhost:<port>", () => {
+  it("accepts zero-prefixed numeric strings", () => {
     fc.assert(
       fc.property(
-        fc.integer({ min: 1, max: 65535 }),
-        (port) => parseHostPort(`http://localhost:${port}`) === port,
+        fc.integer({ min: 1, max: 9999 }),
+        (port) => parseHostPort(`0${port}`) === port,
       ),
       { numRuns: 200 },
     );
