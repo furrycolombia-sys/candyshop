@@ -1,40 +1,20 @@
 import { deleteCookie, getCookie } from "cookies-next";
+import { getSharedCookieDomain } from "shared";
+import { isCartCookieItems } from "shared/types";
+import type { CartCookieItem } from "shared/types";
 
-import type { CartItem } from "@/features/checkout/domain/types";
 import {
   CART_COOKIE_CHANGED_EVENT,
   CART_COOKIE_KEY,
 } from "@/shared/domain/constants";
 
-const EMPTY_CART: CartItem[] = [];
-const MINIMUM_DOMAIN_SEGMENTS = 2;
-const DOMAIN_SUFFIX_SEGMENT_OFFSET = -2;
+const EMPTY_CART: CartCookieItem[] = [];
 
 let lastRawCartCookie: string | null = null;
-let lastCartSnapshot: CartItem[] = EMPTY_CART;
-
-function getSharedCookieDomain(hostname: string): string | undefined {
-  if (hostname === "localhost" || hostname === "127.0.0.1") return undefined;
-
-  const parts = hostname.split(".");
-  if (parts.length < MINIMUM_DOMAIN_SEGMENTS) return undefined;
-
-  return `.${parts.slice(DOMAIN_SUFFIX_SEGMENT_OFFSET).join(".")}`;
-}
-
-function isValidCartItem(item: unknown): item is CartItem {
-  if (typeof item !== "object" || item === null) return false;
-  const record = item as Record<string, unknown>;
-  return (
-    typeof record.id === "string" &&
-    typeof record.price_cop === "number" &&
-    typeof record.price_usd === "number" &&
-    typeof record.quantity === "number"
-  );
-}
+let lastCartSnapshot: CartCookieItem[] = EMPTY_CART;
 
 /** Read and validate the cart cookie set by the store app. */
-export function readCartFromCookie(): CartItem[] {
+export function readCartFromCookie(): CartCookieItem[] {
   const raw = getCookie(CART_COOKIE_KEY);
   if (raw) {
     const serialized = String(raw);
@@ -44,16 +24,14 @@ export function readCartFromCookie(): CartItem[] {
 
     try {
       const parsed: unknown = JSON.parse(serialized);
-      if (!Array.isArray(parsed)) {
+      if (!isCartCookieItems(parsed)) {
         lastRawCartCookie = serialized;
         lastCartSnapshot = EMPTY_CART;
         return EMPTY_CART;
       }
 
       lastRawCartCookie = serialized;
-      lastCartSnapshot = parsed.filter((item: unknown) =>
-        isValidCartItem(item),
-      );
+      lastCartSnapshot = parsed;
       return lastCartSnapshot;
     } catch {
       lastRawCartCookie = serialized;

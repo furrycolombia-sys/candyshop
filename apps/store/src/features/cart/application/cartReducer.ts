@@ -13,22 +13,42 @@ export type CartAction =
   | { type: "CLEAR_CART" }
   | { type: "HYDRATE"; payload: CartItem[] };
 
+function toCartSnapshot(
+  payload: Omit<CartItem, "quantity">,
+): Omit<CartItem, "quantity"> {
+  return {
+    id: payload.id,
+    name_en: payload.name_en,
+    name_es: payload.name_es,
+    price_cop: payload.price_cop,
+    price_usd: payload.price_usd,
+    seller_id: payload.seller_id,
+    images: payload.images,
+    max_quantity: payload.max_quantity,
+    category: payload.category,
+    type: payload.type,
+    refundable: payload.refundable,
+  };
+}
+
 export function addItemToItems(
   items: CartItem[],
   payload: Omit<CartItem, "quantity"> & { quantity?: number },
 ): CartItem[] {
   const { quantity = 1, ...rest } = payload;
-  const existingIndex = items.findIndex((item) => item.id === rest.id);
+  const snapshot = toCartSnapshot(rest);
+  const existingIndex = items.findIndex((item) => item.id === snapshot.id);
 
   if (existingIndex !== -1) {
     return items.map((item, index) =>
       index === existingIndex
         ? {
             ...item,
+            ...snapshot,
             quantity:
-              item.max_quantity === null
+              snapshot.max_quantity === null
                 ? item.quantity + quantity
-                : Math.min(item.quantity + quantity, item.max_quantity),
+                : Math.min(item.quantity + quantity, snapshot.max_quantity),
           }
         : item,
     );
@@ -37,11 +57,11 @@ export function addItemToItems(
   return [
     ...items,
     {
-      ...rest,
+      ...snapshot,
       quantity:
-        rest.max_quantity === null
+        snapshot.max_quantity === null
           ? quantity
-          : Math.min(quantity, rest.max_quantity),
+          : Math.min(quantity, snapshot.max_quantity),
     },
   ];
 }
