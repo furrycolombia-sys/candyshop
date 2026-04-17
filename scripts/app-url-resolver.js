@@ -1,9 +1,8 @@
 /**
  * Resolves app URLs for E2E tests and Playwright configs.
  *
- * Reads APP_PUBLIC_ORIGIN from the active env file (loaded by load-root-env.cjs).
- * If set, derives each app URL by joining the origin with the app's path.
- * Falls back to NEXT_PUBLIC_*_URL env vars, then to devUrl from app-links.json.
+ * Reads explicit NEXT_PUBLIC_* app URLs from the active env file
+ * (loaded by load-root-env.cjs). Falls back to app-links.json devUrl values.
  *
  * No E2E mode detection. No isE2EMode flag. The env file IS the configuration.
  * To run E2E against prod, load .env.prod — no code changes needed.
@@ -21,42 +20,20 @@ loadRootEnv({ targetEnv: process.env.TARGET_ENV });
 const appLinks = require("../config/app-links.json");
 
 /**
- * @param {string} s
- * @returns {string}
- */
-function stripTrailingSlash(s) {
-  return s.replace(/\/+$/, "");
-}
-
-/**
  * Resolves all app URLs for the active environment.
  *
  * Resolution order:
- *   1. APP_PUBLIC_ORIGIN + app.path  (when APP_PUBLIC_ORIGIN is set)
- *   2. NEXT_PUBLIC_<APP>_URL         (per-app override)
- *   3. app.devUrl                    (hardcoded localhost port from app-links.json)
+ *   1. NEXT_PUBLIC_<APP>_URL         (per-app explicit URL)
+ *   2. app.devUrl                    (hardcoded localhost port from app-links.json)
  *
  * @returns {Record<string, string>}
  */
 function resolveE2EAppUrls() {
-  const rawOrigin = process.env.APP_PUBLIC_ORIGIN?.trim() ?? "";
-  // In local dev mode (APPS_MODE=local), apps run on individual ports —
-  // APP_PUBLIC_ORIGIN points to a single-origin proxy that isn't running.
-  // Use per-app NEXT_PUBLIC_*_URL vars instead.
-  const appsMode = process.env.APPS_MODE ?? "local";
-  const publicOrigin =
-    rawOrigin && appsMode !== "local" ? stripTrailingSlash(rawOrigin) : null;
-
   /** @type {Record<string, string>} */
   const result = {};
 
   for (const [name, app] of Object.entries(appLinks)) {
-    if (publicOrigin) {
-      result[name] =
-        app.path === "/" ? publicOrigin : `${publicOrigin}${app.path}`;
-    } else {
-      result[name] = process.env[app.envKey] ?? app.devUrl;
-    }
+    result[name] = process.env[app.envKey] ?? app.devUrl;
   }
 
   return result;
