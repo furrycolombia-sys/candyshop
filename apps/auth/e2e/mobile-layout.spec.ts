@@ -30,7 +30,6 @@ test("mobile layouts stay contained and checkout keeps the sidebar closed", asyn
   const seller = await createTestUser("mobile-seller", SELLER_PERMISSIONS);
   const buyer = await createTestUser("mobile-buyer", [
     "products.read",
-    "product_images.read",
     "orders.create",
     "orders.read",
     "receipts.create",
