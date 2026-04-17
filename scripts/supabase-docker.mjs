@@ -132,7 +132,9 @@ function generateConfig() {
 
   const basePort = parseInt(process.env.SUPABASE_PORT ?? "54321", 10);
   if (isNaN(basePort)) {
-    console.error(`ERROR: SUPABASE_PORT is not a valid number: ${process.env.SUPABASE_PORT}`);
+    console.error(
+      `ERROR: SUPABASE_PORT is not a valid number: ${process.env.SUPABASE_PORT}`,
+    );
     process.exit(1);
   }
 
@@ -167,7 +169,9 @@ function generateConfig() {
   }
 
   writeFileSync(configPath, template, "utf-8");
-  console.log(`✓ Generated config.toml (Project: ${projectId}, API: ${ports.SUPABASE_API_PORT}, Studio: ${ports.SUPABASE_STUDIO_PORT})`);
+  console.log(
+    `✓ Generated config.toml (Project: ${projectId}, API: ${ports.SUPABASE_API_PORT}, Studio: ${ports.SUPABASE_STUDIO_PORT})`,
+  );
 }
 
 function cleanupConfig() {
@@ -223,8 +227,14 @@ if (command === "restart" || command === "start") {
   const projectId = `candystore-${targetEnv}`;
   const orphans = getSupabaseContainers(projectId);
   if (orphans.length > 0) {
-    console.log(`Cleaning up ${orphans.length} orphaned container(s) for ${projectId}...`);
-    spawnSync("docker", ["rm", "-f", ...orphans], { cwd: rootDir, stdio: "pipe", env: process.env });
+    console.log(
+      `Cleaning up ${orphans.length} orphaned container(s) for ${projectId}...`,
+    );
+    spawnSync("docker", ["rm", "-f", ...orphans], {
+      cwd: rootDir,
+      stdio: "pipe",
+      env: process.env,
+    });
     console.log(`✓ Removed orphaned containers`);
   }
 
@@ -239,18 +249,24 @@ if (command === "restart" || command === "start") {
 function getSupabaseContainers(projectId) {
   const result = spawnSync(
     "docker",
-    ["ps", "-a", "--filter", `label=com.supabase.cli.project=${projectId}`, "-q"],
+    [
+      "ps",
+      "-a",
+      "--filter",
+      `label=com.supabase.cli.project=${projectId}`,
+      "-q",
+    ],
     {
       cwd: rootDir,
       stdio: "pipe",
       env: process.env,
     },
   );
-  
+
   if (result.status !== 0) {
     return [];
   }
-  
+
   return result.stdout.toString().trim().split("\n").filter(Boolean);
 }
 

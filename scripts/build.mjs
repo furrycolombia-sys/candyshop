@@ -15,7 +15,9 @@ const rootDir = resolve(__dirname, "..");
 const isWindows = process.platform === "win32";
 
 const result = spawnSync(
-  isWindows ? `"${resolve(rootDir, "node_modules", ".bin", "turbo.cmd")}"` : resolve(rootDir, "node_modules", ".bin", "turbo"),
+  isWindows
+    ? `"${resolve(rootDir, "node_modules", ".bin", "turbo.cmd")}"`
+    : resolve(rootDir, "node_modules", ".bin", "turbo"),
   ["build"],
   { cwd: rootDir, stdio: "inherit", env: process.env, shell: isWindows },
 );

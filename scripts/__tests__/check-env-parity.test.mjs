@@ -108,7 +108,8 @@ describe("checkParity — CLOUDFLARE_TUNNEL_* exemption", () => {
   it("8.1/8.3 — CLOUDFLARE_TUNNEL_* keys only in staging → passes with exemptCount > 0", () => {
     const files = {
       ".env.dev": "TARGET_ENV=dev\nAPPS_MODE=local\n",
-      ".env.staging": "TARGET_ENV=staging\nAPPS_MODE=docker\nCLOUDFLARE_TUNNEL_APP_ENABLED=true\nCLOUDFLARE_TUNNEL_APP_TOKEN=abc\n",
+      ".env.staging":
+        "TARGET_ENV=staging\nAPPS_MODE=docker\nCLOUDFLARE_TUNNEL_APP_ENABLED=true\nCLOUDFLARE_TUNNEL_APP_TOKEN=abc\n",
       ".env.prod": "TARGET_ENV=prod\nAPPS_MODE=docker\n",
     };
     const { errors, exemptCount } = checkParity(files);
@@ -119,8 +120,10 @@ describe("checkParity — CLOUDFLARE_TUNNEL_* exemption", () => {
   // Requirement 8.3: multiple CLOUDFLARE_TUNNEL_* keys across files → all counted
   it("8.3 — counts all CLOUDFLARE_TUNNEL_* keys across all files", () => {
     const files = {
-      ".env.dev": "TARGET_ENV=dev\nCLOUDFLARE_TUNNEL_APP_ENABLED=false\nCLOUDFLARE_TUNNEL_APP_TOKEN=\n",
-      ".env.staging": "TARGET_ENV=staging\nCLOUDFLARE_TUNNEL_APP_ENABLED=true\nCLOUDFLARE_TUNNEL_APP_TOKEN=tok\nCLOUDFLARE_TUNNEL_SUPABASE_ENABLED=true\nCLOUDFLARE_TUNNEL_SUPABASE_TOKEN=tok2\n",
+      ".env.dev":
+        "TARGET_ENV=dev\nCLOUDFLARE_TUNNEL_APP_ENABLED=false\nCLOUDFLARE_TUNNEL_APP_TOKEN=\n",
+      ".env.staging":
+        "TARGET_ENV=staging\nCLOUDFLARE_TUNNEL_APP_ENABLED=true\nCLOUDFLARE_TUNNEL_APP_TOKEN=tok\nCLOUDFLARE_TUNNEL_SUPABASE_ENABLED=true\nCLOUDFLARE_TUNNEL_SUPABASE_TOKEN=tok2\n",
     };
     const { errors, exemptCount } = checkParity(files);
     // APP_ENABLED, APP_TOKEN appear in both → 2 unique keys
@@ -133,8 +136,10 @@ describe("checkParity — CLOUDFLARE_TUNNEL_* exemption", () => {
   // Requirement 8.2: non-tunnel key missing from one file → still fails
   it("8.2 — non-tunnel key missing from one file still causes a parity error", () => {
     const files = {
-      ".env.dev": "TARGET_ENV=dev\nAPPS_MODE=local\nCLOUDFLARE_TUNNEL_APP_ENABLED=false\n",
-      ".env.staging": "TARGET_ENV=staging\nCLOUDFLARE_TUNNEL_APP_ENABLED=true\n",
+      ".env.dev":
+        "TARGET_ENV=dev\nAPPS_MODE=local\nCLOUDFLARE_TUNNEL_APP_ENABLED=false\n",
+      ".env.staging":
+        "TARGET_ENV=staging\nCLOUDFLARE_TUNNEL_APP_ENABLED=true\n",
       // APPS_MODE missing from staging
     };
     const { errors, exemptCount } = checkParity(files);
