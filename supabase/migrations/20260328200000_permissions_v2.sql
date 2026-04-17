@@ -152,11 +152,6 @@ drop policy if exists "settings_update"  on public.payment_settings;
 -- ---- Audit Log ----
 drop policy if exists "audit_read" on audit.logged_actions;
 
--- ---- Storage: Product Images ----
-drop policy if exists "product_images_public_read" on storage.objects;
-drop policy if exists "product_images_upload"      on storage.objects;
-drop policy if exists "product_images_delete"      on storage.objects;
-
 -- ---- Storage: Receipts ----
 drop policy if exists "receipts_upload"  on storage.objects;
 drop policy if exists "receipts_read"    on storage.objects;
@@ -439,24 +434,6 @@ create policy "settings_update" on public.payment_settings
 -- ---------------------------------------------------------------------------
 create policy "audit_read" on audit.logged_actions
   for select using (has_permission(auth.uid(), 'admin.audit'));
-
--- ---------------------------------------------------------------------------
--- Storage: Product Images (public read, products.create/delete writes)
--- ---------------------------------------------------------------------------
-create policy "product_images_public_read" on storage.objects
-  for select using (bucket_id = 'product-images');
-
-create policy "product_images_upload" on storage.objects
-  for insert with check (
-    bucket_id = 'product-images'
-    and has_permission(auth.uid(), 'products.create')
-  );
-
-create policy "product_images_delete" on storage.objects
-  for delete using (
-    bucket_id = 'product-images'
-    and has_permission(auth.uid(), 'products.delete')
-  );
 
 -- ---------------------------------------------------------------------------
 -- Storage: Receipts (orders.place for upload/delete, orders.view for read)
