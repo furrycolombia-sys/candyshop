@@ -28,7 +28,10 @@ function parseEnvFile(filePath) {
     const eq = trimmed.indexOf("=");
     if (eq === -1) continue;
     const key = trimmed.slice(0, eq).trim();
-    const val = trimmed.slice(eq + 1).trim().replace(/^["']|["']$/g, "");
+    const val = trimmed
+      .slice(eq + 1)
+      .trim()
+      .replace(/^["']|["']$/g, "");
     vars[key] = val;
   }
   return vars;
@@ -40,7 +43,8 @@ function resolveSecrets(vars, secrets) {
   for (const [key, val] of Object.entries(vars)) {
     if (!val.includes("$secret:")) continue;
     vars[key] = val.replace(SECRET_RE, (_, name) => {
-      if (!(name in secrets)) throw new Error(`Missing secret: "${name}". Run pnpm sync-secrets.`);
+      if (!(name in secrets))
+        throw new Error(`Missing secret: "${name}". Run pnpm sync-secrets.`);
       return secrets[name];
     });
   }
@@ -91,7 +95,11 @@ export function loadEnv(targetEnv) {
   // If ENV_DEBUG=true, serialize all resolved vars into a single NEXT_PUBLIC_ var
   // so the playground can display them without needing turbo globalEnv entries.
   if (vars.ENV_DEBUG === "true") {
-    const snapshot = { ...vars, TARGET_ENV: env, NODE_ENV: process.env.NODE_ENV ?? "" };
+    const snapshot = {
+      ...vars,
+      TARGET_ENV: env,
+      NODE_ENV: process.env.NODE_ENV ?? "",
+    };
     process.env.NEXT_PUBLIC_ENV_DEBUG = JSON.stringify(snapshot);
   }
 }

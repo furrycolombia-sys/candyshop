@@ -16,9 +16,9 @@ const rootDir = resolve(__dirname, "..");
 const isWindows = process.platform === "win32";
 
 // Strip --env <name> before forwarding args to supabase
-const supabaseArgs = process.argv.slice(2).filter((a, i, arr) =>
-  a !== "--env" && arr[i - 1] !== "--env"
-);
+const supabaseArgs = process.argv
+  .slice(2)
+  .filter((a, i, arr) => a !== "--env" && arr[i - 1] !== "--env");
 
 const result = spawnSync(
   isWindows ? "pnpm.cmd" : "pnpm",

@@ -41,9 +41,7 @@ function resolveSecrets(vars, secrets) {
     if (!val.includes("$secret:")) continue;
     vars[key] = val.replace(SECRET_RE, (_, name) => {
       if (!(name in secrets))
-        throw new Error(
-          `Missing secret: "${name}". Run pnpm sync-secrets.`,
-        );
+        throw new Error(`Missing secret: "${name}". Run pnpm sync-secrets.`);
       return secrets[name];
     });
   }
@@ -56,8 +54,7 @@ function resolveSecrets(vars, secrets) {
  * @param {{ targetEnv?: string }} [opts]
  */
 function loadRootEnv(opts) {
-  const env =
-    (opts && opts.targetEnv) || process.env.TARGET_ENV || "dev";
+  const env = (opts && opts.targetEnv) || process.env.TARGET_ENV || "dev";
   const envFile = resolve(rootDir, `.env.${env}`);
 
   if (!existsSync(envFile)) {
@@ -66,9 +63,7 @@ function loadRootEnv(opts) {
 
   const vars = parseEnvFile(envFile);
 
-  const hasSecretRefs = Object.values(vars).some((v) =>
-    v.includes("$secret:"),
-  );
+  const hasSecretRefs = Object.values(vars).some((v) => v.includes("$secret:"));
   if (hasSecretRefs) {
     if (process.env.CI === "true") {
       for (const [key, val] of Object.entries(vars)) {

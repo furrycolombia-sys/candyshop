@@ -24,6 +24,7 @@ export function PaymentsSidebar() {
       className={`relative hidden shrink-0 flex-col border-r-3 border-foreground bg-background transition-all duration-300 ease-in-out lg:flex ${
         collapsed ? COLLAPSED_WIDTH_CLASS : "w-60"
       }`}
+      data-loading={isLoading}
       {...tid("payments-sidebar")}
     >
       <button
