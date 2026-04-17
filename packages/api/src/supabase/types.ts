@@ -7,87 +7,6 @@ export type Json =
   | Json[];
 
 export type Database = {
-  audit: {
-    Tables: {
-      logged_actions: {
-        Row: {
-          action_timestamp: string;
-          action_type: string;
-          changed_fields: Json | null;
-          client_ip: unknown;
-          db_user: string;
-          event_id: number;
-          row_data: Json | null;
-          schema_name: string;
-          table_name: string;
-          transaction_id: number | null;
-          user_id: string | null;
-        };
-        Insert: {
-          action_timestamp?: string;
-          action_type: string;
-          changed_fields?: Json | null;
-          client_ip?: unknown;
-          db_user?: string;
-          event_id?: number;
-          row_data?: Json | null;
-          schema_name: string;
-          table_name: string;
-          transaction_id?: number | null;
-          user_id?: string | null;
-        };
-        Update: {
-          action_timestamp?: string;
-          action_type?: string;
-          changed_fields?: Json | null;
-          client_ip?: unknown;
-          db_user?: string;
-          event_id?: number;
-          row_data?: Json | null;
-          schema_name?: string;
-          table_name?: string;
-          transaction_id?: number | null;
-          user_id?: string | null;
-        };
-        Relationships: [];
-      };
-    };
-    Views: {
-      logged_actions_with_user: {
-        Row: {
-          action_timestamp: string | null;
-          action_type: string | null;
-          changed_fields: Json | null;
-          client_ip: unknown;
-          db_user: string | null;
-          event_id: number | null;
-          row_data: Json | null;
-          schema_name: string | null;
-          table_name: string | null;
-          transaction_id: number | null;
-          user_avatar: string | null;
-          user_display_name: string | null;
-          user_email: string | null;
-          user_id: string | null;
-        };
-        Relationships: [];
-      };
-    };
-    Functions: {
-      archive_old_logs: {
-        Args: { batch_size?: number; retention_days?: number };
-        Returns: number;
-      };
-      disable_tracking: { Args: { target_table: unknown }; Returns: undefined };
-      enable_tracking: { Args: { target_table: unknown }; Returns: undefined };
-    };
-    Enums: {
-      [_ in never]: never;
-    };
-    CompositeTypes: {
-      [_ in never]: never;
-    };
-  };
   graphql_public: {
     Tables: {
       [_ in never]: never;
@@ -886,6 +805,7 @@ export type Database = {
         Args: { p_permission_key: string; p_user_id: string };
         Returns: boolean;
       };
+      is_order_delegate: { Args: { p_order_id: string }; Returns: boolean };
       release_stock: {
         Args: { p_product_id: string; p_quantity: number };
         Returns: undefined;
@@ -1067,9 +987,6 @@ export type CompositeTypes<
     : never;
 
 export const Constants = {
-  audit: {
-    Enums: {},
-  },
   graphql_public: {
     Enums: {},
   },
