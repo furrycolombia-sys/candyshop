@@ -108,7 +108,17 @@ function buildComposeArgs(targetEnv) {
  * Simulates the script's top-level decision logic:
  * given build result and options, returns what commands would be run.
  */
-function simulateScript({ imageName, buildArgValues, noCache, up, tunnel = false, targetEnv, buildExitCode, composeExitCode, launcherExitCode = 0 }) {
+function simulateScript({
+  imageName,
+  buildArgValues,
+  noCache,
+  up,
+  tunnel = false,
+  targetEnv,
+  buildExitCode,
+  composeExitCode,
+  launcherExitCode = 0,
+}) {
   const commands = [];
   const buildArgs = buildDockerArgs({ imageName, buildArgValues, noCache });
   commands.push({ cmd: "docker", args: buildArgs });
@@ -127,7 +137,10 @@ function simulateScript({ imageName, buildArgValues, noCache, up, tunnel = false
     }
 
     if (tunnel) {
-      commands.push({ cmd: "node", args: ["scripts/cloudflared.mjs", "--env", targetEnv] });
+      commands.push({
+        cmd: "node",
+        args: ["scripts/cloudflared.mjs", "--env", targetEnv],
+      });
       if (launcherExitCode !== 0) {
         return { commands, exitCode: launcherExitCode, successMessage };
       }
@@ -209,8 +222,21 @@ describe("parseCliArgs — example tests", () => {
   });
 
   it("all flags together", () => {
-    const opts = parseCliArgs(["node", "script.mjs", "--env", "staging", "--no-cache", "--up"]);
-    expect(opts).toEqual({ targetEnv: "staging", noCache: true, up: true, tunnel: false, help: false });
+    const opts = parseCliArgs([
+      "node",
+      "script.mjs",
+      "--env",
+      "staging",
+      "--no-cache",
+      "--up",
+    ]);
+    expect(opts).toEqual({
+      targetEnv: "staging",
+      noCache: true,
+      up: true,
+      tunnel: false,
+      help: false,
+    });
   });
 
   it("--tunnel sets tunnel to true", () => {
@@ -230,14 +256,19 @@ describe("parseCliArgs — example tests", () => {
 
 describe("buildDockerArgs — example tests", () => {
   it("includes -t <imageName>", () => {
-    const args = buildDockerArgs({ imageName: "myimage:1.0", buildArgValues: {} });
+    const args = buildDockerArgs({
+      imageName: "myimage:1.0",
+      buildArgValues: {},
+    });
     const tIdx = args.indexOf("-t");
     expect(tIdx).toBeGreaterThan(-1);
     expect(args[tIdx + 1]).toBe("myimage:1.0");
   });
 
   it("includes all 13 --build-arg flags", () => {
-    const values = Object.fromEntries(BUILD_ARG_KEYS.map((k) => [k, `val-${k}`]));
+    const values = Object.fromEntries(
+      BUILD_ARG_KEYS.map((k) => [k, `val-${k}`]),
+    );
     const args = buildDockerArgs({ imageName: "img", buildArgValues: values });
     for (const key of BUILD_ARG_KEYS) {
       const idx = args.indexOf(`${key}=val-${key}`);
@@ -248,13 +279,21 @@ describe("buildDockerArgs — example tests", () => {
 
   // 5.4 — --no-cache appends --no-cache to docker build args
   it("5.4 — appends --no-cache when noCache=true", () => {
-    const args = buildDockerArgs({ imageName: "img", buildArgValues: {}, noCache: true });
+    const args = buildDockerArgs({
+      imageName: "img",
+      buildArgValues: {},
+      noCache: true,
+    });
     expect(args).toContain("--no-cache");
   });
 
   // 5.5 — no --no-cache means --no-cache is absent
   it("5.5 — omits --no-cache when noCache=false", () => {
-    const args = buildDockerArgs({ imageName: "img", buildArgValues: {}, noCache: false });
+    const args = buildDockerArgs({
+      imageName: "img",
+      buildArgValues: {},
+      noCache: false,
+    });
     expect(args).not.toContain("--no-cache");
   });
 
@@ -284,27 +323,47 @@ describe("Script decision logic — example tests", () => {
 
   // 5.6 — --up triggers docker compose after successful build
   it("5.6 — --up triggers docker compose after successful build", () => {
-    const result = simulateScript({ ...baseOpts, up: true, buildExitCode: 0, composeExitCode: 0 });
+    const result = simulateScript({
+      ...baseOpts,
+      up: true,
+      buildExitCode: 0,
+      composeExitCode: 0,
+    });
     const composeCalls = result.commands.filter((c) => c.args[0] === "compose");
     expect(composeCalls.length).toBeGreaterThan(0);
   });
 
   // 5.7 — no --up means docker compose is never called
   it("5.7 — no --up means docker compose is never called", () => {
-    const result = simulateScript({ ...baseOpts, up: false, buildExitCode: 0, composeExitCode: 0 });
+    const result = simulateScript({
+      ...baseOpts,
+      up: false,
+      buildExitCode: 0,
+      composeExitCode: 0,
+    });
     const composeCalls = result.commands.filter((c) => c.args[0] === "compose");
     expect(composeCalls.length).toBe(0);
   });
 
   // 5.8 — loadEnv throws → exit 1 (tested via the error path in the script logic)
   it("5.8 — build failure exits with the build's exit code", () => {
-    const result = simulateScript({ ...baseOpts, up: true, buildExitCode: 1, composeExitCode: 0 });
+    const result = simulateScript({
+      ...baseOpts,
+      up: true,
+      buildExitCode: 1,
+      composeExitCode: 0,
+    });
     expect(result.exitCode).toBe(1);
   });
 
   // 5.9 — docker build exits non-zero → same exit code, compose not called
   it("5.9 — docker build exits non-zero → same exit code, compose not called", () => {
-    const result = simulateScript({ ...baseOpts, up: true, buildExitCode: 2, composeExitCode: 0 });
+    const result = simulateScript({
+      ...baseOpts,
+      up: true,
+      buildExitCode: 2,
+      composeExitCode: 0,
+    });
     expect(result.exitCode).toBe(2);
     const composeCalls = result.commands.filter((c) => c.args[0] === "compose");
     expect(composeCalls.length).toBe(0);
@@ -312,17 +371,32 @@ describe("Script decision logic — example tests", () => {
 
   // 5.10 — docker compose up exits non-zero → same exit code
   it("5.10 — docker compose up exits non-zero → same exit code", () => {
-    const result = simulateScript({ ...baseOpts, up: true, buildExitCode: 0, composeExitCode: 3 });
+    const result = simulateScript({
+      ...baseOpts,
+      up: true,
+      buildExitCode: 0,
+      composeExitCode: 3,
+    });
     expect(result.exitCode).toBe(3);
   });
 
   it("exits 0 on full success without --up", () => {
-    const result = simulateScript({ ...baseOpts, up: false, buildExitCode: 0, composeExitCode: 0 });
+    const result = simulateScript({
+      ...baseOpts,
+      up: false,
+      buildExitCode: 0,
+      composeExitCode: 0,
+    });
     expect(result.exitCode).toBe(0);
   });
 
   it("exits 0 on full success with --up", () => {
-    const result = simulateScript({ ...baseOpts, up: true, buildExitCode: 0, composeExitCode: 0 });
+    const result = simulateScript({
+      ...baseOpts,
+      up: true,
+      buildExitCode: 0,
+      composeExitCode: 0,
+    });
     expect(result.exitCode).toBe(0);
   });
 });
@@ -334,7 +408,10 @@ describe("Script decision logic — example tests", () => {
 describe("PBT — parseHostPort properties", () => {
   it("returns the parsed integer for numeric strings", () => {
     fc.assert(
-      fc.property(fc.integer({ min: 1, max: 65535 }), (port) => parseHostPort(String(port)) === port),
+      fc.property(
+        fc.integer({ min: 1, max: 65535 }),
+        (port) => parseHostPort(String(port)) === port,
+      ),
       { numRuns: 200 },
     );
   });
@@ -369,7 +446,9 @@ describe("PBT — parseCliArgs properties", () => {
   it("targetEnv is always the value after --env when present", () => {
     fc.assert(
       fc.property(
-        fc.string({ minLength: 1, maxLength: 20 }).filter((s) => !s.startsWith("-")),
+        fc
+          .string({ minLength: 1, maxLength: 20 })
+          .filter((s) => !s.startsWith("-")),
         (envName) => {
           const opts = parseCliArgs(["node", "script.mjs", "--env", envName]);
           return opts.targetEnv === envName;
@@ -382,10 +461,7 @@ describe("PBT — parseCliArgs properties", () => {
   it("targetEnv is always 'prod' when --env is absent", () => {
     fc.assert(
       fc.property(
-        fc.array(
-          fc.constantFrom("--no-cache", "--up"),
-          { maxLength: 2 },
-        ),
+        fc.array(fc.constantFrom("--no-cache", "--up"), { maxLength: 2 }),
         (extraFlags) => {
           const opts = parseCliArgs(["node", "script.mjs", ...extraFlags]);
           return opts.targetEnv === "prod";
@@ -401,14 +477,11 @@ describe("PBT — buildDockerArgs properties", () => {
   // Validates: Requirements 1.5, 2.1
   it("Property 1: -t arg always equals the provided imageName", () => {
     fc.assert(
-      fc.property(
-        fc.string({ minLength: 1, maxLength: 100 }),
-        (imageName) => {
-          const args = buildDockerArgs({ imageName, buildArgValues: {} });
-          const tIdx = args.indexOf("-t");
-          return tIdx !== -1 && args[tIdx + 1] === imageName;
-        },
-      ),
+      fc.property(fc.string({ minLength: 1, maxLength: 100 }), (imageName) => {
+        const args = buildDockerArgs({ imageName, buildArgValues: {} });
+        const tIdx = args.indexOf("-t");
+        return tIdx !== -1 && args[tIdx + 1] === imageName;
+      }),
       { numRuns: 100 },
     );
   });
@@ -417,11 +490,16 @@ describe("PBT — buildDockerArgs properties", () => {
   // Validates: Requirements 2.2
   it("Property 2: all 13 build-arg keys appear as --build-arg KEY=VALUE", () => {
     const arbitraryValues = fc.record(
-      Object.fromEntries(BUILD_ARG_KEYS.map((k) => [k, fc.string({ maxLength: 100 })])),
+      Object.fromEntries(
+        BUILD_ARG_KEYS.map((k) => [k, fc.string({ maxLength: 100 })]),
+      ),
     );
     fc.assert(
       fc.property(arbitraryValues, (values) => {
-        const args = buildDockerArgs({ imageName: "img", buildArgValues: values });
+        const args = buildDockerArgs({
+          imageName: "img",
+          buildArgValues: values,
+        });
         return BUILD_ARG_KEYS.every((key) => {
           const expected = `${key}=${values[key] ?? ""}`;
           const idx = args.indexOf(expected);
@@ -436,21 +514,21 @@ describe("PBT — buildDockerArgs properties", () => {
   // Validates: Requirements 6.3
   it("Property 4: success message always contains the image name", () => {
     fc.assert(
-      fc.property(
-        fc.string({ minLength: 1, maxLength: 100 }),
-        (imageName) => {
-          const result = simulateScript({
-            imageName,
-            buildArgValues: {},
-            noCache: false,
-            up: false,
-            targetEnv: "prod",
-            buildExitCode: 0,
-            composeExitCode: 0,
-          });
-          return result.successMessage !== null && result.successMessage.includes(imageName);
-        },
-      ),
+      fc.property(fc.string({ minLength: 1, maxLength: 100 }), (imageName) => {
+        const result = simulateScript({
+          imageName,
+          buildArgValues: {},
+          noCache: false,
+          up: false,
+          targetEnv: "prod",
+          buildExitCode: 0,
+          composeExitCode: 0,
+        });
+        return (
+          result.successMessage !== null &&
+          result.successMessage.includes(imageName)
+        );
+      }),
       { numRuns: 100 },
     );
   });
@@ -474,7 +552,9 @@ describe("PBT — Property 3: compose never called after failed build", () => {
             buildExitCode: failCode,
             composeExitCode: 0,
           });
-          const composeCalls = result.commands.filter((c) => c.args[0] === "compose");
+          const composeCalls = result.commands.filter(
+            (c) => c.args[0] === "compose",
+          );
           return composeCalls.length === 0 && result.exitCode === failCode;
         },
       ),
@@ -513,7 +593,9 @@ describe("--tunnel flag — unit tests", () => {
       launcherExitCode: 0,
     });
     expect(result.exitCode).toBe(0);
-    const launcherCall = result.commands.find((c) => c.cmd === "node" && c.args[0] === "scripts/cloudflared.mjs");
+    const launcherCall = result.commands.find(
+      (c) => c.cmd === "node" && c.args[0] === "scripts/cloudflared.mjs",
+    );
     expect(launcherCall).toBeDefined();
   });
 
@@ -569,23 +651,20 @@ describe("PBT — Property 6: docker-build propagates launcher exit code exactly
   // Validates: Requirements 4.4
   it("Property 6: for any non-zero launcher exit code, docker-build exits with that exact code", () => {
     fc.assert(
-      fc.property(
-        fc.integer({ min: 1, max: 255 }),
-        (launcherExitCode) => {
-          const result = simulateScript({
-            imageName: "candyshop:latest",
-            buildArgValues: {},
-            noCache: false,
-            up: true,
-            tunnel: true,
-            targetEnv: "prod",
-            buildExitCode: 0,
-            composeExitCode: 0,
-            launcherExitCode,
-          });
-          return result.exitCode === launcherExitCode;
-        },
-      ),
+      fc.property(fc.integer({ min: 1, max: 255 }), (launcherExitCode) => {
+        const result = simulateScript({
+          imageName: "candyshop:latest",
+          buildArgValues: {},
+          noCache: false,
+          up: true,
+          tunnel: true,
+          targetEnv: "prod",
+          buildExitCode: 0,
+          composeExitCode: 0,
+          launcherExitCode,
+        });
+        return result.exitCode === launcherExitCode;
+      }),
       { numRuns: 100 },
     );
   });

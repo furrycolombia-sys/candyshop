@@ -59,28 +59,40 @@ console.log(`   env: ${targetEnv}\n`);
 const tunnelId = process.env.CLOUDFLARE_TUNNEL_ID;
 
 if (tunnelId) {
-  const credentialsFile = resolve(homedir(), ".cloudflared", `${tunnelId}.json`);
+  const credentialsFile = resolve(
+    homedir(),
+    ".cloudflared",
+    `${tunnelId}.json`,
+  );
 
   const appPort = Number.parseInt(process.env.HOST_PORT ?? "", 10);
   if (Number.isNaN(appPort)) {
-    console.error("ERROR: HOST_PORT is not set — cannot generate tunnel config");
+    console.error(
+      "ERROR: HOST_PORT is not set — cannot generate tunnel config",
+    );
     process.exit(1);
   }
 
   const supabasePortRaw = process.env.SUPABASE_PORT;
   if (!supabasePortRaw || supabasePortRaw === "N/A") {
-    console.error("ERROR: SUPABASE_PORT is not set — cannot generate tunnel config");
+    console.error(
+      "ERROR: SUPABASE_PORT is not set — cannot generate tunnel config",
+    );
     process.exit(1);
   }
   const supabasePort = Number.parseInt(supabasePortRaw, 10);
   if (Number.isNaN(supabasePort)) {
-    console.error(`ERROR: SUPABASE_PORT is not a valid number: ${supabasePortRaw}`);
+    console.error(
+      `ERROR: SUPABASE_PORT is not a valid number: ${supabasePortRaw}`,
+    );
     process.exit(1);
   }
 
   const siteUrl = process.env.SUPABASE_AUTH_SITE_URL;
   if (!siteUrl) {
-    console.error("ERROR: SUPABASE_AUTH_SITE_URL is not set — cannot derive hostname");
+    console.error(
+      "ERROR: SUPABASE_AUTH_SITE_URL is not set — cannot derive hostname",
+    );
     process.exit(1);
   }
   const baseHost = new URL(siteUrl).hostname.split(".").slice(-2).join(".");
@@ -118,7 +130,9 @@ ingress:
   - service: http_status:404
 `;
   writeFileSync(configPath, config, "utf-8");
-  console.log(`✓ Generated ~/.cloudflared/config.yml (app: ${appPort}, supabase: ${supabasePort})`);
+  console.log(
+    `✓ Generated ~/.cloudflared/config.yml (app: ${appPort}, supabase: ${supabasePort})`,
+  );
 }
 
 // ── Discover tunnels ──────────────────────────────────────────────────────────
@@ -147,7 +161,9 @@ for (const name of tunnelNames) {
 
   const token = process.env[`CLOUDFLARE_TUNNEL_${name}_TOKEN`] ?? "";
   if (!token) {
-    console.error(`ERROR: CLOUDFLARE_TUNNEL_${name}_TOKEN is not set — skipping`);
+    console.error(
+      `ERROR: CLOUDFLARE_TUNNEL_${name}_TOKEN is not set — skipping`,
+    );
     continue;
   }
 

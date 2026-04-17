@@ -40,9 +40,13 @@ function runStopper({ env, spawnSyncFn }) {
     const token = env[`CLOUDFLARE_TUNNEL_${name}_TOKEN`] ?? "";
     if (!token) continue;
 
-    const result = spawnSyncFn("pkill", ["-f", `cloudflared tunnel run --token ${token}`], {
-      stdio: "pipe",
-    });
+    const result = spawnSyncFn(
+      "pkill",
+      ["-f", `cloudflared tunnel run --token ${token}`],
+      {
+        stdio: "pipe",
+      },
+    );
 
     if (result.status === 0) {
       stdoutMessages.push(`✓ Tunnel stopped: ${name}`);
@@ -80,7 +84,9 @@ describe("runStopper — example paths", () => {
     const spawnSyncFn = () => ({ status: 1 });
     const result = runStopper({ env, spawnSyncFn });
     expect(result.exitCode).toBe(0);
-    expect(result.stdoutMessages).toContain("⚠ No running tunnel found for: APP");
+    expect(result.stdoutMessages).toContain(
+      "⚠ No running tunnel found for: APP",
+    );
   });
 
   // 7.9 — two enabled tunnels: one found, one not → one success + one warning + exits 0
@@ -99,7 +105,9 @@ describe("runStopper — example paths", () => {
     const result = runStopper({ env, spawnSyncFn });
     expect(result.exitCode).toBe(0);
     expect(result.stdoutMessages).toContain("✓ Tunnel stopped: APP");
-    expect(result.stdoutMessages).toContain("⚠ No running tunnel found for: SUPABASE");
+    expect(result.stdoutMessages).toContain(
+      "⚠ No running tunnel found for: SUPABASE",
+    );
   });
 
   // disabled tunnel is skipped
@@ -109,7 +117,10 @@ describe("runStopper — example paths", () => {
       CLOUDFLARE_TUNNEL_APP_TOKEN: "my-token",
     };
     let called = false;
-    const spawnSyncFn = () => { called = true; return { status: 0 }; };
+    const spawnSyncFn = () => {
+      called = true;
+      return { status: 0 };
+    };
     const result = runStopper({ env, spawnSyncFn });
     expect(result.exitCode).toBe(0);
     expect(called).toBe(false);
@@ -123,7 +134,10 @@ describe("runStopper — example paths", () => {
       CLOUDFLARE_TUNNEL_APP_TOKEN: "",
     };
     let called = false;
-    const spawnSyncFn = () => { called = true; return { status: 0 }; };
+    const spawnSyncFn = () => {
+      called = true;
+      return { status: 0 };
+    };
     const result = runStopper({ env, spawnSyncFn });
     expect(result.exitCode).toBe(0);
     expect(called).toBe(false);
@@ -141,7 +155,9 @@ describe("loadEnv error handling", () => {
     try {
       throw new Error(errorMessage);
     } catch (err) {
-      stderrMessages.push(`ERROR: Failed to load .env.${envName}: ${err.message}`);
+      stderrMessages.push(
+        `ERROR: Failed to load .env.${envName}: ${err.message}`,
+      );
       exitCode = 1;
     }
     expect(exitCode).toBe(1);
@@ -162,6 +178,9 @@ describe("pkill invocation", () => {
       return { status: 0 };
     };
     runStopper({ env, spawnSyncFn });
-    expect(capturedArgs).toEqual(["-f", "cloudflared tunnel run --token exact-token-value"]);
+    expect(capturedArgs).toEqual([
+      "-f",
+      "cloudflared tunnel run --token exact-token-value",
+    ]);
   });
 });

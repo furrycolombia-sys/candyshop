@@ -53,7 +53,9 @@ const up = args.includes("--up");
 const tunnel = args.includes("--tunnel");
 
 if (tunnel && !up) {
-  console.error("ERROR: --tunnel requires --up. Use: pnpm docker:build --up --tunnel");
+  console.error(
+    "ERROR: --tunnel requires --up. Use: pnpm docker:build --up --tunnel",
+  );
   process.exit(1);
 }
 
@@ -87,7 +89,9 @@ if (!containerName) {
 
 const hostPort = Number.parseInt(process.env.HOST_PORT ?? "", 10);
 if (Number.isNaN(hostPort)) {
-  console.error("ERROR: HOST_PORT is not set to a valid number in the env file.");
+  console.error(
+    "ERROR: HOST_PORT is not set to a valid number in the env file.",
+  );
   process.exit(1);
 }
 
@@ -162,11 +166,11 @@ if (up) {
 
   // Remove any existing container with the same name first.
   // This handles containers started outside of compose context.
-  const rmResult = spawnSync(
-    "docker",
-    ["rm", "-f", containerName],
-    { cwd: rootDir, stdio: "pipe", env: process.env },
-  );
+  const rmResult = spawnSync("docker", ["rm", "-f", containerName], {
+    cwd: rootDir,
+    stdio: "pipe",
+    env: process.env,
+  });
   if (rmResult.status === 0) {
     console.log(`  Removed existing container: ${containerName}`);
   }
@@ -205,11 +209,15 @@ if (up) {
 
   if (tunnel) {
     console.log(`\nLaunching Cloudflare tunnels ...`);
-    const tunnelResult = spawnSync("node", ["scripts/cloudflared.mjs", "--env", targetEnv], {
-      cwd: rootDir,
-      stdio: "inherit",
-      env: process.env,
-    });
+    const tunnelResult = spawnSync(
+      "node",
+      ["scripts/cloudflared.mjs", "--env", targetEnv],
+      {
+        cwd: rootDir,
+        stdio: "inherit",
+        env: process.env,
+      },
+    );
     if (tunnelResult.status !== 0) {
       process.exit(tunnelResult.status ?? 1);
     }

@@ -45,10 +45,12 @@ const headed = args.includes("--headed");
 const ui = args.includes("--ui");
 
 if (!["dev", "staging"].includes(targetEnv)) {
-  console.error("ERROR: --env must be dev or staging"); process.exit(1);
+  console.error("ERROR: --env must be dev or staging");
+  process.exit(1);
 }
 if (!["auth", "store"].includes(targetApp)) {
-  console.error("ERROR: --app must be auth or store"); process.exit(1);
+  console.error("ERROR: --app must be auth or store");
+  process.exit(1);
 }
 
 loadEnv(targetEnv);
@@ -64,7 +66,10 @@ if (targetEnv === "dev") {
   //    template with OAuth providers (Google, Discord) properly configured.
   console.log("▶ supabase:docker start --env dev");
   spawnSync("pnpm", ["supabase:docker", "start", "--env", "dev"], {
-    cwd: rootDir, stdio: "inherit", env: process.env, shell: true,
+    cwd: rootDir,
+    stdio: "inherit",
+    env: process.env,
+    shell: true,
   });
 
   // 2. Start dev servers if not already up
@@ -76,7 +81,10 @@ if (targetEnv === "dev") {
   } else {
     console.log(`\n▶ pnpm dev`);
     devProc = spawn("pnpm", ["dev"], {
-      cwd: rootDir, stdio: "inherit", env: process.env, shell: true,
+      cwd: rootDir,
+      stdio: "inherit",
+      env: process.env,
+      shell: true,
     });
     console.log(`   Waiting for ${targetApp} on :${port}...`);
     await waitForPort(port, 120_000);
@@ -90,27 +98,47 @@ if (targetEnv === "staging") {
   // 0. Stop any existing tunnel first
   console.log("▶ tunnel:stop --env staging");
   spawnSync("pnpm", ["tunnel:stop", "--env", "staging"], {
-    cwd: rootDir, stdio: "inherit", env: process.env, shell: true,
+    cwd: rootDir,
+    stdio: "inherit",
+    env: process.env,
+    shell: true,
   });
 
   // 1. Start Supabase Docker stack for staging
   console.log("▶ supabase:docker start --env staging");
-  const supaResult = spawnSync("pnpm", ["supabase:docker", "start", "--env", "staging"], {
-    cwd: rootDir, stdio: "inherit", env: process.env, shell: true,
-  });
+  const supaResult = spawnSync(
+    "pnpm",
+    ["supabase:docker", "start", "--env", "staging"],
+    {
+      cwd: rootDir,
+      stdio: "inherit",
+      env: process.env,
+      shell: true,
+    },
+  );
   if (supaResult.status !== 0) process.exit(supaResult.status ?? 1);
 
   // 2. Build + start app container
   console.log("\n▶ docker:build --env staging --up");
-  const buildResult = spawnSync("pnpm", ["docker:build", "--env", "staging", "--up"], {
-    cwd: rootDir, stdio: "inherit", env: process.env, shell: true,
-  });
+  const buildResult = spawnSync(
+    "pnpm",
+    ["docker:build", "--env", "staging", "--up"],
+    {
+      cwd: rootDir,
+      stdio: "inherit",
+      env: process.env,
+      shell: true,
+    },
+  );
   if (buildResult.status !== 0) process.exit(buildResult.status ?? 1);
 
   // 3. Launch Cloudflare tunnel
   console.log("\n▶ tunnel --env staging");
   const tunnelResult = spawnSync("pnpm", ["tunnel", "--env", "staging"], {
-    cwd: rootDir, stdio: "inherit", env: process.env, shell: true,
+    cwd: rootDir,
+    stdio: "inherit",
+    env: process.env,
+    shell: true,
   });
   if (tunnelResult.status !== 0) process.exit(tunnelResult.status ?? 1);
 
@@ -129,7 +157,14 @@ if (!existsSync(configPath)) {
   process.exit(1);
 }
 
-const pwArgs = ["exec", "playwright", "test", "--config", configPath, "--max-failures=1"];
+const pwArgs = [
+  "exec",
+  "playwright",
+  "test",
+  "--config",
+  configPath,
+  "--max-failures=1",
+];
 if (headed) pwArgs.push("--headed");
 if (ui) pwArgs.push("--ui");
 
@@ -151,7 +186,11 @@ pw.on("exit", (code) => {
 
 function portForApp(app) {
   const key = `NEXT_PUBLIC_${app.toUpperCase()}_URL`;
-  try { return Number.parseInt(new URL(process.env[key]).port, 10); } catch { /* fall through */ }
+  try {
+    return Number.parseInt(new URL(process.env[key]).port, 10);
+  } catch {
+    /* fall through */
+  }
   return { auth: 5000, store: 5001 }[app] ?? 5000;
 }
 
@@ -159,8 +198,14 @@ async function checkPort(port) {
   const { createConnection } = await import("node:net");
   return new Promise((res) => {
     const s = createConnection({ port, host: "127.0.0.1" });
-    s.once("connect", () => { s.destroy(); res(true); });
-    s.once("error", () => { s.destroy(); res(false); });
+    s.once("connect", () => {
+      s.destroy();
+      res(true);
+    });
+    s.once("error", () => {
+      s.destroy();
+      res(false);
+    });
   });
 }
 

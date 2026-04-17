@@ -5,12 +5,13 @@ import { expect, test, type BrowserContext, type Page } from "@playwright/test";
 import { cleanupTestData } from "./helpers/cleanup";
 import {
   APP_URLS,
-  DEBOUNCE_WAIT_MS,
   ELEMENT_TIMEOUT_MS,
+  LONG_OPERATION_TIMEOUT_MS,
   MUTATION_WAIT_MS,
 } from "./helpers/constants";
 import {
   ADMIN_PERMISSIONS,
+  adminQuery,
   createTestUser,
   injectSession,
   type TestUser,
@@ -65,22 +66,66 @@ const ALL_APP_PERMISSIONS = [
 
 async function navigateToUserDetail(
   page: Page,
-  targetEmail: string,
   targetUserId: string,
 ): Promise<void> {
-  await page.goto(`${APP_URLS.ADMIN}/en/users`);
-  await page.waitForLoadState("networkidle", { timeout: 30_000 });
-  await expect(page.getByTestId("users-page")).toBeVisible({
-    timeout: ELEMENT_TIMEOUT_MS,
+  await page.goto(`${APP_URLS.ADMIN}/en/users/${targetUserId}`, {
+    waitUntil: "domcontentloaded",
   });
-
-  await page.getByTestId("users-search-input").fill(targetEmail);
-  await page.waitForTimeout(DEBOUNCE_WAIT_MS);
-  await page.getByTestId(`user-row-${targetUserId}`).click();
-
   await expect(page.getByTestId("user-detail-page")).toBeVisible({
     timeout: ELEMENT_TIMEOUT_MS,
   });
+}
+
+async function getGrantedPermissionKeys(userId: string): Promise<string[]> {
+  const rows = await adminQuery(
+    "user_permissions",
+    [
+      `user_id=eq.${userId}`,
+      "select=resource_permissions!inner(permissions!inner(key))",
+    ].join("&"),
+  );
+
+  return rows
+    .map((row) => {
+      const resourcePermissions = row.resource_permissions as
+        | { permissions?: { key?: string } }
+        | Array<{ permissions?: { key?: string } }>
+        | undefined;
+
+      if (Array.isArray(resourcePermissions)) {
+        return resourcePermissions[0]?.permissions?.key;
+      }
+
+      return resourcePermissions?.permissions?.key;
+    })
+    .filter((key): key is string => Boolean(key));
+}
+
+async function waitForPermissionState(
+  userId: string,
+  expected: Record<string, boolean>,
+): Promise<void> {
+  const deadline = Date.now() + LONG_OPERATION_TIMEOUT_MS;
+
+  while (Date.now() < deadline) {
+    const grantedKeys = await getGrantedPermissionKeys(userId);
+    const matches = Object.entries(expected).every(
+      ([permissionKey, desired]) =>
+        desired
+          ? grantedKeys.includes(permissionKey)
+          : !grantedKeys.includes(permissionKey),
+    );
+
+    if (matches) {
+      return;
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, 500));
+  }
+
+  throw new Error(
+    `Timed out waiting for permission state: ${JSON.stringify(expected)}`,
+  );
 }
 
 async function setPermissions(
@@ -91,7 +136,7 @@ async function setPermissions(
   updates: Record<string, boolean>,
 ): Promise<void> {
   await injectSession(context, admin);
-  await navigateToUserDetail(page, target.email, target.userId);
+  await navigateToUserDetail(page, target.userId);
 
   for (const [permissionKey, desired] of Object.entries(updates)) {
     const checkbox = page.getByTestId(`permission-toggle-${permissionKey}`);
@@ -101,6 +146,7 @@ async function setPermissions(
     if (current !== desired) {
       await checkbox.click();
       await page.waitForTimeout(MUTATION_WAIT_MS);
+      await waitForPermissionState(target.userId, { [permissionKey]: desired });
     }
 
     if (desired) {
@@ -131,10 +177,11 @@ async function navigateWithFreshSession(
 ): Promise<void> {
   await context.clearCookies();
   await injectSession(context, user);
-  await page.goto(`${APP_URLS.AUTH}/en`);
-  await page.waitForLoadState("networkidle");
-  await page.goto(url);
-  await page.waitForLoadState("networkidle");
+  await page.goto(`${APP_URLS.AUTH}/en`, { waitUntil: "domcontentloaded" });
+  await expect(page.getByTestId("app-navigation")).toBeVisible({
+    timeout: ELEMENT_TIMEOUT_MS,
+  });
+  await page.goto(url, { waitUntil: "domcontentloaded" });
 }
 
 test.describe.serial("Permission management", () => {
@@ -158,7 +205,7 @@ test.describe.serial("Permission management", () => {
     page,
   }) => {
     await injectSession(context, admin);
-    await navigateToUserDetail(page, target.email, target.userId);
+    await navigateToUserDetail(page, target.userId);
 
     for (const permissionKey of ALL_APP_PERMISSIONS) {
       await expect(
@@ -216,6 +263,15 @@ test.describe.serial("Permission management", () => {
   });
 
   test("turns payments sections off and on", async ({ context, page }) => {
+    await setPermissions(page, context, admin, target, {
+      "orders.create": true,
+      "orders.read": true,
+      "orders.update": true,
+      "receipts.create": true,
+      "receipts.read": true,
+      "seller_payment_methods.read": true,
+    });
+
     await navigateWithFreshSession(
       context,
       page,
@@ -301,7 +357,9 @@ test.describe.serial("Permission management", () => {
     await setPermissions(page, context, admin, target, {
       "seller_payment_methods.read": true,
       "orders.create": true,
+      "orders.read": true,
       "receipts.create": true,
+      "receipts.read": true,
       "orders.update": true,
     });
 
@@ -371,7 +429,7 @@ test.describe.serial("Permission management", () => {
     page,
   }) => {
     await injectSession(context, admin);
-    await navigateToUserDetail(page, target.email, target.userId);
+    await navigateToUserDetail(page, target.userId);
     await page.getByTestId("template-btn-none").click();
     await page.waitForTimeout(MUTATION_WAIT_MS);
 
@@ -402,7 +460,7 @@ test.describe.serial("Permission management", () => {
     await snap(page, "all-apps-blocked");
 
     await injectSession(context, admin);
-    await navigateToUserDetail(page, target.email, target.userId);
+    await navigateToUserDetail(page, target.userId);
     await page.getByTestId("template-btn-admin").click();
     await page.waitForTimeout(MUTATION_WAIT_MS);
 

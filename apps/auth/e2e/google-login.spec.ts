@@ -181,11 +181,6 @@ test("Google OAuth login flow", async () => {
     viewport: { width: 1280, height: 720 },
     extraHTTPHeaders: getE2EExtraHTTPHeaders(),
   });
-  context.on("request", (request) => {
-    if (request.url().includes("localhost")) {
-      console.log(`[browser:request] ${request.method()} ${request.url()}`);
-    }
-  });
   context.on("requestfailed", (request) => {
     if (shouldIgnoreRequestFailure(request.url())) return;
     console.log(
@@ -193,11 +188,13 @@ test("Google OAuth login flow", async () => {
     );
   });
   const page = await context.newPage();
-  page.on("console", (message) =>
-    console.log(`[browser:${message.type()}] ${message.text()}`),
-  );
+  page.on("console", (message) => {
+    if (message.type() === "error") {
+      console.log(`[browser:error] ${message.text()}`);
+    }
+  });
   page.on("pageerror", (error) =>
-    console.log(`[browser:error] ${error.message}`),
+    console.log(`[browser:pageerror] ${error.message}`),
   );
 
   try {
