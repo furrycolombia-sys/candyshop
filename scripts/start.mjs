@@ -50,11 +50,21 @@ function portForApp(name) {
 const children = appNames.map((app) => {
   const appDir = resolve(rootDir, "apps", app);
   const port = portForApp(app);
-  const nextBin = resolve(appDir, "node_modules", ".bin", isWindows ? "next.CMD" : "next");
+  const nextBin = resolve(
+    appDir,
+    "node_modules",
+    ".bin",
+    isWindows ? "next.CMD" : "next",
+  );
   const args = ["dev", ...(port ? ["-p", port] : [])];
 
   return isWindows
-    ? spawn(`"${nextBin}" ${args.join(" ")}`, { cwd: appDir, stdio: "inherit", env: process.env, shell: true })
+    ? spawn(`"${nextBin}" ${args.join(" ")}`, {
+        cwd: appDir,
+        stdio: "inherit",
+        env: process.env,
+        shell: true,
+      })
     : spawn(nextBin, args, { cwd: appDir, stdio: "inherit", env: process.env });
 });
 

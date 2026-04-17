@@ -26,7 +26,7 @@ if [ -z "${CI:-}" ] && [ -f ".env.dev" ]; then
 import { loadEnv } from './scripts/load-env.mjs';
 loadEnv('dev');
 for (const [k, v] of Object.entries(process.env)) {
-  if (k.startsWith('NEXT_PUBLIC_') || k === 'APP_PUBLIC_ORIGIN') {
+  if (k.startsWith('NEXT_PUBLIC_')) {
     process.stdout.write(`export ${k}=${JSON.stringify(v)}\n`);
   }
 }
@@ -51,7 +51,6 @@ const keys = [
   'NEXT_PUBLIC_STUDIO_URL',
   'NEXT_PUBLIC_BUILD_HASH',
   'NEXT_PUBLIC_ENABLE_TEST_IDS',
-  'APP_PUBLIC_ORIGIN',
   'NEXT_PUBLIC_ENV_DEBUG',
 ];
 for (const k of keys) {

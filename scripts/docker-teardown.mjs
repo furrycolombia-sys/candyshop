@@ -79,13 +79,7 @@ console.log(`Stopping and removing container: ${containerName} ...`);
 
 const downResult = spawnSync(
   "docker",
-  [
-    "compose",
-    "-f",
-    "docker/compose.yml",
-    "down",
-    "--remove-orphans",
-  ],
+  ["compose", "-f", "docker/compose.yml", "down", "--remove-orphans"],
   {
     cwd: rootDir,
     stdio: "inherit",
