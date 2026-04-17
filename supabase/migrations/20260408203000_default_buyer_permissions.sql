@@ -30,7 +30,6 @@ begin
   where rp.resource_type = 'global'
     and p.key in (
       'products.read',
-      'product_images.read',
       'product_reviews.create',
       'product_reviews.read',
       'product_reviews.update',

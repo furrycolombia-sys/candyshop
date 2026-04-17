@@ -111,26 +111,3 @@ create policy "reviews_own_update" on public.product_reviews
 create policy "reviews_own_delete" on public.product_reviews
   for delete using (auth.uid() = user_id);
 
--- -----------------------------------------------------------------------------
--- Storage: Product Images Bucket
--- -----------------------------------------------------------------------------
-insert into storage.buckets (id, name, public)
-values ('product-images', 'product-images', true)
-on conflict (id) do nothing;
-
--- Storage policies
-create policy "product_images_public_read"
-  on storage.objects for select
-  using (bucket_id = 'product-images');
-
-create policy "product_images_auth_upload"
-  on storage.objects for insert
-  with check (bucket_id = 'product-images' and auth.role() = 'authenticated');
-
--- MVP NOTE: Delete policy intentionally allows any authenticated user to delete
--- any image. Ownership scoping (auth.uid() = owner) will be added when the
--- seller permissions model is in place.
--- TODO(GH-11): Scope to object owner when seller_id / permissions exist.
-create policy "product_images_auth_delete"
-  on storage.objects for delete
-  using (bucket_id = 'product-images' and auth.role() = 'authenticated');

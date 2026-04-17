@@ -21,9 +21,6 @@ insert into public.permissions (
   ('products.read', 'Read Products', 'Ver Productos', 'Browse and view products', 'Navegar y ver productos', null),
   ('products.update', 'Update Products', 'Editar Productos', 'Edit own products', 'Editar productos propios', null),
   ('products.delete', 'Delete Products', 'Eliminar Productos', 'Delete own products', 'Eliminar productos propios', null),
-  ('product_images.create', 'Upload Product Images', 'Subir Imagenes de Producto', 'Upload product images', 'Subir imagenes de producto', 'products.create'),
-  ('product_images.read', 'View Product Images', 'Ver Imagenes de Producto', 'View product images', 'Ver imagenes de producto', null),
-  ('product_images.delete', 'Delete Product Images', 'Eliminar Imagenes', 'Delete product images', 'Eliminar imagenes de producto', 'products.create'),
   ('product_reviews.create', 'Write Reviews', 'Escribir Resenas', 'Write product reviews', 'Escribir resenas de producto', 'orders.create'),
   ('product_reviews.read', 'Read Reviews', 'Ver Resenas', 'Read product reviews', 'Ver resenas de producto', null),
   ('product_reviews.update', 'Edit Reviews', 'Editar Resenas', 'Edit own review', 'Editar resena propia', null),
@@ -72,7 +69,6 @@ select p.id, 'global', null
 from public.permissions p
 where p.key in (
   'products.create', 'products.read', 'products.update', 'products.delete',
-  'product_images.create', 'product_images.read', 'product_images.delete',
   'product_reviews.create', 'product_reviews.read', 'product_reviews.update', 'product_reviews.delete',
   'orders.create', 'orders.read', 'orders.update',
   'receipts.create', 'receipts.read', 'receipts.delete',
@@ -136,9 +132,6 @@ drop policy if exists "settings_read" on public.payment_settings;
 drop policy if exists "settings_insert" on public.payment_settings;
 drop policy if exists "settings_update" on public.payment_settings;
 drop policy if exists "audit_read" on audit.logged_actions;
-drop policy if exists "product_images_public_read" on storage.objects;
-drop policy if exists "product_images_upload" on storage.objects;
-drop policy if exists "product_images_delete" on storage.objects;
 drop policy if exists "receipts_upload" on storage.objects;
 drop policy if exists "receipts_read" on storage.objects;
 drop policy if exists "receipts_delete" on storage.objects;
@@ -350,21 +343,6 @@ create policy "settings_update" on public.payment_settings
 
 create policy "audit_read" on audit.logged_actions
   for select using (has_permission(auth.uid(), 'audit.read'));
-
-create policy "product_images_public_read" on storage.objects
-  for select using (bucket_id = 'product-images');
-
-create policy "product_images_upload" on storage.objects
-  for insert with check (
-    bucket_id = 'product-images'
-    and has_permission(auth.uid(), 'product_images.create')
-  );
-
-create policy "product_images_delete" on storage.objects
-  for delete using (
-    bucket_id = 'product-images'
-    and has_permission(auth.uid(), 'product_images.delete')
-  );
 
 create policy "receipts_upload" on storage.objects
   for insert with check (
