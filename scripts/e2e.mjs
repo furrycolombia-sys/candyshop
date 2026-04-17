@@ -25,12 +25,18 @@ const args = process.argv.slice(2);
 
 if (args.includes("--help")) {
   console.log(`
-Usage: node scripts/e2e.mjs [--env <name>] [--app <app>] [--headed] [--ui]
+Usage: node scripts/e2e.mjs [--env <name>] [--app <app>] [--headed] [--ui] [-- <playwright args>]
 
   --env <name>   dev | staging  (default: dev)
   --app <app>    auth | store   (default: auth)
   --headed       Headed browser
   --ui           Playwright UI mode
+  --             Everything after -- is forwarded to Playwright as-is
+
+Examples:
+  node scripts/e2e.mjs --env staging -- --grep "turns payments"
+  node scripts/e2e.mjs --env staging -- apps/auth/e2e/permission-management.spec.ts:267
+  node scripts/e2e.mjs --env dev -- --grep "login" --headed
 `);
   process.exit(0);
 }
@@ -43,6 +49,10 @@ const targetApp = appFlag !== -1 ? args[appFlag + 1] : "auth";
 
 const headed = args.includes("--headed");
 const ui = args.includes("--ui");
+
+// Everything after -- is forwarded verbatim to Playwright
+const separatorIdx = args.indexOf("--");
+const passthroughArgs = separatorIdx !== -1 ? args.slice(separatorIdx + 1) : [];
 
 if (!["dev", "staging"].includes(targetEnv)) {
   console.error("ERROR: --env must be dev or staging");
@@ -167,6 +177,10 @@ const pwArgs = [
 ];
 if (headed) pwArgs.push("--headed");
 if (ui) pwArgs.push("--ui");
+// Quote args that contain spaces so shell: true doesn't break them into tokens
+if (passthroughArgs.length) {
+  pwArgs.push(...passthroughArgs.map((a) => (a.includes(" ") ? `"${a}"` : a)));
+}
 
 console.log(`▶ playwright test  app=${targetApp}  env=${targetEnv}\n`);
 

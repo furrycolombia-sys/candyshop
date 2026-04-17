@@ -8,6 +8,7 @@ import {
   ELEMENT_TIMEOUT_MS,
   LONG_OPERATION_TIMEOUT_MS,
   MUTATION_WAIT_MS,
+  NAVIGATION_TIMEOUT_MS,
 } from "./helpers/constants";
 import {
   ADMIN_PERMISSIONS,
@@ -69,10 +70,11 @@ async function navigateToUserDetail(
   targetUserId: string,
 ): Promise<void> {
   await page.goto(`${APP_URLS.ADMIN}/en/users/${targetUserId}`, {
-    waitUntil: "domcontentloaded",
+    waitUntil: "networkidle",
+    timeout: NAVIGATION_TIMEOUT_MS,
   });
   await expect(page.getByTestId("user-detail-page")).toBeVisible({
-    timeout: ELEMENT_TIMEOUT_MS,
+    timeout: NAVIGATION_TIMEOUT_MS,
   });
 }
 
@@ -169,6 +171,27 @@ async function expectHidden(page: Page, testId: string): Promise<void> {
   });
 }
 
+// Navigate to a payments URL with a fully fresh auth session.
+//
+// WHY THE EXTRA WAIT EXISTS:
+// The payments sidebar hides all nav items while useCurrentUserPermissions is
+// loading (isLoading=true). Permission state is resolved client-side via two
+// sequential Supabase round-trips after page load:
+//   1. useAuth → getUser()           (JWT validation, ~100–500 ms)
+//   2. useCurrentUserPermissions     (DB query for granted keys, ~100–500 ms)
+//
+// Using waitUntil:"domcontentloaded" means the page's JS has not yet started
+// those fetches. Under load (e.g. when running the full suite), the combined
+// round-trips can exceed ELEMENT_TIMEOUT_MS, causing sidebar assertions to fail
+// even though the permission IS granted — the sidebar is simply still loading.
+//
+// waitUntil:"networkidle" is not viable because the payments app keeps
+// persistent connections open (Supabase realtime channel), so networkidle
+// never fires and the goto call times out.
+//
+// FIX: PaymentsSidebar exposes data-loading={isLoading} on its container. We
+// wait for data-loading="false" before returning, guaranteeing that all
+// permission-gated sidebar items have been rendered and are ready to assert on.
 async function navigateWithFreshSession(
   context: BrowserContext,
   page: Page,
@@ -182,6 +205,11 @@ async function navigateWithFreshSession(
     timeout: ELEMENT_TIMEOUT_MS,
   });
   await page.goto(url, { waitUntil: "domcontentloaded" });
+  /* eslint-disable no-restricted-syntax -- getByTestId can't express compound attribute selectors; we need both data-testid and data-loading in one locator */
+  await page
+    .locator('[data-testid="payments-sidebar"][data-loading="false"]')
+    .waitFor({ state: "visible", timeout: NAVIGATION_TIMEOUT_MS });
+  /* eslint-enable no-restricted-syntax */
 }
 
 test.describe.serial("Permission management", () => {
@@ -262,7 +290,13 @@ test.describe.serial("Permission management", () => {
     await snap(page, "studio-restored");
   });
 
+  // Timeout raised to 180 s (from the default 60 s) because this test performs
+  // 8 navigateWithFreshSession calls + 4 setPermissions mutations. Each
+  // navigation now correctly waits for the sidebar's permission state to settle,
+  // which adds a small but necessary delay per step. 60 s was sufficient when
+  // running in isolation but regularly exceeded under full-suite load.
   test("turns payments sections off and on", async ({ context, page }) => {
+    test.setTimeout(180_000);
     await setPermissions(page, context, admin, target, {
       "orders.create": true,
       "orders.read": true,
