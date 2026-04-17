@@ -232,11 +232,6 @@
       "update": "Editar Productos",
       "delete": "Eliminar Productos"
     },
-    "product_images": {
-      "create": "Subir Imagenes de Producto",
-      "read": "Ver Imagenes de Producto",
-      "delete": "Eliminar Imagenes de Producto"
-    },
     "product_reviews": {
       "create": "Escribir Resenas",
       "read": "Ver Resenas",
@@ -302,11 +297,6 @@
       "read": "Ver detalles de productos, precios e inventario",
       "update": "Editar nombres, descripciones, precios y stock de productos",
       "delete": "Eliminar productos permanentemente del catalogo"
-    },
-    "product_images": {
-      "create": "Subir imagenes a las galerias de productos",
-      "read": "Ver imagenes de la galeria de productos",
-      "delete": "Eliminar imagenes de las galerias de productos"
     },
     "product_reviews": {
       "create": "Escribir resenas sobre productos comprados",
