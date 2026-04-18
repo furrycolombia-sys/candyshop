@@ -10,6 +10,7 @@ import {
   useReducer,
   useRef,
 } from "react";
+import type { CartCookieItem } from "shared/types";
 
 import {
   COOKIE_KEY,
@@ -25,6 +26,7 @@ import {
 import { isValidCartItems } from "./cartValidation";
 
 import type { CartItem, CartState } from "@/features/cart/domain/types";
+import { fetchStoreProductsByIds } from "@/features/products/infrastructure/productQueries";
 
 interface CartContextValue extends CartState {
   addItem: (
@@ -43,21 +45,73 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   // Hydrate from cookie on mount
   useEffect(() => {
-    try {
-      const raw = getCookie(COOKIE_KEY);
-      if (raw) {
+    let isActive = true;
+
+    async function hydrateFromCookie() {
+      try {
+        const raw = getCookie(COOKIE_KEY);
+        if (!raw) return;
+
         const parsed: unknown = JSON.parse(String(raw));
-        if (isValidCartItems(parsed)) {
-          dispatch({ type: "HYDRATE", payload: parsed });
+        if (!isValidCartItems(parsed)) return;
+
+        const cookieItems = parsed as CartCookieItem[];
+        if (cookieItems.length === 0) return;
+
+        const products = await fetchStoreProductsByIds(
+          cookieItems.map((item) => item.id),
+        );
+        if (!isActive) return;
+
+        const productById = new Map(
+          products.map((product) => [product.id, product]),
+        );
+        const hydratedItems: CartItem[] = cookieItems
+          .map((cookieItem) => {
+            const product = productById.get(cookieItem.id);
+            if (!product) return null;
+
+            const quantity =
+              product.max_quantity === null
+                ? cookieItem.quantity
+                : Math.min(cookieItem.quantity, product.max_quantity);
+
+            return {
+              id: product.id,
+              name_en: product.name_en,
+              name_es: product.name_es,
+              price_cop: product.price_cop,
+              price_usd: product.price_usd,
+              seller_id: product.seller_id,
+              images: product.images,
+              max_quantity: product.max_quantity,
+              category: product.category,
+              type: product.type,
+              refundable: product.refundable,
+              quantity,
+            };
+          })
+          .filter((item): item is CartItem => item !== null);
+
+        if (hydratedItems.length > 0) {
+          dispatch({ type: "HYDRATE", payload: hydratedItems });
         }
+      } catch {
+        // Ignore invalid stored data
+      } finally {
+        if (!isActive) return;
+        requestAnimationFrame(() => {
+          if (!isActive) return;
+          mountedRef.current = true;
+        });
       }
-    } catch {
-      // Ignore invalid stored data
     }
-    // Mark mounted AFTER a tick so the persist effect skips the initial render
-    requestAnimationFrame(() => {
-      mountedRef.current = true;
-    });
+
+    void hydrateFromCookie();
+
+    return () => {
+      isActive = false;
+    };
   }, []);
 
   // Persist to cookie — skips the first render (before hydration completes)
