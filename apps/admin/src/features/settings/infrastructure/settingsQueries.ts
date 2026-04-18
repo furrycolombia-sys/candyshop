@@ -1,9 +1,6 @@
-import type { createBrowserSupabaseClient } from "api/supabase";
-
 import { DEFAULT_SETTINGS } from "@/features/settings/domain/constants";
 import type { PaymentSettings } from "@/features/settings/domain/types";
-
-type SupabaseClient = ReturnType<typeof createBrowserSupabaseClient>;
+import type { SupabaseClient } from "@/shared/domain/types";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- table not in generated types yet
 const TABLE = "payment_settings" as any;

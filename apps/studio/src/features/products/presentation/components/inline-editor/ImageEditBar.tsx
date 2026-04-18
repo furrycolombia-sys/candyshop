@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 import type { Control, UseFieldArrayReplace } from "react-hook-form";
 import { useWatch } from "react-hook-form";
 import { tid } from "shared";
-import { Input } from "ui";
+import { Input, cn } from "ui";
 
 import type { ProductFormValues } from "@/features/products/domain/validationSchema";
 
@@ -29,7 +29,10 @@ export function ImageEditBar({
 
   return (
     <div
-      className={`border-strong border-foreground bg-background p-3 ${editing ? "" : "hidden"}`}
+      className={cn(
+        "border-strong border-foreground bg-background p-3",
+        !editing && "hidden",
+      )}
       {...tid("image-edit-bar")}
     >
       <div className="flex flex-col gap-2">

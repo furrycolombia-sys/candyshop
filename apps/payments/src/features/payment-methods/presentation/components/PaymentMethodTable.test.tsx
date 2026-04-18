@@ -24,6 +24,7 @@ vi.mock("shared", async (importOriginal) => {
 });
 
 vi.mock("ui", () => ({
+  cn: (...args: unknown[]) => args.filter(Boolean).join(" "),
   Skeleton: ({ className }: { className: string }) => (
     <div className={className} data-testid="skeleton" />
   ),

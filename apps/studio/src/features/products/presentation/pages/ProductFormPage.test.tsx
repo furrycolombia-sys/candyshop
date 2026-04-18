@@ -22,6 +22,7 @@ vi.mock("next-intl", () => ({
 }));
 
 vi.mock("ui", () => ({
+  cn: (...args: unknown[]) => args.filter(Boolean).join(" "),
   Skeleton: ({ className }: { className?: string }) => (
     <div data-testid="skeleton" className={className} />
   ),
@@ -31,7 +32,7 @@ const mockInsert = { mutate: vi.fn(), isPending: false, error: null };
 const mockUpdate = { mutate: vi.fn(), isPending: false, error: null };
 const mockUseProductById = vi.fn();
 
-vi.mock("@/features/products/application/useProductForm", () => ({
+vi.mock("@/features/products/application/hooks/useProductForm", () => ({
   productToFormValues: vi.fn((p: unknown) => p),
   useInsertProduct: () => mockInsert,
   useProductById: (...args: unknown[]) => mockUseProductById(...args),

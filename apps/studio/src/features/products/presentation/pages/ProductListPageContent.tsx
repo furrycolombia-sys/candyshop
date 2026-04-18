@@ -7,8 +7,7 @@ import { useQueryStates } from "nuqs";
 import { tid } from "shared";
 import { Button } from "ui";
 
-import { usePendingOrderCount } from "@/features/orders/application/hooks/usePendingOrderCount";
-import { useProducts } from "@/features/products/application/useProducts";
+import { useProducts } from "@/features/products/application/hooks/useProducts";
 import { productsSearchParams } from "@/features/products/domain/searchParams";
 import { ProductFilters } from "@/features/products/presentation/components/ProductFilters";
 import { ProductTable } from "@/features/products/presentation/components/ProductTable";
@@ -18,6 +17,8 @@ interface ProductListPageContentProps {
   canUpdate: boolean;
   canDelete: boolean;
   canManageDelegates: boolean;
+  pendingCount?: number;
+  delegateCounts: Record<string, number>;
 }
 
 export function ProductListPageContent({
@@ -25,11 +26,12 @@ export function ProductListPageContent({
   canUpdate,
   canDelete,
   canManageDelegates,
+  pendingCount,
+  delegateCounts,
 }: ProductListPageContentProps) {
   const t = useTranslations();
   const [filters] = useQueryStates(productsSearchParams);
   const { data: products, isLoading } = useProducts(filters);
-  const { data: pendingCount } = usePendingOrderCount();
   const isFiltered = !!(filters.type || filters.category || filters.q);
 
   return (
@@ -86,6 +88,7 @@ export function ProductListPageContent({
           canUpdate={canUpdate}
           canDelete={canDelete}
           canManageDelegates={canManageDelegates}
+          delegateCounts={delegateCounts}
         />
       </div>
     </main>

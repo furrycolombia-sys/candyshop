@@ -1,0 +1,48 @@
+{
+  "agent": "security",
+  "review_id": "2026-04-17_14-00-00",
+  "timestamp": "2026-04-17T14:00:00Z",
+  "scope": "apps/",
+  "summary": {
+    "filesAnalyzed": 749,
+    "issuesFound": 1,
+    "critical": 0,
+    "warning": 1,
+    "suggestion": 0,
+    "info": 0
+  },
+  "issues": [
+    {
+      "id": "SEC-001",
+      "severity": "warning",
+      "category": "SEC",
+      "file": "apps/admin/src/app/api/admin/users/[userId]/delegates/route.ts",
+      "line": 87,
+      "description": "In the DELETE handler, `delegateRowId` is extracted from `request.json()` with a type cast but no null/type check before validateUuid(). If the request body is missing the delegateRowId field, the cast returns undefined, and validateUuid(undefined) would throw 'Invalid UUID: undefined' which is caught and returned as a 500 error instead of a clean 400. This is a minor security/UX issue as it leaks implementation details in the error type.",
+      "rule": "security.md - Input validation",
+      "fix": "Add explicit type check: `const body = await request.json(); const { delegateRowId } = body as { delegateRowId?: unknown }; if (!delegateRowId || typeof delegateRowId !== 'string') return NextResponse.json({ error: 'Invalid payload' }, { status: 400 });`"
+    }
+  ],
+  "patterns": [
+    {
+      "id": "PAT-SEC-001",
+      "description": "SEC-002 fix verified: orders/route.ts correctly validates payment_method_id with UUID_REGEX before use. The validation chain is: string check → length check → UUID_REGEX test. Clean and correct.",
+      "verdict": "CLEAN - SEC-002 fix verified"
+    },
+    {
+      "id": "PAT-SEC-002",
+      "description": "SEC-001 (price manipulation) is documented as known architectural limitation. The total_cop validation in orders/route.ts correctly validates: typeof check, Number.isFinite(), and total_cop > 0. Price is validated to be a positive finite number.",
+      "verdict": "DOCUMENTED LIMITATION - not a new finding"
+    },
+    {
+      "id": "PAT-SEC-003",
+      "description": "Cart cookie validation in cartCookie.ts has proper isValidCartItem type guard checking all required fields (id, price_cop, price_usd, quantity). Malformed cart items are filtered out.",
+      "verdict": "COMPLIANT"
+    },
+    {
+      "id": "PAT-SEC-004",
+      "description": "Admin API routes consistently use getAuthorizedAdmin([permission]) pattern for authorization checks before any data access. No authorization bypasses found.",
+      "verdict": "COMPLIANT"
+    }
+  ]
+}

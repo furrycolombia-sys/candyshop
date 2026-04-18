@@ -1,0 +1,211 @@
+{
+  "agent": "pattern-discovery",
+  "review_id": "2026-04-17_10-00-00",
+  "timestamp": "2026-04-17T10:00:00Z",
+  "scope": "apps/",
+  "summary": {
+    "filesAnalyzed": 47,
+    "issuesFound": 8,
+    "critical": 0,
+    "warning": 3,
+    "suggestion": 3,
+    "info": 2
+  },
+  "issues": [
+    {
+      "id": "PAT-001",
+      "severity": "warning",
+      "title": "createWrapper duplicated in 32 test files with no shared utility",
+      "description": "Every hook test file that needs a TanStack Query wrapper defines an inline `function createWrapper()` that creates a new `QueryClient` with `retry: false`. This exact pattern appears in 32 test files across studio, payments, auth, and admin apps. There is no shared test utility (e.g., `src/test/utils.tsx`) providing a `createWrapper` or `renderWithQueryClient` helper. The studio setup even lacks MSW, which means some tests may silently pass without proper network isolation.",
+      "files": [
+        "apps/studio/src/features/products/application/hooks/useProducts.test.tsx",
+        "apps/studio/src/features/seller-admins/application/hooks/useDelegates.test.tsx",
+        "apps/payments/src/features/received-orders/application/hooks/useReceivedOrders.test.tsx",
+        "apps/payments/src/features/checkout/application/hooks/useSubmitPayment.test.tsx",
+        "apps/auth/src/features/account/application/hooks/useUpdateProfile.test.tsx"
+      ],
+      "rule": "testing.md — test utilities should be centralized; DRY principle",
+      "recommendation": "Add a `src/test/utils.tsx` to each app (or a shared package util) that exports `createWrapper()` and `renderWithQueryClient()`. This eliminates ~32 duplicate definitions and makes it easy to change QueryClient defaults globally."
+    },
+    {
+      "id": "PAT-002",
+      "severity": "warning",
+      "title": "next-intl mocked inline in 97 test files instead of via a global setup mock",
+      "description": "Every component test file that renders a component using `useTranslations` individually calls `vi.mock('next-intl', () => ({ useTranslations: () => (key: string) => key }))`. This identical mock block appears ~97 times across all apps. There is no global vitest setup (e.g., in `src/test/setup.ts`) that auto-mocks next-intl, so every test author must remember to add this boilerplate.",
+      "files": [
+        "apps/studio/src/features/seller-admins/presentation/components/DelegateList.test.tsx",
+        "apps/studio/src/features/products/presentation/components/ProductTable.test.tsx",
+        "apps/payments/src/features/received-orders/presentation/components/ReceivedOrderCard.test.tsx",
+        "apps/auth/src/features/auth/presentation/pages/LoginPage.test.tsx"
+      ],
+      "rule": "testing.md — test setup should be centralized; DRY principle",
+      "recommendation": "Add `vi.mock('next-intl', ...)` in each app's `src/test/setup.ts` so it applies globally. This removes ~97 duplicate mock declarations and ensures no test accidentally uses real next-intl behavior in unit tests."
+    },
+    {
+      "id": "PAT-003",
+      "severity": "warning",
+      "title": "Inconsistent Supabase client access: useSupabase hook vs createBrowserSupabaseClient directly",
+      "description": "Most hooks (39 occurrences) correctly use `useSupabase()` from the `shared` package, which memoizes the Supabase client. However, 7 locations in studio and store bypass this hook and call `createBrowserSupabaseClient()` directly — including `useMemo(() => createBrowserSupabaseClient(), [])` duplicating exactly what `useSupabase` already provides. The store's `productQueries.ts` infrastructure file even creates clients directly (not injected), diverging from the injection pattern used by other apps.",
+      "files": [
+        "apps/studio/src/features/products/application/hooks/useProducts.ts",
+        "apps/studio/src/features/seller-admins/application/hooks/useDelegateSearch.ts",
+        "apps/store/src/features/products/infrastructure/productQueries.ts"
+      ],
+      "rule": "architecture.md — infrastructure should receive the Supabase client via injection (from hook); libraries-over-manual-code.md",
+      "recommendation": "Replace all `useMemo(() => createBrowserSupabaseClient(), [])` usages with `useSupabase()`. For the store's `productQueries.ts`, adopt the same injection pattern: accept a `supabase` parameter and call from the hook, matching how `studio` and `payments` infrastructure files work."
+    },
+    {
+      "id": "PAT-004",
+      "severity": "suggestion",
+      "title": "Some TanStack Query keys are magic strings rather than domain constants",
+      "description": "Most features define query keys as constants in `domain/constants.ts` (e.g., `PRODUCTS_QUERY_KEY`, `RECEIVED_ORDERS_QUERY_KEY`). However, several hooks use inline string literals: `queryKey: ['store-products']`, `queryKey: ['pending-order-count']`, `queryKey: ['seller-profiles', sellerIds]`, `queryKey: ['payment-methods', sellerId]`. These magic strings are not exported as constants, making cache invalidation fragile and harder to trace.",
+      "files": [
+        "apps/store/src/features/products/application/hooks/useStoreProducts.ts",
+        "apps/studio/src/features/orders/application/hooks/usePendingOrderCount.ts",
+        "apps/payments/src/features/checkout/application/hooks/useSellerProfiles.ts",
+        "apps/payments/src/features/payment-methods/application/hooks/usePaymentMethods.ts",
+        "apps/store/src/features/cart/application/hooks/useSellerProfiles.ts"
+      ],
+      "rule": "no-hardcoding.md — magic strings must be named constants in domain/constants.ts",
+      "recommendation": "Export query key constants from each feature's `domain/constants.ts` (e.g., `STORE_PRODUCTS_QUERY_KEY = 'store-products'`) and use them in hooks. This is already the correct pattern in studio's products and seller-admins features."
+    },
+    {
+      "id": "PAT-005",
+      "severity": "suggestion",
+      "title": "store app uses useQueryState directly in filter components instead of a dedicated hook",
+      "description": "The `CategoryFilter`, `TypeFilter`, and `SearchBar` components in the store app each call `useQueryState` directly, importing from `nuqs` and accessing `catalogSearchParams` parsers individually. The URL state rule recommends parsers live in `domain/searchParams.ts` (already done) but also that `useQueryStates` be called inside an application-layer hook rather than directly in presentation components. In contrast, payments (`ReceivedOrdersPageContent`) and admin (`AuditLogPageContent`, `UsersPageContent`) correctly centralize `useQueryStates` in page-level components or hooks.",
+      "files": [
+        "apps/store/src/features/products/presentation/components/CategoryFilter.tsx",
+        "apps/store/src/features/products/presentation/components/TypeFilter.tsx",
+        "apps/store/src/features/products/presentation/components/SearchBar.tsx"
+      ],
+      "rule": "url-state.md — parsers defined in domain, consumed via hook in application layer; architecture.md — presentation layer should not import from domain directly",
+      "recommendation": "Extract a `useCatalogFilters` hook in `features/products/application/hooks/` that wraps `useQueryStates(catalogSearchParams)` and exposes the filter values + setters. Components import the hook instead of calling `useQueryState` directly."
+    },
+    {
+      "id": "PAT-006",
+      "severity": "suggestion",
+      "title": "store app missing @source directive for local app files in globals.css",
+      "description": "The auth and landing apps include `@source '../**/*.{ts,tsx}'` in `globals.css` to ensure local app files are scanned by Tailwind v4. The store, payments, admin, and studio apps only scan the `packages/ui` source — they rely on Next.js's default content detection for local files. This works in practice but is inconsistent with auth/landing and could cause edge cases when Tailwind misses classes in certain file locations.",
+      "files": [
+        "apps/store/src/app/globals.css",
+        "apps/payments/src/app/globals.css",
+        "apps/admin/src/app/globals.css",
+        "apps/studio/src/app/globals.css"
+      ],
+      "rule": "css-consistency.md — @source directives should be consistent across apps",
+      "recommendation": "Audit whether the store/payments/admin/studio apps need the explicit `@source '../**/*.{ts,tsx}'` directive. If auth and landing have it for a reason, standardize all apps to include it for consistency, or document why some apps omit it."
+    },
+    {
+      "id": "PAT-007",
+      "severity": "info",
+      "title": "Page / PageContent separation is a well-established pattern across apps",
+      "description": "A consistent pattern is used across studio, payments, and admin: `Page` components handle permission checks (`useCurrentUserPermissions`, `hasPermission`) and render `null` or `<AccessDeniedState>` for unauthorized users, then delegate to a `PageContent` component that handles actual data and UI. This is a clean separation of auth concerns from business UI. All app router `page.tsx` files are thin wrappers calling `setRequestLocale(locale)` and rendering the feature Page component — correctly following the architecture rule.",
+      "files": [
+        "apps/payments/src/features/received-orders/presentation/pages/ReceivedOrdersPage.tsx",
+        "apps/admin/src/features/settings/presentation/pages/SettingsPage.tsx",
+        "apps/studio/src/features/products/presentation/pages/ProductListPage.tsx"
+      ],
+      "rule": "architecture.md — App Router thin wrappers; component-patterns.md — Container/Presenter pattern",
+      "recommendation": "Document this Page/PageContent permission-guard pattern formally. Consider adding it to component-patterns.md or architecture.md as a named pattern: 'Permission Guard Page' wraps a 'Content Component'."
+    },
+    {
+      "id": "PAT-008",
+      "severity": "info",
+      "title": "studio app test setup lacks MSW, unlike payments/admin/store",
+      "description": "The studio app's `src/test/setup.ts` only imports `@testing-library/jest-dom/vitest` and cleanup — it does not start an MSW server. The payments, admin, and store apps all set up `server.listen({ onUnhandledRequest: 'error' })` in their test setup. Studio tests mock infrastructure functions via `vi.mock` instead of using MSW handlers, which is a valid but different approach. This inconsistency means studio would not catch unintended network requests during tests.",
+      "files": [
+        "apps/studio/src/test/setup.ts",
+        "apps/payments/src/test/setup.ts",
+        "apps/admin/src/test/setup.ts",
+        "apps/store/src/test/setup.ts"
+      ],
+      "rule": "testing.md — MSW for API mocking; consistency across apps",
+      "recommendation": "Either: (a) add MSW setup to studio's test setup for consistency and better network isolation, or (b) document the intentional choice to use vi.mock for infrastructure in studio (the studio app uses Supabase JS SDK directly, not REST endpoints, so MSW provides less value there). Auth app also lacks MSW setup — same reasoning applies."
+    }
+  ],
+  "discoveredPatterns": [
+    {
+      "name": "Permission Guard Page Pattern",
+      "description": "Page components check `useCurrentUserPermissions()` and render `null` (loading) or `<AccessDeniedState>` (denied) before delegating to a `PageContent` component. This cleanly separates authorization from business UI and is consistent across studio, payments, and admin.",
+      "examples": [
+        "apps/payments/src/features/received-orders/presentation/pages/ReceivedOrdersPage.tsx",
+        "apps/admin/src/features/settings/presentation/pages/SettingsPage.tsx",
+        "apps/studio/src/features/products/presentation/pages/ProductListPage.tsx"
+      ]
+    },
+    {
+      "name": "Supabase Infrastructure Injection Pattern",
+      "description": "Infrastructure query files accept `SupabaseClient` as a first parameter (e.g., `fetchProducts(supabase, filters)`). Application hooks obtain the client via `useSupabase()` and pass it down. This decouples infrastructure from React and makes testing straightforward via vi.mock of the infrastructure module.",
+      "examples": [
+        "apps/studio/src/features/products/infrastructure/productQueries.ts",
+        "apps/payments/src/features/received-orders/infrastructure/receivedOrderQueries.ts",
+        "apps/studio/src/features/products/application/hooks/useProductMutations.ts"
+      ]
+    },
+    {
+      "name": "Domain searchParams for nuqs parsers",
+      "description": "URL state parsers are co-located in `domain/searchParams.ts` per feature. This is consistently followed in studio, payments, admin, and store. Parsers are then consumed via `useQueryStates` in page-level components or dedicated hooks.",
+      "examples": [
+        "apps/studio/src/features/products/domain/searchParams.ts",
+        "apps/payments/src/features/received-orders/domain/searchParams.ts",
+        "apps/admin/src/features/audit/domain/searchParams.ts",
+        "apps/store/src/features/products/domain/searchParams.ts"
+      ]
+    },
+    {
+      "name": "Query key constants in domain/constants.ts",
+      "description": "React Query keys are exported as string constants (e.g., `PRODUCTS_QUERY_KEY`) from `domain/constants.ts`. Hooks use these constants in `queryKey` arrays. This is well-established in studio's products and seller-admins features, and payments' received-orders feature.",
+      "examples": [
+        "apps/studio/src/features/products/domain/constants.ts",
+        "apps/payments/src/features/received-orders/domain/constants.ts",
+        "apps/studio/src/features/seller-admins/domain/constants.ts"
+      ]
+    },
+    {
+      "name": "Shared createAppRuntimeProviders factory",
+      "description": "Studio, payments, and admin use `createAppRuntimeProviders` from `shared/providers` to create their Providers component with minimal boilerplate. Store and landing have custom Providers due to extra context (Cart, NuqsAdapter, FlyToCart). Auth and playground use the simpler `QueryOnlyProviders` re-export. This represents three tiers of provider complexity.",
+      "examples": [
+        "apps/studio/src/app/[locale]/providers.tsx",
+        "apps/payments/src/app/[locale]/providers.tsx",
+        "apps/store/src/app/[locale]/providers.tsx",
+        "apps/auth/src/app/[locale]/providers.tsx"
+      ]
+    },
+    {
+      "name": "Thin route wrappers with setRequestLocale",
+      "description": "All Next.js app router `page.tsx` files follow the same pattern: import `setRequestLocale` from `next-intl/server`, call it with the locale param, then render the feature Page component. This is consistent across all apps and correctly follows the architecture rule of keeping route files as thin wrappers.",
+      "examples": [
+        "apps/studio/src/app/[locale]/products/new/page.tsx",
+        "apps/payments/src/app/[locale]/sales/page.tsx",
+        "apps/admin/src/app/[locale]/users/page.tsx"
+      ]
+    }
+  ],
+  "rulesSuggestions": [
+    {
+      "id": "RS-001",
+      "title": "Formalize the Permission Guard Page pattern",
+      "description": "Add a named pattern to component-patterns.md or architecture.md describing the Page/PageContent split where Page handles permission checks and PageContent handles business logic. This is already the de facto standard across 3 apps but not documented.",
+      "targetFile": ".claude/rules/component-patterns.md"
+    },
+    {
+      "id": "RS-002",
+      "title": "Mandate centralized test setup for next-intl mock",
+      "description": "Add a rule to testing.md that next-intl and other framework mocks (like `shared.tid`) should be configured in `src/test/setup.ts` via `vi.mock` at the module level, not repeated in each test file. This would eliminate ~97 duplicated mock declarations.",
+      "targetFile": ".claude/rules/testing.md"
+    },
+    {
+      "id": "RS-003",
+      "title": "Mandate createWrapper / renderWithQueryClient test utility per app",
+      "description": "Add a rule that each app MUST expose a `src/test/utils.tsx` with at minimum a `createWrapper()` helper that wraps components in `QueryClientProvider` with test defaults. Tests import from `@/test/utils` rather than defining inline.",
+      "targetFile": ".claude/rules/testing.md"
+    },
+    {
+      "id": "RS-004",
+      "title": "Clarify preferred Supabase client access pattern in hooks",
+      "description": "Add explicit guidance to architecture.md that: (1) hooks MUST use `useSupabase()` from `shared`, never `useMemo(() => createBrowserSupabaseClient(), [])` directly; (2) infrastructure functions MUST accept the client as a parameter rather than creating it internally.",
+      "targetFile": ".claude/rules/architecture.md"
+    }
+  ]
+}

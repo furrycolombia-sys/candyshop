@@ -79,9 +79,11 @@
   --font-sans: var(--font-dm-sans);
   --font-mono: var(--font-geist-mono);
 
-  /* Custom font sizes (generates text-ui-xs utility) */
+  /* Custom font sizes (generates text-ui-xs and text-label-xs utilities) */
   --text-ui-xs: 10px;
   --text-ui-xs--line-height: 12px;
+  --text-label-xs: 11px;
+  --text-label-xs--line-height: 14px;
 
   /* Border radius */
   --radius-sm: calc(var(--radius) - 4px);

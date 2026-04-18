@@ -1,0 +1,83 @@
+{
+  "agent": "performance",
+  "review_id": "2026-04-17_20-00-00",
+  "timestamp": "2026-04-17T20:00:00",
+  "scope": "apps/",
+  "summary": {
+    "filesAnalyzed": 20,
+    "issuesFound": 3,
+    "critical": 0,
+    "warning": 1,
+    "suggestion": 2,
+    "info": 0
+  },
+  "issues": [
+    {
+      "id": "PERF-001",
+      "severity": "warning",
+      "category": "Inline style object — static value recreated on every render",
+      "file": "apps/store/src/features/products/presentation/components/product-detail/GalleryOverlays.tsx",
+      "line": 33,
+      "description": "The dot-texture overlay uses `style={{ backgroundImage: '…', backgroundSize: '20px 20px' }}` inline. Because it is a static, never-changing value, a new object is allocated on every render of any component that renders GalleryOverlays. This component appears inside the product detail page which re-renders when add-to-cart state changes.",
+      "recommendation": "Extract the static style object to a module-level constant outside the component so it is created once:\n\nconst DOT_TEXTURE_STYLE = {\n  backgroundImage: 'radial-gradient(circle, currentColor 1px, transparent 1px)',\n  backgroundSize: '20px 20px',\n} as const;\n\nThen use `style={DOT_TEXTURE_STYLE}` in JSX.",
+      "codeSnippet": "style={{\n  backgroundImage:\n    'radial-gradient(circle, currentColor 1px, transparent 1px)',\n  backgroundSize: '20px 20px',\n}}"
+    },
+    {
+      "id": "PERF-002",
+      "severity": "suggestion",
+      "category": "getCategoryTheme called twice per render — redundant lookup",
+      "file": "apps/store/src/features/products/presentation/components/ProductCardImage.tsx",
+      "line": 65,
+      "description": "ProductCardImage receives `categoryColor` and `categoryForeground` as props (already derived from getCategoryTheme in the parent ProductCard), but then calls getCategoryTheme(product.category) a second time inline at line 65 just to extract `.accent` for FeaturedRibbon. This is a redundant lookup per card render. While getCategoryTheme is an O(1) dict lookup and cheap, passing the already-computed accent string down avoids the duplication and clarifies the data flow.",
+      "recommendation": "Add an `accentVar` prop to ProductCardImageProps and pass `categoryTheme.accent` from the parent ProductCard:\n\n// In ProductCard.tsx (parent)\n<ProductCardImage\n  ...\n  accentVar={categoryTheme.accent}\n/>\n\n// In ProductCardImage.tsx — remove the getCategoryTheme import and call",
+      "codeSnippet": "accentVar={getCategoryTheme(product.category).accent}"
+    },
+    {
+      "id": "PERF-003",
+      "severity": "suggestion",
+      "category": "No React.lazy / dynamic() for any heavy component",
+      "file": "apps/store/src/features/products/presentation/components/FeaturedRibbon.tsx",
+      "line": null,
+      "description": "FeaturedRibbon runs a requestAnimationFrame loop drawing to a Canvas element on every animation frame (shine animation). It is imported statically in both ProductCard and ProductCardImage, meaning its code is always in the initial bundle even for products that are not featured. The component is used conditionally (`product.featured`). Lazy-loading it would exclude its Canvas + animation code from the initial chunk.",
+      "recommendation": "Use Next.js dynamic import with ssr:false (Canvas cannot SSR):\n\nimport dynamic from 'next/dynamic';\n\nconst FeaturedRibbon = dynamic(\n  () => import('./FeaturedRibbon').then(m => ({ default: m.FeaturedRibbon })),\n  { ssr: false }\n);\n\nThis also removes the need to guard `globalThis.window` for devicePixelRatio at module load time."
+    }
+  ],
+  "patterns": [
+    {
+      "pattern": "Inline style objects with theme values (theme.bg, theme.foreground, categoryColor, etc.)",
+      "assessment": "Acceptable — these are all dynamic CSS variable strings that differ per product category. They cannot be moved to static Tailwind classes. The objects are small (1–2 properties) and the components re-render only when the product or theme changes. No action needed beyond PERF-001 which is the only truly static case.",
+      "files": [
+        "apps/store/src/features/cart/presentation/components/CartItemRow.tsx",
+        "apps/store/src/features/products/presentation/components/product-detail/HeroSection.tsx",
+        "apps/store/src/features/products/presentation/components/product-detail/MobileBar.tsx",
+        "apps/store/src/features/products/presentation/components/product-detail/GalleryOverlays.tsx",
+        "apps/landing/src/features/home/presentation/components/FeaturesSection.tsx",
+        "apps/landing/src/features/home/presentation/components/RolesSection.tsx"
+      ]
+    },
+    {
+      "pattern": "useMemo for expensive computations",
+      "assessment": "Well used in key places: ProductCatalogPage (filteredProducts), ProductGrid (buildGridOrder), ImageGallery (images array + thumbGridStyle), TwoColumnSection (sorted items). No missing memoization found in hot paths.",
+      "files": [
+        "apps/store/src/features/products/presentation/pages/ProductCatalogPage.tsx",
+        "apps/store/src/features/products/presentation/components/ProductGrid.tsx",
+        "apps/store/src/features/products/presentation/components/product-detail/ImageGallery.tsx",
+        "apps/store/src/features/products/presentation/components/product-detail/sections/TwoColumnSection.tsx"
+      ]
+    },
+    {
+      "pattern": "Next.js Image component",
+      "assessment": "All production image renders use next/image with fill+sizes or explicit dimensions. Raw <img> elements appear only in test file mocks (vi.mock factories) — correct.",
+      "files": [
+        "apps/store/src/features/cart/presentation/components/CartItemRow.tsx",
+        "apps/store/src/features/products/presentation/components/ProductCardImage.tsx",
+        "apps/store/src/features/products/presentation/components/product-detail/ImageGallery.tsx"
+      ]
+    },
+    {
+      "pattern": "React.lazy / dynamic()",
+      "assessment": "No lazy loading is used anywhere in apps/. For most components this is fine. FeaturedRibbon (PERF-003) is the most actionable candidate due to its animation loop and conditional usage.",
+      "files": []
+    }
+  ]
+}

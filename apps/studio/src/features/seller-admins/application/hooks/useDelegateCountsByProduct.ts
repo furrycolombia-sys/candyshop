@@ -1,6 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { createBrowserSupabaseClient } from "api/supabase";
-import { useMemo } from "react";
+import { useSupabase } from "shared";
 
 import { SELLER_ADMINS_QUERY_KEY } from "@/features/seller-admins/domain/constants";
 import { fetchDelegateCountsByProduct } from "@/features/seller-admins/infrastructure/delegateQueries";
@@ -8,7 +7,7 @@ import { fetchDelegateCountsByProduct } from "@/features/seller-admins/infrastru
 const DELEGATE_COUNTS_KEY = "delegate-counts";
 
 export function useDelegateCountsByProduct(sellerId?: string) {
-  const supabase = useMemo(() => createBrowserSupabaseClient(), []);
+  const supabase = useSupabase();
 
   return useQuery({
     // eslint-disable-next-line @tanstack/query/exhaustive-deps -- supabase client is stable (memoized)

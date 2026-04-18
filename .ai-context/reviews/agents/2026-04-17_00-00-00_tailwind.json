@@ -1,0 +1,82 @@
+{
+  "agent": "tailwind",
+  "timestamp": "2026-04-17T00:00:00Z",
+  "scope": "apps/",
+  "summary": {
+    "filesAnalyzed": 272,
+    "issuesFound": 5,
+    "critical": 0,
+    "warning": 3,
+    "suggestion": 2,
+    "info": 0
+  },
+  "issues": [
+    {
+      "id": "STYLE-001",
+      "severity": "warning",
+      "title": "Raw palette color used for star icon — should use semantic token",
+      "file": "apps/studio/src/features/products/presentation/components/inline-editor/InlineImageCarousel.tsx",
+      "line": 203,
+      "description": "The cover star icon uses `text-yellow-500` (raw Tailwind palette) instead of a semantic token. The project has `text-warning` available which maps to `--warning` and conveys the 'selected/favorite' intent semantically.",
+      "rule": "tailwind.md#use-semantic-color-names",
+      "fix": "Replace `text-yellow-500` with `text-warning`. Also update the two E2E tests (apps/auth/e2e/screenshot-proof.spec.ts:197 and apps/auth/e2e/studio-ux-improvements.spec.ts:187) which assert `toHaveClass(/text-yellow-500/)` to use a `data-*` attribute or `aria-pressed` for state detection instead of a class name, per e2e-selectors.md."
+    },
+    {
+      "id": "STYLE-002",
+      "severity": "warning",
+      "title": "E2E tests assert state via Tailwind class — violates e2e-selectors rule",
+      "file": "apps/auth/e2e/screenshot-proof.spec.ts",
+      "line": 197,
+      "description": "`await expect(starIcon).toHaveClass(/text-yellow-500/)` is asserting UI state by checking a Tailwind utility class. Per e2e-selectors.md, state assertions must use ARIA attributes or `data-*` attributes, never CSS classes.",
+      "rule": "e2e-selectors.md#never-use-tailwind-classes",
+      "fix": "Add `data-cover={watchedImages?.[index]?.is_cover}` (or `aria-pressed`) on the Star button in InlineImageCarousel.tsx, then assert `toHaveAttribute('data-cover', 'true')` in the E2E tests instead of `toHaveClass(/text-yellow-500/)`."
+    },
+    {
+      "id": "STYLE-003",
+      "severity": "warning",
+      "title": "E2E test asserts state via Tailwind class — duplicate violation",
+      "file": "apps/auth/e2e/studio-ux-improvements.spec.ts",
+      "line": 187,
+      "description": "Same pattern as STYLE-002: `await expect(starIcon).toHaveClass(/text-yellow-500/)` checks Tailwind class for state. Both test files originate from the same underlying component issue.",
+      "rule": "e2e-selectors.md#never-use-tailwind-classes",
+      "fix": "Same fix as STYLE-002 — propagate `data-cover` attribute to the SVG or its wrapper and use `toHaveAttribute` in the test."
+    },
+    {
+      "id": "STYLE-004",
+      "severity": "suggestion",
+      "title": "apps/auth, apps/landing, apps/playground use `@source` for app-only scanning",
+      "file": "apps/auth/src/app/globals.css",
+      "line": 5,
+      "description": "Three apps (auth, landing, playground) have `@source \"../\u2026\u2026/**/*.{ts,tsx}\"` which scans only their own source tree. The shared `packages/ui/src/styles/globals.css` (imported via `@import \"ui/globals\"`) already includes `@source` for the ui and app-components packages, so classes used in those packages should be generated. However, the inconsistency with other apps (store, admin, studio, payments all add the explicit `@source \"../../../../packages/ui/src/**/*.{ts,tsx}\"` in their own globals.css) makes the intent unclear and could cause confusion. Aligning all apps to the same pattern improves maintainability.",
+      "rule": "css-consistency.md#required-ui-package-scanning",
+      "fix": "Add `@source \"../../../../packages/ui/src/**/*.{ts,tsx}\";` to apps/auth/src/app/globals.css, apps/landing/src/app/globals.css, and apps/playground/src/app/globals.css to match the pattern used by store/admin/studio/payments. This makes the scanning intent explicit regardless of how the ui/globals import resolves @source paths."
+    },
+    {
+      "id": "STYLE-005",
+      "severity": "suggestion",
+      "title": "Raw palette colors in playground debug page (intentional/dev-only context)",
+      "file": "apps/playground/src/app/[locale]/env/page.tsx",
+      "line": 12,
+      "description": "The env debug page uses `text-red-500`, `text-blue-500`, and `text-green-600` raw palette colors. While playground has relaxed quality expectations per the monorepo rules, these could use semantic tokens (`text-destructive`, `text-info`, `text-success`) for consistency.",
+      "rule": "tailwind.md#use-semantic-color-names",
+      "fix": "Replace `text-red-500` with `text-destructive`, `text-blue-500` with `text-info`, `text-green-600` with `text-success`. This is low priority since it is a playground dev-only page."
+    }
+  ],
+  "patterns": [
+    {
+      "pattern": "Dynamic CSS variables for themed components",
+      "description": "Several components (store/landing/studio) use inline `style={{ backgroundColor: 'var(--pink)', color: 'var(--candy-text)' }}` for per-product/per-category theming. This is the correct pattern when runtime values come from CSS variables rather than hardcoded hex colors. No violations found.",
+      "assessment": "Correct usage — CSS variable strings inline are intentional per the project rules."
+    },
+    {
+      "pattern": "Shared globals.css via ui/globals import",
+      "description": "All 7 apps import `@import 'ui/globals'` which provides a single source of truth for CSS variables, theme, semantic classes, and source scanning. This is well-implemented.",
+      "assessment": "Good architectural pattern — CSS is centralized in packages/ui/src/styles/."
+    },
+    {
+      "pattern": "Semantic color tokens used throughout",
+      "description": "The vast majority of app code correctly uses semantic tokens (bg-primary, text-destructive, text-success, text-warning, text-muted-foreground, etc.) instead of raw palette colors. The only violation found was the yellow star icon.",
+      "assessment": "Strong compliance with semantic color rules across all apps."
+    }
+  ]
+}

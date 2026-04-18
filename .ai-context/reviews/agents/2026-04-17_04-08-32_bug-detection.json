@@ -1,0 +1,92 @@
+{
+  "agent": "bug-detection",
+  "timestamp": "2026-04-17T04:08:32",
+  "scope": "apps/",
+  "summary": {
+    "filesAnalyzed": 30,
+    "issuesFound": 5,
+    "critical": 0,
+    "warning": 3,
+    "suggestion": 2,
+    "info": 0
+  },
+  "issues": [
+    {
+      "id": "BUG-001",
+      "severity": "warning",
+      "category": "Logic Error / Silent Failure",
+      "file": "apps/studio/src/features/products/infrastructure/productMutations.ts",
+      "line": 40,
+      "description": "insertProduct calls supabase.auth.getUser() and uses user?.id ?? null. If the user is unauthenticated, the product is inserted with seller_id = null. This does not throw; the DB insert succeeds if RLS allows null seller_id, resulting in an orphaned product owned by nobody. The studio layout wraps routes in ProtectedRoute so this is unlikely in practice, but the function itself has no guard.",
+      "code": "seller_id: user?.id ?? null",
+      "fix": "Add an explicit guard: `if (!user) throw new Error('Unauthenticated');` before the insert. This prevents silent data corruption if the protection layer is ever bypassed or the function is reused elsewhere.",
+      "rule": "Null/Undefined Handling"
+    },
+    {
+      "id": "BUG-002",
+      "severity": "warning",
+      "category": "Logic Error / Silent Failure",
+      "file": "apps/studio/src/features/products/infrastructure/productQueries.ts",
+      "line": 19,
+      "description": "fetchProducts uses user?.id ?? '' to filter by seller_id when the user is unauthenticated. This produces an empty-string filter (.eq('seller_id', '')) instead of throwing or returning early. The query will silently return 0 rows, masking the unauthenticated state rather than surfacing it as an error.",
+      "code": ".eq('seller_id', user?.id ?? '')",
+      "fix": "Add `if (!user) return [];` or `if (!user) throw new Error('Unauthenticated');` after destructuring user. Consistent with how pendingOrderCount.ts handles the same situation with `if (!user) return 0`.",
+      "rule": "Null/Undefined Handling"
+    },
+    {
+      "id": "BUG-003",
+      "severity": "warning",
+      "category": "Stale Closure / Missing Debounce Cleanup",
+      "file": "apps/payments/src/features/payment-methods/application/hooks/useAutoSavePaymentMethod.ts",
+      "line": 40,
+      "description": "The useCallback for triggerSave includes updateMutation in its dependency array. If the mutation object reference changes (which TanStack Query may do on re-render), a new triggerSave is created, causing each of the three dependent useEffects to fire and schedule new debounce timers. The previous debounce timer from the old closure will also fire because clearTimeout is only called at the top of triggerSave if it is called again. This can cause double-save race conditions. The existing cleanup-on-unmount effect is correct, but the stale triggerSave closures in effects are the problem.",
+      "code": "const triggerSave = useCallback(\n    (patch) => {\n      if (debounceRef.current) clearTimeout(debounceRef.current);\n      ...\n    },\n    [updateMutation],\n  );",
+      "fix": "Store updateMutation in a ref (similar to the existing paymentMethodIdRef pattern) so triggerSave has a stable identity and never causes downstream effect re-runs. Example: `const mutationRef = useRef(updateMutation); mutationRef.current = updateMutation;` then remove updateMutation from deps.",
+      "rule": "State Race Conditions"
+    },
+    {
+      "id": "BUG-004",
+      "severity": "suggestion",
+      "category": "Logic Error / Edge Case",
+      "file": "apps/admin/src/features/users/application/utils/getInitials.ts",
+      "line": 7,
+      "description": "The split+map pattern `name.split(' ').map(n => n[0])` accesses index [0] of empty-string parts produced by multiple consecutive spaces or a trailing space. `''[0]` returns undefined in JavaScript, which Array.join converts to an empty string (not to the string 'undefined'). The result is not a crash, but for names like 'John  Doe' (double space) the second empty segment produces a null that is silently dropped. This may result in fewer initials than expected in edge cases.",
+      "code": "name.split(' ').map((n) => n[0]).join('').toUpperCase()",
+      "fix": "Filter empty parts before mapping: `name.split(' ').filter(Boolean).map(n => n[0]).join('').toUpperCase()`",
+      "rule": "Edge Cases"
+    },
+    {
+      "id": "BUG-005",
+      "severity": "suggestion",
+      "category": "Missing Error Boundary / Async Error Handling",
+      "file": "apps/payments/src/features/checkout/presentation/pages/CheckoutPageContent.tsx",
+      "line": 116,
+      "description": "The second useEffect checks `groups.length > 0 && hasCompletedCheckout && !cartCleared.current` to clear the completed-checkout flag. However, hasCompletedCheckout reads from sessionStorage via getCompletedCheckoutState which is called outside the effect (line 104). If groups re-renders after checkout completes and before the effect runs, the condition may not trigger in time — and when it does, groups.length is used directly (not a stable ref), meaning the effect dependency is the length number, not the groups array. This is correct but subtle; a comment explaining the intent would reduce risk of future regressions.",
+      "code": "useEffect(() => {\n    if (groups.length > 0 && hasCompletedCheckout && !cartCleared.current) {\n      writeCompletedCheckoutFlag(false);\n    }\n  }, [groups.length, hasCompletedCheckout]);",
+      "fix": "No code change strictly necessary, but add a comment explaining why groups.length (not groups) is the dep. Alternatively, move the readCompletedCheckoutFlag() call inside the effect for more explicit data flow.",
+      "rule": "Logic Errors"
+    }
+  ],
+  "patterns": [
+    {
+      "pattern": "Consistent setInterval cleanup",
+      "observation": "All setInterval usages (ExpirationLabel.tsx, ReceivedOrderCard.tsx) correctly return cleanup functions from useEffect. This is a good pattern.",
+      "recommendation": "None — well implemented."
+    },
+    {
+      "pattern": "Consistent JSON.parse safety",
+      "observation": "All JSON.parse usages in production code (cartCookie.ts, CartContext.tsx) are wrapped in try/catch blocks. This is a good pattern.",
+      "recommendation": "None — well implemented."
+    },
+    {
+      "pattern": "getUser() null handling inconsistency across infrastructure files",
+      "observation": "pendingOrderCount.ts correctly guards with `if (!user) return 0`, but productQueries.ts and productMutations.ts use fallback values instead of early-return guards. Establish a consistent pattern.",
+      "recommendation": "Standardize on explicit guard + early return (throw or return sentinel) across all infrastructure files that call getUser()."
+    },
+    {
+      "pattern": "addEventListener cleanup",
+      "observation": "The single addEventListener usage in cartCookie.ts correctly returns a cleanup function with removeEventListener for all three event listeners added.",
+      "recommendation": "None — well implemented."
+    }
+  ]
+}

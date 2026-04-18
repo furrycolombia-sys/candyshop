@@ -1,0 +1,95 @@
+{
+  "agent": "solid",
+  "review_id": "2026-04-17_20-00-00",
+  "timestamp": "2026-04-17T20:00:00",
+  "scope": "apps/",
+  "summary": {
+    "filesAnalyzed": 22,
+    "issuesFound": 6,
+    "critical": 0,
+    "warning": 4,
+    "suggestion": 2,
+    "info": 0
+  },
+  "issues": [
+    {
+      "id": "SOLID-001",
+      "principle": "Interface Segregation (ISP)",
+      "severity": "warning",
+      "file": "apps/admin/src/features/users/presentation/components/UserTable.tsx",
+      "lines": "17-34",
+      "description": "UserTable has a large prop interface (15 props) that bundles filter state, pagination state, selection state, and export capability in one component. Child components like the filter inputs and export button depend on all props even though each sub-concern only uses a subset.",
+      "detail": "Props include: users, total, isLoading, page, onPageChange, onSelectUser, selectedUsers, onSelectUsersChange, filterInput, onFilterInputChange, roleFilter, onRoleFilterChange, itemFilter, onItemFilterChange, canExport, onExportCsv. The component renders search, two selects, a table body, and a pagination footer—each of these sub-components forces the parent to pass everything through one monolithic interface.",
+      "suggestion": "Consider grouping related props into objects (e.g. filterState, paginationState, selectionState) or splitting UserTable into UserTableFilters + UserTableList + UserTablePagination with dedicated prop interfaces. KISS note: if UserTable is only used in one place (UsersPageContent), the current shape may be acceptable complexity.",
+      "kissConflict": true
+    },
+    {
+      "id": "SOLID-002",
+      "principle": "Open/Closed (OCP)",
+      "severity": "warning",
+      "file": "apps/payments/src/features/received-orders/presentation/components/ActionButtons.tsx",
+      "lines": "61-98",
+      "description": "ActionButtons uses sequential if-block branching (mode === 'approve', mode === 'reject', mode === 'evidence') to render different UI panels. Adding a new action mode requires modifying this component directly rather than extending it.",
+      "detail": "The pattern renders ConfirmActionPanel or SellerNoteInput based on the current mode. While the mode values are typed (ActionMode union), the rendering logic is not data-driven—each new action type added to SellerAction in the domain layer requires a corresponding new if-block here.",
+      "suggestion": "A mode-to-panel map (Record<ActionMode, ReactNode | ComponentType>) would allow extension without modification. However, with only 3 modes and the component being small, KISS may win here—this is a suggestion rather than a blocker.",
+      "kissConflict": true
+    },
+    {
+      "id": "SOLID-003",
+      "principle": "Single Responsibility (SRP)",
+      "severity": "warning",
+      "file": "apps/payments/src/features/checkout/presentation/components/SellerCheckoutCard.tsx",
+      "lines": "1-180",
+      "description": "SellerCheckoutCard combines three distinct responsibilities: (1) fetching payment methods via useSellerPaymentMethods, (2) managing expand/collapse UI state, and (3) orchestrating multi-step checkout validation (field validation, stock issue detection). This causes the component to change for UI layout reasons, business rule changes, or data-fetching concerns.",
+      "detail": "The component has 5 useState calls (isExpanded, selectedMethodId, buyerSubmission, validationError + data from useSellerPaymentMethods), owns the form validation loop (lines 88-98), and delegates rendering to SellerCheckoutContent. The data-fetch and validation could live in a dedicated hook like useSellerCheckout(sellerId, items).",
+      "suggestion": "Extract data-fetching + validation into useSellerCheckout hook. SellerCheckoutCard would then be a presentation-only component responsible solely for expand/collapse and rendering SellerCheckoutContent. The hook handles method fetching and form validation."
+    },
+    {
+      "id": "SOLID-004",
+      "principle": "Single Responsibility (SRP)",
+      "severity": "warning",
+      "file": "apps/admin/src/features/users/presentation/pages/UsersPageContent.tsx",
+      "lines": "1-104",
+      "description": "UsersPageContent handles URL state synchronization (nuqs), debounced search timer management, CSV export orchestration (fetching, transforming, triggering download, logging), and user navigation—all in one component.",
+      "detail": "Three distinct responsibilities: (1) search debounce logic (useEffect with setTimeout, lines 40-48), (2) CSV export including data transformation and download trigger (handleExportCsv, lines 58-68), (3) URL state sync guard (useEffect lines 32-38). The export logic (exportUsersToCsv + downloadCsv + logExport) could be encapsulated in a useExportUsers hook.",
+      "suggestion": "Extract export logic into a useExportUsers(users, selectedUsers) hook. The debounce-to-URL sync pattern is already a known nuqs idiom and is acceptable as-is."
+    },
+    {
+      "id": "SOLID-005",
+      "principle": "Single Responsibility (SRP)",
+      "severity": "suggestion",
+      "file": "apps/store/src/features/products/presentation/components/product-detail/ImageGallery.tsx",
+      "lines": "1-252",
+      "description": "ImageGallery renders desktop and mobile layouts with duplicated bottom-bar markup (caption + counter) in both branches (lines 145-159 and lines 192-207). The component also owns thumbnail rendering, main image rendering, and placeholder logic in one file.",
+      "detail": "The bottom bar JSX for caption and counter is copy-pasted in the desktop layout (lines 145-159) and again in the mobile layout (lines 192-207). While each version has slightly different sizing classes, the logical structure is identical.",
+      "suggestion": "Extract an ImageGalleryBottomBar component or a renderBottomBar helper. This is a minor DRY/SRP note; KISS is satisfied with the current approach for a single-use component."
+    },
+    {
+      "id": "SOLID-006",
+      "principle": "Dependency Inversion (DIP)",
+      "severity": "suggestion",
+      "file": "apps/payments/src/features/checkout/presentation/pages/CheckoutPageContent.tsx",
+      "lines": "18-34",
+      "description": "CheckoutPageContent defines and directly calls two sessionStorage helper functions (readCompletedCheckoutFlag and writeCompletedCheckoutFlag) inline in the presentation layer. This couples the component to the concrete storage mechanism.",
+      "detail": "The functions read/write sessionStorage directly with a literal key CHECKOUT_COMPLETED_SESSION_KEY. While the key is imported from constants, the storage mechanism is not abstracted. A test that needs to assert on the completed-checkout state must mock the sessionStorage global rather than injecting a dependency.",
+      "suggestion": "Move these helpers into the application layer (e.g. checkoutSession.ts utility or a useCheckoutCompletionState hook) to keep the presentation layer free of infrastructure concerns. Minor issue—acceptable as-is given the narrowly scoped usage."
+    }
+  ],
+  "patterns": [
+    {
+      "id": "PAT-SOLID-001",
+      "description": "Good DIP usage throughout: presentation components consistently depend on custom hooks (useSellerPaymentMethods, useAddToCart, useUsers, useCartFromCookie) rather than calling infrastructure directly. No direct supabase or fetch calls were found in presentation components.",
+      "severity": "info"
+    },
+    {
+      "id": "PAT-SOLID-002",
+      "description": "SellerCheckoutContent uses object grouping (submission, methodSelection, buyerForm props) to address ISP—related props are bundled into typed sub-objects instead of flat lists. This is a good pattern worth documenting.",
+      "severity": "info"
+    },
+    {
+      "id": "PAT-SOLID-003",
+      "description": "ReceivedOrderCard correctly separates the expiration countdown concern into a useEffect with setInterval + cleanup, demonstrating proper SRP within a component that handles multiple data display concerns. The BuyerInfoValue co-located helper is a valid SRP pattern with eslint-disable comment justification.",
+      "severity": "info"
+    }
+  ]
+}

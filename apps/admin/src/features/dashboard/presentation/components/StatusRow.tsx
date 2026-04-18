@@ -1,3 +1,5 @@
+import { cn } from "ui";
+
 interface StatusRowProps {
   label: string;
   status: "operational" | "degraded" | "down";
@@ -23,7 +25,10 @@ export function StatusRow({ label, status, statusLabel }: StatusRowProps) {
     <div className="flex items-center justify-between">
       <span className="font-mono text-xs text-muted-foreground">{label}</span>
       <div className="flex items-center gap-1.5">
-        <span className={`size-1.5 rounded-full ${getDotClass(status)}`} />
+        <span
+          className={cn("size-1.5 rounded-full", getDotClass(status))}
+          data-status={status}
+        />
         <span className="font-mono text-ui-xs text-muted-foreground/60">
           {statusLabel}
         </span>

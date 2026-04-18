@@ -1,8 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { createBrowserSupabaseClient } from "api/supabase";
-import { useMemo } from "react";
+import { useSupabase } from "shared";
 
 import {
   RECEIVED_ORDERS_QUERY_KEY,
@@ -11,7 +10,7 @@ import {
 import { fetchReceivedOrders } from "@/features/received-orders/infrastructure/receivedOrderQueries";
 
 export function useReceivedOrders(filter?: string) {
-  const supabase = useMemo(() => createBrowserSupabaseClient(), []);
+  const supabase = useSupabase();
 
   return useQuery({
     // eslint-disable-next-line @tanstack/query/exhaustive-deps -- supabase client is not serializable and is stable (memoized above)

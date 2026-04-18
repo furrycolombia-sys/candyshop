@@ -1,0 +1,68 @@
+{
+  "agent": "security",
+  "review_id": "2026-04-17_22-00-00",
+  "timestamp": "2026-04-17T22:00:00",
+  "scope": "apps/",
+  "summary": {
+    "filesAnalyzed": 14,
+    "issuesFound": 4,
+    "critical": 0,
+    "warning": 3,
+    "suggestion": 1,
+    "info": 0
+  },
+  "issues": [
+    {
+      "id": "SEC-001",
+      "severity": "warning",
+      "title": "adminFetchJson leaks raw Supabase error body into server logs",
+      "file": "apps/payments/src/shared/infrastructure/adminRestClient.ts",
+      "line": 72,
+      "vulnerabilityType": "exposure",
+      "description": "When the Supabase REST API returns a non-OK response, the full response body is read and thrown as an Error message: `throw new Error(await response.text())`. The Supabase PostgREST error body can include schema details, table names, constraint names, and RLS policy names. These get captured into the Error.message and are then logged to the server via `console.error(\"[checkout/orders]\", error instanceof Error ? error.message : String(error))` in route handlers. The admin counterpart in apps/admin correctly discards the body (`await response.text()` without storing it).",
+      "risk": "Internal database schema details (table names, column names, RLS policy names) may appear in server-side logs. Depending on log aggregation and access controls, this could expose internal schema information to parties who have access to server logs but should not have schema knowledge.",
+      "fix": "Replace `throw new Error(await response.text())` with a sanitized message: consume the body to avoid connection leaks but discard its content. Example: `await response.text(); throw new Error(`Admin API failed: ${String(response.status)}`);` — matching the pattern already used correctly in apps/admin/src/app/api/admin/_shared/adminRest.ts line 79-81."
+    },
+    {
+      "id": "SEC-002",
+      "severity": "warning",
+      "title": "CSP uses 'unsafe-inline' and 'unsafe-eval' in script-src across all apps",
+      "file": "apps/store/next.config.ts",
+      "line": 25,
+      "vulnerabilityType": "xss",
+      "description": "All Next.js apps (store, payments, auth, admin, studio, landing, playground) set an identical Content-Security-Policy that includes `script-src 'self' 'unsafe-inline' 'unsafe-eval'`. The `'unsafe-inline'` directive allows inline <script> tags and event handlers; `'unsafe-eval'` allows eval() and Function() constructors. Both directives significantly reduce the XSS protection that CSP is meant to provide.",
+      "risk": "If an attacker achieves XSS injection (e.g., via a reflected or stored XSS in user content), the CSP provides no protection because `'unsafe-inline'` and `'unsafe-eval'` permit arbitrary script execution. This negates one of the primary defenses against XSS.",
+      "fix": "Replace `'unsafe-inline'` with nonce-based CSP (Next.js 13+ supports nonces via middleware). Replace `'unsafe-eval'` if not strictly required by a dependency. Use `next-safe` or the Next.js built-in CSP nonce approach. If `'unsafe-eval'` is required by a bundler in development only, gate it with `process.env.NODE_ENV === 'development'`."
+    },
+    {
+      "id": "SEC-003",
+      "severity": "warning",
+      "title": "Next.js image remotePatterns allows all HTTPS hosts (wildcard hostname)",
+      "file": "apps/store/next.config.ts",
+      "line": 46,
+      "vulnerabilityType": "exposure",
+      "description": "Both apps/store/next.config.ts and apps/studio/next.config.ts configure `images.remotePatterns` with `{ protocol: 'https', hostname: '**' }`. This allows Next.js Image Optimization to proxy and serve images from any HTTPS host on the internet.",
+      "risk": "An attacker who can control a product image URL (e.g., through a seller-uploaded product image URL stored in the database) could potentially use the Next.js image proxy as an open proxy for arbitrary HTTPS URLs. This can be abused for Server-Side Request Forgery (SSRF) to make requests to internal network endpoints, cloud metadata services (169.254.169.254), or to serve malicious content via the trusted domain. It also increases bandwidth costs.",
+      "fix": "Restrict `hostname` to known trusted domains that serve product images (e.g., Supabase storage host, CDN host). If user-provided image URLs from any host must be supported, add explicit allowlisting and consider a separate image upload flow that re-hosts images on a controlled domain."
+    },
+    {
+      "id": "SEC-004",
+      "severity": "suggestion",
+      "title": "validateUuid in payments adminRestClient echoes the raw value in error message",
+      "file": "apps/payments/src/shared/infrastructure/adminRestClient.ts",
+      "line": 8,
+      "vulnerabilityType": "exposure",
+      "description": "`validateUuid` throws `new Error(\"Invalid UUID: \" + value)` when the UUID validation fails. This echoes the attacker-controlled input value directly into the error message. While this error is caught and only `error.message` is logged server-side (not returned to the client), echoing attacker input into log messages is not best practice.",
+      "risk": "Log injection: if the value contains special characters (newlines, ANSI escape codes), it could corrupt log format or confuse log parsers. Low severity because this is server-side logging only and the client receives only a generic error.",
+      "fix": "Change the message to a generic one that does not echo the input: `throw new Error('Invalid UUID format')`. The admin version in apps/admin already does this with `throw new Error(INVALID_PAYLOAD_ERROR)` (line 62 of adminRest.ts)."
+    }
+  ],
+  "patterns": [
+    "All apps consistently use security headers (HSTS, X-Content-Type-Options, X-Frame-Options, Referrer-Policy, Permissions-Policy) — good baseline hardening.",
+    "All API routes (payments, admin, auth) correctly validate user authentication via supabase.auth.getUser() before processing requests — no auth bypass issues found.",
+    "No hardcoded secrets, tokens, or API keys found in source code — all sensitive values are loaded from environment variables.",
+    "The checkout/payment-methods route correctly suppresses payment method data when stock issues are detected, aligning with checkout stock integrity rules.",
+    "CORS on the auth refresh endpoint correctly validates Origin against a known allowlist — no wildcard CORS found.",
+    "The admin REST client in apps/admin correctly discards raw error body from Supabase to avoid schema leakage — this good practice should be replicated in apps/payments."
+  ]
+}

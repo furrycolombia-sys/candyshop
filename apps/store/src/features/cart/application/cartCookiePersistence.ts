@@ -1,26 +1,19 @@
 import { deleteCookie, setCookie } from "cookies-next";
+import { getSharedCookieDomain as resolveSharedCookieDomain } from "shared";
+import {
+  HOURS_PER_DAY,
+  MINUTES_PER_HOUR,
+  SECONDS_PER_MINUTE,
+} from "shared/constants/time";
+import type { CartCookieItem } from "shared/types";
 
 import type { CartItem } from "@/features/cart/domain/types";
 
-export const COOKIE_KEY = "candystore-cart";
 const DAYS = 30;
-const HOURS_PER_DAY = 24;
-const MINUTES_PER_HOUR = 60;
-const SECONDS_PER_MINUTE = 60;
-const MINIMUM_DOMAIN_SEGMENTS = 2;
-const DOMAIN_SUFFIX_SEGMENT_OFFSET = -2;
+const CART_COOKIE_KEY = "candystore-cart";
 /** Cookie lives for 30 days */
 export const COOKIE_MAX_AGE_S =
   DAYS * HOURS_PER_DAY * MINUTES_PER_HOUR * SECONDS_PER_MINUTE;
-
-export function getSharedCookieDomain(hostname: string): string | undefined {
-  if (hostname === "localhost" || hostname === "127.0.0.1") return undefined;
-
-  const parts = hostname.split(".");
-  if (parts.length < MINIMUM_DOMAIN_SEGMENTS) return undefined;
-
-  return `.${parts.slice(DOMAIN_SUFFIX_SEGMENT_OFFSET).join(".")}`;
-}
 
 export function getCartCookieOptions() {
   const isSecure =
@@ -28,7 +21,7 @@ export function getCartCookieOptions() {
     globalThis.location.protocol === "https:";
   let sharedDomain: string | undefined;
   if (globalThis.window !== undefined) {
-    sharedDomain = getSharedCookieDomain(globalThis.location.hostname);
+    sharedDomain = resolveSharedCookieDomain(globalThis.location.hostname);
   }
 
   return {
@@ -41,12 +34,16 @@ export function getCartCookieOptions() {
 
 export function persistCartCookie(items: CartItem[]) {
   const cookieOptions = getCartCookieOptions();
+  const cookieItems: CartCookieItem[] = items.map((item) => ({
+    id: item.id,
+    quantity: item.quantity,
+  }));
 
   if (cookieOptions.domain) {
-    deleteCookie(COOKIE_KEY, { path: "/" });
+    deleteCookie(CART_COOKIE_KEY, { path: "/" });
   }
 
-  setCookie(COOKIE_KEY, JSON.stringify(items), {
+  setCookie(CART_COOKIE_KEY, JSON.stringify(cookieItems), {
     ...cookieOptions,
     maxAge: COOKIE_MAX_AGE_S,
   });
@@ -54,9 +51,12 @@ export function persistCartCookie(items: CartItem[]) {
 
 export function removeCartCookie() {
   const cookieOptions = getCartCookieOptions();
-  deleteCookie(COOKIE_KEY, cookieOptions);
+  deleteCookie(CART_COOKIE_KEY, cookieOptions);
 
   if (cookieOptions.domain !== undefined) {
-    deleteCookie(COOKIE_KEY, { path: "/" });
+    deleteCookie(CART_COOKIE_KEY, { path: "/" });
   }
 }
+
+export { getSharedCookieDomain } from "shared";
+export { CART_COOKIE_KEY as COOKIE_KEY };

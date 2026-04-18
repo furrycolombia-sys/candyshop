@@ -4,6 +4,7 @@ import { ChevronDown } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 import { tid } from "shared";
+import { cn } from "ui";
 
 import { AuditRowDetail } from "./AuditRowDetail";
 
@@ -70,15 +71,16 @@ function getUpdateFieldsSummary(entry: AuditEntry): string | null {
   return null;
 }
 
+const TIMESTAMP_FORMAT_OPTIONS: Intl.DateTimeFormatOptions = {
+  month: "short",
+  day: "numeric",
+  hour: "2-digit",
+  minute: "2-digit",
+  second: "2-digit",
+};
+
 function formatTimestamp(ts: string, locale: string): string {
-  const d = new Date(ts);
-  return d.toLocaleString(locale, {
-    month: "short",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-  });
+  return new Date(ts).toLocaleString(locale, TIMESTAMP_FORMAT_OPTIONS);
 }
 
 export function AuditTable({
@@ -207,7 +209,10 @@ export function AuditTable({
                   {/* Action badge */}
                   <span className="px-4 py-2.5">
                     <span
-                      className={`inline-block rounded-sm border px-2 py-0.5 font-mono text-ui-xs font-bold uppercase tracking-widest ${colorClass}`}
+                      className={cn(
+                        "inline-block rounded-sm border px-2 py-0.5 font-mono text-ui-xs font-bold uppercase tracking-widest",
+                        colorClass,
+                      )}
                     >
                       {entry.action_type}
                     </span>
@@ -227,7 +232,10 @@ export function AuditTable({
                   {/* Chevron */}
                   <span className="flex items-center justify-center px-2 py-2.5">
                     <ChevronDown
-                      className={`size-3.5 text-muted-foreground transition-transform duration-200 ${isExpanded ? "rotate-180" : ""}`}
+                      className={cn(
+                        "size-3.5 text-muted-foreground transition-transform duration-200",
+                        isExpanded && "rotate-180",
+                      )}
                     />
                   </span>
                 </div>

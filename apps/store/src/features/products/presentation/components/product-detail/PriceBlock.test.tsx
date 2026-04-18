@@ -15,6 +15,8 @@ vi.mock("shared", () => ({
     const price = locale === "en" ? product.price_usd : product.price_cop;
     return `$${price}`;
   },
+  i18nCurrencyCode: (_product: unknown, locale: string) =>
+    locale === "en" ? "USD" : "COP",
 }));
 
 function makeProduct(overrides: Partial<Product> = {}): Product {

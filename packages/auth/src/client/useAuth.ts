@@ -61,7 +61,11 @@ export function useAuth({ supabaseClient }: UseAuthOptions): UseAuthReturn {
 
       if (!isActive) return;
 
-      setSession(error || !user ? null : initialSession);
+      if (error || !user) {
+        setSession(null);
+      } else {
+        setSession(initialSession);
+      }
       setIsLoading(false);
     }
 

@@ -11,7 +11,7 @@ vi.mock("auth/client", () => ({
   useCurrentUserPermissions: vi.fn(() => ({ grantedKeys: ["users.export"] })),
 }));
 
-vi.mock("@/features/audit/application/useAuditLog", () => ({
+vi.mock("@/features/audit/application/hooks/useAuditLog", () => ({
   useLogExport: vi.fn(() => ({
     mutate: vi.fn(),
   })),

@@ -18,3 +18,28 @@ export type {
   UrlBlock,
   VideoBlock,
 } from "@/shared/domain/paymentMethodTypes";
+
+import type { SellerPaymentMethod } from "@/shared/domain/paymentMethodTypes";
+
+export interface CreatePaymentMethodParams {
+  sellerId: string;
+  nameEn: string;
+  nameEs?: string;
+}
+
+export type UpdatePaymentMethodPatch = Partial<
+  Pick<
+    SellerPaymentMethod,
+    | "name_en"
+    | "name_es"
+    | "display_blocks"
+    | "form_fields"
+    | "is_active"
+    | "sort_order"
+  >
+>;
+
+export interface UpdatePaymentMethodParams {
+  id: string;
+  patch: UpdatePaymentMethodPatch;
+}

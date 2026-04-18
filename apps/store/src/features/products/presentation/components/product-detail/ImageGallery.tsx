@@ -3,8 +3,9 @@
 
 import Image from "next/image";
 import { useTranslations } from "next-intl";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { tid } from "shared";
+import { cn } from "ui";
 
 import type { CategoryTheme } from "@/features/products/domain/constants";
 import type { Product, ProductImage } from "@/features/products/domain/types";
@@ -44,14 +45,23 @@ function getProductImages(images: unknown): ProductImage[] {
 export function ImageGallery({ product, theme }: ImageGalleryProps) {
   const tTypes = useTranslations("productTypes");
   const t = useTranslations("products");
-  const images = getProductImages(product.images);
-  const hasImages = images.length > 0;
   const [activeIndex, setActiveIndex] = useState(0);
+  const images = useMemo(
+    () => getProductImages(product.images),
+    [product.images],
+  );
+  const hasImages = images.length > 0;
 
   const activeImage = images[activeIndex];
 
   const thumbInactive =
     "border-foreground/20 bg-background hover:border-foreground";
+
+  const thumbGridStyle = useMemo(
+    // eslint-disable-next-line i18next/no-literal-string -- CSS grid value, not user-facing text
+    () => ({ gridTemplateColumns: `repeat(${images.length}, 1fr)` }),
+    [images.length],
+  );
 
   // Placeholder for products with no images
   if (!hasImages) {
@@ -100,7 +110,10 @@ export function ImageGallery({ product, theme }: ImageGalleryProps) {
                   type="button"
                   key={img.url}
                   onClick={() => setActiveIndex(idx)}
-                  className={`relative size-16 overflow-hidden border-strong transition-all ${activeCls}`}
+                  className={cn(
+                    "relative size-16 overflow-hidden border-strong transition-all",
+                    activeCls,
+                  )}
                   style={isActive ? { backgroundColor: theme.bg } : undefined}
                   aria-label={
                     img.alt ??
@@ -210,12 +223,7 @@ export function ImageGallery({ product, theme }: ImageGalleryProps) {
         </div>
 
         {images.length > 1 && (
-          <div
-            className="grid w-full max-w-full gap-2"
-            style={{
-              gridTemplateColumns: `repeat(${String(images.length)}, 1fr)`,
-            }}
-          >
+          <div className="grid w-full max-w-full gap-2" style={thumbGridStyle}>
             {images.map((img, idx) => {
               const isActive = idx === activeIndex;
               const activeCls = isActive
@@ -226,7 +234,10 @@ export function ImageGallery({ product, theme }: ImageGalleryProps) {
                   type="button"
                   key={img.url}
                   onClick={() => setActiveIndex(idx)}
-                  className={`relative h-16 overflow-hidden border-strong py-2 transition-all ${activeCls}`}
+                  className={cn(
+                    "relative h-16 overflow-hidden border-strong py-2 transition-all",
+                    activeCls,
+                  )}
                   style={isActive ? { backgroundColor: theme.bg } : undefined}
                   aria-label={img.alt ?? String(idx + 1)}
                 >

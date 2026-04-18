@@ -1,5 +1,5 @@
 import { render, screen, fireEvent } from "@testing-library/react";
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, type Mock } from "vitest";
 
 vi.mock("next-intl", () => ({
   useTranslations: () => (key: string) => key,
@@ -22,6 +22,7 @@ vi.mock("shared", () => ({
     }
     return null;
   },
+  formatCop: (amount: number) => `${amount.toLocaleString()} COP`,
 }));
 
 vi.mock("next/image", () => ({
@@ -42,6 +43,7 @@ vi.mock("next/link", () => ({
 }));
 
 vi.mock("ui", () => ({
+  cn: (...args: unknown[]) => args.filter(Boolean).join(" "),
   Badge: ({ children }: { children: React.ReactNode }) => (
     <span>{children}</span>
   ),
@@ -57,18 +59,12 @@ vi.mock("ui", () => ({
       {children}
     </button>
   ),
-  cn: (...args: unknown[]) => args.filter(Boolean).join(" "),
-}));
-
-const mockToggle = { mutate: vi.fn() };
-const mockDelete = { mutate: vi.fn() };
-
-vi.mock("@/features/products/application/useProductMutations", () => ({
-  useToggleProduct: () => mockToggle,
-  useDeleteProduct: () => mockDelete,
 }));
 
 import { ProductTableRow } from "./ProductTableRow";
+
+let onToggle: Mock;
+let onDelete: Mock;
 
 const mockProduct = {
   id: "p1",
@@ -101,10 +97,20 @@ const defaultProps = {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } as any,
   isDragging: false,
+  get onToggle() {
+    return onToggle;
+  },
+  get onDelete() {
+    return onDelete;
+  },
 };
 
 describe("ProductTableRow", () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(() => {
+    vi.clearAllMocks();
+    onToggle = vi.fn();
+    onDelete = vi.fn();
+  });
 
   it("renders product name", () => {
     render(
@@ -172,11 +178,7 @@ describe("ProductTableRow", () => {
       </table>,
     );
     fireEvent.click(screen.getByTestId("toggle-active-p1"));
-    expect(mockToggle.mutate).toHaveBeenCalledWith({
-      id: "p1",
-      field: "is_active",
-      value: false,
-    });
+    expect(onToggle).toHaveBeenCalledWith("p1", "is_active", false);
   });
 
   it("shows confirm button after clicking delete, then deletes on confirm", () => {
@@ -191,7 +193,7 @@ describe("ProductTableRow", () => {
     fireEvent.click(screen.getByTestId("delete-product-p1"));
     // Second click confirms
     fireEvent.click(screen.getByTestId("confirm-delete-p1"));
-    expect(mockDelete.mutate).toHaveBeenCalled();
+    expect(onDelete).toHaveBeenCalledWith("p1");
   });
 
   it("cancels delete when cancel button is clicked", () => {
@@ -239,7 +241,7 @@ describe("ProductTableRow", () => {
       </table>,
     );
     const row = screen.getByTestId("product-row-p1");
-    expect(row.className).toContain("shadow");
+    expect(row).toHaveAttribute("data-dragging", "true");
   });
 
   it("toggles featured state", () => {
@@ -251,11 +253,7 @@ describe("ProductTableRow", () => {
       </table>,
     );
     fireEvent.click(screen.getByTestId("toggle-featured-p1"));
-    expect(mockToggle.mutate).toHaveBeenCalledWith({
-      id: "p1",
-      field: "featured",
-      value: true,
-    });
+    expect(onToggle).toHaveBeenCalledWith("p1", "featured", true);
   });
 
   it("renders without image when images is empty", () => {

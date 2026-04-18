@@ -1,0 +1,115 @@
+{
+  "agent": "performance",
+  "timestamp": "2026-04-17T04:08:32",
+  "scope": "apps/",
+  "summary": {
+    "filesAnalyzed": 18,
+    "issuesFound": 6,
+    "critical": 0,
+    "warning": 2,
+    "suggestion": 4,
+    "info": 0
+  },
+  "issues": [
+    {
+      "id": "PERF-001",
+      "severity": "warning",
+      "category": "Data Fetching",
+      "file": "apps/payments/src/features/received-orders/infrastructure/receivedOrderQueries.ts",
+      "lines": "166-176",
+      "title": "Sequential awaits for independent DB queries in fetchReceivedOrders",
+      "description": "The own-orders query (line 166) and the delegated-orders fetch (line 172) are independent and run sequentially. They can be parallelized with Promise.all to reduce total latency.",
+      "currentCode": "const { data: ownData, error: ownError } = await ownQuery;\nif (ownError) throw ownError;\nconst ownRows = (ownData ?? []) as OrderRow[];\n\nconst { rows: delegatedRows, sellerNameMap } = await fetchDelegatedOrderRows(supabase, user.id, filter);",
+      "suggestedFix": "const [ownResult, delegatedResult] = await Promise.all([\n  ownQuery,\n  fetchDelegatedOrderRows(supabase, user.id, filter),\n]);\nif (ownResult.error) throw ownResult.error;\nconst ownRows = (ownResult.data ?? []) as OrderRow[];\nconst { rows: delegatedRows, sellerNameMap } = delegatedResult;",
+      "impact": "Two independent Supabase round-trips run sequentially; parallelizing them halves the DB wait time for this critical path."
+    },
+    {
+      "id": "PERF-002",
+      "severity": "warning",
+      "category": "Missing Memoization",
+      "file": "apps/store/src/features/products/presentation/components/product-detail/sections/AccordionSection.tsx",
+      "lines": "16",
+      "title": "Array sort on every render without useMemo",
+      "description": "const sorted = [...section.items].sort(...) is computed on every render. If AccordionSection re-renders due to a parent state change (e.g. theme, locale), the sort runs again even if section.items hasn't changed. Same pattern exists in GallerySection (line 16), TwoColumnSection (line 17), and CardsSection (line 19).",
+      "affectedFiles": [
+        "apps/store/src/features/products/presentation/components/product-detail/sections/AccordionSection.tsx:16",
+        "apps/store/src/features/products/presentation/components/product-detail/sections/GallerySection.tsx:16",
+        "apps/store/src/features/products/presentation/components/product-detail/sections/TwoColumnSection.tsx:17",
+        "apps/store/src/features/products/presentation/components/product-detail/sections/CardsSection.tsx:19"
+      ],
+      "currentCode": "const sorted = [...section.items].sort((a, b) => a.sort_order - b.sort_order);",
+      "suggestedFix": "const sorted = useMemo(\n  () => [...section.items].sort((a, b) => a.sort_order - b.sort_order),\n  [section.items],\n);",
+      "impact": "Low in isolation (product sections are small), but these components are rendered several times per product-detail page. The fix is trivial and prevents unnecessary allocations."
+    },
+    {
+      "id": "PERF-003",
+      "severity": "suggestion",
+      "category": "Missing Memoization",
+      "file": "apps/store/src/features/products/presentation/components/product-detail/ProductSections.tsx",
+      "lines": "21-23",
+      "title": "Top-level sections sort computed on every render without useMemo",
+      "description": "const sections = [...product.sections].sort(...) inside ProductSections runs on every render. ProductSections is a client component that receives product as a prop — if any parent re-renders, this sort re-runs.",
+      "currentCode": "const sections = [\n  ...((product.sections as ProductSection[] | null) ?? []),\n].sort((a, b) => a.sort_order - b.sort_order);",
+      "suggestedFix": "const sections = useMemo(\n  () => [...((product.sections as ProductSection[] | null) ?? [])]\n    .sort((a, b) => a.sort_order - b.sort_order),\n  [product.sections],\n);",
+      "impact": "Minor — product detail pages are relatively static; memoization avoids the allocation on incidental re-renders."
+    },
+    {
+      "id": "PERF-004",
+      "severity": "suggestion",
+      "category": "Data Fetching",
+      "file": "apps/payments/src/features/received-orders/infrastructure/receivedOrderQueries.ts",
+      "lines": "56",
+      "title": "Per-row receipt URL fetch inside mapRowToOrder called via Promise.all",
+      "description": "mapRowToOrder calls getReceiptUrl individually for each row. While these calls are made in parallel via Promise.all (lines 192-202), each call creates a separate signed URL request to Supabase Storage. The buyer-orders path (orderQueries.ts) already pre-batches receipt paths before mapping. Consider the same approach here to keep patterns consistent and avoid creating N individual storage API calls.",
+      "currentCode": "receipt_url: await getReceiptUrl(supabase, row.receipt_url),",
+      "suggestedFix": "Pre-collect receipt paths and batch them (like in orderQueries.ts lines 47-58), then pass the resolved URL into the mapping step.",
+      "impact": "Moderate when the received-orders list is long. Supabase Storage signed URLs are network calls; batching reduces round-trip overhead.",
+      "note": "The existing orderQueries.ts already shows the correct batching pattern as a reference."
+    },
+    {
+      "id": "PERF-005",
+      "severity": "suggestion",
+      "category": "Bundle Size / Lazy Loading",
+      "file": "apps/",
+      "lines": "N/A",
+      "title": "No dynamic() imports used anywhere in apps",
+      "description": "No files in apps/ use Next.js dynamic() for code-splitting heavy components. The InlineEditor, ImageGallery, TemplateEditor, and IconPicker are all statically imported. These are moderately complex components that are not always rendered on initial page load.",
+      "suggestedFix": "Consider using dynamic(() => import('./InlineEditor'), { ssr: false }) for the studio InlineEditor and admin TemplateEditor, which include heavyweight dependencies (drag-and-drop, icon pickers) and are only rendered on user interaction.",
+      "impact": "Moderate — reduces initial bundle for seller studio and admin pages, improving first-load performance."
+    },
+    {
+      "id": "PERF-006",
+      "severity": "suggestion",
+      "category": "Image Optimization",
+      "file": "apps/auth/src/features/account/presentation/components/ProfileCard.tsx",
+      "lines": "33",
+      "title": "<img> used for OAuth avatar — intentional and documented",
+      "description": "An <img> element is used for the OAuth avatar URL (profile.avatar_url). The file has an eslint-disable comment explaining that next/image optimization is not needed for external OAuth avatars. This is correct: next/image requires the external domain to be whitelisted in next.config, and OAuth provider URLs are not predictable.",
+      "impact": "None — this is intentional and correctly documented. Listed for completeness only.",
+      "severity": "info"
+    }
+  ],
+  "patterns": [
+    {
+      "id": "PAT-PERF-001",
+      "title": "Good pattern: CartContext is fully memoized",
+      "description": "apps/store/src/features/cart/application/CartContext.tsx correctly uses useCallback for all mutation handlers and wraps the context value in useMemo. This is the reference pattern for context providers.",
+      "file": "apps/store/src/features/cart/application/CartContext.tsx"
+    },
+    {
+      "id": "PAT-PERF-002",
+      "title": "Good pattern: orderQueries.ts pre-batches signed URLs",
+      "description": "apps/payments/src/features/orders/infrastructure/orderQueries.ts (lines 47-58) collects all receipt paths, resolves them in a single Promise.all, then maps results — avoiding N individual storage API calls. This is the reference pattern for bulk signed URL resolution.",
+      "file": "apps/payments/src/features/orders/infrastructure/orderQueries.ts"
+    },
+    {
+      "id": "PAT-PERF-003",
+      "title": "Good pattern: useMemo used correctly in ProductCatalogPage and ProductGrid",
+      "description": "ProductCatalogPage wraps the client-side filter computation in useMemo with correct dependencies. ProductGrid wraps grid-order computation in useMemo. These are well-done.",
+      "files": [
+        "apps/store/src/features/products/presentation/pages/ProductCatalogPage.tsx",
+        "apps/store/src/features/products/presentation/components/ProductGrid.tsx"
+      ]
+    }
+  ]
+}

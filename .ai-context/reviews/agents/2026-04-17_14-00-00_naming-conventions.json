@@ -1,0 +1,43 @@
+{
+  "agent": "naming-conventions",
+  "review_id": "2026-04-17_14-00-00",
+  "timestamp": "2026-04-17T14:00:00Z",
+  "scope": "apps/",
+  "summary": {
+    "filesAnalyzed": 749,
+    "issuesFound": 1,
+    "critical": 0,
+    "warning": 0,
+    "suggestion": 1,
+    "info": 0
+  },
+  "issues": [
+    {
+      "id": "NAME-001",
+      "severity": "suggestion",
+      "category": "NAME",
+      "file": "apps/admin/src/app/api/admin/users/[userId]/delegates/route.ts",
+      "line": 12,
+      "description": "Local constant SELLER_ADMINS_READ uses SCREAMING_SNAKE_CASE which is correct for constants, but the name is slightly ambiguous - it could be confused with a query key or an action. The studio app uses SELLER_ADMINS_READ_PERMISSION which is more descriptive.",
+      "rule": "naming-conventions.md",
+      "fix": "Rename to SELLER_ADMINS_READ_PERMISSION for clarity and consistency with studio app naming."
+    }
+  ],
+  "patterns": [
+    {
+      "id": "PAT-NAME-001",
+      "description": "NAME-002 fix verified: useAddToCart.ts correctly uses isAdded (boolean with is prefix) throughout. Consumers MobileBarWithCart.tsx, HeroSection.tsx, and ProductCard.tsx all use isAdded correctly.",
+      "verdict": "CLEAN - no regression from NAME-002 fix"
+    },
+    {
+      "id": "PAT-NAME-002",
+      "description": "NAME-003 fix verified: InlineTagEditor.tsx correctly uses isInputVisible (boolean with is prefix) at line 26 and 90. The test file also uses isInputVisible semantics correctly.",
+      "verdict": "CLEAN - no regression from NAME-003 fix"
+    },
+    {
+      "id": "PAT-NAME-003",
+      "description": "PRODUCT_SEARCH_DEBOUNCE_MS follows the SCREAMING_SNAKE_CASE naming convention for exported constants. File naming conventions (PascalCase components, camelCase hooks) are consistently followed across all apps.",
+      "verdict": "COMPLIANT"
+    }
+  ]
+}

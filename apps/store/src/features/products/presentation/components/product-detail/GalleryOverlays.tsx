@@ -16,6 +16,11 @@ interface GalleryOverlaysProps {
   t: (key: string) => string;
 }
 
+const DOT_TEXTURE_STYLE = {
+  backgroundImage: "radial-gradient(circle, currentColor 1px, transparent 1px)",
+  backgroundSize: "20px 20px",
+} as const;
+
 /** Shared overlays for main image (dot texture, label, counter, badges) */
 export function GalleryOverlays({
   product,
@@ -30,11 +35,7 @@ export function GalleryOverlays({
       {/* Dot texture */}
       <div
         className="absolute inset-0 opacity-[0.07]"
-        style={{
-          backgroundImage:
-            "radial-gradient(circle, currentColor 1px, transparent 1px)",
-          backgroundSize: "20px 20px",
-        }}
+        style={DOT_TEXTURE_STYLE}
       />
 
       {/* View label watermark */}

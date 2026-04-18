@@ -1,0 +1,91 @@
+{
+  "agent": "solid",
+  "timestamp": "2026-04-17T04:08:32",
+  "scope": "apps/",
+  "summary": {
+    "filesAnalyzed": 14,
+    "issuesFound": 5,
+    "critical": 0,
+    "warning": 3,
+    "suggestion": 2,
+    "info": 0
+  },
+  "issues": [
+    {
+      "id": "SOLID-001",
+      "severity": "warning",
+      "principle": "OCP (Open/Closed) + SRP (Single Responsibility)",
+      "file": "apps/payments/src/features/received-orders/presentation/components/ActionButtons.tsx",
+      "lines": "77-98",
+      "description": "The `reject` and `evidence` modes each get their own if-block but render the exact same component (`SellerNoteInput`) with identical props. If a third note-based mode is added, another if-block will be required. The mode branching could be collapsed so `reject` and `evidence` share a single branch since they differ only by action name.",
+      "fix": "Consolidate the two identical `SellerNoteInput` branches into one: `if (mode === 'reject' || mode === 'evidence')` — this removes the duplication and avoids future OCP violations when new note-based modes are added.",
+      "codeSnippet": "// mode === 'reject' and mode === 'evidence' both render:\n<SellerNoteInput onSubmit={handleNoteSubmit} onCancel={() => setMode(null)} isPending={isPending} placeholder={t('notePlaceholder')} />"
+    },
+    {
+      "id": "SOLID-002",
+      "severity": "warning",
+      "principle": "ISP (Interface Segregation)",
+      "file": "apps/admin/src/features/users/presentation/components/UserTable.tsx",
+      "lines": "17-34",
+      "description": "`UserTableProps` has 14 props covering filter state, pagination, selection, and export capability. This is a wide interface that bundles multiple distinct concerns (filtering, paging, selection, export) into a single component boundary. The `renderTableBody` standalone function also receives 7 positional parameters, which is a symptom of the same problem.",
+      "fix": "Consider splitting into composable sub-components or context: a `UserFiltersBar` (filterInput, roleFilter, itemFilter, canExport, onExportCsv) and a `UserTableBody` accepting only data + selection props. Under KISS, if the split would add unnecessary indirection, keep as-is and document intentionally — but the 14-prop interface is worth noting.",
+      "codeSnippet": "interface UserTableProps {\n  // 14 props covering filtering, paging, selection, and export\n  filterInput, onFilterInputChange, roleFilter, onRoleFilterChange,\n  itemFilter, onItemFilterChange, canExport, onExportCsv,\n  users, total, isLoading, page, onPageChange, onSelectUser,\n  selectedUsers, onSelectUsersChange\n}"
+    },
+    {
+      "id": "SOLID-003",
+      "severity": "warning",
+      "principle": "SRP (Single Responsibility)",
+      "file": "apps/payments/src/features/payment-methods/application/hooks/usePaymentMethodsManager.ts",
+      "lines": "14-103",
+      "description": "The hook comment says it 'encapsulates all data-fetching, mutations, and UI state' — which is exactly the SRP violation. It combines: (1) data fetching via `usePaymentMethods`, (2) three mutation operations (create, update, delete), (3) UI state management (expandedId), and (4) sort-order swap logic (handleMoveUp / handleMoveDown). Additionally, `handleDelete` calls `globalThis.confirm()`, mixing browser dialog UI directly into application-layer logic.",
+      "fix": "Under KISS, the orchestration is acceptable for a page-level hook, but `globalThis.confirm()` in an application hook is the clearest violation — it ties the hook to browser UI. Move the confirm dialog to the presentation layer (component) so the hook only receives a 'delete confirmed' callback. The sort-swap logic (handleMoveUp/handleMoveDown) could also be extracted to a pure utility.",
+      "codeSnippet": "// Application hook calling browser dialog — DIP / SRP violation:\nif (globalThis.confirm(t('deleteConfirm'))) {\n  deleteMutation.mutate(id);\n}"
+    },
+    {
+      "id": "SOLID-004",
+      "severity": "suggestion",
+      "principle": "DIP (Dependency Inversion)",
+      "file": "apps/payments/src/features/checkout/presentation/components/DynamicFormField.tsx",
+      "lines": "118-120",
+      "description": "The `FileInput` private helper calls `alert()` directly to show an error when a file exceeds the size limit. The parent component already has an `error` prop that is designed for this purpose. Using `alert()` in a presentation component bypasses the established error-display contract and makes the component untestable in unit tests.",
+      "fix": "Instead of calling `alert()`, invoke the `onChange('')` path and have the parent pass the error message down via the `error` prop. The component already has error display rendering: `{error && <p className='text-xs text-destructive'>{error}</p>}`. Alternatively, add an `onFileError` callback prop.",
+      "codeSnippet": "// Current: bypasses error prop, untestable\nalert(`File exceeds 10 MB limit (${(file.size / MAX_FILE_BYTES).toFixed(1)}x)`);\n\n// Better: propagate via existing error mechanism\n// parent catches the validation, sets error state, passes as error prop"
+    },
+    {
+      "id": "SOLID-005",
+      "severity": "suggestion",
+      "principle": "SRP (Single Responsibility)",
+      "file": "apps/studio/src/features/products/presentation/components/inline-editor/InlineImageCarousel.tsx",
+      "lines": "1-394",
+      "description": "At 394 lines, `InlineImageCarousel` handles: drag-and-drop reorder logic, broken-image tracking state, active index management, thumbnail rendering (desktop + mobile), main image rendering (with two separate layouts), inline edit bar rendering, add/remove/cover-set operations. Each of these is a distinct responsibility. The component is not a 'god component' by itself but the desktop-vs-mobile dual rendering adds significant duplication and complexity.",
+      "fix": "The most impactful extract would be the thumbnail strip (desktop vertical / mobile horizontal) into a shared `ImageThumbnailStrip` component receiving `direction` prop — this would eliminate the near-duplicate thumbnail rendering blocks. This is a KISS/SRP tradeoff; if the layouts are expected to diverge, keep them separate.",
+      "codeSnippet": "// Duplicate thumbnail rendering blocks at lines 332-361 (desktop) and 376-386 (mobile)\n// Both call renderThumbContent(field, index) but with different wrapper layouts"
+    }
+  ],
+  "patterns": [
+    {
+      "pattern": "globalThis.confirm() used in application hooks and presentation components",
+      "occurrences": [
+        "apps/payments/src/features/payment-methods/application/hooks/usePaymentMethodsManager.ts:42",
+        "apps/studio/src/features/products/presentation/components/inline-editor/EditorToolbar.tsx:169",
+        "apps/studio/src/features/products/presentation/components/inline-editor/TemplatePicker.tsx:30",
+        "apps/payments/src/features/payment-methods/presentation/components/PaymentMethodTable.tsx:127",
+        "apps/admin/src/features/templates/presentation/components/TemplateTable.tsx:134"
+      ],
+      "recommendation": "Consider creating a shared confirm dialog or use the existing inline confirm pattern (already used in ProductTableRow) for consistency and testability."
+    },
+    {
+      "pattern": "No direct API calls (fetch/axios/supabase) in presentation components",
+      "occurrences": [],
+      "recommendation": "Good pattern observed: all data access goes through application-layer hooks. No DIP violations of this type were found."
+    },
+    {
+      "pattern": "Large prop interfaces on table/list components",
+      "occurrences": [
+        "apps/admin/src/features/users/presentation/components/UserTable.tsx (14 props)",
+        "apps/studio/src/features/products/presentation/components/ProductTableRow.tsx (11 props)"
+      ],
+      "recommendation": "Table components with many props are common in admin UIs. Acceptable under KISS, but ISP suggests grouping related props (filter state, selection state) into typed sub-objects."
+    }
+  ]
+}

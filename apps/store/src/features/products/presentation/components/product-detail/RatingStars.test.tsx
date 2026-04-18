@@ -1,49 +1,43 @@
-/* eslint-disable testing-library/no-node-access */
-import { render } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import { describe, it, expect } from "vitest";
 
 import { RatingStars } from "@/features/products/presentation/components/product-detail/RatingStars";
 
 describe("RatingStars", () => {
   it("renders 5 stars", () => {
-    const { container } = render(<RatingStars rating={3} />);
-    const stars = container.querySelectorAll("svg");
-    expect(stars).toHaveLength(5);
+    render(<RatingStars rating={3} />);
+    expect(screen.getAllByTestId("rating-star")).toHaveLength(5);
   });
 
   it("fills stars based on rounded rating", () => {
-    const { container } = render(<RatingStars rating={4} />);
-    const stars = container.querySelectorAll("svg");
-    const filledStars = [...stars].filter((s) =>
-      (s.getAttribute("class") ?? "").includes("fill-current"),
-    );
+    render(<RatingStars rating={4} />);
+    const stars = screen.getAllByTestId("rating-star");
+
+    const filledStars = stars.filter((s) => s.dataset.filled === "true");
     expect(filledStars).toHaveLength(4);
   });
 
   it("renders 0 filled stars for rating 0", () => {
-    const { container } = render(<RatingStars rating={0} />);
-    const stars = container.querySelectorAll("svg");
-    const filledStars = [...stars].filter((s) =>
-      (s.getAttribute("class") ?? "").includes("fill-current"),
-    );
+    render(<RatingStars rating={0} />);
+    const stars = screen.getAllByTestId("rating-star");
+
+    const filledStars = stars.filter((s) => s.dataset.filled === "true");
     expect(filledStars).toHaveLength(0);
   });
 
   it("renders 5 filled stars for rating 5", () => {
-    const { container } = render(<RatingStars rating={5} />);
-    const stars = container.querySelectorAll("svg");
-    const filledStars = [...stars].filter((s) =>
-      (s.getAttribute("class") ?? "").includes("fill-current"),
-    );
+    render(<RatingStars rating={5} />);
+    const stars = screen.getAllByTestId("rating-star");
+
+    const filledStars = stars.filter((s) => s.dataset.filled === "true");
     expect(filledStars).toHaveLength(5);
   });
 
   it("renders unfilled stars with muted class", () => {
-    const { container } = render(<RatingStars rating={2} />);
-    const stars = container.querySelectorAll("svg");
-    const mutedStars = [...stars].filter((s) =>
-      (s.getAttribute("class") ?? "").includes("text-muted-foreground"),
-    );
+    render(<RatingStars rating={2} />);
+    const stars = screen.getAllByTestId("rating-star");
+
+    const mutedStars = stars.filter((s) => s.dataset.filled === "false");
     expect(mutedStars).toHaveLength(3);
   });
 
@@ -59,9 +53,10 @@ describe("RatingStars", () => {
       foreground: "var(--candy-text)",
       accent: "--pink",
     };
-    const { container } = render(<RatingStars rating={3} theme={theme} />);
-    const stars = container.querySelectorAll("svg");
-    const themedStars = [...stars].filter(
+    render(<RatingStars rating={3} theme={theme} />);
+    const stars = screen.getAllByTestId("rating-star");
+
+    const themedStars = stars.filter(
       (s) => s.getAttribute("style")?.includes("var(--pink)") ?? false,
     );
     expect(themedStars).toHaveLength(3);

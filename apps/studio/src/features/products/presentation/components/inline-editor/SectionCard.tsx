@@ -7,6 +7,7 @@ import { useCallback, useEffect } from "react";
 import type { Control } from "react-hook-form";
 import { useController, useFieldArray } from "react-hook-form";
 import { tid } from "shared";
+import { cn } from "ui";
 
 import { AutoTextarea } from "./AutoTextarea";
 import { InlineRemoveButton } from "./InlineRemoveButton";
@@ -16,7 +17,7 @@ import { SectionItemsGallery } from "./SectionItemsGallery";
 import { SectionItemsTwoColumn } from "./SectionItemsTwoColumn";
 import type { SectionFieldArray } from "./sectionItemTypes";
 
-import { useLangToggle } from "@/features/products/application/useLangToggle";
+import { useLangToggle } from "@/features/products/application/hooks/useLangToggle";
 import { SECTION_I18N_NAMESPACE } from "@/features/products/domain/constants";
 import type { ProductFormValues } from "@/features/products/domain/validationSchema";
 import type { CategoryTheme } from "@/shared/domain/categoryConstants";
@@ -186,7 +187,10 @@ export function SectionCard({
           {...tid(`section-collapse-${sectionIndex}`)}
         >
           <ChevronDown
-            className={`size-4 transition-transform ${isCollapsed ? "-rotate-90" : ""}`}
+            className={cn(
+              "size-4 transition-transform",
+              isCollapsed && "-rotate-90",
+            )}
           />
         </button>
 

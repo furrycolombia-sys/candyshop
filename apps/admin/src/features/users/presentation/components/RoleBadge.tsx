@@ -2,6 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { tid } from "shared";
+import { cn } from "ui";
 
 import type { UserRole } from "@/features/users/domain/types";
 
@@ -22,7 +23,11 @@ export function RoleBadge({ role }: RoleBadgeProps) {
 
   return (
     <span
-      className={`inline-flex items-center rounded-none border-2 px-2 py-0.5 font-display text-xs font-bold uppercase tracking-wider ${ROLE_STYLES[role]}`}
+      className={cn(
+        "inline-flex items-center rounded-none border-2 px-2 py-0.5 font-display text-xs font-bold uppercase tracking-wider",
+        ROLE_STYLES[role],
+      )}
+      data-variant={role}
       {...tid(`role-badge-${role}`)}
     >
       {t(role)}

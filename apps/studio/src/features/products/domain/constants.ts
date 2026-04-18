@@ -5,6 +5,12 @@ import type { ProductFormValues } from "./validationSchema";
 /** Shared React Query key for products — used across all hooks */
 export const PRODUCTS_QUERY_KEY = "products";
 
+/** React Query key for product templates */
+export const TEMPLATES_QUERY_KEY = "product-templates";
+
+/** Debounce delay for product search/filter inputs (ms) */
+export const PRODUCT_SEARCH_DEBOUNCE_MS = 300;
+
 export const PRODUCT_TYPES: ProductType[] = [
   "merch",
   "digital",

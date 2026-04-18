@@ -1,8 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { createBrowserSupabaseClient } from "api/supabase";
-import { useMemo } from "react";
+import { useSupabase } from "shared";
 
 import { fetchPendingOrderCount } from "@/features/orders/infrastructure/pendingOrderCount";
 
@@ -13,7 +12,7 @@ const STALE_TIME_MS = 30_000;
 const REFETCH_INTERVAL_MS = 60_000;
 
 export function usePendingOrderCount() {
-  const supabase = useMemo(() => createBrowserSupabaseClient(), []);
+  const supabase = useSupabase();
 
   return useQuery({
     // eslint-disable-next-line @tanstack/query/exhaustive-deps -- supabase client is not serializable and is stable (memoized above)

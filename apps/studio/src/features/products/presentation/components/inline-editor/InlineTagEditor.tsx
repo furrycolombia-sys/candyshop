@@ -7,18 +7,11 @@ import type { Control } from "react-hook-form";
 import { useController } from "react-hook-form";
 import { tid } from "shared";
 
+import { parseTags } from "@/features/products/domain/utils";
 import type { ProductFormValues } from "@/features/products/domain/validationSchema";
 
 interface InlineTagEditorProps {
   control: Control<ProductFormValues>;
-}
-
-/** Parse comma-separated tag string into array */
-function parseTags(raw: string): string[] {
-  return raw
-    .split(",")
-    .map((t) => t.trim())
-    .filter(Boolean);
 }
 
 export function InlineTagEditor({ control }: InlineTagEditorProps) {
@@ -29,7 +22,7 @@ export function InlineTagEditor({ control }: InlineTagEditorProps) {
   const { value: fieldValue, onChange: fieldOnChange } = field;
   const tags = parseTags(String(fieldValue ?? ""));
   const [newTag, setNewTag] = useState("");
-  const [showInput, setShowInput] = useState(false);
+  const [isInputVisible, setIsInputVisible] = useState(false);
 
   const updateTags = useCallback(
     (updated: string[]) => {
@@ -64,7 +57,7 @@ export function InlineTagEditor({ control }: InlineTagEditorProps) {
         handleAdd();
       }
       if (e.key === "Escape") {
-        setShowInput(false);
+        setIsInputVisible(false);
         setNewTag("");
       }
     },
@@ -93,14 +86,14 @@ export function InlineTagEditor({ control }: InlineTagEditorProps) {
         </span>
       ))}
 
-      {showInput ? (
+      {isInputVisible ? (
         <input
           value={newTag}
           onChange={(e) => setNewTag(e.target.value)}
           onKeyDown={handleKeyDown}
           onBlur={() => {
             handleAdd();
-            setShowInput(false);
+            setIsInputVisible(false);
           }}
           placeholder={t("tagPlaceholder")}
           className="w-28 border-b-2 border-dashed border-foreground/30 bg-transparent px-1 py-0.5 text-xs outline-none placeholder:text-muted-foreground/50 focus:border-foreground/60"
@@ -110,7 +103,7 @@ export function InlineTagEditor({ control }: InlineTagEditorProps) {
       ) : (
         <button
           type="button"
-          onClick={() => setShowInput(true)}
+          onClick={() => setIsInputVisible(true)}
           className="rounded-full border-2 border-dashed border-foreground/30 px-2.5 py-0.5 font-display text-ui-xs font-bold uppercase tracking-widest text-muted-foreground transition-colors hover:border-foreground/60 hover:text-foreground"
           {...tid("inline-tag-add-btn")}
         >

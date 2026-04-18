@@ -1,0 +1,45 @@
+{
+  "agent": "naming-conventions",
+  "review_id": "2026-04-17_22-00-00",
+  "timestamp": "2026-04-17T22:00:00",
+  "scope": "apps/",
+  "summary": {
+    "filesAnalyzed": 250,
+    "issuesFound": 1,
+    "critical": 0,
+    "warning": 1,
+    "suggestion": 0,
+    "info": 0
+  },
+  "issues": [
+    {
+      "id": "NAME-001",
+      "severity": "warning",
+      "title": "Test file name does not match source file name",
+      "file": "apps/store/src/features/cart/presentation/components/CartDrawerWithItems.test.tsx",
+      "line": 1,
+      "currentName": "CartDrawerWithItems.test.tsx",
+      "suggestedName": "CartDrawer.test.tsx (or extract a CartDrawerWithItems.tsx component)",
+      "convention": "Test files must have the same name as the source file they test (e.g. MyComponent.test.tsx for MyComponent.tsx)",
+      "fix": "Either rename this test file to CartDrawer.test.tsx (merging with the existing CartDrawer.test.tsx), or extract a CartDrawerWithItems.tsx component and keep the test as-is. Currently there is no CartDrawerWithItems.tsx source file but both CartDrawer.test.tsx and CartDrawerWithItems.test.tsx exist — both import from ./CartDrawer."
+    }
+  ],
+  "patterns": [
+    {
+      "description": "All component (.tsx) files outside Next.js app router directories consistently use PascalCase. App router files (page.tsx, layout.tsx, error.tsx, providers.tsx, global-error.tsx) correctly use lowercase Next.js convention.",
+      "type": "positive"
+    },
+    {
+      "description": "All hook files in */hooks/* directories consistently start with 'use' prefix followed by PascalCase (e.g. useAuditLog.ts, useProductMutations.ts). No violations found.",
+      "type": "positive"
+    },
+    {
+      "description": "All utility files in */utils/* directories consistently use camelCase (e.g. computeRole.ts, formatLastSeen.ts, getApiBasePath.ts). No violations found.",
+      "type": "positive"
+    },
+    {
+      "description": "All test files for hooks and components follow the <SourceName>.test.<ext> pattern. One exception found (NAME-001).",
+      "type": "mixed"
+    }
+  ]
+}

@@ -54,8 +54,9 @@ export function useUserDelegates(userId: string | null) {
   return useQuery({
     queryKey: [USER_DELEGATES_QUERY_KEY, userId],
     queryFn: async (): Promise<UserDelegatesResponse> => {
+      if (!userId) throw new Error("userId is required");
       const basePath = getApiBasePath();
-      const response = await fetch(delegatesUrl(basePath, userId as string), {
+      const response = await fetch(delegatesUrl(basePath, userId), {
         credentials: SAME_ORIGIN,
       });
       if (!response.ok) throw new Error("Failed to load delegates");

@@ -23,7 +23,7 @@ describe("StatusRow", () => {
     const { container } = render(
       <StatusRow label="DB" status="operational" statusLabel="OK" />,
     );
-    const dot = container.querySelector(".bg-success");
+    const dot = container.querySelector('[data-status="operational"]');
     expect(dot).toBeInTheDocument();
   });
 
@@ -31,7 +31,7 @@ describe("StatusRow", () => {
     const { container } = render(
       <StatusRow label="DB" status="degraded" statusLabel="Slow" />,
     );
-    const dot = container.querySelector(".bg-warning");
+    const dot = container.querySelector('[data-status="degraded"]');
     expect(dot).toBeInTheDocument();
   });
 
@@ -39,7 +39,7 @@ describe("StatusRow", () => {
     const { container } = render(
       <StatusRow label="DB" status="down" statusLabel="Offline" />,
     );
-    const dot = container.querySelector(".bg-destructive");
+    const dot = container.querySelector('[data-status="down"]');
     expect(dot).toBeInTheDocument();
   });
 });

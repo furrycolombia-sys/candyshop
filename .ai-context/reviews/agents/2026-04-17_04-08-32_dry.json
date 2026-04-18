@@ -1,0 +1,97 @@
+{
+  "agent": "dry",
+  "timestamp": "2026-04-17T04:08:32",
+  "scope": "apps/",
+  "summary": {
+    "filesAnalyzed": 28,
+    "issuesFound": 5,
+    "critical": 0,
+    "warning": 3,
+    "suggestion": 2,
+    "info": 0
+  },
+  "issues": [
+    {
+      "id": "DRY-001",
+      "severity": "warning",
+      "title": "Time-conversion constants duplicated across 3 feature files",
+      "description": "MINUTES_PER_HOUR, SECONDS_PER_MINUTE, and MS_PER_SECOND are independently defined in three separate files. packages/shared already has a constants/time.ts file that currently only exposes QUERY-related constants; these time-unit primitives should live there instead.",
+      "locations": [
+        "apps/store/src/features/cart/application/cartCookiePersistence.ts:9-10 (local consts, private)",
+        "apps/payments/src/features/checkout/domain/constants.ts:15-17 (exported)",
+        "apps/admin/src/features/users/domain/constants.ts:184-186 (exported)"
+      ],
+      "fix": "Add MS_PER_SECOND, SECONDS_PER_MINUTE, MINUTES_PER_HOUR, and HOURS_PER_DAY to packages/shared/src/constants/time.ts and export them. Then replace the three local definitions with imports from 'shared'."
+    },
+    {
+      "id": "DRY-002",
+      "severity": "warning",
+      "title": "Duplicate useSellerProfiles hook in store and payments",
+      "description": "useSellerProfiles(sellerIds: string[]) exists in two apps with the same purpose: fetch display names from user_profiles for a list of seller IDs. The store version inlines the Supabase query directly; the payments version delegates to fetchSellerProfiles. Additionally, payments/shared/infrastructure has a third helper, fetchUserDisplayNames, that performs the identical DB query pattern. Three implementations of the same data-fetch logic.",
+      "locations": [
+        "apps/store/src/features/cart/application/hooks/useSellerProfiles.ts",
+        "apps/payments/src/features/checkout/application/hooks/useSellerProfiles.ts",
+        "apps/payments/src/features/checkout/infrastructure/checkoutQueries.ts:175-194 (fetchSellerProfiles)",
+        "apps/payments/src/shared/infrastructure/fetchUserDisplayNames.ts (fetchUserDisplayNames)"
+      ],
+      "fix": "Consolidate the Supabase query into a single function in packages/shared (or packages/api) and have both apps import it. The hook wrappers can stay per-app (different staleTime, different error behavior), but the underlying DB fetch should be shared.",
+      "note": "The store version dedupes IDs with Set before querying; the payments version does not. Verify this difference is intentional before merging."
+    },
+    {
+      "id": "DRY-003",
+      "severity": "warning",
+      "title": "validateUuid duplicated in admin and payments API routes",
+      "description": "validateUuid (UUID regex validation throwing on mismatch) is defined independently in apps/admin/src/app/api/admin/_shared/adminRest.ts and apps/payments/src/shared/infrastructure/adminRestClient.ts. Both use a slightly different constant name (UUID_PATTERN vs UUID_REGEX) but the same regex and identical throw logic.",
+      "locations": [
+        "apps/admin/src/app/api/admin/_shared/adminRest.ts:17-65",
+        "apps/payments/src/shared/infrastructure/adminRestClient.ts:3-11"
+      ],
+      "fix": "Move validateUuid and the UUID regex into packages/shared (e.g., packages/shared/src/utils/validateUuid.ts) and import from there in both apps. The admin version uses a different error message constant (INVALID_PAYLOAD_ERROR) — align error messages when consolidating."
+    },
+    {
+      "id": "DRY-004",
+      "severity": "suggestion",
+      "title": "isValidCartItem logic duplicated across store and payments",
+      "description": "isValidCartItem (type-guard checking id/price_usd/quantity) is implemented in apps/store/src/features/cart/application/cartValidation.ts and again inline (private) in apps/payments/src/features/checkout/infrastructure/cartCookie.ts. The payments version additionally checks price_cop. The logic is nearly identical and serves the same purpose: parsing the shared cart cookie.",
+      "locations": [
+        "apps/store/src/features/cart/application/cartValidation.ts:3-17",
+        "apps/payments/src/features/checkout/infrastructure/cartCookie.ts:15-24"
+      ],
+      "fix": "Since the cart cookie is a shared contract between store and payments, consider placing the CartItem shape definition and its validator in packages/shared (or a dedicated cart-cookie package). Both apps can then import one canonical validator.",
+      "note": "The payments validator checks price_cop in addition to price_usd. Reconcile which fields are truly required before merging."
+    },
+    {
+      "id": "DRY-005",
+      "severity": "suggestion",
+      "title": "ProtectedRoute wrapper files are identical in every app",
+      "description": "Five apps (store, admin, payments, studio, playground) each have an identical one-liner ProtectedRoute.tsx that just calls createProtectedRoute(appUrls.auth). The file content is 100% the same across all five.",
+      "locations": [
+        "apps/store/src/features/auth/presentation/components/ProtectedRoute.tsx",
+        "apps/admin/src/features/auth/presentation/components/ProtectedRoute.tsx",
+        "apps/payments/src/features/auth/presentation/components/ProtectedRoute.tsx",
+        "apps/studio/src/features/auth/presentation/components/ProtectedRoute.tsx",
+        "apps/playground/src/features/auth/presentation/components/ProtectedRoute.tsx"
+      ],
+      "fix": "This is a minor duplication acceptable under KISS — each file is one line and the local import of appUrls is intentional (each app may have a different auth URL). No action required unless the pattern grows in complexity. Acceptable as-is."
+    }
+  ],
+  "patterns": [
+    {
+      "name": "display_name ?? email fallback pattern",
+      "description": "The pattern `profile.display_name ?? profile.email.split('@')[0]` or `profile.display_name ?? profile.email` appears in 10+ places across store, auth, studio, admin, and payments. It is already partially abstracted in fetchUserDisplayNames (payments) but the presentation layer still duplicates it inline. Not flagged as a rule violation because individual uses are single expressions, but worth noting as a candidate for a shared formatDisplayName utility in packages/shared.",
+      "occurrences": 10,
+      "files": [
+        "apps/auth/src/features/account/presentation/pages/UserProfilePage.tsx:48",
+        "apps/store/src/features/cart/application/hooks/useSellerProfiles.ts:29",
+        "apps/studio/src/features/seller-admins/presentation/components/DelegateList.tsx:39",
+        "apps/studio/src/features/seller-admins/presentation/components/EditDelegatePermissions.tsx:51",
+        "apps/admin/src/features/users/presentation/components/UserHeader.tsx:47",
+        "apps/admin/src/features/users/presentation/components/UserRow.tsx:56",
+        "apps/admin/src/features/users/presentation/components/delegates/AsDelegateRow.tsx:30",
+        "apps/admin/src/features/users/presentation/components/delegates/AsSellerRow.tsx:27",
+        "apps/payments/src/features/checkout/infrastructure/checkoutQueries.ts:191",
+        "apps/payments/src/shared/infrastructure/fetchUserDisplayNames.ts:24"
+      ]
+    }
+  ]
+}

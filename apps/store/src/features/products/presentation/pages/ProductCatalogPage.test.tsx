@@ -27,7 +27,7 @@ let mockLoading = false;
 let mockError = false;
 let mockData: unknown[] | undefined;
 
-vi.mock("@/features/products/application/useStoreProducts", () => ({
+vi.mock("@/features/products/application/hooks/useStoreProducts", () => ({
   useStoreProducts: () => ({
     data: mockData,
     isLoading: mockLoading,
@@ -35,22 +35,20 @@ vi.mock("@/features/products/application/useStoreProducts", () => ({
   }),
 }));
 
-vi.mock("../components/CategoryFilter", () => ({
-  CategoryFilter: () => <div data-testid="category-filter" />,
+vi.mock("../components/ProductFilters", () => ({
+  ProductFilters: () => (
+    <div>
+      <div data-testid="search-bar" />
+      <div data-testid="category-filter" />
+      <div data-testid="type-filter" />
+    </div>
+  ),
 }));
 
 vi.mock("../components/ProductGrid", () => ({
   ProductGrid: ({ products }: { products: unknown[] }) => (
     <div data-testid="product-grid">{products.length} products</div>
   ),
-}));
-
-vi.mock("../components/SearchBar", () => ({
-  SearchBar: () => <div data-testid="search-bar" />,
-}));
-
-vi.mock("../components/TypeFilter", () => ({
-  TypeFilter: () => <div data-testid="type-filter" />,
 }));
 
 describe("ProductCatalogPage", () => {
