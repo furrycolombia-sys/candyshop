@@ -8,6 +8,9 @@ on:
         required: false
         default: ""
 
+env:
+  PNPM_VERSION: "10.32.1"
+
 jobs:
   quality-checks:
     runs-on: ubuntu-latest
@@ -19,6 +22,8 @@ jobs:
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v6
+        with:
+          version: ${{ env.PNPM_VERSION }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v6
