@@ -1,0 +1,72 @@
+{
+  "agent": "naming-conventions",
+  "review_id": "2026-04-17_10-00-00",
+  "timestamp": "2026-04-17T10:00:00Z",
+  "scope": "apps/",
+  "summary": {
+    "filesAnalyzed": 264,
+    "issuesFound": 3,
+    "critical": 0,
+    "warning": 2,
+    "suggestion": 1,
+    "info": 0
+  },
+  "issues": [
+    {
+      "id": "NAME-002",
+      "severity": "warning",
+      "file": "apps/store/src/features/cart/application/hooks/useAddToCart.ts",
+      "line": 27,
+      "title": "Boolean state variable missing `is/has/can/should` prefix",
+      "description": "The boolean state variable `added` does not follow the boolean naming convention. Boolean variables should have an `is`, `has`, `can`, or `should` prefix to clearly communicate their type and intent. It is also exposed on the public hook return type `UseAddToCartReturn` as `added: boolean`.",
+      "rule": "naming-conventions.md#variables--functions",
+      "fix": "Rename `added` to `isAdded` (state, setter, and return type interface field)."
+    },
+    {
+      "id": "NAME-003",
+      "severity": "warning",
+      "file": "apps/studio/src/features/products/presentation/components/inline-editor/InlineTagEditor.tsx",
+      "line": 26,
+      "title": "Boolean state variable missing `is/has/can/should` prefix",
+      "description": "The boolean state variable `showInput` does not follow the boolean naming convention. Boolean variables should have an `is`, `has`, `can`, or `should` prefix.",
+      "rule": "naming-conventions.md#variables--functions",
+      "fix": "Rename `showInput` to `isInputVisible` or `isShowingInput`."
+    },
+    {
+      "id": "NAME-004",
+      "severity": "suggestion",
+      "file": "apps/store/src/features/cart/application/CartContext.tsx",
+      "line": 0,
+      "title": "Context file located in application root instead of application/context subfolder",
+      "description": "CartContext.tsx and FlyToCartContext.tsx live directly under `features/cart/application/` rather than a dedicated `application/context/` subfolder, which is the pattern used in all other apps (`shared/application/context/ErrorContext.tsx`). This is inconsistent with the project pattern and makes the application layer root directory harder to navigate.",
+      "rule": "naming-conventions.md#files--folders",
+      "fix": "Consider moving to `apps/store/src/features/cart/application/context/CartContext.tsx` for consistency with the project's established folder pattern."
+    }
+  ],
+  "patterns": [
+    {
+      "type": "positive",
+      "description": "All 51 hook files across all apps correctly follow the `use` prefix convention without exception."
+    },
+    {
+      "type": "positive",
+      "description": "All component files in presentation/components and presentation/pages directories use PascalCase naming consistently."
+    },
+    {
+      "type": "positive",
+      "description": "All exported global constants use SCREAMING_SNAKE_CASE (e.g., PRODUCTS_QUERY_KEY, PERMISSION_GROUPS, USER_TABLE_COLUMN_COUNT)."
+    },
+    {
+      "type": "positive",
+      "description": "Prop interfaces consistently use `ComponentName + Props` suffix across all apps."
+    },
+    {
+      "type": "positive",
+      "description": "Utility/infrastructure files correctly use camelCase (e.g., delegateQueries.ts, productMutations.ts, cartCookiePersistence.ts)."
+    },
+    {
+      "type": "positive",
+      "description": "Type-specific files (GalleryTypes.ts, PaymentMethodTypes.ts, CategoryTypes.ts, SectionItemTypes.ts) correctly use PascalCase per the `UserTypes.ts` convention."
+    }
+  ]
+}

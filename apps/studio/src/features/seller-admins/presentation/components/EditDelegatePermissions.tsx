@@ -10,6 +10,7 @@ import type {
   DelegatePermission,
   DelegateWithProfile,
 } from "@/features/seller-admins/domain/types";
+import { getDisplayName } from "@/features/seller-admins/domain/utils";
 
 interface EditDelegatePermissionsProps {
   delegate: DelegateWithProfile;
@@ -47,8 +48,7 @@ export function EditDelegatePermissions({
     <div className="space-y-3 rounded-lg border p-4">
       <p className="text-sm font-medium">
         {t("editPermissionsFor", {
-          name:
-            delegate.admin_profile.display_name ?? delegate.admin_profile.email,
+          name: getDisplayName(delegate.admin_profile),
         })}
       </p>
 

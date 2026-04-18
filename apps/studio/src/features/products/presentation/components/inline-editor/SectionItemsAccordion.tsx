@@ -16,7 +16,7 @@ import { InlineAddButton } from "./InlineAddButton";
 import { InlineRemoveButton } from "./InlineRemoveButton";
 import type { SectionFieldArray } from "./sectionItemTypes";
 
-import { useLangToggle } from "@/features/products/application/useLangToggle";
+import { useLangToggle } from "@/features/products/application/hooks/useLangToggle";
 import {
   ITEM_DROPPABLE_PREFIX,
   SECTION_I18N_NAMESPACE,
@@ -42,7 +42,7 @@ function AccordionItemEditor({
 }) {
   const t = useTranslations(SECTION_I18N_NAMESPACE);
   const { lang, toggleLang } = useLangToggle();
-  const [open, setOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
 
   const titleField = useController({
     control,
@@ -103,11 +103,11 @@ function AccordionItemEditor({
         {/* Expand / collapse toggle */}
         <button
           type="button"
-          onClick={() => setOpen((v) => !v)}
+          onClick={() => setIsOpen((v) => !v)}
           className="shrink-0 text-muted-foreground hover:text-foreground"
-          aria-expanded={open}
+          aria-expanded={isOpen}
         >
-          {open ? (
+          {isOpen ? (
             <Minus className="size-5 shrink-0" />
           ) : (
             <Plus className="size-5 shrink-0" />
@@ -116,7 +116,7 @@ function AccordionItemEditor({
       </div>
 
       {/* Expanded content — mirrors store AccordionItem answer area */}
-      {open && (
+      {isOpen && (
         <div
           className="border-t-strong border-foreground px-5 pb-5 pt-4"
           style={{ backgroundColor: theme.bgLight }}
@@ -161,7 +161,7 @@ export function SectionItemsAccordion({
     <div className="flex flex-col gap-3 p-4">
       <Droppable
         droppableId={`${ITEM_DROPPABLE_PREFIX}${sectionIndex}`}
-        type="ITEM"
+        type={`${ITEM_DROPPABLE_PREFIX}${sectionIndex}`}
       >
         {/* eslint-disable sonarjs/no-nested-functions -- @hello-pangea/dnd requires render-prop pattern */}
         {(provided) => (

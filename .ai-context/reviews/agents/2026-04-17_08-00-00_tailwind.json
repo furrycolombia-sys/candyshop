@@ -1,0 +1,164 @@
+{
+  "agent": "tailwind",
+  "review_id": "2026-04-17_08-00-00",
+  "timestamp": "2026-04-17T08:00:00.000Z",
+  "scope": "apps/",
+  "summary": {
+    "filesAnalyzed": 28,
+    "issuesFound": 8,
+    "critical": 0,
+    "warning": 5,
+    "suggestion": 3,
+    "info": 0
+  },
+  "issues": [
+    {
+      "id": "STYLE-001",
+      "severity": "warning",
+      "category": "Inline Styles - Dynamic Theme Colors",
+      "files": [
+        "apps/store/src/features/products/presentation/components/product-detail/HeroSection.tsx",
+        "apps/store/src/features/products/presentation/components/product-detail/MobileBar.tsx",
+        "apps/store/src/features/products/presentation/components/product-detail/ImageGallery.tsx",
+        "apps/store/src/features/products/presentation/components/product-detail/GalleryOverlays.tsx",
+        "apps/store/src/features/products/presentation/components/product-detail/sections/GallerySection.tsx",
+        "apps/store/src/features/products/presentation/components/product-detail/sections/AccordionItem.tsx",
+        "apps/store/src/features/products/presentation/components/product-detail/sections/CardsSection.tsx",
+        "apps/store/src/features/products/presentation/components/product-detail/sections/TwoColumnSection.tsx",
+        "apps/store/src/features/products/presentation/pages/ProductDetailPage.tsx",
+        "apps/store/src/features/products/presentation/components/ProductBadges.tsx",
+        "apps/store/src/features/products/presentation/components/ProductCardImage.tsx",
+        "apps/studio/src/features/products/presentation/components/inline-editor/SectionItemsAccordion.tsx",
+        "apps/studio/src/features/products/presentation/components/inline-editor/SectionItemsGallery.tsx",
+        "apps/studio/src/features/products/presentation/components/inline-editor/SectionItemsCards.tsx",
+        "apps/studio/src/features/products/presentation/components/inline-editor/SectionItemsTwoColumn.tsx",
+        "apps/studio/src/features/products/presentation/components/inline-editor/InlineHero.tsx",
+        "apps/studio/src/features/products/presentation/components/inline-editor/InlineImageCarousel.tsx"
+      ],
+      "description": "Multiple product detail and inline-editor components use `style={{ backgroundColor: theme.bg }}`, `style={{ color: theme.text }}`, `style={{ borderColor: theme.border }}` etc. These reference dynamic CSS variable strings from `categoryConstants.ts` (e.g. `var(--pink)`, `color-mix(in srgb, var(--pink) 15%, transparent)`). Since the values are runtime-dynamic (depend on product category), inline styles are the only correct approach here — Tailwind JIT cannot generate arbitrary dynamic values. This is an accepted pattern, not a bug. Noting for awareness.",
+      "note": "This is intentional and correct. Dynamic per-category theming requires inline styles. The CSS variable references use the project's semantic candy color system. No action required.",
+      "rule": "Inline styles are acceptable when the color value is truly dynamic and cannot be resolved at build time."
+    },
+    {
+      "id": "STYLE-002",
+      "severity": "warning",
+      "category": "Inline Styles - Landing Dynamic Colors",
+      "files": [
+        "apps/landing/src/features/home/presentation/components/RolesSection.tsx",
+        "apps/landing/src/features/home/presentation/components/FeaturesSection.tsx"
+      ],
+      "description": "Role cards and category feature cards use `style={{ backgroundColor: cardBg, color: cardText }}` where the values are CSS variable strings from a constant array (e.g. `var(--pink)`, `var(--mint)`, `var(--lemon)`). The values are from a fixed constant list, not truly runtime-dynamic. Since Tailwind cannot know which `bg-pink`, `bg-mint` etc. will be rendered for each card in the list, inline styles using CSS variables are an acceptable approach here. However, these could potentially be refactored using Tailwind's `bg-[var(--pink)]` arbitrary value syntax or a small set of predefined CSS classes per candy color.",
+      "suggestion": "Consider using CSS classes like `bg-pink`, `bg-mint`, etc. if these candy color tokens are mapped in the Tailwind theme (they are: `--color-pink: var(--pink)` in packages/ui/src/styles/theme.css). This would allow: `className=\"bg-pink text-candy-text\"` directly instead of inline styles, which is cleaner and more consistent with the Tailwind utility-first approach.",
+      "rule": "Prefer Tailwind utility classes over inline styles when the color is in the theme."
+    },
+    {
+      "id": "STYLE-003",
+      "severity": "warning",
+      "category": "cn() Not Used - Template Literal Class Concatenation in Sidebars",
+      "files": [
+        "apps/admin/src/shared/presentation/components/AdminSidebar.tsx",
+        "apps/payments/src/shared/presentation/components/PaymentsSidebarNav.tsx",
+        "apps/payments/src/shared/presentation/components/PaymentsSidebar.tsx"
+      ],
+      "description": "These sidebar components use template literal string concatenation (`className={\`base-classes ${conditional ? 'a' : 'b'}\`}`) for conditional classes instead of the `cn()` utility. Neither file imports `cn`. Using template literals for conditional Tailwind classes can lead to class conflicts (e.g., `tailwind-merge` cannot deduplicate conflicting utilities). The `cn()` utility (clsx + tailwind-merge) is the project standard for conditional classes.",
+      "example_violation": "className={`group relative flex items-center gap-3 ... ${isActive ? 'bg-foreground text-background' : 'text-muted-foreground hover:bg-muted hover:text-foreground'}`}",
+      "example_fix": "import { cn } from 'ui'; ... className={cn('group relative flex items-center gap-3 ...', isActive ? 'bg-foreground text-background' : 'text-muted-foreground hover:bg-muted hover:text-foreground')}",
+      "rule": "Use cn() for conditional Tailwind classes."
+    },
+    {
+      "id": "STYLE-004",
+      "severity": "warning",
+      "category": "cn() Not Used - Template Literal Class Concatenation in Other Components",
+      "files": [
+        "apps/store/src/features/products/presentation/components/ProductCard.tsx",
+        "apps/store/src/features/products/presentation/components/ProductCardImage.tsx",
+        "apps/payments/src/features/orders/presentation/components/OrderCard.tsx",
+        "apps/payments/src/features/orders/presentation/components/OrderStatusBadge.tsx",
+        "apps/payments/src/features/received-orders/presentation/pages/ReceivedOrdersPageContent.tsx",
+        "apps/payments/src/features/received-orders/presentation/components/ConfirmActionPanel.tsx",
+        "apps/payments/src/features/received-orders/presentation/components/ConfirmActionPanel.tsx",
+        "apps/admin/src/features/users/presentation/components/TemplateButtons.tsx",
+        "apps/admin/src/features/users/presentation/components/RoleBadge.tsx",
+        "apps/admin/src/features/audit/presentation/components/AuditTable.tsx",
+        "apps/admin/src/features/dashboard/presentation/components/ActivityRow.tsx",
+        "apps/studio/src/features/products/presentation/components/inline-editor/LangTextarea.tsx",
+        "apps/studio/src/features/products/presentation/components/inline-editor/InlineHero.tsx",
+        "apps/landing/src/features/home/presentation/components/FeaturesSection.tsx"
+      ],
+      "description": "Multiple components across apps use template literal string concatenation for dynamic className values where cn() should be used. This is widespread and represents a consistent pattern deviation from the cn() standard.",
+      "rule": "Use cn() for conditional Tailwind classes to benefit from tailwind-merge deduplication."
+    },
+    {
+      "id": "STYLE-005",
+      "severity": "warning",
+      "category": "Inline Style - Aspect Ratio Hack",
+      "files": [
+        "apps/payments/src/features/checkout/presentation/components/DisplayBlockRenderer.tsx:54"
+      ],
+      "description": "Uses `style={{ paddingBottom: '56.25%' }}` on a `relative w-full` container for the 16:9 aspect ratio trick. Tailwind v4 / modern CSS supports `aspect-ratio` natively via `aspect-video` (16:9) or `aspect-[16/9]`.",
+      "example_violation": "<div className=\"relative w-full\" style={{ paddingBottom: '56.25%' }}>",
+      "example_fix": "<div className=\"relative w-full aspect-video\">",
+      "rule": "Use Tailwind's aspect-ratio utilities instead of the padding-bottom hack."
+    },
+    {
+      "id": "STYLE-006",
+      "severity": "suggestion",
+      "category": "Inline Style - Canvas size",
+      "files": [
+        "apps/store/src/features/products/presentation/components/FeaturedRibbon.tsx:189"
+      ],
+      "description": "Uses `style={{ width: s, height: s }}` on a canvas element where `s` is a computed number value (pixel dimensions for the canvas). Since canvas requires numeric pixel dimensions and `s` is a JavaScript runtime value, inline style is the correct approach here.",
+      "note": "Accepted pattern for canvas elements that need numeric pixel dimensions.",
+      "rule": "Canvas elements with runtime-computed pixel dimensions may use inline styles."
+    },
+    {
+      "id": "STYLE-007",
+      "severity": "suggestion",
+      "category": "Arbitrary Font Size Values",
+      "files": [
+        "apps/landing/src/features/home/presentation/components/FeaturesSection.tsx:123"
+      ],
+      "description": "Uses `text-[1.55rem]`, `sm:text-[1.8rem]`, `lg:text-[2rem]` — arbitrary font size values for a display heading. These are not part of the design system typography scale. The project has semantic typography classes defined in globals.css. If these specific sizes are needed for the landing page hero typography, consider adding a named semantic utility class (e.g. `.text-hero-title`) to globals.css for consistency.",
+      "rule": "Minimize arbitrary values; define semantic typography tokens for repeated custom sizes."
+    },
+    {
+      "id": "STYLE-008",
+      "severity": "suggestion",
+      "category": "Arbitrary Width Value",
+      "files": [
+        "apps/payments/src/shared/presentation/components/PaymentsMobileSidebar.tsx:39"
+      ],
+      "description": "Uses `w-[18rem]` for the mobile sidebar sheet width. This is a one-off arbitrary value. Consider using a Tailwind theme extension (e.g. `w-72` = 18rem in Tailwind's default scale) or defining it as a named token.",
+      "note": "`w-72` in Tailwind's default scale equals 18rem (288px), which is equivalent to `w-[18rem]`.",
+      "example_fix": "Replace `w-[18rem]` with `w-72`",
+      "rule": "Use Tailwind's default spacing scale instead of arbitrary values when an equivalent exists."
+    }
+  ],
+  "patterns": [
+    {
+      "id": "PAT-001",
+      "type": "good",
+      "description": "Semantic color system well-adopted. No raw Tailwind palette colors (bg-red-500, text-blue-500, etc.) found across all app TSX files. All status/state indicators use semantic tokens (bg-success, bg-warning, bg-destructive, bg-info, text-muted-foreground, etc.). The STATUS_CLASS_MAP in payments and getDotClass/getActionClass in admin all correctly use semantic color tokens."
+    },
+    {
+      "id": "PAT-002",
+      "type": "good",
+      "description": "No hardcoded hex colors in className attributes. All hex values are confined to CSS variable definitions in packages/ui/src/styles/colors.css, not in component className strings."
+    },
+    {
+      "id": "PAT-003",
+      "type": "good",
+      "description": "@source directive for ui package scanning is present in all apps/*/src/app/globals.css files, ensuring Tailwind JIT generates classes used in the shared ui package."
+    },
+    {
+      "id": "PAT-004",
+      "type": "concern",
+      "description": "cn() utility is imported in only 7 TSX files across all apps, while template literal class concatenation is used extensively in 14+ files. The project uses cn() inconsistently — it should be the standard for any conditional className composition."
+    },
+    {
+      "id": "PAT-005",
+      "type": "good",
+      "description": "Dynamic category/product theming via categoryConstants.ts correctly uses CSS variables (var(--pink), color-mix(), etc.) as the single source of truth, flowing through inline styles when values are runtime-dynamic. This is an intentional and correct architectural decision."
+    }
+  ]
+}

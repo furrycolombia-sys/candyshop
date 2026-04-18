@@ -1,0 +1,177 @@
+{
+  "agent": "pattern-discovery",
+  "timestamp": "2026-04-17T02:58:21",
+  "scope": "apps/",
+  "summary": {
+    "filesAnalyzed": 732,
+    "issuesFound": 8,
+    "critical": 0,
+    "warning": 4,
+    "suggestion": 3,
+    "info": 1
+  },
+  "issues": [
+    {
+      "id": "PAT-001",
+      "severity": "warning",
+      "category": "Inconsistent Pattern",
+      "title": "AppTopNavigation implemented differently in every app",
+      "description": "All 7 apps have an AppTopNavigation wrapper that calls useCurrentUserPermissions() and passes the result to AppNavigation. However, the implementations differ in how they handle the permissionState: store/landing pass it directly (simplest), admin/payments destructure then reconstruct, playground destructures then reconstructs with an intermediate variable, auth destructures and spreads individually, and studio spreads grantedKeys into a new array. The functional result is identical but the code diverges across apps.",
+      "affectedFiles": [
+        "apps/admin/src/shared/presentation/components/AppTopNavigation.tsx",
+        "apps/auth/src/shared/presentation/components/AppTopNavigation.tsx",
+        "apps/landing/src/shared/presentation/components/AppTopNavigation.tsx",
+        "apps/payments/src/shared/presentation/components/AppTopNavigation.tsx",
+        "apps/playground/src/shared/presentation/components/AppTopNavigation.tsx",
+        "apps/store/src/shared/presentation/components/AppTopNavigation.tsx",
+        "apps/studio/src/shared/presentation/components/AppTopNavigation.tsx"
+      ],
+      "recommendation": "Standardize on the simplest form used by store/landing: `const permissionState = useCurrentUserPermissions(); return <AppNavigation {...props} permissionState={permissionState} />;`. The studio variant unnecessarily spreads grantedKeys into a new array (`[...grantedKeys]`), which creates a new reference on every render and could affect memoization. The app-components package's AppNavigation already takes the full permissionState shape, so no destructuring is needed."
+    },
+    {
+      "id": "PAT-002",
+      "severity": "warning",
+      "category": "Duplicate Code — Missing Abstraction",
+      "title": "global-error.tsx is identical across all 7 apps",
+      "description": "The file apps/*/src/app/global-error.tsx is byte-for-byte identical in all 7 apps. It renders a simple 'Something went wrong' full-page error with a Reload button. Because it must be a Client Component and must include <html>/<body> tags (Next.js requirement for global errors), it cannot be a standard shared component imported at runtime. However, it could be a factory/template in the shared package that each app's global-error.tsx re-exports or wraps.",
+      "affectedFiles": [
+        "apps/admin/src/app/global-error.tsx",
+        "apps/auth/src/app/global-error.tsx",
+        "apps/landing/src/app/global-error.tsx",
+        "apps/payments/src/app/global-error.tsx",
+        "apps/playground/src/app/global-error.tsx",
+        "apps/store/src/app/global-error.tsx",
+        "apps/studio/src/app/global-error.tsx"
+      ],
+      "recommendation": "Extract the inner layout (the JSX without the wrapping <html>/<body>) to a shared component like `GlobalErrorContent` in packages/app-components or packages/shared. Each app's global-error.tsx keeps the <html>/<body> wrapper and renders the shared content component. This reduces 7 identical files to 1 shared component + 7 minimal wrappers."
+    },
+    {
+      "id": "PAT-003",
+      "severity": "warning",
+      "category": "Inconsistent Pattern",
+      "title": "categoryConstants duplicated between store and studio with comment acknowledging it",
+      "description": "apps/store/src/shared/domain/categoryConstants.ts and apps/studio/src/shared/domain/categoryConstants.ts contain nearly identical code: the same CategoryTheme interface, the same TINT_LIGHT/TINT_SUBTLE/FOREGROUND constants, the same tintedColor/buildTheme helper functions, and the same CATEGORY_THEMES map. The studio file even has a comment saying it 'mirrors store's CategoryTheme'. The only difference is that store exports PRODUCT_CATEGORIES and getCategoryColor while studio omits them.",
+      "affectedFiles": [
+        "apps/store/src/shared/domain/categoryConstants.ts",
+        "apps/studio/src/shared/domain/categoryConstants.ts"
+      ],
+      "recommendation": "Move CategoryTheme, CATEGORY_THEMES, getCategoryTheme, and the internal helpers (tintedColor, buildTheme) to packages/shared (or packages/ui if purely visual). Both apps import from the shared package. PRODUCT_CATEGORIES and getCategoryColor are store-specific and stay in store. The studio comment 'mirrors store's CategoryTheme' signals this is a known cross-app concern that was not yet promoted to shared."
+    },
+    {
+      "id": "PAT-004",
+      "severity": "warning",
+      "category": "Inconsistent Pattern",
+      "title": "payments app uses createIntlProxy instead of createSupabaseIntlProxy despite having protected routes",
+      "description": "apps/payments/src/proxy.ts uses the simpler `createIntlProxy(routing)` (no Supabase session handling), while apps/store, admin, and studio all use `createSupabaseIntlProxy({ routing, updateSession })`. The payments app has ProtectedRoute, ApiAuthBootstrap, and accesses user session in components (useSupabaseAuth, useSupabase). Without createSupabaseIntlProxy, the Supabase session cookie is not refreshed on each middleware pass, which can cause stale session issues for protected routes.",
+      "affectedFiles": ["apps/payments/src/proxy.ts"],
+      "recommendation": "Switch payments proxy.ts to use createSupabaseIntlProxy with updateSupabaseSession, consistent with store, admin, and studio. This ensures the auth session is properly refreshed on middleware execution for the payments app's protected routes.",
+      "note": "This may be intentional if payments relies on the auth app's session cookie being refreshed upstream, but it should be explicitly documented if so."
+    },
+    {
+      "id": "PAT-005",
+      "severity": "suggestion",
+      "category": "Inconsistent Pattern",
+      "title": "Studio useProducts/useDelegateSearch use createBrowserSupabaseClient+useMemo instead of useSupabase hook",
+      "description": "Most hooks across all apps (admin, payments, auth, studio mutations) use `const supabase = useSupabase()` from the shared package. However, `useProducts` and `useDelegateSearch` in studio use `const supabase = useMemo(() => createBrowserSupabaseClient(), [])` directly, with an eslint-disable comment explaining the supabase client is stable. These two hooks call fetchProducts/searchUsers which take supabase as a parameter (dependency injection pattern), while other hooks also inject supabase but get it from useSupabase. The mixed approach adds a lint suppression and an eslint-disable comment unnecessarily.",
+      "affectedFiles": [
+        "apps/studio/src/features/products/application/hooks/useProducts.ts",
+        "apps/studio/src/features/seller-admins/application/hooks/useDelegateSearch.ts"
+      ],
+      "recommendation": "Use `useSupabase()` consistently. The useSupabase hook from shared already provides a stable reference to the browser Supabase client and doesn't require useMemo or an eslint-disable comment."
+    },
+    {
+      "id": "PAT-006",
+      "severity": "suggestion",
+      "category": "Inconsistent Pattern",
+      "title": "admin imports useSupabase via @/ re-export instead of direct from shared",
+      "description": "Admin app hooks import useSupabase as `import { useSupabase } from '@/shared/application/hooks/useSupabase'` (which re-exports from 'shared'), while all other apps (payments, auth, studio) import directly as `import { useSupabase } from 'shared'`. The admin re-export file is a one-liner (`export { useSupabase } from 'shared'`) that adds indirection without benefit.",
+      "affectedFiles": [
+        "apps/admin/src/features/settings/application/hooks/usePaymentSettings.ts",
+        "apps/admin/src/features/settings/application/hooks/useUpdateSettings.ts",
+        "apps/admin/src/features/audit/application/hooks/useAuditLog.ts",
+        "apps/admin/src/features/users/application/hooks/useUserProfile.ts",
+        "apps/admin/src/features/users/application/hooks/useUsers.ts",
+        "apps/admin/src/features/templates/application/hooks/useTemplateMutations.ts",
+        "apps/admin/src/features/templates/application/hooks/useTemplates.ts",
+        "apps/admin/src/features/dashboard/application/hooks/useRecentActivity.ts",
+        "apps/admin/src/shared/application/hooks/useSupabase.ts"
+      ],
+      "recommendation": "Admin hooks should import `useSupabase` directly from `'shared'`, consistent with all other apps. The intermediate re-export file `apps/admin/src/shared/application/hooks/useSupabase.ts` can be removed. Note that the admin already uses `import { tid } from 'shared'` and other shared imports directly in some files, showing the precedent exists."
+    },
+    {
+      "id": "PAT-007",
+      "severity": "suggestion",
+      "category": "Inconsistent Pattern",
+      "title": "Globals.css @source directive inconsistency: some apps have extra self-scan directive",
+      "description": "Three apps (auth, landing, playground) have two @source directives: `@source '../**/*.{ts,tsx}'` (scans the app itself) plus `@source '../../../../packages/ui/src/**/*.{ts,tsx}'` (scans ui package). The other four apps (admin, payments, store, studio) only have the ui package scan. Tailwind v4 with Next.js should auto-detect the app's own files, so the extra `../` self-scan in auth/landing/playground may be unnecessary boilerplate, or conversely the other apps may be missing it.",
+      "affectedFiles": [
+        "apps/auth/src/app/globals.css",
+        "apps/landing/src/app/globals.css",
+        "apps/playground/src/app/globals.css"
+      ],
+      "recommendation": "Determine whether the self-scan `@source '../**/*.{ts,tsx}'` directive is needed. If Next.js 16 + Tailwind v4 auto-detects app files, remove the extra directive from auth/landing/playground for consistency. If it IS needed (e.g., for monorepo isolation), add it to admin/payments/store/studio as well."
+    },
+    {
+      "id": "PAT-008",
+      "severity": "info",
+      "category": "Good Pattern",
+      "title": "Consistent re-export wrappers for cross-app shared infrastructure",
+      "description": "All apps follow a clean, consistent pattern of re-exporting shared infrastructure through app-local files: useSupabaseAuth re-exports from 'auth/client', QueryProvider and ThemeProvider re-export from 'shared/providers', ApiAuthBootstrap re-exports from 'shared/providers', AccessDeniedState re-exports from 'shared/components', ErrorContext re-exports from 'shared/providers'. This allows each app to import from its own @/ namespace (`@/features/auth/...`) while the actual implementation lives in the shared packages. The pattern decouples apps from package internals and enables easier future refactoring.",
+      "affectedFiles": [
+        "apps/*/src/features/auth/application/hooks/useSupabaseAuth.ts",
+        "apps/*/src/shared/infrastructure/providers/QueryProvider.tsx",
+        "apps/*/src/shared/infrastructure/providers/ThemeProvider.tsx",
+        "apps/*/src/shared/infrastructure/providers/ApiAuthBootstrap.tsx",
+        "apps/*/src/shared/presentation/components/AccessDeniedState.tsx",
+        "apps/*/src/shared/application/context/ErrorContext.tsx"
+      ],
+      "recommendation": "Continue and enforce this re-export wrapper pattern. New shared primitives (from auth, shared, ui packages) should be introduced through local wrappers rather than direct cross-app imports. Document this as an official pattern in the monorepo architecture docs."
+    }
+  ],
+  "patterns": [
+    {
+      "name": "App-level re-export wrappers for shared primitives",
+      "description": "All apps consistently wrap shared package exports (auth client, providers, utils) in local re-export files under @/features/auth and @/shared/infrastructure. This enables refactoring of shared packages without touching feature code.",
+      "status": "good",
+      "examples": [
+        "apps/*/src/features/auth/application/hooks/useSupabaseAuth.ts -> export { useSupabaseAuth } from 'auth/client'",
+        "apps/*/src/shared/infrastructure/providers/QueryProvider.tsx -> export { QueryProvider } from 'shared/providers'"
+      ]
+    },
+    {
+      "name": "createAppRuntimeProviders factory for app bootstrapping",
+      "description": "Admin, payments, and studio use createAppRuntimeProviders() from shared/providers to assemble their client-side provider tree. Store and landing have custom manual implementations. This factory pattern is good but not consistently applied.",
+      "status": "inconsistent",
+      "examples": [
+        "apps/admin/src/app/[locale]/providers.tsx: createAppRuntimeProviders({ authHostUrl, mswProvider, wrapper })",
+        "apps/store/src/app/[locale]/providers.tsx: manual Providers function with NuqsAdapter + CartProvider"
+      ]
+    },
+    {
+      "name": "Infrastructure query functions accept supabase as parameter (dependency injection)",
+      "description": "All infrastructure query files (productQueries.ts, delegateQueries.ts, settingsQueries.ts, etc.) accept the supabase client as a parameter rather than calling createBrowserSupabaseClient internally. This makes them easily unit-testable by passing a mock client. The one exception is store/productQueries.ts which calls createBrowserSupabaseClient() internally — consistent with store's simpler query pattern.",
+      "status": "good",
+      "examples": [
+        "studio/infrastructure/productQueries.ts: fetchProducts(supabase: SupabaseDB, filters?)",
+        "admin/infrastructure/settingsQueries.ts: fetchPaymentSettings(supabase: SupabaseClient)"
+      ]
+    },
+    {
+      "name": "Route files are thin wrappers — layout owns structure",
+      "description": "All apps consistently use thin page.tsx route files that only import and render feature page components. The [locale]/layout.tsx holds the structural shell (nav, sidebar, providers). This is the documented standard.",
+      "status": "good",
+      "examples": [
+        "apps/studio/src/app/[locale]/products/new/page.tsx",
+        "apps/admin/src/app/[locale]/users/page.tsx"
+      ]
+    },
+    {
+      "name": "MSW passthrough in apps without mocks",
+      "description": "Studio has an MSWProvider that is a pure passthrough fragment (returns <>children</>) because it does not use MSW mocks, yet it maintains provider interface compatibility. This is an intentional and documented pattern for keeping provider shapes consistent.",
+      "status": "good",
+      "examples": [
+        "apps/studio/src/shared/infrastructure/providers/MSWProvider.tsx"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,115 @@
+{
+  "agent": "performance",
+  "timestamp": "2026-04-17T18:00:00",
+  "scope": "apps/",
+  "summary": {
+    "filesAnalyzed": 22,
+    "issuesFound": 5,
+    "critical": 0,
+    "warning": 3,
+    "suggestion": 2,
+    "info": 0
+  },
+  "issues": [
+    {
+      "id": "PERF-001",
+      "severity": "warning",
+      "title": "Inline arrow callbacks recreated on every render inside .map()",
+      "file": "apps/payments/src/features/checkout/presentation/pages/CheckoutPageContent.tsx",
+      "line": 209,
+      "issueType": "callback",
+      "description": "Inside the groups.map() loop, each SellerCheckoutCard receives `onSubmit={(params) => handleSubmit(group.sellerId, group.items, group.subtotalCop, params)}`. This creates a new function reference on every render for every group. Because `handleSubmit` is already memoized via useCallback, the only cost is the extra closure allocation per-group per-render, but if SellerCheckoutCard is ever wrapped in React.memo the memoization would be broken.",
+      "impact": "Each render creates N new function objects (one per seller group). If SellerCheckoutCard is memoized, props always differ — defeating memoization.",
+      "rule": "code-review-standards.md#performance-standards",
+      "fix": "Refactor SellerCheckoutCard to accept sellerId + items + subtotalCop directly and call handleSubmit internally, or restructure handleSubmit to take a single group-shaped argument so a stable useCallback per group can be formed using a map."
+    },
+    {
+      "id": "PERF-002",
+      "severity": "warning",
+      "title": "Inline callback in .map() for PaymentMethodsPageContent toggle/delete/move",
+      "file": "apps/payments/src/features/payment-methods/presentation/pages/PaymentMethodsPageContent.tsx",
+      "line": 122,
+      "issueType": "callback",
+      "description": "Inside the methods.map() loop, `onClick={() => handleMoveUp(index)}`, `onClick={() => handleMoveDown(index)}`, `onClick={() => handleToggleExpand(method.id)}`, `onClick={() => handleDelete(method.id)}`, and `onCheckedChange={(checked) => handleToggleActive(method.id, checked)}` all create new closures on every render for every method. This is a list that could grow and is rendered inside a management UI.",
+      "impact": "O(n) new function objects created on every render pass where n = number of payment methods. Any memoized child row component would receive always-different props.",
+      "rule": "code-review-standards.md#performance-standards",
+      "fix": "Extract each method row into a separate memoized component (e.g. PaymentMethodRow) that receives only `method`, `index`, `total`, and stable handler callbacks. Handlers in the child call parent functions with method.id already closed over once at mount."
+    },
+    {
+      "id": "PERF-003",
+      "severity": "warning",
+      "title": "ProductTable passes inline arrow callbacks per row inside .map()",
+      "file": "apps/studio/src/features/products/presentation/components/ProductTable.tsx",
+      "line": 168,
+      "issueType": "callback",
+      "description": "`onToggle={(field, value) => handleToggle(product.id, field, value)}` and `onDelete={() => handleDelete(product.id)}` are new closures per product per render. Both handleToggle and handleDelete are already stabilised with useCallback, but the wrapping arrow still allocates a new function each render for each product.",
+      "impact": "For a list of N products, 2N new function objects per render. The Draggable/ProductTableRow component is not currently memoized, but this pattern is a common pre-condition for future performance regressions when wrapping with memo.",
+      "rule": "code-review-standards.md#performance-standards",
+      "fix": "Pass product.id as a prop to ProductTableRow and have the row invoke the stable parent callbacks with its own id. This removes the need for inline wrappers."
+    },
+    {
+      "id": "PERF-004",
+      "severity": "suggestion",
+      "title": "FeaturedRibbon runs a canvas animation (rAF loop) on every product card/detail render",
+      "file": "apps/store/src/features/products/presentation/components/FeaturedRibbon.tsx",
+      "line": 159,
+      "issueType": "rendering",
+      "description": "FeaturedRibbon uses requestAnimationFrame in a continuous loop (draw calls rAF recursively) to animate a shine effect. This animation runs independently for each featured product rendered on the page simultaneously (e.g. on the catalog page, featured product card + hero section). Each instance has its own persistent rAF loop consuming a frame callback slot.",
+      "impact": "If multiple featured products are visible at once (e.g. grid + detail), multiple independent animation loops run in parallel. Each loop redraws a canvas every ~16ms even when the element is off-screen or the tab is in background (until cleanup).",
+      "rule": "code-review-standards.md#performance-standards",
+      "fix": "Consider using a CSS animation/transition instead of a canvas rAF loop for the shine effect (simpler, GPU-composited, pauses when tab is hidden). If the canvas approach is required, use the Page Visibility API to pause the loop when `document.visibilityState === 'hidden'`."
+    },
+    {
+      "id": "PERF-005",
+      "severity": "suggestion",
+      "title": "ImageGallery computes gridTemplateColumns as an inline style with dynamic value inside render",
+      "file": "apps/store/src/features/products/presentation/components/product-detail/ImageGallery.tsx",
+      "line": 217,
+      "issueType": "rendering",
+      "description": "`style={{ gridTemplateColumns: \\`repeat(${String(images.length)}, 1fr)\\` }}` creates a new object on every render. While images.length rarely changes, the object is still reallocated each render cycle, and the string is reconstructed unnecessarily.",
+      "impact": "Minor per-render allocation. Low impact but trivially avoidable.",
+      "rule": "code-review-standards.md#performance-standards",
+      "fix": "Memoize the style object: `const thumbGridStyle = useMemo(() => ({ gridTemplateColumns: \\`repeat(${images.length}, 1fr)\\` }), [images.length]);` and pass `style={thumbGridStyle}`. Note: images is already memoized in this component so the dependency is stable."
+    }
+  ],
+  "patterns": [
+    {
+      "pattern": "Inline arrow callbacks inside .map() loops",
+      "files": [
+        "apps/payments/src/features/checkout/presentation/pages/CheckoutPageContent.tsx",
+        "apps/payments/src/features/payment-methods/presentation/pages/PaymentMethodsPageContent.tsx",
+        "apps/studio/src/features/products/presentation/components/ProductTable.tsx"
+      ],
+      "note": "This is a recurring pattern across list renderers. The fix in each case is the same: move per-item callbacks into a dedicated row component so the parent only passes stable handler references."
+    },
+    {
+      "pattern": "Good use of useMemo for derived/filtered lists",
+      "files": [
+        "apps/store/src/features/products/presentation/pages/ProductCatalogPage.tsx",
+        "apps/store/src/features/products/presentation/components/ProductGrid.tsx",
+        "apps/store/src/features/products/presentation/components/product-detail/ImageGallery.tsx",
+        "apps/payments/src/features/checkout/presentation/pages/CheckoutPageContent.tsx",
+        "apps/store/src/features/cart/presentation/components/CartDrawer.tsx"
+      ],
+      "note": "The codebase consistently uses useMemo for filter/sort/grouping operations. This is a positive pattern."
+    },
+    {
+      "pattern": "Good use of useCallback for event handlers passed down",
+      "files": [
+        "apps/studio/src/features/products/presentation/components/ProductTable.tsx",
+        "apps/payments/src/features/received-orders/presentation/pages/ReceivedOrdersPageContent.tsx",
+        "apps/store/src/features/cart/application/CartContext.tsx"
+      ],
+      "note": "Top-level handlers are properly memoized. The issue is only the final binding layer (inline closures inside .map())."
+    },
+    {
+      "pattern": "Infrastructure queries use Promise.all for parallel fetching",
+      "files": [
+        "apps/payments/src/features/orders/infrastructure/orderQueries.ts",
+        "apps/payments/src/features/received-orders/infrastructure/receivedOrderQueries.ts",
+        "apps/admin/src/app/api/admin/users/[userId]/delegates/route.ts"
+      ],
+      "note": "Good — no N+1 sequential await patterns found in infrastructure layer."
+    }
+  ]
+}

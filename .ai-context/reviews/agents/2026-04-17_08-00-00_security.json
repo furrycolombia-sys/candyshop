@@ -1,0 +1,113 @@
+{
+  "agent": "security",
+  "review_id": "2026-04-17_08-00-00",
+  "timestamp": "2026-04-17T08:00:00.000Z",
+  "scope": "apps/",
+  "summary": {
+    "filesAnalyzed": 16,
+    "issuesFound": 6,
+    "critical": 0,
+    "warning": 4,
+    "suggestion": 2,
+    "info": 0
+  },
+  "issues": [
+    {
+      "id": "SEC-001",
+      "severity": "warning",
+      "category": "API Security",
+      "title": "Access token returned in response body from refresh endpoint",
+      "file": "apps/auth/src/app/api/auth/refresh/route.ts",
+      "line": 83,
+      "description": "The /api/auth/refresh endpoint returns the access token in the JSON response body (`{ ok: true, accessToken: session.access_token }`). The token is also set in an HttpOnly cookie. Exposing the raw JWT in the response body means any JavaScript running on the page can read it, increasing the XSS attack surface for token theft. If the intent is purely cookie-based auth, the response body token is unnecessary.",
+      "fix": "Remove `accessToken` from the response body. Rely solely on the HttpOnly cookie already being set. If the caller explicitly needs the token (e.g. memory-only storage), document why and ensure the caller never persists it in localStorage/sessionStorage."
+    },
+    {
+      "id": "SEC-002",
+      "severity": "warning",
+      "category": "Input Validation / Injection",
+      "title": "sellerId not UUID-validated before use in PostgREST queries",
+      "file": "apps/payments/src/app/api/checkout/payment-methods/route.ts",
+      "line": 183,
+      "description": "The `sellerId` value from the request body is validated only for being a non-empty string (line 243), but it is then passed directly to `fetchPaymentMethodsBySeller` and `validateStock`, which interpolate it into PostgREST filter strings (e.g. `seller_id=eq.${sellerId}`). If an attacker crafts a sellerId containing PostgREST operators (e.g. `abc,id=not.null`), it may alter the query semantics. While PostgREST's parameterization mitigates full injection, malformed values can cause unexpected query behavior or errors that leak internal details.",
+      "fix": "Apply `validateUuid(sellerId)` (already defined in `adminRest.ts`) before using it in any query. The same `validateUuid` helper is used for userId throughout the admin routes — apply it consistently here."
+    },
+    {
+      "id": "SEC-003",
+      "severity": "warning",
+      "category": "Input Validation / Injection",
+      "title": "Item IDs not UUID-validated before use in PostgREST IN clause",
+      "file": "apps/payments/src/app/api/checkout/payment-methods/route.ts",
+      "line": 177,
+      "description": "In `fetchProductsByIds`, the product IDs from sanitized items are joined directly into a PostgREST `in.(...)` filter: `id: \\`in.(${productIds.join(',')})\\``. The `sanitizeItems` function validates that IDs are non-empty strings, but does NOT validate them as UUIDs. An attacker could supply a crafted id string containing commas or closing parentheses to potentially escape the IN list. UUID validation would prevent this entirely.",
+      "fix": "Add UUID format validation in `sanitizeItems` for the `record.id` field before accepting it, or call `validateUuid` on each id before building the IN clause. The `validateUuid` helper already exists in `adminRest.ts` and uses a strict UUID regex."
+    },
+    {
+      "id": "SEC-004",
+      "severity": "warning",
+      "category": "Input Validation",
+      "title": "fetchGrantedPermissions in payments route uses unvalidated userId",
+      "file": "apps/payments/src/app/api/checkout/payment-methods/route.ts",
+      "line": 167,
+      "description": "The `fetchGrantedPermissions` function in the payments route uses `user_id: \\`eq.${userId}\\`` without UUID validation (compare: the admin route's identical function in `adminRest.ts` uses `validateUuid(userId)`). While `user.id` comes from a Supabase JWT and is therefore trusted in practice, the inconsistency is a code-quality security risk — if the source of `user.id` changes, there is no defensive UUID check.",
+      "fix": "Apply UUID validation: `user_id: \\`eq.${validateUuid(userId)}\\`` — mirror the pattern used in the admin route."
+    },
+    {
+      "id": "SEC-005",
+      "severity": "suggestion",
+      "category": "CSP",
+      "title": "Content-Security-Policy uses unsafe-inline and unsafe-eval across all apps",
+      "file": "apps/*/next.config.ts",
+      "line": 23,
+      "description": "All seven apps (store, admin, auth, landing, playground, payments, studio) define the same CSP that includes `'unsafe-inline'` for script-src and `'unsafe-eval'`. While this is a common requirement for Next.js development, `'unsafe-eval'` in particular is a significant weakening of XSS protection and should be removed in production if possible. `'unsafe-inline'` for scripts nullifies most script-src protections.",
+      "fix": "Investigate whether `'unsafe-eval'` is still required (it was needed by older Next.js versions for hot-reload and some webpack internals, but Next.js 15+ with SWC may not require it). Use nonce-based or hash-based CSP to replace `'unsafe-inline'` for scripts. Consider using a separate development vs. production CSP configuration."
+    },
+    {
+      "id": "SEC-006",
+      "severity": "suggestion",
+      "category": "Environment Variables",
+      "title": "NEXT_PUBLIC_SUPABASE_ANON_KEY read in server-side infrastructure code",
+      "file": "apps/admin/src/features/audit/infrastructure/auditQueries.ts",
+      "line": 19,
+      "description": "Two server-side infrastructure files (`auditQueries.ts` and `recentActivityQueries.ts`) read `process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY`. The `NEXT_PUBLIC_` prefix causes Next.js to embed the value in client-side bundles. This is expected for the Supabase anon key (it is a public key by design), but the usage in server-only infrastructure creates a misleading pattern: future developers might copy this pattern for genuinely secret keys assuming it is fine on the server.",
+      "fix": "Informational / low priority. Consider documenting in a code comment that `NEXT_PUBLIC_SUPABASE_ANON_KEY` is intentionally public and safe to expose. For other server-only secrets, always use non-NEXT_PUBLIC_ env vars (e.g. `SUPABASE_SERVICE_ROLE_KEY` is already correctly handled this way)."
+    }
+  ],
+  "patterns": [
+    {
+      "id": "PAT-001",
+      "type": "positive",
+      "description": "All admin API routes consistently authenticate callers using getAuthorizedAdmin() before any data access — no unprotected admin endpoints found."
+    },
+    {
+      "id": "PAT-002",
+      "type": "positive",
+      "description": "SUPABASE_SERVICE_ROLE_KEY is correctly read from a non-NEXT_PUBLIC_ environment variable in all server-side routes and never exposed to client bundles."
+    },
+    {
+      "id": "PAT-003",
+      "type": "positive",
+      "description": "All apps define security headers (X-Frame-Options, X-Content-Type-Options, Strict-Transport-Security, Referrer-Policy, Permissions-Policy, CSP) via next.config.ts."
+    },
+    {
+      "id": "PAT-004",
+      "type": "positive",
+      "description": "No hardcoded secrets, bearer tokens, or known key patterns (sk_live, ghp_, AKIA, etc.) found in source files."
+    },
+    {
+      "id": "PAT-005",
+      "type": "positive",
+      "description": "CORS origins in the auth refresh endpoint are restricted to a whitelist of known app URLs sourced from environment variables — no wildcard origin permitted."
+    },
+    {
+      "id": "PAT-006",
+      "type": "positive",
+      "description": "No dangerouslySetInnerHTML usage found anywhere in the apps directory."
+    },
+    {
+      "id": "PAT-007",
+      "type": "inconsistency",
+      "description": "UUID validation is applied to userId in adminRest.ts and admin routes, but NOT applied to sellerId or item IDs in the payments checkout routes — creating an inconsistent validation posture between apps."
+    }
+  ]
+}

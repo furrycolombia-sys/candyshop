@@ -227,7 +227,10 @@
     "nameRequired": "Name (EN) is required",
     "newMethodDefault": "New Payment Method",
     "optional": "optional",
-    "dragToReorder": "Drag to reorder"
+    "dragToReorder": "Drag to reorder",
+    "removeBlock": "Remove block",
+    "removeField": "Remove field",
+    "imageUnavailable": "Image unavailable"
   },
   "common": {
     "loading": "Loading...",

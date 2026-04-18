@@ -9,7 +9,7 @@ export default function EnvPage() {
     return (
       <main className="p-8 font-mono text-sm">
         <h1 className="text-xl font-bold mb-2">Environment Variables</h1>
-        <p className="text-red-500">
+        <p className="text-destructive">
           ENV_DEBUG is not enabled. Set ENV_DEBUG=true in your env file.
         </p>
       </main>
@@ -36,14 +36,12 @@ export default function EnvPage() {
         <tbody>
           {rows.map(([key, value]) => (
             <tr key={key} className="border-b border-foreground/10">
-              <td className="py-1 pr-4 text-blue-500 whitespace-nowrap">
-                {key}
-              </td>
+              <td className="py-1 pr-4 text-info whitespace-nowrap">{key}</td>
               <td className="py-1 break-all max-w-xl">
                 {value ? (
-                  <span className="text-green-600">{value}</span>
+                  <span className="text-success">{value}</span>
                 ) : (
-                  <span className="text-red-500 italic">not set</span>
+                  <span className="text-destructive italic">not set</span>
                 )}
               </td>
             </tr>

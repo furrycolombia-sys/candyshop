@@ -6,7 +6,7 @@
 import { Clock } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { i18nField, tid } from "shared";
+import { tid } from "shared";
 
 import { ActionButtons } from "./ActionButtons";
 import { ReceiptViewer } from "./ReceiptViewer";
@@ -14,18 +14,14 @@ import { ReceivedStatusBadge } from "./ReceivedStatusBadge";
 
 import { EXPIRING_SOON_THRESHOLD_MS } from "@/features/received-orders/domain/constants";
 import type {
-  OrderItem,
   ReceivedOrder,
   SellerAction,
 } from "@/features/received-orders/domain/types";
 import { formatCop } from "@/shared/application/utils/formatCop";
+import { getItemName } from "@/shared/domain/orderUtils";
 
 /** Re-compute interval for "expiring soon" check (every minute) */
 const TICK_INTERVAL_MS = 60_000;
-
-function getItemName(item: OrderItem, locale: string): string {
-  return i18nField(item.metadata, "name", locale) || item.product_id;
-}
 
 function isUrl(value: string): boolean {
   return value.startsWith("https://");
@@ -81,22 +77,16 @@ export function ReceivedOrderCard({
   const t = useTranslations("receivedOrders");
   const locale = useLocale();
 
-  const handleAction = useCallback(
-    (action: SellerAction, note?: string) => {
-      onAction(order.id, action, note);
-    },
-    [order.id, onAction],
-  );
+  const [isExpiringSoon, setIsExpiringSoon] = useState(() => {
+    const d = order.expires_at ? new Date(order.expires_at) : null;
+    return d === null
+      ? false
+      : d.getTime() - Date.now() < EXPIRING_SOON_THRESHOLD_MS;
+  });
 
   const expiresAt = useMemo(
     () => (order.expires_at ? new Date(order.expires_at) : null),
     [order.expires_at],
-  );
-
-  const [isExpiringSoon, setIsExpiringSoon] = useState(() =>
-    expiresAt === null
-      ? false
-      : expiresAt.getTime() - Date.now() < EXPIRING_SOON_THRESHOLD_MS,
   );
 
   useEffect(() => {
@@ -108,6 +98,13 @@ export function ReceivedOrderCard({
     const id = setInterval(tick, TICK_INTERVAL_MS);
     return () => clearInterval(id);
   }, [expiresAt]);
+
+  const handleAction = useCallback(
+    (action: SellerAction, note?: string) => {
+      onAction(order.id, action, note);
+    },
+    [order.id, onAction],
+  );
 
   return (
     <div

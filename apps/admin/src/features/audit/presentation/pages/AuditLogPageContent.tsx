@@ -4,7 +4,7 @@ import { useTranslations } from "next-intl";
 import { useQueryStates } from "nuqs";
 import { tid } from "shared";
 
-import { useAuditLog } from "@/features/audit/application/useAuditLog";
+import { useAuditLog } from "@/features/audit/application/hooks/useAuditLog";
 import { AUDIT_PAGE_SIZE } from "@/features/audit/domain/constants";
 import { auditSearchParams } from "@/features/audit/domain/searchParams";
 import { AuditFilters } from "@/features/audit/presentation/components/AuditFilters";

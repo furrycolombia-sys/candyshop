@@ -13,11 +13,12 @@ vi.mock("next-intl", () => ({
 vi.mock("shared", () => ({
   tid: (id: string) => ({ "data-testid": id }),
   i18nPrice: () => "$25",
+  i18nCurrencyCode: () => "USD",
 }));
 
 vi.mock("@/features/cart/application/hooks/useAddToCart", () => ({
   useAddToCart: () => ({
-    added: false,
+    isAdded: false,
     quantityInCart: 0,
     handleAddToCart: vi.fn(),
   }),

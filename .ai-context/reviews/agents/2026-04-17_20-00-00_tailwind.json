@@ -1,0 +1,82 @@
+{
+  "agent": "tailwind",
+  "review_id": "2026-04-17_20-00-00",
+  "timestamp": "2026-04-17T20:00:00",
+  "scope": "apps/",
+  "summary": {
+    "filesAnalyzed": 18,
+    "issuesFound": 2,
+    "critical": 0,
+    "warning": 1,
+    "suggestion": 1,
+    "info": 0
+  },
+  "issues": [
+    {
+      "id": "STYLE-001",
+      "severity": "warning",
+      "category": "STYLE",
+      "file": "apps/studio/src/features/products/presentation/components/inline-editor/PriceInput.tsx",
+      "line": 58,
+      "description": "Template literal used to combine className prop with static Tailwind classes instead of cn() utility.",
+      "snippet": "className={`invisible absolute whitespace-pre ${className}`}",
+      "rule": "Use cn() for combining dynamic/conditional classes",
+      "fix": "Replace template literal with cn(): className={cn('invisible absolute whitespace-pre', className)}"
+    },
+    {
+      "id": "STYLE-002",
+      "severity": "suggestion",
+      "category": "STYLE",
+      "file": "apps/store/src/features/products/presentation/components/CategoryFilter.tsx",
+      "line": 55,
+      "description": "Template literal used to construct a dynamic Tailwind class string inside cn() call. The color value comes from PRODUCT_CATEGORIES constants (CSS variables like 'var(--pink)'), which are used as inline class strings. However, the pattern `${color} text-foreground` is building a class string from a CSS variable value, not a Tailwind class — this may not work as intended since CSS variable references are not Tailwind utility class names.",
+      "snippet": "className={getButtonClass(isActive, `${color} text-foreground`)}",
+      "rule": "Template literal class construction should use cn() and Tailwind-valid classes",
+      "fix": "Verify that the 'color' value in PRODUCT_CATEGORIES resolves to a valid Tailwind class (not a CSS var()). If colors are CSS vars, use style={{ backgroundColor: color }} for the active background instead of embedding CSS var strings in className."
+    }
+  ],
+  "patterns": [
+    {
+      "id": "PAT-001",
+      "type": "good",
+      "description": "@source directives are correctly configured in all 7 apps (store, admin, auth, landing, payments, playground, studio). All include both self-scan and ui package scan directives.",
+      "files": [
+        "apps/store/src/app/globals.css",
+        "apps/admin/src/app/globals.css",
+        "apps/auth/src/app/globals.css",
+        "apps/landing/src/app/globals.css",
+        "apps/payments/src/app/globals.css",
+        "apps/playground/src/app/globals.css",
+        "apps/studio/src/app/globals.css"
+      ]
+    },
+    {
+      "id": "PAT-002",
+      "type": "good",
+      "description": "All apps import from 'ui/globals' for shared theme, ensuring CSS variable consistency across apps. globals.css files are identical in all apps.",
+      "files": ["apps/*/src/app/globals.css"]
+    },
+    {
+      "id": "PAT-003",
+      "type": "good",
+      "description": "No raw Tailwind palette colors (red-*, green-*, blue-*, gray-*, slate-*, etc.) found in any .ts/.tsx files. All color usage goes through semantic tokens.",
+      "files": []
+    },
+    {
+      "id": "PAT-004",
+      "type": "good",
+      "description": "Category color theming uses CSS variables (var(--pink), var(--mint), etc.) via a centralized categoryConstants.ts in packages/shared. Inline styles using theme.bg, theme.bgLight, theme.foreground are intentional — they apply dynamic CSS variable values computed at runtime from category data, which cannot be expressed as static Tailwind classes.",
+      "files": [
+        "packages/shared/src/utils/categoryConstants.ts",
+        "apps/store/src/features/products/presentation/components/ProductBadges.tsx",
+        "apps/store/src/features/products/presentation/components/product-detail/HeroSection.tsx"
+      ]
+    },
+    {
+      "id": "PAT-005",
+      "type": "good",
+      "description": "cn() utility is consistently used for conditional class combinations throughout the codebase.",
+      "files": []
+    }
+  ]
+}

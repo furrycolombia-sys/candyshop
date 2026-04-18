@@ -20,6 +20,7 @@ vi.mock("shared", () => ({
   tid: (id: string) => ({ "data-testid": id }),
   i18nPrice: (product: Record<string, unknown>) =>
     `$${product.price_usd ?? product.price_cop}`,
+  useSupabase: () => ({}),
 }));
 vi.mock("ui", () => ({
   Sheet: ({ children }: { children: React.ReactNode }) => (
@@ -65,7 +66,7 @@ vi.mock("@/features/cart/application/FlyToCartContext", () => ({
 vi.mock("@/features/cart/application/groupBySeller", () => ({
   groupCartBySeller: () => [],
 }));
-vi.mock("@/features/cart/application/useSellerProfiles", () => ({
+vi.mock("@/features/cart/application/hooks/useSellerProfiles", () => ({
   useSellerProfiles: () => ({ data: null }),
 }));
 vi.mock("@/shared/infrastructure/config", () => ({

@@ -1,0 +1,112 @@
+{
+  "agent": "dry",
+  "timestamp": "2026-04-17T02:58:21",
+  "scope": "apps/",
+  "summary": {
+    "filesAnalyzed": 42,
+    "issuesFound": 7,
+    "critical": 0,
+    "warning": 4,
+    "suggestion": 3,
+    "info": 0
+  },
+  "issues": [
+    {
+      "id": "DRY-001",
+      "severity": "warning",
+      "category": "Logic Duplication",
+      "title": "categoryConstants.ts duplicated between store and studio apps",
+      "description": "The entire `categoryConstants.ts` file — including the `CategoryTheme` interface, `buildTheme` helper, `CATEGORY_THEMES` record, and `getCategoryTheme` function — is copy-pasted identically between `apps/store/src/shared/domain/categoryConstants.ts` and `apps/studio/src/shared/domain/categoryConstants.ts`. The studio version even has a comment explicitly acknowledging it: 'mirrors store's CategoryTheme'. Both tests (`categoryConstants.test.ts`) also overlap significantly. The only difference is the import source for `ProductCategory`: store uses `@/shared/domain/CategoryTypes`, studio uses `shared/types`.",
+      "files": [
+        "apps/store/src/shared/domain/categoryConstants.ts",
+        "apps/studio/src/shared/domain/categoryConstants.ts"
+      ],
+      "recommendation": "Move `CategoryTheme`, `buildTheme`, `CATEGORY_THEMES`, `getCategoryTheme` into `packages/shared` (since `ProductCategory` from `shared/types` is already there). Both apps can then import from the shared package. The `getCategoryColor` and `PRODUCT_CATEGORIES` helpers that are store-only can remain in the store."
+    },
+    {
+      "id": "DRY-002",
+      "severity": "warning",
+      "category": "Logic Duplication",
+      "title": "validateUuid and createRestPath duplicated between admin and payments API routes",
+      "description": "`validateUuid` and `createRestPath` are implemented independently in `apps/admin/src/app/api/admin/_shared/adminRest.ts` and `apps/payments/src/app/api/checkout/payment-methods/route.ts`. Both functions have identical logic (UUID regex validation, URLSearchParams builder). The UUID regex patterns differ slightly (admin uses version-constrained `[1-5]`, payments uses a looser pattern) but serve the same purpose. The admin version is already extracted to a shared file; the payments version re-implements it inline.",
+      "files": [
+        "apps/admin/src/app/api/admin/_shared/adminRest.ts",
+        "apps/payments/src/app/api/checkout/payment-methods/route.ts"
+      ],
+      "recommendation": "The payments route already imports `adminFetchJson` from `@/shared/infrastructure/adminRestClient`. Move `validateUuid` and `createRestPath` into that shared client (`apps/payments/src/shared/infrastructure/adminRestClient.ts`) and import them in the route handler, eliminating the inline re-implementations."
+    },
+    {
+      "id": "DRY-003",
+      "severity": "warning",
+      "category": "Logic Duplication",
+      "title": "getSupabaseConfig and auditQuery duplicated within admin app",
+      "description": "Within `apps/admin`, both `src/shared/infrastructure/recentActivityQueries.ts` and `src/features/audit/infrastructure/auditQueries.ts` define identical `getSupabaseConfig()` functions and near-identical `auditQuery()` functions. The constants `PARAM_ORDER`, `PARAM_SELECT`, and `ORDER_BY_TIMESTAMP_DESC` are also duplicated between the two files.",
+      "files": [
+        "apps/admin/src/shared/infrastructure/recentActivityQueries.ts",
+        "apps/admin/src/features/audit/infrastructure/auditQueries.ts"
+      ],
+      "recommendation": "Extract `getSupabaseConfig`, `auditQuery`, and the shared constants (`PARAM_ORDER`, `PARAM_SELECT`, `ORDER_BY_TIMESTAMP_DESC`) into a new file at `apps/admin/src/shared/infrastructure/auditRestClient.ts`. Both query files can then import from that shared client."
+    },
+    {
+      "id": "DRY-004",
+      "severity": "warning",
+      "category": "Logic Duplication",
+      "title": "formatCOP/formatCop duplicated between studio and payments apps",
+      "description": "`apps/studio/src/features/products/presentation/components/ProductTableRow.tsx` defines a local `formatCOP` function using `Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', ... })`. `apps/payments/src/shared/application/utils/formatCop.ts` exports an identical `formatCop` function. The studio version is private (not exported) and uses a slightly different config (`maximumFractionDigits: 0` explicitly). This is the same knowledge duplicated.",
+      "files": [
+        "apps/studio/src/features/products/presentation/components/ProductTableRow.tsx",
+        "apps/payments/src/shared/application/utils/formatCop.ts"
+      ],
+      "recommendation": "Move `formatCop` to `packages/shared` (since both studio and payments use it), or have the studio import `formatCop` from `apps/payments` is not correct — instead, extract to `packages/shared/src/utils/formatCop.ts` and import in both apps."
+    },
+    {
+      "id": "DRY-005",
+      "severity": "suggestion",
+      "category": "Logic Duplication",
+      "title": "parseTags duplicated within studio app",
+      "description": "Within `apps/studio`, `parseTags` (split by comma, trim, filter falsy) is defined twice: once in `src/features/products/application/hooks/useProductForm.ts` (named `parseTags`) and once in `src/features/products/presentation/components/inline-editor/InlineTagEditor.tsx` (also named `parseTags`). Both functions are identical.",
+      "files": [
+        "apps/studio/src/features/products/application/hooks/useProductForm.ts",
+        "apps/studio/src/features/products/presentation/components/inline-editor/InlineTagEditor.tsx"
+      ],
+      "recommendation": "Extract `parseTags` to `apps/studio/src/features/products/domain/utils.ts` (or the existing `domain/` layer) and import it in both places. This is a minor within-feature DRY violation."
+    },
+    {
+      "id": "DRY-006",
+      "severity": "suggestion",
+      "category": "Logic Duplication",
+      "title": "getItemName duplicated between OrderItemsList and ReceivedOrderCard",
+      "description": "Both `apps/payments/src/features/orders/presentation/components/OrderItemsList.tsx` and `apps/payments/src/features/received-orders/presentation/components/ReceivedOrderCard.tsx` define an identical `getItemName(item: OrderItem, locale: string): string` function with the same body: `i18nField(item.metadata, 'name', locale) || item.product_id`.",
+      "files": [
+        "apps/payments/src/features/orders/presentation/components/OrderItemsList.tsx",
+        "apps/payments/src/features/received-orders/presentation/components/ReceivedOrderCard.tsx"
+      ],
+      "recommendation": "Extract `getItemName` to `apps/payments/src/shared/domain/orderUtils.ts` and import it in both components. Both orders and received-orders features deal with the same `OrderItem` type, so the shared domain level is appropriate."
+    },
+    {
+      "id": "DRY-007",
+      "severity": "suggestion",
+      "category": "Type Duplication",
+      "title": "CartItem and SellerGroup redefined in payments/checkout with different shape than store/cart",
+      "description": "`apps/store/src/features/cart/domain/types.ts` exports `CartItem` and `SellerGroup`. `apps/payments/src/features/checkout/domain/types.ts` redefines both interfaces with a different (flattened/extended) shape. The payments `CartItem` has an explicit `[key: string]: unknown` index signature to accept the full product row from the cookie. The `SellerGroup` in payments adds `sellerName` and renames `subtotal` to `subtotalCop`. These are intentionally different shapes (the comment in payments acknowledges the cookie shape), so this is accepted architectural duplication, not a violation. Noting as suggestion for awareness.",
+      "files": [
+        "apps/store/src/features/cart/domain/types.ts",
+        "apps/payments/src/features/checkout/domain/types.ts"
+      ],
+      "recommendation": "Document clearly that `payments/checkout/domain/types.ts::CartItem` is intentionally a looser superset of `store/cart/domain/types.ts::CartItem` to accommodate cookie deserialization. If both apps evolve, consider sharing a base `CartItemBase` type in `packages/shared` and extending in each app. Low priority — the current approach is intentional and documented."
+    }
+  ],
+  "patterns": [
+    {
+      "name": "createWrapper test pattern",
+      "description": "26 test files across all apps define a near-identical `createWrapper()` function that wraps children in a `QueryClientProvider` with `retry: false`. This is an acceptable pattern for isolated hook tests (test code DRY exceptions apply per rules), but could benefit from a shared `createTestWrapper` utility in each app's `src/test/` setup file if it becomes burdensome.",
+      "files_count": 26,
+      "severity": "info"
+    },
+    {
+      "name": "MSWProvider wrapper pattern",
+      "description": "Three apps (admin, store, payments) have identical `MSWProvider.tsx` wrapper files that delegate to `SharedMSWProvider` from `shared/providers`. This pattern is correct architecture (apps wire up their own mocks path) and is not a DRY violation.",
+      "severity": "info"
+    }
+  ]
+}

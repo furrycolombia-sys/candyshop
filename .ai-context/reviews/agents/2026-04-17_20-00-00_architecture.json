@@ -1,0 +1,110 @@
+{
+  "agent": "architecture",
+  "review_id": "2026-04-17_20-00-00",
+  "timestamp": "2026-04-17T20:00:00",
+  "scope": "apps/",
+  "summary": {
+    "filesAnalyzed": 30,
+    "issuesFound": 8,
+    "critical": 0,
+    "warning": 5,
+    "suggestion": 3,
+    "info": 0
+  },
+  "issues": [
+    {
+      "id": "ARCH-001",
+      "severity": "warning",
+      "category": "Feature Isolation",
+      "file": "apps/store/src/features/products/presentation/components/product-detail/HeroSection.tsx",
+      "line": 11,
+      "description": "Cross-feature import: `products` feature imports directly from `cart` feature (`useAddToCart`). Both ProductCard.tsx and MobileBarWithCart.tsx follow the same pattern.",
+      "rule": "Features must not import directly from other features",
+      "fix": "This is a valid use of the cart's public barrel index (`@/features/cart`), so the import path is compliant. However, consider whether cart interaction belongs in the products presentation layer or should be composed at the page/provider level. The current pattern couples products to cart."
+    },
+    {
+      "id": "ARCH-002",
+      "severity": "warning",
+      "category": "Feature Isolation",
+      "file": "apps/studio/src/features/products/presentation/pages/ProductListPage.tsx",
+      "line": 7,
+      "description": "Cross-feature imports in a page component: `products` feature imports from both `orders` and `seller-admins` features (`usePendingOrderCount`, `useDelegateCountsByProduct`, `SELLER_ADMINS_READ_PERMISSION`). This couples three features together in one component.",
+      "rule": "Features must not import directly from other features",
+      "fix": "Lift the data aggregation to the route-level (`app/` directory) or a shared hook, then pass the results as props to the feature pages. Alternatively, create a composition page in app/ that retrieves data from each feature independently."
+    },
+    {
+      "id": "ARCH-003",
+      "severity": "warning",
+      "category": "Feature Isolation",
+      "file": "apps/studio/src/features/seller-admins/presentation/pages/ProductDelegatesPage.tsx",
+      "line": 9,
+      "description": "Cross-feature import: `seller-admins` feature imports `useProductById` from the `products` feature application layer.",
+      "rule": "Features must not import directly from other features",
+      "fix": "Pass `productId` and the resolved product data as props from the route wrapper, or expose a shared hook via `@/shared/`."
+    },
+    {
+      "id": "ARCH-004",
+      "severity": "warning",
+      "category": "App Router Thin Wrappers",
+      "file": "apps/payments/src/app/[locale]/payment-methods/page.tsx",
+      "description": "Route page imports `PaymentMethodsPage` via a deep path (`@/features/payment-methods/presentation/pages/PaymentMethodsPage`) instead of using the feature's barrel export. The barrel (`@/features/payment-methods`) does export `PaymentMethodsPage`.",
+      "rule": "Route files should import from the feature's public index barrel",
+      "fix": "Change import to `import { PaymentMethodsPage } from '@/features/payment-methods';`"
+    },
+    {
+      "id": "ARCH-005",
+      "severity": "warning",
+      "category": "DRY / Code Duplication",
+      "file": "apps/payments/src/shared/infrastructure/adminRestClient.ts",
+      "description": "The `adminRestClient` in `payments` and `adminRest.ts` in `admin/src/app/api/admin/_shared/` both implement `createRestPath`, `validateUuid`, and a Supabase admin REST fetch wrapper. This is duplicated infrastructure.",
+      "rule": "Shared infrastructure logic used in multiple apps should live in `packages/shared` or a dedicated server package",
+      "fix": "Extract the shared Supabase admin REST client (UUID regex, createRestPath, validateUuid, adminFetch/adminFetchJson) to `packages/api` or a new `packages/server-utils` package so both apps can import it."
+    },
+    {
+      "id": "ARCH-006",
+      "severity": "suggestion",
+      "category": "Barrel Exports",
+      "file": "apps/*/src/features/*/domain/",
+      "description": "67 feature layers across apps are missing `index.ts` barrel exports (11 domain layers, 21 application layers, 13 infrastructure layers, 22 presentation layers). Without barrel exports, consuming code must use deep paths, which breaks encapsulation and makes refactors harder.",
+      "rule": "Each feature layer should have index.ts exporting its public API",
+      "fix": "Add `index.ts` barrel files to each layer that is currently missing one. Prioritize domain and application layers as they are most commonly consumed externally."
+    },
+    {
+      "id": "ARCH-007",
+      "severity": "suggestion",
+      "category": "Inline Types",
+      "file": "apps/admin/src/features/settings/application/hooks/useUpdateSettings.ts",
+      "line": 12,
+      "description": "Inline anonymous type `{ key: string; value: string }` used as `mutationFn` parameter. The `settings` feature already has `domain/types.ts` and the setting keys are typed as `keyof PaymentSettings`. The mutation parameter type would be more expressive as a named type.",
+      "rule": "Types should be defined in domain/types, not inline in application hooks",
+      "fix": "Add `export interface UpdateSettingPayload { key: keyof PaymentSettings; value: string; }` to `domain/types.ts` and reference it in the hook."
+    },
+    {
+      "id": "ARCH-008",
+      "severity": "suggestion",
+      "category": "Shared Code Policy",
+      "file": "apps/admin/src/shared/application/hooks/useLogExport.ts",
+      "description": "This shared hook is a single re-export of `useAuditLog` from the `audit` feature. A one-line re-export in `shared/` that points back into a specific feature's application layer adds indirection without benefit and obscures the real source.",
+      "rule": "Shared code must be truly generic and used by 2+ features",
+      "fix": "Remove `shared/application/hooks/useLogExport.ts` and have consumers import directly from `@/features/audit/application/hooks/useAuditLog` (using the feature barrel if possible)."
+    }
+  ],
+  "patterns": [
+    {
+      "type": "positive",
+      "description": "All route files (page.tsx) consistently follow the thin-wrapper pattern — they import and render a single feature page, passing only locale/id params. Business logic is correctly kept out of the app router."
+    },
+    {
+      "type": "positive",
+      "description": "App URLs are centralized in `packages/shared/src/config/appUrls.ts` using `app-links.json`, driven by environment variables. No hardcoded localhost URLs in production feature code."
+    },
+    {
+      "type": "positive",
+      "description": "Each feature has a top-level `index.ts` barrel export for its public API. Cross-feature imports that do occur use the feature barrel index rather than deep internal paths (except ARCH-004)."
+    },
+    {
+      "type": "concern",
+      "description": "Three distinct cross-feature import patterns exist in `apps/studio` (products ↔ orders ↔ seller-admins) and `apps/store` (products ↔ cart). These are pragmatic compositions but violate feature isolation. They may be acceptable given the small scale, but should be tracked."
+    }
+  ]
+}

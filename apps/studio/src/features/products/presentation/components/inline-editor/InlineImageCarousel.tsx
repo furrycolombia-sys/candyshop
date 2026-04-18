@@ -38,7 +38,7 @@ export function InlineImageCarousel({ control }: InlineImageCarouselProps) {
   const watchedImages = useWatch({ control, name: "images" });
 
   const [activeIndex, setActiveIndex] = useState(0);
-  const [editingMain, setEditingMain] = useState(false);
+  const [isEditingMain, setIsEditingMain] = useState(false);
   const [brokenImages, setBrokenImages] = useState<Set<number>>(new Set());
 
   // Keep activeIndex in bounds
@@ -79,7 +79,7 @@ export function InlineImageCarousel({ control }: InlineImageCarouselProps) {
       fit: "cover",
     });
     setActiveIndex(fields.length);
-    setEditingMain(true);
+    setIsEditingMain(true);
   }, [append, fields.length]);
 
   const handleRemove = useCallback(
@@ -96,6 +96,7 @@ export function InlineImageCarousel({ control }: InlineImageCarouselProps) {
       if (index <= safeIndex && safeIndex > 0) {
         setActiveIndex(safeIndex - 1);
       }
+      setIsEditingMain(false);
     },
     [remove, safeIndex],
   );
@@ -124,7 +125,7 @@ export function InlineImageCarousel({ control }: InlineImageCarouselProps) {
   );
 
   const toggleEditMain = useCallback(() => {
-    setEditingMain((prev) => !prev);
+    setIsEditingMain((prev) => !prev);
   }, []);
 
   /* ---- Thumbnail placeholder (no URL or broken) ---- */
@@ -158,8 +159,14 @@ export function InlineImageCarousel({ control }: InlineImageCarouselProps) {
       <>
         <button
           type="button"
-          onClick={() => setActiveIndex(index)}
-          className={`flex items-center justify-center size-16 border-strong transition-all overflow-hidden ${activeCls}`}
+          onClick={() => {
+            setActiveIndex(index);
+            setIsEditingMain(false);
+          }}
+          className={cn(
+            "flex items-center justify-center size-16 border-strong transition-all overflow-hidden",
+            activeCls,
+          )}
           style={isActive ? { backgroundColor: theme.bg } : undefined}
           aria-label={t("imageNumber", { number: index + 1 })}
         >
@@ -194,13 +201,15 @@ export function InlineImageCarousel({ control }: InlineImageCarouselProps) {
           onClick={() => handleSetCover(index)}
           aria-label={t("setAsCover")}
           className="absolute -bottom-1.5 -right-1.5 z-10 flex size-5 items-center justify-center rounded-full bg-background border border-foreground/20"
+          data-cover={watchedImages?.[index]?.is_cover ? "true" : "false"}
           {...tid(`image-thumb-cover-${String(index)}`)}
         >
           <Star
+            data-filled={watchedImages?.[index]?.is_cover ?? false}
             className={cn(
               "size-3",
               watchedImages?.[index]?.is_cover
-                ? "fill-current text-yellow-500"
+                ? "fill-current text-warning"
                 : "text-muted-foreground",
             )}
           />
@@ -269,7 +278,10 @@ export function InlineImageCarousel({ control }: InlineImageCarouselProps) {
             <img
               src={liveUrl}
               alt={liveAlt}
-              className={`relative size-full ${liveFit === "contain" ? "object-contain" : "object-cover"}`}
+              className={cn(
+                "relative size-full",
+                liveFit === "contain" ? "object-contain" : "object-cover",
+              )}
               onError={() => handleImageError(safeIndex)}
               onLoad={() => handleImageLoad(safeIndex)}
             />
@@ -304,8 +316,8 @@ export function InlineImageCarousel({ control }: InlineImageCarouselProps) {
       <ImageEditBar
         control={control}
         index={safeIndex}
-        editing={editingMain}
-        onDone={() => setEditingMain(false)}
+        editing={isEditingMain}
+        onDone={() => setIsEditingMain(false)}
         replace={replace}
       />
     ) : null;

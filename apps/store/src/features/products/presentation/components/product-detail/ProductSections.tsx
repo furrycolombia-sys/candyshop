@@ -1,4 +1,7 @@
+"use client";
+
 import { useLocale } from "next-intl";
+import { useMemo } from "react";
 import { i18nField } from "shared";
 import type { ProductSection } from "shared/types";
 
@@ -18,9 +21,13 @@ export function ProductSections({ product }: ProductSectionsProps) {
 
   const longDescription = i18nField(product, "long_description", locale);
 
-  const sections = [
-    ...((product.sections as ProductSection[] | null) ?? []),
-  ].sort((a, b) => a.sort_order - b.sort_order);
+  const sections = useMemo(
+    () =>
+      [...((product.sections as ProductSection[] | null) ?? [])].sort(
+        (a, b) => a.sort_order - b.sort_order,
+      ),
+    [product.sections],
+  );
 
   return (
     <>

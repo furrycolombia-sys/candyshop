@@ -1,9 +1,8 @@
 import { renderHook, act } from "@testing-library/react";
+import type { Product } from "shared/types";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 import { useAddToCart } from "./useAddToCart";
-
-import type { Product } from "@/features/products/domain/types";
 
 const mockAddItem = vi.fn();
 const mockFire = vi.fn();
@@ -65,9 +64,9 @@ describe("useAddToCart", () => {
     vi.useFakeTimers();
   });
 
-  it("returns added=false initially", () => {
+  it("returns isAdded=false initially", () => {
     const { result } = renderHook(() => useAddToCart(mockProduct));
-    expect(result.current.added).toBe(false);
+    expect(result.current.isAdded).toBe(false);
   });
 
   it("returns quantityInCart from cart items", () => {
@@ -100,10 +99,10 @@ describe("useAddToCart", () => {
 
     expect(mockAddItem).toHaveBeenCalledWith(mockProduct);
     expect(mockFire).toHaveBeenCalled();
-    expect(result.current.added).toBe(true);
+    expect(result.current.isAdded).toBe(true);
   });
 
-  it("resets added after timeout", () => {
+  it("resets isAdded after timeout", () => {
     const { result } = renderHook(() => useAddToCart(mockProduct));
     const mockEvent = {
       preventDefault: vi.fn(),
@@ -118,12 +117,12 @@ describe("useAddToCart", () => {
     act(() => {
       result.current.handleAddToCart(mockEvent);
     });
-    expect(result.current.added).toBe(true);
+    expect(result.current.isAdded).toBe(true);
 
     act(() => {
       vi.advanceTimersByTime(1500);
     });
-    expect(result.current.added).toBe(false);
+    expect(result.current.isAdded).toBe(false);
   });
 
   it("does not add or animate when the stock limit is already reached", () => {
@@ -146,6 +145,6 @@ describe("useAddToCart", () => {
 
     expect(mockAddItem).not.toHaveBeenCalled();
     expect(mockFire).not.toHaveBeenCalled();
-    expect(result.current.added).toBe(false);
+    expect(result.current.isAdded).toBe(false);
   });
 });

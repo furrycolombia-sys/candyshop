@@ -1,0 +1,147 @@
+{
+  "agent": "naming-conventions",
+  "timestamp": "2026-04-17T00:00:00Z",
+  "scope": "apps/",
+  "summary": {
+    "filesAnalyzed": 717,
+    "issuesFound": 11,
+    "critical": 0,
+    "warning": 5,
+    "suggestion": 6,
+    "info": 0
+  },
+  "issues": [
+    {
+      "id": "NAME-001",
+      "severity": "warning",
+      "title": "Type file uses camelCase instead of PascalCase",
+      "file": "apps/store/src/shared/domain/categoryTypes.ts",
+      "line": 1,
+      "description": "Type files should use PascalCase naming per convention (e.g. UserTypes.ts). The file categoryTypes.ts starts with a lowercase letter.",
+      "rule": "naming-conventions.md#files--folders",
+      "fix": "Rename to CategoryTypes.ts"
+    },
+    {
+      "id": "NAME-002",
+      "severity": "warning",
+      "title": "Type file uses camelCase instead of PascalCase",
+      "file": "apps/store/src/features/products/domain/galleryTypes.ts",
+      "line": 1,
+      "description": "Type files should use PascalCase naming per convention (e.g. UserTypes.ts). The file galleryTypes.ts starts with a lowercase letter.",
+      "rule": "naming-conventions.md#files--folders",
+      "fix": "Rename to GalleryTypes.ts"
+    },
+    {
+      "id": "NAME-003",
+      "severity": "warning",
+      "title": "Type file uses camelCase instead of PascalCase",
+      "file": "apps/payments/src/shared/domain/paymentMethodTypes.ts",
+      "line": 1,
+      "description": "Type files should use PascalCase naming per convention (e.g. UserTypes.ts). The file paymentMethodTypes.ts starts with a lowercase letter.",
+      "rule": "naming-conventions.md#files--folders",
+      "fix": "Rename to PaymentMethodTypes.ts"
+    },
+    {
+      "id": "NAME-004",
+      "severity": "warning",
+      "title": "Type file uses camelCase instead of PascalCase",
+      "file": "apps/studio/src/features/products/presentation/components/inline-editor/sectionItemTypes.ts",
+      "line": 1,
+      "description": "Type files should use PascalCase naming per convention (e.g. UserTypes.ts). The file sectionItemTypes.ts starts with a lowercase letter.",
+      "rule": "naming-conventions.md#files--folders",
+      "fix": "Rename to SectionItemTypes.ts"
+    },
+    {
+      "id": "NAME-005",
+      "severity": "warning",
+      "title": "Utility file uses kebab-case instead of camelCase",
+      "file": "apps/admin/src/features/users/application/utils/export-csv.ts",
+      "line": 1,
+      "description": "Utility files should use camelCase naming (e.g. formatDate.ts). The file export-csv.ts uses kebab-case.",
+      "rule": "naming-conventions.md#files--folders",
+      "fix": "Rename to exportCsv.ts"
+    },
+    {
+      "id": "NAME-006",
+      "severity": "suggestion",
+      "title": "Boolean state variable missing 'is' prefix",
+      "file": "apps/studio/src/features/products/presentation/components/inline-editor/SectionItemsAccordion.tsx",
+      "line": 45,
+      "description": "Boolean state variable 'open' should use is/has/can/should prefix per naming conventions. const [open, setOpen] = useState(false) should be const [isOpen, setIsOpen].",
+      "rule": "naming-conventions.md#variables--functions",
+      "fix": "Rename to const [isOpen, setIsOpen] = useState(false)"
+    },
+    {
+      "id": "NAME-007",
+      "severity": "suggestion",
+      "title": "Boolean state variable missing 'is' prefix",
+      "file": "apps/studio/src/features/products/presentation/components/inline-editor/IconPicker.tsx",
+      "line": 27,
+      "description": "Boolean state variable 'open' should use is/has/can/should prefix per naming conventions. const [open, setOpen] = useState(false) should be const [isOpen, setIsOpen].",
+      "rule": "naming-conventions.md#variables--functions",
+      "fix": "Rename to const [isOpen, setIsOpen] = useState(false)"
+    },
+    {
+      "id": "NAME-008",
+      "severity": "suggestion",
+      "title": "Boolean state variable missing 'is' prefix",
+      "file": "apps/store/src/features/products/presentation/components/product-detail/sections/AccordionItem.tsx",
+      "line": 22,
+      "description": "Boolean state variable 'open' should use is/has/can/should prefix per naming conventions. const [open, setOpen] = useState(false) should be const [isOpen, setIsOpen].",
+      "rule": "naming-conventions.md#variables--functions",
+      "fix": "Rename to const [isOpen, setIsOpen] = useState(false)"
+    },
+    {
+      "id": "NAME-009",
+      "severity": "suggestion",
+      "title": "Boolean state variable missing 'is' prefix",
+      "file": "apps/payments/src/shared/presentation/components/PaymentsSidebar.tsx",
+      "line": 17,
+      "description": "Boolean state variable 'collapsed' should use is/has/can/should prefix per naming conventions. const [collapsed, setCollapsed] = useState(false) should be const [isCollapsed, setIsCollapsed].",
+      "rule": "naming-conventions.md#variables--functions",
+      "fix": "Rename to const [isCollapsed, setIsCollapsed] = useState(false)"
+    },
+    {
+      "id": "NAME-010",
+      "severity": "suggestion",
+      "title": "Boolean state variable missing 'is' prefix",
+      "file": "apps/admin/src/shared/presentation/components/AdminSidebar.tsx",
+      "line": 93,
+      "description": "Boolean state variable 'collapsed' should use is/has/can/should prefix per naming conventions. const [collapsed, setCollapsed] = useState(false) should be const [isCollapsed, setIsCollapsed].",
+      "rule": "naming-conventions.md#variables--functions",
+      "fix": "Rename to const [isCollapsed, setIsCollapsed] = useState(false)"
+    },
+    {
+      "id": "NAME-011",
+      "severity": "suggestion",
+      "title": "Schema exported from types.ts instead of dedicated schema file",
+      "file": "apps/auth/src/features/account/domain/types.ts",
+      "line": 19,
+      "description": "The profileFormSchema Zod schema is defined in types.ts but the convention mentions schema.ts as a dedicated file for validation schemas. This is a minor concern since the naming convention lists schema.ts as a special file type.",
+      "rule": "naming-conventions.md#special-files",
+      "fix": "Consider moving profileFormSchema to a separate schema.ts file in the same directory"
+    }
+  ],
+  "patterns": [
+    {
+      "pattern": "Type files follow inconsistent naming convention",
+      "description": "Most type files are correctly named types.ts but several feature-scoped type files use camelCase (categoryTypes.ts, galleryTypes.ts, paymentMethodTypes.ts, sectionItemTypes.ts). The convention mandates PascalCase for type files.",
+      "recommendation": "Standardize all type-specific files to PascalCase as per the naming convention (UserTypes.ts pattern)."
+    },
+    {
+      "pattern": "Boolean state variables often lack is/has prefix",
+      "description": "Multiple components use 'open' and 'collapsed' as boolean state variable names instead of 'isOpen' and 'isCollapsed'. This pattern appears in 5 files across apps.",
+      "recommendation": "Apply is/has prefix consistently to boolean state variables to improve readability and follow project conventions."
+    },
+    {
+      "pattern": "Component files consistently follow PascalCase",
+      "description": "All component .tsx files follow PascalCase naming. Only Next.js reserved files (page.tsx, layout.tsx, error.tsx, providers.tsx) use lowercase, which is correct.",
+      "recommendation": "No action required. This is a positive pattern."
+    },
+    {
+      "pattern": "Hook files consistently use use prefix",
+      "description": "All hook files across the codebase correctly use the 'use' prefix (useAuth.ts, useProducts.ts, etc.). No violations found.",
+      "recommendation": "No action required. This is a positive pattern."
+    }
+  ]
+}

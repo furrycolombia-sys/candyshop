@@ -152,20 +152,26 @@ export function SellerCheckoutCard({
           items={items}
           subtotalCop={subtotalCop}
           getItemName={getItemName}
-          isSubmitted={isSubmitted}
-          isSubmitting={isSubmitting}
-          isDisabled={isDisabled}
-          error={hasStockIssues ? "stock_error" : error}
-          hasStockIssues={hasStockIssues}
-          isLoadingMethods={isLoadingMethods}
-          methods={methods}
-          selectedMethodId={effectiveSelectedMethodId}
-          selectedMethod={selectedMethod}
-          buyerSubmission={buyerSubmission}
-          validationError={validationError}
-          onSelectMethod={setSelectedMethodId}
-          onBuyerSubmissionChange={handleBuyerSubmissionChange}
-          onFileSelected={handleFileSelected}
+          submission={{
+            isSubmitted,
+            isSubmitting,
+            isDisabled,
+            error: hasStockIssues ? "stock_error" : error,
+            hasStockIssues,
+          }}
+          methodSelection={{
+            isLoadingMethods,
+            methods,
+            selectedMethodId: effectiveSelectedMethodId,
+            selectedMethod,
+            onSelectMethod: setSelectedMethodId,
+          }}
+          buyerForm={{
+            buyerSubmission,
+            validationError,
+            onBuyerSubmissionChange: handleBuyerSubmissionChange,
+            onFileSelected: handleFileSelected,
+          }}
           onSubmit={handleSubmit}
         />
       )}

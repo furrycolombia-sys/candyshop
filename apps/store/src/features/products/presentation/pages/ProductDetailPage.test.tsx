@@ -35,7 +35,7 @@ let mockLoading = false;
 let mockError = false;
 let mockProduct: unknown = null;
 
-vi.mock("@/features/products/application/useStoreProducts", () => ({
+vi.mock("@/features/products/application/hooks/useStoreProducts", () => ({
   useStoreProduct: () => ({
     data: mockProduct,
     isLoading: mockLoading,

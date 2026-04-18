@@ -37,6 +37,7 @@ vi.mock("shared", () => ({
   tid: (id: string) => ({ "data-testid": id }),
   i18nPrice: (product: Record<string, unknown>) =>
     `$${product.price_usd ?? product.price_cop}`,
+  useSupabase: () => ({}),
 }));
 
 vi.mock("ui", () => ({
@@ -84,7 +85,7 @@ vi.mock("@/features/cart/application/groupBySeller", () => ({
   ],
 }));
 
-vi.mock("@/features/cart/application/useSellerProfiles", () => ({
+vi.mock("@/features/cart/application/hooks/useSellerProfiles", () => ({
   useSellerProfiles: () => ({ data: { "seller-1": "Seller One" } }),
 }));
 

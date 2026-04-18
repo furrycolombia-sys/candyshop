@@ -1,0 +1,150 @@
+{
+  "agent": "dry",
+  "timestamp": "2026-04-17T00:00:00Z",
+  "scope": "apps/",
+  "summary": {
+    "filesAnalyzed": 120,
+    "issuesFound": 7,
+    "critical": 0,
+    "warning": 4,
+    "suggestion": 3,
+    "info": 0
+  },
+  "issues": [
+    {
+      "id": "DRY-001",
+      "severity": "warning",
+      "title": "SupabaseClient type alias re-declared in 8 infrastructure files",
+      "file": "apps/admin/src/features/templates/infrastructure/templateQueries.ts",
+      "line": 8,
+      "description": "The type alias `type SupabaseClient = ReturnType<typeof createBrowserSupabaseClient>` is copy-pasted into 8 separate infrastructure files across admin, studio, and payments. Only `apps/payments/src/shared/domain/types.ts` exports it as a reusable type; the others are private local aliases that replicate the same knowledge.",
+      "duplicatedIn": [
+        "apps/admin/src/shared/infrastructure/recentActivityQueries.ts",
+        "apps/admin/src/features/settings/infrastructure/settingsQueries.ts",
+        "apps/admin/src/features/audit/infrastructure/auditQueries.ts",
+        "apps/admin/src/features/users/infrastructure/userPermissionQueries.ts",
+        "apps/studio/src/features/orders/infrastructure/pendingOrderCount.ts",
+        "apps/studio/src/features/seller-admins/infrastructure/delegateMutations.ts",
+        "apps/studio/src/features/seller-admins/infrastructure/delegateQueries.ts",
+        "apps/payments/src/shared/domain/types.ts"
+      ],
+      "rule": "dry-principle.md#extract-types",
+      "fix": "Export `SupabaseClient` once from `packages/api/src/supabase/index.ts` (it already exports `createBrowserSupabaseClient`), then add `export type SupabaseClient = ReturnType<typeof createBrowserSupabaseClient>` there. Each infrastructure file should import the shared type instead of re-declaring it. Alternatively, each app can define it once in its own `shared/domain/types.ts` (as payments already does) and the infrastructure files import from there."
+    },
+    {
+      "id": "DRY-002",
+      "severity": "warning",
+      "title": "`useMemo(() => createBrowserSupabaseClient(), [])` pattern in 20+ hooks",
+      "file": "apps/studio/src/features/products/application/useProducts.ts",
+      "line": 1,
+      "description": "The one-liner `const supabase = useMemo(() => createBrowserSupabaseClient(), [])` is duplicated in at least 20 hook files across store, payments, studio, auth, and admin. Only `apps/admin/src/shared/application/hooks/useSupabase.ts` abstracts this into a reusable `useSupabase()` hook, but that hook is not used by the other apps.",
+      "duplicatedIn": [
+        "apps/store/src/features/cart/application/useSellerProfiles.ts",
+        "apps/payments/src/features/received-orders/application/hooks/useReceivedOrders.ts",
+        "apps/payments/src/features/received-orders/application/hooks/useOrderActions.ts",
+        "apps/payments/src/features/payment-methods/application/hooks/usePaymentMethods.ts",
+        "apps/payments/src/features/payment-methods/application/hooks/usePaymentMethodMutations.ts",
+        "apps/payments/src/features/orders/application/hooks/useResubmitEvidence.ts",
+        "apps/payments/src/features/orders/application/hooks/useMyOrders.ts",
+        "apps/payments/src/features/checkout/application/hooks/useSubmitPayment.ts",
+        "apps/payments/src/features/checkout/application/hooks/useSellerProfiles.ts",
+        "apps/auth/src/features/account/application/hooks/useUpdateProfile.ts",
+        "apps/auth/src/features/account/application/hooks/useProfile.ts",
+        "apps/studio/src/features/seller-admins/application/hooks/useDelegates.ts",
+        "apps/studio/src/features/seller-admins/application/hooks/useDelegateMutations.ts",
+        "apps/studio/src/features/seller-admins/application/hooks/useDelegateCountsByProduct.ts",
+        "apps/studio/src/features/products/application/useProductMutations.ts",
+        "apps/studio/src/features/products/application/useProductForm.ts",
+        "apps/studio/src/features/products/application/hooks/useProductTemplates.ts",
+        "apps/studio/src/features/orders/application/hooks/usePendingOrderCount.ts"
+      ],
+      "rule": "dry-principle.md#extract-custom-hooks",
+      "fix": "Move `useSupabase()` from `apps/admin/src/shared/application/hooks/useSupabase.ts` into the `packages/shared` package (e.g. `packages/shared/src/hooks/useSupabase.ts`) and export it from the shared package index. All hooks across all apps can then `import { useSupabase } from 'shared'` instead of repeating the one-liner."
+    },
+    {
+      "id": "DRY-003",
+      "severity": "warning",
+      "title": "Cart cookie key `\"candystore-cart\"` defined twice across apps",
+      "file": "apps/store/src/features/cart/application/cartCookiePersistence.ts",
+      "line": 5,
+      "description": "The cart cookie key string `\"candystore-cart\"` is defined as `COOKIE_KEY` in the store app and independently as `CART_COOKIE_KEY` in `apps/payments/src/shared/domain/constants.ts`. Both represent the same piece of knowledge (the shared cross-app cookie name). If the cookie name changes, it must be updated in two places.",
+      "duplicatedIn": ["apps/payments/src/shared/domain/constants.ts"],
+      "rule": "dry-principle.md#extract-constants",
+      "fix": "Define the canonical constant once — the best place is `packages/shared/src/constants/` since this value is genuinely cross-app. Export it as `CART_COOKIE_KEY` and import it in both the store's `cartCookiePersistence.ts` and the payments app's constants. The payments `shared/domain/constants.ts` already has the right name; the store should import from the shared package instead of redeclaring `COOKIE_KEY`."
+    },
+    {
+      "id": "DRY-004",
+      "severity": "warning",
+      "title": "`getSharedCookieDomain` logic duplicated in store and payments",
+      "file": "apps/store/src/features/cart/application/cartCookiePersistence.ts",
+      "line": 16,
+      "description": "The `getSharedCookieDomain(hostname)` function — which strips the hostname to a shared parent domain for cross-app cookie scoping — is defined twice with identical logic: once in the store app and once (as a private function) in `apps/payments/src/features/checkout/infrastructure/cartCookie.ts`. The constants `MINIMUM_DOMAIN_SEGMENTS` and `DOMAIN_SUFFIX_SEGMENT_OFFSET` are also duplicated.",
+      "duplicatedIn": [
+        "apps/payments/src/features/checkout/infrastructure/cartCookie.ts"
+      ],
+      "rule": "dry-principle.md#extract-utility-functions",
+      "fix": "Extract `getSharedCookieDomain` into `packages/shared/src/utils/` (alongside the cart cookie constant, see DRY-003). Both apps can then import the shared utility. This is a pure function with no app-specific dependencies, making it an ideal candidate for the shared package."
+    },
+    {
+      "id": "DRY-005",
+      "severity": "suggestion",
+      "title": "Time conversion constants (`HOURS_PER_DAY`, `MINUTES_PER_HOUR`, etc.) defined in multiple apps",
+      "file": "apps/admin/src/features/users/domain/constants.ts",
+      "line": 182,
+      "description": "The basic time-conversion constants `MS_PER_SECOND = 1000`, `SECONDS_PER_MINUTE = 60`, `MINUTES_PER_HOUR = 60`, `HOURS_PER_DAY = 24` are defined in `apps/admin/src/features/users/domain/constants.ts`, `apps/payments/src/features/checkout/domain/constants.ts`, and `apps/store/src/features/cart/application/cartCookiePersistence.ts`. The `packages/shared/src/constants/time.ts` file exists for time constants but only contains query stale times — it is the natural home for these universal values.",
+      "duplicatedIn": [
+        "apps/payments/src/features/checkout/domain/constants.ts",
+        "apps/store/src/features/cart/application/cartCookiePersistence.ts"
+      ],
+      "rule": "dry-principle.md#extract-constants",
+      "fix": "Add `MS_PER_SECOND`, `SECONDS_PER_MINUTE`, `MINUTES_PER_HOUR`, `HOURS_PER_DAY`, `DAYS_PER_MONTH`, `DAYS_PER_YEAR`, `MONTHS_PER_YEAR` to `packages/shared/src/constants/time.ts` and re-export them. Remove the per-app copies and import from `shared/constants/time`. Note: apply KISS — only do this if the admin and payments usages genuinely share the same semantic meaning, which they do (these are universal unit constants)."
+    },
+    {
+      "id": "DRY-006",
+      "severity": "suggestion",
+      "title": "`useSellerProfiles` hook duplicated in store and payments with near-identical logic",
+      "file": "apps/store/src/features/cart/application/useSellerProfiles.ts",
+      "line": 1,
+      "description": "Both the store and payments apps define a `useSellerProfiles(sellerIds)` hook that queries `user_profiles` for a list of seller IDs and returns a `Record<string, string>` name map. The store's version inlines the Supabase query; the payments version delegates to `fetchSellerProfiles`. The core purpose, query key, query shape, and return type are identical.",
+      "duplicatedIn": [
+        "apps/payments/src/features/checkout/application/hooks/useSellerProfiles.ts"
+      ],
+      "rule": "dry-principle.md#extract-custom-hooks",
+      "fix": "This hook crosses app boundaries and depends on the Supabase client, so the KISS guardrail applies — extracting it to `packages/shared` would introduce Supabase as a package dependency. The better fix is to consolidate the underlying `fetchSellerProfiles` infrastructure function in one shared location (or accept the duplication as intentional isolation between apps since the two hooks have subtle differences in fallback logic and deduplication)."
+    },
+    {
+      "id": "DRY-007",
+      "severity": "suggestion",
+      "title": "Vitest config `resolve.alias` block copy-pasted across all 6 apps",
+      "file": "apps/admin/vitest.config.ts",
+      "line": 62,
+      "description": "The `resolve.alias` block mapping `@`, `@shared`, `@ui`, `@api`, `@app-components`, `shared`, `ui`, `api`, and `@monorepo/app-components` to their respective package paths is copy-pasted identically across all 6 app vitest configs. A change to the monorepo package layout requires updating all 6 files.",
+      "duplicatedIn": [
+        "apps/store/vitest.config.ts",
+        "apps/payments/vitest.config.ts",
+        "apps/auth/vitest.config.ts",
+        "apps/studio/vitest.config.ts",
+        "apps/landing/vitest.config.ts"
+      ],
+      "rule": "dry-principle.md#rule-of-three",
+      "fix": "Extract a shared `createVitestAliases(__dirname)` helper into a root-level `vitest.shared.ts` (or `vitest.aliases.ts`) file. Each app's config imports and spreads it: `resolve: { alias: createVitestAliases(__dirname) }`. Alternatively, explore Vitest's built-in workspace support (`vitest.workspace.ts`) which can define shared config at the monorepo root."
+    }
+  ],
+  "patterns": [
+    {
+      "name": "Per-app config shim files are thin re-exports",
+      "description": "Files like `apps/*/src/shared/infrastructure/config/environment.ts`, `api.ts`, and `tid.ts` are one-line re-exports from `packages/shared`. This is the correct intentional pattern (not a DRY violation) — it creates a stable import path for each app while the implementation lives in the shared package.",
+      "verdict": "Intentional — not a DRY violation"
+    },
+    {
+      "name": "ProtectedRoute.tsx is identical across 4 apps",
+      "description": "`apps/admin`, `apps/payments`, `apps/store`, and `apps/studio` each have a `ProtectedRoute.tsx` that contains exactly: `export const ProtectedRoute = createProtectedRoute(appUrls.auth)`. This is two-line boilerplate that exists because each app uses its own `appUrls` import. Given KISS, this does not warrant further abstraction.",
+      "verdict": "Acceptable — KISS wins, two lines per app is not worth abstracting"
+    },
+    {
+      "name": "MSW browser/server setup files are identical boilerplate",
+      "description": "`apps/admin`, `apps/store`, and `apps/payments` each have `mocks/browser.ts` and `mocks/server.ts` files with identical 5-line MSW setup. These are app-scoped by design (each app has its own handler set), and KISS suggests leaving them as-is.",
+      "verdict": "Acceptable — MSW setup is intentionally app-scoped"
+    }
+  ]
+}

@@ -1,5 +1,5 @@
 import { useLocale } from "next-intl";
-import { i18nPrice, tid } from "shared";
+import { i18nCurrencyCode, i18nPrice, tid } from "shared";
 
 import type { Product } from "@/features/products/domain/types";
 
@@ -11,10 +11,10 @@ interface PriceBlockProps {
 export function PriceBlock({ product, discountLabel }: PriceBlockProps) {
   const locale = useLocale();
 
-  const isEnglish = locale === "en";
-  const currencyLabel = isEnglish ? "USD" : "COP";
-  const price = isEnglish ? product.price_usd : product.price_cop;
-  const compareAtPrice = isEnglish
+  const currencyCode = i18nCurrencyCode(product, locale);
+  const isUsd = currencyCode === "USD";
+  const price = isUsd ? product.price_usd : product.price_cop;
+  const compareAtPrice = isUsd
     ? product.compare_at_price_usd
     : product.compare_at_price_cop;
   const hasDiscount = compareAtPrice != null && compareAtPrice > price;
@@ -25,16 +25,16 @@ export function PriceBlock({ product, discountLabel }: PriceBlockProps) {
       {...tid("hero-price")}
     >
       <div className="flex items-baseline gap-3 flex-wrap">
-        <div className="flex items-baseline gap-1">
-          <span className="font-display text-xs font-bold uppercase tracking-wider text-muted-foreground">
-            {currencyLabel}
+        <div className="flex min-w-0 items-baseline gap-1">
+          <span className="shrink-0 font-display text-xs font-bold uppercase tracking-wider text-muted-foreground">
+            {currencyCode}
           </span>
-          <span className="font-display text-5xl font-extrabold">
+          <span className="min-w-0 break-all font-display text-3xl font-extrabold sm:text-4xl lg:text-5xl">
             {i18nPrice(product, locale)}
           </span>
         </div>
         {hasDiscount && compareAtPrice != null && (
-          <span className="font-display text-2xl font-bold line-through text-muted-foreground">
+          <span className="font-display text-xl font-bold line-through text-muted-foreground sm:text-2xl">
             {i18nPrice(
               {
                 ...product,

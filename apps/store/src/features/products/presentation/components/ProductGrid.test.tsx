@@ -13,7 +13,7 @@ vi.mock("next-intl", () => ({
   useLocale: () => "en",
 }));
 
-vi.mock("@/features/products/application/useGridCols", () => ({
+vi.mock("@/features/products/application/hooks/useGridCols", () => ({
   useGridCols: () => 3,
 }));
 

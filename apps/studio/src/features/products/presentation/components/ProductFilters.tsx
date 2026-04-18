@@ -9,12 +9,19 @@ import { cn, Input } from "ui";
 
 import {
   PRODUCT_CATEGORIES,
+  PRODUCT_SEARCH_DEBOUNCE_MS,
   PRODUCT_TYPES,
 } from "@/features/products/domain/constants";
 import { productsSearchParams } from "@/features/products/domain/searchParams";
-
-const DEBOUNCE_MS = 300;
 const I18N_ALL = "common.all";
+
+const getPillClass = (isActive: boolean) =>
+  cn(
+    "button-brutal rounded-full border-2 px-4 py-1.5 text-sm transition-all",
+    isActive
+      ? "bg-foreground text-background shadow-brutal-sm"
+      : "bg-background hover:bg-muted",
+  );
 
 export function ProductFilters() {
   const t = useTranslations();
@@ -27,13 +34,16 @@ export function ProductFilters() {
   useEffect(() => {
     const timer = setTimeout(() => {
       setParams({ q: searchInput || null }, { history: "replace" });
-    }, DEBOUNCE_MS);
+    }, PRODUCT_SEARCH_DEBOUNCE_MS);
     return () => clearTimeout(timer);
   }, [searchInput, setParams]);
 
-  // Sync external URL changes back to local state
+  // Sync external URL changes back to local state (equality guard breaks debounce→URL→sync cycle)
   useEffect(() => {
-    setSearchInput(q);
+    if (q !== searchInput) {
+      setSearchInput(q);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [q]);
 
   const handleTypeChange = useCallback(
@@ -49,14 +59,6 @@ export function ProductFilters() {
     },
     [setParams],
   );
-
-  const getPillClass = (isActive: boolean) =>
-    cn(
-      "button-brutal rounded-full border-2 px-4 py-1.5 text-sm transition-all",
-      isActive
-        ? "bg-foreground text-background shadow-brutal-sm"
-        : "bg-background hover:bg-muted",
-    );
 
   return (
     <div className="flex flex-col gap-4" {...tid("product-filters")}>

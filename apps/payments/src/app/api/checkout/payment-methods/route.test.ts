@@ -14,6 +14,8 @@ function makeRequest(body: unknown) {
   });
 }
 
+const BUYER_ID = "c0eebc99-9c0b-4ef8-bb6d-6bb9bd380a13";
+
 async function loadRouteModule() {
   process.env.NEXT_PUBLIC_SUPABASE_URL = "https://supabase.test";
   process.env.SUPABASE_SERVICE_ROLE_KEY = "service-role";
@@ -27,7 +29,7 @@ async function loadRouteModule() {
       getUser: vi.fn().mockResolvedValue({
         data: {
           user: {
-            id: "buyer-1",
+            id: BUYER_ID,
           },
         },
       }),
@@ -40,6 +42,9 @@ async function loadRouteModule() {
     POST: routeModule.POST,
   };
 }
+
+const SELLER_ID = "b0eebc99-9c0b-4ef8-bb6d-6bb9bd380a12";
+const PRODUCT_ID = "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11";
 
 describe("POST /api/checkout/payment-methods", () => {
   beforeEach(() => {
@@ -76,8 +81,8 @@ describe("POST /api/checkout/payment-methods", () => {
         ok: true,
         json: async () => [
           {
-            id: "product-1",
-            seller_id: "seller-1",
+            id: PRODUCT_ID,
+            seller_id: SELLER_ID,
             is_active: true,
             max_quantity: 3,
           },
@@ -99,8 +104,8 @@ describe("POST /api/checkout/payment-methods", () => {
 
     const response = await POST(
       makeRequest({
-        sellerId: "seller-1",
-        items: [{ id: "product-1", quantity: 2 }],
+        sellerId: SELLER_ID,
+        items: [{ id: PRODUCT_ID, quantity: 2 }],
       }),
     );
 
@@ -149,8 +154,8 @@ describe("POST /api/checkout/payment-methods", () => {
         ok: true,
         json: async () => [
           {
-            id: "product-1",
-            seller_id: "seller-1",
+            id: PRODUCT_ID,
+            seller_id: SELLER_ID,
             is_active: true,
             max_quantity: 1,
           },
@@ -159,8 +164,8 @@ describe("POST /api/checkout/payment-methods", () => {
 
     const response = await POST(
       makeRequest({
-        sellerId: "seller-1",
-        items: [{ id: "product-1", quantity: 2 }],
+        sellerId: SELLER_ID,
+        items: [{ id: PRODUCT_ID, quantity: 2 }],
       }),
     );
 
@@ -191,8 +196,8 @@ describe("POST /api/checkout/payment-methods", () => {
 
     const response = await POST(
       makeRequest({
-        sellerId: "seller-1",
-        items: [{ id: "product-1", quantity: 1 }],
+        sellerId: SELLER_ID,
+        items: [{ id: PRODUCT_ID, quantity: 1 }],
       }),
     );
 
@@ -204,8 +209,8 @@ describe("POST /api/checkout/payment-methods", () => {
 
     const response = await POST(
       makeRequest({
-        sellerId: "seller-1",
-        items: [{ id: "product-1", quantity: 0 }],
+        sellerId: SELLER_ID,
+        items: [{ id: PRODUCT_ID, quantity: 0 }],
       }),
     );
 

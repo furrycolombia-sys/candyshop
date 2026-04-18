@@ -1,0 +1,37 @@
+{
+  "agent": "pattern-discovery",
+  "review_id": "2026-04-17_14-00-00",
+  "timestamp": "2026-04-17T14:00:00Z",
+  "scope": "apps/",
+  "summary": {
+    "filesAnalyzed": 749,
+    "issuesFound": 0,
+    "critical": 0,
+    "warning": 0,
+    "suggestion": 0,
+    "info": 4
+  },
+  "issues": [],
+  "patterns": [
+    {
+      "id": "PAT-DISC-001",
+      "description": "Consistent 'permission string as local constant in route' pattern: route files define local string constants for permissions (e.g., SELLER_ADMINS_READ, SELLER_ADMINS_DELETE). This is repeated across multiple admin route files. Consider creating a shared permissions constants module at apps/admin/src/shared/domain/permissions.ts to centralize all permission strings used in route authorization.",
+      "suggestion": "Create apps/admin/src/shared/domain/permissions.ts exporting SELLER_ADMINS_READ, SELLER_ADMINS_DELETE, etc. This prevents the current pattern where each route redefines the same strings."
+    },
+    {
+      "id": "PAT-DISC-002",
+      "description": "Pattern: Context + hook co-location is consistently used across CartContext.tsx, FlyToCartContext.tsx, ErrorContext.tsx. This is a recognized React pattern. Recommend documenting this as an approved exception to the one-component-per-file rule in the component-patterns rule file.",
+      "suggestion": "Add to component-patterns.md: 'Context files may export both the Provider component and its hook (e.g., CartProvider + useCart). This is an approved Context pattern exception.'"
+    },
+    {
+      "id": "PAT-DISC-003",
+      "description": "The paymentMethodIdRef pattern (updating a ref to current value before callbacks to prevent stale closures) is used in useAutoSavePaymentMethod.ts. This is a well-known React pattern. If more hooks need this pattern, a custom useLatestRef(value) hook could be added to packages/shared.",
+      "suggestion": "Consider adding useLatestRef<T>(value: T): React.RefObject<T> to packages/shared/src/hooks/ for reuse."
+    },
+    {
+      "id": "PAT-DISC-004",
+      "description": "The 'eslint-disable react-hooks/exhaustive-deps -- intentional: only trigger on [specific] changes' pattern is used in useAutoSavePaymentMethod.ts for intentional dependency array omissions. This is well-documented but should be monitored - overuse can hide real bugs.",
+      "suggestion": "Keep tracking intentional exhaustive-deps suppressions. Current usage in useAutoSavePaymentMethod.ts is justified and well-commented."
+    }
+  ]
+}

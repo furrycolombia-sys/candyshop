@@ -1,9 +1,9 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { createBrowserSupabaseClient } from "api/supabase";
-import { useMemo } from "react";
+import { useSupabase } from "shared";
 
+import { SELLER_PROFILES_QUERY_KEY } from "@/features/checkout/domain/constants";
 import { fetchSellerProfiles } from "@/features/checkout/infrastructure/checkoutQueries";
 
 /**
@@ -11,11 +11,11 @@ import { fetchSellerProfiles } from "@/features/checkout/infrastructure/checkout
  * Returns a Record<sellerId, displayName>.
  */
 export function useSellerProfiles(sellerIds: string[]) {
-  const supabase = useMemo(() => createBrowserSupabaseClient(), []);
+  const supabase = useSupabase();
 
   return useQuery({
     // eslint-disable-next-line @tanstack/query/exhaustive-deps -- supabase is not serializable (circular refs)
-    queryKey: ["seller-profiles", sellerIds],
+    queryKey: [SELLER_PROFILES_QUERY_KEY, sellerIds],
     queryFn: () => fetchSellerProfiles(supabase, sellerIds),
     enabled: sellerIds.length > 0,
   });

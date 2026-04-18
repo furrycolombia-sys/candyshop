@@ -1,0 +1,95 @@
+{
+  "agent": "naming-conventions",
+  "timestamp": "2026-04-17T04:08:32",
+  "scope": "apps/",
+  "summary": {
+    "filesAnalyzed": 537,
+    "issuesFound": 3,
+    "critical": 0,
+    "warning": 3,
+    "suggestion": 0,
+    "info": 0
+  },
+  "issues": [
+    {
+      "id": "NAME-001",
+      "severity": "warning",
+      "category": "File/Folder Naming",
+      "file": "apps/store/src/features/products/presentation/components/product-detail/",
+      "description": "Component grouping folder uses kebab-case instead of PascalCase. Per naming conventions, component folders should use PascalCase when grouping related components.",
+      "rule": "Naming Conventions: Component folders: PascalCase (if grouping)",
+      "fix": "Rename folder from `product-detail/` to `ProductDetail/` and update all imports referencing this path.",
+      "affectedFiles": [
+        "apps/store/src/features/products/presentation/components/product-detail/ImageGallery.tsx",
+        "apps/store/src/features/products/presentation/components/product-detail/HeroSection.tsx",
+        "apps/store/src/features/products/presentation/components/product-detail/MobileBar.tsx",
+        "apps/store/src/features/products/presentation/components/product-detail/ProductSections.tsx",
+        "apps/store/src/features/products/presentation/components/product-detail/sections/"
+      ]
+    },
+    {
+      "id": "NAME-002",
+      "severity": "warning",
+      "category": "File/Folder Naming",
+      "file": "apps/studio/src/features/products/presentation/components/inline-editor/",
+      "description": "Component grouping folder uses kebab-case instead of PascalCase. Per naming conventions, component folders should use PascalCase when grouping related components.",
+      "rule": "Naming Conventions: Component folders: PascalCase (if grouping)",
+      "fix": "Rename folder from `inline-editor/` to `InlineEditor/` and update all imports referencing this path.",
+      "affectedFiles": [
+        "apps/studio/src/features/products/presentation/components/inline-editor/InlineEditor.tsx",
+        "apps/studio/src/features/products/presentation/components/inline-editor/InlineTagEditor.tsx",
+        "apps/studio/src/features/products/presentation/components/inline-editor/InlineImageCarousel.tsx",
+        "apps/studio/src/features/products/presentation/components/inline-editor/SectionItemsAccordion.tsx",
+        "apps/studio/src/features/products/presentation/components/inline-editor/IconPicker.tsx"
+      ]
+    },
+    {
+      "id": "NAME-003",
+      "severity": "warning",
+      "category": "File/Folder Naming",
+      "file": "apps/admin/src/features/users/presentation/components/delegates/",
+      "description": "Component grouping folder uses kebab-case (lowercase) instead of PascalCase. Per naming conventions, component folders should use PascalCase when grouping related components.",
+      "rule": "Naming Conventions: Component folders: PascalCase (if grouping)",
+      "fix": "Rename folder from `delegates/` to `Delegates/` and update all imports referencing this path.",
+      "affectedFiles": [
+        "apps/admin/src/features/users/presentation/components/delegates/AsDelegateRow.tsx",
+        "apps/admin/src/features/users/presentation/components/delegates/AsSellerRow.tsx",
+        "apps/admin/src/features/users/presentation/components/delegates/PermissionBadges.tsx",
+        "apps/admin/src/features/users/presentation/components/delegates/ProductName.tsx",
+        "apps/admin/src/features/users/presentation/components/delegates/RemoveButton.tsx"
+      ]
+    }
+  ],
+  "patterns": [
+    {
+      "type": "GOOD_PATTERN",
+      "description": "All boolean useState variables correctly use is/has/can/should prefix across all apps. Examples: isOpen, isCollapsed, isConfirming, hasError, isAdded, isDismissed, hasErrored, isChecked, isExpanded.",
+      "note": "Zero violations found for boolean state naming."
+    },
+    {
+      "type": "GOOD_PATTERN",
+      "description": "All component files (*.tsx) use PascalCase naming consistently across all apps.",
+      "note": "Zero violations found for component file naming."
+    },
+    {
+      "type": "GOOD_PATTERN",
+      "description": "All hook files use camelCase with the `use` prefix consistently.",
+      "note": "Zero violations found for hook file naming."
+    },
+    {
+      "type": "GOOD_PATTERN",
+      "description": "All exported constants in domain/constants.ts files use SCREAMING_SNAKE_CASE consistently.",
+      "note": "Zero violations found for constant naming."
+    },
+    {
+      "type": "GOOD_PATTERN",
+      "description": "Event handlers consistently use the `handle` prefix (handleClick, handleSubmit, handleDragEnd, etc.) and callback props use the `on` prefix.",
+      "note": "Zero violations found for event handler naming."
+    },
+    {
+      "type": "GOOD_PATTERN",
+      "description": "Utility files use camelCase naming (formatLastSeen.ts, computeRole.ts, templatePermissions.ts, lucideIconMap.ts).",
+      "note": "Zero violations found for utility file naming."
+    }
+  ]
+}

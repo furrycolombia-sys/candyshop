@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { tid } from "shared";
+import { cn } from "ui";
 
 import type { OrderStatus } from "@/features/received-orders/domain/types";
 
@@ -58,7 +59,10 @@ export function ReceivedStatusBadge({ status }: { status: OrderStatus }) {
 
   return (
     <span
-      className={`inline-flex items-center gap-1 rounded-md border-2 px-2 py-0.5 font-display text-xs font-bold uppercase tracking-wider ${config.className}`}
+      className={cn(
+        "inline-flex items-center gap-1 rounded-md border-2 px-2 py-0.5 font-display text-xs font-bold uppercase tracking-wider",
+        config.className,
+      )}
       {...tid("order-status-badge")}
     >
       <Icon className="size-3.5" />
