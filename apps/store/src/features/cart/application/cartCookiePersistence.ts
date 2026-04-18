@@ -1,5 +1,5 @@
 import { deleteCookie, setCookie } from "cookies-next";
-import { CART_COOKIE_KEY, getSharedCookieDomain } from "shared";
+import { getSharedCookieDomain as resolveSharedCookieDomain } from "shared";
 import {
   HOURS_PER_DAY,
   MINUTES_PER_HOUR,
@@ -10,6 +10,7 @@ import type { CartCookieItem } from "shared/types";
 import type { CartItem } from "@/features/cart/domain/types";
 
 const DAYS = 30;
+const CART_COOKIE_KEY = "candystore-cart";
 /** Cookie lives for 30 days */
 export const COOKIE_MAX_AGE_S =
   DAYS * HOURS_PER_DAY * MINUTES_PER_HOUR * SECONDS_PER_MINUTE;
@@ -20,7 +21,7 @@ export function getCartCookieOptions() {
     globalThis.location.protocol === "https:";
   let sharedDomain: string | undefined;
   if (globalThis.window !== undefined) {
-    sharedDomain = getSharedCookieDomain(globalThis.location.hostname);
+    sharedDomain = resolveSharedCookieDomain(globalThis.location.hostname);
   }
 
   return {
@@ -57,4 +58,5 @@ export function removeCartCookie() {
   }
 }
 
-export { CART_COOKIE_KEY as COOKIE_KEY, getSharedCookieDomain } from "shared";
+export { getSharedCookieDomain } from "shared";
+export { CART_COOKIE_KEY as COOKIE_KEY };
