@@ -1,0 +1,75 @@
+{
+  "agent": "security",
+  "review_id": "2026-04-17_10-00-00",
+  "timestamp": "2026-04-17T10:00:00Z",
+  "scope": "apps/",
+  "summary": {
+    "filesAnalyzed": 18,
+    "issuesFound": 3,
+    "critical": 1,
+    "warning": 2,
+    "suggestion": 0,
+    "info": 0
+  },
+  "issues": [
+    {
+      "id": "SEC-001",
+      "severity": "critical",
+      "file": "apps/payments/src/app/api/checkout/orders/route.ts",
+      "line": 67,
+      "title": "Client-controlled order price accepted without server-side validation",
+      "description": "The POST /api/checkout/orders route accepts `total_cop` from the request body and uses it directly to record the order total (line 90: `const totalCop = total_cop`). The only check is that it is a positive finite number (lines 81-83). No server-side re-calculation of the correct price from the product catalog is performed. The price originates from the client-side cart cookie (`price_cop` stored by the browser), which an attacker can freely modify before submitting a checkout.",
+      "impact": "An authenticated user can craft an HTTP request with an arbitrarily low `total_cop` (e.g., 1 COP) and create a valid order at that manipulated price. The order is persisted to the database with the tampered total, and the seller's payment instructions are returned via the payment-methods endpoint (which validates stock but not price). This allows buyers to commit to orders at fraudulent prices.",
+      "rule": "code-review-standards.md#security-standards",
+      "fix": "Server-side: After fetching the payment method (which resolves `seller_id`), query `products` for the submitted item IDs, compute the expected `total_cop` from DB prices × quantities, and reject the request if the submitted `total_cop` does not match. If this route does not receive cart items (only `payment_method_id`), add a separate validation step or pass cart items and recompute on the server."
+    },
+    {
+      "id": "SEC-002",
+      "severity": "warning",
+      "file": "apps/payments/src/app/api/checkout/orders/route.ts",
+      "line": 18,
+      "title": "payment_method_id used in PostgREST URL without UUID validation",
+      "description": "In `fetchPaymentMethod`, the `payment_method_id` string from the request body is embedded into a PostgREST REST URL using `encodeURIComponent` (line 18: `seller_payment_methods?id=eq.${encodeURIComponent(paymentMethodId)}`). While `encodeURIComponent` prevents most URL-level injection, there is no UUID format validation applied to `payment_method_id` before this call. The payment-methods route (route.ts:190-193) validates `sellerId` and items with `UUID_REGEX`, but the orders route skips this step for `payment_method_id`. A malformed (non-UUID) value is passed to the database query rather than being rejected early at the API boundary.",
+      "impact": "Minor: PostgREST will return an empty result for a non-UUID `id` due to type mismatch (Postgres UUID column), so there is no SQL injection risk in practice. However, the inconsistency allows unusual values into the query layer, produces harder-to-diagnose errors, and could interact unexpectedly with future query changes.",
+      "rule": "code-review-standards.md#security-standards",
+      "fix": "Add UUID validation at the start of the handler, the same way it is done in the payment-methods route: validate `payment_method_id` with `UUID_REGEX` before calling `fetchPaymentMethod`. Example: `if (!UUID_REGEX.test(payment_method_id)) return NextResponse.json({ error: 'Invalid payload' }, { status: 400 });`"
+    },
+    {
+      "id": "SEC-003",
+      "severity": "warning",
+      "file": "apps/payments/src/features/received-orders/presentation/components/ReceivedOrderCard.tsx",
+      "line": 52,
+      "title": "Unvalidated user-supplied URL rendered as clickable link and image source",
+      "description": "The `BuyerInfoValue` component renders any `buyer_info` value that starts with `https://` as a clickable `<a>` link (line 52-62). If the value also matches an image extension pattern it is rendered as an `<img>` tag with the attacker-controlled URL as `src` (lines 36-50). The `buyer_info` values come from buyer-submitted form fields stored in the database without URL allowlist validation on the server side. While React's JSX rendering prevents XSS in attribute values, a malicious seller or a crafted form submission can: (1) cause external image loads that leak the viewer's IP to a tracking server via the `src`, (2) load harmful content (e.g. exploit images in older browsers), and (3) craft phishing links that appear to originate from the platform UI.",
+      "impact": "IP leakage / tracking pixel via automatic image loads; phishing links displayed in the seller's order management view; potential SSRF if the app's server ever pre-fetches these URLs. Primarily affects sellers viewing received orders.",
+      "rule": "code-review-standards.md#security-standards",
+      "fix": "Server-side: validate `buyer_info` URL values against an allowlist of trusted upload domains (e.g. your Supabase storage bucket hostname) before saving to the database. Client-side as a defence-in-depth: replace the open `isUrl` check (`value.startsWith('https://')`) with a strict domain allowlist check, and add `crossOrigin=\"anonymous\"` and `referrerPolicy=\"no-referrer\"` to the `<img>` tag. Consider adding `sandbox` attribute if rendering in an iframe context."
+    }
+  ],
+  "patterns": [
+    {
+      "type": "good",
+      "description": "Consistent UUID validation via validateUuid() across admin routes and payment-methods route prevents path parameter injection."
+    },
+    {
+      "type": "good",
+      "description": "Auth refresh endpoint sets access token as HTTP-only cookie, not in response body. CORS uses an explicit allowlist of known app origins."
+    },
+    {
+      "type": "good",
+      "description": "OAuth callback (handleOAuthCallback) validates redirect destination with isSafeRedirect() and an origins allowlist, preventing open redirect."
+    },
+    {
+      "type": "good",
+      "description": "No dangerouslySetInnerHTML usage found anywhere in the apps/ directory."
+    },
+    {
+      "type": "good",
+      "description": "Service role key is read from process.env and never hardcoded; all admin REST clients read credentials from environment variables only."
+    },
+    {
+      "type": "good",
+      "description": "Admin API routes gate all operations behind getAuthorizedAdmin() which checks both session validity and required permission keys."
+    }
+  ]
+}

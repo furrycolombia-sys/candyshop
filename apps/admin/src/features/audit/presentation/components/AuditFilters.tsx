@@ -4,7 +4,7 @@ import { useTranslations } from "next-intl";
 import { tid } from "shared";
 import { cn } from "ui";
 
-import { useAuditTableNames } from "@/features/audit/application/useAuditLog";
+import { useAuditTableNames } from "@/features/audit/application/hooks/useAuditLog";
 import { AUDIT_ACTION_TYPES } from "@/features/audit/domain/constants";
 
 interface AuditFiltersProps {

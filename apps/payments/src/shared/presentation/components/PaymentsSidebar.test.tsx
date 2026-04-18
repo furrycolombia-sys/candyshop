@@ -32,6 +32,7 @@ vi.mock("shared", () => ({
 }));
 
 vi.mock("ui", () => ({
+  cn: (...args: unknown[]) => args.filter(Boolean).join(" "),
   Sheet: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
   SheetTrigger: ({ children }: { children: React.ReactNode }) => (
     <div>{children}</div>

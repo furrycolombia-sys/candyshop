@@ -1,6 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { createBrowserSupabaseClient } from "api/supabase";
-import { useMemo } from "react";
+import { useSupabase } from "shared";
 
 import { SELLER_ADMINS_QUERY_KEY } from "@/features/seller-admins/domain/constants";
 import type { DelegatePermission } from "@/features/seller-admins/domain/types";
@@ -12,7 +11,7 @@ import {
 
 export function useAddDelegate() {
   const queryClient = useQueryClient();
-  const supabase = useMemo(() => createBrowserSupabaseClient(), []);
+  const supabase = useSupabase();
 
   return useMutation({
     mutationFn: ({
@@ -34,7 +33,7 @@ export function useAddDelegate() {
 
 export function useUpdateDelegatePermissions() {
   const queryClient = useQueryClient();
-  const supabase = useMemo(() => createBrowserSupabaseClient(), []);
+  const supabase = useSupabase();
 
   return useMutation({
     mutationFn: ({
@@ -55,7 +54,7 @@ export function useUpdateDelegatePermissions() {
 
 export function useRemoveDelegate() {
   const queryClient = useQueryClient();
-  const supabase = useMemo(() => createBrowserSupabaseClient(), []);
+  const supabase = useSupabase();
 
   return useMutation({
     mutationFn: ({

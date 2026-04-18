@@ -1,0 +1,126 @@
+{
+  "agent": "bug-detection",
+  "review_id": "2026-04-17_08-00-00",
+  "timestamp": "2026-04-17T08:00:00.000Z",
+  "scope": "apps/",
+  "summary": {
+    "filesAnalyzed": 10,
+    "issuesFound": 11,
+    "critical": 2,
+    "warning": 6,
+    "suggestion": 3,
+    "info": 0
+  },
+  "issues": [
+    {
+      "id": "BUG-001",
+      "severity": "critical",
+      "category": "useEffect-deps",
+      "title": "Missing dependency in useEffect - clearCartCookie not tracked",
+      "file": "apps/payments/src/features/checkout/presentation/pages/CheckoutPageContent.tsx",
+      "line": 107,
+      "description": "The useEffect at line 107-113 has clearCartCookie in the body but not in the dependency array. If clearCartCookie changes, the stale closure will reference the old version. Additionally, the dependency array only includes [allSubmitted] but the effect also depends on cartCleared.current which is a ref.",
+      "fix": "Add clearCartCookie to the dependency array: [allSubmitted, clearCartCookie]"
+    },
+    {
+      "id": "BUG-002",
+      "severity": "warning",
+      "category": "missing-client-directive",
+      "title": "Missing 'use client' directive in client component",
+      "file": "apps/store/src/features/cart/presentation/components/CartItemRow.tsx",
+      "line": 1,
+      "description": "This component uses event handlers (onClick on buttons at lines 108, 125, 137) and is clearly a client component, but lacks the 'use client' directive. This will cause hydration errors in Next.js.",
+      "fix": "Add 'use client'; at the top of the file before imports"
+    },
+    {
+      "id": "BUG-003",
+      "severity": "critical",
+      "category": "stale-state",
+      "title": "Filter input state becomes stale when URL params change externally",
+      "file": "apps/admin/src/features/users/presentation/pages/UsersPageContent.tsx",
+      "line": 24,
+      "description": "filterInput is initialized from params.search but never synced when params change from external navigation. If user navigates directly via URL, filterInput will show stale value. No useEffect exists to sync filterInput back to params changes.",
+      "fix": "Add useEffect to sync filterInput when params.search changes: useEffect(() => { setFilterInput(params.search ?? ''); }, [params.search])"
+    },
+    {
+      "id": "BUG-004",
+      "severity": "warning",
+      "category": "unused-state",
+      "title": "roleFilter and itemFilter state never used to filter",
+      "file": "apps/admin/src/features/users/presentation/pages/UsersPageContent.tsx",
+      "line": 30,
+      "description": "roleFilter and itemFilter are created as local state and passed to UserTable, but never used to actually filter the useUsers query results. The state is maintained but has no effect.",
+      "fix": "Either remove these states if not needed, or add them to the useUsers query parameters to actually filter results"
+    },
+    {
+      "id": "BUG-005",
+      "severity": "suggestion",
+      "category": "memoization",
+      "title": "getItemName function not memoized - causes unnecessary re-renders",
+      "file": "apps/payments/src/features/checkout/application/hooks/useCartFromCookie.ts",
+      "line": 74,
+      "description": "getItemName is recreated on every render (arrow function inside component body). This causes dependent components to re-render unnecessarily. Should be wrapped in useCallback.",
+      "fix": "Wrap getItemName in useCallback: const getItemName = useCallback((item: CartItem) => i18nField(item, 'name', locale), [locale]);"
+    },
+    {
+      "id": "BUG-006",
+      "severity": "warning",
+      "category": "missing-error-handling",
+      "title": "No error handling in useSubmitPayment mutationFn",
+      "file": "apps/payments/src/features/checkout/application/hooks/useSubmitPayment.ts",
+      "line": 33,
+      "description": "The mutationFn is async but has no try/catch. If createOrder or submitReceipt throw errors, they propagate unhandled. Callers must handle all error types.",
+      "fix": "Add try/catch block around the function body to ensure consistent error handling"
+    },
+    {
+      "id": "BUG-007",
+      "severity": "warning",
+      "category": "cross-feature-import",
+      "title": "Cross-feature import violates feature isolation",
+      "file": "apps/studio/src/features/products/presentation/components/ProductTable.tsx",
+      "line": 18,
+      "description": "ProductTable imports useDelegateCountsByProduct from @/features/seller-admins which is a different feature. This creates tight coupling and circular dependency risks.",
+      "fix": "Move the delegate count logic to a shared hook or pass delegateCounts as a prop from the parent component"
+    },
+    {
+      "id": "BUG-008",
+      "severity": "info",
+      "category": "dead-code",
+      "title": "Empty JSX expressions in Droppable component",
+      "file": "apps/studio/src/features/products/presentation/components/ProductTable.tsx",
+      "line": 129,
+      "description": "Empty curly braces {} appear at lines 129 and 157 within the Droppable component. These are likely copy-paste artifacts or incomplete code.",
+      "fix": "Remove the empty {} expressions at lines 129 and 157"
+    },
+    {
+      "id": "BUG-009",
+      "severity": "warning",
+      "category": "missing-error-handler",
+      "title": "Missing onError callbacks in mutations",
+      "file": "apps/studio/src/features/products/application/useProductMutations.ts",
+      "line": 15,
+      "description": "useToggleProduct, useDeleteProduct, and useReorderProducts mutations have onSuccess handlers but no onError handlers. Errors are silently ignored, preventing proper error UI feedback.",
+      "fix": "Add onError callbacks to each mutation to handle and display errors properly"
+    },
+    {
+      "id": "BUG-010",
+      "severity": "critical",
+      "category": "null-pointer-access",
+      "title": "Unsafe nested property access in hasRequiredPermissions",
+      "file": "apps/payments/src/app/api/checkout/payment-methods/route.ts",
+      "line": 158,
+      "description": "Line 158 accesses row.resource_permissions.permissions.key without null checks. If the nested structure is missing or malformed, this will throw a runtime error.",
+      "fix": "Add defensive checks: row.resource_permissions?.permissions?.key or validate the structure before access"
+    },
+    {
+      "id": "BUG-011",
+      "severity": "suggestion",
+      "category": "error-handling",
+      "title": "Inconsistent error message extraction logic",
+      "file": "apps/payments/src/features/checkout/presentation/pages/CheckoutPageContent.tsx",
+      "line": 88,
+      "description": "Error handling at lines 88-91 tries to extract error.message but also falls back to (error as {message?: string})?.message. This dual approach is fragile - if error is a string or other type, both approaches fail.",
+      "fix": "Implement consistent error-to-message extraction: const message = error instanceof Error ? error.message : String(error) || t('errorOccurred')"
+    }
+  ]
+}

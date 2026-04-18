@@ -1,0 +1,198 @@
+{
+  "agent": "pattern-discovery",
+  "review_id": "2026-04-17_22-00-00",
+  "timestamp": "2026-04-17T22:00:00",
+  "scope": "apps/",
+  "summary": {
+    "filesAnalyzed": 30,
+    "issuesFound": 7,
+    "critical": 0,
+    "warning": 1,
+    "suggestion": 4,
+    "info": 2
+  },
+  "issues": [
+    {
+      "id": "PAT-001",
+      "severity": "info",
+      "title": "Permission Guard Pages follow a consistent undocumented pattern",
+      "files": [
+        "apps/admin/src/features/audit/presentation/pages/AuditLogPage.tsx",
+        "apps/admin/src/features/users/presentation/pages/UsersPage.tsx",
+        "apps/admin/src/features/templates/presentation/pages/TemplatesPage.tsx",
+        "apps/admin/src/features/settings/presentation/pages/SettingsPage.tsx",
+        "apps/admin/src/features/dashboard/presentation/pages/DashboardPage.tsx",
+        "apps/payments/src/features/payment-methods/presentation/pages/PaymentMethodsPage.tsx",
+        "apps/payments/src/features/checkout/presentation/pages/CheckoutPage.tsx",
+        "apps/studio/src/features/products/presentation/pages/ProductListPage.tsx"
+      ],
+      "description": "A consistent two-layer page pattern exists across admin, payments and studio: a thin `*Page` component handles auth loading and permission check (returning `<AccessDeniedState>` on failure), then delegates to a `*PageContent` component for actual content. This pattern appears in 8+ pages but is not yet documented in architecture rules.",
+      "fix": "Document this Permission Guard Page pattern in `.claude/rules/architecture.md` under Application-Level Architecture, explaining that `*Page` = permission guard, `*PageContent` = content. This prevents future developers from implementing permission checks inside content components."
+    },
+    {
+      "id": "PAT-002",
+      "severity": "info",
+      "title": "App-level thin re-export wrappers for shared utilities is an established pattern",
+      "files": [
+        "apps/admin/src/shared/infrastructure/providers/QueryProvider.tsx",
+        "apps/store/src/shared/infrastructure/providers/QueryProvider.tsx",
+        "apps/admin/src/shared/application/context/ErrorContext.tsx",
+        "apps/payments/src/shared/application/context/ErrorContext.tsx",
+        "apps/admin/src/shared/presentation/components/AccessDeniedState.tsx",
+        "apps/studio/src/shared/presentation/components/AccessDeniedState.tsx",
+        "apps/store/src/shared/domain/categoryConstants.ts",
+        "apps/studio/src/shared/domain/categoryConstants.ts"
+      ],
+      "description": "All apps use one-line re-export wrappers that proxy shared utilities from `shared/*` or `auth/client` into app-local paths. For example, every app has `shared/infrastructure/providers/QueryProvider.tsx` that just does `export { QueryProvider } from \"shared/providers\"`. This is a deliberate DI/architecture pattern but is not documented.",
+      "fix": "Document this thin re-export wrapper pattern in `.claude/rules/monorepo-architecture.md` to explain that apps create local wrappers for shared utilities so consumers always import from app-local paths, making it easy to override or extend in the future."
+    },
+    {
+      "id": "PAT-003",
+      "severity": "suggestion",
+      "title": "Auth feature in each app is a thin re-export — a redundant pattern",
+      "files": [
+        "apps/admin/src/features/auth/application/hooks/useSupabaseAuth.ts",
+        "apps/store/src/features/auth/application/hooks/useSupabaseAuth.ts",
+        "apps/payments/src/features/auth/application/hooks/useSupabaseAuth.ts",
+        "apps/studio/src/features/auth/application/hooks/useSupabaseAuth.ts",
+        "apps/playground/src/features/auth/application/hooks/useSupabaseAuth.ts"
+      ],
+      "description": "Every app has `features/auth/application/hooks/useSupabaseAuth.ts` that is a single line: `export { useSupabaseAuth } from \"auth/client\"`. The features/auth/index.ts barrel then re-exports this. This creates 5 identical files with identical content. The same thin-wrapper approach is already applied at `shared/`, and `features/auth` wrapping seems unnecessary duplication.",
+      "fix": "Consider merging the `features/auth` wrapper into the `shared/application/` level (which is already the pattern for other auth utilities), or document that `features/auth` is intentionally kept for architectural symmetry even when it's a pure passthrough."
+    },
+    {
+      "id": "PAT-004",
+      "severity": "suggestion",
+      "title": "URL state pattern (nuqs searchParams) is well-established — but only for product/admin features",
+      "files": [
+        "apps/admin/src/features/audit/domain/searchParams.ts",
+        "apps/admin/src/features/users/domain/searchParams.ts",
+        "apps/store/src/features/products/domain/searchParams.ts",
+        "apps/studio/src/features/products/domain/searchParams.ts",
+        "apps/payments/src/features/received-orders/domain/searchParams.ts"
+      ],
+      "description": "The nuqs URL state pattern is correctly applied in 5 features (audit, users, products in store/studio, received-orders in payments). However, several paginated or filterable pages in payments (`orders`, `checkout`) and studio (`seller-admins`) do not use searchParams at all — using local `useState` instead, making those pages non-bookmarkable.",
+      "fix": "Audit `apps/payments/src/features/orders` and `apps/studio/src/features/seller-admins` for filter/pagination state that should use nuqs. The URL state rule already exists in `.claude/rules/url-state.md` — enforcement is the gap."
+    },
+    {
+      "id": "PAT-005",
+      "severity": "suggestion",
+      "title": "CSS is fully centralized in the shared ui package — all app globals.css are identical",
+      "files": [
+        "apps/admin/src/app/globals.css",
+        "apps/auth/src/app/globals.css",
+        "apps/landing/src/app/globals.css",
+        "apps/payments/src/app/globals.css",
+        "apps/playground/src/app/globals.css",
+        "apps/store/src/app/globals.css",
+        "apps/studio/src/app/globals.css"
+      ],
+      "description": "All 7 app `globals.css` files are byte-for-byte identical (3 imports + 2 @source directives). This is excellent CSS DRY compliance — all semantic utilities (`surface-grid-dots`, `border-b-strong`, `font-display`, etc.) are defined in `packages/ui/src/styles/utilities.css`. The `css-consistency.md` rule is being followed perfectly.",
+      "fix": "No fix needed. Consider documenting this as a positive architectural achievement in CLAUDE.md or the css-consistency rule to help future contributors understand this is intentional and complete."
+    },
+    {
+      "id": "PAT-006",
+      "severity": "suggestion",
+      "title": "eslint-disable i18next comments are widely used for non-string literal suppressions",
+      "files": [
+        "apps/payments/src/app/api/checkout/orders/route.ts",
+        "apps/payments/src/app/api/checkout/payment-methods/route.ts",
+        "apps/admin/src/features/audit/infrastructure/auditQueries.ts",
+        "apps/admin/src/features/users/presentation/pages/UsersPage.tsx",
+        "apps/admin/src/features/settings/presentation/pages/SettingsPage.tsx",
+        "apps/studio/src/features/products/domain/constants.ts"
+      ],
+      "description": "44 files contain `eslint-disable i18next/no-literal-string` comments. Many are legitimate (HTTP headers, internal permission key strings, API identifiers), but the pattern is common enough that it's worth reviewing. Several suppressions are in places like `domain/constants.ts` and infrastructure files where hardcoded non-UI strings are intentional, suggesting the i18n lint rule may be over-broad for non-presentation layers.",
+      "fix": "Consider scoping the `i18next/no-literal-string` ESLint rule to `presentation/**/*.tsx` files only, removing the need for suppressions in infrastructure/domain layers. This would reduce noise and make suppressions in presentation files stand out as actual issues."
+    },
+    {
+      "id": "PAT-007",
+      "severity": "warning",
+      "title": "Inconsistent tid() import source across apps",
+      "files": [
+        "apps/admin/src/shared/presentation/components/AdminSidebar.tsx",
+        "apps/admin/src/features/audit/presentation/components/AuditTable.tsx",
+        "apps/store/src/features/products/presentation/components/SearchBar.tsx",
+        "apps/payments/src/shared/presentation/components/PaymentsSidebarNav.tsx"
+      ],
+      "description": "Most components import `tid` from `\"shared\"` directly (the workspace package). However, 4 apps (admin, store, payments, studio) also have a local re-export at `shared/infrastructure/config/tid.ts`. Tests and some components may use either import path, creating inconsistency. The `tid.ts` wrappers just do `export { tid, ... } from \"shared/utils/tid\"`, so they're redundant but harmless.",
+      "fix": "Standardize all `tid` imports to `import { tid } from \"shared\"` (the already-established pattern used in 100+ files). The local `shared/infrastructure/config/tid.ts` wrappers can then be removed as they add no value. Update the e2e-selectors rule to specify the canonical import path."
+    }
+  ],
+  "patterns": [
+    {
+      "type": "good",
+      "description": "Permission Guard + Content Page split: `*Page` handles auth/permission checks and delegates rendering to `*PageContent`. Consistent across 8+ pages in admin, payments, and studio. Cleanly separates concerns and enables content components to focus purely on rendering.",
+      "files": [
+        "apps/admin/src/features/audit/presentation/pages/AuditLogPage.tsx",
+        "apps/admin/src/features/users/presentation/pages/UsersPage.tsx",
+        "apps/payments/src/features/payment-methods/presentation/pages/PaymentMethodsPage.tsx"
+      ]
+    },
+    {
+      "type": "good",
+      "description": "Thin re-export wrapper pattern at app-level shared: each app wraps shared package exports via local files (e.g., `shared/infrastructure/providers/QueryProvider.tsx` re-exporting from `shared/providers`). Enables future overrides without touching all consumers.",
+      "files": [
+        "apps/admin/src/shared/infrastructure/providers/QueryProvider.tsx",
+        "apps/store/src/shared/application/context/ErrorContext.tsx",
+        "apps/admin/src/shared/presentation/components/AccessDeniedState.tsx"
+      ]
+    },
+    {
+      "type": "good",
+      "description": "URL state managed via nuqs searchParams files in domain layer. All filter/pagination hooks use `useQueryStates(featureSearchParams)` with parsers declared in `domain/searchParams.ts`. Consistent in all 5 features that have filters.",
+      "files": [
+        "apps/admin/src/features/audit/domain/searchParams.ts",
+        "apps/store/src/features/products/domain/searchParams.ts",
+        "apps/payments/src/features/received-orders/domain/searchParams.ts"
+      ]
+    },
+    {
+      "type": "good",
+      "description": "All 7 app globals.css files are identical, delegating all CSS to `packages/ui/src/styles/`. Semantic utility classes (surface-grid-dots, border-b-strong, font-display, etc.) are centralized in the ui package and shared across all apps. Perfect CSS consistency compliance.",
+      "files": [
+        "packages/ui/src/styles/utilities.css",
+        "apps/store/src/app/globals.css",
+        "apps/admin/src/app/globals.css"
+      ]
+    },
+    {
+      "type": "good",
+      "description": "Barrel index.ts files exist for every feature, enforcing clean public API boundaries. Each feature exports only what's needed via its index.ts.",
+      "files": [
+        "apps/admin/src/features/audit/index.ts",
+        "apps/store/src/features/products/index.ts",
+        "apps/studio/src/features/seller-admins/index.ts"
+      ]
+    },
+    {
+      "type": "good",
+      "description": "E2E tests use getByTestId() with tid() as primary selector strategy — no class-based selectors found in spec files. smoke-all-apps.spec.ts tests cross-app session persistence properly.",
+      "files": [
+        "apps/auth/e2e/smoke-all-apps.spec.ts",
+        "apps/auth/e2e/checkout-stock-integrity.spec.ts"
+      ]
+    },
+    {
+      "type": "bad",
+      "description": "5 identical `features/auth/application/hooks/useSupabaseAuth.ts` files across apps that each contain a single line re-exporting from `auth/client`. These could be consolidated or removed.",
+      "files": [
+        "apps/admin/src/features/auth/application/hooks/useSupabaseAuth.ts",
+        "apps/store/src/features/auth/application/hooks/useSupabaseAuth.ts",
+        "apps/payments/src/features/auth/application/hooks/useSupabaseAuth.ts",
+        "apps/studio/src/features/auth/application/hooks/useSupabaseAuth.ts",
+        "apps/playground/src/features/auth/application/hooks/useSupabaseAuth.ts"
+      ]
+    },
+    {
+      "type": "bad",
+      "description": "Inconsistent `tid` import source: some files import from `\"shared\"`, others use a local wrapper at `shared/infrastructure/config/tid.ts`. The canonical import should be `from \"shared\"`.",
+      "files": [
+        "apps/admin/src/shared/infrastructure/config/tid.ts",
+        "apps/payments/src/shared/infrastructure/config/tid.ts",
+        "apps/store/src/shared/infrastructure/config/tid.ts",
+        "apps/studio/src/shared/infrastructure/config/tid.ts"
+      ]
+    }
+  ]
+}

@@ -27,7 +27,11 @@ export function AuditRowDetail({ entry }: AuditRowDetailProps) {
 
   const handleCopyUserId = async () => {
     if (entry.user_id) {
-      await navigator.clipboard.writeText(entry.user_id);
+      try {
+        await navigator.clipboard.writeText(entry.user_id);
+      } catch {
+        // Clipboard permission denied or non-HTTPS context — ignore silently
+      }
     }
   };
 

@@ -1,7 +1,10 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "api/supabase/types";
 
-import type { ProductFilters } from "@/features/products/domain/types";
+import type {
+  ProductFilters,
+  ReorderItem,
+} from "@/features/products/domain/types";
 
 type SupabaseDB = SupabaseClient<Database>;
 
@@ -13,10 +16,11 @@ export async function fetchProducts(
   const {
     data: { user },
   } = await supabase.auth.getUser();
+  if (!user) return [];
   let query = supabase
     .from("products")
     .select("*")
-    .eq("seller_id", user?.id ?? "")
+    .eq("seller_id", user.id)
     .order("sort_order", { ascending: true })
     .order("id", { ascending: true });
 
@@ -69,7 +73,7 @@ export async function deleteProduct(supabase: SupabaseDB, id: string) {
 /** Batch-update sort_order for a list of products */
 export async function reorderProducts(
   supabase: SupabaseDB,
-  items: Array<{ id: string; sortOrder: number }>,
+  items: ReorderItem[],
 ) {
   const updates = items.map((item) =>
     supabase

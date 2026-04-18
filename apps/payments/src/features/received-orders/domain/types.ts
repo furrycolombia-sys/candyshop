@@ -22,3 +22,13 @@ export interface ReceivedOrder {
 }
 
 export type SellerAction = "approved" | "rejected" | "evidence_requested";
+
+/** Whether the seller can approve or reject an order in this status */
+export function canActOnOrder(status: OrderStatus): boolean {
+  return status === "pending_verification" || status === "evidence_requested";
+}
+
+/** Whether the seller can request additional evidence */
+export function canRequestEvidence(status: OrderStatus): boolean {
+  return status === "pending_verification";
+}

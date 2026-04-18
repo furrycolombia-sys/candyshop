@@ -1,0 +1,84 @@
+{
+  "agent": "security",
+  "timestamp": "2026-04-17T04:08:32",
+  "scope": "apps/",
+  "summary": {
+    "filesAnalyzed": 18,
+    "issuesFound": 3,
+    "critical": 1,
+    "warning": 2,
+    "suggestion": 0,
+    "info": 0
+  },
+  "issues": [
+    {
+      "id": "SEC-001",
+      "severity": "critical",
+      "category": "Price Manipulation",
+      "title": "Order total accepted from client-controlled request body without server-side recalculation",
+      "file": "apps/payments/src/app/api/checkout/orders/route.ts",
+      "lines": "67-97, 122-126",
+      "description": "The POST /api/checkout/orders route accepts `total_cop` directly from the client request body and stores it in the database without server-side recalculation. Additionally, `unit_price_cop` stored in `order_items` is taken from the cart cookie (`item.price_cop`), which is a client-controlled cookie. A malicious buyer can tamper the cart cookie or the `total_cop` field to submit orders at arbitrary prices (e.g., $1 for any product).",
+      "evidence": "Route line 97: `const totalCop = total_cop;` — value is taken from request body directly. checkoutQueries.ts line 136: `unit_price_cop: item.price_cop` — item price comes from the cookie, not from the database.",
+      "affected_files": [
+        "apps/payments/src/app/api/checkout/orders/route.ts",
+        "apps/payments/src/features/checkout/infrastructure/checkoutQueries.ts",
+        "apps/payments/src/features/checkout/infrastructure/cartCookie.ts",
+        "apps/payments/src/features/checkout/application/hooks/useCartFromCookie.ts"
+      ],
+      "rule": "checkout-stock-integrity.md — price manipulation prevention",
+      "fix": "The server must look up prices from the database for each product ID at order creation time, and recalculate `total_cop` server-side. Neither `total_cop` from the client body nor `price_cop` from the cart cookie should be trusted for financial records. The `unit_price_cop` stored in `order_items` must come from the `products` table fetched by the server using the provided product IDs, not from client-sent data."
+    },
+    {
+      "id": "SEC-002",
+      "severity": "warning",
+      "category": "Authentication",
+      "title": "getSession() used in server-side route instead of getUser()",
+      "file": "apps/auth/src/app/api/auth/refresh/route.ts",
+      "lines": "59-64",
+      "description": "The POST /api/auth/refresh route uses `supabase.auth.getSession()` to verify authentication. Supabase recommends using `getUser()` for server-side auth checks because `getSession()` only reads from the cookie and does not re-validate the JWT with the Supabase auth server. A forged or stolen session cookie can bypass the session check in this context. The admin routes and payment routes correctly use `getUser()`.",
+      "evidence": "apps/auth/src/app/api/auth/refresh/route.ts line 64: `} = await supabase.auth.getSession();`",
+      "affected_files": ["apps/auth/src/app/api/auth/refresh/route.ts"],
+      "rule": "Supabase server-side auth best practices — always use getUser() for security-sensitive server checks",
+      "fix": "Replace `supabase.auth.getSession()` with `supabase.auth.getUser()` and use `user` instead of `session` to validate authentication. If the access_token cookie value is needed, read it from cookies explicitly after verifying the user."
+    },
+    {
+      "id": "SEC-003",
+      "severity": "warning",
+      "category": "Authentication",
+      "title": "getSession() used in admin audit queries instead of getUser()",
+      "file": "apps/admin/src/features/audit/infrastructure/auditQueries.ts",
+      "lines": "59-66",
+      "description": "The audit query infrastructure (`auditQueries.ts` and `auditRestClient.ts`) uses `supabase.auth.getSession()` to extract the session token for constructing Authorization headers. Same issue as SEC-002: the session is only verified locally from the cookie, not server-side. An attacker with a stale or forged session cookie can authenticate audit REST queries.",
+      "evidence": "apps/admin/src/shared/infrastructure/auditRestClient.ts line 25: `} = await supabase.auth.getSession();` and apps/admin/src/features/audit/infrastructure/auditQueries.ts line 64: same pattern.",
+      "affected_files": [
+        "apps/admin/src/shared/infrastructure/auditRestClient.ts",
+        "apps/admin/src/features/audit/infrastructure/auditQueries.ts"
+      ],
+      "rule": "Supabase server-side auth best practices — always use getUser() for security-sensitive server checks",
+      "fix": "Replace `getSession()` with `getUser()` and use the returned user's access_token from the verified session. Alternatively, since these REST queries use Bearer tokens, call `getUser()` first to verify the token is still valid, then proceed with the access token obtained from `getSession()` only after `getUser()` confirms validity."
+    }
+  ],
+  "patterns": [
+    {
+      "pattern": "UUID validation in place",
+      "description": "All admin API routes and payment routes properly validate user-controlled UUIDs using `validateUuid()` before passing them to database queries. This prevents UUID injection attacks."
+    },
+    {
+      "pattern": "No hardcoded secrets found",
+      "description": "No hardcoded API keys, tokens, or credentials found in source files. All sensitive values use process.env variables."
+    },
+    {
+      "pattern": "Service role key only server-side",
+      "description": "SUPABASE_SERVICE_ROLE_KEY is used only in server-side files (API routes and infrastructure), never in client-side ('use client') code."
+    },
+    {
+      "pattern": "Input sanitization in checkout payment-methods",
+      "description": "The /api/checkout/payment-methods route sanitizes all cart items via sanitizeItems() before using them, including UUID validation and quantity checks."
+    },
+    {
+      "pattern": "CORS whitelist implemented",
+      "description": "apps/auth/src/app/api/auth/refresh/route.ts uses an allowlist of known app URLs for CORS, preventing arbitrary cross-origin requests."
+    }
+  ]
+}

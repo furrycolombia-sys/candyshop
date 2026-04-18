@@ -37,6 +37,7 @@ vi.mock("next/link", () => ({
 }));
 
 vi.mock("ui", () => ({
+  cn: (...args: unknown[]) => args.filter(Boolean).join(" "),
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   Button: ({ children, ...props }: any) => (
     <button {...props}>{children}</button>
@@ -51,12 +52,23 @@ vi.mock("nuqs", async (importOriginal) => {
   };
 });
 
-vi.mock("@/features/products/application/useProducts", () => ({
+vi.mock("@/features/products/application/hooks/useProducts", () => ({
   useProducts: () => ({
     data: [{ id: "1", name_en: "Product 1" }],
     isLoading: false,
   }),
 }));
+
+vi.mock("@/shared/application/hooks/useSupabaseAuth", () => ({
+  useSupabaseAuth: () => ({ user: { id: "seller-1" } }),
+}));
+
+vi.mock(
+  "@/features/seller-admins/application/hooks/useDelegateCountsByProduct",
+  () => ({
+    useDelegateCountsByProduct: () => ({ data: {} }),
+  }),
+);
 
 vi.mock("@/features/orders/application/hooks/usePendingOrderCount", () => ({
   usePendingOrderCount: () => ({

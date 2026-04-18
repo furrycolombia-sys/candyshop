@@ -35,9 +35,10 @@ export async function insertProduct(supabase: SupabaseDB, data: ProductInsert) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
+  if (!user) throw new Error("Unauthenticated");
   const { data: product, error } = await supabase
     .from("products")
-    .insert({ ...data, sort_order: sortOrder, seller_id: user?.id ?? null })
+    .insert({ ...data, sort_order: sortOrder, seller_id: user.id })
     .select()
     .single();
 

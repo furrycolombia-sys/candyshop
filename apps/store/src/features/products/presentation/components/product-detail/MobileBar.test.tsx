@@ -16,6 +16,7 @@ vi.mock("next-intl", () => ({
 vi.mock("shared", () => ({
   tid: (id: string) => ({ "data-testid": id }),
   i18nPrice: () => "$25",
+  i18nCurrencyCode: () => "USD",
 }));
 
 const defaultTheme = {
@@ -77,7 +78,7 @@ describe("MobileBar", () => {
     render(
       <MobileBar
         product={makeProduct()}
-        added={false}
+        isAdded={false}
         hasReachedStockLimit={false}
         onAddToCart={onAddToCart}
         theme={defaultTheme}
@@ -92,7 +93,7 @@ describe("MobileBar", () => {
     render(
       <MobileBar
         product={makeProduct()}
-        added={false}
+        isAdded={false}
         hasReachedStockLimit={false}
         onAddToCart={onAddToCart}
         theme={defaultTheme}
@@ -109,7 +110,7 @@ describe("MobileBar", () => {
     render(
       <MobileBar
         product={makeProduct()}
-        added={true}
+        isAdded={true}
         hasReachedStockLimit={false}
         onAddToCart={onAddToCart}
         theme={defaultTheme}
@@ -123,7 +124,7 @@ describe("MobileBar", () => {
     render(
       <MobileBar
         product={makeProduct()}
-        added={false}
+        isAdded={false}
         hasReachedStockLimit={false}
         onAddToCart={onAddToCart}
         theme={defaultTheme}
@@ -137,7 +138,7 @@ describe("MobileBar", () => {
     render(
       <MobileBar
         product={makeProduct()}
-        added={false}
+        isAdded={false}
         hasReachedStockLimit={false}
         onAddToCart={onAddToCart}
         theme={defaultTheme}
@@ -151,7 +152,7 @@ describe("MobileBar", () => {
     render(
       <MobileBar
         product={makeProduct()}
-        added={false}
+        isAdded={false}
         hasReachedStockLimit={false}
         onAddToCart={onAddToCart}
         theme={defaultTheme}
@@ -166,7 +167,7 @@ describe("MobileBar", () => {
     render(
       <MobileBar
         product={makeProduct({ is_active: false })}
-        added={false}
+        isAdded={false}
         hasReachedStockLimit={false}
         onAddToCart={onAddToCart}
         theme={defaultTheme}
@@ -182,7 +183,7 @@ describe("MobileBar", () => {
     render(
       <MobileBar
         product={makeProduct()}
-        added={true}
+        isAdded={true}
         hasReachedStockLimit={false}
         onAddToCart={onAddToCart}
         theme={defaultTheme}
@@ -198,7 +199,7 @@ describe("MobileBar", () => {
     render(
       <MobileBar
         product={makeProduct({ max_quantity: 1 })}
-        added={false}
+        isAdded={false}
         hasReachedStockLimit={true}
         onAddToCart={onAddToCart}
         theme={defaultTheme}

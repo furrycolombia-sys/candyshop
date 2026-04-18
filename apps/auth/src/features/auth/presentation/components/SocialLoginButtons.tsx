@@ -39,10 +39,14 @@ export function SocialLoginButtons() {
   const returnTo = searchParams.get("returnTo") ?? "/";
 
   const handleSignIn = async (provider: Provider) => {
-    await signInWithProvider(
-      provider,
-      `${globalThis.location.origin}/auth/callback?next=${encodeURIComponent(returnTo)}`,
-    );
+    try {
+      await signInWithProvider(
+        provider,
+        `${globalThis.location.origin}/auth/callback?next=${encodeURIComponent(returnTo)}`,
+      );
+    } catch {
+      // Network error or popup blocked — silently ignore, provider redirects on success
+    }
   };
 
   return (

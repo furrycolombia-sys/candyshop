@@ -1,0 +1,100 @@
+{
+  "agent": "component-patterns",
+  "review_id": "2026-04-17_10-00-00",
+  "timestamp": "2026-04-17T10:00:00Z",
+  "scope": "apps/",
+  "summary": {
+    "filesAnalyzed": 169,
+    "issuesFound": 4,
+    "critical": 0,
+    "warning": 3,
+    "suggestion": 1,
+    "info": 0
+  },
+  "issues": [
+    {
+      "id": "COMP-001",
+      "severity": "warning",
+      "file": "apps/payments/src/features/received-orders/presentation/components/ReceivedOrderCard.tsx",
+      "line": 35,
+      "title": "Multiple components in single file (BuyerInfoValue helper)",
+      "description": "File exports ReceivedOrderCard but also defines BuyerInfoValue as an internal component. The eslint-disable comment acknowledges this. While the comment justifies the pattern, BuyerInfoValue renders JSX and is a real React component, not just a utility. Per the one-component-per-file rule, it should be extracted — or kept only if it is truly unshareable and tightly coupled.",
+      "rule": "one-component-per-file.md",
+      "fix": "Extract BuyerInfoValue to its own file BuyerInfoValue.tsx in the same directory, or ensure the inline declaration is truly a small, private render helper that will never be reused."
+    },
+    {
+      "id": "COMP-002",
+      "severity": "warning",
+      "file": "apps/payments/src/features/checkout/presentation/components/DynamicFormField.tsx",
+      "line": 95,
+      "title": "Multiple components in single file (FileInput helper)",
+      "description": "File exports DynamicFormField but also defines FileInput as an internal, non-exported component. The eslint-disable comment acknowledges this. FileInput is a real React component co-located with its parent. Per project rules, it should be in its own file.",
+      "rule": "one-component-per-file.md",
+      "fix": "Extract FileInput to FileInput.tsx in the same directory. Import it in DynamicFormField.tsx."
+    },
+    {
+      "id": "COMP-003",
+      "severity": "warning",
+      "file": "apps/studio/src/features/products/presentation/components/inline-editor/SectionItemsGallery.tsx, SectionItemsTwoColumn.tsx, SectionItemsCards.tsx, SectionItemsAccordion.tsx",
+      "line": 1,
+      "title": "Multiple components in single file (internal compound item editors)",
+      "description": "Each of these four files defines an internal, non-exported helper component (GalleryItemEditor, TwoColumnRow, CardItem, AccordionItemEditor) alongside the main exported component. All have eslint-disable comments with explanations. While the pattern is acknowledged, it violates the one-component-per-file rule. The rule's compound-component exception applies to shadcn/ui patterns in ui/ only.",
+      "rule": "one-component-per-file.md",
+      "fix": "Extract each internal sub-component to its own file (e.g., GalleryItemEditor.tsx) in the same directory and import it in the parent. The eslint-disable comments can then be removed."
+    },
+    {
+      "id": "COMP-004",
+      "severity": "suggestion",
+      "file": "apps/admin/src/shared/presentation/components/AdminSidebar.tsx, apps/payments/src/shared/presentation/components/PaymentsSidebar.tsx",
+      "line": 95,
+      "title": "Sidebar collapse state uses useState instead of nuqs",
+      "description": "Both AdminSidebar and PaymentsSidebar use useState for isCollapsed. Per the URL State rule, 'view mode' state (e.g., sidebar collapse) should use nuqs to enable bookmarking and refresh persistence. However, sidebar collapse is borderline — it can also be considered transient UI state. The rule lists 'Panel open/close (shareable)' as a nuqs candidate.",
+      "rule": "url-state.md",
+      "fix": "Consider using useQueryState('sidebarCollapsed', parseAsBoolean.withDefault(false)) from nuqs so collapse state persists across refreshes and is shareable. Only apply if the collapsed state should survive a page reload."
+    }
+  ],
+  "patterns": [
+    {
+      "type": "good",
+      "description": "All 169 non-test TSX files export exactly ONE component as their primary export — no accidental god-files or barrel component files.",
+      "examples": [
+        "apps/admin/src/features/users/presentation/pages/UsersPageContent.tsx",
+        "apps/studio/src/features/products/presentation/components/ProductFilters.tsx"
+      ]
+    },
+    {
+      "type": "good",
+      "description": "Search debouncing pattern (local useState for input + useEffect to flush to nuqs URL) is consistently used in ProductFilters and UsersPageContent — prevents excessive URL writes on every keystroke.",
+      "examples": [
+        "apps/studio/src/features/products/presentation/components/ProductFilters.tsx:24",
+        "apps/admin/src/features/users/presentation/pages/UsersPageContent.tsx:24"
+      ]
+    },
+    {
+      "type": "good",
+      "description": "Navigation state (filters, search, pagination, sorting) is correctly managed via nuqs in all page-level components (AuditLogPageContent, UsersPageContent, ProductFilters).",
+      "examples": [
+        "apps/admin/src/features/audit/presentation/pages/AuditLogPageContent.tsx",
+        "apps/admin/src/features/users/presentation/pages/UsersPageContent.tsx",
+        "apps/studio/src/features/products/presentation/components/ProductFilters.tsx"
+      ]
+    },
+    {
+      "type": "good",
+      "description": "'use client' directives are correctly placed at the top of all client components. Files with eslint-disable comments before the directive have valid justifications.",
+      "examples": [
+        "apps/payments/src/features/payment-methods/presentation/components/PaymentMethodEditor.tsx",
+        "apps/studio/src/features/products/presentation/components/inline-editor/SectionItemsGallery.tsx"
+      ]
+    },
+    {
+      "type": "info",
+      "description": "Six files use eslint-disable react/no-multi-comp with documented justifications. These are acknowledged violations where the team has explicitly decided co-location outweighs the one-component rule. They are tracked as COMP-001 through COMP-003.",
+      "examples": [
+        "apps/payments/src/features/received-orders/presentation/components/ReceivedOrderCard.tsx",
+        "apps/payments/src/features/checkout/presentation/components/DynamicFormField.tsx",
+        "apps/studio/src/features/products/presentation/components/inline-editor/SectionItemsCards.tsx"
+      ]
+    }
+  ]
+}

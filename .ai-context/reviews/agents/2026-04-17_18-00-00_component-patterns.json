@@ -1,0 +1,87 @@
+{
+  "agent": "component-patterns",
+  "timestamp": "2026-04-17T18:00:00",
+  "scope": "apps/",
+  "summary": {
+    "filesAnalyzed": 30,
+    "issuesFound": 5,
+    "critical": 0,
+    "warning": 3,
+    "suggestion": 2,
+    "info": 0
+  },
+  "issues": [
+    {
+      "id": "COMP-001",
+      "severity": "warning",
+      "title": "Unused prop declared in interface",
+      "file": "apps/payments/src/features/payment-methods/presentation/components/PaymentMethodEditor.tsx",
+      "line": 20,
+      "description": "The interface `PaymentMethodEditorProps` declares `onClose?: () => void` but the component destructures only `{ method }` from props. The `onClose` prop is never used in the component body. This creates a misleading API surface — callers passing `onClose` will see no effect.",
+      "rule": "component-patterns.md#props-interface",
+      "fix": "Either remove `onClose` from the interface if it is not needed, or destructure it and wire it up (e.g., call it after an action completes). If the prop is intentionally reserved for future use, add a comment explaining why."
+    },
+    {
+      "id": "COMP-002",
+      "severity": "warning",
+      "title": "Hook call order violation: useMemo before useState",
+      "file": "apps/store/src/features/products/presentation/components/product-detail/ImageGallery.tsx",
+      "line": 48,
+      "description": "The component calls `useMemo` on line 48 before `useState` on line 50. The standard component structure dictates all hooks should appear in the order: state hooks → derived/memo hooks → callback hooks → effects. Mixing `useMemo` before `useState` breaks the conventional reading order and can obscure dependencies.",
+      "rule": "component-patterns.md#standard-component-template",
+      "fix": "Move `const [activeIndex, setActiveIndex] = useState(0)` before the `useMemo` call so the hook order becomes: useTranslations → useState → useMemo."
+    },
+    {
+      "id": "COMP-003",
+      "severity": "warning",
+      "title": "Hook call order violation: useMemo interleaved with useState",
+      "file": "apps/payments/src/features/checkout/presentation/components/SellerCheckoutCard.tsx",
+      "line": 55,
+      "description": "The component initializes four `useState` calls (lines 44-49), then calls `useSellerPaymentMethods`, then calls `useMemo` on line 55, then defines more derived values. The `useMemo` on line 55 is interleaved before all state hooks are complete, and then derived constants (`isSubmitted`, `isSubmitting`, `isDisabled`) are placed after the handlers. The standard order is: all hooks → all derived state → all handlers → early returns → render.",
+      "rule": "component-patterns.md#standard-component-template",
+      "fix": "Reorder the hook section so all `useState` calls come first (including any from custom hooks like `useSellerPaymentMethods`), followed by all `useMemo`/derived values, then handlers (`useCallback`/regular functions)."
+    },
+    {
+      "id": "COMP-004",
+      "severity": "warning",
+      "title": "Hook call order violation: useCallback and useMemo before useState",
+      "file": "apps/payments/src/features/received-orders/presentation/components/ReceivedOrderCard.tsx",
+      "line": 81,
+      "description": "The component calls `useCallback` on line 81 and `useMemo` on line 88 before calling `useState` on line 93. This reverses the standard pattern of state hooks → derived hooks. The `useState` on line 93 depends on the `expiresAt` memo value, which makes the code harder to follow as the state initializer references a value computed above it.",
+      "rule": "component-patterns.md#standard-component-template",
+      "fix": "Move the `useState` for `isExpiringSoon` before the `useCallback` and `useMemo` declarations, using a lazy initializer that recomputes the initial value independently, or restructure so all `useState` calls appear first."
+    },
+    {
+      "id": "COMP-005",
+      "severity": "suggestion",
+      "title": "Handler function not wrapped in useCallback",
+      "file": "apps/admin/src/features/templates/presentation/components/TemplateEditor.tsx",
+      "line": 54,
+      "description": "The `updateField` handler on line 54 is defined as a plain arrow function inside the component body without `useCallback`. While it is only called from JSX event handlers and not passed as a prop, the other handlers in this component (`updateSection`, `removeSection`, `updateItem`, `addItem`, `removeItem`) all use `useCallback`. The inconsistent pattern makes `updateField` stand out. Per project conventions, event handlers should use `useCallback` for consistency, especially when the component renders multiple child components.",
+      "rule": "component-patterns.md#standard-component-template",
+      "fix": "Wrap `updateField` with `useCallback`: `const updateField = useCallback(<K extends keyof TemplateFormValues>(key: K, value: TemplateFormValues[K]) => { setForm((prev) => ({ ...prev, [key]: value })); }, []);`"
+    }
+  ],
+  "patterns": [
+    {
+      "type": "positive",
+      "description": "All client components correctly include 'use client' directive. No missing directives were found across 47 files using client-side hooks (useState, useEffect, etc.)."
+    },
+    {
+      "type": "positive",
+      "description": "Props interfaces are consistently co-located with their components and follow the ComponentNameProps naming convention throughout all apps."
+    },
+    {
+      "type": "positive",
+      "description": "Container/presenter separation is well-practiced. Most page-level components (e.g., UsersPageContent, CheckoutPageContent, UserDetailPageContent) cleanly orchestrate data via hooks and pass results down to presenter components."
+    },
+    {
+      "type": "positive",
+      "description": "No 'any' type usage found in production component props. All 'any' usages are in test files with explicit eslint-disable comments explaining the reason."
+    },
+    {
+      "type": "info",
+      "description": "The ReceivedOrderCard component uses an eslint-disable comment for react/no-multi-comp to co-locate a private BuyerInfoValue helper. This pattern is acceptable per the one-component-per-file rule exceptions for compound helpers, and the comment is appropriately documented."
+    }
+  ]
+}

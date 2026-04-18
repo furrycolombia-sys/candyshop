@@ -34,7 +34,7 @@ vi.mock("shared", () => ({
 
 vi.mock("@/features/cart/application/hooks/useAddToCart", () => ({
   useAddToCart: vi.fn(() => ({
-    added: false,
+    isAdded: false,
     quantityInCart: 0,
     hasReachedStockLimit: false,
     handleAddToCart: mockHandleAddToCart,
@@ -241,7 +241,7 @@ describe("HeroSection", () => {
 
   it("disables add-to-cart when the cart already reached the stock limit", () => {
     vi.mocked(useAddToCart).mockReturnValue({
-      added: false,
+      isAdded: false,
       quantityInCart: 1,
       hasReachedStockLimit: true,
       handleAddToCart: mockHandleAddToCart,

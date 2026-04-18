@@ -53,11 +53,13 @@ vi.mock("@hello-pangea/dnd", () => ({
     ),
 }));
 
-vi.mock("@/features/products/application/useProductMutations", () => ({
+vi.mock("@/features/products/application/hooks/useProductMutations", () => ({
   useReorderProducts: () => ({ mutate: vi.fn() }),
+  useDeleteProduct: () => ({ mutate: vi.fn() }),
+  useToggleProduct: () => ({ mutate: vi.fn() }),
 }));
 
-vi.mock("@/features/auth/application/hooks/useSupabaseAuth", () => ({
+vi.mock("@/shared/application/hooks/useSupabaseAuth", () => ({
   useSupabaseAuth: () => ({ user: { id: "seller-1" } }),
 }));
 
@@ -122,6 +124,7 @@ describe("ProductTable", () => {
         canUpdate={true}
         canDelete={true}
         canManageDelegates={true}
+        delegateCounts={{}}
       />,
     );
     expect(screen.getByText("common.loading")).toBeInTheDocument();
@@ -136,6 +139,7 @@ describe("ProductTable", () => {
         canUpdate={true}
         canDelete={true}
         canManageDelegates={true}
+        delegateCounts={{}}
       />,
     );
     expect(screen.getByTestId("products-empty-state")).toBeInTheDocument();
@@ -152,6 +156,7 @@ describe("ProductTable", () => {
         canUpdate={true}
         canDelete={true}
         canManageDelegates={true}
+        delegateCounts={{}}
       />,
     );
     expect(screen.getByTestId("product-table")).toBeInTheDocument();
@@ -167,6 +172,7 @@ describe("ProductTable", () => {
         canUpdate={true}
         canDelete={true}
         canManageDelegates={true}
+        delegateCounts={{}}
       />,
     );
     expect(screen.getByText("products.name")).toBeInTheDocument();
@@ -185,6 +191,7 @@ describe("ProductTable", () => {
         canUpdate={true}
         canDelete={true}
         canManageDelegates={true}
+        delegateCounts={{}}
       />,
     );
     expect(screen.getByTestId("product-row-Product 1")).toBeInTheDocument();
@@ -201,6 +208,7 @@ describe("ProductTable", () => {
         canUpdate={true}
         canDelete={true}
         canManageDelegates={true}
+        delegateCounts={{ p1: 2, p2: 0 }}
       />,
     );
     expect(screen.getByTestId("delegate-count-Product 1")).toHaveTextContent(

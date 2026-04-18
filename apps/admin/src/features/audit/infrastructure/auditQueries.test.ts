@@ -1,14 +1,25 @@
 import { http, HttpResponse } from "msw";
 import { afterEach, describe, it, expect, vi, beforeEach } from "vitest";
 
+vi.mock("@/shared/infrastructure/config/environment", () => ({
+  supabaseUrl: "http://127.0.0.1:54321",
+}));
+
+const SUPABASE_URL = "http://127.0.0.1:54321";
+
 import { fetchAuditLog, fetchAuditTableNames } from "./auditQueries";
 
 import { server } from "@/mocks/server";
 
-// Fake supabase client with auth.getSession
+// Fake supabase client with auth.getUser + auth.getSession
 function createMockSupabase(token?: string) {
   return {
     auth: {
+      getUser: vi.fn().mockResolvedValue({
+        data: {
+          user: token ? { id: "user-123" } : null,
+        },
+      }),
       getSession: vi.fn().mockResolvedValue({
         data: {
           session: token ? { access_token: token } : null,
@@ -20,12 +31,9 @@ function createMockSupabase(token?: string) {
   >;
 }
 
-const SUPABASE_URL = "http://127.0.0.1:54321";
-
 describe("fetchAuditLog", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", SUPABASE_URL);
     vi.stubEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY", "test-anon-key");
   });
 
@@ -111,7 +119,7 @@ describe("fetchAuditLog", () => {
 
     const supabase = createMockSupabase("token");
     await expect(fetchAuditLog(supabase)).rejects.toThrow(
-      "Audit query failed: 500",
+      "Audit REST query failed: 500",
     );
   });
 });
@@ -119,7 +127,6 @@ describe("fetchAuditLog", () => {
 describe("fetchAuditTableNames", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", SUPABASE_URL);
     vi.stubEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY", "test-anon-key");
   });
 

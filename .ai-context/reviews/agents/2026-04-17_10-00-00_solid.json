@@ -1,0 +1,91 @@
+{
+  "agent": "solid",
+  "review_id": "2026-04-17_10-00-00",
+  "timestamp": "2026-04-17T10:00:00Z",
+  "scope": "apps/",
+  "summary": {
+    "filesAnalyzed": 18,
+    "issuesFound": 5,
+    "critical": 0,
+    "warning": 3,
+    "suggestion": 2,
+    "info": 0
+  },
+  "issues": [
+    {
+      "id": "SOLID-001",
+      "severity": "warning",
+      "principle": "SRP",
+      "file": "apps/payments/src/features/checkout/presentation/pages/CheckoutPageContent.tsx",
+      "line": 18,
+      "title": "Presentation component owns session-storage side effects",
+      "description": "CheckoutPageContent contains two module-level functions (readCompletedCheckoutFlag, writeCompletedCheckoutFlag) that directly access globalThis.sessionStorage, and two useEffect hooks that invoke them. Session-storage persistence is infrastructure-level logic; embedding it in a presentation page component gives the component two reasons to change: UI layout changes AND storage strategy changes.",
+      "rule": "solid-principles.md#s---single-responsibility-principle",
+      "fix": "Extract the session-flag read/write logic into a dedicated hook (e.g. useCheckoutCompletedFlag) or a thin infrastructure utility, and consume it from the page. The hook returns a boolean and a setter; the page only calls them."
+    },
+    {
+      "id": "SOLID-002",
+      "severity": "warning",
+      "principle": "ISP",
+      "file": "apps/admin/src/features/users/presentation/components/UserTable.tsx",
+      "line": 17,
+      "title": "UserTableProps bundles unrelated filter concerns into one interface",
+      "description": "UserTableProps has 14 props covering three distinct concerns: data display (users, total, isLoading, page, onPageChange), selection (selectedUsers, onSelectUser, onSelectUsersChange), and filtering (filterInput, onFilterInputChange, roleFilter, onRoleFilterChange, itemFilter, onItemFilterChange, canExport, onExportCsv). Any consumer of this component must provide all three groups of props even if it does not need one of the concerns (e.g. a read-only admin view that has no need for export).",
+      "rule": "solid-principles.md#i---interface-segregation-principle",
+      "fix": "Split into focused interfaces: UserTableDataProps, UserTableSelectionProps, UserTableFilterProps. Compose them in the component signature or use an options bag. Alternatively, split the filter bar into a separate UserTableFilters component that accepts only filter-related props."
+    },
+    {
+      "id": "SOLID-003",
+      "severity": "warning",
+      "principle": "SRP",
+      "file": "apps/studio/src/features/products/presentation/components/inline-editor/InlineImageCarousel.tsx",
+      "line": 26,
+      "title": "Single component manages drag-and-drop, thumbnail selection, broken-image tracking, cover-image assignment, and edit mode",
+      "description": "InlineImageCarousel (394 lines) handles five distinct concerns simultaneously: (1) drag-and-drop reordering via @hello-pangea/dnd, (2) active thumbnail selection and index tracking, (3) broken/loaded image state per index, (4) cover image assignment via replace(), and (5) inline edit mode toggle. Each concern has its own state and handlers interleaved in one component, making it hard to test or change any one concern in isolation.",
+      "rule": "solid-principles.md#s---single-responsibility-principle",
+      "fix": "Apply KISS first — the component is complex but coherent for its domain. If a refactor is warranted, extract at minimum: a useImageCarousel hook (manages activeIndex, isEditingMain, brokenImages state and all derived handlers) so the component only renders. The drag-and-drop wrapper can stay inline since it is tightly bound to the DOM structure. This reduces the component to a pure renderer of hook state."
+    },
+    {
+      "id": "SOLID-004",
+      "severity": "suggestion",
+      "principle": "SRP",
+      "file": "apps/payments/src/features/payment-methods/application/hooks/usePaymentMethodsManager.ts",
+      "line": 14,
+      "title": "Manager hook mixes data-fetching, mutation orchestration, sort-order swapping logic, and UI expand state",
+      "description": "usePaymentMethodsManager combines: (1) data fetching (usePaymentMethods), (2) three mutations (create, update, delete), (3) sort-order swap logic inside handleMoveUp/handleMoveDown that duplicates reordering concerns, and (4) UI accordion expand state. The sort-swap pattern (lines 58-88) duplicates between two handlers. This is a minor SRP concern — the hook is well-named and the grouping is intentional — but the sort logic and expand state are separable.",
+      "rule": "solid-principles.md#s---single-responsibility-principle",
+      "fix": "Low priority given KISS. If further work touches this file, consider splitting: usePaymentMethodOrder for the swap logic (reusable if other list types need ordering), and keep usePaymentMethodsManager focused on create/update/delete + expand state. The expand state could also live in the page component since it is purely UI."
+    },
+    {
+      "id": "SOLID-005",
+      "severity": "suggestion",
+      "principle": "SRP",
+      "file": "apps/studio/src/features/products/presentation/components/inline-editor/EditorToolbar.tsx",
+      "line": 39,
+      "title": "EditorToolbarProps exposes raw react-hook-form internals (Control, UseFormRegister, UseFormSetValue) to the presentation component",
+      "description": "EditorToolbar receives three react-hook-form primitives (control, register, setValue) plus business callbacks (onSave, onReset, onApplyTemplate). This tightly couples the presentation component to the form library's API surface. A change in how the form is managed (e.g. switching from react-hook-form to a different form library) would require changes to both the hook layer and this component's prop contract.",
+      "rule": "solid-principles.md#d---dependency-inversion-principle",
+      "fix": "Consider lifting the watched values (selectedType, featured, isActive, refundable) out of the toolbar into the parent page, passing them as plain values plus change callbacks. This makes EditorToolbar a pure presenter depending on abstractions (plain values + handlers) rather than on the concrete form library API. The register prop for the category select can be replaced with a value + onChange pair."
+    }
+  ],
+  "patterns": [
+    {
+      "pattern": "globalThis.confirm() used directly in hooks and presentation components",
+      "files": [
+        "apps/payments/src/features/payment-methods/application/hooks/usePaymentMethodsManager.ts",
+        "apps/payments/src/features/payment-methods/presentation/components/PaymentMethodTable.tsx",
+        "apps/studio/src/features/products/presentation/components/inline-editor/EditorToolbar.tsx",
+        "apps/studio/src/features/products/presentation/components/inline-editor/TemplatePicker.tsx",
+        "apps/admin/src/features/templates/presentation/components/TemplateTable.tsx"
+      ],
+      "note": "Using globalThis.confirm() in hooks violates SRP (application hook owns browser dialog concern) and DIP (depends on browser API directly). It also breaks testability. A common pattern is to pass an onConfirm callback or use a shared confirmation dialog component. Consider documenting an acceptable project-wide pattern for destructive confirmations."
+    },
+    {
+      "pattern": "useProductMutations.ts exports three independent hooks from one file",
+      "files": [
+        "apps/studio/src/features/products/application/hooks/useProductMutations.ts"
+      ],
+      "note": "useToggleProduct, useDeleteProduct, and useReorderProducts are exported from a single file. This is an acceptable barrel pattern (not a SOLID violation) since each exported hook has a single responsibility. No action needed."
+    }
+  ]
+}

@@ -19,7 +19,7 @@ vi.mock("auth/client", () => ({
   }),
 }));
 
-vi.mock("@/shared/application/hooks/useRecentActivity", () => ({
+vi.mock("@/features/dashboard/application/hooks/useRecentActivity", () => ({
   useRecentActivity: () => ({
     data: [
       {

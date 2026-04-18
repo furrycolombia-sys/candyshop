@@ -8,8 +8,8 @@ import {
   INTERNAL_SERVER_ERROR_STATUS,
   validateUuid,
 } from "@/app/api/admin/_shared/adminRest";
+import { SELLER_ADMINS_READ_PERMISSION } from "@/features/users/domain/constants";
 
-const SELLER_ADMINS_READ = "seller_admins.read";
 const SELLER_ADMINS_DELETE = "seller_admins.delete";
 
 /** Delegate row shape returned by the API */
@@ -56,7 +56,7 @@ export async function GET(
   _request: Request,
   context: { params: Promise<{ userId: string }> },
 ) {
-  const adminUserId = await getAuthorizedAdmin([SELLER_ADMINS_READ]);
+  const adminUserId = await getAuthorizedAdmin([SELLER_ADMINS_READ_PERMISSION]);
   if (!adminUserId) {
     return NextResponse.json({ error: FORBIDDEN_ERROR }, { status: 403 });
   }
@@ -103,9 +103,12 @@ export async function DELETE(
 
   try {
     await context.params;
-    const { delegateRowId } = (await request.json()) as {
-      delegateRowId: string;
-    };
+    const body = (await request.json()) as Record<string, unknown>;
+    const { delegateRowId } = body;
+
+    if (typeof delegateRowId !== "string" || !delegateRowId) {
+      return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
+    }
 
     validateUuid(delegateRowId);
 

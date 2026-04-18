@@ -3,7 +3,7 @@
 import { Pencil, Trash2 } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { i18nField, tid } from "shared";
-import { Skeleton, Switch } from "ui";
+import { Skeleton, Switch, cn } from "ui";
 
 import type { SellerPaymentMethod } from "@/features/payment-methods/domain/types";
 
@@ -84,7 +84,10 @@ export function PaymentMethodTable({
           {methods.map((method, index) => (
             <tr
               key={method.id}
-              className={`border-b border-border last:border-b-0 ${index % ZEBRA_MODULO === 1 ? "bg-muted/20" : ""}`}
+              className={cn(
+                "border-b border-border last:border-b-0",
+                index % ZEBRA_MODULO === 1 && "bg-muted/20",
+              )}
               {...tid(`payment-method-row-${method.id}`)}
             >
               <td className="px-4 py-3 text-sm font-medium">

@@ -1,0 +1,149 @@
+{
+  "agent": "architecture",
+  "timestamp": "2026-04-17T02:58:21",
+  "scope": "apps/",
+  "summary": {
+    "filesAnalyzed": 28,
+    "issuesFound": 7,
+    "critical": 0,
+    "warning": 5,
+    "suggestion": 2,
+    "info": 0
+  },
+  "issues": [
+    {
+      "id": "ARCH-001",
+      "severity": "warning",
+      "category": "Cross-Feature Import",
+      "file": "apps/studio/src/features/seller-admins/presentation/pages/ProductDelegatesPage.tsx",
+      "lines": [8, 9],
+      "description": "Feature 'seller-admins' imports directly from feature 'auth' (useSupabaseAuth) and feature 'products' (useProductById). Cross-feature imports in presentation pages should go through a shared abstraction or the shared layer.",
+      "imports": [
+        "import { useSupabaseAuth } from \"@/features/auth/application/hooks/useSupabaseAuth\"",
+        "import { useProductById } from \"@/features/products/application/hooks/useProductForm\""
+      ],
+      "rule": "Features MUST NOT import directly from other features. Cross-feature communication should go through shared interfaces in /shared/domain/, global stores, or event patterns.",
+      "fix": "Move useSupabaseAuth to shared/application/hooks (it is imported by multiple features across the app). Extract the product data fetch to a prop or composition at the page/app router level."
+    },
+    {
+      "id": "ARCH-002",
+      "severity": "warning",
+      "category": "Cross-Feature Import",
+      "file": "apps/studio/src/features/seller-admins/presentation/components/AddDelegateForm.tsx",
+      "lines": [8],
+      "description": "Feature 'seller-admins' imports 'useSupabaseAuth' directly from feature 'auth'. This couples two domain features at the presentation layer.",
+      "imports": [
+        "import { useSupabaseAuth } from \"@/features/auth/application/hooks/useSupabaseAuth\""
+      ],
+      "rule": "Cross-feature imports violate feature isolation.",
+      "fix": "Move useSupabaseAuth (or a generic useCurrentUser hook) to apps/studio/src/shared/application/hooks."
+    },
+    {
+      "id": "ARCH-003",
+      "severity": "warning",
+      "category": "Cross-Feature Import",
+      "file": "apps/studio/src/features/seller-admins/presentation/pages/DelegateManagementPage.tsx",
+      "lines": [8],
+      "description": "Feature 'seller-admins' imports 'useSupabaseAuth' directly from feature 'auth'. Same violation as ARCH-001/002.",
+      "imports": [
+        "import { useSupabaseAuth } from \"@/features/auth/application/hooks/useSupabaseAuth\""
+      ],
+      "rule": "Cross-feature imports violate feature isolation.",
+      "fix": "Move useSupabaseAuth to shared/application/hooks (used by 3+ presentation files in seller-admins alone, plus products feature)."
+    },
+    {
+      "id": "ARCH-004",
+      "severity": "warning",
+      "category": "Cross-Feature Import",
+      "file": "apps/studio/src/features/products/presentation/pages/ProductListPage.tsx",
+      "lines": [6, 7, 9],
+      "description": "Feature 'products' imports from three other features: 'auth' (useSupabaseAuth), 'orders' (usePendingOrderCount), and 'seller-admins' (useDelegateCountsByProduct). This page aggregates cross-feature data at the feature presentation layer instead of at the app router or shared level.",
+      "imports": [
+        "import { useSupabaseAuth } from \"@/features/auth/application/hooks/useSupabaseAuth\"",
+        "import { usePendingOrderCount } from \"@/features/orders/application/hooks/usePendingOrderCount\"",
+        "import { useDelegateCountsByProduct } from \"@/features/seller-admins/application/hooks/useDelegateCountsByProduct\""
+      ],
+      "rule": "Cross-feature imports violate feature isolation. Page-level orchestration of multiple features belongs at the app router level or through shared context.",
+      "fix": "Extract the cross-feature data fetching (pendingCount, delegateCounts) to the app router page wrapper or a shared dashboard context, and pass them as props to ProductListPage. Move useSupabaseAuth to shared."
+    },
+    {
+      "id": "ARCH-005",
+      "severity": "warning",
+      "category": "Cross-Feature Import",
+      "file": "apps/admin/src/features/users/presentation/pages/UsersPageContent.tsx",
+      "lines": [9],
+      "description": "Feature 'users' imports 'useLogExport' from feature 'audit'. The audit export functionality is coupled into the users presentation layer.",
+      "imports": [
+        "import { useLogExport } from \"@/features/audit/application/hooks/useAuditLog\""
+      ],
+      "rule": "Features MUST NOT import directly from other features.",
+      "fix": "Either move the export feature to shared, or pass the log export handler as a prop from the app router page down to UsersPageContent."
+    },
+    {
+      "id": "ARCH-006",
+      "severity": "suggestion",
+      "category": "Inline Types in API Route",
+      "file": "apps/payments/src/app/api/checkout/payment-methods/route.ts",
+      "lines": [23, 32, 39, 48],
+      "description": "The route file defines local types (PaymentMethodRow, ProductStockRow, PermissionRow, CheckoutItemPayload) inline. These are internal DB row shapes used only within this route, so this is a minor issue. However, if these shapes are reused across routes, they should be extracted.",
+      "note": "This is acceptable if the types are strictly internal to this route. The CheckoutItemPayload type particularly might be worth extracting to the checkout domain if it represents a domain concept.",
+      "rule": "Complex types used across files MUST be in domain/types. Single-file internal types are acceptable.",
+      "fix": "Consider extracting CheckoutItemPayload to apps/payments/src/features/checkout/domain/types.ts if it represents a checkout domain concept reused elsewhere."
+    },
+    {
+      "id": "ARCH-007",
+      "severity": "suggestion",
+      "category": "Inline Types in API Route",
+      "file": "apps/payments/src/app/api/checkout/orders/route.ts",
+      "lines": [9, 23],
+      "description": "Local row types (PaymentMethodRow, OrderRow) defined inline in the route. These are internal-only shapes for direct DB access. Acceptable for now but worth monitoring if they grow.",
+      "rule": "Minor: single-use types local to one file are acceptable.",
+      "fix": "No action needed unless these types are reused in other files."
+    }
+  ],
+  "patterns": [
+    {
+      "id": "PAT-001",
+      "type": "good",
+      "description": "App Router thin wrapper pattern is consistently followed across all apps. Route page.tsx files only call setRequestLocale and render the feature page component — no business logic in routes.",
+      "examples": [
+        "apps/store/src/app/[locale]/page.tsx",
+        "apps/payments/src/app/[locale]/checkout/page.tsx",
+        "apps/admin/src/app/[locale]/users/[userId]/page.tsx"
+      ]
+    },
+    {
+      "id": "PAT-002",
+      "type": "good",
+      "description": "Clean layer dependency direction is respected in 95%+ of cases. Application layer imports infrastructure, infrastructure imports domain — no backward dependencies found.",
+      "examples": [
+        "apps/payments/src/features/checkout/application/hooks/useSubmitPayment.ts → infrastructure",
+        "apps/studio/src/features/products/infrastructure/productQueries.ts → domain"
+      ]
+    },
+    {
+      "id": "PAT-003",
+      "type": "good",
+      "description": "Shared code policies are followed: receiptStorage is in shared/infrastructure because it is used by 3 features (checkout, orders, received-orders) in payments app.",
+      "file": "apps/payments/src/shared/infrastructure/receiptStorage.ts"
+    },
+    {
+      "id": "PAT-004",
+      "type": "concern",
+      "description": "useSupabaseAuth from the 'auth' feature is imported by 3+ files in the 'seller-admins' and 'products' features (apps/studio). This hook is a prime candidate for promotion to shared/application/hooks to eliminate all these cross-feature imports in one move.",
+      "affected_files": [
+        "apps/studio/src/features/seller-admins/presentation/pages/DelegateManagementPage.tsx",
+        "apps/studio/src/features/seller-admins/presentation/pages/ProductDelegatesPage.tsx",
+        "apps/studio/src/features/seller-admins/presentation/components/AddDelegateForm.tsx",
+        "apps/studio/src/features/products/presentation/pages/ProductListPage.tsx"
+      ],
+      "recommendation": "Move useSupabaseAuth to apps/studio/src/shared/application/hooks/useSupabaseAuth.ts (or use the auth/client from packages/auth if it provides equivalent functionality)."
+    },
+    {
+      "id": "PAT-005",
+      "type": "good",
+      "description": "No hardcoded production URLs found in source files. All URLs are either localhost references in config/tests (acceptable), environment variable reads, or example.com strings in test mocks.",
+      "note": "SUPABASE_LOCAL_URL fallback hardcoded to http://127.0.0.1:54321 in admin/environment.ts and studio/next.config.ts — this is a safe local dev fallback, not a production concern."
+    }
+  ]
+}

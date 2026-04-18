@@ -1,6 +1,4 @@
 /* eslint-disable sonarjs/no-nested-functions -- @hello-pangea/dnd render props require nested function callbacks */
-/* eslint-disable i18next/no-literal-string -- aria-labels and language code labels are UI chrome, not user-facing content */
-/* eslint-disable react/no-multi-comp -- private helper components co-located with their parent */
 "use client";
 
 import {
@@ -9,22 +7,17 @@ import {
   Droppable,
   type DropResult,
 } from "@hello-pangea/dnd";
-import { FileText, GripVertical, Image, Link, Video, X } from "lucide-react";
+import { FileText, GripVertical, Video, Image, Link, X } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useCallback, useState } from "react";
+import { useCallback } from "react";
 import { tid } from "shared";
-import { Textarea } from "ui";
+
+import { BlockEditor } from "./BlockEditor";
 
 import type {
   DisplayBlock,
   DisplayBlockType,
-  ImageBlock,
-  LinkBlock,
-  TextBlock,
-  UrlBlock,
-  VideoBlock,
 } from "@/features/payment-methods/domain/types";
-import { toYouTubeEmbedUrl } from "@/features/payment-methods/domain/youtubeEmbed";
 
 interface DisplaySectionEditorProps {
   blocks: DisplayBlock[];
@@ -168,7 +161,7 @@ export function DisplaySectionEditor({
                         type="button"
                         onClick={() => removeBlock(block.id)}
                         className="self-start rounded-sm p-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-                        aria-label="Remove block"
+                        aria-label={t("removeBlock")}
                         {...tid(`display-block-remove-${block.id}`)}
                       >
                         <X className="size-4" />
@@ -182,189 +175,6 @@ export function DisplaySectionEditor({
           )}
         </Droppable>
       </DragDropContext>
-    </div>
-  );
-}
-
-// ─── Neobrutalist input class ─────────────────────────────────────────────────
-
-const inputClass =
-  "flex h-9 w-full border-strong border-foreground bg-background px-3 py-1 text-sm shadow-brutal-sm focus:outline-none focus:ring-2 focus:ring-brand";
-
-// ─── Block Editor ─────────────────────────────────────────────────────────────
-
-function BlockEditor({
-  block,
-  onChange,
-}: {
-  block: DisplayBlock;
-  onChange: (block: DisplayBlock) => void;
-}) {
-  const t = useTranslations("paymentMethods");
-  const optionalLabel = t("optional");
-
-  switch (block.type) {
-    case "text": {
-      const b = block as TextBlock;
-      return (
-        <div className="flex flex-col gap-2">
-          <Textarea
-            rows={3}
-            placeholder={t("contentEn")}
-            value={b.content_en}
-            onChange={(e) => onChange({ ...b, content_en: e.target.value })}
-          />
-          <Textarea
-            rows={2}
-            placeholder={`${t("contentEs")} (${optionalLabel})`}
-            value={b.content_es ?? ""}
-            onChange={(e) =>
-              onChange({ ...b, content_es: e.target.value || undefined })
-            }
-          />
-        </div>
-      );
-    }
-    case "image": {
-      const b = block as ImageBlock;
-      return (
-        <div className="flex flex-col gap-2">
-          <input
-            type="url"
-            placeholder={t("imageUrl")}
-            value={b.url}
-            onChange={(e) => onChange({ ...b, url: e.target.value })}
-            className={inputClass}
-          />
-          <input
-            type="text"
-            placeholder={t("altTextEn")}
-            value={b.alt_en ?? ""}
-            onChange={(e) =>
-              onChange({ ...b, alt_en: e.target.value || undefined })
-            }
-            className={inputClass}
-          />
-          <input
-            type="text"
-            placeholder={`${t("altTextEs")} (${optionalLabel})`}
-            value={b.alt_es ?? ""}
-            onChange={(e) =>
-              onChange({ ...b, alt_es: e.target.value || undefined })
-            }
-            className={inputClass}
-          />
-        </div>
-      );
-    }
-    case "video": {
-      const b = block as VideoBlock;
-      return <VideoBlockEditor block={b} onChange={onChange} />;
-    }
-    case "link": {
-      const b = block as LinkBlock;
-      return (
-        <div className="flex flex-col gap-2">
-          <input
-            type="url"
-            placeholder={t("linkUrl")}
-            value={b.url}
-            onChange={(e) => onChange({ ...b, url: e.target.value })}
-            className={inputClass}
-          />
-          <input
-            type="text"
-            placeholder={t("linkLabelEn")}
-            value={b.label_en}
-            onChange={(e) => onChange({ ...b, label_en: e.target.value })}
-            className={inputClass}
-          />
-          <input
-            type="text"
-            placeholder={`${t("linkLabelEs")} (${optionalLabel})`}
-            value={b.label_es ?? ""}
-            onChange={(e) =>
-              onChange({ ...b, label_es: e.target.value || undefined })
-            }
-            className={inputClass}
-          />
-        </div>
-      );
-    }
-    case "url": {
-      const b = block as UrlBlock;
-      return (
-        <div className="flex flex-col gap-2">
-          <input
-            type="url"
-            placeholder={t("linkUrl")}
-            value={b.url}
-            onChange={(e) => onChange({ ...b, url: e.target.value })}
-            className={inputClass}
-          />
-          <input
-            type="text"
-            placeholder={t("linkLabelEn")}
-            value={b.label_en ?? ""}
-            onChange={(e) =>
-              onChange({ ...b, label_en: e.target.value || undefined })
-            }
-            className={inputClass}
-          />
-          <input
-            type="text"
-            placeholder={`${t("linkLabelEs")} (${optionalLabel})`}
-            value={b.label_es ?? ""}
-            onChange={(e) =>
-              onChange({ ...b, label_es: e.target.value || undefined })
-            }
-            className={inputClass}
-          />
-        </div>
-      );
-    }
-  }
-}
-
-// ─── Video Block Editor ───────────────────────────────────────────────────────
-
-function VideoBlockEditor({
-  block,
-  onChange,
-}: {
-  block: VideoBlock;
-  onChange: (block: DisplayBlock) => void;
-}) {
-  const t = useTranslations("paymentMethods");
-  const [rawUrl, setRawUrl] = useState(block.url);
-  const [urlError, setUrlError] = useState<string | null>(null);
-
-  const handleChange = (value: string) => {
-    setRawUrl(value);
-    if (!value.trim()) {
-      setUrlError(null);
-      onChange({ ...block, url: "" });
-      return;
-    }
-    const embedUrl = toYouTubeEmbedUrl(value);
-    if (embedUrl) {
-      setUrlError(null);
-      onChange({ ...block, url: embedUrl });
-    } else {
-      setUrlError(t("invalidYoutubeUrl"));
-    }
-  };
-
-  return (
-    <div className="flex flex-col gap-1">
-      <input
-        type="url"
-        placeholder={t("videoUrl")}
-        value={rawUrl}
-        onChange={(e) => handleChange(e.target.value)}
-        className={inputClass}
-      />
-      {urlError && <p className="text-xs text-destructive">{urlError}</p>}
     </div>
   );
 }

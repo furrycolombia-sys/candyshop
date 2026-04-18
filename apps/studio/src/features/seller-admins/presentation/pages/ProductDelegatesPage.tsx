@@ -5,19 +5,18 @@ import { useTranslations } from "next-intl";
 import { useCallback } from "react";
 import { tid } from "shared";
 
-import { useSupabaseAuth } from "@/features/auth/application/hooks/useSupabaseAuth";
-import { useProductById } from "@/features/products/application/useProductForm";
+import { useProductById } from "@/features/products/application/hooks/useProductForm";
 import {
   useAddDelegate,
   useRemoveDelegate,
 } from "@/features/seller-admins/application/hooks/useDelegateMutations";
 import { useDelegates } from "@/features/seller-admins/application/hooks/useDelegates";
+import { SELLER_ADMINS_READ_PERMISSION } from "@/features/seller-admins/domain/constants";
 import type { DelegatePermission } from "@/features/seller-admins/domain/types";
 import { AddDelegateForm } from "@/features/seller-admins/presentation/components/AddDelegateForm";
 import { DelegateList } from "@/features/seller-admins/presentation/components/DelegateList";
+import { useSupabaseAuth } from "@/shared/application/hooks/useSupabaseAuth";
 import { AccessDeniedState } from "@/shared/presentation/components/AccessDeniedState";
-
-const SELLER_ADMINS_READ_PERMISSION = "seller_admins.read";
 
 interface ProductDelegatesPageProps {
   productId: string;

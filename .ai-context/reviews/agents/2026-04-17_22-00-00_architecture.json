@@ -1,0 +1,93 @@
+{
+  "agent": "architecture",
+  "review_id": "2026-04-17_22-00-00",
+  "timestamp": "2026-04-17T22:00:00",
+  "scope": "apps/",
+  "summary": {
+    "filesAnalyzed": 38,
+    "issuesFound": 5,
+    "critical": 0,
+    "warning": 3,
+    "suggestion": 2,
+    "info": 0
+  },
+  "issues": [
+    {
+      "id": "ARCH-001",
+      "severity": "warning",
+      "title": "Duplicated admin REST client utility across two apps",
+      "file": "apps/payments/src/shared/infrastructure/adminRestClient.ts",
+      "line": 1,
+      "description": "apps/payments contains adminRestClient.ts and apps/admin contains app/api/admin/_shared/adminRest.ts. Both implement nearly identical logic: building Supabase REST URLs with service-role keys, createRestPath(), validateUuid(), and adminFetch/adminFetchJson. This is knowledge duplication — a change to Supabase REST auth headers or URL construction must be applied in both places. The two implementations even differ slightly (e.g., UUID regex variants, function names, error handling), creating an inconsistency risk.",
+      "rule": "architecture.md#shared-code-policy",
+      "fix": "Extract the common Supabase Admin REST client into a shared package (e.g., packages/shared or packages/api/src/supabase/adminRest.ts). Both apps can then import from 'api/supabase/adminRest' or 'shared/adminRest'. If the implementations diverge intentionally (e.g., admin vs. payments security contexts), document why."
+    },
+    {
+      "id": "ARCH-002",
+      "severity": "warning",
+      "title": "Inline local type definitions in API route instead of domain types",
+      "file": "apps/payments/src/app/api/checkout/payment-methods/route.ts",
+      "line": 18,
+      "description": "The route defines several local types inline: PaymentMethodRow (line 18), ProductStockRow (line 25), PermissionRow (line 32), and CheckoutItemPayload (line 43). These describe the shape of DB rows and request payloads — domain-level knowledge. Per the No Hardcoding rule, these should live in domain/types or infrastructure types files, not inlined in the route handler. A database schema change requires hunting down all inline definitions.",
+      "rule": "no-hardcoding.md#2-types--interfaces--type-files",
+      "fix": "Move PaymentMethodRow, ProductStockRow, PermissionRow to apps/payments/src/features/checkout/domain/types.ts or a dedicated apps/payments/src/features/checkout/infrastructure/types.ts. CheckoutItemPayload can stay local (it's a request DTO), but should be named clearly as CheckoutItemDTO."
+    },
+    {
+      "id": "ARCH-003",
+      "severity": "warning",
+      "title": "One-line re-export shims in shared/ that proxy to packages/shared",
+      "file": "apps/store/src/shared/domain/CategoryTypes.ts",
+      "line": 1,
+      "description": "apps/store/src/shared/domain/CategoryTypes.ts and apps/store/src/shared/domain/categoryConstants.ts are single-line re-exports that simply forward types and functions from the 'shared' workspace package. Similarly apps/studio/src/shared/domain/categoryConstants.ts is an identical re-export shim. These shims add an indirection layer without adding value — feature files can import directly from 'shared' or 'shared/types'. This is a one-line re-export shim anti-pattern.",
+      "rule": "architecture.md#shared-code-policy",
+      "fix": "Remove the shim files and update the ~11 importing files in apps/store/src/features/ to import directly from 'shared' or 'shared/types'. The feature-level domain/constants.ts that re-exports from the shim (apps/store/src/features/products/domain/constants.ts) should also import from 'shared' directly."
+    },
+    {
+      "id": "ARCH-004",
+      "severity": "suggestion",
+      "title": "Missing barrel index.ts files for most feature layers",
+      "file": "apps/admin/src/features/users/",
+      "line": 1,
+      "description": "Clean Architecture recommends each layer (domain/, application/, infrastructure/, presentation/) expose a public API via index.ts. Currently, only feature-level index.ts files exist (e.g., apps/admin/src/features/users/index.ts), while layer-level index files (domain/index.ts, application/index.ts, etc.) are absent in most features across all apps. The exception is apps/store/src/features/cart/domain/index.ts and apps/store/src/features/products/domain/index.ts. This means consumers must import from deep internal paths like '@/features/users/application/hooks/useUsers' rather than '@/features/users/application'.",
+      "rule": "architecture.md#barrel-exports",
+      "fix": "Add index.ts barrel files to each layer folder within features where multiple consumers import from that layer. Prioritize the most-imported layers first (application/hooks are commonly imported). This is a progressive improvement — start with high-traffic layers rather than doing all at once."
+    },
+    {
+      "id": "ARCH-005",
+      "severity": "suggestion",
+      "title": "Hardcoded YouTube embed base URL in domain layer",
+      "file": "apps/payments/src/features/payment-methods/domain/youtubeEmbed.ts",
+      "line": 11,
+      "description": "The constant YOUTUBE_EMBED_BASE = 'https://www.youtube.com/embed/' is a hardcoded external service URL placed in the domain layer. While this URL is effectively immutable (YouTube's embed URL format), it is an external dependency URL that per the No Hardcoding rule should be a named constant in a config or infrastructure location rather than inlined in domain logic. The URL is used as a construction template, not a configurable environment variable, so this is low severity.",
+      "rule": "no-hardcoding.md#4-configuration--config-files",
+      "fix": "The current approach is acceptable given YouTube's stable embed URL. If desired, rename the constant to be more descriptive (e.g., YOUTUBE_EMBED_URL_PREFIX) and move it to an infrastructure-level constants file, keeping domain logic pure. This is a minor suggestion."
+    }
+  ],
+  "patterns": [
+    {
+      "type": "good",
+      "name": "App Router thin wrappers",
+      "description": "All inspected app/[locale]/* page.tsx files are thin wrappers that only call setRequestLocale() and render a single feature page component (e.g., <DashboardPage />, <CheckoutPage />). No business logic, data fetching, or state management leaks into route files."
+    },
+    {
+      "type": "good",
+      "name": "Feature barrel exports via index.ts",
+      "description": "All features expose a public API through a feature-level index.ts. Cross-feature imports (e.g., products importing useAddToCart from cart) correctly use the barrel export '@/features/cart' rather than reaching into internal layers."
+    },
+    {
+      "type": "good",
+      "name": "Domain types properly isolated",
+      "description": "Domain types (types.ts, constants.ts, searchParams.ts) are consistently placed in the domain/ layer and do not import from application or infrastructure layers. The dependency rule (Presentation → Application → Domain) is respected."
+    },
+    {
+      "type": "good",
+      "name": "Environment-based config in shared/infrastructure/config",
+      "description": "All apps use shared/infrastructure/config/environment.ts and config/api.ts for environment variables and API configuration. No hardcoded API URLs were found in application or domain code (only in test files with localhost test URLs and in infrastructure REST clients reading from process.env)."
+    },
+    {
+      "type": "good",
+      "name": "Shared utilities properly placed in packages/shared",
+      "description": "Common utilities (i18nField, CART_COOKIE_KEY, CategoryTheme etc.) live in the packages/shared workspace package and are imported via 'shared'. Apps do not duplicate these utilities."
+    }
+  ]
+}

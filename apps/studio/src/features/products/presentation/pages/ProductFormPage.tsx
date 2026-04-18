@@ -10,7 +10,7 @@ import {
   useInsertProduct,
   useProductById,
   useUpdateProduct,
-} from "@/features/products/application/useProductForm";
+} from "@/features/products/application/hooks/useProductForm";
 import { InlineEditor } from "@/features/products/presentation/components/inline-editor";
 import { AccessDeniedState } from "@/shared/presentation/components/AccessDeniedState";
 

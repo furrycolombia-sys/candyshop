@@ -1,0 +1,48 @@
+{
+  "agent": "solid",
+  "review_id": "2026-04-17_14-00-00",
+  "timestamp": "2026-04-17T14:00:00Z",
+  "scope": "apps/",
+  "summary": {
+    "filesAnalyzed": 749,
+    "issuesFound": 2,
+    "critical": 0,
+    "warning": 1,
+    "suggestion": 1,
+    "info": 0
+  },
+  "issues": [
+    {
+      "id": "SOLID-001",
+      "severity": "warning",
+      "category": "SOLID",
+      "file": "apps/payments/src/features/checkout/presentation/pages/CheckoutPageContent.tsx",
+      "line": 1,
+      "description": "CheckoutPageContent.tsx is 222 lines and has multiple responsibilities: cart state reading, submission state machine per-seller, completed flag session storage management, and layout. The functions readCompletedCheckoutFlag, writeCompletedCheckoutFlag, and getCompletedCheckoutState are defined inside the file but are candidates for extraction to a domain utility. The component manages both UI orchestration and session persistence logic.",
+      "rule": "solid-principles.md - Single Responsibility",
+      "fix": "Extract the session storage helpers (readCompletedCheckoutFlag, writeCompletedCheckoutFlag, getCompletedCheckoutState) to a domain utility module like checkout/domain/checkoutSession.ts. This keeps the component focused on UI orchestration."
+    },
+    {
+      "id": "SOLID-002",
+      "severity": "suggestion",
+      "category": "SOLID",
+      "file": "apps/admin/src/features/audit/presentation/components/AuditTable.tsx",
+      "line": 1,
+      "description": "AuditTable.tsx is 259 lines. While it is a table component, it appears to handle filtering, pagination display, and row rendering in a single component. Consider splitting row rendering to a separate AuditTableRow component to adhere to SRP.",
+      "rule": "solid-principles.md - Single Responsibility",
+      "fix": "Extract the row rendering logic to AuditTableRow.tsx. This follows the same pattern used in ProductTableRow.tsx in the studio app."
+    }
+  ],
+  "patterns": [
+    {
+      "id": "PAT-SOLID-001",
+      "description": "usePaymentMethodsManager hook correctly follows SRP - it encapsulates all data-fetching, mutations, and UI state for payment methods page in a single hook with clear responsibilities. Well-structured. Verified from new test file and source.",
+      "verdict": "COMPLIANT"
+    },
+    {
+      "id": "PAT-SOLID-002",
+      "description": "useAutoSavePaymentMethod correctly separates auto-save concerns (debounce, mutation) from PaymentMethodEditor UI state. stale closure fix via paymentMethodIdRef is correct and well-implemented.",
+      "verdict": "COMPLIANT - no regression from BUG-003 fix"
+    }
+  ]
+}
