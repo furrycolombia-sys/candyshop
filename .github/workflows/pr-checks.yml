@@ -13,8 +13,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  NODE_VERSION: "20"
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+  NODE_VERSION: "24"
 
 jobs:
   # ============================================
@@ -26,7 +25,7 @@ jobs:
     timeout-minutes: 5
     steps:
       - name: Validate branch can target base
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             const baseBranch = context.payload.pull_request.base.ref;
@@ -109,7 +108,7 @@ jobs:
       docs-only: ${{ steps.check.outputs.docs-only }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Detect file changes
         uses: dorny/paths-filter@v3
@@ -169,13 +168,13 @@ jobs:
     if: needs.changes.outputs.docs-only == 'false'
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v6
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: "pnpm"
@@ -211,13 +210,13 @@ jobs:
     if: needs.changes.outputs.store == 'true' || needs.changes.outputs.packages == 'true'
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v6
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: "pnpm"
@@ -272,13 +271,13 @@ jobs:
     if: needs.changes.outputs.store == 'true' || needs.changes.outputs.packages == 'true'
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v6
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: "pnpm"
@@ -341,7 +340,7 @@ jobs:
     if: always()
     steps:
       - name: Create or update PR comment
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             const changes = {
@@ -415,3 +414,4 @@ jobs:
                 body: summary
               });
             }
+
