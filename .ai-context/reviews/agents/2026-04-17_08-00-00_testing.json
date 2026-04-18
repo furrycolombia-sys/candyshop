@@ -1,0 +1,226 @@
+{
+  "agent": "testing",
+  "review_id": "2026-04-17_08-00-00",
+  "timestamp": "2026-04-17T08:00:00.000Z",
+  "scope": "apps/",
+  "summary": {
+    "filesAnalyzed": 45,
+    "issuesFound": 8,
+    "critical": 0,
+    "warning": 5,
+    "suggestion": 3,
+    "info": 0,
+    "coverage": {
+      "components": { "total": 95, "tested": 78, "percentage": 82 },
+      "hooks": { "total": 42, "tested": 32, "percentage": 76 },
+      "utils": { "total": 18, "tested": 15, "percentage": 83 }
+    }
+  },
+  "issues": [
+    {
+      "id": "TEST-001",
+      "severity": "warning",
+      "file": "apps/payments/src/features/checkout/application/hooks/useCartFromCookie.ts",
+      "description": "No test file exists for useCartFromCookie — a complex hook that reads from cookie via useSyncExternalStore, groups cart items by seller, and resolves seller display names. The grouping logic (sellerId de-duplication, subtotal calculation) has multiple edge cases that should be tested: empty cart, unknown seller_id, hydration state, loading state.",
+      "rule": "testing.md - Unit Tests for Hooks",
+      "fix": "Create apps/payments/src/features/checkout/application/hooks/useCartFromCookie.test.ts covering: empty cart, grouping by seller, subtotal calculation, hydration/loading states, unknown seller_id fallback."
+    },
+    {
+      "id": "TEST-002",
+      "severity": "warning",
+      "file": "apps/payments/src/features/payment-methods/application/hooks/useAutoSavePaymentMethod.ts",
+      "description": "No test file exists for useAutoSavePaymentMethod — a hook with debounced auto-save logic, three independent useEffect triggers (name, displayBlocks, formFields), and saveStatus state transitions (idle → saving → saved/idle). The debounce logic and cleanup on unmount are particularly important to verify.",
+      "rule": "testing.md - Unit Tests for Hooks",
+      "fix": "Create useAutoSavePaymentMethod.test.tsx covering: debounce behaviour (vi.useFakeTimers), saveStatus transitions, cleanup on unmount, independent effect triggers."
+    },
+    {
+      "id": "TEST-003",
+      "severity": "warning",
+      "file": "apps/admin/src/features/users/application/utils/formatLastSeen.ts",
+      "description": "No test file exists for formatLastSeen — a pure utility function with 6 time-range branches (justNow, minutesAgo, hoursAgo, daysAgo, monthsAgo, yearsAgo) and a null input path. Pure functions are the easiest to test and highest-confidence unit tests.",
+      "rule": "testing.md - Unit Tests for Utils",
+      "fix": "Create formatLastSeen.test.ts covering: null input, each time-range boundary, boundary values at each threshold."
+    },
+    {
+      "id": "TEST-004",
+      "severity": "warning",
+      "file": "apps/admin/src/features/users/application/hooks/",
+      "description": "Five hooks in the admin users feature have no tests: useApplyTemplate (mutation + cache invalidation), useTogglePermission (mutation), useUserDelegates (query), useUserPermissions (query), useUserProfile (query). These hooks represent critical permission management logic in the admin panel.",
+      "rule": "testing.md - Unit Tests for Hooks",
+      "fix": "Create test files for each hook. At minimum: useApplyTemplate.test.tsx (success path, error path, cache invalidation), useTogglePermission.test.tsx (optimistic update if any), useUserProfile/Delegates/Permissions.test.tsx (loading/error/data states)."
+    },
+    {
+      "id": "TEST-005",
+      "severity": "warning",
+      "file": "apps/admin/src/features/users/presentation/components/delegates/",
+      "description": "Five delegate sub-components (AsDelegateRow, AsSellerRow, PermissionBadges, ProductName, RemoveButton) have no test files. These are UI components inside a delegate management flow that affects user permissions.",
+      "rule": "testing.md - Unit Tests for Components",
+      "fix": "Add test files for each delegate sub-component. Focus on rendering with expected data, conditional rendering, and click handlers (especially RemoveButton)."
+    },
+    {
+      "id": "TEST-006",
+      "severity": "suggestion",
+      "file": "apps/payments/src/features/checkout/presentation/components/BuyerField.tsx",
+      "description": "No test file exists for BuyerField, DynamicFormField, DisplayBlocksSection, DisplayBlockRenderer, FormFieldsSection, and ImageBlock — six checkout form components without tests. These components render dynamic form fields and display blocks that drive the checkout UX.",
+      "rule": "testing.md - Unit Tests for Components",
+      "fix": "Prioritise DynamicFormField and DisplayBlockRenderer as they contain conditional rendering logic. Add tests for rendering various field/block types and edge cases (empty blocks, unknown types)."
+    },
+    {
+      "id": "TEST-007",
+      "severity": "suggestion",
+      "file": "apps/studio/src/features/seller-admins/application/hooks/useDelegateSearch.ts",
+      "description": "useDelegateSearch has no test. The hook wraps a Supabase query with an early-return guard (returns empty array when excludeUserId is undefined). This guard is easy to miss in integration.",
+      "rule": "testing.md - Unit Tests for Hooks",
+      "fix": "Create useDelegateSearch.test.ts covering: call with no excludeUserId returns [], call with excludeUserId delegates to searchUsers."
+    },
+    {
+      "id": "TEST-008",
+      "severity": "suggestion",
+      "file": "apps/admin/src/features/dashboard/application/hooks/useRecentActivity.ts",
+      "description": "useRecentActivity hook in the admin dashboard has no test file.",
+      "rule": "testing.md - Unit Tests for Hooks",
+      "fix": "Create useRecentActivity.test.ts covering loading, error, and data states."
+    }
+  ],
+  "missingTests": [
+    {
+      "sourceFile": "apps/payments/src/features/checkout/application/hooks/useCartFromCookie.ts",
+      "expectedTestFile": "apps/payments/src/features/checkout/application/hooks/useCartFromCookie.test.ts",
+      "type": "hook",
+      "priority": "high",
+      "reason": "Complex grouping and hydration logic with multiple edge cases"
+    },
+    {
+      "sourceFile": "apps/payments/src/features/payment-methods/application/hooks/useAutoSavePaymentMethod.ts",
+      "expectedTestFile": "apps/payments/src/features/payment-methods/application/hooks/useAutoSavePaymentMethod.test.ts",
+      "type": "hook",
+      "priority": "high",
+      "reason": "Debounce logic, multiple effects, and saveStatus state machine"
+    },
+    {
+      "sourceFile": "apps/admin/src/features/users/application/utils/formatLastSeen.ts",
+      "expectedTestFile": "apps/admin/src/features/users/application/utils/formatLastSeen.test.ts",
+      "type": "util",
+      "priority": "high",
+      "reason": "Pure function with 6 time-range branches — ideal for unit tests"
+    },
+    {
+      "sourceFile": "apps/admin/src/features/users/application/hooks/useApplyTemplate.ts",
+      "expectedTestFile": "apps/admin/src/features/users/application/hooks/useApplyTemplate.test.ts",
+      "type": "hook",
+      "priority": "medium",
+      "reason": "Mutation hook managing user permissions in admin panel"
+    },
+    {
+      "sourceFile": "apps/admin/src/features/users/application/hooks/useTogglePermission.ts",
+      "expectedTestFile": "apps/admin/src/features/users/application/hooks/useTogglePermission.test.ts",
+      "type": "hook",
+      "priority": "medium",
+      "reason": "Mutation hook toggling user permissions"
+    },
+    {
+      "sourceFile": "apps/admin/src/features/users/application/hooks/useUserDelegates.ts",
+      "expectedTestFile": "apps/admin/src/features/users/application/hooks/useUserDelegates.test.ts",
+      "type": "hook",
+      "priority": "medium",
+      "reason": "Query hook for delegate management"
+    },
+    {
+      "sourceFile": "apps/admin/src/features/users/application/hooks/useUserPermissions.ts",
+      "expectedTestFile": "apps/admin/src/features/users/application/hooks/useUserPermissions.test.ts",
+      "type": "hook",
+      "priority": "medium",
+      "reason": "Query hook for user permissions"
+    },
+    {
+      "sourceFile": "apps/admin/src/features/users/application/hooks/useUserProfile.ts",
+      "expectedTestFile": "apps/admin/src/features/users/application/hooks/useUserProfile.test.ts",
+      "type": "hook",
+      "priority": "medium",
+      "reason": "Query hook for user profile data"
+    },
+    {
+      "sourceFile": "apps/admin/src/features/users/presentation/components/delegates/AsDelegateRow.tsx",
+      "expectedTestFile": "apps/admin/src/features/users/presentation/components/delegates/AsDelegateRow.test.tsx",
+      "type": "component",
+      "priority": "low",
+      "reason": "Delegate sub-component in permission management flow"
+    },
+    {
+      "sourceFile": "apps/admin/src/features/users/presentation/components/delegates/AsSellerRow.tsx",
+      "expectedTestFile": "apps/admin/src/features/users/presentation/components/delegates/AsSellerRow.test.tsx",
+      "type": "component",
+      "priority": "low",
+      "reason": "Delegate sub-component in permission management flow"
+    },
+    {
+      "sourceFile": "apps/admin/src/features/users/presentation/components/delegates/RemoveButton.tsx",
+      "expectedTestFile": "apps/admin/src/features/users/presentation/components/delegates/RemoveButton.test.tsx",
+      "type": "component",
+      "priority": "medium",
+      "reason": "Button that removes delegates — destructive action needs test coverage"
+    },
+    {
+      "sourceFile": "apps/payments/src/features/checkout/presentation/components/BuyerField.tsx",
+      "expectedTestFile": "apps/payments/src/features/checkout/presentation/components/BuyerField.test.tsx",
+      "type": "component",
+      "priority": "low",
+      "reason": "Checkout form component"
+    },
+    {
+      "sourceFile": "apps/payments/src/features/checkout/presentation/components/DynamicFormField.tsx",
+      "expectedTestFile": "apps/payments/src/features/checkout/presentation/components/DynamicFormField.test.tsx",
+      "type": "component",
+      "priority": "medium",
+      "reason": "Dynamic form rendering with conditional logic by field type"
+    },
+    {
+      "sourceFile": "apps/payments/src/features/checkout/presentation/components/DisplayBlockRenderer.tsx",
+      "expectedTestFile": "apps/payments/src/features/checkout/presentation/components/DisplayBlockRenderer.test.tsx",
+      "type": "component",
+      "priority": "medium",
+      "reason": "Renders different block types dynamically — conditional rendering logic"
+    },
+    {
+      "sourceFile": "apps/studio/src/features/seller-admins/application/hooks/useDelegateSearch.ts",
+      "expectedTestFile": "apps/studio/src/features/seller-admins/application/hooks/useDelegateSearch.test.ts",
+      "type": "hook",
+      "priority": "low",
+      "reason": "Has an important guard (returns empty when no excludeUserId) that should be verified"
+    },
+    {
+      "sourceFile": "apps/admin/src/features/dashboard/application/hooks/useRecentActivity.ts",
+      "expectedTestFile": "apps/admin/src/features/dashboard/application/hooks/useRecentActivity.test.ts",
+      "type": "hook",
+      "priority": "low",
+      "reason": "Dashboard query hook without tests"
+    }
+  ],
+  "patterns": [
+    {
+      "type": "positive",
+      "description": "No snapshot tests found anywhere across the entire apps/ directory — the codebase consistently uses targeted behavioral assertions instead of opaque snapshots.",
+      "recommendation": "Maintain this practice. Continue using specific getByTestId/getByRole/toHaveAttribute assertions."
+    },
+    {
+      "type": "positive",
+      "description": "No skipped tests (it.skip / test.skip / describe.skip / xit) or TODO/FIXME markers found in any test file — test suite is clean and fully active.",
+      "recommendation": "No action needed."
+    },
+    {
+      "type": "positive",
+      "description": "Examined test files (e.g. useAddToCart.test.ts) demonstrate strong quality: fake timers for timeout testing, vi.clearAllMocks in beforeEach, edge cases for stock limits, async act() wrapping. This pattern should be referenced for new tests.",
+      "recommendation": "Document this test as a reference pattern in project docs or test utilities."
+    },
+    {
+      "type": "info",
+      "description": "Pure utility functions are generally well-covered (templatePermissions.test.ts, computeRole.test.ts, formatCop.test.ts), with one notable gap: formatLastSeen.ts has no test despite having 6 conditional branches.",
+      "recommendation": "Add formatLastSeen.test.ts as a quick, high-value addition."
+    },
+    {
+      "type": "info",
+      "description": "The useSupabaseAuth hook appears in all apps (admin, auth, payments, store, studio, playground) but has no test in any app. Since it wraps Supabase auth, it may be intentionally skipped due to auth infrastructure mocking complexity, but a minimal smoke test for auth state transitions would add value.",
+      "recommendation": "Consider adding a single shared test or at least one app-level test for useSupabaseAuth covering the common state transitions."
+    }
+  ]
+}

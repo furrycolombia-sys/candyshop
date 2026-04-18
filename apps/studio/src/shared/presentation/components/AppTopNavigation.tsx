@@ -14,7 +14,7 @@ export function AppTopNavigation(props: AppTopNavigationProps) {
   const { grantedKeys, isLoading, isAuthenticated } =
     useCurrentUserPermissions();
   const permissionState = {
-    grantedKeys: [...grantedKeys],
+    grantedKeys,
     isLoading,
     isAuthenticated,
   };

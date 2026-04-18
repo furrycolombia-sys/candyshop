@@ -1,0 +1,153 @@
+{
+  "agent": "pattern-discovery",
+  "timestamp": "2026-04-17T00:00:00Z",
+  "scope": "apps/",
+  "summary": {
+    "filesAnalyzed": 180,
+    "issuesFound": 6,
+    "critical": 0,
+    "warning": 3,
+    "suggestion": 2,
+    "info": 1
+  },
+  "issues": [
+    {
+      "id": "PAT-001",
+      "severity": "warning",
+      "title": "Hardcoded user-facing strings in UserTable filter dropdowns and export button",
+      "file": "apps/admin/src/features/users/presentation/components/UserTable.tsx",
+      "line": 144,
+      "description": "The file has `/* eslint-disable i18next/no-literal-string */` at the top, but the actual violations are the role filter options ('All Roles', 'Buyer', 'Seller'), item filter options ('All Items', 'Has Items', 'No Items'), and the export button label 'Export Selected as CSV'. These are user-facing strings that should use useTranslations(). The ESLint disable suppresses the warning instead of fixing it. All other components in the same feature (UserRow, RoleBadge, Pagination) correctly use useTranslations.",
+      "rule": "naming-conventions.md",
+      "fix": "Remove the blanket eslint-disable comment. Add translation keys to the users namespace (e.g. users.filters.allRoles, users.filters.buyer, users.export.selectedAsCsv). Use t() for these strings."
+    },
+    {
+      "id": "PAT-002",
+      "severity": "warning",
+      "title": "Hardcoded aria-labels in PaymentMethods editor buttons",
+      "file": "apps/payments/src/features/payment-methods/presentation/pages/PaymentMethodsPageContent.tsx",
+      "line": 191,
+      "description": "aria-label=\"Move up\", aria-label=\"Move down\" (PaymentMethodsPageContent.tsx lines 191, 201) and aria-label=\"Remove block\" (DisplaySectionEditor.tsx line 171), aria-label=\"Remove field\" (FormSectionEditor.tsx line 183) are hardcoded English strings. The files suppress the lint rule with `/* eslint-disable i18next/no-literal-string -- aria-labels ... are UI chrome, not user-facing content */`, but aria-labels are read aloud by screen readers and are user-facing. Accessible labels should be translated for the app's supported locales (en, es).",
+      "rule": "tailwind.md",
+      "fix": "Use useTranslations() to supply translated aria-labels, e.g. aria-label={t('common.moveUp')}. Remove the eslint-disable. The DisplaySectionEditor.tsx and FormSectionEditor.tsx files have the same issue."
+    },
+    {
+      "id": "PAT-003",
+      "severity": "warning",
+      "title": "Hardcoded 'Image unavailable' fallback text in DisplayBlockRenderer",
+      "file": "apps/payments/src/features/checkout/presentation/components/DisplayBlockRenderer.tsx",
+      "line": 106,
+      "description": "The fallback text 'Image unavailable' rendered when an image fails to load is a hardcoded English string. The file suppresses the lint rule with `/* eslint-disable i18next/no-literal-string -- renderer uses internal/fallback text, not user-facing */`. However, this text IS shown to buyers in checkout when their seller's product image fails, making it user-facing. The VideoBlock also has title=\"Video\" hardcoded (line 62), which is an aria title visible to assistive tech.",
+      "rule": "single-source-of-truth.md",
+      "fix": "Pass translated fallback strings via props (following the props injection pattern from monorepo-architecture.md), or move this component into the app layer and use useTranslations() for the fallback texts."
+    },
+    {
+      "id": "PAT-004",
+      "severity": "suggestion",
+      "title": "Status system in DashboardPageContent always hardcodes 'operational' status",
+      "file": "apps/admin/src/features/dashboard/presentation/pages/DashboardPageContent.tsx",
+      "line": 125,
+      "description": "The StatusRow components all receive `status=\"operational\"` hardcoded. The StatusRow component supports 'operational' | 'degraded' | 'down' statuses with correct semantic colors, but no real monitoring data is fetched — the statuses are static. This means the dashboard system health section never changes, making it misleading rather than useful.",
+      "rule": "no-hardcoding.md#what-is-hardcoding",
+      "fix": "Either remove the system status section if no monitoring integration is planned, or integrate a real health-check hook and pass dynamic status values. If keeping static values as a placeholder, add a comment documenting the intent."
+    },
+    {
+      "id": "PAT-005",
+      "severity": "suggestion",
+      "title": "Page/PageContent split pattern is consistent but not documented",
+      "file": "apps/admin/src/features/dashboard/presentation/pages/DashboardPage.tsx",
+      "line": 1,
+      "description": "A consistent pattern exists across admin, payments, and studio apps: a `*Page.tsx` handles permission checks and renders either an AccessDeniedState or a `*PageContent.tsx`. The `*PageContent.tsx` contains actual page logic. This is a well-implemented RBAC-guard pattern that is not documented anywhere in the .claude/rules/ files. It ensures clean separation of auth concerns from page content. Files following this pattern: DashboardPage/Content, UsersPage/Content, SettingsPage/Content, TemplatesPage/Content, AuditLogPage/Content, OrdersPage/Content, ReceivedOrdersPage/Content, PaymentMethodsPage/Content, CheckoutPage/Content, ProductListPage/Content, ProductFormPage.",
+      "rule": "architecture.md",
+      "fix": "Document this RBAC guard pattern as an architectural standard in .claude/rules/architecture.md under a new 'Permission Guard Pattern' section."
+    },
+    {
+      "id": "PAT-006",
+      "severity": "info",
+      "title": "ESLint disable pattern for SQL identifiers is consistent and well-justified",
+      "file": "apps/payments/src/features/checkout/infrastructure/checkoutQueries.ts",
+      "line": 1,
+      "description": "Infrastructure files that interact directly with Supabase (SQL table names, column names, RPC names) consistently use `/* eslint-disable i18next/no-literal-string -- infrastructure file: Supabase table/column names are SQL identifiers, not user-facing text */`. This is the correct and expected pattern: SQL identifiers like 'orders', 'seller_payment_methods', 'reserve_stock' are not translatable user text. The pattern is consistently applied across all Supabase query files in payments, admin, auth, and studio.",
+      "rule": "architecture.md#generated-code",
+      "fix": "No action required. This pattern is correct. Consider documenting it as an approved ESLint disable pattern in the architecture or no-hardcoding rules."
+    }
+  ],
+  "patterns": [
+    {
+      "type": "good",
+      "description": "nuqs (useQueryState/useQueryStates) is consistently used for user-facing navigation state: filters, pagination, search, and tabs. No unauthorized useState for URL-worthy state was found.",
+      "files": [
+        "apps/admin/src/features/users/presentation/pages/UsersPageContent.tsx",
+        "apps/admin/src/features/audit/presentation/pages/AuditLogPageContent.tsx",
+        "apps/payments/src/features/received-orders/presentation/pages/ReceivedOrdersPageContent.tsx",
+        "apps/store/src/features/products/presentation/pages/ProductCatalogPage.tsx",
+        "apps/studio/src/features/products/presentation/pages/ProductListPageContent.tsx"
+      ]
+    },
+    {
+      "type": "good",
+      "description": "tid() utility is universally applied across all apps for stable test IDs. Over 390 usages across 122 files. This enables consistent E2E test selection without relying on CSS classes.",
+      "files": [
+        "apps/admin/src/features/users/presentation/components/UserTable.tsx",
+        "apps/store/src/features/products/presentation/components/ProductCard.tsx",
+        "apps/payments/src/features/checkout/presentation/components/CheckoutItemsSummary.tsx",
+        "apps/studio/src/features/products/presentation/components/inline-editor/InlineEditor.tsx"
+      ]
+    },
+    {
+      "type": "good",
+      "description": "useTranslations() is used in almost all user-facing components across all apps (landing, auth, admin, payments, store, studio). Only a small number of files suppress it with well-commented justifications.",
+      "files": [
+        "apps/landing/src/features/home/presentation/components/HeroSection.tsx",
+        "apps/admin/src/features/users/presentation/components/RoleBadge.tsx",
+        "apps/payments/src/features/checkout/presentation/components/BuyerField.tsx",
+        "apps/store/src/features/products/presentation/pages/ProductCatalogPage.tsx"
+      ]
+    },
+    {
+      "type": "good",
+      "description": "Stock reservation in checkout uses server-side database RPCs (reserve_stock, release_stock) with atomic rollback. Payment methods are fetched through a server-side validation boundary (checkoutPaymentMethods.ts) that returns hasStockIssues flag, enforcing the checkout-stock-integrity rule at the API layer.",
+      "files": [
+        "apps/payments/src/features/checkout/infrastructure/checkoutQueries.ts",
+        "apps/payments/src/features/checkout/infrastructure/checkoutPaymentMethods.ts"
+      ]
+    },
+    {
+      "type": "good",
+      "description": "Page/PageContent split pattern consistently separates RBAC guards from page content across admin, payments, and studio apps. The Page component handles permissions and renders AccessDeniedState or the PageContent component.",
+      "files": [
+        "apps/admin/src/features/dashboard/presentation/pages/DashboardPage.tsx",
+        "apps/admin/src/features/users/presentation/pages/UsersPage.tsx",
+        "apps/payments/src/features/orders/presentation/pages/OrdersPage.tsx",
+        "apps/studio/src/features/products/presentation/pages/ProductListPage.tsx"
+      ]
+    },
+    {
+      "type": "good",
+      "description": "Domain searchParams files in each feature (audit, users, received-orders, products) define nuqs parsers at the domain layer, keeping URL state shape close to business domain types.",
+      "files": [
+        "apps/admin/src/features/audit/domain/searchParams.ts",
+        "apps/admin/src/features/users/domain/searchParams.ts",
+        "apps/payments/src/features/received-orders/domain/searchParams.ts",
+        "apps/store/src/features/products/domain/searchParams.ts",
+        "apps/studio/src/features/products/domain/searchParams.ts"
+      ]
+    },
+    {
+      "type": "bad",
+      "description": "Blanket `/* eslint-disable i18next/no-literal-string */` comments in some files suppress valid i18n warnings without fixing them (UserTable.tsx), while other files use the same pattern correctly with narrow scope and clear justification.",
+      "files": [
+        "apps/admin/src/features/users/presentation/components/UserTable.tsx"
+      ]
+    },
+    {
+      "type": "bad",
+      "description": "Aria-labels for icon-only buttons in PaymentMethods editor ('Move up', 'Move down', 'Remove block', 'Remove field') are hardcoded English strings, bypassing i18n. These are user-facing because screen readers announce them.",
+      "files": [
+        "apps/payments/src/features/payment-methods/presentation/pages/PaymentMethodsPageContent.tsx",
+        "apps/payments/src/features/payment-methods/presentation/components/DisplaySectionEditor.tsx",
+        "apps/payments/src/features/payment-methods/presentation/components/FormSectionEditor.tsx"
+      ]
+    }
+  ]
+}

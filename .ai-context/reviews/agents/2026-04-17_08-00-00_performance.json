@@ -1,0 +1,88 @@
+{
+  "agent": "performance",
+  "review_id": "2026-04-17_08-00-00",
+  "timestamp": "2026-04-17T08:00:00.000Z",
+  "scope": "apps/",
+  "summary": {
+    "filesAnalyzed": 18,
+    "issuesFound": 5,
+    "critical": 0,
+    "warning": 3,
+    "suggestion": 2,
+    "info": 0
+  },
+  "issues": [
+    {
+      "id": "PERF-001",
+      "severity": "warning",
+      "category": "Callback Issues",
+      "file": "apps/payments/src/features/checkout/presentation/pages/CheckoutPageContent.tsx",
+      "line": 209,
+      "description": "Inline arrow function passed as `onSubmit` prop to `SellerCheckoutCard` inside a `groups.map()`. A new function reference is created on every render for each seller group. `SellerCheckoutCard` already wraps its own heavy logic (payment methods fetch, form state), so this causes unnecessary re-renders any time the parent re-renders.",
+      "rule": "Callbacks passed to child components should be stable. Wrap with useCallback or pre-build the handler map outside JSX.",
+      "suggestion": "Pre-compute a stable `onSubmit` handler map via useMemo, or move the inline lambda into a useCallback inside a sub-component that accepts sellerId/items/subtotal as props."
+    },
+    {
+      "id": "PERF-002",
+      "severity": "warning",
+      "category": "Inline Object Literals",
+      "file": "apps/payments/src/features/checkout/presentation/components/SellerCheckoutCard.tsx",
+      "line": 155,
+      "description": "Three separate inline object literals are passed as props to `SellerCheckoutContent` on every render: `submission={{ ... }}`, `methodSelection={{ ... }}`, and `buyerForm={{ ... }}`. These objects are re-created each render even when their constituent values have not changed. If `SellerCheckoutContent` is ever memoized, these prop objects will defeat memoization.",
+      "rule": "Avoid creating new object literals directly in JSX props when the child component could be memoized.",
+      "suggestion": "Extract each prop object into a useMemo call inside SellerCheckoutCard, or flatten the props and pass primitives directly to SellerCheckoutContent."
+    },
+    {
+      "id": "PERF-003",
+      "severity": "warning",
+      "category": "Unstable Reference",
+      "file": "apps/payments/src/features/checkout/application/hooks/useCartFromCookie.ts",
+      "line": 74,
+      "description": "`getItemName` is a plain function defined inside the hook body on every call: `const getItemName = (item: CartItem) => i18nField(item, 'name', locale)`. It is not memoized with useCallback. It is then threaded down through CheckoutPageContent → SellerCheckoutCard → SellerCheckoutContent → CheckoutItemsSummary. Any component in that chain that uses this prop as a dependency (e.g., in a useEffect or useCallback dep array) will re-run unnecessarily on each render.",
+      "rule": "Functions returned from hooks and passed through multiple component layers should be stable references.",
+      "suggestion": "Wrap `getItemName` in `useCallback(() => ..., [locale])` inside `useCartFromCookie`."
+    },
+    {
+      "id": "PERF-004",
+      "severity": "suggestion",
+      "category": "Expensive Calculation in Render",
+      "file": "apps/store/src/features/products/presentation/components/product-detail/ImageGallery.tsx",
+      "line": 47,
+      "description": "`getProductImages(product.images)` is called on every render without memoization. The function filters and maps the `images` array (which is a JSONB field that may require parsing). Although the computation is lightweight for a small list, the call happens in a client component that re-renders when `activeIndex` state changes (user clicking thumbnails), triggering the array transform unnecessarily.",
+      "rule": "Array transformations called directly in the render body that depend only on props should use useMemo.",
+      "suggestion": "Wrap the call: `const images = useMemo(() => getProductImages(product.images), [product.images])`."
+    },
+    {
+      "id": "PERF-005",
+      "severity": "suggestion",
+      "category": "Lazy Loading",
+      "file": "apps/studio/src/features/products/presentation/components/inline-editor/IconPicker.tsx",
+      "line": 4,
+      "description": "IconPicker imports `iconNames` and `DynamicIcon` from `lucide-react/dynamic` at the top level. `lucide-react/dynamic` loads the entire icon registry into the bundle for the Studio product editor. This import is synchronous and is included in the main chunk for any page that renders the InlineEditor. Since IconPicker is only shown when the user actively edits a section item, this is a good candidate for code-splitting.",
+      "rule": "Large or rarely-used components (especially those with heavy dependencies) should be loaded lazily.",
+      "suggestion": "Use `dynamic(() => import('./IconPicker'), { ssr: false })` from `next/dynamic` inside InlineSections or the parent section editor, so the full lucide dynamic registry is only loaded when the icon picker is needed."
+    }
+  ],
+  "patterns": [
+    {
+      "id": "PAT-PERF-01",
+      "description": "Inline `style={{ ... }}` with CSS variable strings (e.g., `style={{ backgroundColor: theme.bg }}`) are widely used across product detail and studio components. These are NOT performance issues — CSS variable string values are primitives and React performs a shallow equality check. These are correctly used for dynamic theming."
+    },
+    {
+      "id": "PAT-PERF-02",
+      "description": "CartContext correctly wraps all action callbacks (addItem, removeItem, updateQuantity, clearCart) with useCallback and memoizes the context value with useMemo. This is a well-implemented pattern."
+    },
+    {
+      "id": "PAT-PERF-03",
+      "description": "Next.js Image component is used consistently wherever product images are rendered (ImageGallery, ProductCardImage, InlineImageCarousel). No raw <img> tags found in production component files — only in test files where <img> is rendered by Next.js Image in jsdom."
+    },
+    {
+      "id": "PAT-PERF-04",
+      "description": "No heavy bundle libraries (recharts, lodash, xlsx, moment, react-pdf) found in the apps/ source. Bundle risk is low."
+    },
+    {
+      "id": "PAT-PERF-05",
+      "description": "No React.lazy or next/dynamic usage found anywhere in apps/. For the current feature set this is acceptable, but as the studio editor grows (especially with DnD, IconPicker, TemplatePicker), dynamic imports should be considered for the heaviest sub-panels."
+    }
+  ]
+}

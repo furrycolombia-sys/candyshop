@@ -1,0 +1,127 @@
+{
+  "agent": "security",
+  "review_id": "2026-04-17_20-00-00",
+  "timestamp": "2026-04-17T20:00:00",
+  "scope": "apps/",
+  "summary": {
+    "filesAnalyzed": 18,
+    "issuesFound": 6,
+    "critical": 0,
+    "warning": 4,
+    "suggestion": 2,
+    "info": 0
+  },
+  "issues": [
+    {
+      "id": "SEC-001",
+      "severity": "warning",
+      "category": "CSP",
+      "title": "Content-Security-Policy uses unsafe-inline and unsafe-eval in script-src across all apps",
+      "files": [
+        "apps/store/next.config.ts:25",
+        "apps/admin/next.config.ts:25",
+        "apps/auth/next.config.ts:25",
+        "apps/payments/next.config.ts:25",
+        "apps/studio/next.config.ts:25",
+        "apps/landing/next.config.ts:25",
+        "apps/playground/next.config.ts:25"
+      ],
+      "description": "All 7 apps share the same CSP header: `script-src 'self' 'unsafe-inline' 'unsafe-eval'`. The `unsafe-inline` directive allows inline script execution, and `unsafe-eval` allows string-to-code evaluation (e.g. eval()). Together these directives largely defeat XSS protection that CSP is meant to provide. Next.js supports nonce-based CSP as of v13+ which would allow removing these directives.",
+      "fix": "Replace 'unsafe-inline' with a nonce or hash in script-src. Replace 'unsafe-eval' if no eval-dependent third party is required. Next.js App Router supports middleware-generated nonces for this purpose."
+    },
+    {
+      "id": "SEC-002",
+      "severity": "warning",
+      "category": "Image Security",
+      "title": "Next.js Image remotePatterns allows all HTTPS hostnames in store and studio",
+      "files": [
+        "apps/store/next.config.ts:46",
+        "apps/studio/next.config.ts:55"
+      ],
+      "description": "Both apps configure `{ protocol: 'https', hostname: '**' }` as a remote pattern for Next.js Image optimization. This effectively allows the image optimization endpoint to proxy and serve images from any HTTPS host on the internet. An attacker could use this as an open proxy to fetch and serve arbitrary content through the app's domain, which may bypass firewall rules or be used for SSRF in certain deployment environments.",
+      "fix": "Restrict remotePatterns to the actual known hostnames used for product images (e.g. the Supabase storage hostname and any known CDN hostname). If user-provided URLs from any host must be supported, at minimum consider rate-limiting the optimization endpoint or using a dedicated image CDN with origin restrictions."
+    },
+    {
+      "id": "SEC-003",
+      "severity": "warning",
+      "category": "Environment Variable Exposure",
+      "title": "NEXT_PUBLIC_SUPABASE_ANON_KEY used in server-side code as an API key header",
+      "files": ["apps/admin/src/shared/infrastructure/auditRestClient.ts:11"],
+      "description": "The `auditRestClient.ts` file reads `NEXT_PUBLIC_SUPABASE_ANON_KEY` from `process.env` and passes it as the `apikey` header on direct Supabase REST calls from a server-side function. NEXT_PUBLIC_ variables are bundled into the client-side JavaScript and visible to all browser users. While the anon key is intentionally public in Supabase's model (RLS enforces security), the pattern is a code smell: the server call does not need the public anon key — it already has the user's session token for authorization. The anon key should only be used on the client side. Relying on it server-side (even if functionally safe today) may mislead future developers into treating it as a privileged credential.",
+      "fix": "On the server side, use only the session access_token for bearer authentication against Supabase REST endpoints. Remove the `NEXT_PUBLIC_SUPABASE_ANON_KEY` read from auditRestClient.ts; the anon key is not needed when the user's JWT is already being sent in the Authorization header."
+    },
+    {
+      "id": "SEC-004",
+      "severity": "warning",
+      "category": "Information Disclosure",
+      "title": "adminRest.ts forwards raw Supabase/PostgREST error text to server logs with the full path",
+      "files": ["apps/admin/src/app/api/admin/_shared/adminRest.ts:81"],
+      "description": "The `adminFetch` wrapper logs the raw Supabase/PostgREST error body (`errorText`) to `console.error` along with the REST path. PostgREST error bodies can include internal SQL hints, schema details, and constraint names. Although this is server-side only (not forwarded to the client), these logs may flow into log aggregation systems where less-trusted users could read them. The current comment even acknowledges this: 'never forward raw DB details to callers' — but the details are still logged.",
+      "fix": "Log only the HTTP status code and a sanitized error code (e.g. the PostgREST `code` field without the SQL `details`/`hint` fields) to reduce internal schema leakage in logs. Use structured logging if available."
+    },
+    {
+      "id": "SEC-005",
+      "severity": "suggestion",
+      "category": "Environment Variable Exposure",
+      "title": "Playground env debug page exposes all NEXT_PUBLIC_ vars when ENV_DEBUG=true",
+      "files": [
+        "apps/playground/src/app/[locale]/env/page.tsx",
+        "scripts/load-env.mjs:103-119"
+      ],
+      "description": "When `ENV_DEBUG=true` is set in a non-production env file, `load-env.mjs` serializes all `NEXT_PUBLIC_*` variables into `NEXT_PUBLIC_ENV_DEBUG` and the playground exposes them at `/en/env`. The load-env script correctly blocks this in production, but the page has no route-level authentication check. If the playground app is accessible in a staging/test environment where `ENV_DEBUG=true` is set, any unauthenticated visitor could view all public environment variable values including Supabase URLs and anon keys. The playground app's ProtectedRoute pattern (if used) would need to cover this page.",
+      "fix": "Add an authentication guard to the `/env` page (e.g. redirect to auth if no session cookie is present). Alternatively, disable the route entirely in non-local environments by checking `TARGET_ENV !== 'dev'` at the page level."
+    },
+    {
+      "id": "SEC-006",
+      "severity": "suggestion",
+      "category": "Input Validation",
+      "title": "orders/route.ts casts buyer_submission to Record<string, string> without type validation",
+      "files": ["apps/payments/src/app/api/checkout/orders/route.ts:150"],
+      "description": "The `buyer_submission` field from the request body is validated as a non-null object but individual values are not checked to be strings before the cast `const submission = buyer_submission as Record<string, string>`. This object is stored as `buyer_info` JSON in the orders table. If a buyer sends nested objects, arrays, or very large values as field values, they bypass type enforcement and could cause unexpected behavior in downstream processing (e.g. rendering order details, PDF generation, or notification systems that iterate the buyer info).",
+      "fix": "After the null check, add a loop that validates each entry of `buyer_submission` is a string value: `if (Object.values(buyer_submission).some(v => typeof v !== 'string')) return 400`. This matches the intent of the `validateBuyerSubmission` utility call that already exists a few lines later."
+    }
+  ],
+  "patterns": [
+    {
+      "pattern": "Consistent use of server-side auth validation via supabase.auth.getUser()",
+      "description": "All API routes that require authentication call getUser() (which contacts the Supabase Auth server) rather than relying solely on the JWT claim in getSession(). This is the correct approach and prevents JWT forgery attacks.",
+      "files": [
+        "apps/admin/src/app/api/admin/_shared/adminRest.ts",
+        "apps/payments/src/app/api/checkout/payment-methods/route.ts",
+        "apps/payments/src/app/api/checkout/orders/route.ts",
+        "apps/auth/src/app/api/auth/refresh/route.ts"
+      ]
+    },
+    {
+      "pattern": "UUID validation on all user-supplied identifiers in API routes",
+      "description": "Both admin and payment API routes use validateUuid() before using user-supplied IDs in Supabase REST queries. This prevents basic injection patterns and ensures IDs conform to the expected format.",
+      "files": [
+        "apps/admin/src/app/api/admin/_shared/adminRest.ts",
+        "apps/admin/src/app/api/admin/users/[userId]/permissions/route.ts",
+        "apps/payments/src/shared/infrastructure/adminRestClient.ts",
+        "apps/payments/src/app/api/checkout/payment-methods/route.ts"
+      ]
+    },
+    {
+      "pattern": "Service role key used only in server-side API routes",
+      "description": "SUPABASE_SERVICE_ROLE_KEY (without NEXT_PUBLIC_ prefix) is only read in server-side files (API routes and server-only infrastructure). No client-side component reads it. This correctly keeps the service role key server-side only.",
+      "files": [
+        "apps/admin/src/app/api/admin/_shared/adminRest.ts",
+        "apps/payments/src/shared/infrastructure/adminRestClient.ts"
+      ]
+    },
+    {
+      "pattern": "CORS whitelist enforced in auth refresh endpoint",
+      "description": "The auth/refresh route builds an explicit ALLOWED_ORIGINS Set from env vars and only reflects the Origin header back if it matches. This prevents credential-bearing cross-origin requests from arbitrary origins.",
+      "files": ["apps/auth/src/app/api/auth/refresh/route.ts"]
+    },
+    {
+      "pattern": "Stock validation enforced server-side before returning payment methods",
+      "description": "The checkout/payment-methods route validates cart quantities against live DB stock before returning seller payment details. Payment method data is withheld (empty methods array) when stock issues are detected, satisfying the Checkout Stock Integrity rule.",
+      "files": [
+        "apps/payments/src/app/api/checkout/payment-methods/route.ts",
+        "apps/payments/src/app/api/checkout/orders/route.ts"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,143 @@
+{
+  "agent": "architecture",
+  "timestamp": "2026-04-17T04:08:32",
+  "scope": "apps/",
+  "summary": {
+    "filesAnalyzed": 28,
+    "issuesFound": 7,
+    "critical": 0,
+    "warning": 4,
+    "suggestion": 3,
+    "info": 0
+  },
+  "issues": [
+    {
+      "id": "ARCH-001",
+      "severity": "warning",
+      "category": "Barrel Exports",
+      "title": "Layer-level index.ts files missing across multiple features",
+      "description": "43 feature layer directories (application/, domain/, infrastructure/, presentation/) lack index.ts barrel exports. The architecture rule requires each layer to export a public API. Affected apps: admin, auth, landing, payments, studio (store is better covered). Without barrel exports, internal paths are exposed and refactoring breaks consumers.",
+      "affectedPaths": [
+        "apps/admin/src/features/*/application/ (missing index.ts)",
+        "apps/admin/src/features/*/presentation/ (missing index.ts)",
+        "apps/auth/src/features/*/application/ (missing index.ts)",
+        "apps/auth/src/features/*/presentation/ (missing index.ts)",
+        "apps/payments/src/features/*/application/ (missing index.ts)",
+        "apps/payments/src/features/*/domain/ (missing index.ts)",
+        "apps/payments/src/features/*/infrastructure/ (missing index.ts)",
+        "apps/payments/src/features/*/presentation/ (missing index.ts)",
+        "apps/studio/src/features/*/application/ (missing index.ts)",
+        "apps/studio/src/features/*/domain/ (missing index.ts)",
+        "apps/studio/src/features/*/infrastructure/ (missing index.ts)",
+        "apps/studio/src/features/*/presentation/ (missing index.ts)"
+      ],
+      "rule": "Barrel Exports - Each layer should have index.ts exporting public API",
+      "fix": "Add index.ts to each layer directory re-exporting the public API. Start with the most-used layers (application, presentation) in admin and payments."
+    },
+    {
+      "id": "ARCH-002",
+      "severity": "warning",
+      "category": "Hardcoded Config",
+      "title": "Hardcoded Supabase local URL fallback in production config",
+      "description": "apps/admin/src/shared/infrastructure/config/environment.ts defines a hardcoded fallback URL 'http://127.0.0.1:54321' for NEXT_PUBLIC_SUPABASE_URL. This is a development-only value that should not live in shared infrastructure config. If NEXT_PUBLIC_SUPABASE_URL is unset in production, the app silently falls back to a non-working local URL with no error.",
+      "affectedPaths": [
+        "apps/admin/src/shared/infrastructure/config/environment.ts:10"
+      ],
+      "rule": "No Hardcoding - Hardcoded config URLs must be in env/config, fallbacks to localhost are risky",
+      "fix": "Remove the hardcoded fallback or move it to a clearly marked development-only guard. Consider throwing an error if the env var is missing in non-development environments."
+    },
+    {
+      "id": "ARCH-003",
+      "severity": "warning",
+      "category": "Inline Types",
+      "title": "Inline object type literals in mutationFn arguments (payments)",
+      "description": "apps/payments/src/features/payment-methods/application/hooks/usePaymentMethodMutations.ts uses inline anonymous type literals for mutationFn parameters ({ sellerId: string; nameEn: string; nameEs?: string } and { id: string; patch: Partial<...> }). These types belong in the feature's domain/types.ts.",
+      "affectedPaths": [
+        "apps/payments/src/features/payment-methods/application/hooks/usePaymentMethodMutations.ts:25-28",
+        "apps/payments/src/features/payment-methods/application/hooks/usePaymentMethodMutations.ts:45-58"
+      ],
+      "rule": "No Hardcoding - Inline Types: Complex types must be in domain/types",
+      "fix": "Extract these parameter shapes into named interfaces in apps/payments/src/features/payment-methods/domain/types.ts, e.g. CreatePaymentMethodParams and UpdatePaymentMethodParams."
+    },
+    {
+      "id": "ARCH-004",
+      "severity": "warning",
+      "category": "Inline Types",
+      "title": "Internal helper component with inline type in DisplayBlockRenderer",
+      "description": "apps/payments/src/features/checkout/presentation/components/DisplayBlockRenderer.tsx defines the internal BlockContent component with an inline type literal ({ block: DisplayBlock; locale: string }). Though minor (2 props), it breaks the one-component-per-file rule and uses inline types.",
+      "affectedPaths": [
+        "apps/payments/src/features/checkout/presentation/components/DisplayBlockRenderer.tsx:32-37"
+      ],
+      "rule": "No Hardcoding - Inline types in component signatures",
+      "fix": "Define a BlockContentProps interface at the top of the file (or in a .types.ts file). The BlockContent internal component is acceptable in-file per the compound component exception, but the type should be named."
+    },
+    {
+      "id": "ARCH-005",
+      "severity": "suggestion",
+      "category": "URL State",
+      "title": "Debounce pattern using local useState + useEffect is correct but repetitive",
+      "description": "Both apps/admin/src/features/users/presentation/pages/UsersPageContent.tsx and apps/studio/src/features/products/presentation/components/ProductFilters.tsx implement the identical debounced-search pattern: local useState for the input value + useEffect to push to nuqs params after a delay. This is the correct pattern per the URL State rule, but the debounce logic is duplicated. A shared useDebounced hook in the shared package could eliminate this duplication.",
+      "affectedPaths": [
+        "apps/admin/src/features/users/presentation/pages/UsersPageContent.tsx:24-43",
+        "apps/studio/src/features/products/presentation/components/ProductFilters.tsx:23-36"
+      ],
+      "rule": "DRY - Same pattern repeated across 2+ features",
+      "fix": "Consider extracting a useDebouncedParam hook into packages/shared/src/hooks/ that accepts (value, delay, setter) and handles the debounce + sync pattern. KISS caveat: only worthwhile if this pattern will appear in a third location."
+    },
+    {
+      "id": "ARCH-006",
+      "severity": "suggestion",
+      "category": "Hardcoded Config",
+      "title": "YouTube embed base URL hardcoded in domain logic",
+      "description": "apps/payments/src/features/payment-methods/domain/youtubeEmbed.ts hardcodes the YouTube embed URL base string 'https://www.youtube.com/embed/' in three separate return statements. While technically a domain utility (not app config), the repeated URL string could be extracted to a named constant within the same file.",
+      "affectedPaths": [
+        "apps/payments/src/features/payment-methods/domain/youtubeEmbed.ts:18",
+        "apps/payments/src/features/payment-methods/domain/youtubeEmbed.ts:22",
+        "apps/payments/src/features/payment-methods/domain/youtubeEmbed.ts:26"
+      ],
+      "rule": "No Hardcoding - Repeated magic strings should be constants; DRY",
+      "fix": "Add a module-level constant: const YOUTUBE_EMBED_BASE = 'https://www.youtube.com/embed/'; and use it in all three return statements."
+    },
+    {
+      "id": "ARCH-007",
+      "severity": "suggestion",
+      "category": "App Router",
+      "title": "All app/ route files are correctly thin wrappers",
+      "description": "All sampled page.tsx files (admin, store, payments, studio) follow the thin-wrapper pattern: they only call setRequestLocale and render the feature page component. No business logic or data fetching in route files. This is excellent compliance.",
+      "affectedPaths": [
+        "apps/admin/src/app/[locale]/page.tsx",
+        "apps/store/src/app/[locale]/page.tsx",
+        "apps/payments/src/app/[locale]/checkout/page.tsx",
+        "apps/studio/src/app/[locale]/products/[id]/page.tsx"
+      ],
+      "rule": "App Router Thin Wrappers - Route files should only import and render feature pages",
+      "fix": "No action needed. Existing pattern is correct."
+    }
+  ],
+  "patterns": [
+    {
+      "type": "good",
+      "name": "Consistent feature-level barrel exports (index.ts)",
+      "description": "All features have a top-level index.ts (e.g. apps/admin/src/features/audit/index.ts). The missing barrel exports are at the sub-layer level (application/, presentation/), not at the feature root level.",
+      "suggestion": "Continue ensuring all new features have both a root index.ts AND layer-level index.ts files."
+    },
+    {
+      "type": "good",
+      "name": "nuqs usage for URL state in all filter/pagination components",
+      "description": "All sampled filter, search, and pagination components (ProductFilters, UsersPageContent, ProductCatalogPage, AuditLogPageContent, ReceivedOrdersPageContent) correctly use useQueryStates/useQueryState from nuqs for URL-persisted state.",
+      "suggestion": "Strong compliance. No violations found."
+    },
+    {
+      "type": "good",
+      "name": "Layer dependency direction is correct",
+      "description": "No violations found where domain imports from application/infrastructure, or application imports from presentation. The dependency flow (Presentation → Application → Domain ← Infrastructure) is respected throughout all sampled features.",
+      "suggestion": "No action needed."
+    },
+    {
+      "type": "concern",
+      "name": "Presentation layer imports from shared/infrastructure are widespread",
+      "description": "Presentation components across all apps import from @/shared/infrastructure/config (appUrls) and @/shared/infrastructure/i18n (Link, useRouter). This is technically an upward dependency but is accepted by the architecture because these are app-level shared infrastructure utilities (not cross-feature), making this a recognized pattern rather than a violation.",
+      "suggestion": "Document this as an accepted exception: presentation components may import from @/shared/infrastructure/config and @/shared/infrastructure/i18n for cross-cutting concerns."
+    }
+  ]
+}

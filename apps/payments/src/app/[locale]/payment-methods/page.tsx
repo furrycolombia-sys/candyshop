@@ -1,6 +1,6 @@
 import { setRequestLocale } from "next-intl/server";
 
-import { PaymentMethodsPage } from "@/features/payment-methods/presentation/pages/PaymentMethodsPage";
+import { PaymentMethodsPage } from "@/features/payment-methods";
 
 export default async function Page({
   params,

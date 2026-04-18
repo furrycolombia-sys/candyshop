@@ -4,6 +4,7 @@
 import { useCurrentUserPermissions } from "auth/client";
 import { useTranslations } from "next-intl";
 
+import { SELLER_ADMINS_READ_PERMISSION } from "@/features/users/domain/constants";
 import { UserDetailPageContent } from "@/features/users/presentation/pages/UserDetailPageContent";
 import { AccessDeniedState } from "@/shared/presentation/components/AccessDeniedState";
 
@@ -30,7 +31,7 @@ export function UserDetailPage({ userId }: UserDetailPageProps) {
       userId={userId}
       canCreate={hasPermission("user_permissions.create")}
       canDelete={hasPermission("user_permissions.delete")}
-      canManageDelegates={hasPermission("seller_admins.read")}
+      canManageDelegates={hasPermission(SELLER_ADMINS_READ_PERMISSION)}
     />
   );
 }

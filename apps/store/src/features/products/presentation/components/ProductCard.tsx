@@ -2,7 +2,8 @@
 
 import { ShoppingCart } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
-import { i18nField, i18nPrice, slugify, tid } from "shared";
+import { i18nCurrencyCode, i18nField, i18nPrice, slugify, tid } from "shared";
+import { cn } from "ui";
 
 import { ProductBadges } from "./ProductBadges";
 import { ProductCardImage } from "./ProductCardImage";
@@ -34,33 +35,35 @@ export function ProductCard({
   const tCategories = useTranslations("categories");
   const tTypes = useTranslations("productTypes");
   const locale = useLocale();
-  const { added, quantityInCart, hasReachedStockLimit, handleAddToCart } =
+  const { isAdded, quantityInCart, hasReachedStockLimit, handleAddToCart } =
     useAddToCart(product);
 
   const categoryTheme = getCategoryTheme(product.category);
   const categoryColor = getCategoryColor(product.category);
   const isFeatured = variant === "featured";
-  const addToCartLabel = added ? t("addedToCart") : t("addToCart");
+  const addToCartLabel = isAdded ? t("addedToCart") : t("addToCart");
   const isAddToCartDisabled =
-    !isProductAvailable(product) || added || hasReachedStockLimit;
+    !isProductAvailable(product) || isAdded || hasReachedStockLimit;
   const inCartLabel = t("inCart", { count: quantityInCart });
   const name = i18nField(product, "name", locale);
   const description = i18nField(product, "description", locale);
 
   return (
     <article
-      className={`flex border-strong border-foreground shadow-brutal-md bg-background transition-transform hover:-translate-1 ${
-        isFeatured ? "flex-col sm:flex-row" : "flex-col"
-      }`}
+      className={cn(
+        "flex border-strong border-foreground shadow-brutal-md bg-background transition-transform hover:-translate-1",
+        isFeatured ? "flex-col sm:flex-row" : "flex-col",
+      )}
       {...tid("product-card")}
       data-product-id={product.id}
       data-variant={variant}
     >
       <Link
         href={`/products/${product.id}/${slugify(name)}`}
-        className={`flex flex-1 no-underline text-foreground ${
-          isFeatured ? "flex-col sm:flex-row" : "flex-col"
-        }`}
+        className={cn(
+          "flex flex-1 no-underline text-foreground",
+          isFeatured ? "flex-col sm:flex-row" : "flex-col",
+        )}
         {...tid("product-card-link")}
       >
         <ProductCardImage
@@ -77,9 +80,10 @@ export function ProductCard({
 
         {/* Content */}
         <div
-          className={`flex flex-1 flex-col gap-3 ${
-            isFeatured ? "p-5 sm:p-6 justify-center" : "p-4"
-          }`}
+          className={cn(
+            "flex flex-1 flex-col gap-3",
+            isFeatured ? "p-5 sm:p-6 justify-center" : "p-4",
+          )}
         >
           {/* Badges row */}
           <ProductBadges
@@ -93,9 +97,12 @@ export function ProductCard({
 
           {/* Name */}
           <h3
-            className={`font-display font-extrabold ${
-              isFeatured ? "text-xl/tight sm:text-2xl/tight" : "text-base/tight"
-            }`}
+            className={cn(
+              "font-display font-extrabold",
+              isFeatured
+                ? "text-xl/tight sm:text-2xl/tight"
+                : "text-base/tight",
+            )}
             {...tid("product-card-name")}
           >
             {name}
@@ -121,22 +128,24 @@ export function ProductCard({
 
           {/* Price */}
           <div
-            className={`mt-auto pt-2 ${
-              isFeatured
-                ? "flex flex-col sm:flex-row sm:items-center gap-3"
-                : ""
-            }`}
+            className={cn(
+              "mt-auto pt-2",
+              isFeatured && "flex flex-col sm:flex-row sm:items-center gap-3",
+            )}
           >
             <span
-              className={`font-display font-extrabold ${
-                isFeatured ? "text-2xl sm:text-3xl" : "text-xl"
-              }`}
+              className={cn(
+                "flex min-w-0 items-baseline gap-1 font-display font-extrabold",
+                isFeatured ? "text-2xl sm:text-3xl" : "text-xl",
+              )}
               {...tid("product-card-price")}
             >
-              <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground mr-1">
-                {locale === "en" ? "USD" : "COP"}
+              <span className="shrink-0 text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                {i18nCurrencyCode(product, locale)}
               </span>
-              {i18nPrice(product, locale)}
+              <span className="min-w-0 break-all">
+                {i18nPrice(product, locale)}
+              </span>
             </span>
 
             {isFeatured && (

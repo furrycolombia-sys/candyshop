@@ -39,13 +39,13 @@ function getErrorMessages(
 
 export function FormErrorBanner({ errors }: FormErrorBannerProps) {
   const t = useTranslations("form.inlineEditor.errors");
-  const [dismissed, setDismissed] = useState(false);
+  const [isDismissed, setIsDismissed] = useState(false);
 
   const errorList = getErrorMessages(errors);
   const errorCount = errorList.length;
 
   // Nothing to show
-  if (errorCount === 0 || dismissed) return null;
+  if (errorCount === 0 || isDismissed) return null;
 
   const handleScrollToField = (fieldKey: string) => {
     // Use getElementsByName (semantic DOM API for form fields) instead of querySelector
@@ -88,7 +88,7 @@ export function FormErrorBanner({ errors }: FormErrorBannerProps) {
 
         <button
           type="button"
-          onClick={() => setDismissed(true)}
+          onClick={() => setIsDismissed(true)}
           className="shrink-0 p-0.5 text-destructive/60 transition-colors hover:text-destructive"
           aria-label={t("dismiss")}
           {...tid("form-error-dismiss")}

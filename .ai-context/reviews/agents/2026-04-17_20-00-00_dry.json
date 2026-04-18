@@ -1,0 +1,75 @@
+{
+  "agent": "dry",
+  "review_id": "2026-04-17_20-00-00",
+  "timestamp": "2026-04-17T20:00:00",
+  "scope": "apps/",
+  "summary": {
+    "filesAnalyzed": 25,
+    "issuesFound": 2,
+    "critical": 0,
+    "warning": 2,
+    "suggestion": 0,
+    "info": 0
+  },
+  "issues": [
+    {
+      "id": "DRY-001",
+      "severity": "warning",
+      "category": "DRY",
+      "title": "display_name ?? email fallback repeated 5+ times in studio/seller-admins presentation layer",
+      "description": "The pattern `profile.display_name ?? profile.email` (and variants) is used 5+ times across three presentation components in apps/studio/src/features/seller-admins/presentation/components/. The logic represents a single business rule: 'resolve a user's display name, falling back to email'. It is not extracted to a shared utility within this feature (e.g., getDisplayName). The payments app already solved this correctly with `fetchUserDisplayNames`.",
+      "occurrences": [
+        {
+          "file": "apps/studio/src/features/seller-admins/presentation/components/DelegateList.tsx",
+          "lines": [39, 53, 61],
+          "snippet": "profile.display_name ?? profile.email"
+        },
+        {
+          "file": "apps/studio/src/features/seller-admins/presentation/components/AddDelegateForm.tsx",
+          "lines": [62, 105, 125],
+          "snippet": "u.display_name ?? u.email"
+        },
+        {
+          "file": "apps/studio/src/features/seller-admins/presentation/components/EditDelegatePermissions.tsx",
+          "line": 51,
+          "snippet": "delegate.admin_profile.display_name ?? delegate.admin_profile.email"
+        }
+      ],
+      "rule": "DRY - Rule of Three: same business rule used 7 times across 3 files in the same feature",
+      "fix": "Extract a utility function `getDisplayName(profile: { display_name: string | null; email: string }): string` to `apps/studio/src/features/seller-admins/domain/` or a shared application utility, then replace all inline usages."
+    },
+    {
+      "id": "DRY-002",
+      "severity": "warning",
+      "category": "DRY",
+      "title": "store/useSellerProfiles inlines DB query logic that could be extracted to an infrastructure utility",
+      "description": "apps/store/src/features/cart/application/hooks/useSellerProfiles.ts directly embeds the Supabase user_profiles query and display-name fallback logic (`display_name ?? email.split('@')[0]`) inside the hook function body. The payments app correctly separates this into `fetchUserDisplayNames` in the infrastructure layer. Within the store app, this is the only place the pattern is used — so it does not violate the Rule of Three by itself. However, the hook violates Clean Architecture by performing infrastructure (Supabase query) directly in the application layer hook instead of delegating to a query function.",
+      "occurrences": [
+        {
+          "file": "apps/store/src/features/cart/application/hooks/useSellerProfiles.ts",
+          "lines": [19, 31],
+          "snippet": "supabase.from('user_profiles').select('id, display_name, email') ... display_name ?? email.split('@')[0]"
+        }
+      ],
+      "rule": "DRY + Architecture: infrastructure concern (DB query) embedded in application layer hook; compare to payments app which correctly extracts to shared/infrastructure/fetchUserDisplayNames.ts",
+      "fix": "Extract the Supabase query to apps/store/src/features/cart/infrastructure/cartQueries.ts (or similar), and call it from the hook. This mirrors how payments handles the same concern."
+    }
+  ],
+  "patterns": [
+    {
+      "id": "PAT-001",
+      "type": "well-implemented",
+      "description": "payments app correctly extracts display name resolution to apps/payments/src/shared/infrastructure/fetchUserDisplayNames.ts and reuses it across checkoutQueries.ts and orderQueries.ts — good example of DRY at the infrastructure layer."
+    },
+    {
+      "id": "PAT-002",
+      "type": "coincidental-duplication",
+      "description": "SELLER_PROFILES_QUERY_KEY = 'seller-profiles' appears in both store and payments apps with the same string value. This is acceptable coincidental duplication across separate app runtimes — each app owns its own query keys independently."
+    },
+    {
+      "id": "PAT-003",
+      "type": "coincidental-duplication",
+      "description": "TEMPLATES_QUERY_KEY = 'product-templates' appears in both admin and studio apps. Same rationale — separate runtimes, coincidental same value."
+    }
+  ]
+}

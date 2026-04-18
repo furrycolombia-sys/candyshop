@@ -1,0 +1,107 @@
+{
+  "agent": "architecture",
+  "timestamp": "2026-04-17T18:00:00",
+  "scope": "apps/",
+  "summary": {
+    "filesAnalyzed": 28,
+    "issuesFound": 8,
+    "critical": 1,
+    "warning": 4,
+    "suggestion": 3,
+    "info": 0
+  },
+  "issues": [
+    {
+      "id": "ARCH-001",
+      "severity": "critical",
+      "title": "Cross-feature import: cart application imports from products domain",
+      "file": "apps/store/src/features/cart/application/hooks/useAddToCart.ts",
+      "line": 8,
+      "description": "The cart feature's application layer directly imports `Product` type from the products feature's domain layer (`@/features/products/domain/types`). Features must NOT import directly from other features. This creates a bidirectional coupling between cart and products.",
+      "rule": "architecture.md#feature-isolation",
+      "fix": "Move the shared `Product` type (or a CartProduct DTO) to `apps/store/src/shared/domain/types.ts` so both features can depend on a shared abstraction rather than on each other. Alternatively, pass `Product` as a parameter through shared interfaces."
+    },
+    {
+      "id": "ARCH-002",
+      "severity": "warning",
+      "title": "App Router page contains business logic (auth check + conditional render)",
+      "file": "apps/auth/src/app/[locale]/page.tsx",
+      "line": 1,
+      "description": "The route file directly calls `createServerSupabaseClient()`, checks `supabase.auth.getUser()`, and conditionally renders two different feature pages based on authentication state. Route files should only import and render a single feature page; business logic and auth checks belong in the feature's application layer.",
+      "rule": "architecture.md#app-router-usage",
+      "fix": "Create a dedicated feature page (e.g., `apps/auth/src/features/auth/presentation/pages/AuthIndexPage.tsx`) that handles the auth check and conditional rendering. The route file should simply render that page: `return <AuthIndexPage />`."
+    },
+    {
+      "id": "ARCH-003",
+      "severity": "warning",
+      "title": "App Router index page renders inline UI instead of delegating to a feature page",
+      "file": "apps/payments/src/app/[locale]/page.tsx",
+      "line": 1,
+      "description": "The payments app index route (`/payments`) renders a full UI layout inline (main container, heading, i18n calls) without a corresponding feature page. Route files should be thin wrappers that only import and render a feature page.",
+      "rule": "architecture.md#app-router-usage",
+      "fix": "Create `apps/payments/src/features/home/presentation/pages/PaymentsHomePage.tsx` (or similar) and move the JSX and `getTranslations` call there. The route becomes: `return <PaymentsHomePage />`."
+    },
+    {
+      "id": "ARCH-004",
+      "severity": "warning",
+      "title": "App Router index page renders inline UI instead of delegating to a feature page",
+      "file": "apps/playground/src/app/[locale]/page.tsx",
+      "line": 1,
+      "description": "Same pattern as ARCH-003: the playground index route renders UI inline. Playground has relaxed quality expectations (see monorepo-architecture.md), so this is a warning rather than critical, but it is still a violation of the app-router thin wrapper rule.",
+      "rule": "architecture.md#app-router-usage",
+      "fix": "Move the inline JSX to a feature page component, e.g., `apps/playground/src/features/home/presentation/pages/PlaygroundHomePage.tsx`."
+    },
+    {
+      "id": "ARCH-005",
+      "severity": "warning",
+      "title": "Cross-feature import in products presentation: uses cart hook directly",
+      "file": "apps/store/src/features/products/presentation/components/ProductCard.tsx",
+      "line": 12,
+      "description": "ProductCard (in the `products` feature) imports `useAddToCart` from the `cart` feature (`@/features/cart`). HeroSection.tsx and MobileBarWithCart.tsx also do the same. Features should not import directly from each other; cross-feature communication should go through shared hooks, events, or context.",
+      "rule": "architecture.md#feature-isolation",
+      "fix": "Lift `useAddToCart` to a shared application hook (e.g., `apps/store/src/shared/application/hooks/useAddToCart.ts`) or pass the handler as a prop injected at the page level. The `Product` type dependency can also be resolved by moving it to shared domain."
+    },
+    {
+      "id": "ARCH-006",
+      "severity": "suggestion",
+      "title": "Layer-level barrel exports (index.ts) are absent in almost all features",
+      "file": "apps/*/src/features/*/domain|application|infrastructure|presentation/",
+      "line": null,
+      "description": "Of all feature layers across all apps, only `apps/store/src/features/cart/domain/index.ts` and `apps/store/src/features/products/domain/index.ts` exist as layer-level barrel exports. All other feature layers (domain, application, infrastructure, presentation) across admin, auth, landing, payments, store, studio are missing `index.ts` files. The architecture rule recommends each layer has an `index.ts` exposing its public API.",
+      "rule": "architecture.md#shared-code-policy",
+      "fix": "Incrementally add `index.ts` barrel files to each layer as features are modified. Priority: layers most frequently imported (domain and application layers first). This does not need to be done all at once."
+    },
+    {
+      "id": "ARCH-007",
+      "severity": "suggestion",
+      "title": "Inline return type in utility function instead of named type",
+      "file": "apps/studio/src/features/products/presentation/components/inline-editor/FormErrorBanner.tsx",
+      "line": 18,
+      "description": "The helper function `getErrorMessages` has inline return type `{ field: string; message: string }[]`. Per the No Hardcoding rule, non-trivial inline types in function signatures should be extracted to named types in the domain layer.",
+      "rule": "no-hardcoding.md#2-types--interfaces--type-files",
+      "fix": "Define `interface FormError { field: string; message: string }` in `apps/studio/src/features/products/domain/types.ts` (or a local types file) and use `FormError[]` as the return type."
+    },
+    {
+      "id": "ARCH-008",
+      "severity": "suggestion",
+      "title": "Hardcoded fallback URL in next.config.ts",
+      "file": "apps/studio/next.config.ts",
+      "line": 34,
+      "description": "The line `process.env.NEXT_PUBLIC_SUPABASE_URL || 'http://localhost:54321'` hardcodes a localhost URL as a fallback. While this is in a config file (not app source), consistency with other apps (which do not have this fallback) would improve portability. The other apps' next.config.ts files omit this pattern.",
+      "rule": "no-hardcoding.md#4-configuration--config-files",
+      "fix": "Remove the hardcoded fallback and handle missing env variable gracefully, or document it as an intentional development default in a comment."
+    }
+  ],
+  "patterns": [
+    {
+      "pattern": "Feature barrel (index.ts) at feature root but not at layer level",
+      "description": "All features have a root `index.ts` that exports the feature's public API, but no layer-level barrel exports. This is an incomplete application of the barrel export pattern. Direct internal cross-layer paths are used (e.g., `@/features/auth/presentation/pages/LoginPage`) rather than `@/features/auth`.",
+      "recommendation": "Consider adopting layer-level barrels as features grow, or document that the current project standard is feature-root barrels only."
+    },
+    {
+      "pattern": "Application layer imports directly from infrastructure (dependency inversion)",
+      "description": "Application hooks (useAddToCart, useProfile, usePaymentMethods, etc.) import directly from infrastructure files (`@/features/X/infrastructure/Y`). This is a common pattern here — the application layer DOES depend on the infrastructure concretions rather than injecting them. While this works for React Query (which acts as the abstraction), it technically violates the DIP.",
+      "recommendation": "This is a widely consistent pattern across all apps and is pragmatic for React Query usage. Low-risk. If strict DIP is required, introduce repository interfaces in the domain layer."
+    }
+  ]
+}

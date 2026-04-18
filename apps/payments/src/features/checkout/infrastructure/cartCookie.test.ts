@@ -43,40 +43,25 @@ describe("readCartFromCookie", () => {
     expect(readCartFromCookie()).toEqual([]);
   });
 
-  it("filters out invalid cart items", () => {
+  it("returns empty when cookie payload is a mixed-validity array", () => {
     const items = [
       {
         id: "p1",
-        name_en: "Widget",
-        name_es: "Widget",
-        price_cop: 1000,
-        price_usd: 1,
-        seller_id: "s1",
         quantity: 2,
-        images: [],
-        max_quantity: 10,
       },
       { invalid: true }, // missing required fields
       null,
     ];
     mockGetCookie.mockReturnValue(JSON.stringify(items));
     const result = readCartFromCookie();
-    expect(result).toHaveLength(1);
-    expect(result[0].id).toBe("p1");
+    expect(result).toEqual([]);
   });
 
   it("returns valid cart items from cookie", () => {
     const items = [
       {
         id: "p1",
-        name_en: "Widget",
-        name_es: "Widget",
-        price_cop: 5000,
-        price_usd: 1.5,
-        seller_id: "s1",
         quantity: 3,
-        images: [],
-        max_quantity: null,
       },
     ];
     mockGetCookie.mockReturnValue(JSON.stringify(items));
@@ -84,7 +69,6 @@ describe("readCartFromCookie", () => {
     expect(result).toHaveLength(1);
     expect(result[0]).toMatchObject({
       id: "p1",
-      price_cop: 5000,
       quantity: 3,
     });
   });

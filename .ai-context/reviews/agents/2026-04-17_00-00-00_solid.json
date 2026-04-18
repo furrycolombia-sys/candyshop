@@ -1,0 +1,95 @@
+{
+  "agent": "solid",
+  "timestamp": "2026-04-17T00:00:00Z",
+  "scope": "apps/",
+  "summary": {
+    "filesAnalyzed": 499,
+    "issuesFound": 6,
+    "critical": 0,
+    "warning": 4,
+    "suggestion": 2,
+    "info": 0
+  },
+  "issues": [
+    {
+      "id": "SOLID-001",
+      "severity": "warning",
+      "principle": "O",
+      "title": "Duplicate status-to-class switch blocks across orders and received-orders",
+      "file": "apps/payments/src/features/orders/presentation/components/OrderCard.tsx",
+      "line": 22,
+      "description": "getOrderBannerClass in OrderCard.tsx and getStatusBadgeClass in OrderStatusBadge.tsx have identical switch logic mapping OrderStatus values to Tailwind semantic classes (warning, info, success, destructive). Adding a new status value requires updating both functions independently, violating the Open/Closed Principle.",
+      "rule": "solid-principles.md#o---openclosed-principle",
+      "fix": "Extract a shared STATUS_CLASS_MAP record (keyed by OrderStatus) into the orders domain constants or a shared presentation utility. Both components import and look up from the same map. New status values are added once in the map — no code changes required in components."
+    },
+    {
+      "id": "SOLID-002",
+      "severity": "warning",
+      "principle": "O",
+      "title": "Duplicate status-to-class switch in OrderCard mirrors OrderStatusBadge",
+      "file": "apps/payments/src/features/orders/presentation/components/OrderStatusBadge.tsx",
+      "line": 12,
+      "description": "getStatusBadgeClass in OrderStatusBadge.tsx has the same switch structure as getOrderBannerClass in OrderCard.tsx (same cases, same returned Tailwind classes). Any addition of a new OrderStatus value must be duplicated across both files.",
+      "rule": "solid-principles.md#o---openclosed-principle",
+      "fix": "See SOLID-001. Consolidate into a single STATUS_CLASS_MAP constant exported from the orders domain layer and consumed by both components."
+    },
+    {
+      "id": "SOLID-003",
+      "severity": "warning",
+      "principle": "I",
+      "title": "SellerCheckoutContent has an oversized prop interface (17 props)",
+      "file": "apps/payments/src/features/checkout/presentation/components/SellerCheckoutContent.tsx",
+      "line": 19,
+      "description": "SellerCheckoutContentProps declares 17 props covering submission state, loading state, stock error state, payment method selection state, buyer form state, and event handlers. Consumers must supply all of them even when they only interact with a subset. This is the classic Interface Segregation violation: one large interface that bundles unrelated concerns.",
+      "rule": "solid-principles.md#i---interface-segregation-principle",
+      "fix": "Group related props into focused sub-objects or split into smaller composable sections. For example: a SubmissionState object (isSubmitted, isSubmitting, isDisabled, error), a MethodSelectionState object (methods, selectedMethodId, selectedMethod, isLoadingMethods, onSelectMethod), and a BuyerFormState object (buyerSubmission, validationError, onBuyerSubmissionChange, onFileSelected). This reduces coupling and makes each section independently testable."
+    },
+    {
+      "id": "SOLID-004",
+      "severity": "warning",
+      "principle": "S",
+      "title": "PaymentMethodEditor manages names, display blocks, form fields, debounce, and save status in one component",
+      "file": "apps/payments/src/features/payment-methods/presentation/components/PaymentMethodEditor.tsx",
+      "line": 25,
+      "description": "PaymentMethodEditor orchestrates 7 useState calls and 4 useEffect hooks covering: name validation, debounced auto-save coordination, display-block state, and form-field state. These are distinct concerns — debounced persistence logic is interleaved with UI state management. This creates multiple reasons for the component to change (UX changes, save behavior changes, validation logic changes).",
+      "rule": "solid-principles.md#s---single-responsibility-principle",
+      "fix": "Extract the debounced auto-save coordination into a custom hook (e.g., useAutoSavePaymentMethod) that accepts the current field values and returns the saveStatus. The component then only manages local UI state (nameEn, nameEs, displayBlocks, formFields) and delegates persistence to the hook."
+    },
+    {
+      "id": "SOLID-005",
+      "severity": "suggestion",
+      "principle": "O",
+      "title": "SectionRenderer and SectionCard.renderItems use identical switch on section type",
+      "file": "apps/store/src/features/products/presentation/components/product-detail/sections/SectionRenderer.tsx",
+      "line": 15,
+      "description": "SectionRenderer (store) dispatches to section type components via a switch statement. SectionCard.renderItems (studio) has a parallel switch on the same section types. These two switches must both be updated when a new section type is added. The existing structure is acceptable but should be noted as a growth risk.",
+      "rule": "solid-principles.md#o---openclosed-principle",
+      "fix": "Since section types are shared via the shared/types package, a SECTION_TYPE_RENDERERS record in the shared domain (or per-app domain constants) would make adding a new section type a single-point change. Only do this if section types grow beyond the current 4."
+    },
+    {
+      "id": "SOLID-006",
+      "severity": "suggestion",
+      "principle": "S",
+      "title": "CheckoutPageContent manages checkout session flag persistence alongside UI orchestration",
+      "file": "apps/payments/src/features/checkout/presentation/pages/CheckoutPageContent.tsx",
+      "line": 17,
+      "description": "CheckoutPageContent directly implements sessionStorage read/write helpers (readCompletedCheckoutFlag, writeCompletedCheckoutFlag) inline alongside its render logic and cart coordination. The persistence mechanism is a separate concern from the checkout orchestration.",
+      "rule": "solid-principles.md#s---single-responsibility-principle",
+      "fix": "Extract the three helper functions and the two related useEffect hooks into a small custom hook (e.g., useCheckoutCompletionFlag(allSubmitted)) that returns hasCompletedCheckout. This keeps the page component focused on orchestration and makes the flag logic independently testable."
+    }
+  ],
+  "patterns": [
+    {
+      "id": "PAT-SOLID-001",
+      "description": "Status-to-class mapping via switch is consistently used across multiple components in the payments app. This is a good pattern but is duplicated across OrderCard and OrderStatusBadge. A shared STATUS_VARIANT_MAP constant record would eliminate the duplication."
+    },
+    {
+      "id": "PAT-SOLID-002",
+      "description": "Dispatcher-switch pattern (SectionRenderer, DisplayBlockRenderer, StatusContent, BlockEditor) is used appropriately throughout the codebase. These are type-narrowing dispatchers for discriminated unions — this is correct usage and not a SOLID violation."
+    },
+    {
+      "id": "PAT-SOLID-003",
+      "description": "The codebase consistently separates data-fetching hooks from presentational components (container/presenter pattern). No direct API/Supabase calls were found inside presentation layer components — infrastructure access is correctly isolated to application-layer hooks."
+    }
+  ]
+}

@@ -13,13 +13,13 @@ interface MobileBarWithCartProps {
 
 /** Connects MobileBar to the shared add-to-cart hook */
 export function MobileBarWithCart({ product, theme }: MobileBarWithCartProps) {
-  const { added, quantityInCart, hasReachedStockLimit, handleAddToCart } =
+  const { isAdded, quantityInCart, hasReachedStockLimit, handleAddToCart } =
     useAddToCart(product);
 
   return (
     <MobileBar
       product={product}
-      added={added}
+      isAdded={isAdded}
       hasReachedStockLimit={hasReachedStockLimit}
       onAddToCart={handleAddToCart}
       theme={theme}

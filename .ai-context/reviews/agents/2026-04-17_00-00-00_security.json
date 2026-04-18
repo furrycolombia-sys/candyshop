@@ -1,0 +1,102 @@
+{
+  "agent": "security",
+  "timestamp": "2026-04-17T00:00:00Z",
+  "scope": "apps/",
+  "summary": {
+    "filesAnalyzed": 734,
+    "issuesFound": 5,
+    "critical": 0,
+    "warning": 3,
+    "suggestion": 2,
+    "info": 0
+  },
+  "issues": [
+    {
+      "id": "SEC-001",
+      "severity": "warning",
+      "title": "Access token cookie is not httpOnly — readable by JavaScript",
+      "file": "packages/auth/src/server/session.ts",
+      "line": 43,
+      "vulnerabilityType": "exposure",
+      "description": "The access token cookie (`createAccessTokenCookieOptions`) explicitly sets `httpOnly: false` so that all apps on the same domain can read it via `document.cookie`. This is intentional (see comment: 'NOT httpOnly so JS can read it across all apps on the same domain'). However, any XSS vulnerability anywhere on the shared domain would allow an attacker to steal the access token from `document.cookie`.",
+      "risk": "If an XSS bug is ever introduced in any app on the domain, the access token can be exfiltrated by injecting a `document.cookie` read. The refresh token remains httpOnly and is not exposed, which limits the blast radius — but stealing the short-lived access token is still enough to authenticate API calls.",
+      "rule": "code-review-standards.md#security-standards",
+      "fix": "This is an architectural trade-off consciously documented in the code. The risk is acceptable as long as (1) CSP headers are implemented to restrict script sources, (2) input sanitization is thorough, and (3) the access token TTL is kept short. Consider adding a `Content-Security-Policy` header to all apps to significantly reduce XSS attack surface.",
+      "cwe": "CWE-1004"
+    },
+    {
+      "id": "SEC-002",
+      "severity": "warning",
+      "title": "Access token returned in JSON response body from /api/auth/refresh",
+      "file": "apps/auth/src/app/api/auth/refresh/route.ts",
+      "line": 83,
+      "vulnerabilityType": "exposure",
+      "description": "The POST /api/auth/refresh endpoint returns `{ ok: true, accessToken: session.access_token }` in the JSON body in addition to setting it as a cookie. The token is therefore readable not just from cookies but also from the fetch response body. Consumer code in `packages/auth/src/client/accessToken.ts` reads it from the body and stores it in an in-memory variable, which is the intended pattern. However, if any logging middleware or network inspection tool captures response bodies, the raw JWT will be logged.",
+      "risk": "Token leakage to logs, monitoring tools, or browser network inspector is possible. An attacker with access to server logs or a man-in-the-middle position on a non-HTTPS connection would obtain a valid JWT.",
+      "rule": "code-review-standards.md#security-standards",
+      "fix": "Ensure the app is always served over HTTPS (enforced by the HSTS header already present). Consider whether the token truly needs to be in the response body or whether the httpOnly cookie path alone is sufficient for the in-memory store use-case. If the body is necessary, ensure production log sinks do not capture response bodies.",
+      "cwe": "CWE-532"
+    },
+    {
+      "id": "SEC-003",
+      "severity": "warning",
+      "title": "No Content-Security-Policy header configured in any app",
+      "file": "apps/store/next.config.ts",
+      "line": 8,
+      "vulnerabilityType": "xss",
+      "description": "All apps configure the same set of security headers (HSTS, X-Frame-Options, X-Content-Type-Options, X-XSS-Protection, Referrer-Policy, Permissions-Policy) but none of them include a `Content-Security-Policy` header. The legacy `X-XSS-Protection: 1; mode=block` header has been deprecated and removed from modern browsers. Without a CSP, reflected or stored XSS attacks have no browser-level mitigation. This is particularly relevant because the access token cookie is not httpOnly (SEC-001).",
+      "risk": "A successful XSS attack would allow an attacker to read the access token from `document.cookie`, call APIs on behalf of the victim, or perform other client-side attacks. Without CSP, browser-level XSS protection is absent in modern browsers.",
+      "rule": "code-review-standards.md#security-standards",
+      "fix": "Add a `Content-Security-Policy` header to all apps' `securityHeaders` arrays in their `next.config.ts` files. Start with a report-only mode: `Content-Security-Policy-Report-Only: default-src 'self'; script-src 'self' 'nonce-{NONCE}'; ...`. Next.js 15+ supports nonce-based CSP natively. Example starting point: `{ key: 'Content-Security-Policy', value: \"default-src 'self'; img-src 'self' https: data:; script-src 'self'; style-src 'self' 'unsafe-inline'; connect-src 'self';\" }`",
+      "cwe": "CWE-693"
+    },
+    {
+      "id": "SEC-004",
+      "severity": "suggestion",
+      "title": "ENV_DEBUG feature serializes all environment variables into a NEXT_PUBLIC_ var",
+      "file": "scripts/load-env.mjs",
+      "line": 103,
+      "vulnerabilityType": "exposure",
+      "description": "When `ENV_DEBUG=true`, the `load-env.mjs` script serializes all resolved environment variables (including the entire `vars` snapshot) into `NEXT_PUBLIC_ENV_DEBUG` and exposes them at the playground route `http://localhost:5003/en/env`. The playground's `EnvPage` then renders all these key-value pairs in the browser. If `ENV_DEBUG=true` is accidentally set in a non-development environment, all env vars (including any secrets that might be in the .env file) would be exposed client-side via the Next.js build.",
+      "risk": "If `ENV_DEBUG=true` is accidentally set in staging or production, any secrets present in the environment file would be bundled into the client-side JavaScript. The `NEXT_PUBLIC_ENV_DEBUG` variable is baked into the build at compile time.",
+      "rule": "code-review-standards.md#security-standards",
+      "fix": "Add a guard in `load-env.mjs` to prevent `ENV_DEBUG=true` from being set when `NODE_ENV=production` or when `TARGET_ENV` is `prod`/`staging`. Also consider filtering out secret-like keys (e.g., anything containing `SECRET`, `KEY`, `TOKEN`, `PASSWORD`) from the `snapshot` before serializing, so even in development the viewer only shows non-sensitive config values.",
+      "cwe": "CWE-532"
+    },
+    {
+      "id": "SEC-005",
+      "severity": "suggestion",
+      "title": "Wildcard image hostname allows loading images from any HTTPS domain",
+      "file": "apps/store/next.config.ts",
+      "line": 41,
+      "vulnerabilityType": "exposure",
+      "description": "Both `apps/store` and `apps/studio` configure `images.remotePatterns` with `{ protocol: 'https', hostname: '**' }`. This allows the Next.js Image component to proxy and optimize images from any HTTPS hostname. The comments acknowledge this: 'Product images are user-provided URLs — allow all HTTPS hosts'. While the images are proxied server-side (not rendered via unsafe inline styles), a malicious seller could supply tracker URLs or URLs that leak the server's IP via direct upstream requests.",
+      "risk": "Server-side request forgery (SSRF) risk is low since Next.js validates the URL before fetching, but the server will make outgoing HTTPS requests to any URL a seller provides as a product image. This could be used to probe internal network addresses or exfiltrate the server's egress IP.",
+      "rule": "code-review-standards.md#security-standards",
+      "fix": "If the set of allowed image hosts is known (e.g., a specific CDN or Supabase storage bucket), restrict `hostname` to those specific domains. If truly arbitrary user-provided URLs must be supported, consider adding an allowlist of trusted CDN patterns and blocking private IP ranges via a middleware guard before the image optimization request is forwarded.",
+      "cwe": "CWE-918"
+    }
+  ],
+  "patterns": [
+    {
+      "pattern": "Strong server-side auth checks on all admin API routes",
+      "description": "Every admin API route (`apps/admin/src/app/api/admin/`) calls `getAuthorizedAdmin()` which verifies both authentication (Supabase session) and authorization (permission keys) before processing requests. UUIDs from route params are validated against a strict regex pattern before use in queries."
+    },
+    {
+      "pattern": "Supabase service role key correctly server-only",
+      "description": "`SUPABASE_SERVICE_ROLE_KEY` (without NEXT_PUBLIC_ prefix) is used only in server-side API routes (`/api/checkout/orders`, `/api/checkout/payment-methods`, `/api/admin/_shared/adminRest.ts`). It is never exposed to client-side code."
+    },
+    {
+      "pattern": "No hardcoded secrets found",
+      "description": "No API keys, tokens, passwords, or credentials were found hardcoded in any source file. All sensitive configuration is loaded from environment variables."
+    },
+    {
+      "pattern": "Input validation on checkout APIs",
+      "description": "The checkout routes validate all incoming payload fields (type checking, UUID validation, sanitizeItems function) before using them in downstream queries."
+    },
+    {
+      "pattern": "CORS whitelist on auth refresh endpoint",
+      "description": "The /api/auth/refresh endpoint uses an allowlist of known app origins (built from NEXT_PUBLIC_*_URL env vars) and only sets Access-Control-Allow-Origin for matching origins."
+    }
+  ]
+}

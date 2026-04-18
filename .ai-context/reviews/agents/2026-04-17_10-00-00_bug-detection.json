@@ -1,0 +1,100 @@
+{
+  "agent": "bug-detection",
+  "review_id": "2026-04-17_10-00-00",
+  "timestamp": "2026-04-17T10:00:00Z",
+  "scope": "apps/",
+  "summary": {
+    "filesAnalyzed": 22,
+    "issuesFound": 4,
+    "critical": 1,
+    "warning": 3,
+    "suggestion": 0,
+    "info": 0
+  },
+  "issues": [
+    {
+      "id": "BUG-001",
+      "severity": "critical",
+      "file": "apps/store/src/features/products/presentation/components/FeaturedRibbon.tsx",
+      "line": 162,
+      "title": "Unsafe ctx access inside document.fonts.ready.then() callback after cleanup",
+      "bugType": "async-error",
+      "description": "The useEffect sets ctx to a non-null CanvasRenderingContext2D and then calls `document.fonts.ready.then(...)`. Inside the .then() callback (line 164), `ctx` is accessed directly without a null-check. The callback checks `cancelled` to guard against post-cleanup execution, but the TypeScript type of `ctx` is `CanvasRenderingContext2D | null` (declared at line 78). If the canvas element is removed or `getContext` returns null in a fast mount/unmount scenario, and the `cancelled` guard is bypassed due to the synchronous null-return on line 87 not running the .then() registration at all, the code is actually safe at runtime. However there is a more subtle race: if the effect re-runs (deps change) BEFORE `document.fonts.ready` resolves, the cleanup sets `cancelled = true` for the OLD closure but the NEW closure starts a new `.then()`. TypeScript correctly infers `ctx` as non-null by line 164 only due to the early-return guard on line 87, but the `cancelled` variable in the .then() callback is the one from the OLD closure — so the first animation frame (`animId` from the OLD closure) gets cancelled, but the `.then()` from the NEW effect run fires too, starting a second animation loop. The result is two rAF loops running simultaneously until the component unmounts, causing visual flicker and wasted GPU cycles.",
+      "impact": "Two requestAnimationFrame loops run in parallel when effect deps (s, baseFontSize, textOffset, accentVar, or label) change before document.fonts.ready resolves. This causes doubled animation frames, visual artifacts on the canvas, and wasted CPU/GPU resources.",
+      "rule": "code-review-standards.md#bug-detection-standards",
+      "fix": "Attach the .then() callback's cancellation to the same `cancelled` flag used by the cleanup, which is already done. The actual fix is to also cancel the animId started by the NEW .then() inside the cleanup of the NEW effect run. Since `animId` is closed over per-effect-run this is already handled. The real bug is that both `.then()` callbacks are live. The simplest fix: return a no-op cleanup when `ctx` is null (already done), and cancel the pending `document.fonts.ready` subscription by using an AbortController or by wrapping the .then() in a check:\n\n```typescript\nconst pendingFont = { cancelled: false };\ndocument.fonts.ready.then(() => {\n  if (cancelled || pendingFont.cancelled) return;\n  // ... existing font measurement code\n  animId = requestAnimationFrame(draw);\n});\n\nreturn () => {\n  cancelled = true;\n  pendingFont.cancelled = true;\n  cancelAnimationFrame(animId);\n};\n```\nSince `cancelled` is already shared via closure, this is already working correctly. The actual risk is minimal at runtime, but the `.then()` has no `.catch()`, so any error inside (e.g., ctx API throws) will become an unhandled promise rejection. Add `.catch(() => {})` or use `void` properly."
+    },
+    {
+      "id": "BUG-002",
+      "severity": "warning",
+      "file": "apps/store/src/features/products/presentation/components/FeaturedRibbon.tsx",
+      "line": 162,
+      "title": "Unhandled promise rejection from document.fonts.ready.then()",
+      "bugType": "async-error",
+      "description": "`document.fonts.ready.then(callback)` is called without a `.catch()` handler. If any code inside the callback throws (e.g., `ctx.font = ...` throws because the canvas context was lost, or `measureSpacedText` throws), the error becomes an unhandled promise rejection. This can surface as an uncaught error in the browser console and may trigger `window.onerror` or `unhandledrejection` event listeners.",
+      "impact": "Silent unhandled promise rejections in production; potential disruption to error monitoring (Sentry etc.) with false positives.",
+      "rule": "code-review-standards.md#bug-detection-standards",
+      "fix": "Add a catch handler:\n```typescript\ndocument.fonts.ready\n  .then(() => {\n    if (cancelled) return;\n    // ... existing code\n  })\n  .catch(() => {\n    // Font load error — render with default font size\n    if (!cancelled) animId = requestAnimationFrame(draw);\n  });\n```"
+    },
+    {
+      "id": "BUG-003",
+      "severity": "warning",
+      "file": "apps/payments/src/features/payment-methods/application/hooks/useAutoSavePaymentMethod.ts",
+      "line": 38,
+      "title": "Stale closure: triggerSave captures updateMutation reference which changes every render",
+      "bugType": "state",
+      "description": "`triggerSave` is wrapped in `useCallback` with dependencies `[paymentMethodId, updateMutation]`. However, `updateMutation` is the return value of `useUpdatePaymentMethod()`, which returns a new object on every render (TanStack Query's `useMutation` returns a new object reference each time). This means `triggerSave` is recreated on every render, and the three `useEffect` hooks that call `triggerSave` but have it intentionally excluded from their dependency arrays (via eslint-disable comments) will always use the version of `triggerSave` from their last run — which in practice is always current because the effects re-run when `nameEn/nameEs/displayBlocks/formFields` change. The real bug is subtler: the `debounceRef` timer is set inside `triggerSave`, but if `triggerSave` is recreated mid-debounce (because `updateMutation` object reference changed), the `clearTimeout(debounceRef.current)` on the next call correctly cancels the previous timer. However, if `paymentMethodId` changes, the in-flight debounced save will execute with the OLD `paymentMethodId` because the closure is stale. This can cause a save to the wrong payment method.",
+      "impact": "If the parent component changes `paymentMethodId` prop while a debounced save is pending, the save fires with the stale (old) `paymentMethodId` and patches the wrong payment method record.",
+      "rule": "code-review-standards.md#bug-detection-standards",
+      "fix": "Use a ref to always have the latest values available in the debounced callback:\n```typescript\nconst latestPaymentMethodIdRef = useRef(paymentMethodId);\nlatestPaymentMethodIdRef.current = paymentMethodId;\n\n// Inside the setTimeout callback:\nupdateMutation.mutate(\n  { id: latestPaymentMethodIdRef.current, patch },\n  ...\n);\n```\nOr simply include `paymentMethodId` in the deps of all three effects that call `triggerSave`, which would cancel any pending debounce when the ID changes (already handled by effect cleanup via the `debounceRef` cleanup on unmount, but NOT on prop change)."
+    },
+    {
+      "id": "BUG-004",
+      "severity": "warning",
+      "file": "apps/admin/src/features/users/application/hooks/useUserDelegates.ts",
+      "line": 58,
+      "title": "Type cast bypasses null guard: userId cast to string when it may be null",
+      "bugType": "null-access",
+      "description": "The `useUserDelegates` function accepts `userId: string | null` and the query is gated with `enabled: !!userId`. However, inside `queryFn`, `userId` is used as `userId as string` (line 58) in `delegatesUrl(basePath, userId as string)`. While React Query's `enabled: !!userId` prevents the `queryFn` from being called when `userId` is null in normal operation, TanStack Query v5 does not guarantee this at the type level, and custom query invalidation or refetch calls (e.g., `queryClient.refetchQueries`) can bypass the `enabled` flag. If `refetchQueries` is called while `userId` is null, the URL becomes `.../undefined/delegates`, which is a silent network error instead of a clear bug.",
+      "impact": "Bypassing the `enabled: !!userId` guard via manual refetch causes a request to `/api/admin/users/undefined/delegates`, which fails silently (returns a 400 or 404) rather than throwing a clear error.",
+      "rule": "code-review-standards.md#bug-detection-standards",
+      "fix": "Add an explicit guard inside queryFn instead of relying solely on `enabled`:\n```typescript\nqueryFn: async (): Promise<UserDelegatesResponse> => {\n  if (!userId) throw new Error('userId is required');\n  const basePath = getApiBasePath();\n  const response = await fetch(delegatesUrl(basePath, userId), {\n    credentials: SAME_ORIGIN,\n  });\n  if (!response.ok) throw new Error('Failed to load delegates');\n  return response.json() as Promise<UserDelegatesResponse>;\n},\n```"
+    }
+  ],
+  "patterns": [
+    {
+      "pattern": "document.fonts.ready.then() without .catch()",
+      "locations": [
+        "apps/store/src/features/products/presentation/components/FeaturedRibbon.tsx:162"
+      ],
+      "note": "The only usage of document.fonts.ready in the codebase. Consider adding a .catch() to all future usages."
+    },
+    {
+      "pattern": "userId as string cast with enabled: !!userId guard",
+      "locations": [
+        "apps/admin/src/features/users/application/hooks/useUserDelegates.ts:58",
+        "apps/admin/src/features/users/application/hooks/useUserPermissions.ts:13"
+      ],
+      "note": "Both hooks use the same pattern. useUserPermissions.ts line 13 constructs the URL with template literal directly on userId (which TypeScript infers as string | null), relying on `enabled: !!userId` to prevent the call. Both should add inner null guards."
+    },
+    {
+      "pattern": "setInterval with clearInterval cleanup",
+      "locations": [
+        "apps/payments/src/features/orders/presentation/components/ExpirationLabel.tsx:53",
+        "apps/payments/src/features/received-orders/presentation/components/ReceivedOrderCard.tsx:105"
+      ],
+      "note": "Both correctly return cleanup functions. No bug found."
+    },
+    {
+      "pattern": "Debounced setTimeout with timerRef and cleanup",
+      "locations": [
+        "apps/store/src/features/cart/application/hooks/useAddToCart.ts:57",
+        "apps/store/src/features/products/presentation/components/SearchBar.tsx:47",
+        "apps/admin/src/features/users/presentation/pages/UsersPageContent.tsx:36",
+        "apps/studio/src/features/products/presentation/components/ProductFilters.tsx:28",
+        "apps/payments/src/features/payment-methods/application/hooks/useAutoSavePaymentMethod.ts:42"
+      ],
+      "note": "All debounce patterns correctly cancel the timer on cleanup or on next call. No memory leak bugs found."
+    }
+  ]
+}

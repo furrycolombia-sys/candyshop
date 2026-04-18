@@ -1,10 +1,10 @@
+import { escapeLikePattern } from "shared";
 import { describe, it, expect, vi } from "vitest";
 
 import {
   fetchDelegates,
   fetchDelegateCountsByProduct,
   searchUsers,
-  escapeLikePattern,
 } from "./delegateQueries";
 
 /* ------------------------------------------------------------------ */

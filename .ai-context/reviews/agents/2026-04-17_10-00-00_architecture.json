@@ -1,0 +1,96 @@
+{
+  "agent": "architecture",
+  "review_id": "2026-04-17_10-00-00",
+  "timestamp": "2026-04-17T10:00:00Z",
+  "scope": "apps/",
+  "summary": {
+    "filesAnalyzed": 45,
+    "issuesFound": 8,
+    "critical": 0,
+    "warning": 6,
+    "suggestion": 2,
+    "info": 0
+  },
+  "issues": [
+    {
+      "id": "ARCH-001",
+      "severity": "warning",
+      "file": "apps/store/src/features/products/presentation/components/ProductCard.tsx",
+      "line": 12,
+      "title": "Cross-feature import: products imports from cart",
+      "description": "The 'products' feature directly imports 'useAddToCart' from '@/features/cart'. This violates feature isolation — features must not import directly from other features. The same pattern appears in MobileBarWithCart.tsx and HeroSection.tsx.",
+      "rule": "architecture.md#feature-isolation",
+      "fix": "Move the useAddToCart hook call up to a shared orchestration layer (e.g., the page or a shared application hook), or pass an onAddToCart callback as a prop from the parent that orchestrates both features."
+    },
+    {
+      "id": "ARCH-002",
+      "severity": "warning",
+      "file": "apps/store/src/features/products/presentation/components/product-detail/MobileBarWithCart.tsx",
+      "line": 5,
+      "title": "Cross-feature import: products imports from cart",
+      "description": "Duplicate of ARCH-001 pattern. 'products' feature imports 'useAddToCart' from '@/features/cart' in the product detail mobile bar component.",
+      "rule": "architecture.md#feature-isolation",
+      "fix": "Inject the add-to-cart behavior as a prop callback from the parent page, which can import from both features."
+    },
+    {
+      "id": "ARCH-003",
+      "severity": "warning",
+      "file": "apps/store/src/features/products/presentation/components/product-detail/HeroSection.tsx",
+      "line": 11,
+      "title": "Cross-feature import: products imports from cart",
+      "description": "Duplicate of ARCH-001 pattern. 'products' feature imports 'useAddToCart' from '@/features/cart' in the product detail hero section.",
+      "rule": "architecture.md#feature-isolation",
+      "fix": "Inject the add-to-cart behavior as a prop callback from the parent page."
+    },
+    {
+      "id": "ARCH-004",
+      "severity": "warning",
+      "file": "apps/store/src/features/cart/application/hooks/useAddToCart.ts",
+      "line": 8,
+      "title": "Cross-feature import: cart imports Product type from products",
+      "description": "The 'cart' feature imports 'Product' type from '@/features/products/domain/types'. This creates a bidirectional dependency between cart and products features. The Product type used as CartItem's base should ideally live in a shared domain layer (e.g. @/shared/domain/types) since both features need it.",
+      "rule": "architecture.md#feature-isolation",
+      "fix": "Move the shared 'Product' type to '@/shared/domain/types' so both cart and products features can reference it without coupling to each other."
+    },
+    {
+      "id": "ARCH-005",
+      "severity": "warning",
+      "file": "apps/studio/src/features/seller-admins/presentation/pages/ProductDelegatesPage.tsx",
+      "line": 9,
+      "title": "Cross-feature import: seller-admins imports from products",
+      "description": "The 'seller-admins' feature directly imports 'useProductById' from '@/features/products/application/hooks/useProductForm'. Features should not import from each other.",
+      "rule": "architecture.md#feature-isolation",
+      "fix": "Pass the product data as a prop to ProductDelegatesPage from the parent page/route that can fetch it, or expose a shared hook in '@/shared/application/hooks'."
+    },
+    {
+      "id": "ARCH-006",
+      "severity": "warning",
+      "file": "apps/studio/src/features/products/presentation/pages/ProductListPage.tsx",
+      "line": 7,
+      "title": "Cross-feature imports: products imports from orders and seller-admins",
+      "description": "The 'products' feature imports 'usePendingOrderCount' from '@/features/orders' and 'useDelegateCountsByProduct' from '@/features/seller-admins'. Both are cross-feature imports that violate feature isolation. ProductListPage is orchestrating multiple features but lives inside the products feature.",
+      "rule": "architecture.md#feature-isolation",
+      "fix": "Move the orchestration to the App Router page (apps/studio/src/app/.../page.tsx) or create an app-level shared orchestration hook. Alternatively, pass the counts as props from a parent that owns all three features."
+    },
+    {
+      "id": "ARCH-007",
+      "severity": "suggestion",
+      "file": "apps/studio/src/features/seller-admins/presentation/pages/DelegateManagementPage.tsx",
+      "line": 19,
+      "title": "Duplicated permission constant not extracted to domain/constants.ts",
+      "description": "The constant 'SELLER_ADMINS_READ_PERMISSION = \"seller_admins.read\"' is defined identically in both DelegateManagementPage.tsx (line 19) and ProductDelegatesPage.tsx (line 20). Magic permission strings should live in 'domain/constants.ts', not in presentation layer files.",
+      "rule": "architecture.md#no-hardcoding",
+      "fix": "Move 'SELLER_ADMINS_READ_PERMISSION' to 'apps/studio/src/features/seller-admins/domain/constants.ts' and import it in both pages."
+    },
+    {
+      "id": "ARCH-008",
+      "severity": "suggestion",
+      "file": "apps/store/src/features/products/presentation/components/ProductFilters.tsx",
+      "line": 16,
+      "title": "Magic number constant DEBOUNCE_MS defined in presentation layer",
+      "description": "The constant 'DEBOUNCE_MS = 300' is defined inline in the presentation component file. Debounce timing is a domain-level or application-level constant, not a presentation detail. Compare: admin/users feature correctly uses 'USER_SEARCH_DEBOUNCE_MS' from domain/constants.ts.",
+      "rule": "architecture.md#no-hardcoding",
+      "fix": "Move 'DEBOUNCE_MS' (or rename to 'PRODUCT_SEARCH_DEBOUNCE_MS') to 'apps/store/src/features/products/domain/constants.ts' and import it in ProductFilters.tsx."
+    }
+  ]
+}

@@ -5,7 +5,6 @@ export const FALLBACK_SELLER_NAME = "Seller";
 export const FALLBACK_BUYER_NAME = "Buyer";
 
 /** Cookie key used by the store app to persist the cart */
-export const CART_COOKIE_KEY = "candystore-cart";
 
 /** Browser event fired when the cart cookie changes inside the payments app */
 export const CART_COOKIE_CHANGED_EVENT = "candystore:cart-cookie-changed";
@@ -28,3 +27,5 @@ export const RECEIPTS_BUCKET = "receipts";
 
 /** Signed receipt URLs stay valid for one hour */
 export const RECEIPT_URL_TTL_SECONDS = 60 * 60;
+
+export { CART_COOKIE_KEY } from "shared";

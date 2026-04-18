@@ -1,7 +1,11 @@
 import { test as base, type BrowserContext } from "@playwright/test";
 import { createClient } from "@supabase/supabase-js";
 
-import { injectSession } from "../helpers/session";
+import {
+  BUYER_PERMISSIONS,
+  grantPermissions,
+  injectSession,
+} from "../helpers/session";
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 if (!SUPABASE_URL)
@@ -43,6 +47,8 @@ async function createTestSession(context: BrowserContext) {
 
   if (signInError)
     throw new Error(`Failed to sign in test user: ${signInError.message}`);
+
+  await grantPermissions(user.user!.id, BUYER_PERMISSIONS);
 
   await injectSession(context, {
     userId: user.user!.id,

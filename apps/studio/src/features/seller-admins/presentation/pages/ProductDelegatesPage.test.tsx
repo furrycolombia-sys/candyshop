@@ -19,11 +19,11 @@ vi.mock("auth/client", () => ({
   }),
 }));
 
-vi.mock("@/features/auth/application/hooks/useSupabaseAuth", () => ({
+vi.mock("@/shared/application/hooks/useSupabaseAuth", () => ({
   useSupabaseAuth: () => ({ user: { id: "seller-1" } }),
 }));
 
-vi.mock("@/features/products/application/useProductForm", () => ({
+vi.mock("@/features/products/application/hooks/useProductForm", () => ({
   useProductById: () => ({
     data: { id: "product-1", name_en: "Test Product" },
     isLoading: false,

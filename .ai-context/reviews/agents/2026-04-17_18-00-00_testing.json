@@ -1,0 +1,219 @@
+{
+  "agent": "testing",
+  "timestamp": "2026-04-17T18:00:00",
+  "scope": "apps/",
+  "summary": {
+    "filesAnalyzed": 30,
+    "issuesFound": 12,
+    "critical": 0,
+    "warning": 7,
+    "suggestion": 5,
+    "info": 0,
+    "coverage": {
+      "components": { "total": 138, "tested": 95, "percentage": 69 },
+      "hooks": { "total": 52, "tested": 42, "percentage": 81 },
+      "utils": { "total": 8, "tested": 6, "percentage": 75 }
+    }
+  },
+  "issues": [
+    {
+      "id": "TEST-001",
+      "severity": "warning",
+      "title": "Critical checkout orders API route has no tests",
+      "file": "apps/payments/src/app/api/checkout/orders/route.ts",
+      "testFile": "MISSING",
+      "description": "The POST /api/checkout/orders route handles order creation with server-side price calculation and stock validation. This is a critical financial path that calculates totals server-side, validates form fields, inserts orders and order items. It has zero test coverage, meaning bugs in UUID validation, price calculation, or form field validation would go undetected.",
+      "rule": "testing.md#unit-testing",
+      "fix": "Add a route.test.ts following the same pattern as apps/payments/src/app/api/checkout/payment-methods/route.test.ts. Test: (1) 401 when unauthenticated, (2) 400 on invalid payload, (3) 404 on missing payment method, (4) 422 on missing form fields, (5) 422 on unknown product id, (6) 201 with correct orderId on success."
+    },
+    {
+      "id": "TEST-002",
+      "severity": "warning",
+      "title": "Auth refresh API route has no tests",
+      "file": "apps/auth/src/app/api/auth/refresh/route.ts",
+      "testFile": "MISSING",
+      "description": "The POST /api/auth/refresh route handles cross-origin token refresh with CORS validation. It sets access token cookies and enforces allowlist-based CORS. Missing tests could mask regressions in cookie clearing on auth failure, CORS header injection, or token TTL handling.",
+      "rule": "testing.md#unit-testing",
+      "fix": "Add route.test.ts covering: (1) OPTIONS returns 204 with correct CORS headers for allowed origin, (2) OPTIONS does not set Allow-Origin for unknown origin, (3) POST returns 401 and clears cookie when user invalid, (4) POST returns 200 and sets cookie when session valid."
+    },
+    {
+      "id": "TEST-003",
+      "severity": "warning",
+      "title": "Admin permissions API route has no tests",
+      "file": "apps/admin/src/app/api/admin/users/[userId]/permissions/route.ts",
+      "testFile": "MISSING",
+      "description": "The GET/POST/PUT routes manage user permission grants and revocations. They contain authorization checks, UUID validation, and complex diff logic in replacePermissions(). This is a security-sensitive path with no test coverage.",
+      "rule": "testing.md#unit-testing",
+      "fix": "Add route.test.ts covering: (1) 403 when admin lacks required permission, (2) 400 on invalid UUID, (3) POST grants/revokes a single permission, (4) PUT replaces permissions diff correctly (grants only new, revokes only removed)."
+    },
+    {
+      "id": "TEST-004",
+      "severity": "warning",
+      "title": "Admin delegates API route has no tests",
+      "file": "apps/admin/src/app/api/admin/users/[userId]/delegates/route.ts",
+      "testFile": "MISSING",
+      "description": "The delegates route manages seller delegation relationships for users. No test coverage exists for authorization checks or payload validation.",
+      "rule": "testing.md#unit-testing",
+      "fix": "Add route.test.ts with at minimum: unauthorized access returns 403, invalid userId returns 400."
+    },
+    {
+      "id": "TEST-005",
+      "severity": "warning",
+      "title": "exportCsv utility has no tests",
+      "file": "apps/admin/src/features/users/application/utils/exportCsv.ts",
+      "testFile": "MISSING",
+      "description": "The exportUsersToCsv function contains CSV escaping logic for special characters (commas, double quotes, newlines). This logic is error-prone and has no tests. The existing export-csv.test.ts file tests a different utility.",
+      "rule": "testing.md#unit-testing",
+      "fix": "Add exportCsv.test.ts covering: (1) empty array returns empty string, (2) normal row outputs correct CSV, (3) cell with comma is double-quoted, (4) cell with embedded double-quote uses escape doubling, (5) cell with newline is double-quoted."
+    },
+    {
+      "id": "TEST-006",
+      "severity": "warning",
+      "title": "getApiBasePath utility has no tests",
+      "file": "apps/admin/src/shared/application/utils/getApiBasePath.ts",
+      "testFile": "MISSING",
+      "description": "getApiBasePath inspects window.location.pathname to determine the API prefix. This relies on global state that must be mocked in tests. Edge cases like SSR (window === undefined) and different pathname prefixes should be verified.",
+      "rule": "testing.md#unit-testing",
+      "fix": "Add getApiBasePath.test.ts covering: (1) returns '' when window is undefined (SSR), (2) returns '/admin' when pathname starts with /admin, (3) returns '' for other pathnames."
+    },
+    {
+      "id": "TEST-007",
+      "severity": "warning",
+      "title": "useClearCartCookie hook has no tests",
+      "file": "apps/payments/src/features/checkout/application/hooks/useClearCartCookie.ts",
+      "testFile": "MISSING",
+      "description": "While the hook is a thin wrapper, it's part of the checkout critical path. The underlying cartCookie module is tested separately, but the hook contract (returning the clearCartCookie function reference) is not verified.",
+      "rule": "testing.md#unit-testing",
+      "fix": "Add a trivial test that renders the hook and asserts the returned value is the clearCartCookie function. This ensures the re-export contract stays intact."
+    },
+    {
+      "id": "TEST-008",
+      "severity": "suggestion",
+      "title": "Landing page components lack individual tests",
+      "file": "apps/landing/src/features/home/presentation/components/",
+      "testFile": "MISSING (CtaSection, RolesSection, HeroSection, FeaturesSection)",
+      "description": "Four landing page components have no individual test files. Only the parent HomeSections component is tested. Individual components like HeroSection and CtaSection contain content and interaction logic worth testing in isolation.",
+      "rule": "testing.md#unit-testing",
+      "fix": "Add smoke tests for each landing component that verify they render without errors. For interactive elements (CTA buttons), add click behavior tests."
+    },
+    {
+      "id": "TEST-009",
+      "severity": "suggestion",
+      "title": "Multiple admin users sub-components lack tests",
+      "file": "apps/admin/src/features/users/presentation/components/",
+      "testFile": "MISSING (UserRow, UserHeader, UserRowWithRole, UserDelegatesCard, TemplateButtons, delegates/*)",
+      "description": "The users feature has 9 untested presentation components including UserRow, UserHeader, and the entire delegates/ subdirectory (5 components). UsersPage and UserTable integration tests exist, but individual component behavior is not verified.",
+      "rule": "testing.md#unit-testing",
+      "fix": "Prioritize tests for UserRow (renders user data, handles click), UserDelegatesCard (renders delegates list, empty state), and PermissionBadges (renders correct badges for permission sets)."
+    },
+    {
+      "id": "TEST-010",
+      "severity": "suggestion",
+      "title": "Payments checkout sub-components lack tests",
+      "file": "apps/payments/src/features/checkout/presentation/components/",
+      "testFile": "MISSING (BuyerField, DisplayBlockRenderer, DisplayBlocksSection, DynamicFormField, FormFieldsSection, ImageBlock)",
+      "description": "Six checkout presentation components have no test files. These components handle dynamic form rendering and display block content for the checkout flow. DisplayBlockRenderer and DynamicFormField are particularly important as they handle variable user input.",
+      "rule": "testing.md#unit-testing",
+      "fix": "Add tests for DynamicFormField (renders different input types based on field config) and DisplayBlockRenderer (renders text/video/image blocks correctly)."
+    },
+    {
+      "id": "TEST-011",
+      "severity": "suggestion",
+      "title": "Payment method editor sub-components lack tests",
+      "file": "apps/payments/src/features/payment-methods/presentation/components/",
+      "testFile": "MISSING (BlockEditor, DisplaySectionEditor, FormSectionEditor, VideoBlockEditor, FieldRow)",
+      "description": "Five payment method editor components that handle complex form editing have no tests. PaymentMethodEditor integration test exists but individual editor block components are untested.",
+      "rule": "testing.md#unit-testing",
+      "fix": "Add tests for FieldRow (renders field label/type, handles remove action) and BlockEditor (renders correct editor type based on block type)."
+    },
+    {
+      "id": "TEST-012",
+      "severity": "suggestion",
+      "title": "useSupabaseAuth hooks across all apps have no tests",
+      "file": "apps/*/src/features/auth/application/hooks/useSupabaseAuth.ts",
+      "testFile": "MISSING (store, auth, admin, payments, studio, playground)",
+      "description": "All 6 app instances of useSupabaseAuth lack test coverage. These hooks are critical for auth flows. While they may be thin wrappers over a shared implementation, their contract should be verified per app.",
+      "rule": "testing.md#unit-testing",
+      "fix": "At minimum, add a test in one representative app (e.g., store) verifying the hook returns the expected Supabase auth interface. Other apps can follow the same pattern. This can be a simple smoke test since the underlying Supabase auth is tested by its library."
+    }
+  ],
+  "missingTests": [
+    "apps/payments/src/app/api/checkout/orders/route.ts",
+    "apps/auth/src/app/api/auth/refresh/route.ts",
+    "apps/admin/src/app/api/admin/users/[userId]/permissions/route.ts",
+    "apps/admin/src/app/api/admin/users/[userId]/delegates/route.ts",
+    "apps/payments/src/features/checkout/application/hooks/useClearCartCookie.ts",
+    "apps/admin/src/features/users/application/utils/exportCsv.ts",
+    "apps/admin/src/shared/application/utils/getApiBasePath.ts",
+    "apps/landing/src/features/home/presentation/components/CtaSection.tsx",
+    "apps/landing/src/features/home/presentation/components/RolesSection.tsx",
+    "apps/landing/src/features/home/presentation/components/HeroSection.tsx",
+    "apps/landing/src/features/home/presentation/components/FeaturesSection.tsx",
+    "apps/admin/src/features/users/presentation/components/UserRow.tsx",
+    "apps/admin/src/features/users/presentation/components/UserHeader.tsx",
+    "apps/admin/src/features/users/presentation/components/UserRowWithRole.tsx",
+    "apps/admin/src/features/users/presentation/components/UserDelegatesCard.tsx",
+    "apps/admin/src/features/users/presentation/components/TemplateButtons.tsx",
+    "apps/admin/src/features/users/presentation/components/delegates/AsDelegateRow.tsx",
+    "apps/admin/src/features/users/presentation/components/delegates/AsSellerRow.tsx",
+    "apps/admin/src/features/users/presentation/components/delegates/PermissionBadges.tsx",
+    "apps/admin/src/features/users/presentation/components/delegates/ProductName.tsx",
+    "apps/admin/src/features/users/presentation/components/delegates/RemoveButton.tsx",
+    "apps/payments/src/features/checkout/presentation/components/BuyerField.tsx",
+    "apps/payments/src/features/checkout/presentation/components/DisplayBlockRenderer.tsx",
+    "apps/payments/src/features/checkout/presentation/components/DynamicFormField.tsx",
+    "apps/payments/src/features/checkout/presentation/components/DisplayBlocksSection.tsx",
+    "apps/payments/src/features/checkout/presentation/components/FormFieldsSection.tsx",
+    "apps/payments/src/features/checkout/presentation/components/ImageBlock.tsx",
+    "apps/payments/src/features/payment-methods/presentation/components/BlockEditor.tsx",
+    "apps/payments/src/features/payment-methods/presentation/components/DisplaySectionEditor.tsx",
+    "apps/payments/src/features/payment-methods/presentation/components/FormSectionEditor.tsx",
+    "apps/payments/src/features/payment-methods/presentation/components/VideoBlockEditor.tsx",
+    "apps/payments/src/features/payment-methods/presentation/components/FieldRow.tsx",
+    "apps/payments/src/features/received-orders/presentation/components/ConfirmActionPanel.tsx",
+    "apps/store/src/features/auth/presentation/components/ProtectedRoute.tsx",
+    "apps/admin/src/features/auth/presentation/components/ProtectedRoute.tsx",
+    "apps/payments/src/features/auth/presentation/components/ProtectedRoute.tsx"
+  ],
+  "patterns": [
+    {
+      "type": "good",
+      "description": "Checkout stock integrity is well tested: payment-methods route test covers stock validation suppression of payment methods when quantity exceeds max_quantity, matching the checkout-stock-integrity.md rule.",
+      "files": [
+        "apps/payments/src/app/api/checkout/payment-methods/route.test.ts"
+      ]
+    },
+    {
+      "type": "good",
+      "description": "Test quality is high where tests exist: tests use renderHook + act correctly for async mutations, mock dependencies at the module level, use vi.clearAllMocks() in beforeEach, and test edge cases (stock limit reached, missing fields, unauthorized access).",
+      "files": [
+        "apps/store/src/features/cart/application/hooks/useAddToCart.test.ts",
+        "apps/payments/src/features/checkout/application/hooks/useSubmitPayment.test.tsx"
+      ]
+    },
+    {
+      "type": "good",
+      "description": "Infrastructure layer (queries, mutations) has consistent test coverage across all features in payments, store, studio, and admin. Domain constants and types are also tested.",
+      "files": [
+        "apps/payments/src/features/*/infrastructure/*.test.ts",
+        "apps/store/src/features/*/infrastructure/*.test.ts"
+      ]
+    },
+    {
+      "type": "info",
+      "description": "Several 'missing' hooks are trivial re-exports: useLogExport re-exports from useAuditLog (tested), useSupabase re-exports from shared package (tested), useClearCartCookie returns a single function reference. These are low-priority testing targets.",
+      "files": [
+        "apps/admin/src/shared/application/hooks/useLogExport.ts",
+        "apps/admin/src/shared/application/hooks/useSupabase.ts",
+        "apps/payments/src/features/checkout/application/hooks/useClearCartCookie.ts"
+      ]
+    },
+    {
+      "type": "info",
+      "description": "The ProtectedRoute component (present in store, admin, payments, auth, playground) is not individually tested in any app. As an auth guard, it should have at least one test verifying it redirects unauthenticated users.",
+      "files": [
+        "apps/*/src/features/auth/presentation/components/ProtectedRoute.tsx"
+      ]
+    }
+  ]
+}

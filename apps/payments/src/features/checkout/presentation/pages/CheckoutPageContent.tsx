@@ -8,13 +8,12 @@ import { tid } from "shared";
 import { Skeleton } from "ui";
 
 import { useCartFromCookie } from "@/features/checkout/application/hooks/useCartFromCookie";
+import { useClearCartCookie } from "@/features/checkout/application/hooks/useClearCartCookie";
 import { useSubmitPayment } from "@/features/checkout/application/hooks/useSubmitPayment";
+import { CHECKOUT_COMPLETED_SESSION_KEY } from "@/features/checkout/domain/constants";
 import type { CheckoutSellerStatus } from "@/features/checkout/domain/types";
-import { clearCartCookie } from "@/features/checkout/infrastructure/cartCookie";
 import { SellerCheckoutCard } from "@/features/checkout/presentation/components/SellerCheckoutCard";
 import { appUrls } from "@/shared/infrastructure/config";
-
-const CHECKOUT_COMPLETED_SESSION_KEY = "candystore-checkout-completed";
 
 function readCompletedCheckoutFlag(): boolean {
   if (globalThis.window === undefined) return false;
@@ -43,6 +42,7 @@ export function CheckoutPageContent() {
   const { user } = useSupabaseAuth();
   const { groups, isEmpty, isLoading, getItemName } = useCartFromCookie();
   const submitPayment = useSubmitPayment();
+  const clearCartCookie = useClearCartCookie();
   const checkoutSessionId = useRef(crypto.randomUUID()).current;
 
   const [sellerStates, setSellerStates] = useState<
@@ -110,7 +110,7 @@ export function CheckoutPageContent() {
       writeCompletedCheckoutFlag(true);
       clearCartCookie();
     }
-  }, [allSubmitted]);
+  }, [allSubmitted, clearCartCookie]);
 
   useEffect(() => {
     if (groups.length > 0 && hasCompletedCheckout && !cartCleared.current) {

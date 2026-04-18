@@ -1,0 +1,170 @@
+{
+  "agent": "pattern-discovery",
+  "timestamp": "2026-04-17T04:08:32",
+  "scope": "apps/",
+  "summary": {
+    "filesAnalyzed": 25,
+    "issuesFound": 6,
+    "critical": 0,
+    "warning": 3,
+    "suggestion": 2,
+    "info": 1
+  },
+  "issues": [
+    {
+      "id": "PAT-001",
+      "severity": "warning",
+      "category": "PAT",
+      "title": "Inconsistent Supabase client access pattern across apps",
+      "description": "Three different patterns are used to obtain the Supabase client in hooks/infrastructure: (1) injecting `SupabaseClient` as a parameter to infrastructure functions and calling `useSupabase()` from `shared` in hooks (admin, payments, auth, studio for most hooks), (2) calling `createBrowserSupabaseClient()` directly inside infrastructure functions (store/products), and (3) calling `useMemo(() => createBrowserSupabaseClient(), [])` inside hooks (studio/useProducts, studio/useDelegateSearch). The first pattern is the architectural standard (supabase injected as dependency) but is not applied universally.",
+      "files": [
+        "apps/admin/src/features/settings/infrastructure/settingsQueries.ts",
+        "apps/auth/src/features/account/infrastructure/profileQueries.ts",
+        "apps/payments/src/features/checkout/infrastructure/checkoutQueries.ts",
+        "apps/store/src/features/products/infrastructure/productQueries.ts",
+        "apps/studio/src/features/products/application/hooks/useProducts.ts",
+        "apps/studio/src/features/seller-admins/application/hooks/useDelegateSearch.ts"
+      ],
+      "rule": "architecture.md - Dependency Inversion Principle; shared package `useSupabase` exists as the canonical hook",
+      "suggestion": "Standardize on the `useSupabase()` injection pattern everywhere. In store/products, refactor `productQueries.ts` to accept a `SupabaseClient` parameter (matching all other infrastructure files) and call `useSupabase()` in the application hook layer. For studio hooks using `useMemo(() => createBrowserSupabaseClient(), [])`, replace with `useSupabase()` from `shared`."
+    },
+    {
+      "id": "PAT-002",
+      "severity": "warning",
+      "category": "PAT",
+      "title": "Hardcoded `staleTime: 30_000` magic number repeated across three hooks",
+      "description": "The value `30_000` (30 seconds) is used as a literal staleTime in three separate hooks: `useProfile` (auth), `useTemplates` (admin), and `usePaymentSettings` (admin). Other features properly extract stale time to domain constants (e.g., `STALE_TIME_MS` in audit, `ORDERS_STALE_TIME_MS` in payments). The admin/audit pattern is the correct one.",
+      "files": [
+        "apps/auth/src/features/account/application/hooks/useProfile.ts",
+        "apps/admin/src/features/templates/application/hooks/useTemplates.ts",
+        "apps/admin/src/features/settings/application/hooks/usePaymentSettings.ts"
+      ],
+      "rule": "no-hardcoding.md - magic numbers should be in domain constants",
+      "suggestion": "Define a `STALE_TIME_MS` constant in each feature's `domain/constants.ts` (or reuse a shared constant if the value is the same across features) and reference it instead of the literal `30_000`."
+    },
+    {
+      "id": "PAT-003",
+      "severity": "warning",
+      "category": "PAT",
+      "title": "`as any` / `as never` type casts used to bypass missing Supabase generated types for certain tables",
+      "description": "Several infrastructure files cast Supabase table names to `any` or `never` because those tables are not yet present in the generated types (e.g., `product_templates as any`, `seller_payment_methods as never`). This is a workaround documented with `-- table not in generated types yet` comments. The `as never` pattern appears in `checkoutQueries.ts` (7 occurrences) while `as any` is used in `settingsQueries.ts` and `templateQueries.ts`. Both defeat type safety for those Supabase calls.",
+      "files": [
+        "apps/admin/src/features/settings/infrastructure/settingsQueries.ts",
+        "apps/admin/src/features/templates/infrastructure/templateQueries.ts",
+        "apps/payments/src/features/checkout/infrastructure/checkoutQueries.ts",
+        "apps/admin/src/features/users/infrastructure/userPermissionQueries.ts"
+      ],
+      "rule": "architecture.md - Generated Code Policy; pnpm codegen:supabase should regenerate types",
+      "suggestion": "Run `pnpm codegen:supabase` to regenerate Supabase types so these tables are reflected in the generated schema. Once types are generated, remove the `as any`/`as never` casts and the associated eslint-disable comments."
+    },
+    {
+      "id": "PAT-004",
+      "severity": "suggestion",
+      "category": "PAT",
+      "title": "Inconsistent query key strategy: some use domain constants, some use inline strings",
+      "description": "Admin and studio features consistently define query keys as exported constants in `domain/constants.ts` (e.g., `SETTINGS_QUERY_KEY`, `TEMPLATES_QUERY_KEY`, `AUDIT_QUERY_KEY`). By contrast, store features use inline string literals directly in hooks (`queryKey: ['store-products']`, `queryKey: ['seller-profiles', ...]`). This inconsistency makes it harder to invalidate queries reliably across the codebase.",
+      "files": [
+        "apps/store/src/features/products/application/hooks/useStoreProducts.ts",
+        "apps/store/src/features/cart/application/hooks/useSellerProfiles.ts",
+        "apps/admin/src/features/settings/application/hooks/usePaymentSettings.ts",
+        "apps/admin/src/features/audit/application/hooks/useAuditLog.ts"
+      ],
+      "rule": "no-hardcoding.md - magic strings should live in constants",
+      "suggestion": "Define `STORE_PRODUCTS_QUERY_KEY` and `SELLER_PROFILES_QUERY_KEY` constants in the respective feature `domain/constants.ts` files and replace the inline strings in store hooks."
+    },
+    {
+      "id": "PAT-005",
+      "severity": "suggestion",
+      "category": "PAT",
+      "title": "Loading spinner markup duplicated between ProductCatalogPage and ProductDetailPage",
+      "description": "Both `ProductCatalogPage.tsx` and `ProductDetailPage.tsx` in the store repeat the same spinning loader JSX pattern (a `border-t-transparent rounded-full animate-spin` div with a translatable text label below). The `sonarjs/no-duplicate-string` ESLint disable comment appears on both files, confirming the duplication is known but not yet addressed. A shared `LoadingSpinner` or `LoadingState` component used in both pages would eliminate this.",
+      "files": [
+        "apps/store/src/features/products/presentation/pages/ProductCatalogPage.tsx",
+        "apps/store/src/features/products/presentation/pages/ProductDetailPage.tsx"
+      ],
+      "rule": "dry-principle.md - Rule of Three; component-patterns.md",
+      "suggestion": "Extract a reusable `LoadingState` presentational component (or use an existing one from the shared package) that renders the spinner and label, accepting the label text as a prop."
+    },
+    {
+      "id": "PAT-006",
+      "severity": "info",
+      "category": "PAT",
+      "title": "Consistent Page / PageContent split pattern across multiple apps",
+      "description": "A well-established pattern found across admin, payments, and studio: a thin `*Page.tsx` handles permission checks (using `useCurrentUserPermissions`) and renders either `AccessDeniedState` or a `*PageContent.tsx`. The `*PageContent.tsx` component contains the actual data-fetching and rendering logic. This is a good separation of auth/authorization concerns from content concerns and is applied consistently in ~10 page components.",
+      "files": [
+        "apps/admin/src/features/settings/presentation/pages/SettingsPage.tsx",
+        "apps/admin/src/features/settings/presentation/pages/SettingsPageContent.tsx",
+        "apps/admin/src/features/users/presentation/pages/UserDetailPage.tsx",
+        "apps/payments/src/features/checkout/presentation/pages/CheckoutPage.tsx",
+        "apps/payments/src/features/checkout/presentation/pages/CheckoutPageContent.tsx",
+        "apps/studio/src/features/products/presentation/pages/ProductListPage.tsx",
+        "apps/studio/src/features/products/presentation/pages/ProductListPageContent.tsx"
+      ],
+      "rule": "solid-principles.md - Single Responsibility",
+      "suggestion": "Document this Page/PageContent split as an official project pattern in component-patterns.md or architecture.md so it is consistently applied to any new pages that require permission gating."
+    }
+  ],
+  "patterns": [
+    {
+      "type": "good",
+      "description": "Page/PageContent split for permission-gated pages: thin *Page component handles auth/permission checks, *PageContent handles data and rendering. Consistent across admin, payments, and studio.",
+      "files": [
+        "apps/admin/src/features/settings/presentation/pages/SettingsPage.tsx",
+        "apps/admin/src/features/settings/presentation/pages/SettingsPageContent.tsx",
+        "apps/payments/src/features/checkout/presentation/pages/CheckoutPage.tsx",
+        "apps/payments/src/features/checkout/presentation/pages/CheckoutPageContent.tsx"
+      ],
+      "suggestion": "Formalize as a documented pattern in component-patterns.md."
+    },
+    {
+      "type": "good",
+      "description": "URL state via nuqs: all filter, pagination, and view-mode state uses `useQueryStates` with parsers defined in `domain/searchParams.ts`. Found in store (products), admin (audit, users), studio (products), and payments (received-orders). Consistent adherence to url-state.md rule.",
+      "files": [
+        "apps/store/src/features/products/domain/searchParams.ts",
+        "apps/admin/src/features/audit/domain/searchParams.ts",
+        "apps/payments/src/features/received-orders/domain/searchParams.ts",
+        "apps/studio/src/features/products/domain/searchParams.ts"
+      ],
+      "suggestion": "Pattern is well-established. No action needed."
+    },
+    {
+      "type": "good",
+      "description": "AccessDeniedState is a single shared component from `shared/components`, re-exported via each app's shared/presentation/components/AccessDeniedState.tsx. Clean single source of truth.",
+      "files": [
+        "apps/admin/src/shared/presentation/components/AccessDeniedState.tsx",
+        "apps/payments/src/shared/presentation/components/AccessDeniedState.tsx",
+        "apps/studio/src/shared/presentation/components/AccessDeniedState.tsx"
+      ],
+      "suggestion": "No action needed. Pattern is correct."
+    },
+    {
+      "type": "inconsistent",
+      "description": "Supabase client initialization: admin/auth/payments inject the client via useSupabase() from shared (dependency inversion). Store creates the client directly inside infrastructure functions. Studio creates it with useMemo inside hooks. Three different patterns for the same concern.",
+      "files": [
+        "apps/store/src/features/products/infrastructure/productQueries.ts",
+        "apps/studio/src/features/products/application/hooks/useProducts.ts",
+        "apps/admin/src/features/settings/application/hooks/usePaymentSettings.ts"
+      ],
+      "suggestion": "Standardize on useSupabase() injection everywhere as the canonical pattern."
+    },
+    {
+      "type": "inconsistent",
+      "description": "Query key definitions: admin/studio define query keys as exported constants in domain/constants.ts. Store uses inline string literals ('store-products', 'seller-profiles') directly in hooks.",
+      "files": [
+        "apps/store/src/features/products/application/hooks/useStoreProducts.ts",
+        "apps/admin/src/features/settings/domain/constants.ts"
+      ],
+      "suggestion": "Move store query key strings to domain/constants.ts for consistency."
+    },
+    {
+      "type": "bad",
+      "description": "Type-unsafe Supabase table references using `as any` or `as never` casts in infrastructure files for tables not yet present in generated types (product_templates, payment_settings, seller_payment_methods). Suppresses type safety for those database calls.",
+      "files": [
+        "apps/admin/src/features/settings/infrastructure/settingsQueries.ts",
+        "apps/admin/src/features/templates/infrastructure/templateQueries.ts",
+        "apps/payments/src/features/checkout/infrastructure/checkoutQueries.ts"
+      ],
+      "suggestion": "Run `pnpm codegen:supabase` to bring generated types up to date and remove the casts."
+    }
+  ]
+}

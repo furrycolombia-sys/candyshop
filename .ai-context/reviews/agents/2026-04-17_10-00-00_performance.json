@@ -1,0 +1,74 @@
+{
+  "agent": "performance",
+  "review_id": "2026-04-17_10-00-00",
+  "timestamp": "2026-04-17T10:00:00Z",
+  "scope": "apps/",
+  "summary": {
+    "filesAnalyzed": 18,
+    "issuesFound": 4,
+    "critical": 0,
+    "warning": 3,
+    "suggestion": 1,
+    "info": 0
+  },
+  "issues": [
+    {
+      "id": "PERF-001",
+      "severity": "warning",
+      "file": "apps/studio/src/features/products/presentation/components/ProductTable.tsx",
+      "line": 168,
+      "title": "Inline arrow functions as props cause unnecessary re-renders in render loop",
+      "description": "Inside the DragDropContext > Droppable > Draggable render-prop chain, each ProductTableRow receives two new function references on every render: `onToggle={(field, value) => handleToggle(product.id, field, value)}` and `onDelete={() => handleDelete(product.id)}`. Because these are inline arrow functions, they are recreated on every render cycle. This means ProductTableRow will always see 'new' props and cannot benefit from React.memo (if added later). The issue is amplified because the Draggable render prop itself already re-runs on each parent render.",
+      "impact": "Extra re-renders proportional to the number of products in the table. With drag-and-drop active the parent can re-render frequently. Medium impact when the product list is large (>20 items).",
+      "rule": "code-review-standards.md#performance-standards",
+      "fix": "Bind product.id at the ProductTableRow level: pass `productId` as a prop and have ProductTableRow compose the call internally. Alternatively, build stable per-row callbacks with useMemo mapping product IDs to useCallback-wrapped handlers before the render section. This removes the need for inline closures in the JSX."
+    },
+    {
+      "id": "PERF-002",
+      "severity": "warning",
+      "file": "apps/payments/src/features/checkout/presentation/pages/CheckoutPageContent.tsx",
+      "line": 209,
+      "title": "Inline closure passed as onSubmit prop recreated each render for every seller group",
+      "description": "The groups.map() loop passes `onSubmit={(params) => handleSubmit(group.sellerId, group.items, group.subtotalCop, params)}` to each SellerCheckoutCard. This creates a brand-new function reference per group on every render of CheckoutPageContent. Since sellerStates updates trigger a re-render (e.g., on submission status changes), all seller cards receive new onSubmit props even if their data has not changed.",
+      "impact": "All SellerCheckoutCard instances re-render whenever any single seller's state changes. For checkouts with multiple sellers this is wasteful and can cause visible UI flicker during submission.",
+      "rule": "code-review-standards.md#performance-standards",
+      "fix": "Accept (sellerId, params) in a single stable useCallback-wrapped handler and pass that directly as onSubmit. The handler already exists (handleSubmit) — just adjust its signature to match SellerCheckoutCard's expected `(params) => void` by having the card pass its own sellerId, or memoize per-seller callbacks via useMemo keyed on group.sellerId."
+    },
+    {
+      "id": "PERF-003",
+      "severity": "warning",
+      "file": "apps/payments/src/features/payment-methods/application/hooks/useAutoSavePaymentMethod.ts",
+      "line": 38,
+      "title": "Stale updateMutation reference in useCallback causes debounce timer to always recreate",
+      "description": "triggerSave has updateMutation in its dependency array. useMutation from TanStack Query returns a new object reference on every render, so triggerSave is recreated every render. The three useEffect blocks that call triggerSave all depend on it, but only list the data dependencies (nameEn/nameEs, displayBlocks, formFields) via eslint-disable comments. While intentional, the underlying trigger function instability means the debounce timer is cleared and reset on any render, potentially delaying saves when the parent re-renders during typing.",
+      "impact": "Debounce resets on every parent re-render. In typical usage (user is typing) the parent may re-render from form state, causing the 500ms debounce window to reset and save to fire later than expected. Low–medium impact.",
+      "rule": "code-review-standards.md#performance-standards",
+      "fix": "Store updateMutation.mutate in a ref (`const mutateRef = useRef(updateMutation.mutate); mutateRef.current = updateMutation.mutate`) and call `mutateRef.current(...)` inside triggerSave. With mutate accessed via ref, the useCallback dependency array can be `[paymentMethodId]` only, making triggerSave stable across renders."
+    },
+    {
+      "id": "PERF-004",
+      "severity": "suggestion",
+      "file": "apps/studio/src/features/products/presentation/components/inline-editor/InlineImageCarousel.tsx",
+      "line": 38,
+      "title": "Double useWatch on images array — full array watched twice",
+      "description": "InlineImageCarousel calls both `useFieldArray({ control, name: 'images' })` (which tracks the array for mutation) and separately `useWatch({ control, name: 'images' })` for live values. This means react-hook-form subscribes to the images array in two places. useFieldArray already exposes fields with stable IDs while watchedImages holds the live form values. The dual subscription means two change listeners fire on every image field edit.",
+      "impact": "Slightly extra subscription overhead during image editing. Minor for typical product image counts (1-10), but the pattern is worth cleaning up.",
+      "rule": "code-review-standards.md#performance-standards",
+      "fix": "Use only useFieldArray for mutations and read live field values from `useWatch` at the individual image field level inside each thumbnail component, or derive live values from `useFormContext` only where needed. Avoid watching the entire images array twice at the parent level."
+    }
+  ],
+  "patterns": [
+    {
+      "pattern": "Stable useCallback and useMemo usage is generally good",
+      "description": "Most components (CartContext, ProductTable, ReceivedOrdersPageContent, CartDrawer) correctly wrap handlers with useCallback and computed values with useMemo. The issues found are isolated to specific render-loop arrow functions and one mutation ref instability."
+    },
+    {
+      "pattern": "No missing lazy loading for heavy components found",
+      "description": "No large third-party component trees (charts, rich editors) were found that lacked code-splitting. The inline editor and drag-and-drop components are only used in the studio app where they are the primary content."
+    },
+    {
+      "pattern": "No N+1 data fetching patterns detected",
+      "description": "API calls follow standard TanStack Query patterns with proper query keys. No sequential dependent queries that could be parallelized were identified."
+    }
+  ]
+}

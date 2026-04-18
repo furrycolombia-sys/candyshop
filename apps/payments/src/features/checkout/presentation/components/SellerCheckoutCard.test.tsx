@@ -34,16 +34,14 @@ vi.mock(
 
 vi.mock("./SellerCheckoutContent", () => ({
   SellerCheckoutContent: ({
-    hasStockIssues,
-    error,
+    submission,
   }: {
-    hasStockIssues: boolean;
-    error: string | null;
+    submission: { hasStockIssues: boolean; error: string | null };
   }) => (
     <div
       data-testid="seller-checkout-content"
-      data-has-stock-issues={String(hasStockIssues)}
-      data-error={error ?? ""}
+      data-has-stock-issues={String(submission.hasStockIssues)}
+      data-error={submission.error ?? ""}
     >
       Content
     </div>

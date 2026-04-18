@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { tid } from "shared";
+import { cn } from "ui";
 
 const DEFAULT_CANDY_TEXT = "var(--candy-text)";
 const SECTION_LABEL_KEY = "categories";
@@ -97,7 +98,10 @@ export function FeaturesSection() {
             return (
               <li key={key} className="list-none" {...tid(`category-${key}`)}>
                 <article
-                  className={`group shadow-brutal-lg relative flex h-full min-h-52 flex-col overflow-hidden border-strong border-foreground p-6 transition-transform duration-150 hover:-translate-y-1 sm:min-h-56 lg:p-7 ${tilt} xl:even:translate-y-6`}
+                  className={cn(
+                    "group shadow-brutal-lg relative flex h-full min-h-52 flex-col overflow-hidden border-strong border-foreground p-6 transition-transform duration-150 hover:-translate-y-1 sm:min-h-56 lg:p-7 xl:even:translate-y-6",
+                    tilt,
+                  )}
                   style={{ backgroundColor: bg, color: fg }}
                 >
                   <div
@@ -109,7 +113,7 @@ export function FeaturesSection() {
                     aria-hidden="true"
                   />
                   <div className="mb-8 flex items-start justify-between gap-4">
-                    <span className="border-strong border-foreground bg-background/70 px-3 py-1 text-[11px] font-bold uppercase tracking-section">
+                    <span className="border-strong border-foreground bg-background/70 px-3 py-1 text-label-xs font-bold uppercase tracking-section">
                       {tSections("categories")}
                     </span>
                     <span

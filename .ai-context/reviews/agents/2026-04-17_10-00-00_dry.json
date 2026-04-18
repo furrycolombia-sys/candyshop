@@ -1,0 +1,90 @@
+{
+  "agent": "dry",
+  "review_id": "2026-04-17_10-00-00",
+  "timestamp": "2026-04-17T10:00:00Z",
+  "scope": "apps/",
+  "summary": {
+    "filesAnalyzed": 30,
+    "issuesFound": 4,
+    "critical": 0,
+    "warning": 3,
+    "suggestion": 1,
+    "info": 0
+  },
+  "issues": [
+    {
+      "id": "DRY-001",
+      "severity": "warning",
+      "title": "Admin REST client logic duplicated between apps/admin and apps/payments",
+      "files": [
+        "apps/admin/src/app/api/admin/_shared/adminRest.ts",
+        "apps/payments/src/shared/infrastructure/adminRestClient.ts"
+      ],
+      "duplicatedCode": "Both files independently define the same Supabase admin REST plumbing: reading SUPABASE_URL_INTERNAL/NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY, building service-role headers (apikey + Authorization + Content-Type), constructing the /rest/v1/<path> URL, throwing on missing config, and a generic fetch-with-error-check wrapper (adminFetch / adminFetchJson). createRestPath and validateUuid are also copied verbatim between the two files.",
+      "occurrences": 2,
+      "description": "apps/admin/src/app/api/admin/_shared/adminRest.ts and apps/payments/src/shared/infrastructure/adminRestClient.ts both implement: (1) env-var read for Supabase URL + service-role key; (2) getRestHeaders / getAdminRestHeaders – identical header object; (3) getRestUrl / getAdminRestUrl – identical URL construction; (4) adminFetch / adminFetchJson – nearly identical fetch + error-check pattern; (5) createRestPath – identical URLSearchParams builder (both files); (6) validateUuid – nearly identical UUID regex check (different regex variant but same intent). Any change to the Supabase REST layer (header name, error format, URL pattern) must be made in two places.",
+      "rule": "dry-principle.md#knowledge-duplication-eliminate",
+      "fix": "Extract the shared primitives (env-var reads, getAdminRestHeaders, getAdminRestUrl, adminFetchJson, createRestPath, validateUuid) into a new server-side utility in packages/shared or a new app-level shared module. Both admin and payments Route Handlers import from there. Each app can keep its own higher-level helpers (fetchGrantedPermissions, getAuthorizedAdmin, etc.) that call the shared primitives."
+    },
+    {
+      "id": "DRY-002",
+      "severity": "warning",
+      "title": "useSellerProfiles hook duplicated in store and payments with inlined query logic",
+      "files": [
+        "apps/store/src/features/cart/application/hooks/useSellerProfiles.ts",
+        "apps/payments/src/features/checkout/application/hooks/useSellerProfiles.ts",
+        "apps/payments/src/features/checkout/infrastructure/checkoutQueries.ts"
+      ],
+      "duplicatedCode": "Both hooks fetch user_profiles rows by a list of seller IDs and build a Record<sellerId, displayName> map. The store hook inlines the Supabase query; payments delegates to fetchSellerProfiles() which does the same query with the same field selection (id, display_name, email). The query key (\"seller-profiles\") is also duplicated as a raw string literal.",
+      "occurrences": 2,
+      "description": "apps/store/src/features/cart/application/hooks/useSellerProfiles.ts and apps/payments/src/features/checkout/application/hooks/useSellerProfiles.ts are near-identical hooks (same query key string, same Supabase table/columns, same map-building logic). The only differences are: (a) store deduplicates IDs with [...new Set(...)], payments does not; (b) store falls back to email.split('@')[0], payments app uses FALLBACK_SELLER_NAME constant. There is also a third implementation of the same query inside fetchUserDisplayNames.ts in payments shared infrastructure that does the same SELECT with a fallbackName parameter.",
+      "rule": "dry-principle.md#knowledge-duplication-eliminate",
+      "fix": "Promote the shared Supabase query to payments/src/shared/infrastructure/fetchUserDisplayNames.ts (already exists) and have the store hook import from there via a dedicated infrastructure module. Alternatively, extract a shared useSellerProfiles hook into packages/shared (if the supabase client pattern supports it). At minimum, remove the inline query from store's hook and have it call a dedicated fetchSellerProfiles function just like the payments hook does."
+    },
+    {
+      "id": "DRY-003",
+      "severity": "warning",
+      "title": "PRODUCT_TYPES array constant defined independently in store and studio with different shapes",
+      "files": [
+        "apps/store/src/features/products/domain/constants.ts",
+        "apps/studio/src/features/products/domain/constants.ts"
+      ],
+      "duplicatedCode": "Both files define a PRODUCT_TYPES constant listing the same four product type values (merch, digital, service, ticket). Store uses { value: ProductType }[] while studio uses ProductType[]. Additionally, studio independently defines PRODUCT_CATEGORIES: ProductCategory[] with the same six values already present in packages/shared as PRODUCT_CATEGORIES: { value; color }[].",
+      "occurrences": 2,
+      "description": "The canonical set of product types (merch | digital | service | ticket) is defined as a union type in packages/shared/src/types/product.ts but there is no exported runtime array constant in shared. Both apps therefore roll their own lists. If a new product type is added to the DB enum, it must be updated in three places: the shared type union, the store constant, and the studio constant. The PRODUCT_CATEGORIES case is similar but studio duplicates just the values (not the color metadata) from the shared package.",
+      "rule": "dry-principle.md#extract-constants",
+      "fix": "Add a PRODUCT_TYPES: ProductType[] constant to packages/shared/src/utils/ (analogous to the existing PRODUCT_CATEGORIES array) and export it from the shared index. Both store and studio import from shared. The store wrapper constant { value: ProductType } can be built locally from the shared array if needed. For studio's PRODUCT_CATEGORIES, remove the local definition and import from shared (the simple ProductCategory[] values are already available as .map(c => c.value) from the shared object array)."
+    },
+    {
+      "id": "DRY-004",
+      "severity": "suggestion",
+      "title": "catalog and products searchParams are near-identical across store and studio",
+      "files": [
+        "apps/store/src/features/products/domain/searchParams.ts",
+        "apps/studio/src/features/products/domain/searchParams.ts"
+      ],
+      "duplicatedCode": "Both files export a nuqs searchParams object with the exact same three fields (category, type, q) all using parseAsString.withDefault(\"\"). The only difference is the export name (catalogSearchParams vs productsSearchParams) and field ordering.",
+      "occurrences": 2,
+      "description": "apps/store/src/features/products/domain/searchParams.ts exports { category, type, q } and apps/studio/src/features/products/domain/searchParams.ts exports the exact same three parsers with the same defaults. These represent the same knowledge: the URL filter params for product list views. A new filter field added to the product query (e.g. a 'featured' flag) needs to be added to both files.",
+      "rule": "dry-principle.md#rule-of-three",
+      "fix": "Per KISS: evaluate whether both apps will always share the same filter surface. If yes, extract a shared productFilterSearchParams object to packages/shared/src/utils/ or a new shared domain module, and re-export with local aliases in each app. If the two apps are expected to diverge (e.g. studio may add admin-only filters), keep them separate and accept the duplication — this is coincidental duplication that may evolve differently."
+    }
+  ],
+  "patterns": [
+    {
+      "id": "PAT-DRY-01",
+      "description": "Re-export pattern is used consistently and correctly. All useSupabaseAuth hooks, environment config, api config, category constants, and SupabaseClient type are thin re-exports from shared packages — no duplication of logic.",
+      "assessment": "good"
+    },
+    {
+      "id": "PAT-DRY-02",
+      "description": "PaymentMethodTypes are properly promoted to a shared layer (apps/payments/src/shared/domain/PaymentMethodTypes.ts) with re-exports from the feature domain layer — no duplication.",
+      "assessment": "good"
+    },
+    {
+      "id": "PAT-DRY-03",
+      "description": "formatCop is already extracted to packages/shared and re-exported through apps/payments/src/shared/application/utils/formatCop.ts. Inline toLocaleString COP formatting in CheckoutItemsSummary.tsx bypasses this utility (2 occurrences in same component).",
+      "assessment": "minor — within single component, not cross-app duplication"
+    }
+  ]
+}

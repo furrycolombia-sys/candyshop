@@ -1,27 +1,33 @@
 "use client";
 
+import { useQuery } from "@tanstack/react-query";
+import { createBrowserSupabaseClient } from "api/supabase";
 import { useLocale } from "next-intl";
-import { useMemo, useSyncExternalStore } from "react";
+import { useCallback, useMemo, useSyncExternalStore } from "react";
 import { i18nField } from "shared";
+import type { CartCookieItem } from "shared/types";
 
 import { useSellerProfiles } from "./useSellerProfiles";
 
+import { CHECKOUT_CART_PRODUCTS_QUERY_KEY } from "@/features/checkout/domain/constants";
 import type { CartItem, SellerGroup } from "@/features/checkout/domain/types";
 import {
   readCartFromCookie,
   subscribeToCartCookie,
 } from "@/features/checkout/infrastructure/cartCookie";
+import { fetchCheckoutProductsByIds } from "@/features/checkout/infrastructure/checkoutQueries";
 import { FALLBACK_SELLER_NAME } from "@/shared/domain/constants";
 
 /** Stable empty array so the server snapshot reference never changes. */
-const EMPTY: CartItem[] = [];
+const EMPTY_COOKIE_ITEMS: CartCookieItem[] = [];
+const EMPTY_PRODUCTS: Array<Omit<CartItem, "quantity">> = [];
 
-function getSnapshot(): CartItem[] {
+function getSnapshot(): CartCookieItem[] {
   return readCartFromCookie();
 }
 
-function getServerSnapshot(): CartItem[] {
-  return EMPTY;
+function getServerSnapshot(): CartCookieItem[] {
+  return EMPTY_COOKIE_ITEMS;
 }
 
 /**
@@ -30,12 +36,56 @@ function getServerSnapshot(): CartItem[] {
  */
 export function useCartFromCookie() {
   const locale = useLocale();
-  const items = useSyncExternalStore(
+  const supabase = useMemo(() => createBrowserSupabaseClient(), []);
+  const cookieItems = useSyncExternalStore(
     subscribeToCartCookie,
     getSnapshot,
     getServerSnapshot,
   );
-  const isHydrated = items !== EMPTY;
+  const isHydrated = cookieItems !== EMPTY_COOKIE_ITEMS;
+
+  const cartIds = useMemo(
+    () => cookieItems.map((item) => item.id),
+    [cookieItems],
+  );
+  const { data: products = EMPTY_PRODUCTS, isLoading: isLoadingProducts } =
+    useQuery({
+      // eslint-disable-next-line @tanstack/query/exhaustive-deps -- supabase is not serializable (circular refs)
+      queryKey: [CHECKOUT_CART_PRODUCTS_QUERY_KEY, cartIds],
+      queryFn: () => fetchCheckoutProductsByIds(supabase, cartIds),
+      enabled: cartIds.length > 0,
+      staleTime: 30_000,
+    });
+
+  const productById = useMemo(
+    () => new Map(products.map((product) => [product.id, product])),
+    [products],
+  );
+
+  const items: CartItem[] = useMemo(
+    () =>
+      cookieItems
+        .map((cookieItem) => {
+          const product = productById.get(cookieItem.id);
+          if (!product) return null;
+
+          const maxQuantity =
+            typeof product.max_quantity === "number"
+              ? product.max_quantity
+              : null;
+          const quantity =
+            maxQuantity === null
+              ? cookieItem.quantity
+              : Math.min(cookieItem.quantity, maxQuantity);
+
+          return {
+            ...product,
+            quantity,
+          };
+        })
+        .filter((item): item is CartItem => item !== null),
+    [cookieItems, productById],
+  );
 
   const sellerIds = useMemo(() => {
     const ids = new Set<string>();
@@ -68,10 +118,13 @@ export function useCartFromCookie() {
     }));
   }, [items, sellerNames]);
 
-  const isEmpty = isHydrated && items.length === 0;
-  const isLoading = !isHydrated || isLoadingProfiles;
+  const isEmpty = isHydrated && !isLoadingProducts && items.length === 0;
+  const isLoading = !isHydrated || isLoadingProducts || isLoadingProfiles;
 
-  const getItemName = (item: CartItem) => i18nField(item, "name", locale);
+  const getItemName = useCallback(
+    (item: CartItem) => i18nField(item, "name", locale),
+    [locale],
+  );
 
   return { groups, isEmpty, isLoading, getItemName };
 }

@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { useQueryStates } from "nuqs";
 import { useCallback } from "react";
 import { tid } from "shared";
+import { cn } from "ui";
 
 import { useOrderActions } from "@/features/received-orders/application/hooks/useOrderActions";
 import { useReceivedOrders } from "@/features/received-orders/application/hooks/useReceivedOrders";
@@ -51,7 +52,12 @@ export function ReceivedOrdersPageContent() {
               key={status}
               type="button"
               onClick={() => setParams({ filter: status }, { history: "push" })}
-              className={`rounded-lg border-strong border-foreground px-3 py-1 font-display text-xs font-bold uppercase tracking-wider transition-colors ${activeFilter === status ? "bg-foreground text-background" : "bg-background text-foreground hover:bg-muted"}`}
+              className={cn(
+                "rounded-lg border-strong border-foreground px-3 py-1 font-display text-xs font-bold uppercase tracking-wider transition-colors",
+                activeFilter === status
+                  ? "bg-foreground text-background"
+                  : "bg-background text-foreground hover:bg-muted",
+              )}
               {...tid(`filter-${status}`)}
             >
               {t(`filters.${status}`)}

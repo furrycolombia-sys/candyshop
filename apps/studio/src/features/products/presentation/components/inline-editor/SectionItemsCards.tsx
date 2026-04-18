@@ -16,7 +16,7 @@ import { InlineAddButton } from "./InlineAddButton";
 import { InlineRemoveButton } from "./InlineRemoveButton";
 import type { SectionFieldArray } from "./sectionItemTypes";
 
-import { useLangToggle } from "@/features/products/application/useLangToggle";
+import { useLangToggle } from "@/features/products/application/hooks/useLangToggle";
 import {
   ITEM_DROPPABLE_PREFIX,
   SECTION_I18N_NAMESPACE,
@@ -70,8 +70,11 @@ function CardItem({
     <div
       ref={dragProvided.innerRef}
       {...dragProvided.draggableProps}
-      className="relative flex w-56 shrink-0 flex-col gap-3 border-strong bg-background p-5 shadow-brutal-sm lg:w-auto"
-      style={{ borderColor: theme.border }}
+      className="relative flex w-56 shrink-0 flex-col gap-3 border-strong bg-background p-5 shadow-brutal-sm"
+      style={{
+        borderColor: theme.border,
+        ...dragProvided.draggableProps.style,
+      }}
       {...tid(`section-${sectionIndex}-item-${itemIndex}`)}
     >
       {/* Drag handle */}
@@ -149,7 +152,7 @@ export function SectionItemsCards({
     <div className="flex flex-col gap-3 p-4">
       <Droppable
         droppableId={`${ITEM_DROPPABLE_PREFIX}${sectionIndex}`}
-        type="ITEM"
+        type={`${ITEM_DROPPABLE_PREFIX}${sectionIndex}`}
         direction="horizontal"
       >
         {/* eslint-disable sonarjs/no-nested-functions -- @hello-pangea/dnd requires render-prop pattern */}
@@ -157,7 +160,7 @@ export function SectionItemsCards({
           <div
             ref={provided.innerRef}
             {...provided.droppableProps}
-            className="flex gap-4 overflow-x-auto pb-4 lg:grid lg:grid-cols-4 lg:pb-0"
+            className="flex gap-4 overflow-x-auto pb-4"
           >
             {fields.map((field, itemIndex) => (
               <Draggable

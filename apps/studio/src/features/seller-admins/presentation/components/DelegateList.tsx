@@ -6,6 +6,7 @@ import { tid } from "shared";
 import { Avatar, AvatarFallback, AvatarImage, Badge, Button } from "ui";
 
 import type { DelegateWithProfile } from "@/features/seller-admins/domain/types";
+import { getDisplayName } from "@/features/seller-admins/domain/utils";
 
 const MAX_INITIALS_LENGTH = 2;
 const EMPTY_STATE_CLASS = "py-8 text-center text-muted-foreground";
@@ -36,7 +37,7 @@ export function DelegateList({
     <div {...tid(DELEGATE_LIST_TID)} className="space-y-2">
       {delegates.map((delegate) => {
         const profile = delegate.admin_profile;
-        const initials = (profile.display_name ?? profile.email)
+        const initials = getDisplayName(profile)
           .slice(0, MAX_INITIALS_LENGTH)
           .toUpperCase();
 
@@ -50,7 +51,7 @@ export function DelegateList({
               {profile.avatar_url && (
                 <AvatarImage
                   src={profile.avatar_url}
-                  alt={profile.display_name ?? profile.email}
+                  alt={getDisplayName(profile)}
                 />
               )}
               <AvatarFallback>{initials}</AvatarFallback>
@@ -58,7 +59,7 @@ export function DelegateList({
 
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium truncate">
-                {profile.display_name ?? profile.email}
+                {getDisplayName(profile)}
               </p>
               <p className="text-xs text-muted-foreground truncate">
                 {profile.email}

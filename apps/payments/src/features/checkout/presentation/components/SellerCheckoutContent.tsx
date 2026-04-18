@@ -1,4 +1,3 @@
-/* eslint-disable react/no-multi-comp -- helper components co-located with parent for cohesion */
 "use client";
 
 import { CheckCircle, Loader2 } from "lucide-react";
@@ -6,98 +5,47 @@ import { useTranslations } from "next-intl";
 import { tid } from "shared";
 
 import { CheckoutItemsSummary } from "./CheckoutItemsSummary";
-import { DisplayBlockRenderer } from "./DisplayBlockRenderer";
-import { DynamicFormField } from "./DynamicFormField";
+import { DisplayBlocksSection } from "./DisplayBlocksSection";
+import { FormFieldsSection } from "./FormFieldsSection";
 import { PaymentMethodSelector } from "./PaymentMethodSelector";
 
 import type {
   CartItem,
   SellerPaymentMethodWithType,
 } from "@/features/checkout/domain/types";
-import type { FormField } from "@/shared/domain/paymentMethodTypes";
 
-interface SellerCheckoutContentProps {
-  sellerId: string;
-  items: CartItem[];
-  subtotalCop: number;
-  getItemName: (item: CartItem) => string;
+interface SubmissionState {
   isSubmitted: boolean;
   isSubmitting: boolean;
   isDisabled: boolean;
   error: string | null;
   hasStockIssues: boolean;
+}
+
+interface MethodSelectionState {
   isLoadingMethods: boolean;
   methods: SellerPaymentMethodWithType[];
   selectedMethodId: string | null;
   selectedMethod: SellerPaymentMethodWithType | undefined;
+  onSelectMethod: (id: string | null) => void;
+}
+
+interface BuyerFormState {
   buyerSubmission: Record<string, string>;
   validationError: string | null;
-  onSelectMethod: (id: string | null) => void;
   onBuyerSubmissionChange: (fieldId: string, value: string) => void;
   onFileSelected: (fieldId: string, file: File) => void;
+}
+
+export interface SellerCheckoutContentProps {
+  sellerId: string;
+  items: CartItem[];
+  subtotalCop: number;
+  getItemName: (item: CartItem) => string;
+  submission: SubmissionState;
+  methodSelection: MethodSelectionState;
+  buyerForm: BuyerFormState;
   onSubmit: () => void;
-}
-
-interface DisplayBlocksSectionProps {
-  blocks: SellerPaymentMethodWithType["display_blocks"];
-  label: string;
-}
-
-function DisplayBlocksSection({ blocks, label }: DisplayBlocksSectionProps) {
-  if (blocks.length === 0) return null;
-  return (
-    <div className="space-y-3">
-      <p className="font-display text-xs font-extrabold uppercase tracking-widest">
-        {label}
-      </p>
-      <div className="space-y-3 rounded-lg border border-border bg-muted/20 p-4">
-        {blocks.map((block) => (
-          <DisplayBlockRenderer key={block.id} block={block} />
-        ))}
-      </div>
-    </div>
-  );
-}
-
-interface FormFieldsSectionProps {
-  fields: FormField[];
-  buyerSubmission: Record<string, string>;
-  isDisabled: boolean;
-  label: string;
-  onBuyerSubmissionChange: (fieldId: string, value: string) => void;
-  onFileSelected: (fieldId: string, file: File) => void;
-}
-
-function FormFieldsSection({
-  fields,
-  buyerSubmission,
-  isDisabled,
-  label,
-  onBuyerSubmissionChange,
-  onFileSelected,
-}: FormFieldsSectionProps) {
-  if (fields.length === 0) return null;
-  return (
-    <div className="space-y-3">
-      <p className="font-display text-xs font-extrabold uppercase tracking-widest">
-        {label}
-      </p>
-      <div className="space-y-4">
-        {fields.map((field: FormField) => (
-          <DynamicFormField
-            key={field.id}
-            field={field}
-            value={buyerSubmission[field.id] ?? ""}
-            onChange={(value) => onBuyerSubmissionChange(field.id, value)}
-            onFileChange={(file) => {
-              if (file) onFileSelected(field.id, file);
-            }}
-            disabled={isDisabled}
-          />
-        ))}
-      </div>
-    </div>
-  );
 }
 
 export function SellerCheckoutContent({
@@ -105,23 +53,28 @@ export function SellerCheckoutContent({
   items,
   subtotalCop,
   getItemName,
-  isSubmitted,
-  isSubmitting,
-  isDisabled,
-  error,
-  hasStockIssues,
-  isLoadingMethods,
-  methods,
-  selectedMethodId,
-  selectedMethod,
-  buyerSubmission,
-  validationError,
-  onSelectMethod,
-  onBuyerSubmissionChange,
-  onFileSelected,
+  submission,
+  methodSelection,
+  buyerForm,
   onSubmit,
 }: SellerCheckoutContentProps) {
   const t = useTranslations("checkout");
+
+  const { isSubmitted, isSubmitting, isDisabled, error, hasStockIssues } =
+    submission;
+  const {
+    isLoadingMethods,
+    methods,
+    selectedMethodId,
+    selectedMethod,
+    onSelectMethod,
+  } = methodSelection;
+  const {
+    buyerSubmission,
+    validationError,
+    onBuyerSubmissionChange,
+    onFileSelected,
+  } = buyerForm;
 
   const showForm = !isSubmitted && !isLoadingMethods && !hasStockIssues;
   const showLoading = !isSubmitted && isLoadingMethods;
