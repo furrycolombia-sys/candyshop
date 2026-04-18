@@ -1,0 +1,99 @@
+{
+  "agent": "architecture",
+  "timestamp": "2026-04-17T00:00:00Z",
+  "scope": "apps/",
+  "summary": {
+    "filesAnalyzed": 120,
+    "issuesFound": 7,
+    "critical": 0,
+    "warning": 5,
+    "suggestion": 2,
+    "info": 0
+  },
+  "issues": [
+    {
+      "id": "ARCH-001",
+      "severity": "warning",
+      "title": "Application layer directly imports from infrastructure layer",
+      "file": "apps/admin/src/features/templates/application/hooks/useTemplates.ts",
+      "line": 4,
+      "description": "Application hooks across all apps (52 occurrences) import concrete infrastructure functions directly (e.g. fetchTemplates, fetchProfile, fetchMyOrders). Clean Architecture requires the application layer to depend on abstractions (repository interfaces), not concrete infrastructure implementations. Examples span admin, studio, auth, payments, and store apps.",
+      "rule": "architecture.md#layer-dependencies",
+      "fix": "Define repository interfaces in the domain layer and have application hooks depend on those interfaces. Infrastructure implements the interfaces. Because this is a pervasive codebase-wide pattern adopted consistently, this is low-urgency but worth tracking. The simplest KISS-compliant improvement is to co-locate infrastructure query functions inside application hooks or treat the infrastructure module as the repository implementation without a separate interface, which the project appears to have implicitly chosen."
+    },
+    {
+      "id": "ARCH-002",
+      "severity": "warning",
+      "title": "Presentation component imports directly from infrastructure layer",
+      "file": "apps/studio/src/features/seller-admins/presentation/components/AddDelegateForm.tsx",
+      "line": 12,
+      "description": "AddDelegateForm imports `searchUsers` directly from infrastructure/delegateQueries, bypassing the application layer entirely. The presentation layer should only depend on the application layer (hooks/services).",
+      "rule": "architecture.md#layer-dependencies",
+      "fix": "Move the `searchUsers` call into an application hook (e.g. `useDelegateSearch`) and import that hook from the presentation component instead."
+    },
+    {
+      "id": "ARCH-003",
+      "severity": "warning",
+      "title": "Presentation component imports directly from infrastructure layer",
+      "file": "apps/payments/src/features/checkout/presentation/pages/CheckoutPageContent.tsx",
+      "line": 13,
+      "description": "CheckoutPageContent imports `clearCartCookie` directly from infrastructure/cartCookie. Presentation should not touch infrastructure directly.",
+      "rule": "architecture.md#layer-dependencies",
+      "fix": "Wrap `clearCartCookie` in an application hook or action (e.g. `useCartActions`) and call it from the presentation component through that hook."
+    },
+    {
+      "id": "ARCH-004",
+      "severity": "warning",
+      "title": "Hardcoded Supabase fallback URL in infrastructure files",
+      "file": "apps/admin/src/features/audit/infrastructure/auditQueries.ts",
+      "line": 20,
+      "description": "The Supabase REST URL falls back to the hardcoded string `http://127.0.0.1:54321` when `NEXT_PUBLIC_SUPABASE_URL` is not set. The same pattern also exists in `apps/admin/src/shared/infrastructure/recentActivityQueries.ts` line 14. This is a hardcoded URL/config value that should live in a single centralized config.",
+      "rule": "no-hardcoding.md#5-api-endpoints--api-config",
+      "fix": "Centralize Supabase fallback URL in the app's `shared/infrastructure/config/environment.ts` (where NEXT_PUBLIC_SUPABASE_URL is already read) and import from there, rather than inlining the fallback string in each query file."
+    },
+    {
+      "id": "ARCH-005",
+      "severity": "warning",
+      "title": "Shared hook used by only one feature (admin/useRecentActivity)",
+      "file": "apps/admin/src/shared/application/hooks/useRecentActivity.ts",
+      "line": 1,
+      "description": "The `useRecentActivity` hook and its corresponding `recentActivityQueries.ts` live in `shared/` but are only used by a single feature: `features/dashboard/presentation/pages/DashboardPageContent.tsx`. Shared code policy requires that code in shared/ must be used by 2+ features.",
+      "rule": "monorepo-architecture.md#adding-to-shared-packages",
+      "fix": "Move `useRecentActivity` and `recentActivityQueries.ts` into `features/dashboard/application/` and `features/dashboard/infrastructure/` respectively, since only the dashboard feature uses them."
+    },
+    {
+      "id": "ARCH-006",
+      "severity": "suggestion",
+      "title": "Missing barrel exports for sub-layers (application, infrastructure, presentation)",
+      "file": "apps/admin/src/features/audit/",
+      "line": null,
+      "description": "Feature-level `index.ts` files exist for all features (correct). However, sub-layer `index.ts` barrel exports (application/index.ts, infrastructure/index.ts, presentation/index.ts) are almost entirely absent across all apps. Only `store/features/cart/domain/index.ts` and `store/features/products/domain/index.ts` exist as layer barrels.",
+      "rule": "architecture.md#barrel-exports",
+      "fix": "Add `index.ts` files to each layer folder (domain/, application/, infrastructure/, presentation/) exporting the public API of that layer. This improves encapsulation and makes refactoring safer. This can be done incrementally - prioritize features with the most consumers."
+    },
+    {
+      "id": "ARCH-007",
+      "severity": "suggestion",
+      "title": "Hardcoded session storage key string in presentation layer",
+      "file": "apps/payments/src/features/checkout/presentation/pages/CheckoutPageContent.tsx",
+      "line": 17,
+      "description": "The constant `CHECKOUT_COMPLETED_SESSION_KEY = \"candystore-checkout-completed\"` is defined inline in the presentation file. Per the No Hardcoding rule, string keys that identify a domain concept (checkout completion state) should be defined as a constant in the feature's domain/constants.ts.",
+      "rule": "no-hardcoding.md#1-magic-numbers--strings--constants",
+      "fix": "Move the session storage key to `features/checkout/domain/constants.ts` and import it in CheckoutPageContent."
+    }
+  ],
+  "patterns": [
+    {
+      "name": "Application-imports-infrastructure pattern",
+      "description": "All apps follow a consistent pattern where application hooks (useQuery/useMutation wrappers) import data-fetching functions directly from the infrastructure layer. While this technically violates strict Clean Architecture, it is a deliberate, consistent choice across the entire codebase. The infrastructure functions act as the implicit repository implementation. This pattern should be documented as the project's intentional adaptation of Clean Architecture rather than treated as individual violations."
+    },
+    {
+      "name": "Thin route wrappers",
+      "description": "All page.tsx route files across all apps (admin, store, payments, auth, landing, studio) are properly thin wrappers that only call setRequestLocale and render the feature page component. This is consistently well-implemented."
+    },
+    {
+      "name": "Feature index.ts public API",
+      "description": "All features have a root index.ts exporting their public API. This is consistently applied across all apps."
+    }
+  ]
+}

@@ -11,6 +11,7 @@ vi.mock("shared", () => ({
 }));
 
 vi.mock("ui", () => ({
+  cn: (...args: unknown[]) => args.filter(Boolean).join(" "),
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   Avatar: ({ children, ...props }: any) => <div {...props}>{children}</div>,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

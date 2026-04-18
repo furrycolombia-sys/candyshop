@@ -1,0 +1,115 @@
+{
+  "agent": "component-patterns",
+  "review_id": "2026-04-17_08-00-00",
+  "timestamp": "2026-04-17T08:00:00.000Z",
+  "scope": "apps/",
+  "summary": {
+    "filesAnalyzed": 28,
+    "issuesFound": 5,
+    "critical": 0,
+    "warning": 3,
+    "suggestion": 2,
+    "info": 0
+  },
+  "issues": [
+    {
+      "id": "COMP-001",
+      "severity": "warning",
+      "file": "apps/store/src/features/cart/presentation/components/CartItemRow.tsx",
+      "line": 1,
+      "title": "Missing 'use client' on component with inline event handlers",
+      "description": "CartItemRow renders inline arrow-function onClick handlers (lines 108, 125, 137) but has no 'use client' directive. While it is currently only rendered from the client component CartDrawer, the component itself cannot be safely reused in a server component context. In Next.js App Router, a component that owns inline event handler closures must be a client component.",
+      "rule": "component-patterns.md - 'use client' Directive",
+      "fix": "Add '\"use client\";' as the first line of CartItemRow.tsx."
+    },
+    {
+      "id": "COMP-002",
+      "severity": "warning",
+      "file": "apps/admin/src/features/users/presentation/pages/UsersPageContent.tsx",
+      "line": 29,
+      "title": "Filter state should use URL state (nuqs) instead of useState",
+      "description": "roleFilter and itemFilter are navigation-level filter states managed with useState (lines 29-30). Per the url-state.md rule, user-facing filters must use useQueryState/useQueryStates from nuqs so they are bookmarkable, shareable, and preserved on refresh. The component already uses useQueryStates for the search/page params, making this inconsistency more visible.",
+      "rule": "url-state.md - When to Use nuqs vs useState",
+      "fix": "Add roleFilter and itemFilter to the usersSearchParams definition in domain/searchParams.ts and replace their useState calls with the existing useQueryStates hook."
+    },
+    {
+      "id": "COMP-003",
+      "severity": "warning",
+      "file": "apps/payments/src/features/checkout/presentation/pages/CheckoutPageContent.tsx",
+      "line": 107,
+      "title": "Missing clearCartCookie in useEffect dependency array",
+      "description": "The first useEffect (line 107-113) calls clearCartCookie but omits it from its dependency array. clearCartCookie is obtained from a hook (useClearCartCookie) and its reference may change. The eslint comment suppression is not present here, making this an unintentional omission. While clearCartCookie is likely stable (mutation function from react-query), the dependency should be explicitly included or the omission documented.",
+      "rule": "testing.md - Effect Dependencies / Bug Detection",
+      "fix": "Add clearCartCookie to the dependency array: useEffect(() => { ... }, [allSubmitted, clearCartCookie]);"
+    },
+    {
+      "id": "COMP-004",
+      "severity": "suggestion",
+      "file": "apps/store/src/features/cart/presentation/components/CartItemRow.tsx",
+      "line": 12,
+      "title": "Loose TranslatorFn type uses any[]",
+      "description": "The TranslatorFn type is defined as (...args: any[]) => string with an eslint disable comment explaining it is complex. A more precise type would be (...args: [string] | [string, Record<string, unknown>]) => string, or the actual next-intl TranslationValues type could be imported. The current pattern works but could be tightened.",
+      "rule": "no-hardcoding.md / TypeScript best practices",
+      "fix": "Import TranslationValues from next-intl and type as (key: string, values?: TranslationValues) => string. Or use import type { TranslatorFn } from 'next-intl' if available."
+    },
+    {
+      "id": "COMP-005",
+      "severity": "suggestion",
+      "file": "apps/studio/src/features/products/presentation/components/inline-editor/SectionItemsTwoColumn.tsx",
+      "line": 48,
+      "title": "Repeated 'as any' casts for react-hook-form dynamic field paths",
+      "description": "Both SectionItemsTwoColumn.tsx and SectionItemsGallery.tsx use 'as any' casts for dynamic field name strings constructed from template literals (e.g. `sections.${sectionIndex}.items.${itemIndex}.title_${lang}` as any). This pattern is repeated across at least 4 inline-editor components. A shared typed helper function (e.g. getItemFieldName()) returning the correct type would eliminate the casts and centralize the naming pattern.",
+      "rule": "dry-principle.md / no-hardcoding.md",
+      "fix": "Create a typed helper in the inline-editor shared types: function itemField<K extends keyof SectionItem>(sectionIndex: number, itemIndex: number, field: K): Path<ProductFormValues>. This eliminates the 'as any' casts and is the single source of truth for item field paths."
+    }
+  ],
+  "patterns": [
+    {
+      "id": "PAT-COMP-001",
+      "type": "good-pattern",
+      "description": "Consistent 'use client' placement: All components using useState, useEffect, or browser APIs correctly place '\"use client\"' as the first line. No violations found across the 50 files that use React hooks.",
+      "examples": [
+        "apps/studio/src/features/products/presentation/components/inline-editor/InlineEditor.tsx",
+        "apps/payments/src/features/checkout/presentation/pages/CheckoutPageContent.tsx",
+        "apps/payments/src/features/received-orders/presentation/components/ActionButtons.tsx"
+      ]
+    },
+    {
+      "id": "PAT-COMP-002",
+      "type": "good-pattern",
+      "description": "Props interfaces are consistently co-located with components and follow the [ComponentName]Props naming convention. All inspected components use properly typed interface definitions with no inline object types in function signatures.",
+      "examples": [
+        "apps/payments/src/features/checkout/pages/CheckoutPageContent.tsx - no external props (page component)",
+        "apps/studio/src/features/products/presentation/components/inline-editor/SectionItemsTwoColumn.tsx - SectionItemsTwoColumnProps",
+        "apps/payments/src/features/received-orders/presentation/components/ActionButtons.tsx - ActionButtonsProps"
+      ]
+    },
+    {
+      "id": "PAT-COMP-003",
+      "type": "good-pattern",
+      "description": "Container/Presenter separation is well applied. Data-fetching hooks (useProducts, useUsers, useCartFromCookie) are called in *PageContent components, which pass plain data props to pure presenter components (ProductTable, UserTable, CartItemRow). The presenter components contain no direct API calls.",
+      "examples": [
+        "apps/studio/src/features/products/presentation/pages/ProductListPageContent.tsx (container) → ProductTable (presenter)",
+        "apps/admin/src/features/users/presentation/pages/UsersPageContent.tsx (container) → UserTable (presenter)"
+      ]
+    },
+    {
+      "id": "PAT-COMP-004",
+      "type": "good-pattern",
+      "description": "Internal compound sub-components that violate the one-component-per-file rule are consistently documented with eslint-disable comments citing the tightly-coupled compound component justification (e.g. TwoColumnRow in SectionItemsTwoColumn, GalleryItemEditor in SectionItemsGallery). This is acceptable per the one-component-per-file exceptions.",
+      "examples": [
+        "apps/studio/src/features/products/presentation/components/inline-editor/SectionItemsTwoColumn.tsx",
+        "apps/studio/src/features/products/presentation/components/inline-editor/SectionItemsGallery.tsx"
+      ]
+    },
+    {
+      "id": "PAT-COMP-005",
+      "type": "good-pattern",
+      "description": "Component structure order (hooks → derived state → handlers → early returns → render) is consistently followed. Inspected components place all hooks at top, followed by derived/memoized values, then event handlers, then conditional early returns (loading/empty states), then main JSX.",
+      "examples": [
+        "apps/payments/src/features/checkout/presentation/pages/CheckoutPageContent.tsx",
+        "apps/payments/src/features/received-orders/presentation/components/ActionButtons.tsx"
+      ]
+    }
+  ]
+}

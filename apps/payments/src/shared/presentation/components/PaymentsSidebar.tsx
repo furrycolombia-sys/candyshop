@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { tid } from "shared";
+import { cn } from "ui";
 
 import { PaymentsSidebarNav } from "@/shared/presentation/components/PaymentsSidebarNav";
 
@@ -14,27 +15,28 @@ const COLLAPSED_WIDTH_CLASS = "w-sidebar-collapsed";
 export function PaymentsSidebar() {
   const t = useTranslations("sidebar");
   const pathname = usePathname();
-  const [collapsed, setCollapsed] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(false);
   const { grantedKeys, isLoading } = useCurrentUserPermissions();
 
   const appPath = pathname.replace(/^\/[a-z]{2}/, "") || "/";
 
   return (
     <aside
-      className={`relative hidden shrink-0 flex-col border-r-3 border-foreground bg-background transition-all duration-300 ease-in-out lg:flex ${
-        collapsed ? COLLAPSED_WIDTH_CLASS : "w-60"
-      }`}
+      className={cn(
+        "relative hidden shrink-0 flex-col border-r-3 border-foreground bg-background transition-all duration-300 ease-in-out lg:flex",
+        isCollapsed ? COLLAPSED_WIDTH_CLASS : "w-60",
+      )}
       data-loading={isLoading}
       {...tid("payments-sidebar")}
     >
       <button
         type="button"
-        onClick={() => setCollapsed((prev) => !prev)}
+        onClick={() => setIsCollapsed((prev) => !prev)}
         className="absolute -right-3.5 top-5 z-10 flex size-7 items-center justify-center border-2 border-foreground bg-background text-foreground transition-colors hover:bg-foreground hover:text-background"
-        aria-label={collapsed ? t("expand") : t("collapse")}
+        aria-label={isCollapsed ? t("expand") : t("collapse")}
         {...tid("sidebar-collapse-toggle")}
       >
-        {collapsed ? (
+        {isCollapsed ? (
           <ChevronRight className="size-4" strokeWidth={3} />
         ) : (
           <ChevronLeft className="size-4" strokeWidth={3} />
@@ -43,7 +45,7 @@ export function PaymentsSidebar() {
 
       <PaymentsSidebarNav
         appPath={appPath}
-        collapsed={collapsed}
+        collapsed={isCollapsed}
         grantedKeys={grantedKeys}
         isLoading={isLoading}
       />

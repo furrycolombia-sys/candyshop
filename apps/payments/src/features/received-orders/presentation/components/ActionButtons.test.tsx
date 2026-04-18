@@ -11,6 +11,7 @@ vi.mock("shared", () => ({
 }));
 
 vi.mock("ui", () => ({
+  cn: (...args: unknown[]) => args.filter(Boolean).join(" "),
   Button: ({
     children,
     onClick,

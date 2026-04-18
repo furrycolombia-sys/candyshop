@@ -11,6 +11,7 @@ import type {
 } from "@/features/checkout/domain/types";
 import { FALLBACK_SELLER_NAME } from "@/shared/domain/constants";
 import type { SupabaseClient } from "@/shared/domain/types";
+import { fetchUserDisplayNames } from "@/shared/infrastructure/fetchUserDisplayNames";
 
 /**
  * Fetch a seller's active payment methods directly from seller_payment_methods.
@@ -51,6 +52,51 @@ interface CreateOrderParams {
   checkoutSessionId: string;
 }
 
+export async function fetchCheckoutProductsByIds(
+  supabase: SupabaseClient,
+  ids: string[],
+): Promise<Array<Omit<CartItem, "quantity">>> {
+  if (ids.length === 0) return [];
+
+  const uniqueIds = [...new Set(ids)];
+  const { data, error } = await supabase
+    .from("products")
+    .select(
+      "id, name_en, name_es, price_cop, price_usd, seller_id, images, max_quantity, is_active",
+    )
+    .in("id", uniqueIds)
+    .eq("is_active", true);
+
+  if (error) throw error;
+
+  return (data ?? []).map((product) => ({
+    id: product.id,
+    name_en: product.name_en,
+    name_es: product.name_es,
+    price_cop: product.price_cop,
+    price_usd: product.price_usd,
+    seller_id: product.seller_id,
+    images: product.images,
+    max_quantity: product.max_quantity,
+  }));
+}
+
+async function releaseReservedStock(
+  supabase: SupabaseClient,
+  reserved: Array<{ productId: string; quantity: number }>,
+): Promise<void> {
+  for (const r of reserved) {
+    try {
+      await supabase.rpc("release_stock", {
+        p_product_id: r.productId,
+        p_quantity: r.quantity,
+      });
+    } catch (error) {
+      console.error("Failed to release stock for", r.productId, error);
+    }
+  }
+}
+
 /**
  * Create an order, reserving stock atomically for each item.
  * If any reservation fails, already-reserved items are released.
@@ -59,14 +105,29 @@ export async function createOrder(
   supabase: SupabaseClient,
   params: CreateOrderParams,
 ): Promise<string> {
-  const {
-    userId,
-    sellerId,
-    paymentMethodId,
-    items,
-    totalCop,
-    checkoutSessionId,
-  } = params;
+  const { userId, sellerId, paymentMethodId, items, checkoutSessionId } =
+    params;
+
+  // Fetch current prices from DB to prevent price manipulation via cart cookie
+  const { data: productPrices, error: pricesError } = await supabase
+    .from("products")
+    .select("id, price_cop")
+    .in(
+      "id",
+      items.map((item) => item.id),
+    );
+  if (pricesError) throw pricesError;
+
+  const priceMap = new Map(
+    (productPrices ?? []).map((p) => [p.id, p.price_cop as number]),
+  );
+
+  // Calculate total server-side from DB prices (never trust client-provided total)
+  const serverTotalCop = items.reduce((sum, item) => {
+    const dbPrice = priceMap.get(item.id);
+    if (dbPrice === undefined) throw new Error(`Product ${item.id} not found`);
+    return sum + dbPrice * item.quantity;
+  }, 0);
 
   // Reserve stock for each item
   const reserved: Array<{ productId: string; quantity: number }> = [];
@@ -78,13 +139,8 @@ export async function createOrder(
     });
 
     if (error || !success) {
-      // Release already-reserved items
-      for (const r of reserved) {
-        await supabase.rpc("release_stock", {
-          p_product_id: r.productId,
-          p_quantity: r.quantity,
-        });
-      }
+      // Release already-reserved items — best-effort: continue even if individual releases fail
+      await releaseReservedStock(supabase, reserved);
       throw new Error("stock_error");
     }
 
@@ -100,14 +156,14 @@ export async function createOrder(
         MS_PER_SECOND,
   ).toISOString();
 
-  // Insert order
+  // Insert order with server-calculated total
   const { data: order, error: orderError } = await supabase
     .from("orders")
     .insert({
       user_id: userId,
       seller_id: sellerId,
       payment_method_id: paymentMethodId,
-      total_cop: totalCop,
+      total_cop: serverTotalCop,
       payment_status: "awaiting_payment",
       checkout_session_id: checkoutSessionId,
       expires_at: expiresAt,
@@ -116,25 +172,20 @@ export async function createOrder(
     .single();
 
   if (orderError || !order) {
-    // Release stock on order insert failure
-    for (const r of reserved) {
-      await supabase.rpc("release_stock", {
-        p_product_id: r.productId,
-        p_quantity: r.quantity,
-      });
-    }
+    // Release stock on order insert failure — best-effort: continue even if individual releases fail
+    await releaseReservedStock(supabase, reserved);
     throw orderError ?? new Error("Failed to create order");
   }
 
   const orderId = order.id;
 
-  // Insert order items
+  // Build order items using DB prices
   const orderItems = items.map((item) => ({
     order_id: orderId,
     product_id: item.id,
     quantity: item.quantity,
-    unit_price_cop: item.price_cop,
-    metadata: { name_en: item.name_en, name_es: item.name_es },
+    unit_price_cop: priceMap.get(item.id) as number,
+    metadata: { name_en: item.name_en ?? "", name_es: item.name_es ?? "" },
   }));
 
   const { error: itemsError } = await supabase
@@ -171,24 +222,11 @@ export async function submitReceipt(
 
 /**
  * Fetch display names from user_profiles for a list of seller IDs.
+ * Delegates to the shared fetchUserDisplayNames utility.
  */
 export async function fetchSellerProfiles(
   supabase: SupabaseClient,
   sellerIds: string[],
 ): Promise<Record<string, string>> {
-  if (sellerIds.length === 0) return {};
-
-  const { data, error } = await supabase
-    .from("user_profiles")
-    .select("id, display_name, email")
-    .in("id", sellerIds);
-
-  if (error) throw error;
-
-  const map: Record<string, string> = {};
-  for (const profile of data ?? []) {
-    map[profile.id] =
-      profile.display_name ?? profile.email ?? FALLBACK_SELLER_NAME;
-  }
-  return map;
+  return fetchUserDisplayNames(supabase, sellerIds, FALLBACK_SELLER_NAME);
 }

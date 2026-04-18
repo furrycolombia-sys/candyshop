@@ -1,0 +1,75 @@
+{
+  "agent": "bug-detection",
+  "timestamp": "2026-04-17T18:00:00",
+  "scope": "apps/",
+  "summary": {
+    "filesAnalyzed": 24,
+    "issuesFound": 4,
+    "critical": 0,
+    "warning": 3,
+    "suggestion": 1,
+    "info": 0
+  },
+  "issues": [
+    {
+      "id": "BUG-001",
+      "severity": "warning",
+      "title": "Object URL not revoked when file is replaced (memory leak)",
+      "file": "apps/payments/src/features/orders/presentation/components/ResubmitEvidenceForm.tsx",
+      "line": 56,
+      "bugType": "useEffect",
+      "description": "In `handleFileChange`, when the user selects a new file while a previous preview URL already exists, `URL.createObjectURL(file)` is called without first revoking the previous blob URL. This leaks memory each time the user changes the selected file. The sibling component `ReceiptUpload.tsx` correctly handles this by using a functional setState that revokes the old URL before creating a new one.",
+      "impact": "Each time a user swaps the receipt file, the previous blob URL is orphaned in browser memory and never garbage-collected until page navigation. On long-lived sessions this may accumulate.",
+      "rule": "code-review-standards.md#bug-detection-standards",
+      "fix": "Replace the two separate set calls with a single functional setState that revokes the prior URL:\n\n// Before\nsetReceiptFile(file);\nsetPreviewUrl(URL.createObjectURL(file));\n\n// After\nsetReceiptFile(file);\nsetPreviewUrl((prev) => {\n  if (prev) URL.revokeObjectURL(prev);\n  return URL.createObjectURL(file);\n});"
+    },
+    {
+      "id": "BUG-002",
+      "severity": "warning",
+      "title": "Unsafe `as number` cast on possibly-undefined Map.get result",
+      "file": "apps/payments/src/app/api/checkout/orders/route.ts",
+      "line": 75,
+      "bugType": "type",
+      "description": "`insertOrderItems` uses `priceMap.get(item.id) as number` without a prior existence check. While the calling code at line 165-178 validates that each item's price exists before reaching `insertOrderItems`, this creates a fragile coupling: `insertOrderItems` is a separate function whose contract does not express the precondition, and any future caller that bypasses the validation will silently insert `undefined` as a price, resulting in `NaN` or a database type error at runtime. The same pattern exists in `apps/payments/src/features/checkout/infrastructure/checkoutQueries.ts` line 156.",
+      "impact": "If `priceMap` does not contain a product ID (e.g. due to a refactor adding a new call site without the validation guard), `unit_price_cop` will be `undefined`, which will either insert a NULL into the database or corrupt the order total.",
+      "rule": "code-review-standards.md#bug-detection-standards",
+      "fix": "Add an explicit guard inside `insertOrderItems` to make the contract self-enforcing:\n\nconst orderItems = items.map((item) => {\n  const price = priceMap.get(item.id);\n  if (price === undefined) throw new Error(`Missing price for product ${item.id}`);\n  return {\n    order_id: orderId,\n    product_id: item.id,\n    quantity: item.quantity,\n    unit_price_cop: price,\n  };\n});"
+    },
+    {
+      "id": "BUG-003",
+      "severity": "warning",
+      "title": "Auto-save triggers on initial mount, sending unnecessary API requests",
+      "file": "apps/payments/src/features/payment-methods/application/hooks/useAutoSavePaymentMethod.ts",
+      "line": 69,
+      "bugType": "useEffect",
+      "description": "The three `useEffect` hooks for display_blocks and form_fields (lines 69-78) run on first mount as well as on every subsequent change. This means every time the `PaymentMethodEditor` mounts, it immediately sends up to 3 PATCH requests to the server with the initial (unchanged) values. The name effect has a guard (`if (!nameEn.trim()) return`) but the other two have none.",
+      "impact": "Unnecessary network requests on every editor mount. This could trigger rate limiting, cause false 'saving' indicators, or overwrite any concurrent server-side changes with stale initial form values.",
+      "rule": "code-review-standards.md#bug-detection-standards",
+      "fix": "Track whether the component has mounted using a ref, and skip the first invocation for display_blocks and form_fields:\n\nconst isMountedRef = useRef(false);\nuseEffect(() => {\n  isMountedRef.current = true;\n}, []);\n\n// In the displayBlocks effect:\nuseEffect(() => {\n  if (!isMountedRef.current) return;\n  triggerSave({ display_blocks: displayBlocks });\n  // eslint-disable-next-line react-hooks/exhaustive-deps\n}, [displayBlocks]);\n\n// Same pattern for formFields effect."
+    },
+    {
+      "id": "BUG-004",
+      "severity": "suggestion",
+      "title": "ProductFilters sync effect creates a URL update loop risk",
+      "file": "apps/studio/src/features/products/presentation/components/ProductFilters.tsx",
+      "line": 34,
+      "bugType": "state",
+      "description": "Two `useEffect` hooks create a dependency cycle: the first (line 26) debounces `searchInput` → URL param `q`, and the second (line 34) syncs URL param `q` → `searchInput`. If `q` in the URL changes (e.g. via browser back/forward), it sets `searchInput`, which then triggers the debounce effect, which sets `q` in the URL again, which fires the sync effect again. In practice this may be benign because `nuqs` uses `{ history: 'replace' }` and only updates if the value actually changes, but the circular pattern is fragile. The same pattern exists in `apps/admin/src/features/users/presentation/pages/UsersPageContent.tsx`.",
+      "impact": "Potential extra URL writes on browser back/forward navigation. Low risk in practice due to nuqs deduplication, but could cause subtle issues if the URL normalization behavior changes.",
+      "rule": "code-review-standards.md#bug-detection-standards",
+      "fix": "Guard the sync-back effect with an equality check before calling setState to break the cycle explicitly:\n\nuseEffect(() => {\n  if (q !== searchInput) {\n    setSearchInput(q ?? '');\n  }\n}, [q]); // intentionally omit searchInput to avoid cycle"
+    }
+  ],
+  "patterns": [
+    {
+      "pattern": "Blob URL management via ref+effect pattern",
+      "description": "Two components (ReceiptUpload, ResubmitEvidenceForm) use a ref+useEffect to track and revoke blob URLs on unmount. ReceiptUpload correctly revokes on replacement; ResubmitEvidenceForm does not. Consider extracting a shared useObjectUrl hook.",
+      "recommendation": "Extract blob URL lifecycle into a reusable hook to enforce consistent revocation on both replacement and unmount."
+    },
+    {
+      "pattern": "Debounce+URL-sync bidirectional pattern",
+      "description": "Multiple components (ProductFilters in studio and store, UsersPageContent in admin) use the same two-effect pattern: input→debounce→URL and URL→input-sync. This is a well-established pattern in the codebase but contains latent cycle risk.",
+      "recommendation": "Document the pattern in a shared hook or comment, and always guard the sync-back effect with an equality check."
+    }
+  ]
+}

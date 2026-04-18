@@ -1,0 +1,289 @@
+{
+  "agent": "testing",
+  "timestamp": "2026-04-17T04:08:32",
+  "scope": "apps/",
+  "summary": {
+    "filesAnalyzed": 30,
+    "issuesFound": 14,
+    "critical": 0,
+    "warning": 6,
+    "suggestion": 8,
+    "info": 0,
+    "coverage": {
+      "components": {
+        "total": 75,
+        "tested": 55,
+        "percentage": 73
+      },
+      "hooks": {
+        "total": 55,
+        "tested": 35,
+        "percentage": 64
+      },
+      "utils": {
+        "total": 12,
+        "tested": 9,
+        "percentage": 75
+      }
+    }
+  },
+  "issues": [
+    {
+      "id": "TEST-001",
+      "severity": "warning",
+      "category": "Missing Test",
+      "file": "apps/admin/src/features/users/application/hooks/useApplyTemplate.ts",
+      "description": "Hook with fetch mutation has no test file. Covers a permission-sensitive operation (PUT /api/admin/users/:id/permissions). Missing test for: success case, error case (non-ok response), and query invalidation behavior.",
+      "rule": "Every hook in application/hooks/ should have a corresponding .test.ts(x)"
+    },
+    {
+      "id": "TEST-002",
+      "severity": "warning",
+      "category": "Missing Test",
+      "file": "apps/admin/src/features/users/application/hooks/useTogglePermission.ts",
+      "description": "Mutation hook for toggling user permissions (POST /api/admin/users/:id/permissions) has no test file. Security-sensitive: controls access grants. Missing coverage for: grant=true, grant=false, error handling, cache invalidation.",
+      "rule": "Every hook in application/hooks/ should have a corresponding .test.ts(x)"
+    },
+    {
+      "id": "TEST-003",
+      "severity": "warning",
+      "category": "Missing Test",
+      "file": "apps/admin/src/features/users/application/hooks/useUserPermissions.ts",
+      "description": "Query hook that fetches granted permission keys via fetch API has no test file. Missing coverage for: enabled=false when userId is null, successful fetch, error state when response.ok is false.",
+      "rule": "Every hook in application/hooks/ should have a corresponding .test.ts(x)"
+    },
+    {
+      "id": "TEST-004",
+      "severity": "warning",
+      "category": "Missing Test",
+      "file": "apps/admin/src/features/users/application/hooks/useUserProfile.ts",
+      "description": "Query hook that fetches user profile via Supabase, with enabled guard on userId, has no test. Missing coverage for: null userId disables query, successful data return.",
+      "rule": "Every hook in application/hooks/ should have a corresponding .test.ts(x)"
+    },
+    {
+      "id": "TEST-005",
+      "severity": "warning",
+      "category": "Missing Test",
+      "file": "apps/admin/src/features/users/application/hooks/useUserDelegates.ts",
+      "description": "Hook has no test file. Part of the delegates/admin user management flow.",
+      "rule": "Every hook in application/hooks/ should have a corresponding .test.ts(x)"
+    },
+    {
+      "id": "TEST-006",
+      "severity": "warning",
+      "category": "Missing Test",
+      "file": "apps/admin/src/features/dashboard/application/hooks/useRecentActivity.ts",
+      "description": "Query hook for dashboard recent activity has no test file. No coverage for staleTime behavior or Supabase error propagation.",
+      "rule": "Every hook in application/hooks/ should have a corresponding .test.ts(x)"
+    },
+    {
+      "id": "TEST-007",
+      "severity": "suggestion",
+      "category": "Missing Test",
+      "file": "apps/studio/src/features/products/application/hooks/useProducts.ts",
+      "description": "useProducts hook (TanStack Query wrapping fetchProducts) has no test. Used in ProductListPage which has a page-level test but no hook-level test for filter variations.",
+      "rule": "Hooks with non-trivial filter/query logic should have unit tests"
+    },
+    {
+      "id": "TEST-008",
+      "severity": "suggestion",
+      "category": "Missing Test",
+      "file": "apps/studio/src/features/products/application/hooks/useProductMutations.ts",
+      "description": "Contains three mutation hooks (useToggleProduct, useDeleteProduct, useReorderProducts) with no test file. Query invalidation behavior after each mutation is not covered.",
+      "rule": "Mutation hooks should be tested for success/error paths and cache invalidation"
+    },
+    {
+      "id": "TEST-009",
+      "severity": "suggestion",
+      "category": "Missing Test",
+      "file": "apps/studio/src/features/products/application/hooks/useProductForm.ts",
+      "description": "Product form hook (likely complex state/validation) has no test file.",
+      "rule": "Form hooks with non-trivial logic should have unit tests"
+    },
+    {
+      "id": "TEST-010",
+      "severity": "suggestion",
+      "category": "Missing Test",
+      "file": "apps/studio/src/features/seller-admins/application/hooks/useDelegates.ts",
+      "description": "useDelegates hook has no test file. Tested indirectly via page-level tests but no unit isolation.",
+      "rule": "Query hooks should have unit tests"
+    },
+    {
+      "id": "TEST-011",
+      "severity": "suggestion",
+      "category": "Missing Test",
+      "file": "apps/studio/src/features/seller-admins/application/hooks/useDelegateMutations.ts",
+      "description": "Mutation hook for delegate management has no test file.",
+      "rule": "Mutation hooks should be tested for success/error paths and cache invalidation"
+    },
+    {
+      "id": "TEST-012",
+      "severity": "suggestion",
+      "category": "Missing Test",
+      "file": "apps/payments/src/features/checkout/application/hooks/useCartFromCookie.ts",
+      "description": "Complex hook using useSyncExternalStore + Supabase seller profiles + i18n field resolution. Handles hydration, empty cart, seller grouping, and subtotal computation. No direct test file exists (cartCookie infrastructure is tested but not this hook's logic).",
+      "rule": "Hooks with complex derived state should have unit tests covering edge cases"
+    },
+    {
+      "id": "TEST-013",
+      "severity": "suggestion",
+      "category": "Missing Test",
+      "file": "apps/admin/src/shared/application/utils/getApiBasePath.ts",
+      "description": "Utility function with branching logic (window path detection) has no test. Two distinct cases: server-side (no window) and client-side /admin prefix detection.",
+      "rule": "Pure utility functions with branching logic should have unit tests"
+    },
+    {
+      "id": "TEST-014",
+      "severity": "suggestion",
+      "category": "Missing Test",
+      "file": "apps/landing/src/features/home/presentation/pages/LandingPage.tsx",
+      "description": "LandingPage has no test file. Only HomeSections component is tested. The page composition itself (CtaSection, HeroSection, RolesSection) is not covered.",
+      "rule": "Page components should have at minimum a smoke/render test"
+    }
+  ],
+  "missingTests": [
+    {
+      "source": "apps/admin/src/features/users/application/hooks/useApplyTemplate.ts",
+      "expectedTest": "apps/admin/src/features/users/application/hooks/useApplyTemplate.test.ts",
+      "priority": "high",
+      "reason": "Security-sensitive permission mutation hook"
+    },
+    {
+      "source": "apps/admin/src/features/users/application/hooks/useTogglePermission.ts",
+      "expectedTest": "apps/admin/src/features/users/application/hooks/useTogglePermission.test.ts",
+      "priority": "high",
+      "reason": "Security-sensitive permission toggle mutation"
+    },
+    {
+      "source": "apps/admin/src/features/users/application/hooks/useUserPermissions.ts",
+      "expectedTest": "apps/admin/src/features/users/application/hooks/useUserPermissions.test.ts",
+      "priority": "high",
+      "reason": "Admin permission query with enabled guard"
+    },
+    {
+      "source": "apps/admin/src/features/users/application/hooks/useUserProfile.ts",
+      "expectedTest": "apps/admin/src/features/users/application/hooks/useUserProfile.test.ts",
+      "priority": "medium",
+      "reason": "User profile fetch with null guard"
+    },
+    {
+      "source": "apps/admin/src/features/users/application/hooks/useUserDelegates.ts",
+      "expectedTest": "apps/admin/src/features/users/application/hooks/useUserDelegates.test.ts",
+      "priority": "medium",
+      "reason": "Delegate management query"
+    },
+    {
+      "source": "apps/admin/src/features/dashboard/application/hooks/useRecentActivity.ts",
+      "expectedTest": "apps/admin/src/features/dashboard/application/hooks/useRecentActivity.test.ts",
+      "priority": "medium",
+      "reason": "Dashboard query hook"
+    },
+    {
+      "source": "apps/studio/src/features/products/application/hooks/useProducts.ts",
+      "expectedTest": "apps/studio/src/features/products/application/hooks/useProducts.test.ts",
+      "priority": "medium",
+      "reason": "Product query with filter param variations"
+    },
+    {
+      "source": "apps/studio/src/features/products/application/hooks/useProductMutations.ts",
+      "expectedTest": "apps/studio/src/features/products/application/hooks/useProductMutations.test.ts",
+      "priority": "medium",
+      "reason": "Three mutations with no coverage"
+    },
+    {
+      "source": "apps/studio/src/features/products/application/hooks/useProductForm.ts",
+      "expectedTest": "apps/studio/src/features/products/application/hooks/useProductForm.test.ts",
+      "priority": "medium",
+      "reason": "Form state hook"
+    },
+    {
+      "source": "apps/studio/src/features/seller-admins/application/hooks/useDelegates.ts",
+      "expectedTest": "apps/studio/src/features/seller-admins/application/hooks/useDelegates.test.ts",
+      "priority": "low",
+      "reason": "Indirectly tested via page tests"
+    },
+    {
+      "source": "apps/studio/src/features/seller-admins/application/hooks/useDelegateMutations.ts",
+      "expectedTest": "apps/studio/src/features/seller-admins/application/hooks/useDelegateMutations.test.ts",
+      "priority": "medium",
+      "reason": "Mutation hooks with cache invalidation"
+    },
+    {
+      "source": "apps/payments/src/features/checkout/application/hooks/useCartFromCookie.ts",
+      "expectedTest": "apps/payments/src/features/checkout/application/hooks/useCartFromCookie.test.ts",
+      "priority": "medium",
+      "reason": "Complex derived state with multiple edge cases"
+    },
+    {
+      "source": "apps/admin/src/shared/application/utils/getApiBasePath.ts",
+      "expectedTest": "apps/admin/src/shared/application/utils/getApiBasePath.test.ts",
+      "priority": "low",
+      "reason": "Simple utility but branching logic is untested"
+    },
+    {
+      "source": "apps/landing/src/features/home/presentation/pages/LandingPage.tsx",
+      "expectedTest": "apps/landing/src/features/home/presentation/pages/LandingPage.test.tsx",
+      "priority": "low",
+      "reason": "Page composition test missing"
+    }
+  ],
+  "patterns": [
+    {
+      "type": "positive",
+      "description": "Excellent test coverage overall. The majority of hooks, utils, components, and pages have corresponding test files. The glob-compare shows a mature testing culture.",
+      "examples": [
+        "apps/payments/src/features/checkout/ — all hooks, infra, components, and pages tested",
+        "apps/admin/src/features/audit/ — full layer coverage including domain constants",
+        "apps/admin/src/features/templates/ — consistent test files at every layer"
+      ]
+    },
+    {
+      "type": "positive",
+      "description": "Security-critical path (checkout payment methods, stock validation) has dedicated tests: useSellerPaymentMethods.test.tsx tests the hasStockIssues response path explicitly.",
+      "examples": [
+        "apps/payments/src/features/checkout/application/hooks/useSellerPaymentMethods.test.tsx"
+      ]
+    },
+    {
+      "type": "positive",
+      "description": "Good async test patterns observed — tests use waitFor() and renderHook correctly with QueryClientProvider wrappers.",
+      "examples": [
+        "apps/payments/src/features/checkout/application/hooks/useSellerPaymentMethods.test.tsx"
+      ]
+    },
+    {
+      "type": "gap",
+      "description": "Admin users feature has the highest concentration of untested hooks: useApplyTemplate, useTogglePermission, useUserPermissions, useUserProfile, useUserDelegates — all permission-related operations without unit tests.",
+      "affected": ["apps/admin/src/features/users/application/hooks/"]
+    },
+    {
+      "type": "gap",
+      "description": "Studio app hooks are underrepresented in tests compared to other apps. Out of ~10 application hooks, only 3 have test files (useAutoResize, useLangToggle, useDelegateSearch). The remaining 7 hooks lack tests.",
+      "affected": [
+        "apps/studio/src/features/products/application/hooks/",
+        "apps/studio/src/features/seller-admins/application/hooks/"
+      ]
+    },
+    {
+      "type": "gap",
+      "description": "useSupabaseAuth hook is duplicated across all 6+ apps but none have a test for it. While it may be a simple wrapper, auth hooks are high-value test candidates.",
+      "affected": [
+        "apps/admin/src/features/auth/application/hooks/useSupabaseAuth.ts",
+        "apps/auth/src/features/auth/application/hooks/useSupabaseAuth.ts",
+        "apps/payments/src/features/auth/application/hooks/useSupabaseAuth.ts",
+        "apps/store/src/features/auth/application/hooks/useSupabaseAuth.ts",
+        "apps/studio/src/features/auth/application/hooks/useSupabaseAuth.ts"
+      ]
+    },
+    {
+      "type": "gap",
+      "description": "ProtectedRoute component exists in 5 apps (admin, payments, playground, store, studio) but none have test files.",
+      "affected": [
+        "apps/admin/src/features/auth/presentation/components/ProtectedRoute.tsx",
+        "apps/payments/src/features/auth/presentation/components/ProtectedRoute.tsx",
+        "apps/store/src/features/auth/presentation/components/ProtectedRoute.tsx",
+        "apps/studio/src/features/auth/presentation/components/ProtectedRoute.tsx"
+      ]
+    }
+  ]
+}

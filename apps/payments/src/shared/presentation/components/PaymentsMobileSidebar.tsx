@@ -36,7 +36,7 @@ export function PaymentsMobileSidebar() {
         </SheetTrigger>
         <SheetContent
           side="left"
-          className="w-[18rem] border-r-3 border-foreground bg-background p-0"
+          className="w-72 border-r-3 border-foreground bg-background p-0"
         >
           <SheetHeader className="border-b-3 border-foreground px-5 py-4 text-left">
             <SheetTitle className="font-display text-lg font-extrabold uppercase tracking-[0.18em]">

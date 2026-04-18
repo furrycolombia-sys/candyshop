@@ -11,7 +11,7 @@ import { CartItemRow } from "./CartItemRow";
 import { useCart } from "@/features/cart/application/CartContext";
 import { useFlyToCartContext } from "@/features/cart/application/FlyToCartContext";
 import { groupCartBySeller } from "@/features/cart/application/groupBySeller";
-import { useSellerProfiles } from "@/features/cart/application/useSellerProfiles";
+import { useSellerProfiles } from "@/features/cart/application/hooks/useSellerProfiles";
 import { appUrls } from "@/shared/infrastructure/config";
 
 const BADGE_OVERFLOW_THRESHOLD = 99;

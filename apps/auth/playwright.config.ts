@@ -20,6 +20,16 @@ const { getE2EExtraHTTPHeaders } = require(
 
 const appUrls = resolveE2EAppUrls();
 const extraHTTPHeaders = getE2EExtraHTTPHeaders();
+const isSingleOriginPathRouting =
+  new URL(appUrls.auth).origin === new URL(appUrls.store).origin;
+const stagingPathRoutingIgnores =
+  process.env.TARGET_ENV === "staging" && isSingleOriginPathRouting
+    ? [
+        "**/checkout-stock-integrity.spec.ts",
+        "**/delegated-admin-flow.spec.ts",
+        "**/full-purchase-flow.spec.ts",
+      ]
+    : [];
 
 /**
  * Playwright config for E2E tests.
@@ -33,6 +43,7 @@ const extraHTTPHeaders = getE2EExtraHTTPHeaders();
  */
 export default defineConfig({
   testDir: "./e2e",
+  testIgnore: stagingPathRoutingIgnores,
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,

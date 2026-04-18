@@ -1,6 +1,14 @@
+"use client";
+
 import { Minus, Plus, X } from "lucide-react";
 import Image from "next/image";
-import { getCoverImageUrl, i18nField, i18nPrice, tid } from "shared";
+import {
+  getCoverImageUrl,
+  i18nCurrencyCode,
+  i18nField,
+  i18nPrice,
+  tid,
+} from "shared";
 
 import type { CartItem } from "@/features/cart/domain/types";
 import {
@@ -145,9 +153,18 @@ export function CartItemRow({
 
           {/* Line total */}
           <span
-            className="font-display text-sm font-extrabold"
+            className="flex shrink-0 items-baseline gap-1 font-display text-sm font-extrabold"
             {...tid("cart-item-price")}
           >
+            <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+              {i18nCurrencyCode(
+                {
+                  price_usd: lineTotal,
+                  price_cop: item.price_cop * item.quantity,
+                },
+                locale,
+              )}
+            </span>
             {i18nPrice(
               {
                 ...item,

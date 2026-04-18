@@ -6,12 +6,13 @@ import type {
   CheckoutPaymentMethodsResponse,
   SellerPaymentMethodWithType,
 } from "@/features/checkout/domain/types";
+import {
+  adminFetchJson,
+  createRestPath,
+  UUID_REGEX,
+  validateUuid,
+} from "@/shared/infrastructure/adminRestClient";
 
-// Dynamic key access prevents Turbopack from inlining at build time,
-// allowing the runtime env var to be read when the server starts.
-const supabaseUrl =
-  process.env["SUPABASE_URL_INTERNAL"] || process.env.NEXT_PUBLIC_SUPABASE_URL;
-const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const REQUIRED_PERMISSION_KEYS = ["orders.create", "receipts.create"] as const;
 
 type PaymentMethodRow = {
@@ -44,63 +45,6 @@ type CheckoutItemPayload = {
   quantity: number;
 };
 
-function getRestHeaders() {
-  if (!supabaseUrl || !serviceRoleKey) {
-    throw new Error("Supabase admin REST client is not configured");
-  }
-
-  return {
-    apikey: serviceRoleKey,
-    Authorization: `Bearer ${serviceRoleKey}`,
-    "Content-Type": "application/json",
-  };
-}
-
-function getRestUrl(path: string) {
-  if (!supabaseUrl) {
-    throw new Error("Supabase URL is not configured");
-  }
-
-  return `${supabaseUrl}/rest/v1/${path}`;
-}
-
-function createRestPath(
-  table: string,
-  query: Record<string, string | readonly string[]>,
-) {
-  const searchParams = new URLSearchParams();
-
-  for (const [key, value] of Object.entries(query)) {
-    if (typeof value === "string") {
-      searchParams.set(key, value);
-      continue;
-    }
-
-    for (const item of value) {
-      searchParams.append(key, item);
-    }
-  }
-
-  return `${table}?${searchParams.toString()}`;
-}
-
-async function adminFetchJson<T>(path: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(getRestUrl(path), {
-    ...init,
-    headers: {
-      ...getRestHeaders(),
-      ...init?.headers,
-    },
-    cache: "no-store",
-  });
-
-  if (!response.ok) {
-    throw new Error(await response.text());
-  }
-
-  return (await response.json()) as T;
-}
-
 function sanitizeItems(items: unknown): CheckoutItemPayload[] | null {
   if (!Array.isArray(items) || items.length === 0) {
     return null;
@@ -116,6 +60,7 @@ function sanitizeItems(items: unknown): CheckoutItemPayload[] | null {
     const record = item as Record<string, unknown>;
     if (
       typeof record.id !== "string" ||
+      !UUID_REGEX.test(record.id) ||
       typeof record.quantity !== "number" ||
       !Number.isInteger(record.quantity) ||
       record.quantity <= 0
@@ -155,7 +100,8 @@ function hasRequiredPermissions(rows: PermissionRow[]) {
   const grantedKeys = new Set(
     rows
       .filter((row) => !row.expires_at || Date.parse(row.expires_at) > now)
-      .map((row) => row.resource_permissions.permissions.key),
+      .map((row) => row.resource_permissions?.permissions?.key)
+      .filter((key): key is string => typeof key === "string"),
   );
 
   return REQUIRED_PERMISSION_KEYS.every((key) => grantedKeys.has(key));
@@ -164,7 +110,7 @@ function hasRequiredPermissions(rows: PermissionRow[]) {
 async function fetchGrantedPermissions(userId: string) {
   return adminFetchJson<PermissionRow[]>(
     createRestPath("user_permissions", {
-      user_id: `eq.${userId}`,
+      user_id: `eq.${validateUuid(userId)}`,
       mode: "eq.grant",
       select: "expires_at,resource_permissions!inner(permissions!inner(key))",
     }),
@@ -242,6 +188,7 @@ export async function POST(request: Request) {
     if (
       typeof sellerId !== "string" ||
       sellerId.length === 0 ||
+      !UUID_REGEX.test(sellerId) ||
       !sanitizedItems
     ) {
       return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
@@ -264,7 +211,10 @@ export async function POST(request: Request) {
       hasStockIssues: false,
     });
   } catch (error) {
-    console.error("[checkout/payment-methods]", error);
+    console.error(
+      "[checkout/payment-methods]",
+      error instanceof Error ? error.message : String(error),
+    );
     return NextResponse.json(
       { error: "Failed to load payment methods" },
       { status: 500 },

@@ -1,0 +1,65 @@
+{
+  "agent": "tailwind",
+  "review_id": "2026-04-17_22-00-00",
+  "timestamp": "2026-04-17T22:00:00",
+  "scope": "apps/",
+  "summary": {
+    "filesAnalyzed": 28,
+    "issuesFound": 2,
+    "critical": 0,
+    "warning": 1,
+    "suggestion": 1,
+    "info": 0
+  },
+  "issues": [
+    {
+      "id": "STYLE-001",
+      "severity": "warning",
+      "title": "CSS color variables defined in hex instead of OKLCH format",
+      "file": "packages/ui/src/styles/colors.css",
+      "line": 11,
+      "description": "The shared color definitions in colors.css use hex values (e.g. `--background: #fff`, `--brand: #ff4890`) rather than the recommended OKLCH color format. The Tailwind CSS rules specify 'Colors use OKLCH in theme' for better perceptual uniformity and consistent color manipulation. All 7 apps inherit from this file via `@import \"ui/globals\"`, so this affects the entire monorepo.",
+      "fix": "Convert hex color values to OKLCH format. Example: `--background: #fff` → `--background: oklch(1 0 0)`, `--brand: #ff4890` → `--brand: oklch(0.65 0.22 350)`. Use a hex-to-oklch converter and verify WCAG contrast ratios are preserved after conversion."
+    },
+    {
+      "id": "STYLE-002",
+      "severity": "suggestion",
+      "title": "Arbitrary font size values used for display text instead of semantic class",
+      "file": "apps/landing/src/features/home/presentation/components/FeaturesSection.tsx",
+      "line": 124,
+      "description": "The category card titles use arbitrary Tailwind font sizes `text-[1.55rem] sm:text-[1.8rem] lg:text-[2rem]` for fluid display typography. The shared `utilities.css` already defines semantic display classes (`text-hero-display`, `text-cta-display`) that use `clamp()` for fluid sizing. A similar utility class could serve this purpose and eliminate the arbitrary values.",
+      "fix": "Consider creating a `text-card-display` semantic class in `packages/ui/src/styles/utilities.css` using `clamp()` for the fluid size range, then replace the three arbitrary values with the semantic class. Alternatively, if this is a one-off design, document why a semantic class is not appropriate here."
+    }
+  ],
+  "patterns": [
+    {
+      "pattern": "Single source CSS via ui/globals import",
+      "description": "All 7 app globals.css files are identical and simply import from the shared ui package (`@import \"ui/globals\"`). This is an excellent DRY pattern that ensures CSS consistency across all apps. No per-app CSS variables or theme overrides detected.",
+      "files": [
+        "apps/store/src/app/globals.css",
+        "apps/admin/src/app/globals.css",
+        "apps/auth/src/app/globals.css",
+        "apps/landing/src/app/globals.css",
+        "apps/payments/src/app/globals.css",
+        "apps/studio/src/app/globals.css",
+        "apps/playground/src/app/globals.css"
+      ]
+    },
+    {
+      "pattern": "Dynamic inline styles for theme/category colors",
+      "description": "Several product-related components (CartItemRow, ProductCard, HeroSection, etc.) use inline `style={{ backgroundColor: theme.bg }}` for dynamic product-specific theming. These are computed from `getCategoryTheme()` which returns CSS variable values. This is a valid pattern since the values are truly dynamic (from product data) and cannot be expressed as static Tailwind classes.",
+      "files": [
+        "apps/store/src/features/cart/presentation/components/CartItemRow.tsx",
+        "apps/store/src/features/products/presentation/components/product-detail/HeroSection.tsx"
+      ]
+    },
+    {
+      "pattern": "Candy palette CSS variables used via var() in inline styles",
+      "description": "The landing FeaturesSection uses `style={{ backgroundColor: 'var(--pink)', color: 'var(--candy-text)' }}` for category cards. This correctly uses the CSS variable system rather than hardcoded colors or raw Tailwind palette classes. The variables are defined in the shared colors.css and mapped to Tailwind color utilities in theme.css.",
+      "files": [
+        "apps/landing/src/features/home/presentation/components/FeaturesSection.tsx",
+        "apps/landing/src/features/home/presentation/components/RolesSection.tsx"
+      ]
+    }
+  ]
+}

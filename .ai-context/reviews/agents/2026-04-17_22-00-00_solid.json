@@ -1,0 +1,95 @@
+{
+  "agent": "solid",
+  "review_id": "2026-04-17_22-00-00",
+  "timestamp": "2026-04-17T22:00:00",
+  "scope": "apps/",
+  "summary": {
+    "filesAnalyzed": 28,
+    "issuesFound": 5,
+    "critical": 0,
+    "warning": 3,
+    "suggestion": 2,
+    "info": 0
+  },
+  "issues": [
+    {
+      "id": "SOLID-001",
+      "severity": "warning",
+      "title": "ProductCatalogPage mixes data filtering logic with presentation",
+      "file": "apps/store/src/features/products/presentation/pages/ProductCatalogPage.tsx",
+      "line": 26,
+      "principle": "SRP",
+      "description": "The page component performs category/type/query filtering inline via a useMemo block. Filtering logic is a separate concern from rendering the page layout; it belongs in the application layer (e.g., a useFilteredProducts hook or inside useStoreProducts). This makes the component harder to test in isolation and mixes two distinct reasons to change.",
+      "fix": "Extract the filtering logic to a dedicated hook such as useFilteredProducts(products, { category, type, q, locale }) in the application layer and call it from the page."
+    },
+    {
+      "id": "SOLID-002",
+      "severity": "warning",
+      "title": "BlockEditor and DisplayBlockRenderer duplicate switch-per-block-type structure without shared abstraction",
+      "file": "apps/payments/src/features/payment-methods/presentation/components/BlockEditor.tsx",
+      "line": 33,
+      "principle": "OCP",
+      "description": "Both BlockEditor (apps/payments/src/features/payment-methods/presentation/components/BlockEditor.tsx) and DisplayBlockRenderer (apps/payments/src/features/checkout/presentation/components/DisplayBlockRenderer.tsx) contain parallel switch statements over the same DisplayBlockType union. Adding a new block type requires editing both files. A block-type registry (map from type → { editor, renderer } component pair) would allow extending block types without modifying existing switch statements.",
+      "fix": "Create a BLOCK_REGISTRY: Record<DisplayBlockType, { Editor: React.FC<...>; Renderer: React.FC<...> }> in the domain or application layer. Replace the switch statements with registry lookups so new types only require a single registry entry."
+    },
+    {
+      "id": "SOLID-003",
+      "severity": "warning",
+      "title": "InlineHero uses four separate useTranslations scopes, indicating multiple rendering concerns",
+      "file": "apps/studio/src/features/products/presentation/components/inline-editor/InlineHero.tsx",
+      "line": 23,
+      "principle": "SRP",
+      "description": "InlineHero calls useTranslations for 'form.inlineEditor', 'products', 'categories', and 'productTypes' inside a single 220-line component. This signals that the component is rendering multiple distinct UI sections (product fields, category/type badges, stock fields) that each belong to their own focused component. The component also manages stock-quantity controller logic inline.",
+      "fix": "Extract the category/type badge group into a ProductBadgesGroup component and the stock-quantity block into an InlineStockField component. Each child handles its own translation scope and controller state. InlineHero becomes a composition wrapper."
+    },
+    {
+      "id": "SOLID-004",
+      "severity": "suggestion",
+      "title": "UsersPageContent owns both debounced search state and CSV export side-effects",
+      "file": "apps/admin/src/features/users/presentation/pages/UsersPageContent.tsx",
+      "line": 20,
+      "principle": "SRP",
+      "description": "The page component manages debounce sync between local filter input and URL state (two useEffects), user selection state, AND the CSV export trigger with audit logging. These are three separate concerns. However, the file is relatively small and each concern is simple, so the real risk is low. Splitting is worthwhile if either the search debounce or the export logic grow.",
+      "fix": "Consider extracting debounce+URL sync into a useUserSearchParam hook and export logic into a useExportUsers hook to keep the page component purely orchestrative."
+    },
+    {
+      "id": "SOLID-005",
+      "severity": "suggestion",
+      "title": "UserTable has a large prop interface mixing filter state, selection state, and export capability",
+      "file": "apps/admin/src/features/users/presentation/components/UserTable.tsx",
+      "line": 16,
+      "principle": "ISP",
+      "description": "UserTableProps carries 14 props covering three different concerns: pagination (page, total, onPageChange), filter inputs (filterInput, roleFilter, itemFilter and their change handlers), user selection (selectedUsers, onSelectUsersChange, onSelectUser), and export (canExport, onExportCsv). Components that render only the table body must still declare the full interface. KISS applies here — the file is functional and the props are all used — but if the component grows further, segregation becomes necessary.",
+      "fix": "If the component grows, split UserTable into UserTableFilters (filter + export bar) and UserTableBody (rows + pagination), each with a focused prop interface. For now, documenting the groupings with inline comments is sufficient."
+    }
+  ],
+  "patterns": [
+    {
+      "pattern": "Switch-based block renderers",
+      "description": "Both the payments checkout and payment-methods features use switch-over-block-type in renderer and editor components. The pattern is consistent but not open for extension. A shared block registry in the domain layer would be the canonical fix if block types continue to grow.",
+      "files": [
+        "apps/payments/src/features/payment-methods/presentation/components/BlockEditor.tsx",
+        "apps/payments/src/features/checkout/presentation/components/DisplayBlockRenderer.tsx",
+        "apps/payments/src/features/payment-methods/presentation/components/DisplaySectionEditor.tsx"
+      ]
+    },
+    {
+      "pattern": "Section type switches in store and studio",
+      "description": "SectionRenderer (store) and SectionCard (studio) each have their own switch on section.type. These are small, well-contained, and have a default fallback — no real maintenance burden at current scale.",
+      "files": [
+        "apps/store/src/features/products/presentation/components/product-detail/sections/SectionRenderer.tsx",
+        "apps/studio/src/features/products/presentation/components/inline-editor/SectionCard.tsx"
+      ]
+    },
+    {
+      "pattern": "Good DIP adherence",
+      "description": "No direct fetch/axios calls were found in component files. All data fetching is abstracted through hooks (useStoreProducts, useUsers, useCartFromCookie, etc.), demonstrating strong DIP compliance across the codebase.",
+      "files": []
+    },
+    {
+      "pattern": "Good ISP on most components",
+      "description": "Most component interfaces are small and focused. The flagged UserTable is an outlier — the majority of components have 3-8 props with clear single-concern interfaces.",
+      "files": []
+    }
+  ]
+}

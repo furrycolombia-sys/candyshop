@@ -17,18 +17,18 @@ interface RemoveButtonProps {
 export function RemoveButton({ rowId, userId, canDelete }: RemoveButtonProps) {
   const t = useTranslations("users.delegates");
   const removeMutation = useRemoveUserDelegate();
-  const [confirming, setConfirming] = useState(false);
+  const [isConfirming, setIsConfirming] = useState(false);
 
   const handleConfirm = useCallback(() => {
     removeMutation.mutate(
       { userId, delegateRowId: rowId },
-      { onSettled: () => setConfirming(false) },
+      { onSettled: () => setIsConfirming(false) },
     );
   }, [removeMutation, userId, rowId]);
 
   if (!canDelete) return null;
 
-  if (confirming) {
+  if (isConfirming) {
     return (
       <div className="flex items-center gap-1">
         <Button
@@ -45,7 +45,7 @@ export function RemoveButton({ rowId, userId, canDelete }: RemoveButtonProps) {
           variant="outline"
           size="sm"
           className="rounded-none border-2 border-border text-xs"
-          onClick={() => setConfirming(false)}
+          onClick={() => setIsConfirming(false)}
           {...tid(`cancel-remove-delegate-${rowId}`)}
         >
           {t("cancel")}
@@ -59,7 +59,7 @@ export function RemoveButton({ rowId, userId, canDelete }: RemoveButtonProps) {
       variant="outline"
       size="sm"
       className="rounded-none border-2 border-border text-destructive hover:bg-destructive/10"
-      onClick={() => setConfirming(true)}
+      onClick={() => setIsConfirming(true)}
       {...tid(`remove-delegate-${rowId}`)}
     >
       <Trash2 className="size-3.5" />

@@ -1,0 +1,102 @@
+{
+  "agent": "testing",
+  "timestamp": "2026-04-17T00:00:00Z",
+  "scope": "apps/",
+  "summary": {
+    "filesAnalyzed": 120,
+    "issuesFound": 6,
+    "critical": 0,
+    "warning": 4,
+    "suggestion": 2,
+    "info": 0
+  },
+  "issues": [
+    {
+      "id": "TEST-001",
+      "severity": "warning",
+      "title": "Class-based CSS assertions in StatusRow.test.tsx",
+      "file": "apps/admin/src/features/dashboard/presentation/components/StatusRow.test.tsx",
+      "line": 26,
+      "description": "Tests use `container.querySelector('.bg-success')`, `container.querySelector('.bg-warning')`, and `container.querySelector('.bg-destructive')` to assert the visual state of the status dot. These Tailwind class selectors are fragile — if the class names change (e.g. from semantic refactor), tests break without any functional regression. The `StatusRow` component should expose a stable `data-*` or ARIA attribute to convey status.",
+      "rule": "e2e-selectors.md#never-use-tailwind-classes",
+      "fix": "Add a `data-status` attribute to the dot element in StatusRow.tsx, e.g. `<span data-status={status} className={...} />`, then assert with `expect(container.querySelector('[data-status=\"operational\"]')).toBeInTheDocument()`. Alternatively add `{...tid('status-dot')}` to the element and use `getByTestId` with a `data-status` assertion."
+    },
+    {
+      "id": "TEST-002",
+      "severity": "warning",
+      "title": "Class-based assertions in InlineImageCarousel.test.tsx (Tailwind classes for star state)",
+      "file": "apps/studio/src/features/products/presentation/components/inline-editor/InlineImageCarousel.test.tsx",
+      "line": 165,
+      "description": "Three test cases assert star fill state by checking for Tailwind classes `text-yellow-500`, `fill-current`, and `text-muted-foreground` directly on SVG elements via `toHaveClass`. This couples the tests to Tailwind utility names. A class rename or theme token migration would silently break these assertions without any behavioral change. Additionally, `text-yellow-500` is a raw Tailwind palette color rather than a semantic token.",
+      "rule": "e2e-selectors.md#never-use-tailwind-classes",
+      "fix": "Replace Tailwind class assertions with a `data-filled` boolean attribute on each star element in the component, e.g. `<Star data-filled={isFilled} />`. Then assert with `toHaveAttribute('data-filled', 'true')`. This also removes the `no-node-access` ESLint suppression comments."
+    },
+    {
+      "id": "TEST-003",
+      "severity": "warning",
+      "title": "Class-based state assertions in RatingStars.test.tsx",
+      "file": "apps/store/src/features/products/presentation/components/product-detail/RatingStars.test.tsx",
+      "line": 18,
+      "description": "Four test cases check star fill state by filtering `container.querySelectorAll('svg')` and matching `.includes('fill-current')` and `.includes('text-muted-foreground')` on the class attribute string. These are Tailwind class names used as state proxies. The eslint suppression `/* eslint-disable testing-library/no-node-access */` signals this is an acknowledged workaround, but the pattern remains fragile.",
+      "rule": "e2e-selectors.md#never-use-tailwind-classes",
+      "fix": "Add `aria-label` on each star or a `data-filled` attribute so tests can use `getAllByRole('img')` + `toHaveAttribute('data-filled', 'true')` count. This provides a stable assertion surface independent of Tailwind class names."
+    },
+    {
+      "id": "TEST-004",
+      "severity": "warning",
+      "title": "Multiple components in admin/users feature lack individual test files",
+      "file": "apps/admin/src/features/users/presentation/components/",
+      "line": null,
+      "description": "The following components have no corresponding `.test.tsx` file: `Pagination.tsx`, `PermissionGroupCard.tsx`, `RoleBadge.tsx`, `TemplateButtons.tsx`, `UserDelegatesCard.tsx`, `UserHeader.tsx`, `UserRow.tsx`, `UserRowWithRole.tsx`, and all five delegates sub-components (`AsDelegateRow.tsx`, `AsSellerRow.tsx`, `PermissionBadges.tsx`, `ProductName.tsx`, `RemoveButton.tsx`). There is only a `UserTable.test.tsx` that exercises the table, but the individual building blocks are untested. For a security-sensitive admin feature (permissions, delegation) this is a meaningful gap.",
+      "rule": "testing.md#unit-testing-vitest",
+      "fix": "Create `.test.tsx` files for each untested component, starting with `PermissionGroupCard` and `Pagination` which have the most interactive logic (toggles, page buttons). At minimum cover: renders correctly, handles disabled/pending state (PermissionGroupCard), disables prev/next at boundaries (Pagination), correct badge color per role (RoleBadge)."
+    },
+    {
+      "id": "TEST-005",
+      "severity": "suggestion",
+      "title": "BuyerField, DisplayBlockRenderer, DynamicFormField, and ConfirmActionPanel lack test files",
+      "file": "apps/payments/src/features/",
+      "line": null,
+      "description": "Several checkout and received-orders components have no test files: `BuyerField.tsx`, `DisplayBlockRenderer.tsx`, `DynamicFormField.tsx` (checkout) and `ConfirmActionPanel.tsx` (received-orders). These are part of the checkout flow which is security-critical per `checkout-stock-integrity.md`. The stock-integrity rule requires coverage for checkout components.",
+      "rule": "checkout-stock-integrity.md#testing-requirements",
+      "fix": "Add test files for `BuyerField`, `DynamicFormField`, and `ConfirmActionPanel`. For `BuyerField` and `DynamicFormField`, verify they render correct input types and labels. For `ConfirmActionPanel`, verify confirmation/cancel handlers fire correctly."
+    },
+    {
+      "id": "TEST-006",
+      "severity": "suggestion",
+      "title": "Landing page individual section components only covered by a single shared test file",
+      "file": "apps/landing/src/features/home/presentation/components/HomeSections.test.tsx",
+      "line": null,
+      "description": "`HeroSection.tsx`, `CtaSection.tsx`, `FeaturesSection.tsx`, and `RolesSection.tsx` are all tested in a single `HomeSections.test.tsx` file, which is an acceptable grouping since these sections have minimal logic. However, `LandingPage.tsx` itself has no test, and the coverage only verifies 3 of the 4 sections (HeroSection is not tested). The HeroSection component is missing from the test file entirely.",
+      "rule": "testing.md#what-to-test",
+      "fix": "Add a test case for `HeroSection` in `HomeSections.test.tsx`. Alternatively, consider adding a test for `LandingPage` that verifies all sections are present when rendered."
+    }
+  ],
+  "patterns": [
+    {
+      "pattern": "Strong use of tid() utility across test files",
+      "description": "The codebase consistently uses the `tid()` utility to add `data-testid` attributes to components, and tests predominantly use `getByTestId` as the primary selector. This is excellent and aligns with the E2E selectors standard. Over 612 `getByTestId` usages were found across 103 test files.",
+      "type": "positive"
+    },
+    {
+      "pattern": "Vitest imports are consistently explicit",
+      "description": "All test files properly import the Vitest functions they use (`describe`, `it`, `expect`, `vi`, `beforeEach`, `afterEach`) from 'vitest'. No implicit globals were detected.",
+      "type": "positive"
+    },
+    {
+      "pattern": "E2E tests avoid hardcoded translation text",
+      "description": "A scan of all .spec.ts files found zero uses of `toContainText()` or `toHaveText()` with specific translation strings. E2E tests are locale-independent.",
+      "type": "positive"
+    },
+    {
+      "pattern": "Good async handling across test files",
+      "description": "Hook tests use `renderHook` + `waitFor`/`findBy*` patterns appropriately for async operations. 18 test files were found using `waitFor` or `findBy` for async assertions.",
+      "type": "positive"
+    },
+    {
+      "pattern": "Class-based state assertions remain in a few files",
+      "description": "Three test files use CSS class names (Tailwind utilities) as state indicators rather than ARIA attributes or data attributes. All three include eslint-disable-no-node-access comments acknowledging the workaround. These should be refactored to use proper data attributes.",
+      "type": "negative"
+    }
+  ]
+}

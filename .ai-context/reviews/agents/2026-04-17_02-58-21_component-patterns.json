@@ -1,0 +1,113 @@
+{
+  "agent": "component-patterns",
+  "timestamp": "2026-04-17T02:58:21",
+  "scope": "apps/",
+  "summary": {
+    "filesAnalyzed": 264,
+    "issuesFound": 6,
+    "critical": 0,
+    "warning": 5,
+    "suggestion": 1,
+    "info": 0
+  },
+  "issues": [
+    {
+      "id": "COMP-001",
+      "severity": "warning",
+      "file": "apps/payments/src/features/checkout/presentation/components/DynamicFormField.tsx",
+      "line": 1,
+      "description": "File contains two component definitions: exported `DynamicFormField` and non-exported `FileInput`. Suppressed with `eslint-disable react/no-multi-comp` with justification comment. While the private-helper pattern is documented as acceptable, `FileInput` renders input elements and has its own props interface — it could be extracted to its own file for full compliance.",
+      "rule": "one-component-per-file.md",
+      "fix": "Extract `FileInput` to `FileInput.tsx` alongside `DynamicFormField.tsx`, or keep as-is since the ESLint disable is documented and the helper is non-exported."
+    },
+    {
+      "id": "COMP-002",
+      "severity": "warning",
+      "file": "apps/payments/src/features/received-orders/presentation/components/ReceivedOrderCard.tsx",
+      "line": 3,
+      "description": "File contains two component definitions: exported `ReceivedOrderCard` and non-exported `BuyerInfoValue`. Suppressed with `eslint-disable react/no-multi-comp`. Same pattern as COMP-001.",
+      "rule": "one-component-per-file.md",
+      "fix": "Extract `BuyerInfoValue` to its own file, or accept the intentional ESLint disable since the helper is non-exported and tightly coupled."
+    },
+    {
+      "id": "COMP-003",
+      "severity": "warning",
+      "file": "apps/studio/src/features/products/presentation/components/inline-editor/SectionItemsTwoColumn.tsx",
+      "line": 3,
+      "description": "File contains two component definitions: exported `SectionItemsTwoColumn` and non-exported `TwoColumnRow`. Suppressed with `eslint-disable react/no-multi-comp` with a compound-component justification comment.",
+      "rule": "one-component-per-file.md",
+      "fix": "Pattern is intentional and documented. No action required unless extraction to its own file is preferred."
+    },
+    {
+      "id": "COMP-004",
+      "severity": "warning",
+      "file": "apps/studio/src/features/products/presentation/components/inline-editor/SectionItemsGallery.tsx",
+      "line": 3,
+      "description": "File contains two component definitions: exported `SectionItemsGallery` and non-exported `GalleryItemEditor`. Suppressed with `eslint-disable react/no-multi-comp`.",
+      "rule": "one-component-per-file.md",
+      "fix": "Pattern is intentional and documented. No action required unless extraction is preferred."
+    },
+    {
+      "id": "COMP-005",
+      "severity": "warning",
+      "file": "apps/studio/src/features/products/presentation/components/inline-editor/SectionItemsCards.tsx",
+      "line": 3,
+      "description": "File contains two component definitions: exported `SectionItemsCards` and non-exported `CardItem`. Suppressed with `eslint-disable react/no-multi-comp`.",
+      "rule": "one-component-per-file.md",
+      "fix": "Pattern is intentional and documented. No action required unless extraction is preferred."
+    },
+    {
+      "id": "COMP-006",
+      "severity": "suggestion",
+      "file": "apps/studio/src/features/products/presentation/components/inline-editor/SectionItemsAccordion.tsx",
+      "line": 3,
+      "description": "File contains two component definitions: exported `SectionItemsAccordion` and non-exported `AccordionItemEditor`. Suppressed with `eslint-disable react/no-multi-comp`. Consistent pattern with COMP-003 through COMP-005 in the same inline-editor directory — all four share the same justified approach.",
+      "rule": "one-component-per-file.md",
+      "fix": "Consider extracting the four private helpers (TwoColumnRow, GalleryItemEditor, CardItem, AccordionItemEditor) into separate files to fully comply with the one-component-per-file rule, or keep the current pattern since it is consistently applied and documented across the inline-editor folder."
+    }
+  ],
+  "patterns": [
+    {
+      "id": "PAT-001",
+      "type": "positive",
+      "description": "All 264 non-test .tsx files analyzed contain at most one exported PascalCase component. No file exports multiple components.",
+      "affectedFiles": "all apps/**/*.tsx (non-test)"
+    },
+    {
+      "id": "PAT-002",
+      "type": "positive",
+      "description": "No nested component definitions found. No component is defined inside another component function body.",
+      "affectedFiles": "all apps/**/*.tsx"
+    },
+    {
+      "id": "PAT-003",
+      "type": "positive",
+      "description": "'use client' directive is correctly applied on all 193 client-side components. No server component misuses client hooks (useState, useEffect, useCallback, useRouter, etc.). No 'use client' component mixes async server patterns.",
+      "affectedFiles": "193 files with 'use client'"
+    },
+    {
+      "id": "PAT-004",
+      "type": "positive",
+      "description": "All error.tsx and global-error.tsx files correctly include 'use client' (required by Next.js App Router).",
+      "affectedFiles": "apps/*/src/app/**/error.tsx, global-error.tsx"
+    },
+    {
+      "id": "PAT-005",
+      "type": "positive",
+      "description": "All providers.tsx files correctly include 'use client'.",
+      "affectedFiles": "apps/*/src/app/[locale]/providers.tsx"
+    },
+    {
+      "id": "PAT-006",
+      "type": "positive",
+      "description": "All root page.tsx redirect files correctly omit 'use client' and use server-side redirect() pattern.",
+      "affectedFiles": "apps/*/src/app/page.tsx"
+    },
+    {
+      "id": "PAT-007",
+      "type": "info",
+      "description": "The inline-editor directory in studio app consistently uses a private-helper compound component pattern across 4 files (SectionItemsTwoColumn, SectionItemsGallery, SectionItemsCards, SectionItemsAccordion). This pattern is deliberate, consistently applied, and documented via ESLint disable comments. Consider formalizing this pattern in the component-patterns rule if it should be allowed more broadly.",
+      "affectedFiles": "apps/studio/src/features/products/presentation/components/inline-editor/"
+    }
+  ]
+}

@@ -1,0 +1,78 @@
+{
+  "agent": "tailwind",
+  "review_id": "2026-04-17_10-00-00",
+  "timestamp": "2026-04-17T10:00:00Z",
+  "scope": "apps/",
+  "summary": {
+    "filesAnalyzed": 754,
+    "issuesFound": 4,
+    "critical": 0,
+    "warning": 1,
+    "suggestion": 3,
+    "info": 0
+  },
+  "issues": [
+    {
+      "id": "STYLE-001",
+      "severity": "warning",
+      "file": "packages/ui/src/styles/colors.css",
+      "line": 8,
+      "title": "CSS color variables use hex/rgb format instead of OKLCH",
+      "description": "All 98 color variable definitions in colors.css use hex (#ff4890, #1a1a1a, etc.) and rgb() format. The Tailwind rule specifies that CSS variables should use OKLCH format (oklch(L C H)) for better perceptual uniformity and easier color manipulation. While this is a shared package file (not directly in apps/), it is the single source of truth imported by all apps via @import \"ui/globals\".",
+      "rule": "tailwind.md#use-oklch-colors",
+      "fix": "Convert hex and rgb color values to OKLCH format. Example: --background: #fff → --background: oklch(1 0 0); --foreground: #1a1a1a → --foreground: oklch(0.13 0 0); --brand: #ff4890 → --brand: oklch(0.65 0.22 350);"
+    },
+    {
+      "id": "STYLE-002",
+      "severity": "suggestion",
+      "file": "apps/landing/src/features/home/presentation/components/FeaturesSection.tsx",
+      "line": 123,
+      "title": "Arbitrary font sizes when design system values may suffice",
+      "description": "Font sizes text-[1.55rem], sm:text-[1.8rem], and lg:text-[2rem] use arbitrary values. The theme defines clamp-based utilities (text-cta-display, text-hero-display) and standard Tailwind scale values (text-2xl=1.5rem, text-3xl=1.875rem, text-4xl=2.25rem) that could serve this purpose. The leading-[0.94] is a tight custom line-height for a display heading, which is design-intentional.",
+      "rule": "tailwind.md#minimize-arbitrary-values",
+      "fix": "Consider using text-3xl (1.875rem) with sm:text-4xl (2.25rem) to align with the design system scale, or extract a semantic utility class (e.g., .text-feature-heading) in utilities.css to avoid repeating these specific arbitrary values."
+    },
+    {
+      "id": "STYLE-003",
+      "severity": "suggestion",
+      "file": "apps/payments/src/shared/presentation/components/PaymentsMobileSidebar.tsx",
+      "line": 31,
+      "title": "Arbitrary letter-spacing values not in design system",
+      "description": "tracking-[0.18em] appears twice in this file (lines 31 and 42) for display text. Tailwind's built-in tracking scale (tracking-widest = 0.1em) doesn't cover 0.18em. The store app uses tracking-[0.12em] similarly. These are display/uppercase text patterns repeated across the codebase.",
+      "rule": "tailwind.md#minimize-arbitrary-values",
+      "fix": "Consider adding a custom tracking value to the @theme block in theme.css (e.g., --tracking-display: 0.18em) to make tracking-display a named utility, avoiding scattered arbitrary values."
+    },
+    {
+      "id": "STYLE-004",
+      "severity": "suggestion",
+      "file": "apps/store/src/app/globals.css (and admin, payments, studio)",
+      "line": 5,
+      "title": "Redundant @source directive duplicates what shared globals.css already declares",
+      "description": "Four apps (store, admin, payments, studio) include @source \"../../../../packages/ui/src/**/*.{ts,tsx}\" in their globals.css. However, this exact directive is already present in packages/ui/src/styles/globals.css, which all apps import via @import \"ui/globals\". Additionally, three apps (auth, landing, playground) also add @source \"../**/*.{ts,tsx}\" for their own app sources, while store, admin, payments, and studio do not. This creates a minor inconsistency — the four apps without the explicit app @source rely entirely on Tailwind v4's automatic source detection.",
+      "rule": "css-consistency.md#required-ui-package-scanning",
+      "fix": "Either (a) remove the redundant @source for ui package from all app globals.css files since the shared globals.css already handles it, OR (b) add consistency by ensuring all apps either include or exclude the explicit @source for their own app files. Document the intentional choice in the shared globals.css comments."
+    }
+  ],
+  "patterns": [
+    {
+      "type": "positive",
+      "description": "All 7 apps correctly import @import \"ui/globals\" which centralizes theme, colors, base, and utility definitions — clean single-source-of-truth pattern.",
+      "files": "All apps/*/src/app/globals.css"
+    },
+    {
+      "type": "positive",
+      "description": "Zero raw Tailwind palette colors (text-red-500, bg-blue-600, etc.) found across all 754 source files. Semantic tokens (destructive, success, warning, info) are used exclusively.",
+      "files": "All apps/"
+    },
+    {
+      "type": "positive",
+      "description": "No inline style attributes using hard-coded color values found. All color references go through CSS variables via Tailwind semantic tokens.",
+      "files": "All apps/"
+    },
+    {
+      "type": "positive",
+      "description": "candy-safelist.txt is used correctly to force-generate dynamic candy palette classes (bg-pink, bg-mint, etc.) that are composed programmatically — proper Tailwind v4 safelist pattern.",
+      "files": "packages/ui/src/styles/globals.css"
+    }
+  ]
+}

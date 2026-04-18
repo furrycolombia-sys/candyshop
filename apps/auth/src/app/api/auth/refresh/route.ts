@@ -58,12 +58,29 @@ export async function OPTIONS(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   const supabase = await createServerSupabaseClient();
+
+  // Validate user server-side via getUser() — contacts Supabase Auth server for JWT verification
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+
+  if (userError || !user) {
+    const response = NextResponse.json({ ok: false }, { status: 401 });
+    response.cookies.set(
+      AUTH_COOKIE_NAMES.accessToken,
+      "",
+      buildAccessTokenCookieOptions(request, EXPIRED_COOKIE_MAX_AGE),
+    );
+    return applyCorsHeaders(response, request);
+  }
+
+  // Retrieve the session token only after server-side validation has passed
   const {
     data: { session },
-    error,
   } = await supabase.auth.getSession();
 
-  if (error || !session?.access_token) {
+  if (!session?.access_token) {
     const response = NextResponse.json({ ok: false }, { status: 401 });
     response.cookies.set(
       AUTH_COOKIE_NAMES.accessToken,
@@ -78,10 +95,7 @@ export async function POST(request: NextRequest) {
       ? session.expires_in
       : AUTH_COOKIE_MAX_AGE.accessToken;
 
-  const response = NextResponse.json({
-    ok: true,
-    accessToken: session.access_token,
-  });
+  const response = NextResponse.json({ ok: true });
   response.cookies.set(
     AUTH_COOKIE_NAMES.accessToken,
     session.access_token,

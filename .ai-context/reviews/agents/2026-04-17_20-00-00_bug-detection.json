@@ -1,0 +1,114 @@
+{
+  "agent": "bug-detection",
+  "review_id": "2026-04-17_20-00-00",
+  "timestamp": "2026-04-17T20:00:00",
+  "scope": "apps/",
+  "summary": {
+    "filesAnalyzed": 22,
+    "issuesFound": 5,
+    "critical": 0,
+    "warning": 3,
+    "suggestion": 2,
+    "info": 0
+  },
+  "issues": [
+    {
+      "id": "BUG-001",
+      "severity": "warning",
+      "category": "State Race Condition / Debounce Loop",
+      "file": "apps/store/src/features/products/presentation/components/SearchBar.tsx",
+      "lines": "16-22",
+      "description": "The sync-back effect (lines 20-22) sets `localValue` to `query` unconditionally on every `query` change, including the change triggered by the debounce effect itself. This creates a tight loop: user types → debounce fires → URL updates (query changes) → sync-back effect fires → setLocalValue(query) overwrites the current input mid-typing. The other two debounce components (ProductFilters.tsx and UsersPageContent.tsx) guard this with an equality check (`if (q !== searchInput)`), but SearchBar.tsx does not.",
+      "code_snippet": "useEffect(() => {\n  setLocalValue(query);\n}, [query]);",
+      "fix": "Add an equality guard before setting state:\n```ts\nuseEffect(() => {\n  setLocalValue((prev) => (prev !== query ? query : prev));\n}, [query]);\n```\nOr more simply: `if (query !== localValue) setLocalValue(query);` — consistent with the pattern in ProductFilters.tsx and UsersPageContent.tsx."
+    },
+    {
+      "id": "BUG-002",
+      "severity": "warning",
+      "category": "Memory Leak / Missing cancelAnimationFrame on early return",
+      "file": "apps/store/src/features/products/presentation/components/FeaturedRibbon.tsx",
+      "lines": "107-186",
+      "description": "`animId` is initialized to `0` and only set when `document.fonts.ready` resolves. The cleanup function captures `animId` via closure; however, `animId` is a local `let` variable inside the effect, so the cleanup always reads its latest value correctly. This is fine. However, there is a subtle issue: if `document.fonts.ready` resolves AFTER the component unmounts (i.e., `cancelled = true`), the `.then()` callback returns early without scheduling any `requestAnimationFrame`, but the cleanup has already run with `animId === 0`, calling `cancelAnimationFrame(0)` which is a no-op. This is safe in practice. The actual concern is in the `.catch()` path on line 180: when fonts fail to load, `requestAnimationFrame(draw)` is called even though `cancelled` might be true at that point — the `!cancelled` check is correct there. No actionable bug, but the `animId = 0` initial value means if the component unmounts before fonts load, `cancelAnimationFrame(0)` is called unnecessarily (harmless). DOWNGRADED to info.",
+      "code_snippet": "let animId: number = 0;\n...\nreturn () => {\n  cancelled = true;\n  cancelAnimationFrame(animId); // animId may still be 0 if fonts haven't loaded yet\n};",
+      "fix": "This is not a real bug — the `cancelled` flag prevents any frame from being scheduled after unmount. No fix required. Downgraded to info."
+    },
+    {
+      "id": "BUG-003",
+      "severity": "warning",
+      "category": "Null/Undefined Access — Initial State from URL Param",
+      "file": "apps/admin/src/features/users/presentation/pages/UsersPageContent.tsx",
+      "lines": "24",
+      "description": "`params.search` has a default of `\"\"` (parseAsString.withDefault(\"\")), so it cannot be null at runtime. However, the initial `useState(params.search)` call captures the value at mount time. If this component is server-rendered and hydrated, the initial URL params may differ between server and client, causing a hydration mismatch where `filterInput` is initialized with the server-side value. The sync-back `useEffect` fixes this post-mount, but there will be one render where `filterInput` does not match the actual URL state. This is a known pattern limitation, not a critical bug, but it can cause a visual flicker or one extra debounce timer.",
+      "code_snippet": "const [filterInput, setFilterInput] = useState(params.search);",
+      "fix": "This is an accepted trade-off with nuqs + local controlled input. The sync-back guard pattern already in place (lines 32-38) mitigates it. No immediate action required — track as known limitation."
+    },
+    {
+      "id": "BUG-004",
+      "severity": "warning",
+      "category": "Stale Closure in useEffect — FeaturedRibbon foreground color",
+      "file": "apps/store/src/features/products/presentation/components/FeaturedRibbon.tsx",
+      "lines": "93-96",
+      "description": "`getComputedStyle(canvas)` is called inside the `useEffect` body (runs once per dep change), not inside the animation loop. This means `foregroundColor` and `bgColor` are captured at effect-run time. If the user switches to dark mode after the component mounts, the canvas continues using the old colors until the effect re-runs (which it won't, because none of its deps — `s`, `baseFontSize`, `textOffset`, `accentVar`, `label` — change on theme switch). The ribbon will display wrong colors until remount or prop change.",
+      "code_snippet": "const foregroundColor =\n  style.getPropertyValue(\"--foreground\").trim() || \"currentColor\";\nconst bgColor = ...;",
+      "fix": "Move `getComputedStyle` calls inside the `draw()` function so colors are resolved per frame, or listen for a `prefers-color-scheme` media query change to re-run the effect:\n```ts\nconst mq = window.matchMedia('(prefers-color-scheme: dark)');\nmq.addEventListener('change', reinitEffect);\nreturn () => mq.removeEventListener('change', reinitEffect);\n```\nAlternatively, add a `data-theme` attribute or CSS class to the effect dependencies."
+    },
+    {
+      "id": "BUG-005",
+      "severity": "suggestion",
+      "category": "Silent Error Swallow in Search",
+      "file": "apps/studio/src/features/seller-admins/presentation/components/AddDelegateForm.tsx",
+      "lines": "46-56",
+      "description": "The `handleSearch` callback catches all errors from `search(value)` and silently sets results to `[]`. This means network errors, auth errors, or unexpected exceptions during delegate search are swallowed without any user-facing feedback. The user sees an empty list and has no indication that an error occurred.",
+      "code_snippet": "try {\n  const users = await search(value);\n  setResults(users);\n} catch {\n  setResults([]);\n} finally {\n  setIsSearching(false);\n}",
+      "fix": "Add an error state and display it to the user:\n```ts\nconst [searchError, setSearchError] = useState<string | null>(null);\n...\ntry {\n  setSearchError(null);\n  const users = await search(value);\n  setResults(users);\n} catch {\n  setResults([]);\n  setSearchError(t('searchError')); // add i18n key\n}\n```"
+    }
+  ],
+  "patterns": [
+    {
+      "id": "PAT-001",
+      "type": "good",
+      "description": "Consistent debounce-with-cleanup pattern: all debounce timers (SearchBar, ProductFilters, UsersPageContent, useAutoSavePaymentMethod) are cleaned up via useEffect return. This prevents timer leaks on unmount.",
+      "files": [
+        "apps/store/src/features/products/presentation/components/SearchBar.tsx",
+        "apps/studio/src/features/products/presentation/components/ProductFilters.tsx",
+        "apps/admin/src/features/users/presentation/pages/UsersPageContent.tsx",
+        "apps/payments/src/features/payment-methods/application/hooks/useAutoSavePaymentMethod.ts"
+      ]
+    },
+    {
+      "id": "PAT-002",
+      "type": "good",
+      "description": "Object URL lifecycle is consistently managed with ref+state double-tracking pattern (ReceiptUpload, ResubmitEvidenceForm): the previewUrlRef keeps the latest URL for unmount cleanup while state drives rendering. Both components correctly revoke old URLs before creating new ones.",
+      "files": [
+        "apps/payments/src/features/checkout/presentation/components/ReceiptUpload.tsx",
+        "apps/payments/src/features/orders/presentation/components/ResubmitEvidenceForm.tsx"
+      ]
+    },
+    {
+      "id": "PAT-003",
+      "type": "good",
+      "description": "All setInterval usages (ExpirationLabel, ReceivedOrderCard) include proper clearInterval cleanup in the useEffect return. No memory leaks from interval timers.",
+      "files": [
+        "apps/payments/src/features/orders/presentation/components/ExpirationLabel.tsx",
+        "apps/payments/src/features/received-orders/presentation/components/ReceivedOrderCard.tsx"
+      ]
+    },
+    {
+      "id": "PAT-004",
+      "type": "good",
+      "description": "The checkout order route (POST /api/checkout/orders) performs proper server-side stock validation and price calculation, preventing client-side price/quantity manipulation. The buyer_submission validation is thorough with UUID regex checks.",
+      "files": ["apps/payments/src/app/api/checkout/orders/route.ts"]
+    },
+    {
+      "id": "PAT-005",
+      "type": "concern",
+      "description": "SearchBar.tsx missing equality guard in sync-back useEffect — inconsistent with the identical pattern in ProductFilters.tsx and UsersPageContent.tsx which both guard with `if (q !== searchInput)` / `if (urlValue !== filterInput)`. This asymmetry suggests SearchBar was not updated when the guard was added to the other components.",
+      "files": [
+        "apps/store/src/features/products/presentation/components/SearchBar.tsx",
+        "apps/studio/src/features/products/presentation/components/ProductFilters.tsx",
+        "apps/admin/src/features/users/presentation/pages/UsersPageContent.tsx"
+      ],
+      "rule_suggestion": "Consider adding a lint rule or shared hook (e.g., `useUrlSyncedInput`) to enforce the equality-guard pattern for all debounce→URL→sync-back flows."
+    }
+  ]
+}

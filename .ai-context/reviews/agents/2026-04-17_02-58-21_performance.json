@@ -1,0 +1,77 @@
+{
+  "agent": "performance",
+  "timestamp": "2026-04-17T02:58:21",
+  "scope": "apps/",
+  "summary": {
+    "filesAnalyzed": 18,
+    "issuesFound": 4,
+    "critical": 0,
+    "warning": 2,
+    "suggestion": 2,
+    "info": 0
+  },
+  "issues": [
+    {
+      "id": "PERF-001",
+      "severity": "warning",
+      "file": "apps/store/src/features/products/presentation/components/product-detail/ImageGallery.tsx",
+      "line": 48,
+      "title": "getProductImages() called in render without memoization",
+      "description": "getProductImages(product.images) is called on every render. The function filters and maps over a JSONB array (potentially complex). If the parent re-renders frequently (e.g. due to URL state changes), this runs on every render even when product.images hasn't changed.",
+      "code": "const images = getProductImages(product.images);",
+      "fix": "Wrap in useMemo: const images = useMemo(() => getProductImages(product.images), [product.images]);"
+    },
+    {
+      "id": "PERF-002",
+      "severity": "warning",
+      "file": "apps/admin/src/features/audit/presentation/components/AuditTable.tsx",
+      "line": 183,
+      "title": "Per-row formatTimestamp() creates new Date + calls toLocaleString on every render",
+      "description": "The AuditTable renders a list of entries. On each render, formatTimestamp() is called for every row, which constructs a new Date object and calls toLocaleString with an options object literal. For tables with many rows and a locale that triggers Intl machinery, this can be noticeable. The options object is also recreated on each call since it's inline.",
+      "code": "{formatTimestamp(entry.action_timestamp, locale)}",
+      "fix": "Memoize the formatted entries array: const formattedEntries = useMemo(() => entries.map(e => ({ ...e, formattedTime: formatTimestamp(e.action_timestamp, locale) })), [entries, locale]); — or extract a stable options constant outside the function."
+    },
+    {
+      "id": "PERF-003",
+      "severity": "suggestion",
+      "file": "apps/payments/src/features/received-orders/presentation/components/ReceivedOrderCard.tsx",
+      "line": 132,
+      "title": "new Date().toLocaleString() called inline in JSX render",
+      "description": "Two toLocaleString() calls happen in render on lines 132 and 198 directly on Date objects without caching. While these dates don't change during the component lifecycle, they're computed on every render. These are low-impact individually, but the pattern is repeated.",
+      "code": "{new Date(order.created_at).toLocaleString()}\n{expiresAt.toLocaleString()}",
+      "note": "The eslint disable comment is intentional for the <img> element — that's correctly justified for dynamic user-uploaded URLs."
+    },
+    {
+      "id": "PERF-004",
+      "severity": "suggestion",
+      "file": "apps/studio/src/features/products/presentation/components/inline-editor/InlineImageCarousel.tsx",
+      "line": 143,
+      "title": "renderThumbContent() is a plain function defined inside component — recreated each render",
+      "description": "renderThumbContent is defined as a local function inside the component body (not as useCallback). It creates closures over watchedImages, safeIndex, brokenImages, theme, etc. on every render. The function is called inside map() in two places (desktop and mobile layouts). Since it's not a component, React.memo doesn't apply. The double-render in both desktop and mobile layouts means it runs twice per field per render.",
+      "code": "const renderThumbContent = (\n  field: (typeof fields)[number],\n  index: number,\n) => { ... }",
+      "fix": "Consider useCallback with appropriate dependencies, or extract as a proper memoized sub-component since its responsibility is clear (rendering a single thumbnail)."
+    }
+  ],
+  "patterns": [
+    {
+      "pattern": "Timer cleanup is consistently handled",
+      "description": "All setTimeout/setInterval usages (ProductFilters, SearchBar, useAddToCart, ExpirationLabel, ReceivedOrderCard, useAutoSavePaymentMethod) properly return cleanup functions. No memory leaks found."
+    },
+    {
+      "pattern": "No raw <img> tags found in production components (excluding explicitly justified exceptions)",
+      "description": "Two <img> usages found: ReceivedOrderCard.tsx (user-uploaded dynamic URLs, eslint-disable justified) and InlineImageCarousel.tsx (user-supplied URLs, eslint-disable justified). ImageGallery.tsx correctly uses Next.js <Image>. The eslint-disable comments document the intentional exceptions."
+    },
+    {
+      "pattern": "Intl formatters are properly cached",
+      "description": "ExpirationLabel.tsx uses a module-level Map (relativeFormatterCache) to cache Intl.RelativeTimeFormat instances per locale. ProductTableRow.tsx and formatCop.ts use module-level constants for Intl.NumberFormat. No problematic per-render Intl constructor calls found."
+    },
+    {
+      "pattern": "Event listener subscriptions properly cleaned up",
+      "description": "cartCookie.ts subscribeToCartCookie correctly returns a cleanup function that removes all three event listeners (custom event, focus, visibilitychange)."
+    },
+    {
+      "pattern": "No large library full-imports found",
+      "description": "No problematic imports like 'import * as lodash' or full library imports were found in production code. Tree-shaking-friendly named imports are used throughout."
+    }
+  ]
+}

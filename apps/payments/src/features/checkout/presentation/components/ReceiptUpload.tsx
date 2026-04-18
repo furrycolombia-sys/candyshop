@@ -37,6 +37,15 @@ export function ReceiptUpload({
     };
   }, []);
 
+  // Revoke preview URL when file is cleared externally (without going through handleRemove)
+  // setPreviewUrl is intentionally omitted: when file is null the JSX renders the upload
+  // button (not the preview img), so stale previewUrl state never renders.
+  useEffect(() => {
+    if (!file && previewUrlRef.current) {
+      URL.revokeObjectURL(previewUrlRef.current);
+    }
+  }, [file]);
+
   const handleSelect = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const selected = e.target.files?.[0] ?? null;

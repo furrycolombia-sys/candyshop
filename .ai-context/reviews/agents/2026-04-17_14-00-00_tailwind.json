@@ -1,0 +1,37 @@
+{
+  "agent": "tailwind",
+  "review_id": "2026-04-17_14-00-00",
+  "timestamp": "2026-04-17T14:00:00Z",
+  "scope": "apps/",
+  "summary": {
+    "filesAnalyzed": 749,
+    "issuesFound": 0,
+    "critical": 0,
+    "warning": 0,
+    "suggestion": 0,
+    "info": 1
+  },
+  "issues": [],
+  "patterns": [
+    {
+      "id": "PAT-STYLE-001",
+      "description": "All 4 main apps (store, admin, payments, studio) correctly include the @source directive for ui package scanning: '@source ../../../../packages/ui/src/**/*.{ts,tsx}'. auth and landing apps also include this directive. CSS consistency rule is met.",
+      "verdict": "COMPLIANT"
+    },
+    {
+      "id": "PAT-STYLE-002",
+      "description": "No hardcoded Tailwind palette colors found (text-red-*, bg-green-*, etc.) in production components. Semantic color tokens (text-destructive, bg-success, etc.) are consistently used across all apps.",
+      "verdict": "COMPLIANT"
+    },
+    {
+      "id": "PAT-STYLE-003",
+      "description": "No inline style objects with hardcoded color values found. The FeaturedRibbon.tsx uses Canvas API directly (not CSS) for its ribbon, which is appropriate for that use case.",
+      "verdict": "COMPLIANT"
+    },
+    {
+      "id": "PAT-STYLE-004",
+      "description": "CATEGORY_COLOR_MAP and TYPE_COLOR_MAP in products/domain/constants.ts use CSS custom properties (var(--pink), var(--mint), etc.) correctly. These are CSS variable strings which should remain inline - no constants extraction needed.",
+      "verdict": "COMPLIANT - pattern is correct"
+    }
+  ]
+}

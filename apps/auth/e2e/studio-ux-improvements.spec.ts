@@ -184,7 +184,7 @@ test.describe.serial("Studio UX Improvements", () => {
 
     // Verify the star on the second thumbnail is filled (yellow)
     const starIcon = coverBtn1.locator("svg");
-    await expect(starIcon).toHaveClass(/text-yellow-500/);
+    await expect(coverBtn1).toHaveAttribute("data-cover", "true");
     await snap(page, "cover-star-verified");
 
     // Save the product

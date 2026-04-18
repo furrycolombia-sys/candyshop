@@ -1,0 +1,63 @@
+{
+  "agent": "architecture",
+  "review_id": "2026-04-17_14-00-00",
+  "timestamp": "2026-04-17T14:00:00Z",
+  "scope": "apps/",
+  "summary": {
+    "filesAnalyzed": 749,
+    "issuesFound": 3,
+    "critical": 0,
+    "warning": 2,
+    "suggestion": 1,
+    "info": 0
+  },
+  "issues": [
+    {
+      "id": "ARCH-001",
+      "severity": "warning",
+      "category": "ARCH",
+      "file": "apps/studio/src/features/products/presentation/pages/ProductListPage.tsx",
+      "line": 34,
+      "description": "Hardcoded permission string 'seller_admins.read' used directly in hasPermission() call instead of using the SELLER_ADMINS_READ_PERMISSION constant that was extracted to seller-admins/domain/constants.ts in the previous cycle.",
+      "rule": "no-hardcoding.md",
+      "fix": "Import SELLER_ADMINS_READ_PERMISSION from '@/features/seller-admins/domain/constants' and use it instead of the raw string."
+    },
+    {
+      "id": "ARCH-002",
+      "severity": "warning",
+      "category": "ARCH",
+      "file": "apps/admin/src/features/users/presentation/pages/UserDetailPage.tsx",
+      "line": 33,
+      "description": "Hardcoded permission string 'seller_admins.read' used in hasPermission() call in the admin app. This is a second app that should also define or import a constant for this permission string.",
+      "rule": "no-hardcoding.md",
+      "fix": "Extract a SELLER_ADMINS_READ_PERMISSION constant in apps/admin/src/features/users/domain/constants.ts and use it here. Note: the admin and studio apps are separate; cross-app import is not allowed, so each app needs its own constant."
+    },
+    {
+      "id": "ARCH-003",
+      "severity": "suggestion",
+      "category": "ARCH",
+      "file": "apps/admin/src/app/api/admin/users/[userId]/delegates/route.ts",
+      "line": 12,
+      "description": "Local constant SELLER_ADMINS_READ = 'seller_admins.read' defined inline in the route file. While it is a local constant (not a magic string inline), it duplicates the value already defined in studio domain/constants.ts and admin domain/constants.ts. A shared domain package constant would be ideal, but since this is an API route, the local constant is acceptable per KISS.",
+      "rule": "dry-principle.md",
+      "fix": "Consider adding SELLER_ADMINS_READ_PERMISSION to apps/admin/src/features/users/domain/constants.ts and importing it in this route file for consistency."
+    }
+  ],
+  "patterns": [
+    {
+      "id": "PAT-ARCH-001",
+      "description": "Refactors ARCH-007 and ARCH-008 from cycle 3 were correctly applied: SELLER_ADMINS_READ_PERMISSION is properly defined in seller-admins/domain/constants.ts and used in DelegateManagementPage.tsx and ProductDelegatesPage.tsx. PRODUCT_SEARCH_DEBOUNCE_MS is correctly in products/domain/constants.ts and used in ProductFilters.tsx.",
+      "verdict": "CLEAN - no regression"
+    },
+    {
+      "id": "PAT-ARCH-002",
+      "description": "All apps/ directories follow Clean Architecture with proper feature/domain/application/infrastructure/presentation layering. No cross-feature imports detected. Route files are thin wrappers.",
+      "verdict": "COMPLIANT"
+    },
+    {
+      "id": "PAT-ARCH-003",
+      "description": "All apps correctly use absolute imports with @/* alias for cross-layer imports. No relative '../../' violations found in production code.",
+      "verdict": "COMPLIANT"
+    }
+  ]
+}

@@ -1,8 +1,7 @@
 "use client";
 
 import { useMutation } from "@tanstack/react-query";
-import { createBrowserSupabaseClient } from "api/supabase";
-import { useMemo } from "react";
+import { useSupabase } from "shared";
 
 import type { CartItem } from "@/features/checkout/domain/types";
 import {
@@ -28,7 +27,7 @@ interface SubmitPaymentParams {
  * Returns the order ID.
  */
 export function useSubmitPayment() {
-  const supabase = useMemo(() => createBrowserSupabaseClient(), []);
+  const supabase = useSupabase();
 
   return useMutation({
     mutationFn: async (params: SubmitPaymentParams): Promise<string> => {
