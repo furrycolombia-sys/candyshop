@@ -15,9 +15,6 @@ concurrency:
   group: deploy-production
   cancel-in-progress: false
 
-env:
-  PNPM_VERSION: "10.32.1"
-
 jobs:
   # ============================================
   # Run CI checks before deploying
@@ -32,9 +29,6 @@ jobs:
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v6
-        with:
-          version: ${{ env.PNPM_VERSION }}
-          package_json_file: apps/store/package.json
 
       - name: Setup Node.js
         uses: actions/setup-node@v6
