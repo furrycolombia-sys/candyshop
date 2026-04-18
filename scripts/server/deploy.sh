@@ -44,10 +44,42 @@ git checkout -B "$BRANCH" FETCH_HEAD
 git clean -fd
 log "Checked out $(git log --oneline -1)"
 
-# Rebuild container — limit CPU so the running site stays responsive
+# Build image explicitly (compose file references prebuilt image and has no build section)
 log "Building Docker image (max ${MAX_BUILD_CPUS} CPUs)..."
-DOCKER_BUILDKIT=1 docker compose -f "$COMPOSE_FILE" --env-file "$ENV_FILE" \
-  build --no-cache --build-arg BUILDKIT_CPU_LIMIT=$MAX_BUILD_CPUS
+set -o allexport
+# shellcheck disable=SC1090
+source "$ENV_FILE"
+set +o allexport
+
+BUILD_ARG_KEYS=(
+  NEXT_PUBLIC_SUPABASE_URL
+  NEXT_PUBLIC_SUPABASE_ANON_KEY
+  NEXT_PUBLIC_AUTH_URL
+  NEXT_PUBLIC_AUTH_HOST_URL
+  NEXT_PUBLIC_STORE_URL
+  NEXT_PUBLIC_ADMIN_URL
+  NEXT_PUBLIC_PLAYGROUND_URL
+  NEXT_PUBLIC_LANDING_URL
+  NEXT_PUBLIC_PAYMENTS_URL
+  NEXT_PUBLIC_STUDIO_URL
+  NEXT_PUBLIC_BUILD_HASH
+  NEXT_PUBLIC_ENABLE_TEST_IDS
+  NEXT_PUBLIC_ENV_DEBUG
+)
+
+BUILD_ARGS=()
+for KEY in "${BUILD_ARG_KEYS[@]}"; do
+  VALUE="${!KEY:-}"
+  BUILD_ARGS+=(--build-arg "${KEY}=${VALUE}")
+done
+
+DOCKER_BUILDKIT=1 docker build \
+  -f "$DEPLOY_DIR/docker/smoke/Dockerfile" \
+  -t "${SITE_PROD_IMAGE_NAME}" \
+  --no-cache \
+  --build-arg BUILDKIT_CPU_LIMIT="$MAX_BUILD_CPUS" \
+  "${BUILD_ARGS[@]}" \
+  "$DEPLOY_DIR"
 
 # Stop old container and start new one
 log "Restarting container..."

@@ -82,16 +82,16 @@ const EVENT = {
 
 const IMAGES = [
   {
-    url: `${IMG_BASE}/hero-bath-preview.webp`,
-    alt_en: "Estelar Paipa Hotel thermal pool",
-    alt_es: "Piscina termal Hotel Estelar Paipa",
+    url: `${IMG_BASE}/photo_2026-03-02_21-15-08.jpg`,
+    alt_en: "Moonfest community gathering",
+    alt_es: "Encuentro comunidad Moonfest",
     sort_order: 1,
     is_cover: false,
   },
   {
-    url: `${IMG_BASE}/photo_2026-03-02_21-15-08.jpg`,
-    alt_en: "Moonfest community gathering",
-    alt_es: "Encuentro comunidad Moonfest",
+    url: `${IMG_BASE}/BANNER_WEB.webp`,
+    alt_en: "Estelar Paipa Hotel thermal pool",
+    alt_es: "Piscina termal Hotel Estelar Paipa",
     sort_order: 2,
     is_cover: true,
   },

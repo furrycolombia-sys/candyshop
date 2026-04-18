@@ -53,7 +53,7 @@ function runDeploy() {
         ...process.env,
         BRANCH,
         REPO_URL: "https://github.com/furrycolombia-sys/candyshop.git",
-        ENV_FILE: "/home/furrycolombia/candyshop-build.env",
+        ENV_FILE: process.env.ENV_FILE || "/home/furrycolombia/.env.prod",
       },
       timeout: 15 * 60 * 1000, // 15 min max
       maxBuffer: 10 * 1024 * 1024,
