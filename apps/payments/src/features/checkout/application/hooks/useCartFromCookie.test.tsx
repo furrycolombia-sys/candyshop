@@ -13,13 +13,9 @@ vi.mock("@/features/checkout/infrastructure/cartCookie", () => ({
   subscribeToCartCookie: vi.fn(() => () => {}),
 }));
 
-vi.mock("shared", async () => {
-  const actual = await vi.importActual<typeof import("shared")>("shared");
-  return {
-    ...actual,
-    useSupabase: vi.fn(() => ({})),
-  };
-});
+vi.mock("api/supabase", () => ({
+  createBrowserSupabaseClient: vi.fn(() => ({})),
+}));
 
 vi.mock("@/features/checkout/infrastructure/checkoutQueries", () => ({
   fetchCheckoutProductsByIds: vi.fn(async () => []),

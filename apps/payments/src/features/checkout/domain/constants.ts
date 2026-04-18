@@ -14,8 +14,7 @@ export const CHECKOUT_CART_PRODUCTS_QUERY_KEY = "checkout-cart-products";
 /** Default expiry offset for new orders (48 hours) */
 export const ORDER_EXPIRY_HOURS = 48;
 
-export {
-  MS_PER_SECOND,
-  SECONDS_PER_MINUTE,
-  MINUTES_PER_HOUR,
-} from "shared/constants/time";
+/** Time conversion constants */
+export const MINUTES_PER_HOUR = 60;
+export const SECONDS_PER_MINUTE = 60;
+export const MS_PER_SECOND = 1000;

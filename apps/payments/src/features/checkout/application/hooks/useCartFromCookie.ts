@@ -1,9 +1,10 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import { createBrowserSupabaseClient } from "api/supabase";
 import { useLocale } from "next-intl";
 import { useCallback, useMemo, useSyncExternalStore } from "react";
-import { i18nField, useSupabase } from "shared";
+import { i18nField } from "shared";
 import type { CartCookieItem } from "shared/types";
 
 import { useSellerProfiles } from "./useSellerProfiles";
@@ -35,7 +36,7 @@ function getServerSnapshot(): CartCookieItem[] {
  */
 export function useCartFromCookie() {
   const locale = useLocale();
-  const supabase = useSupabase();
+  const supabase = useMemo(() => createBrowserSupabaseClient(), []);
   const cookieItems = useSyncExternalStore(
     subscribeToCartCookie,
     getSnapshot,
