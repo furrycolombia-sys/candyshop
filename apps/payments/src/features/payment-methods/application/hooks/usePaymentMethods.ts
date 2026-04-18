@@ -8,7 +8,6 @@ export function usePaymentMethods(sellerId: string) {
   const supabase = useSupabase();
 
   return useQuery({
-    // eslint-disable-next-line @tanstack/query/exhaustive-deps -- supabase client is stable (memoized)
     queryKey: ["payment-methods", sellerId],
     queryFn: () => fetchPaymentMethods(supabase, sellerId),
     enabled: !!sellerId,
