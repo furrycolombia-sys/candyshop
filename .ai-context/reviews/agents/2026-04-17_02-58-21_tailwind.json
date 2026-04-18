@@ -1,0 +1,77 @@
+{
+  "agent": "tailwind",
+  "timestamp": "2026-04-17T02:58:21",
+  "scope": "apps/",
+  "summary": {
+    "filesAnalyzed": 6,
+    "issuesFound": 5,
+    "critical": 0,
+    "warning": 3,
+    "suggestion": 2,
+    "info": 0
+  },
+  "issues": [
+    {
+      "id": "STYLE-001",
+      "severity": "warning",
+      "file": "apps/landing/src/features/home/presentation/components/FeaturesSection.tsx",
+      "lines": [112, 123],
+      "description": "Arbitrary font size values used: `text-[11px]`, `text-[1.55rem]`, `text-[1.8rem]`, `text-[2rem]`. These bypass the design system. The display heading (lines 123) uses responsive arbitrary sizes — if these are intentional brand typography values, they should be extracted as semantic typography tokens in globals.css (e.g., `text-hero-title`, `text-label-xs`).",
+      "rule": "No Arbitrary Values — use design system tokens",
+      "suggestion": "Define semantic type tokens in the shared `ui/globals.css` (e.g., `@theme { --text-label-xs: 0.6875rem; }`) and use `text-label-xs` instead of `text-[11px]`. For the display heading sizes, add a `text-display-*` scale."
+    },
+    {
+      "id": "STYLE-002",
+      "severity": "warning",
+      "file": "apps/store/src/features/products/presentation/components/product-detail/MobileBar.tsx",
+      "lines": [43],
+      "description": "Arbitrary font size `text-[11px]` used for the cart quantity label. This is the same sub-xs size as in FeaturesSection — suggests a recurring need for a `text-label-xs` (11px) token that is missing from the design system.",
+      "rule": "No Arbitrary Values — use design system tokens",
+      "suggestion": "Add a `text-label-xs` semantic token (11px) to the shared theme and replace `text-[11px]` in both files."
+    },
+    {
+      "id": "STYLE-003",
+      "severity": "warning",
+      "file": "apps/admin/src/features/templates/presentation/components/ItemRow.tsx",
+      "lines": [17],
+      "description": "Arbitrary grid-column values: `grid-cols-[1fr_1fr_1fr_1fr_80px_32px]`. These fixed pixel columns for a data table layout have no design token equivalent.",
+      "rule": "No Arbitrary Values — use design system tokens",
+      "suggestion": "This is a borderline case for a table layout — consider extracting to a shared CSS class (e.g., `template-items-grid`) in a feature-level CSS module or utility class. However, if this is a one-off layout, keeping it inline is acceptable per KISS."
+    },
+    {
+      "id": "STYLE-004",
+      "severity": "suggestion",
+      "file": "apps/admin/src/features/templates/presentation/components/TemplateTable.tsx",
+      "lines": [56, 82],
+      "description": "Arbitrary grid-column values: `grid-cols-[1fr_1fr_100px_80px_100px]` used in both the header and data rows. The same value is repeated twice in the same file.",
+      "rule": "No Arbitrary Values / DRY",
+      "suggestion": "Extract to a shared CSS class or a local constant used with `cn()` so the column definition is DRY. E.g., `const COLS = 'grid-cols-[1fr_1fr_100px_80px_100px]'` used with `cn(COLS, ...)` — NOTE: per DRY rules, Tailwind class strings should become a component or utility class, not a JS constant. Consider a wrapping CSS class."
+    },
+    {
+      "id": "STYLE-005",
+      "severity": "suggestion",
+      "file": "apps/admin/src/features/audit/presentation/components/AuditTable.tsx",
+      "lines": [137, 179],
+      "description": "Arbitrary grid-column values: `grid-cols-[160px_100px_1fr_90px_1fr_40px]` used in both the header and data rows. Same pattern as TemplateTable — grid-cols repeated twice.",
+      "rule": "No Arbitrary Values / DRY",
+      "suggestion": "Same as STYLE-004: extract the column definition to avoid duplication. A CSS utility class in `globals.css` or a scoped CSS module would be appropriate."
+    }
+  ],
+  "patterns": [
+    {
+      "id": "PAT-STYLE-001",
+      "type": "positive",
+      "description": "No raw Tailwind palette color classes found (text-red-*, bg-green-*, text-blue-*, etc.). All color usage correctly relies on semantic tokens (text-muted-foreground, text-destructive, bg-background, etc.)."
+    },
+    {
+      "id": "PAT-STYLE-002",
+      "type": "positive",
+      "description": "All inline style={{ }} usages with color/background values are dynamic theme variables (e.g., theme.bg, theme.foreground, categoryColor) — these are correctly kept as dynamic styles since CSS variables cannot be used with Tailwind for truly dynamic runtime values."
+    },
+    {
+      "id": "PAT-STYLE-003",
+      "type": "observation",
+      "description": "The `text-[11px]` value appears in two separate apps (landing and store), suggesting a missing design token for a sub-xs label size. This is a recurring need that would benefit from a shared semantic token."
+    }
+  ]
+}

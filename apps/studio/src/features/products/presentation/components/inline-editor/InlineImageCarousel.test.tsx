@@ -8,13 +8,24 @@ vi.mock("next-intl", () => ({
 
 vi.mock("shared", () => ({
   tid: (id: string) => ({ "data-testid": id }),
+  getCategoryTheme: () => ({
+    bg: "var(--mint)",
+    bgLight: "color-mix(in srgb, var(--mint) 15%, transparent)",
+    border: "var(--mint)",
+    text: "var(--mint)",
+    badgeBg: "var(--mint)",
+    rowEven: "color-mix(in srgb, var(--mint) 5%, transparent)",
+    rowOdd: "color-mix(in srgb, var(--mint) 15%, transparent)",
+    foreground: "var(--foreground)",
+    accent: "--mint",
+  }),
 }));
 
 vi.mock("ui", () => ({
+  cn: (...args: unknown[]) => args.filter(Boolean).join(" "),
   Input: (props: React.InputHTMLAttributes<HTMLInputElement>) => (
     <input {...props} />
   ),
-  cn: (...args: unknown[]) => args.filter(Boolean).join(" "),
 }));
 
 vi.mock("@hello-pangea/dnd", () => ({
@@ -158,11 +169,10 @@ describe("InlineImageCarousel", () => {
     const coverBtn = screen.getAllByTestId("image-thumb-cover-1")[0];
     fireEvent.click(coverBtn);
 
-    // After clicking, the second image's star should have the filled style
-    const starIcons = screen.getAllByLabelText("setAsCover");
-    // The second thumbnail's star (desktop) should now be filled (yellow)
-    const secondStar = starIcons[1];
-    expect(secondStar.querySelector("svg")).toHaveClass("text-yellow-500"); // eslint-disable-line testing-library/no-node-access -- checking SVG class requires DOM traversal
+    // After clicking, the second image's cover button should reflect filled state
+    const coverButtons = screen.getAllByLabelText("setAsCover");
+    // The second thumbnail's button (desktop) should now be cover
+    expect(coverButtons[1]).toHaveAttribute("data-cover", "true");
   });
 
   it("shows filled star on the cover image and unfilled on others", () => {
@@ -188,13 +198,9 @@ describe("InlineImageCarousel", () => {
     const coverButtons = screen.getAllByLabelText("setAsCover");
     // Desktop thumbnails come first, then mobile thumbnails
     // First desktop thumbnail (index 0) — not cover
-    const firstStar = coverButtons[0].querySelector("svg"); // eslint-disable-line testing-library/no-node-access -- checking SVG class requires DOM traversal
-    expect(firstStar).toHaveClass("text-muted-foreground");
-    expect(firstStar).not.toHaveClass("text-yellow-500");
+    expect(coverButtons[0]).toHaveAttribute("data-cover", "false");
 
     // Second desktop thumbnail (index 1) — is cover
-    const secondStar = coverButtons[1].querySelector("svg"); // eslint-disable-line testing-library/no-node-access -- checking SVG class requires DOM traversal
-    expect(secondStar).toHaveClass("text-yellow-500");
-    expect(secondStar).toHaveClass("fill-current");
+    expect(coverButtons[1]).toHaveAttribute("data-cover", "true");
   });
 });

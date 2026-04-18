@@ -2,7 +2,7 @@
 
 import { ShoppingCart } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
-import { i18nPrice, tid } from "shared";
+import { i18nCurrencyCode, i18nPrice, tid } from "shared";
 
 import type { CategoryTheme } from "@/features/products/domain/constants";
 import {
@@ -12,7 +12,7 @@ import {
 
 interface MobileBarProps {
   product: Product;
-  added: boolean;
+  isAdded: boolean;
   hasReachedStockLimit: boolean;
   onAddToCart: (e: React.MouseEvent<HTMLButtonElement>) => void;
   theme: CategoryTheme;
@@ -21,7 +21,7 @@ interface MobileBarProps {
 
 export function MobileBar({
   product,
-  added,
+  isAdded,
   hasReachedStockLimit,
   onAddToCart,
   theme,
@@ -36,11 +36,16 @@ export function MobileBar({
       {...tid("product-detail-mobile-bar")}
     >
       <div className="min-w-0 flex flex-col">
-        <span className="truncate font-display text-xl font-extrabold sm:text-2xl">
-          {i18nPrice(product, locale)}
+        <span className="flex min-w-0 items-baseline gap-1">
+          <span className="shrink-0 font-display text-xs font-bold uppercase tracking-wider text-muted-foreground">
+            {i18nCurrencyCode(product, locale)}
+          </span>
+          <span className="min-w-0 break-all font-display text-lg font-extrabold sm:text-xl">
+            {i18nPrice(product, locale)}
+          </span>
         </span>
         {quantityInCart > 0 && (
-          <span className="flex items-center gap-1 text-[11px] font-bold uppercase tracking-widest sm:text-xs">
+          <span className="flex items-center gap-1 text-label-xs font-bold uppercase tracking-widest sm:text-xs">
             <ShoppingCart className="size-3" />
             {t("inCart", { count: quantityInCart })}
           </span>
@@ -51,10 +56,12 @@ export function MobileBar({
         className="button-brutal button-press-sm shadow-brutal-md min-w-40 flex-1 px-4 py-3 font-display text-xs font-extrabold uppercase tracking-[0.12em] disabled:cursor-not-allowed disabled:opacity-50 sm:text-sm"
         style={{ backgroundColor: theme.bg, color: theme.foreground }}
         onClick={onAddToCart}
-        disabled={!isProductAvailable(product) || added || hasReachedStockLimit}
+        disabled={
+          !isProductAvailable(product) || isAdded || hasReachedStockLimit
+        }
         {...tid("product-detail-mobile-add-to-cart")}
       >
-        {added ? t("addedToCart") : t("addToCart")}
+        {isAdded ? t("addedToCart") : t("addToCart")}
       </button>
     </div>
   );

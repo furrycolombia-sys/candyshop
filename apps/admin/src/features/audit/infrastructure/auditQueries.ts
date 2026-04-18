@@ -1,9 +1,10 @@
-import type { createBrowserSupabaseClient } from "api/supabase";
-
 import { AUDIT_PAGE_SIZE } from "@/features/audit/domain/constants";
 import type { AuditEntry, AuditFilters } from "@/features/audit/domain/types";
-
-type SupabaseClient = ReturnType<typeof createBrowserSupabaseClient>;
+import type { SupabaseClient } from "@/shared/domain/types";
+import {
+  auditRestQuery,
+  getSupabaseConfig,
+} from "@/shared/infrastructure/auditRestClient";
 
 /* PostgREST query parameter keys & values */
 const PARAM_ORDER = "order";
@@ -14,47 +15,6 @@ const ORDER_BY_TIMESTAMP_DESC = "action_timestamp.desc";
 const POSTGREST_EQ_PREFIX = "eq.";
 const AUDIT_SCHEMA = "audit";
 const JSON_CONTENT_TYPE = "application/json";
-
-/** Get the Supabase REST URL and key from environment */
-function getSupabaseConfig() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "http://127.0.0.1:54321";
-  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "";
-  return { url, key };
-}
-
-/** Direct REST query to the audit schema using the user's session token */
-async function auditQuery(
-  supabase: SupabaseClient,
-  table: string,
-  params: URLSearchParams,
-): Promise<unknown[]> {
-  const { url, key } = getSupabaseConfig();
-
-  // Use the authenticated user's JWT so PostgREST applies the `authenticated` role
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-  const token = session?.access_token ?? key;
-
-  const queryString = params.toString();
-  const endpoint = `${url}/rest/v1/${table}?${queryString}`;
-
-  const response = await fetch(endpoint, {
-    headers: {
-      apikey: key,
-      Authorization: `Bearer ${token}`, // eslint-disable-line i18next/no-literal-string -- HTTP header
-      // Tell PostgREST to use the audit schema
-      "Accept-Profile": AUDIT_SCHEMA,
-      Accept: JSON_CONTENT_TYPE,
-    },
-  });
-
-  if (!response.ok) {
-    throw new Error(`Audit query failed: ${String(response.status)}`);
-  }
-
-  return response.json() as Promise<unknown[]>;
-}
 
 /** Fetch audit log entries with optional filters */
 export async function fetchAuditLog(
@@ -75,7 +35,11 @@ export async function fetchAuditLog(
     params.set(PARAM_ACTION_TYPE, POSTGREST_EQ_PREFIX + filters.actionType);
   }
 
-  const data = await auditQuery(supabase, "logged_actions_with_user", params);
+  const data = await auditRestQuery(
+    supabase,
+    "logged_actions_with_user",
+    params,
+  );
   return data as AuditEntry[];
 }
 
@@ -87,7 +51,11 @@ export async function fetchAuditTableNames(
   params.set(PARAM_SELECT, PARAM_TABLE_NAME);
   params.set(PARAM_ORDER, PARAM_TABLE_NAME);
 
-  const data = await auditQuery(supabase, "logged_actions_with_user", params);
+  const data = await auditRestQuery(
+    supabase,
+    "logged_actions_with_user",
+    params,
+  );
   const names = (data as Array<{ table_name: string }>).map(
     (r) => r.table_name,
   );
@@ -105,7 +73,8 @@ export async function insertAuditLog(
   const {
     data: { session },
   } = await supabase.auth.getSession();
-  const token = session?.access_token ?? key;
+  const token = session?.access_token;
+  if (!token) throw new Error("Unauthenticated");
 
   const endpoint = `${url}/rest/v1/logged_actions`;
 

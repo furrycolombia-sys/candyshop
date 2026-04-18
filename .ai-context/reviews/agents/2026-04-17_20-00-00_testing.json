@@ -1,0 +1,98 @@
+{
+  "agent": "testing",
+  "review_id": "2026-04-17_20-00-00",
+  "timestamp": "2026-04-17T20:00:00",
+  "scope": "apps/",
+  "summary": {
+    "filesAnalyzed": 15,
+    "issuesFound": 6,
+    "critical": 0,
+    "warning": 4,
+    "suggestion": 2,
+    "info": 0
+  },
+  "issues": [
+    {
+      "id": "TEST-001",
+      "severity": "warning",
+      "category": "TEST",
+      "file": "apps/admin/src/features/users/presentation/components/RoleBadge.test.tsx",
+      "lines": [32, 38, 44],
+      "description": "Class-based assertions used to verify badge variant (destructive/primary/muted). Tests should assert on ARIA attributes or data attributes for state, not CSS class names.",
+      "rule": "E2E Selectors - Never use Tailwind classes to select or assert state",
+      "fix": "Use data-variant or aria attributes on the Badge component and assert on those instead of className. Example: expect(badge).toHaveAttribute('data-variant', 'destructive') after adding data-variant={variant} to the component."
+    },
+    {
+      "id": "TEST-002",
+      "severity": "warning",
+      "category": "TEST",
+      "file": "apps/studio/src/features/products/presentation/components/ProductTableRow.test.tsx",
+      "line": 242,
+      "description": "Class-based assertion used to verify dragging state: expect(row.className).toContain('shadow'). CSS classes are implementation details that can change with styling refactors.",
+      "rule": "E2E Selectors - Never use Tailwind classes to select or assert state",
+      "fix": "Add a data-dragging={isDragging} attribute to the row element and assert on that: expect(row).toHaveAttribute('data-dragging', 'true')."
+    },
+    {
+      "id": "TEST-003",
+      "severity": "warning",
+      "category": "TEST",
+      "file": "apps/",
+      "description": "The tid() utility is used in many source components (mocked as returning data-testid in test files) but no test file calls getByTestId via tid() lookup in the test assertions themselves — tid() is only mocked, not integrated as a centralized test-id registry. This is consistent but means test IDs are maintained as string literals in both components and tests without a shared constant.",
+      "rule": "Testing - Test IDs with tid() for stable selectors",
+      "fix": "This is an acceptable pattern (mocking tid() in tests) but consider whether a shared tid constants file could prevent typos between component and test. Lower priority given current consistency."
+    },
+    {
+      "id": "TEST-004",
+      "severity": "warning",
+      "category": "TEST",
+      "file": "apps/admin/src/shared/application/hooks/useSupabase.ts",
+      "description": "The useSupabase hook (apps/admin/src/shared/application/hooks/useSupabase.ts) has no corresponding test file. This is a shared infrastructure hook used across the admin app.",
+      "rule": "Testing - Critical paths have tests",
+      "fix": "Add a unit test for useSupabase covering initialization and client availability."
+    },
+    {
+      "id": "TEST-005",
+      "severity": "suggestion",
+      "category": "TEST",
+      "file": "apps/payments/src/features/checkout/application/hooks/useClearCartCookie.ts",
+      "description": "useClearCartCookie is a trivial one-liner (returns clearCartCookie directly) and has no test. Given its simplicity, this is acceptable under KISS — the underlying clearCartCookie is tested via cartCookie.test.ts.",
+      "rule": "KISS Guardrail - Don't require tests for trivial presentational components",
+      "fix": "No action required. The underlying cartCookie infrastructure is tested."
+    },
+    {
+      "id": "TEST-006",
+      "severity": "suggestion",
+      "category": "TEST",
+      "file": "apps/auth/src/features/auth/application/hooks/useSupabaseAuth.ts",
+      "description": "useSupabaseAuth hooks exist in auth, admin, payments, store, studio, and playground apps with no test files. These are auth-critical hooks. However they may be thin wrappers around the Supabase SDK, so coverage depends on complexity.",
+      "rule": "Testing - Critical paths have tests",
+      "fix": "Review each useSupabaseAuth hook to determine if it contains custom logic (error handling, session refresh, etc.). If so, add unit tests. If it is a pure delegation to the SDK, document the intentional lack of tests."
+    }
+  ],
+  "patterns": [
+    {
+      "type": "good",
+      "description": "Excellent overall test coverage: 100+ test files across all apps (store, admin, payments, studio, auth, landing), covering hooks, components, pages, domain constants, infrastructure queries, and API routes."
+    },
+    {
+      "type": "good",
+      "description": "Checkout stock integrity is well-tested: apps/payments/src/app/api/checkout/payment-methods/route.test.ts covers both the happy path (cart within stock) and the suppression path (cart exceeds stock returns empty methods array). This satisfies the checkout-stock-integrity rule."
+    },
+    {
+      "type": "good",
+      "description": "Async handling is properly done across all hook tests: renderHook + act pattern used correctly, waitFor used in component tests where needed, findBy* used for async elements."
+    },
+    {
+      "type": "good",
+      "description": "Test files consistently import all Vitest functions explicitly (describe, it, expect, vi, beforeEach) satisfying the build-checks rule."
+    },
+    {
+      "type": "good",
+      "description": "getByTestId is heavily used (630 occurrences across 105 files), and tid() is consistently mocked to return { 'data-testid': id } in test files. This is the correct pattern and aligns with the e2e-selectors rule."
+    },
+    {
+      "type": "concern",
+      "description": "Class-based assertions exist in 2 test files (RoleBadge.test.tsx and ProductTableRow.test.tsx). These are isolated violations but should be corrected."
+    }
+  ]
+}

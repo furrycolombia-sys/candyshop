@@ -1,0 +1,60 @@
+{
+  "agent": "performance",
+  "review_id": "2026-04-17_22-00-00",
+  "timestamp": "2026-04-17T22:00:00",
+  "scope": "apps/",
+  "summary": {
+    "filesAnalyzed": 28,
+    "issuesFound": 4,
+    "critical": 0,
+    "warning": 2,
+    "suggestion": 2,
+    "info": 0
+  },
+  "issues": [
+    {
+      "id": "PERF-001",
+      "severity": "suggestion",
+      "title": "getPillClass helper recreated on every render in ProductFilters",
+      "file": "apps/studio/src/features/products/presentation/components/ProductFilters.tsx",
+      "line": 55,
+      "description": "getPillClass is defined as a plain function inside the component body, so it is recreated on every render. It is called multiple times in the render output (5 call-sites). For a debounced filter component that re-renders on input, this is a minor overhead.",
+      "fix": "Either define getPillClass outside the component (it has no closure dependencies) or wrap with useCallback. The simplest fix is to hoist it: `const getPillClass = (isActive: boolean) => cn(...)` before the component declaration, since it does not use any props or state."
+    },
+    {
+      "id": "PERF-002",
+      "severity": "warning",
+      "title": "Client-side filtering of all products on every render in ProductCatalogPage",
+      "file": "apps/store/src/features/products/presentation/pages/ProductCatalogPage.tsx",
+      "line": 26,
+      "description": "filteredProducts is already correctly wrapped in useMemo. However, the search filter iterates over the full product list and calls i18nField() (which accesses both name_en and name_es fields) for every product on every keystroke that invalidates the memo. This is fine at small catalog sizes, but will degrade with larger catalogs. The filtering is purely client-side — all products are loaded upfront via useStoreProducts().",
+      "fix": "This is a known trade-off of the current architecture (full client-side filtering). No immediate action required. If the catalog grows significantly, consider moving filtering server-side or adding pagination/virtualization. The useMemo is correctly in place to prevent re-computation on unrelated renders."
+    },
+    {
+      "id": "PERF-003",
+      "severity": "warning",
+      "title": "Inline style objects for dynamic colors create new object references on every render",
+      "file": "apps/store/src/features/products/presentation/components/ProductCardImage.tsx",
+      "line": 42,
+      "description": "Multiple components use inline `style={{ backgroundColor: categoryColor }}` and similar patterns. Because each render creates a new object literal, React must re-evaluate style equality on every render of the parent list. This affects ProductCardImage, ProductBadges, CartItemRow, HeroSection, MobileBar, and several inline-editor components. In list contexts (product grid), each card render creates fresh object references. The values come from static lookup maps (getCategoryColor/getCategoryTheme), so the computed value is stable for a given category.",
+      "fix": "For list items (ProductCardImage, ProductBadges, CartItemRow), consider either: (1) accepting this as a pragmatic trade-off given React's fast object comparison, or (2) wrapping the computed style object with useMemo when the color derivation is stable per category. The highest-impact case is ProductCardImage since it renders in a grid of many items. Example: `const imgStyle = useMemo(() => ({ backgroundColor: categoryColor }), [categoryColor])`."
+    },
+    {
+      "id": "PERF-004",
+      "severity": "suggestion",
+      "title": "FeaturedRibbon canvas animation runs requestAnimationFrame loop continuously",
+      "file": "apps/store/src/features/products/presentation/components/FeaturedRibbon.tsx",
+      "line": 125,
+      "description": "The FeaturedRibbon component uses a requestAnimationFrame loop to animate a shine effect on a canvas. The loop runs at 60fps for all visible featured product cards simultaneously. When multiple featured products are on-screen (e.g. in the catalog page), each ribbon runs its own continuous RAF loop. The cleanup on unmount/deps change is correctly handled (`cancelAnimationFrame` + `themeObserver.disconnect()`). This is a design choice for the visual effect, not a bug, but worth noting for performance budgets.",
+      "fix": "Consider using an IntersectionObserver to pause the RAF loop when the ribbon is not in the viewport, or switch to a CSS animation for the shine effect (which the browser can optimize and batch). For the current catalog scale this is acceptable. If performance profiling shows frame-rate drops on the catalog page, this is the first place to investigate."
+    }
+  ],
+  "patterns": [
+    "All setInterval and setTimeout usages in the codebase correctly return cleanup functions (clearInterval/clearTimeout) inside useEffect — no memory leaks found.",
+    "No raw <img> tags found outside test files — all image usage in production components correctly uses Next.js next/image.",
+    "No React.lazy() or next/dynamic() usage found in apps/ — no lazy-loaded components. Given the current app structure this appears intentional; heavy third-party libraries (recharts, framer-motion, dnd-kit) were not found in apps/.",
+    "new Date() inside render only occurs in a click handler (handleExportCsv in UsersPageContent) for generating a filename timestamp — not a performance concern.",
+    "The two setInterval-based timers (ExpirationLabel, ReceivedOrderCard) are correctly implemented with useMemo for the date object and clearInterval cleanup.",
+    "Debounce hooks (SearchBar, ProductFilters, UsersPageContent, useAutoSavePaymentMethod) all properly clean up timers via useEffect return functions."
+  ]
+}

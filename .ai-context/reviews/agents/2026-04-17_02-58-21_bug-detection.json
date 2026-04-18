@@ -1,0 +1,67 @@
+{
+  "agent": "bug-detection",
+  "timestamp": "2026-04-17T02:58:21",
+  "scope": "apps/",
+  "summary": {
+    "filesAnalyzed": 18,
+    "issuesFound": 4,
+    "critical": 0,
+    "warning": 3,
+    "suggestion": 1,
+    "info": 0
+  },
+  "issues": [
+    {
+      "id": "BUG-001",
+      "severity": "warning",
+      "category": "Logic Error / Uninitialized Variable",
+      "file": "apps/store/src/features/products/presentation/components/FeaturedRibbon.tsx",
+      "line": 107,
+      "description": "`animId` is declared as `let animId: number` (implicitly `undefined`) but the cleanup function at line 181 calls `cancelAnimationFrame(animId)` unconditionally. If the component unmounts before `document.fonts.ready` resolves (line 162), `animId` was never assigned, so `cancelAnimationFrame(undefined)` is called. While this is a no-op in browsers today, it is technically undefined behavior per the spec and could produce a runtime warning in strict environments.",
+      "snippet": "let animId: number; // uninitialized\n...\ndocument.fonts.ready.then(() => {\n  if (cancelled) return; // cancelled=true on unmount, so animId never assigned\n  animId = requestAnimationFrame(draw);\n});\n\nreturn () => {\n  cancelled = true;\n  cancelAnimationFrame(animId); // animId is undefined if fonts.ready not yet resolved\n};",
+      "fix": "Initialize `animId` to 0: `let animId: number = 0;`. `cancelAnimationFrame(0)` is a valid no-op."
+    },
+    {
+      "id": "BUG-002",
+      "severity": "warning",
+      "category": "Async/Promise - Missing error handling",
+      "file": "apps/auth/src/features/auth/presentation/components/SocialLoginButtons.tsx",
+      "line": 41,
+      "description": "`handleSignIn` is an async function that calls `signInWithProvider` without try/catch. If `signInWithProvider` throws (e.g., network error, browser popup blocked), the error is silently swallowed because the onClick handler returns a floating promise. Users will see no feedback and the button will appear to do nothing.",
+      "snippet": "const handleSignIn = async (provider: Provider) => {\n  await signInWithProvider(\n    provider,\n    `${globalThis.location.origin}/auth/callback?next=${encodeURIComponent(returnTo)}`,\n  );\n};\n\n// onClick={() => handleSignIn(id)}  <-- floating promise, errors lost",
+      "fix": "Wrap in try/catch or handle the error (show toast/error state): `try { await signInWithProvider(...); } catch (err) { /* handle error */ }`"
+    },
+    {
+      "id": "BUG-003",
+      "severity": "warning",
+      "category": "Async/Promise - Missing error handling",
+      "file": "apps/admin/src/features/audit/presentation/components/AuditRowDetail.tsx",
+      "line": 28,
+      "description": "`handleCopyUserId` is an async function that calls `navigator.clipboard.writeText` without try/catch. The Clipboard API throws `DOMException: NotAllowedError` in non-HTTPS contexts or when clipboard permission is denied. The error will be an unhandled promise rejection from the onClick handler.",
+      "snippet": "const handleCopyUserId = async () => {\n  if (entry.user_id) {\n    await navigator.clipboard.writeText(entry.user_id); // can throw DOMException\n  }\n};",
+      "fix": "Add try/catch around the clipboard call and optionally show a fallback or toast on error."
+    },
+    {
+      "id": "BUG-004",
+      "severity": "suggestion",
+      "category": "State Race Condition",
+      "file": "apps/payments/src/features/payment-methods/application/hooks/usePaymentMethodsManager.ts",
+      "line": 57,
+      "description": "`handleMoveUp` and `handleMoveDown` issue two sequential `updateMutation.mutate()` calls to swap `sort_order` values between two items. Both mutations fire immediately with the current `sort_order` values. If either mutation fails partway through, the two items will have the same `sort_order` value (partial swap). There is no rollback or optimistic-update pattern here. This is not a crash bug but can result in inconsistent ordering state persisted to the server.",
+      "snippet": "updateMutation.mutate({ id: current.id, patch: { sort_order: prev.sort_order } });\nupdateMutation.mutate({ id: prev.id, patch: { sort_order: current.sort_order } });\n// If first succeeds and second fails, both items share the same sort_order",
+      "fix": "Consider using a single server action or sequential mutation (chain onSuccess) to atomically swap the two sort_order values, or implement optimistic-update with rollback."
+    }
+  ],
+  "patterns": [
+    {
+      "pattern": "Floating promises from async onClick handlers",
+      "description": "Several components use `onClick={() => asyncFn()}` which creates floating promises. Errors in these handlers are silently ignored. The affected files are SocialLoginButtons.tsx and AuditRowDetail.tsx. Pattern is not widespread but worth noting for future handlers.",
+      "suggestion": "Consider a wrapper utility like `void asyncFn()` with a .catch, or ensure async handlers always have try/catch."
+    },
+    {
+      "pattern": "Cleanup patterns are generally correct",
+      "description": "All setInterval and setTimeout usages inspected (FeaturedRibbon, ReceivedOrderCard, ExpirationLabel, useAutoSavePaymentMethod, SearchBar, ProductFilters, UsersPageContent, useAddToCart) have proper cleanup via return functions in useEffect. The cartCookie subscribeToCartCookie correctly returns a cleanup function that removes all addEventListener registrations.",
+      "suggestion": "No action required."
+    }
+  ]
+}

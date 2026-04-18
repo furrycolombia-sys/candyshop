@@ -6,7 +6,7 @@ vi.mock("next-intl", () => ({
   useTranslations: () => (key: string) => key,
 }));
 
-vi.mock("@/features/audit/application/useAuditLog", () => ({
+vi.mock("@/features/audit/application/hooks/useAuditLog", () => ({
   useAuditTableNames: () => ({
     data: ["users", "orders", "products"],
   }),

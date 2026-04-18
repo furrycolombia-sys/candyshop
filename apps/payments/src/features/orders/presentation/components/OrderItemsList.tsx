@@ -1,17 +1,14 @@
 "use client";
 
 import { useLocale } from "next-intl";
-import { i18nField, tid } from "shared";
+import { tid } from "shared";
 
 import type { OrderItem } from "@/features/orders/domain/types";
 import { formatCop } from "@/shared/application/utils/formatCop";
+import { getItemName } from "@/shared/domain/orderUtils";
 
 interface OrderItemsListProps {
   items: OrderItem[];
-}
-
-function getItemName(item: OrderItem, locale: string): string {
-  return i18nField(item.metadata, "name", locale) || item.product_id;
 }
 
 export function OrderItemsList({ items }: OrderItemsListProps) {

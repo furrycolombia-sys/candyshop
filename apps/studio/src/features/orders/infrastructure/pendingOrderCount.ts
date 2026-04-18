@@ -1,6 +1,4 @@
-import type { createBrowserSupabaseClient } from "api/supabase";
-
-type SupabaseClient = ReturnType<typeof createBrowserSupabaseClient>;
+import type { SupabaseClient } from "@/shared/domain/types";
 
 export async function fetchPendingOrderCount(
   supabase: SupabaseClient,

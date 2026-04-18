@@ -1,0 +1,97 @@
+{
+  "agent": "security",
+  "timestamp": "2026-04-17T02:58:21",
+  "scope": "apps/",
+  "summary": {
+    "filesAnalyzed": 18,
+    "issuesFound": 6,
+    "critical": 0,
+    "warning": 4,
+    "suggestion": 2,
+    "info": 0
+  },
+  "issues": [
+    {
+      "id": "SEC-001",
+      "severity": "warning",
+      "category": "XSS / CSP",
+      "file": "apps/auth/next.config.ts",
+      "line": 25,
+      "title": "Content-Security-Policy allows 'unsafe-inline' and 'unsafe-eval' in script-src",
+      "description": "All apps share the same CSP: `script-src 'self' 'unsafe-inline' 'unsafe-eval'`. This weakens XSS protection significantly — 'unsafe-inline' permits inline scripts and 'unsafe-eval' permits eval(). Any reflected or stored XSS that injects an inline <script> or calls eval() bypasses this CSP entirely. The same issue exists in apps/store/next.config.ts, apps/admin/next.config.ts, apps/payments/next.config.ts, apps/studio/next.config.ts, apps/landing/next.config.ts, apps/playground/next.config.ts.",
+      "recommendation": "Replace 'unsafe-inline' with a nonce-based or hash-based CSP (Next.js supports nonce injection via middleware). Remove 'unsafe-eval' and instead use dynamic imports where needed. If these flags are required by third-party scripts today, document which scripts require them so they can be isolated or replaced."
+    },
+    {
+      "id": "SEC-002",
+      "severity": "warning",
+      "category": "Data Exposure",
+      "file": "apps/playground/src/app/[locale]/env/page.tsx",
+      "line": 19,
+      "title": "NEXT_PUBLIC_ENV_DEBUG serializes ALL env vars into a publicly-accessible browser page",
+      "description": "When ENV_DEBUG=true, scripts/load-env.mjs serializes the entire process.env snapshot (including SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, API URLs, and any other vars in the .env file) into NEXT_PUBLIC_ENV_DEBUG. This value is then rendered verbatim at /playground/[locale]/env. Although load-env.mjs blocks this in production, the check relies on NODE_ENV and the `env` flag name. If a non-prod env (e.g. staging) is deployed with ENV_DEBUG=true set in the env file, all NEXT_PUBLIC_ variables — and any var that was serialized — are exposed in the browser. The playground is a live deployment on port 5003.",
+      "recommendation": "1) Do not serialize SUPABASE_SERVICE_ROLE_KEY or any private-server-only var into the snapshot. 2) Add a server-side authentication/IP guard on the /env route so it is not publicly accessible even on non-prod. 3) Consider stripping sensitive keys from the snapshot explicitly (e.g. omit any key containing 'KEY', 'SECRET', 'TOKEN', 'PASSWORD')."
+    },
+    {
+      "id": "SEC-003",
+      "severity": "warning",
+      "category": "Data Exposure",
+      "file": "apps/admin/src/app/api/admin/_shared/adminRest.ts",
+      "line": 79,
+      "title": "Supabase error text forwarded verbatim in thrown errors — may leak internal DB info",
+      "description": "In adminFetch(), when the Supabase REST API returns a non-2xx response, `response.text()` is read and passed directly into `throw new Error(errorText)`. This raw Supabase/PostgREST error message (which can include table names, column names, constraint names, policy names, and query fragments) then propagates up the call stack. Callers in the permissions and delegates routes catch `error.message` and in several cases only check for INVALID_PAYLOAD_ERROR before returning a generic 500 — but they do not re-sanitize the error. If any unhandled path logs or forwards the raw error.message to the client, internal schema details could be leaked.",
+      "recommendation": "Sanitize the raw Supabase error before including it in thrown errors. Either log the full error server-side and throw a generic message, or at a minimum never propagate the raw `errorText` beyond the infrastructure layer. Review all catch blocks that inspect `error.message` to confirm raw Supabase text cannot reach NextResponse.json()."
+    },
+    {
+      "id": "SEC-004",
+      "severity": "warning",
+      "category": "Environment Variables",
+      "file": "apps/admin/src/shared/infrastructure/recentActivityQueries.ts",
+      "line": 12,
+      "title": "NEXT_PUBLIC_SUPABASE_ANON_KEY used as fallback auth token in server-side REST calls",
+      "description": "In both recentActivityQueries.ts and auditQueries.ts, when no authenticated session is present, the code falls back to using `NEXT_PUBLIC_SUPABASE_ANON_KEY` as the Bearer token: `const token = session?.access_token ?? key`. Because this is a NEXT_PUBLIC_ variable it is embedded in the JS bundle and is visible in the browser. Using it as a server-side auth fallback means unauthenticated requests can reach the audit schema using the public anon key. Whether this is exploitable depends on PostgREST RLS policies, but the anon key should not be used to authenticate admin-schema queries.",
+      "recommendation": "Require an authenticated session for all audit queries — do not fall back to the anon key. If the session is absent, return a 401 before attempting any query. This matches how the API routes (payments, admin) handle missing sessions."
+    },
+    {
+      "id": "SEC-005",
+      "severity": "suggestion",
+      "category": "Cookie Security",
+      "file": "packages/auth/src/server/session.ts",
+      "line": 40,
+      "title": "Access token cookie is httpOnly: false by design — documented but worth tracking",
+      "description": "createAccessTokenCookieOptions() explicitly sets httpOnly: false so that client-side JavaScript across all subdomains can read the access token. The comment explains this is intentional for cross-app token sharing. While architecturally deliberate, this means any XSS vulnerability in any app on the shared domain (or any subdomain) can steal the access token. The refresh token remains httpOnly. This is a known trade-off but should be tracked as a risk item.",
+      "recommendation": "Ensure the strict CSP (SEC-001) is addressed first, as fixing XSS vectors reduces the risk of this cookie being stolen. Consider whether a server-side token relay mechanism (the /auth/refresh endpoint) could eliminate the need for JS-readable access tokens. If not, document this risk formally."
+    },
+    {
+      "id": "SEC-006",
+      "severity": "suggestion",
+      "category": "Data Exposure",
+      "file": "apps/store/next.config.ts",
+      "line": 44,
+      "title": "Next.js Image remote patterns allow all HTTPS hostnames",
+      "description": "Both apps/store and apps/studio configure `{ protocol: 'https', hostname: '**' }` in images.remotePatterns. This allows the Next.js image proxy to fetch and optimize images from any HTTPS host on the internet. An attacker who can control a product image URL could use the store's image proxy as a relay to probe internal hosts (SSRF), measure response times, or cause the server to make requests to arbitrary HTTPS endpoints.",
+      "recommendation": "Restrict remotePatterns to the specific hostnames actually used (Supabase storage, CDN domains). If arbitrary seller image URLs are a product requirement, consider proxying through a dedicated image CDN with SSRF protection, or use a Supabase storage bucket for all product images."
+    }
+  ],
+  "patterns": [
+    {
+      "pattern": "Strong positive: all API routes check authentication before processing",
+      "detail": "All admin API routes call getAuthorizedAdmin() with specific permission keys before any data operation. Payment routes call supabase.auth.getUser() and return 401/403 before processing. Auth is consistently checked."
+    },
+    {
+      "pattern": "Strong positive: UUID validation on all user-controlled IDs",
+      "detail": "validateUuid() is applied consistently on path params (userId, delegateRowId) and items before any database query, preventing injection via malformed identifiers."
+    },
+    {
+      "pattern": "Strong positive: no hardcoded secrets found",
+      "detail": "No API keys, tokens, passwords, or credentials were found hardcoded in any source file. All sensitive values are loaded from environment variables."
+    },
+    {
+      "pattern": "Strong positive: CORS restricted to allowlist",
+      "detail": "The /auth/refresh route validates the Origin header against a set built from env vars (NEXT_PUBLIC_*_URL) and only reflects allowed origins. No wildcard CORS."
+    },
+    {
+      "pattern": "Strong positive: security headers applied to all routes",
+      "detail": "All apps apply HSTS, X-Content-Type-Options, X-Frame-Options (SAMEORIGIN), Referrer-Policy, and Permissions-Policy consistently via next.config.ts headers()."
+    }
+  ]
+}

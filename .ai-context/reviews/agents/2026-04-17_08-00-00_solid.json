@@ -1,0 +1,112 @@
+{
+  "agent": "solid",
+  "review_id": "2026-04-17_08-00-00",
+  "timestamp": "2026-04-17T08:00:00.000Z",
+  "scope": "apps/",
+  "summary": {
+    "filesAnalyzed": 28,
+    "issuesFound": 7,
+    "critical": 0,
+    "warning": 5,
+    "suggestion": 2,
+    "info": 0
+  },
+  "issues": [
+    {
+      "id": "SOLID-001",
+      "principle": "SRP",
+      "severity": "warning",
+      "file": "apps/studio/src/features/products/presentation/components/ProductTableRow.tsx",
+      "description": "ProductTableRow mixes presentation with mutation concerns. It directly calls useDeleteProduct() and useToggleProduct() hooks (data mutations) inside a table row component, giving it both display and write responsibilities.",
+      "suggestion": "Move mutation calls to a parent container (ProductListPageContent or ProductTable) and pass handlers as props (onDelete, onToggle). This follows the container/presenter pattern already used elsewhere in the codebase.",
+      "rule": "component-patterns.md#containerPresenter"
+    },
+    {
+      "id": "SOLID-002",
+      "principle": "SRP",
+      "severity": "warning",
+      "file": "apps/payments/src/features/payment-methods/presentation/pages/PaymentMethodsPageContent.tsx",
+      "description": "PaymentMethodsPageContent manages four different concerns in one component: (1) data fetching via usePaymentMethods, (2) all four CRUD mutations (create/update/delete/reorder), (3) expand/collapse UI state, and (4) full rendering of the method list. The reorder logic alone (handleMoveUp/handleMoveDown) involves two concurrent mutation calls. This creates a large component with mixed responsibilities.",
+      "suggestion": "Extract a usePaymentMethodsPage hook to own all state and mutation orchestration, leaving the component responsible only for rendering. The swap-sort logic could also be extracted to a utility or a dedicated hook.",
+      "rule": "solid-principles.md#s"
+    },
+    {
+      "id": "SOLID-003",
+      "principle": "OCP",
+      "severity": "warning",
+      "file": "apps/payments/src/features/payment-methods/presentation/components/BlockEditor.tsx",
+      "description": "BlockEditor uses a switch on block.type with inline JSX for each case (text, image, video, link, url). Adding a new block type requires modifying this file. The pattern is inconsistent: VideoBlock delegates to a separate VideoBlockEditor component while all other types render inline.",
+      "suggestion": "Define a BLOCK_EDITORS map (similar to BLOCK_TYPE_ICONS already in DisplaySectionEditor) mapping each block type to its editor component, so new block types can be added without modifying the switch. The video case already hints at this direction.",
+      "rule": "solid-principles.md#o"
+    },
+    {
+      "id": "SOLID-004",
+      "principle": "OCP",
+      "severity": "warning",
+      "file": "apps/payments/src/features/orders/presentation/components/StatusContent.tsx",
+      "description": "StatusContent renders completely different UI for each payment_status value (evidence_requested, approved, rejected, pending_verification, expired) in a single switch statement. Each case contains unique layout and business logic. Adding a new status requires modifying this file.",
+      "suggestion": "Extract each status case into a dedicated sub-component (ApprovedStatusContent, RejectedStatusContent, etc.) and compose them via a lookup map. This mirrors the pattern used in ReceivedStatusBadge which already uses a getStatusConfig helper to achieve open/closed behaviour.",
+      "rule": "solid-principles.md#o"
+    },
+    {
+      "id": "SOLID-005",
+      "principle": "OCP",
+      "severity": "suggestion",
+      "file": "apps/payments/src/features/received-orders/presentation/components/ActionButtons.tsx",
+      "description": "ActionButtons renders three different panels (ConfirmActionPanel, SellerNoteInput for reject, SellerNoteInput for evidence) via sequential if (mode === ...) guards. The handleNoteSubmit callback also branches on mode to determine which action to dispatch. Adding a new action mode requires editing both the render block and the handler.",
+      "suggestion": "Consider an ACTION_PANELS config map keyed by mode, each defining the component and the action to dispatch, so new modes can be added without modifying the core logic. This is a minor improvement given the current 3-mode scope — only act on it if a fourth mode appears.",
+      "rule": "solid-principles.md#o"
+    },
+    {
+      "id": "SOLID-006",
+      "principle": "ISP",
+      "severity": "warning",
+      "file": "apps/store/src/features/cart/presentation/components/CartItemRow.tsx",
+      "description": "CartItemRowProps requires four separate translator functions (t, tProducts, tTypes, tCategories) to be injected by every caller. Any consumer of CartItemRow must obtain and pass all four translation scopes even if only some are needed. This is an interface segregation issue — the component's translation needs leak into the caller contract.",
+      "suggestion": "Consider calling useTranslations() directly inside CartItemRow (it is already a 'use client' component implicitly via its parent CartDrawer) or consolidate the translators into a single `translations` object prop. This reduces the prop surface and respects ISP by not forcing callers to supply unused dependencies.",
+      "rule": "solid-principles.md#i"
+    },
+    {
+      "id": "SOLID-007",
+      "principle": "SRP",
+      "severity": "suggestion",
+      "file": "apps/payments/src/features/checkout/presentation/components/DynamicFormField.tsx",
+      "description": "DynamicFormField contains an inline FileInput private helper that uses globalThis.alert for validation errors. While the eslint-disable comment acknowledges the co-location, the alert call bypasses the parent's error prop contract (the field is documented to receive error?: string | null from the parent). This creates two different error reporting paths within the same component.",
+      "suggestion": "Have FileInput call onChange with an empty value and surface the error through the existing error prop mechanism, or pass an onError callback. Eliminates the browser alert side-effect from a presentational component.",
+      "rule": "solid-principles.md#s"
+    }
+  ],
+  "patterns": [
+    {
+      "id": "PAT-SOLID-001",
+      "type": "good",
+      "description": "Switch-based renderer components (DisplayBlockRenderer, SectionRenderer, ReceivedStatusBadge) correctly centralise type dispatch in a single place, avoiding scattered conditionals across the codebase. ReceivedStatusBadge is a particularly clean example: it extracts the per-status config to a helper function and delegates rendering to generic display logic.",
+      "files": [
+        "apps/payments/src/features/checkout/presentation/components/DisplayBlockRenderer.tsx",
+        "apps/store/src/features/products/presentation/components/product-detail/sections/SectionRenderer.tsx",
+        "apps/payments/src/features/received-orders/presentation/components/ReceivedStatusBadge.tsx"
+      ]
+    },
+    {
+      "id": "PAT-SOLID-002",
+      "type": "good",
+      "description": "Page/Content split (e.g. TemplatesPage + TemplatesPageContent, CheckoutPage + CheckoutPageContent) consistently delegates data-fetching and orchestration to the *Content component, keeping route files as thin wrappers. This aligns with Architecture rules and provides a clean SRP boundary.",
+      "files": [
+        "apps/admin/src/features/templates/presentation/pages/TemplatesPageContent.tsx",
+        "apps/payments/src/features/checkout/presentation/pages/CheckoutPageContent.tsx"
+      ]
+    },
+    {
+      "id": "PAT-SOLID-003",
+      "type": "observation",
+      "description": "Several components use globalThis.confirm() for destructive actions (TemplateTable, PaymentMethodsPageContent, PaymentMethodTable, EditorToolbar, TemplatePicker). While not a SOLID violation per se, it couples presentation components to a browser-specific side effect and is not testable. ProductTableRow has a better inline confirmation pattern (showing confirm/cancel buttons inline) that is fully accessible and testable.",
+      "files": [
+        "apps/admin/src/features/templates/presentation/components/TemplateTable.tsx",
+        "apps/payments/src/features/payment-methods/presentation/pages/PaymentMethodsPageContent.tsx",
+        "apps/payments/src/features/payment-methods/presentation/components/PaymentMethodTable.tsx",
+        "apps/studio/src/features/products/presentation/components/inline-editor/EditorToolbar.tsx",
+        "apps/studio/src/features/products/presentation/components/inline-editor/TemplatePicker.tsx"
+      ]
+    }
+  ]
+}

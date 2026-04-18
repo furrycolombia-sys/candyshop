@@ -1,0 +1,71 @@
+{
+  "agent": "naming-conventions",
+  "review_id": "2026-04-17_08-00-00",
+  "timestamp": "2026-04-17T08:00:00.000Z",
+  "scope": "apps/",
+  "summary": {
+    "filesAnalyzed": 523,
+    "issuesFound": 1,
+    "critical": 0,
+    "warning": 1,
+    "suggestion": 0,
+    "info": 0
+  },
+  "issues": [
+    {
+      "id": "NAME-001",
+      "severity": "warning",
+      "category": "naming",
+      "title": "Hook files placed directly in application/ layer instead of application/hooks/ subfolder",
+      "description": "10 hook files are placed directly at the application/ layer root instead of inside a hooks/ subfolder. While the file names correctly use the 'use' prefix, they are inconsistent with the majority of hooks (39) which are organized under application/hooks/. This reduces discoverability and structural consistency.",
+      "files": [
+        "apps/admin/src/features/audit/application/useAuditLog.ts",
+        "apps/store/src/features/cart/application/useFlyToCart.ts",
+        "apps/store/src/features/cart/application/useSellerProfiles.ts",
+        "apps/store/src/features/products/application/useGridCols.ts",
+        "apps/store/src/features/products/application/useStoreProducts.ts",
+        "apps/studio/src/features/products/application/useAutoResize.ts",
+        "apps/studio/src/features/products/application/useLangToggle.ts",
+        "apps/studio/src/features/products/application/useProductForm.ts",
+        "apps/studio/src/features/products/application/useProductMutations.ts",
+        "apps/studio/src/features/products/application/useProducts.ts"
+      ],
+      "rule": "Hooks should be placed in application/hooks/ subfolder for consistency",
+      "fix": "Move these files into application/hooks/ subfolders matching the pattern used by the majority of hooks (e.g., apps/store/src/features/cart/application/hooks/useFlyToCart.ts)"
+    }
+  ],
+  "patterns": [
+    {
+      "type": "good",
+      "description": "All React component files (.tsx) in components/ and pages/ folders correctly use PascalCase naming (e.g., AuditFilters.tsx, LoginPage.tsx)."
+    },
+    {
+      "type": "good",
+      "description": "All hook files correctly use camelCase with 'use' prefix (useAuth.ts, useProducts.ts, etc.)."
+    },
+    {
+      "type": "good",
+      "description": "All utility files correctly use camelCase (computeRole.ts, formatLastSeen.ts, getActionClass.ts, etc.)."
+    },
+    {
+      "type": "good",
+      "description": "All type files use either the descriptive PascalCase format (CategoryTypes.ts, GalleryTypes.ts) or domain-level types.ts filename."
+    },
+    {
+      "type": "good",
+      "description": "Props interfaces consistently follow the ComponentNameProps pattern across all apps."
+    },
+    {
+      "type": "good",
+      "description": "Internal state interfaces (RoleCard, ProviderConfig, SubmissionState, etc.) do not follow the Props suffix — correctly they are internal data shape types, not component prop interfaces."
+    },
+    {
+      "type": "good",
+      "description": "Next.js special files (global-error.tsx, not-found.tsx) correctly use kebab-case as required by the framework, not a naming convention violation."
+    },
+    {
+      "type": "good",
+      "description": "No kebab-case .tsx component files found outside the ui/ folder."
+    }
+  ]
+}

@@ -53,7 +53,10 @@ export function ResubmitEvidenceForm({
       }
 
       setReceiptFile(file);
-      setPreviewUrl(URL.createObjectURL(file));
+      setPreviewUrl((prev) => {
+        if (prev) URL.revokeObjectURL(prev);
+        return URL.createObjectURL(file);
+      });
     },
     [],
   );

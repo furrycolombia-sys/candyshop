@@ -18,7 +18,7 @@ vi.mock("auth/client", () => ({
   }),
 }));
 
-vi.mock("@/features/auth/application/hooks/useSupabaseAuth", () => ({
+vi.mock("@/shared/application/hooks/useSupabaseAuth", () => ({
   useSupabaseAuth: () => ({ user: { id: "seller-1" } }),
 }));
 

@@ -12,10 +12,12 @@ import { tid } from "shared";
 
 import { ProductTableRow } from "./ProductTableRow";
 
-import { useSupabaseAuth } from "@/features/auth/application/hooks/useSupabaseAuth";
-import { useReorderProducts } from "@/features/products/application/useProductMutations";
+import {
+  useDeleteProduct,
+  useReorderProducts,
+  useToggleProduct,
+} from "@/features/products/application/hooks/useProductMutations";
 import type { Product } from "@/features/products/domain/types";
-import { useDelegateCountsByProduct } from "@/features/seller-admins/application/hooks/useDelegateCountsByProduct";
 
 const ZEBRA_MODULO = 2;
 
@@ -27,6 +29,7 @@ interface ProductTableProps {
   canUpdate: boolean;
   canDelete: boolean;
   canManageDelegates: boolean;
+  delegateCounts: Record<string, number>;
 }
 
 export function ProductTable({
@@ -36,13 +39,29 @@ export function ProductTable({
   canUpdate,
   canDelete,
   canManageDelegates,
+  delegateCounts,
 }: ProductTableProps) {
   const t = useTranslations();
   const reorderMutation = useReorderProducts();
-  const { user } = useSupabaseAuth();
-  const { data: delegateCounts } = useDelegateCountsByProduct(user?.id);
+  const toggleMutation = useToggleProduct();
+  const deleteMutation = useDeleteProduct();
 
   const canReorder = !isFiltered && products.length > 1;
+  const isMutating = toggleMutation.isPending || deleteMutation.isPending;
+
+  const handleToggle = useCallback(
+    (id: string, field: "is_active" | "featured", value: boolean) => {
+      toggleMutation.mutate({ id, field, value });
+    },
+    [toggleMutation],
+  );
+
+  const handleDelete = useCallback(
+    (id: string) => {
+      deleteMutation.mutate(id);
+    },
+    [deleteMutation],
+  );
 
   const handleDragEnd = useCallback(
     (result: DropResult) => {
@@ -126,7 +145,6 @@ export function ProductTable({
             </tr>
           </thead>
           <Droppable droppableId="product-table" isDropDisabled={!canReorder}>
-            {}
             {(provided) => (
               <tbody ref={provided.innerRef} {...provided.droppableProps}>
                 {products.map((product, index) => (
@@ -147,6 +165,9 @@ export function ProductTable({
                         dragProvided={dragProvided}
                         isDragging={snapshot.isDragging}
                         delegateCount={delegateCounts?.[product.id] ?? 0}
+                        onToggle={handleToggle}
+                        onDelete={handleDelete}
+                        isMutating={isMutating}
                       />
                     )}
                   </Draggable>
@@ -154,7 +175,6 @@ export function ProductTable({
                 {provided.placeholder}
               </tbody>
             )}
-            {}
           </Droppable>
         </table>
       </DragDropContext>

@@ -8,6 +8,17 @@ vi.mock("next-intl", () => ({
 
 vi.mock("shared", () => ({
   tid: (id: string) => ({ "data-testid": id }),
+  getCategoryTheme: () => ({
+    bg: "var(--mint)",
+    bgLight: "color-mix(in srgb, var(--mint) 15%, transparent)",
+    border: "var(--mint)",
+    text: "var(--mint)",
+    badgeBg: "var(--mint)",
+    rowEven: "color-mix(in srgb, var(--mint) 5%, transparent)",
+    rowOdd: "color-mix(in srgb, var(--mint) 15%, transparent)",
+    foreground: "var(--foreground)",
+    accent: "--mint",
+  }),
 }));
 
 vi.mock("./InlineImageCarousel", () => ({

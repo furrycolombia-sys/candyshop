@@ -1,8 +1,7 @@
 "use client";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { createBrowserSupabaseClient } from "api/supabase";
-import { useMemo } from "react";
+import { useSupabase } from "shared";
 
 import { MY_ORDERS_QUERY_KEY } from "@/features/orders/domain/constants";
 import { resubmitEvidence } from "@/features/orders/infrastructure/orderQueries";
@@ -18,7 +17,7 @@ interface ResubmitParams {
  * Invalidates the orders query on success.
  */
 export function useResubmitEvidence() {
-  const supabase = useMemo(() => createBrowserSupabaseClient(), []);
+  const supabase = useSupabase();
   const queryClient = useQueryClient();
 
   return useMutation({

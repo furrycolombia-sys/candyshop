@@ -25,7 +25,7 @@ export function HeroSection({ product, theme }: HeroSectionProps) {
   const tCategories = useTranslations("categories");
   const tTypes = useTranslations("productTypes");
   const locale = useLocale();
-  const { added, quantityInCart, hasReachedStockLimit, handleAddToCart } =
+  const { isAdded, quantityInCart, hasReachedStockLimit, handleAddToCart } =
     useAddToCart(product);
 
   const name = i18nField(product, "name", locale);
@@ -173,11 +173,11 @@ export function HeroSection({ product, theme }: HeroSectionProps) {
                   color: theme.foreground,
                 }}
                 onClick={handleAddToCart}
-                disabled={!isAvailable || added || hasReachedStockLimit}
+                disabled={!isAvailable || isAdded || hasReachedStockLimit}
                 {...tid("hero-add-to-cart")}
               >
                 <ShoppingCart className="size-5" />
-                {added ? t("addedToCart") : t("addToCart")}
+                {isAdded ? t("addedToCart") : t("addToCart")}
               </button>
               {quantityInCart > 0 && (
                 <span

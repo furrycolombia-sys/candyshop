@@ -1,15 +1,16 @@
 "use client";
 
-import { createBrowserSupabaseClient } from "api/supabase";
 import { useTranslations } from "next-intl";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useState } from "react";
 import { tid } from "shared";
 import { Button, Input } from "ui";
 
-import { useSupabaseAuth } from "@/features/auth/application/hooks/useSupabaseAuth";
+import { useDelegateSearch } from "@/features/seller-admins/application/hooks/useDelegateSearch";
+import type { UserSearchResult } from "@/features/seller-admins/application/hooks/useDelegateSearch";
 import { DELEGATE_PERMISSIONS } from "@/features/seller-admins/domain/constants";
 import type { DelegatePermission } from "@/features/seller-admins/domain/types";
-import { searchUsers } from "@/features/seller-admins/infrastructure/delegateQueries";
+import { getDisplayName } from "@/features/seller-admins/domain/utils";
+import { useSupabaseAuth } from "@/shared/application/hooks/useSupabaseAuth";
 
 const MIN_SEARCH_LENGTH = 2;
 
@@ -22,17 +23,10 @@ interface AddDelegateFormProps {
 export function AddDelegateForm({ onAdd, isAdding }: AddDelegateFormProps) {
   const t = useTranslations("sellerAdmins");
   const { user } = useSupabaseAuth();
-  const supabase = useMemo(() => createBrowserSupabaseClient(), []);
+  const { search } = useDelegateSearch(user?.id);
 
   const [query, setQuery] = useState("");
-  const [results, setResults] = useState<
-    Array<{
-      id: string;
-      email: string;
-      display_name: string | null;
-      avatar_url: string | null;
-    }>
-  >([]);
+  const [results, setResults] = useState<UserSearchResult[]>([]);
   const [selectedUser, setSelectedUser] = useState<{
     id: string;
     email: string;
@@ -52,19 +46,21 @@ export function AddDelegateForm({ onAdd, isAdding }: AddDelegateFormProps) {
       }
       setIsSearching(true);
       try {
-        const users = await searchUsers(supabase, value, user.id);
+        const users = await search(value);
         setResults(users);
+      } catch {
+        setResults([]);
       } finally {
         setIsSearching(false);
       }
     },
-    [supabase, user],
+    [search, user],
   );
 
   const handleSelectUser = useCallback(
     (u: { id: string; email: string; display_name: string | null }) => {
       setSelectedUser(u);
-      setQuery(u.display_name ?? u.email);
+      setQuery(getDisplayName(u));
       setResults([]);
     },
     [],
@@ -106,9 +102,7 @@ export function AddDelegateForm({ onAdd, isAdding }: AddDelegateFormProps) {
                   className="w-full px-3 py-2 text-left text-sm hover:bg-accent"
                   onClick={() => handleSelectUser(u)}
                 >
-                  <span className="font-medium">
-                    {u.display_name ?? u.email}
-                  </span>
+                  <span className="font-medium">{getDisplayName(u)}</span>
                   {u.display_name && (
                     <span className="ml-2 text-muted-foreground">
                       {u.email}
@@ -126,8 +120,7 @@ export function AddDelegateForm({ onAdd, isAdding }: AddDelegateFormProps) {
 
       {selectedUser && (
         <p className="text-sm">
-          {t("selectedUser")}:{" "}
-          <strong>{selectedUser.display_name ?? selectedUser.email}</strong>
+          {t("selectedUser")}: <strong>{getDisplayName(selectedUser)}</strong>
         </p>
       )}
 

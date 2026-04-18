@@ -5,6 +5,7 @@
 import { useLocale } from "next-intl";
 import { useId } from "react";
 import { i18nField, tid } from "shared";
+import { cn } from "ui";
 
 import type { FormField } from "@/shared/domain/paymentMethodTypes";
 import { validateFileSize } from "@/shared/domain/paymentMethodUtils";
@@ -45,7 +46,7 @@ export function DynamicFormField({
           placeholder={placeholder}
           disabled={disabled}
           rows={3}
-          className={`${baseInputClass} resize-y`}
+          className={cn(baseInputClass, "resize-y")}
         />
       );
     }
@@ -67,7 +68,7 @@ export function DynamicFormField({
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         disabled={disabled}
-        className={`${baseInputClass} h-10`}
+        className={cn(baseInputClass, "h-10")}
       />
     );
   }

@@ -1,0 +1,243 @@
+{
+  "agent": "pattern-discovery",
+  "review_id": "2026-04-17_08-00-00",
+  "timestamp": "2026-04-17T08:00:00.000Z",
+  "scope": "apps/",
+  "summary": {
+    "filesAnalyzed": 31,
+    "patternsFound": 12,
+    "goodPatterns": 7,
+    "antiPatterns": 2,
+    "inconsistencies": 3,
+    "ruleCandidates": 4
+  },
+  "patterns": [
+    {
+      "id": "PAT-001",
+      "type": "good",
+      "name": "Permission Guard + PageContent Split",
+      "description": "Every protected page is split into two files: a *Page component (guards via useCurrentUserPermissions + AccessDeniedState) and a *PageContent component (actual UI). The guard returns null while loading, renders AccessDeniedState on failure, and delegates permission capabilities as props.",
+      "evidence": [
+        "apps/admin/src/features/audit/presentation/pages/AuditLogPage.tsx",
+        "apps/admin/src/features/settings/presentation/pages/SettingsPage.tsx",
+        "apps/admin/src/features/users/presentation/pages/UsersPage.tsx",
+        "apps/admin/src/features/templates/presentation/pages/TemplatesPage.tsx",
+        "apps/payments/src/features/checkout/presentation/pages/CheckoutPage.tsx",
+        "apps/studio/src/features/products/presentation/pages/ProductListPage.tsx"
+      ],
+      "status": "consistent across 8+ pages",
+      "severity": null
+    },
+    {
+      "id": "PAT-002",
+      "type": "good",
+      "name": "nuqs Domain Search Params",
+      "description": "Each feature that uses URL state defines its nuqs parsers in domain/searchParams.ts. The hook layer consumes them via useQueryStates. This cleanly places URL shape definition in the domain layer.",
+      "evidence": [
+        "apps/admin/src/features/audit/domain/searchParams.ts",
+        "apps/admin/src/features/users/domain/searchParams.ts",
+        "apps/payments/src/features/received-orders/domain/searchParams.ts",
+        "apps/store/src/features/products/domain/searchParams.ts",
+        "apps/studio/src/features/products/domain/searchParams.ts"
+      ],
+      "status": "consistent across features that use URL state",
+      "severity": null
+    },
+    {
+      "id": "PAT-003",
+      "type": "good",
+      "name": "Feature Query Key Constants in domain/constants.ts",
+      "description": "Every TanStack Query key is declared as a constant in the feature's domain/constants.ts (e.g. TEMPLATES_QUERY_KEY, USERS_QUERY_KEY, SETTINGS_QUERY_KEY). Hooks import the constant and pass it to queryKey. This is the single source of truth for cache keys.",
+      "evidence": [
+        "apps/admin/src/features/templates/domain/constants.ts",
+        "apps/admin/src/features/users/domain/constants.ts",
+        "apps/admin/src/features/settings/domain/constants.ts",
+        "apps/payments/src/features/orders/domain/constants.ts",
+        "apps/studio/src/features/products/domain/constants.ts"
+      ],
+      "status": "consistent",
+      "severity": null
+    },
+    {
+      "id": "PAT-004",
+      "type": "good",
+      "name": "Domain Constants Unit Tests",
+      "description": "Every domain/constants.ts file has a matching domain/constants.test.ts that asserts each exported constant equals its expected value. This prevents accidental regression on critical query key strings and default values.",
+      "evidence": [
+        "apps/admin/src/features/settings/domain/constants.test.ts",
+        "apps/admin/src/features/templates/domain/constants.test.ts",
+        "apps/payments/src/features/orders/domain/constants.test.ts",
+        "apps/studio/src/features/products/domain/constants.test.ts",
+        "apps/auth/src/features/account/domain/constants.test.ts"
+      ],
+      "status": "consistent - 9 features follow this",
+      "severity": null
+    },
+    {
+      "id": "PAT-005",
+      "type": "good",
+      "name": "Infrastructure Query Test with createMockSupabase / createChainableMock",
+      "description": "Infrastructure query files (e.g. auditQueries.ts, templateQueries.ts) are tested by constructing a local Supabase mock inside the test file rather than using a shared factory. The audit feature uses MSW for HTTP-level assertions; other features use a chainable in-memory mock. Both approaches isolate the infrastructure layer properly.",
+      "evidence": [
+        "apps/admin/src/features/audit/infrastructure/auditQueries.test.ts",
+        "apps/admin/src/features/templates/infrastructure/templateQueries.test.ts",
+        "apps/admin/src/features/settings/infrastructure/settingsQueries.test.ts"
+      ],
+      "status": "two variants exist (MSW vs chainable mock) - see inconsistency INC-001",
+      "severity": null
+    },
+    {
+      "id": "PAT-006",
+      "type": "good",
+      "name": "Application Hook Tests use createWrapper() + renderHook",
+      "description": "Every application hook test creates a local createWrapper() that wraps a fresh QueryClient with retry:false, then uses renderHook + waitFor. Mocks for infrastructure imports are hoisted with vi.mock before the import. This pattern repeats in 24+ test files.",
+      "evidence": [
+        "apps/admin/src/features/audit/application/useAuditLog.test.tsx",
+        "apps/admin/src/features/settings/application/hooks/usePaymentSettings.test.tsx",
+        "apps/admin/src/features/templates/application/hooks/useTemplates.test.tsx",
+        "apps/payments/src/features/checkout/application/hooks/useSubmitPayment.test.tsx",
+        "apps/studio/src/features/products/application/useProducts.test.tsx"
+      ],
+      "status": "highly consistent across all apps",
+      "severity": null
+    },
+    {
+      "id": "PAT-007",
+      "type": "good",
+      "name": "Supabase ESLint Disable Comment for queryKey",
+      "description": "All hooks that pass a supabase client to queryFn add the comment '// eslint-disable-next-line @tanstack/query/exhaustive-deps -- supabase client is stable (memoized)' above the queryKey. This is a project-wide convention indicating the intentional exclusion is documented and deliberate.",
+      "evidence": [
+        "apps/admin/src/features/audit/application/useAuditLog.ts",
+        "apps/admin/src/features/templates/application/hooks/useTemplates.ts",
+        "apps/admin/src/features/users/application/hooks/useUsers.ts",
+        "apps/payments/src/features/orders/application/hooks/useMyOrders.ts"
+      ],
+      "status": "consistent across 16 files",
+      "severity": null
+    },
+    {
+      "id": "PAT-008",
+      "type": "good",
+      "name": "Permission-Aware PageContent Props (canCreate / canUpdate / canDelete)",
+      "description": "When a Page component checks multiple permissions it passes the results as boolean props (canCreate, canUpdate, canDelete, canManageDelegates) to the PageContent component. This keeps the permission check in one place and makes PageContent purely data-driven.",
+      "evidence": [
+        "apps/admin/src/features/settings/presentation/pages/SettingsPage.tsx",
+        "apps/studio/src/features/products/presentation/pages/ProductListPage.tsx",
+        "apps/admin/src/features/dashboard/presentation/pages/DashboardPage.tsx"
+      ],
+      "status": "used consistently where multiple permission checks apply",
+      "severity": null
+    },
+    {
+      "id": "PAT-009",
+      "type": "inconsistency",
+      "name": "INC-001: MSW vs chainable mock for infrastructure tests",
+      "description": "The audit feature tests its infrastructure queries with MSW HTTP interception (capturing the actual fetch URL), while all other features (templates, settings, payments) use a chainable in-memory Supabase mock. Both approaches work but the MSW approach is more robust because it validates the actual URL and headers sent to Supabase, whereas the chainable mock only verifies that the Supabase client methods are called. There is no documented rule about which to prefer.",
+      "evidence": [
+        "apps/admin/src/features/audit/infrastructure/auditQueries.test.ts (MSW)",
+        "apps/admin/src/features/templates/infrastructure/templateQueries.test.ts (chainable mock)",
+        "apps/admin/src/features/settings/infrastructure/settingsQueries.test.ts (chainable mock)"
+      ],
+      "recommendation": "Document a preferred approach. MSW is recommended since it catches URL filter bugs (as demonstrated in auditQueries.test.ts). The chainable mock couples tests too tightly to the Supabase client method chain.",
+      "severity": "suggestion"
+    },
+    {
+      "id": "PAT-010",
+      "type": "inconsistency",
+      "name": "INC-002: Supabase client access - useSupabase() vs createBrowserSupabaseClient() inline",
+      "description": "Most hooks use useSupabase() (from the 'shared' package) to get the Supabase client. However, three files create the client directly with createBrowserSupabaseClient() inside useMemo or at query-function call time: apps/store/src/features/products/infrastructure/productQueries.ts (creates in the infrastructure function itself), apps/studio/src/features/products/application/useProducts.ts and apps/studio/src/features/seller-admins/application/hooks/useDelegateSearch.ts (inline useMemo). The inconsistency means the store's productQueries creates a new client per call, which bypasses the singleton pattern.",
+      "evidence": [
+        "apps/store/src/features/products/infrastructure/productQueries.ts (creates client inside function body)",
+        "apps/studio/src/features/products/application/useProducts.ts (useMemo createBrowserSupabaseClient)",
+        "apps/studio/src/features/seller-admins/application/hooks/useDelegateSearch.ts (useMemo createBrowserSupabaseClient)",
+        "apps/payments/src/features/orders/application/hooks/useMyOrders.ts (correct: useSupabase())"
+      ],
+      "recommendation": "Standardise on useSupabase() in hooks. Infrastructure functions should accept a supabase client as a parameter (as most already do). The store's productQueries.ts should be refactored to accept a client parameter like all other infrastructure files.",
+      "severity": "warning"
+    },
+    {
+      "id": "PAT-011",
+      "type": "inconsistency",
+      "name": "INC-003: MSW server setup missing in studio",
+      "description": "The apps admin, payments, and store all set up an MSW server in their test/setup.ts with server.listen/resetHandlers/close. The studio app's test/setup.ts only runs cleanup() after each test — no MSW server is configured — even though studio has infrastructure query tests (delegateQueries.test.ts, productMutations.test.ts) that rely on mocked Supabase clients. Those tests use in-process mocks so they don't need MSW, but the pattern is inconsistent and future HTTP-level tests in studio would silently not intercept requests.",
+      "evidence": [
+        "apps/studio/src/test/setup.ts (no MSW setup)",
+        "apps/admin/src/test/setup.ts (MSW setup)",
+        "apps/payments/src/test/setup.ts (MSW setup)",
+        "apps/store/src/test/setup.ts (MSW setup)"
+      ],
+      "recommendation": "Add MSW server setup to studio's test/setup.ts for consistency and future-proofing.",
+      "severity": "suggestion"
+    },
+    {
+      "id": "PAT-012",
+      "type": "anti-pattern",
+      "name": "Repeated createWrapper() boilerplate across 24 test files",
+      "description": "The createWrapper() function (creates QueryClient + QueryClientProvider) is defined inline in every hook test file. This is copy-pasted boilerplate across at minimum 24 files. A shared test utility (e.g. src/test/utils.tsx or a test helpers file) per app could export createWrapper() and centralise it. Note: This is already solved in some apps via a custom render utility, but not for renderHook wrappers.",
+      "evidence": [
+        "apps/admin/src/features/audit/application/useAuditLog.test.tsx",
+        "apps/admin/src/features/templates/application/hooks/useTemplates.test.tsx",
+        "apps/admin/src/features/settings/application/hooks/usePaymentSettings.test.tsx",
+        "... (21 more files)"
+      ],
+      "recommendation": "Extract createWrapper() into apps/[app]/src/test/utils.tsx and export it. Saves ~7 lines per test file and makes the default QueryClient options (retry: false) consistent.",
+      "severity": "suggestion"
+    }
+  ],
+  "ruleSuggestions": [
+    {
+      "id": "RULE-001",
+      "title": "Infrastructure Functions Must Accept Supabase Client as Parameter",
+      "rationale": "All infrastructure functions currently accept the Supabase client as a first parameter except apps/store/src/features/products/infrastructure/productQueries.ts which creates one internally. This breaks testability and the singleton pattern. A rule should codify: infrastructure functions MUST accept the client as a parameter, never create it internally.",
+      "relatedPattern": "INC-002"
+    },
+    {
+      "id": "RULE-002",
+      "title": "Prefer MSW over Chainable Mocks for Infrastructure Tests",
+      "rationale": "MSW HTTP-level tests catch URL construction bugs (filter parameters, select columns) that chainable mocks cannot. Document that new infrastructure tests should use MSW with server.use() overrides to assert URL query params.",
+      "relatedPattern": "INC-001"
+    },
+    {
+      "id": "RULE-003",
+      "title": "App-Level Test Wrapper Utility",
+      "rationale": "createWrapper() is repeated in 24+ files. Each app should export a createWrapper or renderHookWithQuery utility from src/test/utils.tsx to avoid divergence in default QueryClient options.",
+      "relatedPattern": "PAT-012"
+    },
+    {
+      "id": "RULE-004",
+      "title": "All Apps Must Configure MSW in test/setup.ts",
+      "rationale": "MSW is the MSW standard for HTTP mocking. Even if current tests don't use HTTP, apps should configure server.listen/resetHandlers/close in setup.ts so new tests work correctly without extra setup.",
+      "relatedPattern": "INC-003"
+    }
+  ],
+  "positiveObservations": [
+    {
+      "id": "OBS-001",
+      "description": "The Page / PageContent split for permission guarding is extremely consistent across admin, payments, and studio. Every protected page follows the exact same pattern: load check → access denied → delegate with boolean caps. This is well-designed and easy to maintain."
+    },
+    {
+      "id": "OBS-002",
+      "description": "nuqs search params are always defined in domain/searchParams.ts, cleanly following Clean Architecture by placing URL state shape in the domain layer."
+    },
+    {
+      "id": "OBS-003",
+      "description": "Domain constants always have matching unit test files that pin the exact string values of query keys. This prevents silent regressions when refactoring constant names."
+    },
+    {
+      "id": "OBS-004",
+      "description": "Mutation hooks consistently follow the pattern: get supabase + get queryClient, define mutationFn calling the infrastructure function, onSuccess invalidates with the query key constant. This is very uniform across all apps."
+    },
+    {
+      "id": "OBS-005",
+      "description": "The custom Tailwind design system (shadow-brutal, button-brutal, border-strong, font-display, surface-grid-dots, bg-dots) is used consistently across all apps giving the monorepo a cohesive visual identity."
+    },
+    {
+      "id": "OBS-006",
+      "description": "The eslint-disable comment for @tanstack/query/exhaustive-deps is always accompanied by an explanation ('supabase client is stable (memoized)'). This makes the intent of the suppression clear to future readers."
+    },
+    {
+      "id": "OBS-007",
+      "description": "Feature index.ts barrel files exist for every feature and follow a clean public-API export pattern, exposing only what other layers need to consume."
+    }
+  ]
+}

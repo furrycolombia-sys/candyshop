@@ -1,11 +1,8 @@
-import type { createBrowserSupabaseClient } from "api/supabase";
-
 import type {
   ProductTemplate,
   TemplateFormValues,
 } from "@/features/templates/domain/types";
-
-type SupabaseClient = ReturnType<typeof createBrowserSupabaseClient>;
+import type { SupabaseClient } from "@/shared/domain/types";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- table not in generated types yet
 const TABLE = "product_templates" as any;

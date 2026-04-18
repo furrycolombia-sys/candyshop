@@ -8,6 +8,8 @@
  *
  * Returns null for any unrecognised URL.
  */
+const YOUTUBE_EMBED_BASE = "https://www.youtube.com/embed/";
+
 export function toYouTubeEmbedUrl(input: string): string | null {
   if (!input || typeof input !== "string") return null;
 
@@ -15,15 +17,15 @@ export function toYouTubeEmbedUrl(input: string): string | null {
   const embedMatch = input.match(
     /^https?:\/\/(?:www\.)?youtube\.com\/embed\/([\w-]+)/,
   );
-  if (embedMatch) return `https://www.youtube.com/embed/${embedMatch[1]}`;
+  if (embedMatch) return `${YOUTUBE_EMBED_BASE}${embedMatch[1]}`;
 
   // https://www.youtube.com/watch?v=ID
   const watchMatch = input.match(/youtube\.com\/watch\?(?:[^&]*&)*v=([\w-]+)/);
-  if (watchMatch) return `https://www.youtube.com/embed/${watchMatch[1]}`;
+  if (watchMatch) return `${YOUTUBE_EMBED_BASE}${watchMatch[1]}`;
 
   // https://youtu.be/ID
   const shortMatch = input.match(/^https?:\/\/youtu\.be\/([\w-]+)/);
-  if (shortMatch) return `https://www.youtube.com/embed/${shortMatch[1]}`;
+  if (shortMatch) return `${YOUTUBE_EMBED_BASE}${shortMatch[1]}`;
 
   return null;
 }

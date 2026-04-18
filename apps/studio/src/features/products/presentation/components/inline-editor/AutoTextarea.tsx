@@ -1,8 +1,9 @@
 "use client";
 
 import { type Ref, type TextareaHTMLAttributes, useRef } from "react";
+import { cn } from "ui";
 
-import { useAutoResize } from "@/features/products/application/useAutoResize";
+import { useAutoResize } from "@/features/products/application/hooks/useAutoResize";
 
 /**
  * Auto-resizing textarea — grows/shrinks to fit content.
@@ -32,7 +33,10 @@ export function AutoTextarea({
         requestAnimationFrame(autoResize);
       }}
       rows={1}
-      className={`w-full resize-none overflow-hidden bg-transparent outline-none placeholder:text-muted-foreground/50 ${className ?? ""}`}
+      className={cn(
+        "w-full resize-none overflow-hidden bg-transparent outline-none placeholder:text-muted-foreground/50",
+        className,
+      )}
       {...props}
     />
   );

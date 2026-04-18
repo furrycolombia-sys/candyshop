@@ -1,0 +1,149 @@
+{
+  "agent": "naming-conventions",
+  "timestamp": "2026-04-17T02:58:21",
+  "scope": "apps/",
+  "summary": {
+    "filesAnalyzed": 660,
+    "issuesFound": 6,
+    "critical": 0,
+    "warning": 6,
+    "suggestion": 0,
+    "info": 0
+  },
+  "issues": [
+    {
+      "id": "NAME-001",
+      "severity": "warning",
+      "category": "Boolean Variable Naming",
+      "file": "apps/payments/src/features/received-orders/presentation/components/ConfirmActionPanel.tsx",
+      "line": 29,
+      "description": "Boolean state variable `checked` does not use is/has/can/should prefix.",
+      "snippet": "const [checked, setChecked] = useState(false);",
+      "suggestion": "Rename to `isChecked` / `setIsChecked`."
+    },
+    {
+      "id": "NAME-002",
+      "severity": "warning",
+      "category": "Boolean Variable Naming",
+      "file": "apps/payments/src/features/received-orders/presentation/components/SellerNoteInput.tsx",
+      "line": 23,
+      "description": "Boolean state variable `error` does not use is/has/can/should prefix.",
+      "snippet": "const [error, setError] = useState(false);",
+      "suggestion": "Rename to `hasError` / `setHasError`."
+    },
+    {
+      "id": "NAME-003",
+      "severity": "warning",
+      "category": "Boolean Variable Naming",
+      "file": "apps/payments/src/features/checkout/presentation/components/ImageBlock.tsx",
+      "line": 15,
+      "description": "Boolean state variable `errored` does not use is/has/can/should prefix.",
+      "snippet": "const [errored, setErrored] = useState(false);",
+      "suggestion": "Rename to `hasErrored` or `isErrored` / `setIsErrored`."
+    },
+    {
+      "id": "NAME-004",
+      "severity": "warning",
+      "category": "Boolean Variable Naming",
+      "file": "apps/admin/src/features/users/presentation/components/delegates/RemoveButton.tsx",
+      "line": 20,
+      "description": "Boolean state variable `confirming` does not use is/has/can/should prefix.",
+      "snippet": "const [confirming, setConfirming] = useState(false);",
+      "suggestion": "Rename to `isConfirming` / `setIsConfirming`."
+    },
+    {
+      "id": "NAME-005",
+      "severity": "warning",
+      "category": "Boolean Variable Naming",
+      "file": "apps/studio/src/features/products/presentation/components/inline-editor/FormErrorBanner.tsx",
+      "line": 42,
+      "description": "Boolean state variable `dismissed` does not use is/has/can/should prefix.",
+      "snippet": "const [dismissed, setDismissed] = useState(false);",
+      "suggestion": "Rename to `isDismissed` / `setIsDismissed`."
+    },
+    {
+      "id": "NAME-006",
+      "severity": "warning",
+      "category": "Boolean Variable Naming",
+      "file": "apps/studio/src/features/products/presentation/components/inline-editor/InlineImageCarousel.tsx",
+      "line": 41,
+      "description": "Boolean state variable `editingMain` does not use is/has/can/should prefix.",
+      "snippet": "const [editingMain, setEditingMain] = useState(false);",
+      "suggestion": "Rename to `isEditingMain` / `setIsEditingMain`."
+    }
+  ],
+  "patterns": [
+    {
+      "type": "compliant",
+      "description": "All component .tsx files in presentation/ folders use PascalCase naming. No violations found.",
+      "examples": [
+        "AuditLogPage.tsx",
+        "UserDetailPage.tsx",
+        "ProfileCard.tsx",
+        "TemplateEditor.tsx"
+      ]
+    },
+    {
+      "type": "compliant",
+      "description": "Next.js route files (page.tsx, layout.tsx, error.tsx, global-error.tsx, providers.tsx) correctly use lowercase as required by the framework.",
+      "examples": ["page.tsx", "layout.tsx", "error.tsx"]
+    },
+    {
+      "type": "compliant",
+      "description": "All hook files use camelCase with the `use` prefix convention.",
+      "examples": [
+        "useAuditLog.ts",
+        "useUserPermissions.ts",
+        "useProductForm.ts",
+        "useSupabaseAuth.ts"
+      ]
+    },
+    {
+      "type": "compliant",
+      "description": "All utility .ts files use camelCase naming.",
+      "examples": [
+        "computeRole.ts",
+        "formatLastSeen.ts",
+        "getApiBasePath.ts",
+        "getActionClass.ts"
+      ]
+    },
+    {
+      "type": "compliant",
+      "description": "Types files follow PascalCase convention. Files named *Types.ts are appropriately cased.",
+      "examples": [
+        "GalleryTypes.ts",
+        "PaymentMethodTypes.ts",
+        "CategoryTypes.ts",
+        "SectionItemTypes.ts"
+      ]
+    },
+    {
+      "type": "compliant",
+      "description": "All exported global constants use SCREAMING_SNAKE_CASE convention.",
+      "examples": [
+        "DELEGATE_PERMISSIONS",
+        "PRODUCTS_QUERY_KEY",
+        "ORDER_EXPIRY_HOURS",
+        "MS_PER_SECOND"
+      ]
+    },
+    {
+      "type": "compliant",
+      "description": "Event handlers inside components consistently use the `handle` prefix. No `on*` handler naming violations found in production component files.",
+      "examples": ["handleClick", "handleSubmit", "handleChange"]
+    },
+    {
+      "type": "violation-pattern",
+      "description": "6 boolean useState variables across apps/payments, apps/admin, and apps/studio are missing the is/has/can/should prefix. This is a recurring minor pattern worth addressing.",
+      "affectedFiles": [
+        "apps/payments/src/features/received-orders/presentation/components/ConfirmActionPanel.tsx",
+        "apps/payments/src/features/received-orders/presentation/components/SellerNoteInput.tsx",
+        "apps/payments/src/features/checkout/presentation/components/ImageBlock.tsx",
+        "apps/admin/src/features/users/presentation/components/delegates/RemoveButton.tsx",
+        "apps/studio/src/features/products/presentation/components/inline-editor/FormErrorBanner.tsx",
+        "apps/studio/src/features/products/presentation/components/inline-editor/InlineImageCarousel.tsx"
+      ]
+    }
+  ]
+}

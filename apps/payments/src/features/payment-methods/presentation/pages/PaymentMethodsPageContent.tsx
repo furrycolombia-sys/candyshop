@@ -10,16 +10,10 @@ import {
   Trash2,
 } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
-import { useCallback, useState } from "react";
 import { i18nField, tid } from "shared";
-import { Button, Switch } from "ui";
+import { Button, Switch, cn } from "ui";
 
-import {
-  useCreatePaymentMethod,
-  useDeletePaymentMethod,
-  useUpdatePaymentMethod,
-} from "@/features/payment-methods/application/hooks/usePaymentMethodMutations";
-import { usePaymentMethods } from "@/features/payment-methods/application/hooks/usePaymentMethods";
+import { usePaymentMethodsManager } from "@/features/payment-methods/application/hooks/usePaymentMethodsManager";
 import { PaymentMethodEditor } from "@/features/payment-methods/presentation/components/PaymentMethodEditor";
 
 interface PaymentMethodsPageContentProps {
@@ -39,79 +33,18 @@ export function PaymentMethodsPageContent({
   const { user } = useSupabaseAuth();
 
   const sellerId = user?.id ?? "";
-  const { data: methods, isLoading } = usePaymentMethods(sellerId);
-
-  const createMutation = useCreatePaymentMethod();
-  const updateMutation = useUpdatePaymentMethod();
-  const deleteMutation = useDeletePaymentMethod();
-
-  const [expandedId, setExpandedId] = useState<string | null>(null);
-
-  const handleToggleExpand = useCallback((id: string) => {
-    setExpandedId((prev) => (prev === id ? null : id));
-  }, []);
-
-  const handleCreate = useCallback(() => {
-    createMutation.mutate(
-      { sellerId, nameEn: "" },
-      {
-        onSuccess: (method) => {
-          setExpandedId(method.id);
-        },
-      },
-    );
-  }, [createMutation, sellerId]);
-
-  const handleDelete = useCallback(
-    (id: string) => {
-      if (globalThis.confirm(t("deleteConfirm"))) {
-        if (expandedId === id) setExpandedId(null);
-        deleteMutation.mutate(id);
-      }
-    },
-    [deleteMutation, expandedId, t],
-  );
-
-  const handleToggleActive = useCallback(
-    (id: string, isActive: boolean) => {
-      updateMutation.mutate({ id, patch: { is_active: isActive } });
-    },
-    [updateMutation],
-  );
-
-  const handleMoveUp = useCallback(
-    (index: number) => {
-      if (!methods || index === 0) return;
-      const current = methods[index];
-      const prev = methods[index - 1];
-      updateMutation.mutate({
-        id: current.id,
-        patch: { sort_order: prev.sort_order },
-      });
-      updateMutation.mutate({
-        id: prev.id,
-        patch: { sort_order: current.sort_order },
-      });
-    },
-    [methods, updateMutation],
-  );
-
-  const handleMoveDown = useCallback(
-    (index: number) => {
-      if (!methods || index === methods.length - 1) return;
-      const current = methods[index];
-      const next = methods[index + 1];
-      updateMutation.mutate({
-        id: current.id,
-        patch: { sort_order: next.sort_order },
-      });
-      updateMutation.mutate({
-        id: next.id,
-        patch: { sort_order: current.sort_order },
-      });
-    },
-    [methods, updateMutation],
-  );
+  const {
+    methods,
+    isLoading,
+    expandedId,
+    isCreating,
+    handleToggleExpand,
+    handleCreate,
+    handleDelete,
+    handleToggleActive,
+    handleMoveUp,
+    handleMoveDown,
+  } = usePaymentMethodsManager(sellerId);
 
   if (isLoading) {
     return (
@@ -143,11 +76,11 @@ export function PaymentMethodsPageContent({
               type="button"
               className="button-brutal shadow-brutal-md button-press-sm rounded-xl border-strong bg-brand px-6 py-3 text-brand-foreground hover:bg-brand-hover"
               onClick={handleCreate}
-              disabled={createMutation.isPending}
+              disabled={isCreating}
               {...tid("add-payment-method-button")}
             >
               <Plus className="size-5" />
-              {createMutation.isPending ? tCommon("loading") : t("addMethod")}
+              {isCreating ? tCommon("loading") : t("addMethod")}
             </Button>
           )}
         </header>
@@ -176,7 +109,10 @@ export function PaymentMethodsPageContent({
               return (
                 <div
                   key={method.id}
-                  className={`rounded-xl border-strong border-foreground bg-background shadow-brutal-sm overflow-hidden ${isExpanded ? "bg-muted/30" : ""}`}
+                  className={cn(
+                    "rounded-xl border-strong border-foreground bg-background shadow-brutal-sm overflow-hidden",
+                    isExpanded && "bg-muted/30",
+                  )}
                   {...tid("payment-method-row")}
                 >
                   {/* Collapsed header row */}

@@ -8,14 +8,10 @@ import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 import { useCallback, useState } from "react";
-import { getCoverImageUrl, i18nField, tid } from "shared";
+import { formatCop, getCoverImageUrl, i18nField, tid } from "shared";
 import type { ProductCategory, ProductType } from "shared/types";
 import { Badge, Button, cn } from "ui";
 
-import {
-  useDeleteProduct,
-  useToggleProduct,
-} from "@/features/products/application/useProductMutations";
 import {
   CATEGORY_COLOR_MAP,
   TYPE_COLOR_MAP,
@@ -35,15 +31,13 @@ interface ProductTableRowProps {
   dragProvided: DraggableProvided;
   isDragging: boolean;
   delegateCount?: number;
-}
-
-function formatCOP(value: number): string {
-  return new Intl.NumberFormat("es-CO", {
-    style: "currency",
-    currency: "COP",
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(value);
+  onToggle: (
+    id: string,
+    field: "is_active" | "featured",
+    value: boolean,
+  ) => void;
+  onDelete: (id: string) => void;
+  isMutating?: boolean;
 }
 
 function renderReadOnlyState(value: boolean) {
@@ -62,12 +56,13 @@ export function ProductTableRow({
   dragProvided,
   isDragging,
   delegateCount,
+  onToggle,
+  onDelete,
+  isMutating = false,
 }: ProductTableRowProps) {
   const t = useTranslations();
   const locale = useLocale();
-  const toggleMutation = useToggleProduct();
-  const deleteMutation = useDeleteProduct();
-  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [isConfirming, setIsConfirming] = useState(false);
 
   const imageUrl = getCoverImageUrl(product.images);
   const name = i18nField(
@@ -78,20 +73,19 @@ export function ProductTableRow({
 
   const handleToggle = useCallback(
     (field: "is_active" | "featured", currentValue: boolean) => {
-      toggleMutation.mutate({ id: product.id, field, value: !currentValue });
+      onToggle(product.id, field, !currentValue);
     },
-    [toggleMutation, product.id],
+    [onToggle, product.id],
   );
 
   const handleDelete = useCallback(() => {
-    setDeletingId(product.id);
-  }, [product.id]);
+    setIsConfirming(true);
+  }, []);
 
   const confirmDelete = useCallback(() => {
-    deleteMutation.mutate(product.id, {
-      onSettled: () => setDeletingId(null),
-    });
-  }, [deleteMutation, product.id]);
+    onDelete(product.id);
+    setIsConfirming(false);
+  }, [onDelete, product.id]);
 
   const getToggleClass = (isActive: boolean, activeClass: string) =>
     cn(
@@ -106,7 +100,7 @@ export function ProductTableRow({
     );
 
   let actionControls: ReactNode = null;
-  if (canDelete && deletingId === product.id) {
+  if (canDelete && isConfirming) {
     actionControls = (
       <div className="flex items-center gap-1">
         <Button
@@ -114,7 +108,7 @@ export function ProductTableRow({
           size="sm"
           className="border-2 border-border text-xs"
           onClick={confirmDelete}
-          disabled={deleteMutation.isPending}
+          disabled={isMutating}
           {...tid(`confirm-delete-${product.id}`)}
         >
           {t("common.confirm")}
@@ -123,7 +117,7 @@ export function ProductTableRow({
           variant="outline"
           size="sm"
           className="border-2 border-border text-xs"
-          onClick={() => setDeletingId(null)}
+          onClick={() => setIsConfirming(false)}
           {...tid(`cancel-delete-${product.id}`)}
         >
           {t("common.cancel")}
@@ -154,6 +148,7 @@ export function ProductTableRow({
         isOddRow && "bg-muted/10",
         isDragging && "bg-muted shadow-lg",
       )}
+      data-dragging={isDragging}
       {...tid(`product-row-${product.id}`)}
     >
       {canReorder && (
@@ -220,7 +215,7 @@ export function ProductTableRow({
 
       <td className="px-4 py-3 text-right">
         <span className="text-table-cell font-bold tabular-nums">
-          {formatCOP(product.price_cop)}
+          {formatCop(product.price_cop)}
         </span>
       </td>
 
@@ -229,7 +224,7 @@ export function ProductTableRow({
           <button
             type="button"
             onClick={() => handleToggle("is_active", product.is_active)}
-            disabled={toggleMutation.isPending}
+            disabled={isMutating}
             className={getToggleClass(product.is_active, "bg-success")}
             role="switch"
             aria-checked={product.is_active}
@@ -247,7 +242,7 @@ export function ProductTableRow({
           <button
             type="button"
             onClick={() => handleToggle("featured", product.featured)}
-            disabled={toggleMutation.isPending}
+            disabled={isMutating}
             className={getToggleClass(product.featured, "bg-brand")}
             role="switch"
             aria-checked={product.featured}

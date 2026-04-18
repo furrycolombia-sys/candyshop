@@ -194,7 +194,7 @@ test.describe.serial("Screenshot Proof — Studio UX Improvements", () => {
 
     // Screenshot 2: Filled yellow star on cover image thumbnail
     const starIcon = coverBtn1.locator("svg");
-    await expect(starIcon).toHaveClass(/text-yellow-500/);
+    await expect(coverBtn1).toHaveAttribute("data-cover", "true");
     await snapElement(
       desktopThumbs,
       "cover-filled-yellow-star-on-second-image",

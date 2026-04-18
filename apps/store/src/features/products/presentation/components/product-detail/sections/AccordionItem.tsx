@@ -19,7 +19,7 @@ export function AccordionItem({
   index,
   theme,
 }: AccordionItemProps) {
-  const [open, setOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
 
   return (
     <div
@@ -29,18 +29,18 @@ export function AccordionItem({
       <button
         type="button"
         className="w-full flex items-center justify-between gap-4 p-5 text-left font-bold text-sm uppercase tracking-wide transition-colors hover:bg-muted"
-        onClick={() => setOpen((v) => !v)}
-        aria-expanded={open}
+        onClick={() => setIsOpen((v) => !v)}
+        aria-expanded={isOpen}
         {...tid(`accordion-toggle-${index}`)}
       >
         <span>{question}</span>
-        {open ? (
+        {isOpen ? (
           <Minus className="size-5 shrink-0" />
         ) : (
           <Plus className="size-5 shrink-0" />
         )}
       </button>
-      {open && (
+      {isOpen && (
         <div
           className="border-t-strong border-foreground px-5 pb-5 pt-4"
           style={{ backgroundColor: theme.bgLight }}

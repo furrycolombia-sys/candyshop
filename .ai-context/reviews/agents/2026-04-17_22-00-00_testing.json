@@ -1,0 +1,195 @@
+{
+  "agent": "testing",
+  "review_id": "2026-04-17_22-00-00",
+  "timestamp": "2026-04-17T22:00:00",
+  "scope": "apps/",
+  "summary": {
+    "filesAnalyzed": 266,
+    "testFilesFound": 205,
+    "issuesFound": 10,
+    "critical": 0,
+    "warning": 7,
+    "suggestion": 3,
+    "info": 0
+  },
+  "issues": [
+    {
+      "id": "TEST-001",
+      "severity": "warning",
+      "title": "ConfirmActionPanel (security-sensitive) has no test",
+      "file": "apps/payments/src/features/received-orders/presentation/components/ConfirmActionPanel.tsx",
+      "testFile": "MISSING",
+      "description": "ConfirmActionPanel controls confirm/reject flow for received orders. It gates the confirm button behind a checkbox and manages `isPending` state. This component is directly involved in the payment approval flow and per the Checkout Stock Integrity rule requires coverage.",
+      "fix": "Add a test verifying: (1) confirm button is disabled when checkbox is unchecked, (2) confirm button is enabled only after checking, (3) isPending disables all buttons, (4) onConfirm is NOT called when checkbox unchecked, (5) approve vs reject variant renders different styling cues."
+    },
+    {
+      "id": "TEST-002",
+      "severity": "warning",
+      "title": "DynamicFormField (137 lines, complex branching) has no test",
+      "file": "apps/payments/src/features/checkout/presentation/components/DynamicFormField.tsx",
+      "testFile": "MISSING",
+      "description": "DynamicFormField renders checkout form inputs with multiple field types and conditional logic (137 lines). It is part of the checkout flow and handles user input for payment-related forms. Missing coverage for its type-branching logic.",
+      "fix": "Add tests for each field type rendered (text, email, textarea, select, etc.) and verify onChange propagation."
+    },
+    {
+      "id": "TEST-003",
+      "severity": "warning",
+      "title": "CheckoutPageContent (222 lines, checkout orchestrator) has no test",
+      "file": "apps/payments/src/features/checkout/presentation/pages/CheckoutPageContent.tsx",
+      "testFile": "MISSING",
+      "description": "CheckoutPageContent is the main checkout page orchestrator at 222 lines. It assembles BuyerField, FormFieldsSection, DisplayBlocksSection, PaymentMethodSelector, and ReceiptUpload. Missing test leaves the full checkout rendering path uncovered.",
+      "fix": "Add an integration-style page test (similar to CheckoutPage.test.tsx) mocking the hooks and asserting that the main sections render and that stock-out / loading states work correctly."
+    },
+    {
+      "id": "TEST-004",
+      "severity": "warning",
+      "title": "UserDetailPageContent (143 lines, complex permissions UI) has no test",
+      "file": "apps/admin/src/features/users/presentation/pages/UserDetailPageContent.tsx",
+      "testFile": "MISSING",
+      "description": "UserDetailPageContent orchestrates user profile display, permission group toggles, template application, and delegate management. It is a large component with multiple hooks and conditional rendering that is completely untested.",
+      "fix": "Add a test that mocks useUserProfile, useUserPermissions, useTogglePermission, and useApplyTemplate, then verifies: loading skeleton, permission group cards render, back navigation."
+    },
+    {
+      "id": "TEST-005",
+      "severity": "warning",
+      "title": "BlockEditor / DisplaySectionEditor (payment method editors) have no tests",
+      "file": "apps/payments/src/features/payment-methods/presentation/components/BlockEditor.tsx",
+      "testFile": "MISSING",
+      "description": "BlockEditor (154 lines) and DisplaySectionEditor (180 lines) are the primary editors for seller payment method display blocks. They contain interactive drag-and-reorder and add/remove logic with no test coverage.",
+      "fix": "Add tests for add/remove block interactions and basic rendering of the editor UI."
+    },
+    {
+      "id": "TEST-006",
+      "severity": "warning",
+      "title": "DisplayBlockRenderer (checkout display blocks) has no test",
+      "file": "apps/payments/src/features/checkout/presentation/components/DisplayBlockRenderer.tsx",
+      "testFile": "MISSING",
+      "description": "DisplayBlockRenderer renders dynamic content blocks (text, image, video, link, url) shown on the checkout page. It branches on block.type across 5 cases. No test verifies any of these render paths.",
+      "fix": "Add tests for each block type: text (renders content), image (renders img), video (renders iframe), link (renders anchor with href), url (renders url anchor)."
+    },
+    {
+      "id": "TEST-007",
+      "severity": "warning",
+      "title": "Admin users feature components (UserRow, UserHeader, UserDelegatesCard, delegates/*) have no tests",
+      "file": "apps/admin/src/features/users/presentation/components/UserRow.tsx",
+      "testFile": "MISSING",
+      "description": "Several user-facing admin components lack test coverage: UserRow (76 lines), UserHeader (69 lines), UserDelegatesCard (83 lines), and the 5 delegate sub-components (AsDelegateRow, AsSellerRow, PermissionBadges, ProductName, RemoveButton). These components are indirectly covered by UsersPage tests, but isolated unit coverage is absent.",
+      "fix": "Add unit tests for UserRow (renders user data, checkbox interaction), UserHeader (renders avatar, name, role badge), and UserDelegatesCard (renders delegate lists)."
+    },
+    {
+      "id": "TEST-008",
+      "severity": "suggestion",
+      "title": "Landing app: individual page component sections have no isolated tests",
+      "file": "apps/landing/src/features/home/presentation/components/HeroSection.tsx",
+      "testFile": "MISSING",
+      "description": "HeroSection, and LandingPage itself have no dedicated test files. CtaSection, FeaturesSection, and RolesSection are covered indirectly via HomeSections.test.tsx, but HeroSection and LandingPage are never exercised.",
+      "fix": "Add tests for HeroSection rendering key content. A thin LandingPage test verifying it assembles its four sections is also useful."
+    },
+    {
+      "id": "TEST-009",
+      "severity": "suggestion",
+      "title": "Studio ImageEditBar and ProductListPageContent have no tests",
+      "file": "apps/studio/src/features/products/presentation/components/inline-editor/ImageEditBar.tsx",
+      "testFile": "MISSING",
+      "description": "ImageEditBar (107 lines) handles image editing toolbar actions. ProductListPageContent (96 lines) is the orchestrating page for the product list. Both are untested while most sibling components in the inline-editor and products feature are well covered.",
+      "fix": "Add a test for ImageEditBar verifying the toolbar buttons render and trigger callbacks. Add a thin page-level test for ProductListPageContent."
+    },
+    {
+      "id": "TEST-010",
+      "severity": "suggestion",
+      "title": "DashboardPageContent only tested indirectly via DashboardPage.test.tsx",
+      "file": "apps/admin/src/features/dashboard/presentation/pages/DashboardPageContent.tsx",
+      "testFile": "MISSING",
+      "description": "DashboardPageContent has no direct test — it is tested only via DashboardPage.test.tsx which mocks ActivityRow and StatusRow. The `canViewAudit=false` path (no recent activity visible) is never directly asserted at the content-component level.",
+      "fix": "Add a DashboardPageContent.test.tsx that tests the canViewAudit=false path (renders 'no activity' message) and canViewAudit=true path (renders activity rows)."
+    }
+  ],
+  "missingTests": [
+    {
+      "app": "payments",
+      "priority": "high",
+      "files": [
+        "apps/payments/src/features/received-orders/presentation/components/ConfirmActionPanel.tsx",
+        "apps/payments/src/features/checkout/presentation/components/DynamicFormField.tsx",
+        "apps/payments/src/features/checkout/presentation/pages/CheckoutPageContent.tsx",
+        "apps/payments/src/features/payment-methods/presentation/components/BlockEditor.tsx",
+        "apps/payments/src/features/payment-methods/presentation/components/DisplaySectionEditor.tsx",
+        "apps/payments/src/features/payment-methods/presentation/components/FormSectionEditor.tsx",
+        "apps/payments/src/features/payment-methods/presentation/components/VideoBlockEditor.tsx",
+        "apps/payments/src/features/payment-methods/presentation/components/FieldRow.tsx",
+        "apps/payments/src/features/payment-methods/presentation/pages/PaymentMethodsPageContent.tsx",
+        "apps/payments/src/features/checkout/presentation/components/DisplayBlockRenderer.tsx",
+        "apps/payments/src/features/checkout/presentation/components/DisplayBlocksSection.tsx",
+        "apps/payments/src/features/checkout/presentation/components/FormFieldsSection.tsx",
+        "apps/payments/src/features/checkout/presentation/components/BuyerField.tsx",
+        "apps/payments/src/features/received-orders/presentation/pages/ReceivedOrdersPageContent.tsx",
+        "apps/payments/src/features/orders/presentation/pages/OrdersPageContent.tsx"
+      ]
+    },
+    {
+      "app": "admin",
+      "priority": "medium",
+      "files": [
+        "apps/admin/src/features/users/presentation/pages/UserDetailPageContent.tsx",
+        "apps/admin/src/features/users/presentation/components/UserRow.tsx",
+        "apps/admin/src/features/users/presentation/components/UserHeader.tsx",
+        "apps/admin/src/features/users/presentation/components/UserDelegatesCard.tsx",
+        "apps/admin/src/features/users/presentation/components/delegates/AsDelegateRow.tsx",
+        "apps/admin/src/features/users/presentation/components/delegates/AsSellerRow.tsx",
+        "apps/admin/src/features/users/presentation/components/delegates/PermissionBadges.tsx",
+        "apps/admin/src/features/users/presentation/components/delegates/RemoveButton.tsx",
+        "apps/admin/src/features/users/presentation/components/delegates/ProductName.tsx",
+        "apps/admin/src/features/dashboard/presentation/pages/DashboardPageContent.tsx",
+        "apps/admin/src/features/settings/presentation/pages/SettingsPageContent.tsx",
+        "apps/admin/src/features/templates/presentation/pages/TemplatesPageContent.tsx",
+        "apps/admin/src/features/audit/presentation/pages/AuditLogPageContent.tsx"
+      ]
+    },
+    {
+      "app": "studio",
+      "priority": "medium",
+      "files": [
+        "apps/studio/src/features/products/presentation/components/inline-editor/ImageEditBar.tsx",
+        "apps/studio/src/features/products/presentation/pages/ProductListPageContent.tsx"
+      ]
+    },
+    {
+      "app": "landing",
+      "priority": "low",
+      "files": [
+        "apps/landing/src/features/home/presentation/components/HeroSection.tsx",
+        "apps/landing/src/features/home/presentation/pages/LandingPage.tsx"
+      ]
+    }
+  ],
+  "patterns": [
+    {
+      "pattern": "POSITIVE: No className-based state assertions found",
+      "description": "No test file uses toHaveClass() for state checks. All state assertions use data-testid, aria-*, or role-based selectors — fully compliant with the E2E selectors rule."
+    },
+    {
+      "pattern": "POSITIVE: No snapshot tests",
+      "description": "Zero toMatchSnapshot/toMatchInlineSnapshot calls found across all 150 test files. Tests use explicit behavioral assertions."
+    },
+    {
+      "pattern": "POSITIVE: className in tests is only used in mock component prop-forwarding",
+      "description": "All className references in test files are in vi.mock() factory functions forwarding the prop to a stub element, not used for assertions. This is acceptable."
+    },
+    {
+      "pattern": "POSITIVE: CartContext has comprehensive edge case coverage",
+      "description": "apps/store/src/features/cart/application/CartContext.test.tsx covers addItem, removeItem, updateQuantity, clearCart, derived state, and max_quantity capping — including boundary edge cases (0, negative quantities)."
+    },
+    {
+      "pattern": "POSITIVE: Checkout stock integrity is tested",
+      "description": "The checkout stock integrity requirement is addressed: apps/payments/src/app/api/checkout/payment-methods/route.test.ts exists, and CartContext max_quantity capping is thoroughly tested. The main gap is ConfirmActionPanel unit testing."
+    },
+    {
+      "pattern": "CONCERN: *PageContent components are systematically untested",
+      "description": "A recurring pattern: *Page.tsx components have tests but their sibling *PageContent.tsx components (which contain the actual rendering logic) often do not. Examples: DashboardPageContent, CheckoutPageContent, SettingsPageContent, TemplatesPageContent, AuditLogPageContent. These are not thin wrappers — they contain significant logic."
+    },
+    {
+      "pattern": "CONCERN: Playground app has zero tests",
+      "description": "apps/playground has no test files at all. Per the monorepo rules, playground is a permanent incubation sandbox and relaxed quality expectations are allowed, so this is acceptable but worth noting."
+    }
+  ]
+}

@@ -26,7 +26,7 @@ vi.mock("auth/client", () => ({
   }),
 }));
 
-vi.mock("@/features/audit/application/useAuditLog", () => ({
+vi.mock("@/features/audit/application/hooks/useAuditLog", () => ({
   useAuditLog: () => ({
     data: [],
     isLoading: false,
