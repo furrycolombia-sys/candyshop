@@ -35,13 +35,14 @@ Every script in this project reads configuration from a single `.env.<name>` fil
 
 ### Available environments
 
-| File           | Purpose                                    | Committed |
-| -------------- | ------------------------------------------ | --------- |
-| `.env.dev`     | Local dev — Supabase CLI on port 54321     | ✅        |
-| `.env.test`    | Isolated test — Supabase CLI on port 64321 | ✅        |
-| `.env.staging` | Staging — Docker app + Docker Supabase     | ✅        |
-| `.env.prod`    | Production — Docker app + Supabase Cloud   | ✅        |
-| `.secrets`     | Resolved secret values (never committed)   | ❌        |
+| File           | Purpose                                     | Committed |
+| -------------- | ------------------------------------------- | --------- |
+| `.env.dev`     | Local dev — Supabase CLI on port 54321      | ✅        |
+| `.env.develop` | Develop cloud — Docker app + Supabase Cloud | ✅        |
+| `.env.test`    | Isolated test — Supabase CLI on port 64321  | ✅        |
+| `.env.staging` | Staging — Docker app + Docker Supabase      | ✅        |
+| `.env.prod`    | Production — Docker app + Supabase Cloud    | ✅        |
+| `.secrets`     | Resolved secret values (never committed)    | ❌        |
 
 ### Key groups in every env file
 
@@ -336,11 +337,11 @@ pnpm lint:env
 
 ### Topology keys
 
-| Key             | Values                           | Purpose                      |
-| --------------- | -------------------------------- | ---------------------------- |
-| `APPS_MODE`     | `local`, `docker`                | How apps run                 |
-| `SUPABASE_MODE` | `local`, `docker`, `cloud`       | How Supabase runs            |
-| `TARGET_ENV`    | `dev`, `test`, `staging`, `prod` | Set automatically by loadEnv |
+| Key             | Values                                      | Purpose                      |
+| --------------- | ------------------------------------------- | ---------------------------- |
+| `APPS_MODE`     | `local`, `docker`                           | How apps run                 |
+| `SUPABASE_MODE` | `local`, `docker`, `cloud`                  | How Supabase runs            |
+| `TARGET_ENV`    | `dev`, `develop`, `test`, `staging`, `prod` | Set automatically by loadEnv |
 
 ### Container keys
 

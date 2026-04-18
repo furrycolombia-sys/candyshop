@@ -392,13 +392,14 @@ The site will be live at `https://store.ffxivbe.org` once the tunnel connects.
 
 ## Environment files
 
-| File           | Purpose                                    | Committed |
-| -------------- | ------------------------------------------ | --------- |
-| `.env.dev`     | Local dev — Supabase CLI on port 54321     | ✅        |
-| `.env.test`    | Isolated test — Supabase CLI on port 64321 | ✅        |
-| `.env.staging` | Staging — Docker app + Docker Supabase     | ✅        |
-| `.env.prod`    | Production — Docker app + Supabase Cloud   | ✅        |
-| `.secrets`     | Resolved secret values (never committed)   | ❌        |
+| File           | Purpose                                     | Committed |
+| -------------- | ------------------------------------------- | --------- |
+| `.env.dev`     | Local dev — Supabase CLI on port 54321      | ✅        |
+| `.env.develop` | Develop cloud — Docker app + Supabase Cloud | ✅        |
+| `.env.test`    | Isolated test — Supabase CLI on port 64321  | ✅        |
+| `.env.staging` | Staging — Docker app + Docker Supabase      | ✅        |
+| `.env.prod`    | Production — Docker app + Supabase Cloud    | ✅        |
+| `.secrets`     | Resolved secret values (never committed)    | ❌        |
 
 Secrets in env files use `$secret:KEY_NAME` syntax and are resolved at runtime by `scripts/load-env.mjs`. Run `pnpm sync-secrets` to pull them from GitHub.
 
