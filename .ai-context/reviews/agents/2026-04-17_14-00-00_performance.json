@@ -1,0 +1,48 @@
+{
+  "agent": "performance",
+  "review_id": "2026-04-17_14-00-00",
+  "timestamp": "2026-04-17T14:00:00Z",
+  "scope": "apps/",
+  "summary": {
+    "filesAnalyzed": 749,
+    "issuesFound": 1,
+    "critical": 0,
+    "warning": 0,
+    "suggestion": 1,
+    "info": 1
+  },
+  "issues": [
+    {
+      "id": "PERF-001",
+      "severity": "suggestion",
+      "category": "PERF",
+      "file": "apps/payments/src/features/payment-methods/application/hooks/usePaymentMethodsManager.ts",
+      "line": 56,
+      "description": "handleMoveUp and handleMoveDown each call updateMutation.mutate() twice synchronously within the same callback. While this is functionally correct (TanStack Query handles concurrent mutations), it results in two separate network requests. This could be batched into a single API call that swaps sort_order atomically if the backend supports it. Currently each move triggers 2 Supabase updates.",
+      "rule": "performance.md - Data fetching patterns",
+      "fix": "Consider if the backend can accept a batch sort_order update. If not, the current approach is acceptable given the low frequency of this operation."
+    }
+  ],
+  "patterns": [
+    {
+      "id": "PAT-PERF-001",
+      "description": "useCallback and useMemo are consistently used in usePaymentMethodsManager.ts for all handlers. 142 total useCallback/useMemo usages across the codebase indicates good memoization practices.",
+      "verdict": "COMPLIANT"
+    },
+    {
+      "id": "PAT-PERF-002",
+      "description": "FeaturedRibbon.tsx uses requestAnimationFrame with a cancellation flag (cancelled = true) in cleanup. The canvas-based ribbon animation is properly cleaned up on unmount. No memory leaks.",
+      "verdict": "COMPLIANT"
+    },
+    {
+      "id": "PAT-PERF-003",
+      "description": "useAutoSavePaymentMethod.ts uses debouncing (DEBOUNCE_MS = 500) for auto-save operations with proper cleanup in unmount effect. No duplicate timers.",
+      "verdict": "COMPLIANT"
+    },
+    {
+      "id": "PAT-PERF-004",
+      "description": "PRODUCT_SEARCH_DEBOUNCE_MS = 300 is used in ProductFilters.tsx for search input debouncing. Appropriate value for search.",
+      "verdict": "COMPLIANT"
+    }
+  ]
+}

@@ -1,0 +1,91 @@
+{
+  "agent": "architecture",
+  "review_id": "2026-04-17_08-00-00",
+  "timestamp": "2026-04-17T08:00:00.000Z",
+  "scope": "apps/",
+  "summary": {
+    "filesAnalyzed": 30,
+    "issuesFound": 5,
+    "critical": 0,
+    "warning": 3,
+    "suggestion": 2,
+    "info": 0
+  },
+  "issues": [
+    {
+      "id": "ARCH-001",
+      "severity": "warning",
+      "category": "Feature Isolation",
+      "file": "apps/studio/src/features/products/presentation/components/ProductTable.tsx",
+      "line": 15,
+      "description": "Cross-feature import: `products` feature imports from `auth` and `seller-admins` features directly into a presentation component. `ProductTable.tsx` imports `useSupabaseAuth` from `@/features/auth/application/hooks/useSupabaseAuth` and `useDelegateCountsByProduct` from `@/features/seller-admins/application/hooks/useDelegateCountsByProduct`.",
+      "rule": "Features MUST NOT import directly from other features. Cross-feature communication should go through shared interfaces in `/shared/domain/`, global stores, or event emitters.",
+      "fix": "Move `useSupabaseAuth` call to a parent page component or shared hook. Move `useDelegateCountsByProduct` call to a page/container component that passes the count as a prop to `ProductTable`."
+    },
+    {
+      "id": "ARCH-002",
+      "severity": "warning",
+      "category": "Feature Isolation",
+      "file": "apps/studio/src/features/products/presentation/pages/ProductListPageContent.tsx",
+      "line": 10,
+      "description": "Cross-feature import: `products` feature page imports `usePendingOrderCount` from `@/features/orders/application/hooks/usePendingOrderCount`. The products feature should not depend on the orders feature.",
+      "rule": "Features MUST NOT import directly from other features.",
+      "fix": "Either move `usePendingOrderCount` to a shared location (if used by 2+ features) or pass the pending count as a prop from a parent layout/page component that orchestrates both features."
+    },
+    {
+      "id": "ARCH-003",
+      "severity": "warning",
+      "category": "DRY / Hardcoded Infrastructure",
+      "file": "apps/payments/src/app/api/checkout/orders/route.ts",
+      "line": 13,
+      "description": "Admin REST client helpers (`getRestHeaders`, `getRestUrl`, `adminFetchJson`, `createRestPath`) are duplicated across three API route files: `apps/payments/src/app/api/checkout/orders/route.ts`, `apps/payments/src/app/api/checkout/payment-methods/route.ts`, and `apps/admin/src/app/api/admin/_shared/adminRest.ts`. The same logic exists in three places.",
+      "rule": "Architecture rule: shared code should be extracted. These utility functions constitute duplicated infrastructure code.",
+      "fix": "Extract the Supabase admin REST client helpers into a shared infrastructure module (e.g., `apps/payments/src/shared/infrastructure/adminRest.ts`) and import from both route files. The `admin` app already has this in `_shared/adminRest.ts` — consider whether a workspace package or per-app shared module is the right home."
+    },
+    {
+      "id": "ARCH-004",
+      "severity": "suggestion",
+      "category": "Barrel Exports",
+      "file": "apps/*/src/features/*/domain|application|infrastructure|presentation",
+      "description": "Layer-level `index.ts` barrel exports are missing throughout all apps. The rule requires each layer (domain, application, infrastructure, presentation) to have an `index.ts` exporting its public API. Only the feature-level `index.ts` and a few domain-level ones in `apps/store` exist. This affects all features across admin, store, payments, studio, and auth apps (60+ missing layer index files).",
+      "rule": "Each layer should have an `index.ts` exporting its public API. This enables controlled access and prevents consumers from reaching into arbitrary sub-files.",
+      "fix": "Add `index.ts` files to each layer directory, exporting the public API. Since cross-layer imports currently go directly to files (e.g., `@/features/audit/infrastructure/auditQueries`), this is a low-urgency improvement. Prioritize layers with the most consumers. Note: KISS principle applies — avoid adding barrel files that would just re-export everything with no real benefit."
+    },
+    {
+      "id": "ARCH-005",
+      "severity": "suggestion",
+      "category": "Inline Types",
+      "file": "apps/studio/src/features/products/infrastructure/productQueries.ts",
+      "line": 72,
+      "description": "Inline anonymous type `Array<{ id: string; sortOrder: number }>` is used in both `productQueries.ts` (line 72) and `useProductMutations.ts` (line 48) for the `reorderProducts` function parameter. This duplicates a domain concept (a reorder item).",
+      "rule": "Inline types that appear in 2+ places should be extracted to a named type in `domain/types.ts`.",
+      "fix": "Define `interface ReorderItem { id: string; sortOrder: number; }` in `apps/studio/src/features/products/domain/types.ts` and use it in both files."
+    }
+  ],
+  "patterns": [
+    {
+      "type": "good",
+      "description": "App Router thin wrappers: All checked route files (admin, store, payments, studio) are clean thin wrappers that only call `setRequestLocale` and render a feature page component. No business logic in route files."
+    },
+    {
+      "type": "good",
+      "description": "Layer dependency direction is clean: No violations found of domain importing from infrastructure/presentation, or application importing from presentation. Layer flow is respected across all apps."
+    },
+    {
+      "type": "good",
+      "description": "Feature-level barrel exports: All major features have a top-level `index.ts` in all apps."
+    },
+    {
+      "type": "good",
+      "description": "No hardcoded API URLs: All API URLs use `process.env` variables. No hardcoded `https://api.*` calls found in production code."
+    },
+    {
+      "type": "good",
+      "description": "Absolute imports: All cross-layer and cross-feature imports use absolute paths (`@/features/...`, `@/shared/...`). No violations of relative imports crossing layer boundaries in production code."
+    },
+    {
+      "type": "info",
+      "description": "Inline URLs in tests: Many test files use `https://example.com/...` URLs in mock data. These are appropriate for tests and are not violations of the no-hardcoding rule."
+    }
+  ]
+}

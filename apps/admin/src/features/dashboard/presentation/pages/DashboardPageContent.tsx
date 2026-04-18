@@ -4,9 +4,9 @@ import { Activity, ArrowRight } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { tid } from "shared";
 
+import { useRecentActivity } from "@/features/dashboard/application/hooks/useRecentActivity";
 import { ActivityRow } from "@/features/dashboard/presentation/components/ActivityRow";
 import { StatusRow } from "@/features/dashboard/presentation/components/StatusRow";
-import { useRecentActivity } from "@/shared/application/hooks/useRecentActivity";
 import { Link } from "@/shared/infrastructure/i18n";
 
 const SYSTEM_STATUS_KEYS = ["database", "auth", "storage", "realtime"] as const;

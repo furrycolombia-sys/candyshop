@@ -2,11 +2,11 @@
 
 import { useLocale } from "next-intl";
 
-export function ProductName({
-  product,
-}: {
+interface ProductNameProps {
   product: { name_en: string; name_es: string };
-}) {
+}
+
+export function ProductName({ product }: ProductNameProps) {
   const locale = useLocale();
   return (
     <span className="font-medium">

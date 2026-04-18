@@ -1,0 +1,105 @@
+{
+  "agent": "dry",
+  "timestamp": "2026-04-17T18:00:00",
+  "scope": "apps/",
+  "summary": {
+    "filesAnalyzed": 32,
+    "issuesFound": 5,
+    "critical": 0,
+    "warning": 3,
+    "suggestion": 2,
+    "info": 0
+  },
+  "issues": [
+    {
+      "id": "DRY-001",
+      "severity": "warning",
+      "title": "Duplicate `fetchSellerProfiles` vs shared `fetchUserDisplayNames`",
+      "files": [
+        "apps/payments/src/features/checkout/infrastructure/checkoutQueries.ts",
+        "apps/payments/src/shared/infrastructure/fetchUserDisplayNames.ts"
+      ],
+      "duplicatedCode": "Both functions query `user_profiles` table, build a `Record<string, string>` map of id -> display_name ?? email ?? fallback, and return it. `fetchSellerProfiles` is a private duplicate of the already-shared `fetchUserDisplayNames`.",
+      "occurrences": 2,
+      "description": "`fetchSellerProfiles` (lines 195-213 in checkoutQueries.ts) duplicates the logic of `fetchUserDisplayNames` in `apps/payments/src/shared/infrastructure/fetchUserDisplayNames.ts`. The shared version already exists and is used by `orderQueries.ts` and `receivedOrderQueries.ts`. `checkoutQueries.ts` should call `fetchUserDisplayNames` instead of reimplementing it.",
+      "rule": "dry-principle.md#types-of-duplication",
+      "fix": "Replace the `fetchSellerProfiles` function body in `checkoutQueries.ts` with a call to `fetchUserDisplayNames(supabase, sellerIds, FALLBACK_SELLER_NAME)` from `@/shared/infrastructure/fetchUserDisplayNames`."
+    },
+    {
+      "id": "DRY-002",
+      "severity": "warning",
+      "title": "Duplicate `SELLER_PROFILES_QUERY_KEY` constant defined in two apps",
+      "files": [
+        "apps/store/src/features/cart/domain/constants.ts",
+        "apps/payments/src/features/checkout/domain/constants.ts"
+      ],
+      "duplicatedCode": "Both define `export const SELLER_PROFILES_QUERY_KEY = \"seller-profiles\";` independently. The two apps use this for their respective `useSellerProfiles` hooks which implement the same query logic.",
+      "occurrences": 2,
+      "description": "The constant `SELLER_PROFILES_QUERY_KEY = \"seller-profiles\"` is defined twice — once in `apps/store` and once in `apps/payments`. Since each app is separate, this is a cross-app duplication. Both apps' `useSellerProfiles` hooks also duplicate the same Supabase query logic. The store version inlines the query while payments delegates to `fetchSellerProfiles` (itself a duplicate of `fetchUserDisplayNames`). Consolidating the query logic would remove this constant duplication as well.",
+      "rule": "dry-principle.md#extract-constants",
+      "fix": "After DRY-001 is resolved, align the `useSellerProfiles` hook in `apps/store` to also call `fetchUserDisplayNames` (or a shared Supabase helper from `packages/shared`). The query key constant can remain per-app since apps are separate workspaces."
+    },
+    {
+      "id": "DRY-003",
+      "severity": "warning",
+      "title": "Duplicate `TEMPLATES_QUERY_KEY` constant defined in two places",
+      "files": [
+        "apps/admin/src/features/templates/domain/constants.ts",
+        "apps/studio/src/features/products/application/hooks/useProductTemplates.ts"
+      ],
+      "duplicatedCode": "Both define the same string value `\"product-templates\"` — one as an exported constant and one as a local `const TEMPLATES_QUERY_KEY`. They represent the same TanStack Query cache key for product templates.",
+      "occurrences": 2,
+      "description": "`apps/admin` exports `TEMPLATES_QUERY_KEY = \"product-templates\"` from its domain constants. `apps/studio`'s `useProductTemplates.ts` defines a local `const TEMPLATES_QUERY_KEY = \"product-templates\"` (not imported from anywhere). These are independent apps so this is less critical, but if both ever query the same data source, cache conflicts could occur. The studio hook should at minimum move the constant to `apps/studio/src/features/products/domain/constants.ts`.",
+      "rule": "dry-principle.md#extract-constants",
+      "fix": "Move the local `TEMPLATES_QUERY_KEY` in `useProductTemplates.ts` to `apps/studio/src/features/products/domain/constants.ts` and import it from there."
+    },
+    {
+      "id": "DRY-004",
+      "severity": "suggestion",
+      "title": "Cart item validation logic duplicated between store and payments",
+      "files": [
+        "apps/store/src/features/cart/application/cartValidation.ts",
+        "apps/payments/src/features/checkout/infrastructure/cartCookie.ts"
+      ],
+      "duplicatedCode": "Both files contain a local `isValidCartItem` function with identical structural checks (`typeof record.id === 'string'`, `typeof record.quantity === 'number'`). Payments adds `price_cop` check; store only checks `price_usd`.",
+      "occurrences": 2,
+      "description": "The cart item validator in `apps/store/src/features/cart/application/cartValidation.ts` (`isValidCartItem`) and the inline validator in `apps/payments/src/features/checkout/infrastructure/cartCookie.ts` implement the same guard logic. The payment version is stricter (checks both `price_cop` and `price_usd`). Since `CartItem` in payments requires both price fields, and store's `CartItem extends Tables<'products'>` which also includes both fields, these could be unified. However, because the `CartItem` types differ between apps (payments uses a custom interface, store extends the DB table), full unification would require shared types — beyond current scope.",
+      "rule": "dry-principle.md#types-of-duplication",
+      "fix": "Minor: consider extracting the common field checks (`id`, `price_usd`, `quantity`) to a shared utility in `packages/shared` if the cookie format is ever made canonical. For now, document that the payments validator is the stricter/canonical one."
+    },
+    {
+      "id": "DRY-005",
+      "severity": "suggestion",
+      "title": "`display_name ?? email` pattern repeated 12+ times in UI components",
+      "files": [
+        "apps/admin/src/features/users/presentation/components/UserHeader.tsx",
+        "apps/admin/src/features/users/presentation/components/UserRow.tsx",
+        "apps/admin/src/features/users/presentation/components/delegates/AsDelegateRow.tsx",
+        "apps/admin/src/features/users/presentation/components/delegates/AsSellerRow.tsx",
+        "apps/studio/src/features/seller-admins/presentation/components/AddDelegateForm.tsx",
+        "apps/studio/src/features/seller-admins/presentation/components/DelegateList.tsx",
+        "apps/studio/src/features/seller-admins/presentation/components/EditDelegatePermissions.tsx",
+        "apps/auth/src/features/account/presentation/pages/UserProfilePage.tsx"
+      ],
+      "duplicatedCode": "The pattern `profile.display_name ?? profile.email` (or `.email.split('@')[0]`) appears 12+ times across UI components as inline display name resolution.",
+      "occurrences": 12,
+      "description": "User display name resolution (`display_name ?? email ?? fallback`) is done inline across many presentation components. The infrastructure layer already has `fetchUserDisplayNames` (which resolves at fetch time for maps), but UI-level display of a single user's name is handled inline. A simple utility `getUserDisplayName(profile: { display_name: string | null; email: string }): string` in `packages/shared` would eliminate this pattern. However, KISS applies — the pattern is a two-part nullish coalesce, so extracting only makes sense if the resolution logic ever becomes more complex (e.g., adding username field).",
+      "rule": "dry-principle.md#rule-of-three",
+      "fix": "Consider adding `getUserDisplayName` to `packages/shared/src/utils/` once/if the resolution logic grows. For now, the pattern is simple enough that KISS favors leaving it inline."
+    }
+  ],
+  "patterns": [
+    {
+      "name": "Shared query logic properly centralized in payments",
+      "description": "The `fetchUserDisplayNames` utility in `apps/payments/src/shared/infrastructure/` correctly centralizes the user display name resolution for orderQueries and receivedOrderQueries. This is the right pattern; `checkoutQueries.ts` should follow it."
+    },
+    {
+      "name": "ProtectedRoute factory pattern",
+      "description": "All apps correctly use a one-liner `createProtectedRoute(appUrls.auth)` factory — this is intentional per-app boilerplate, not a DRY violation."
+    },
+    {
+      "name": "Query key constants in domain/constants.ts",
+      "description": "Most features correctly place TanStack Query keys in `domain/constants.ts`. `useProductTemplates.ts` in studio is an outlier with a local inline constant."
+    }
+  ]
+}

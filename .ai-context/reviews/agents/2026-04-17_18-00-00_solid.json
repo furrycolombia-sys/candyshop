@@ -1,0 +1,95 @@
+{
+  "agent": "solid",
+  "timestamp": "2026-04-17T18:00:00",
+  "scope": "apps/",
+  "summary": {
+    "filesAnalyzed": 22,
+    "issuesFound": 5,
+    "critical": 0,
+    "warning": 3,
+    "suggestion": 2,
+    "info": 0
+  },
+  "issues": [
+    {
+      "id": "SOLID-001",
+      "severity": "warning",
+      "principle": "O",
+      "title": "BlockEditor switch grows with every new block type",
+      "file": "apps/payments/src/features/payment-methods/presentation/components/BlockEditor.tsx",
+      "line": 33,
+      "description": "BlockEditor uses a switch on block.type to render different editors. Each time a new DisplayBlockType is added, this component must be modified. Currently handles 5 types (text, image, video, link, url) but link and url render nearly identical markup. Adding a new type requires opening this file and adding a new case.",
+      "rule": "solid-principles.md#o---openclosed-principle",
+      "fix": "Extract each block type into its own editor component (TextBlockEditor, ImageBlockEditor, LinkBlockEditor, UrlBlockEditor) and build a BLOCK_EDITOR_MAP: Record<DisplayBlockType, ComponentType<...>> lookup, similar to how BLOCK_TYPE_ICONS is already done. BlockEditor then becomes a pure dispatcher: const Editor = BLOCK_EDITOR_MAP[block.type]; return <Editor block={block} onChange={onChange} />."
+    },
+    {
+      "id": "SOLID-002",
+      "severity": "warning",
+      "principle": "I",
+      "title": "UserTable prop interface is oversized, mixing filtering, selection, pagination, and export concerns",
+      "file": "apps/admin/src/features/users/presentation/components/UserTable.tsx",
+      "line": 17,
+      "description": "UserTableProps has 15 props spanning four distinct responsibilities: filtering (filterInput, onFilterInputChange, roleFilter, onRoleFilterChange, itemFilter, onItemFilterChange), selection (selectedUsers, onSelectUsersChange), pagination (page, onPageChange, total), and export (canExport, onExportCsv). Consumer components must pass all of them even when some aren't relevant. This couples callers to concerns they may not need.",
+      "rule": "solid-principles.md#i---interface-segregation-principle",
+      "fix": "Split into focused sub-interfaces or composite prop groups: FilterProps, SelectionProps, PaginationProps, ExportProps. Alternatively, lift filtering state one level higher and pass a pre-filtered user list so the table only handles rendering and selection. This avoids forcing callers to manage debounce logic that currently lives in UsersPageContent."
+    },
+    {
+      "id": "SOLID-003",
+      "severity": "warning",
+      "principle": "S",
+      "title": "ActionButtons mixes mode state machine, approval flow, rejection flow, and evidence-request flow in one component",
+      "file": "apps/payments/src/features/received-orders/presentation/components/ActionButtons.tsx",
+      "line": 26,
+      "description": "ActionButtons manages four distinct rendering paths (approve confirmation, reject note, evidence note, default buttons) plus two near-identical branches: mode === 'reject' and mode === 'evidence' both render a SellerNoteInput with identical props. The component also encodes business rules about which statuses allow which actions. This is three separate responsibilities: business rule evaluation, UI mode state, and rendering of action UIs.",
+      "rule": "solid-principles.md#s---single-responsibility-principle",
+      "fix": "Extract business-rule logic (canApprove, canReject, canRequestEvidence) into a pure utility or use a custom hook useOrderActionCapabilities(status). Collapse the duplicate reject/evidence branches into a single shared sub-component NoteActionPanel that accepts an onSubmit callback and differs only in the action dispatched. The root component then dispatches modes without duplicating markup."
+    },
+    {
+      "id": "SOLID-004",
+      "severity": "suggestion",
+      "principle": "O",
+      "title": "SectionRenderer switch must be modified to add new product section types",
+      "file": "apps/store/src/features/products/presentation/components/product-detail/sections/SectionRenderer.tsx",
+      "line": 15,
+      "description": "SectionRenderer dispatches to CardsSection, AccordionSection, TwoColumnSection, GallerySection via a switch. Adding a new section type requires modifying this file. The pattern is otherwise clean and the file is small (33 lines), making this a minor risk.",
+      "rule": "solid-principles.md#o---openclosed-principle",
+      "fix": "Replace the switch with a SECTION_COMPONENT_MAP: Record<SectionType, ComponentType<SectionProps>> and look up the component: const Section = SECTION_COMPONENT_MAP[section.type]; if (!Section) return null; return <Section section={section} theme={theme} />. New section types are registered in the map without touching the renderer. The same pattern could apply to SectionCard.renderItems() in studio."
+    },
+    {
+      "id": "SOLID-005",
+      "severity": "suggestion",
+      "principle": "S",
+      "title": "CheckoutPageContent manages session storage, cart state, submission orchestration, and page layout",
+      "file": "apps/payments/src/features/checkout/presentation/pages/CheckoutPageContent.tsx",
+      "line": 40,
+      "description": "CheckoutPageContent directly reads/writes sessionStorage for the completion flag (readCompletedCheckoutFlag, writeCompletedCheckoutFlag) and orchestrates per-seller submission state, in addition to rendering the page layout. Session storage access is infrastructure logic that belongs outside the presentation layer.",
+      "rule": "solid-principles.md#s---single-responsibility-principle",
+      "fix": "Move session storage read/write behind a custom hook useCheckoutCompletionFlag() that encapsulates the infrastructure detail. The page component then only calls the hook and uses its returned boolean, keeping the presentation layer free of direct sessionStorage calls."
+    }
+  ],
+  "patterns": [
+    {
+      "name": "Discriminated-union switch as renderer",
+      "description": "Multiple components (BlockEditor, DisplayBlockRenderer, StatusContent, ReceivedStatusBadge, SectionRenderer, SectionCard.renderItems) use switch on a type discriminant to produce JSX. This is a recurring pattern that works well for exhaustive type narrowing but violates OCP when new variants are added frequently. The codebase is consistent in its usage of this pattern.",
+      "files": [
+        "apps/payments/src/features/payment-methods/presentation/components/BlockEditor.tsx",
+        "apps/payments/src/features/checkout/presentation/components/DisplayBlockRenderer.tsx",
+        "apps/payments/src/features/orders/presentation/components/StatusContent.tsx",
+        "apps/payments/src/features/received-orders/presentation/components/ReceivedStatusBadge.tsx",
+        "apps/store/src/features/products/presentation/components/product-detail/sections/SectionRenderer.tsx",
+        "apps/studio/src/features/products/presentation/components/inline-editor/SectionCard.tsx"
+      ],
+      "recommendation": "For stable, closed enums (StatusContent, ReceivedStatusBadge, StatusRow) the switch pattern is fine. For open-ended types expected to grow (BlockEditor, SectionRenderer), consider a component-map approach to honor OCP."
+    },
+    {
+      "name": "Infrastructure config imports in presentation (appUrls, i18n Link/Router)",
+      "description": "Several presentation components import appUrls from @/shared/infrastructure/config and Link/useRouter from @/shared/infrastructure/i18n. These are accepted patterns in this codebase: appUrls is a static config constant (not a side-effectful infra call), and Link/useRouter are thin i18n wrappers over Next.js primitives. These do not constitute DIP violations by project convention.",
+      "files": [
+        "apps/landing/src/features/home/presentation/components/CtaSection.tsx",
+        "apps/store/src/features/products/presentation/components/ProductCard.tsx",
+        "apps/admin/src/features/users/presentation/pages/UsersPageContent.tsx"
+      ],
+      "recommendation": "No action needed. This is an established, intentional convention in the monorepo."
+    }
+  ]
+}

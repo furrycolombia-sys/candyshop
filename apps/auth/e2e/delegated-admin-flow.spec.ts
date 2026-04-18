@@ -24,6 +24,8 @@ import { createSnapHelper } from "./helpers/snap";
 const { snap, resetCounter } = createSnapHelper(
   path.resolve(__dirname, "screenshots-delegated"),
 );
+const isSingleOriginPathRouting =
+  new URL(APP_URLS.AUTH).origin === new URL(APP_URLS.STUDIO).origin;
 
 /**
  * Delegated admin purchase flow E2E — seller, buyer, delegate.
@@ -41,6 +43,11 @@ const { snap, resetCounter } = createSnapHelper(
  * Requires: supabase start + pnpm dev (all apps)
  */
 test.describe.serial("Delegated admin purchase flow", () => {
+  test.fixme(
+    isSingleOriginPathRouting,
+    "Delegated flow is blocked by single-origin path-routed access guards in staging.",
+  );
+
   let seller: TestUser;
   let buyer: TestUser;
   let delegate: TestUser;

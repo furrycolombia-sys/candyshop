@@ -1,16 +1,10 @@
 /* eslint-disable i18next/no-literal-string -- Supabase query params */
-import type { createBrowserSupabaseClient } from "api/supabase";
+import { escapeLikePattern } from "shared";
 
 import type { DelegateWithProfile } from "@/features/seller-admins/domain/types";
-
-type SupabaseClient = ReturnType<typeof createBrowserSupabaseClient>;
+import type { SupabaseClient } from "@/shared/domain/types";
 
 const SEARCH_RESULTS_LIMIT = 10;
-
-/** Escape SQL LIKE wildcards to prevent pattern injection */
-export function escapeLikePattern(input: string): string {
-  return input.replaceAll(/[%_\\]/g, (char) => `\\${char}`);
-}
 
 /**
  * Fetch all delegates for a seller scoped to a specific product,

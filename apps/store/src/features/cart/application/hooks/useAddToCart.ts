@@ -1,17 +1,17 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { Product } from "shared/types";
 
 import { useCart } from "../CartContext";
 import { useFlyToCartContext } from "../FlyToCartContext";
 
-import type { Product } from "@/features/products/domain/types";
 import { getCategoryColor } from "@/shared/domain/categoryConstants";
 
 const ADDED_RESET_MS = 1500;
 
 interface UseAddToCartReturn {
-  added: boolean;
+  isAdded: boolean;
   quantityInCart: number;
   hasReachedStockLimit: boolean;
   handleAddToCart: (e: React.MouseEvent<HTMLButtonElement>) => void;
@@ -24,7 +24,7 @@ interface UseAddToCartReturn {
 export function useAddToCart(product: Product): UseAddToCartReturn {
   const { addItem, items: cartItems } = useCart();
   const flyCtx = useFlyToCartContext();
-  const [added, setAdded] = useState(false);
+  const [isAdded, setIsAdded] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout>>(null);
 
   useEffect(() => {
@@ -52,9 +52,9 @@ export function useAddToCart(product: Product): UseAddToCartReturn {
       // Pass the full product — CartItem extends Product with quantity
       addItem(product);
 
-      setAdded(true);
+      setIsAdded(true);
       if (timerRef.current) clearTimeout(timerRef.current);
-      timerRef.current = setTimeout(() => setAdded(false), ADDED_RESET_MS);
+      timerRef.current = setTimeout(() => setIsAdded(false), ADDED_RESET_MS);
 
       // Fly-to-cart animation
       const rect = e.currentTarget.getBoundingClientRect();
@@ -63,5 +63,5 @@ export function useAddToCart(product: Product): UseAddToCartReturn {
     [addItem, product, flyCtx, hasReachedStockLimit],
   );
 
-  return { added, quantityInCart, hasReachedStockLimit, handleAddToCart };
+  return { isAdded, quantityInCart, hasReachedStockLimit, handleAddToCart };
 }

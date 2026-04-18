@@ -1,0 +1,107 @@
+{
+  "agent": "naming-conventions",
+  "timestamp": "2026-04-17T18:00:00",
+  "scope": "apps/",
+  "summary": {
+    "filesAnalyzed": 688,
+    "issuesFound": 5,
+    "critical": 0,
+    "warning": 3,
+    "suggestion": 2,
+    "info": 0
+  },
+  "issues": [
+    {
+      "id": "NAME-001",
+      "severity": "warning",
+      "title": "Component grouping folder uses kebab-case instead of PascalCase",
+      "file": "apps/store/src/features/products/presentation/components/product-detail/",
+      "line": null,
+      "currentName": "product-detail",
+      "suggestedName": "ProductDetail",
+      "convention": "Component folders: PascalCase (if grouping)",
+      "rule": "naming-conventions.md#files--folders",
+      "fix": "Rename folder to ProductDetail and update all imports referencing this path"
+    },
+    {
+      "id": "NAME-002",
+      "severity": "warning",
+      "title": "Component grouping folder uses kebab-case instead of PascalCase",
+      "file": "apps/studio/src/features/products/presentation/components/inline-editor/",
+      "line": null,
+      "currentName": "inline-editor",
+      "suggestedName": "InlineEditor",
+      "convention": "Component folders: PascalCase (if grouping)",
+      "rule": "naming-conventions.md#files--folders",
+      "fix": "Rename folder to InlineEditor and update all imports referencing this path"
+    },
+    {
+      "id": "NAME-003",
+      "severity": "warning",
+      "title": "Component grouping folder uses kebab-case instead of PascalCase",
+      "file": "apps/admin/src/features/users/presentation/components/delegates/",
+      "line": null,
+      "currentName": "delegates",
+      "suggestedName": "Delegates",
+      "convention": "Component folders: PascalCase (if grouping)",
+      "rule": "naming-conventions.md#files--folders",
+      "fix": "Rename folder to Delegates and update all imports referencing this path"
+    },
+    {
+      "id": "NAME-004",
+      "severity": "suggestion",
+      "title": "Types file placed in presentation/components layer instead of domain/types",
+      "file": "apps/studio/src/features/products/presentation/components/inline-editor/SectionItemTypes.ts",
+      "line": null,
+      "currentName": "SectionItemTypes.ts",
+      "suggestedName": "apps/studio/src/features/products/domain/types/SectionItemTypes.ts",
+      "convention": "Feature types belong in domain/types/ not in presentation/components/",
+      "rule": "architecture.md#shared-code-policy",
+      "fix": "Move SectionItemTypes.ts to the domain/types/ directory and update import paths"
+    },
+    {
+      "id": "NAME-005",
+      "severity": "suggestion",
+      "title": "Sub-folder sections inside product-detail uses plural lowercase instead of PascalCase",
+      "file": "apps/store/src/features/products/presentation/components/product-detail/sections/",
+      "line": null,
+      "currentName": "sections",
+      "suggestedName": "Sections",
+      "convention": "Component folders: PascalCase (if grouping)",
+      "rule": "naming-conventions.md#files--folders",
+      "fix": "Rename folder to Sections (or resolve as part of NAME-001 renaming) and update all imports"
+    }
+  ],
+  "patterns": [
+    {
+      "pattern": "All TSX component files correctly use PascalCase naming",
+      "status": "compliant",
+      "examples": ["LoginPage.tsx", "ProductCard.tsx", "SellerCheckoutCard.tsx"]
+    },
+    {
+      "pattern": "All custom hook files correctly use camelCase with `use` prefix",
+      "status": "compliant",
+      "examples": ["useAuth.ts", "useProducts.ts", "useDelegates.ts"]
+    },
+    {
+      "pattern": "Props interfaces consistently use ComponentNameProps suffix",
+      "status": "compliant",
+      "examples": ["CartItemRowProps", "ProductCardProps", "ReceiptUploadProps"]
+    },
+    {
+      "pattern": "Utility files use camelCase naming",
+      "status": "compliant",
+      "examples": ["lucideIconMap.ts", "buildGridOrder.ts", "cartValidation.ts"]
+    },
+    {
+      "pattern": "Event handler props use `on` prefix; internal handlers use `handle` prefix",
+      "status": "compliant",
+      "notes": "No violations found for event handler naming"
+    },
+    {
+      "pattern": "PascalCase *Types.ts files in domain directories",
+      "status": "acceptable",
+      "notes": "GalleryTypes.ts, CategoryTypes.ts, PaymentMethodTypes.ts follow naming-conventions.md (Types/Interfaces: PascalCase)"
+    }
+  ]
+}

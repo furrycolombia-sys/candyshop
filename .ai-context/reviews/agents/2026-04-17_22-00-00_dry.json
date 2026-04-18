@@ -1,0 +1,99 @@
+{
+  "agent": "dry",
+  "review_id": "2026-04-17_22-00-00",
+  "timestamp": "2026-04-17T22:00:00",
+  "scope": "apps/",
+  "summary": {
+    "filesAnalyzed": 519,
+    "issuesFound": 4,
+    "critical": 0,
+    "warning": 3,
+    "suggestion": 1,
+    "info": 0
+  },
+  "issues": [
+    {
+      "id": "DRY-001",
+      "severity": "warning",
+      "title": "global-error.tsx duplicated identically across all 7 apps",
+      "files": [
+        "apps/admin/src/app/global-error.tsx",
+        "apps/auth/src/app/global-error.tsx",
+        "apps/landing/src/app/global-error.tsx",
+        "apps/payments/src/app/global-error.tsx",
+        "apps/playground/src/app/global-error.tsx",
+        "apps/store/src/app/global-error.tsx",
+        "apps/studio/src/app/global-error.tsx"
+      ],
+      "description": "All 7 apps contain byte-for-byte identical global-error.tsx components (GlobalErrorBoundary). This is multi-line JSX logic (~35 lines each) duplicated across every app. Any visual or copy change must be made in 7 places.",
+      "occurrences": 7,
+      "fix": "Extract to packages/app-components/src/GlobalErrorBoundary.tsx. Each app's global-error.tsx becomes a 1-line re-export: `export { GlobalErrorBoundary as default } from '@monorepo/app-components'`. Note: Next.js requires global-error.tsx to be a default export at app root, so each app still needs its own file, but the implementation should be shared."
+    },
+    {
+      "id": "DRY-002",
+      "severity": "warning",
+      "title": "MSWProvider, mocks/browser.ts, and mocks/server.ts duplicated identically in 3 apps",
+      "files": [
+        "apps/admin/src/shared/infrastructure/providers/MSWProvider.tsx",
+        "apps/payments/src/shared/infrastructure/providers/MSWProvider.tsx",
+        "apps/store/src/shared/infrastructure/providers/MSWProvider.tsx",
+        "apps/admin/src/mocks/browser.ts",
+        "apps/payments/src/mocks/browser.ts",
+        "apps/store/src/mocks/browser.ts",
+        "apps/admin/src/mocks/server.ts",
+        "apps/payments/src/mocks/server.ts",
+        "apps/store/src/mocks/server.ts"
+      ],
+      "description": "Three apps (admin, payments, store) contain identical MSWProvider.tsx files that wrap SharedMSWProvider with a local `import('@/mocks/browser').then(m => m.worker)` getter. Additionally mocks/browser.ts and mocks/server.ts are byte-for-byte identical in all three apps.",
+      "occurrences": 3,
+      "fix": "The MSWProvider pattern is already almost correct — the `getWorker` lazy import must reference each app's local @/mocks/browser, so the pattern cannot be fully eliminated. However, mocks/browser.ts (`setupWorker(...handlers)`) and mocks/server.ts (`setupServer(...handlers)`) are pure boilerplate with no app-specific logic and could be factored into a shared/providers factory in the `shared` package that accepts the handlers array, or at minimum document that this is intentional boilerplate."
+    },
+    {
+      "id": "DRY-003",
+      "severity": "warning",
+      "title": "Time conversion constants (MS_PER_SECOND, SECONDS_PER_MINUTE, MINUTES_PER_HOUR) defined in multiple feature domains",
+      "files": [
+        "apps/admin/src/features/users/domain/constants.ts",
+        "apps/payments/src/features/checkout/domain/constants.ts",
+        "apps/store/src/features/cart/application/cartCookiePersistence.ts"
+      ],
+      "description": "The same time conversion constants (MS_PER_SECOND = 1000, SECONDS_PER_MINUTE = 60, MINUTES_PER_HOUR = 60) are defined independently in three separate locations. The packages/auth/src/domain/tokens.ts also defines local SECONDS_PER_MINUTE and MINUTES_PER_HOUR. The shared package already has packages/shared/src/constants/time.ts but it only contains QUERY-related time constants, not the raw conversion factors.",
+      "occurrences": 3,
+      "fix": "Add the raw time conversion constants to packages/shared/src/constants/time.ts:\n  export const MS_PER_SECOND = 1000;\n  export const SECONDS_PER_MINUTE = 60;\n  export const MINUTES_PER_HOUR = 60;\n  export const HOURS_PER_DAY = 24;\nThen import from `shared/constants/time` in admin, payments, and store. The store's cartCookiePersistence.ts uses these as file-local consts — import from shared instead."
+    },
+    {
+      "id": "DRY-004",
+      "severity": "suggestion",
+      "title": "securityHeaders array duplicated in all 7 next.config.ts files",
+      "files": [
+        "apps/admin/next.config.ts",
+        "apps/auth/next.config.ts",
+        "apps/landing/next.config.ts",
+        "apps/payments/next.config.ts",
+        "apps/playground/next.config.ts",
+        "apps/store/next.config.ts",
+        "apps/studio/next.config.ts"
+      ],
+      "description": "The `securityHeaders` array (8 header entries including CSP, HSTS, X-Frame-Options, etc.) is copy-pasted identically in all 7 apps' next.config.ts. A CSP or header policy change requires editing 7 files. The apps do already share a createVitestAliases factory pattern at the root.",
+      "occurrences": 7,
+      "fix": "Extract to a root-level shared config file, e.g. config/nextSecurityHeaders.ts:\n  export const securityHeaders = [...];\nThen import in each next.config.ts:\n  import { securityHeaders } from '../../config/nextSecurityHeaders';\nThis is low risk since config/ already exists at the repo root (config/app-links.json)."
+    }
+  ],
+  "patterns": [
+    {
+      "pattern": "Intentional thin re-export wrappers",
+      "description": "Many single-line re-export files exist (e.g. useSupabaseAuth.ts, QueryProvider.tsx, ThemeProvider.tsx, ApiAuthBootstrap.tsx, environment.ts, ErrorContext.tsx) in each app's shared/ folder. These are intentional per the monorepo architecture — each app has its own namespace for imports and the shared package is the single source of truth. These are NOT DRY violations.",
+      "verdict": "by_design"
+    },
+    {
+      "pattern": "auth/callback/route.ts in 4 apps",
+      "description": "Four apps (studio, auth, admin, store) have identical auth/callback/route.ts that delegate to `handleOAuthCallback(request)` from `api/supabase/callback`. This is a required Next.js routing file per app and is intentionally a thin delegation wrapper — not a DRY violation.",
+      "verdict": "by_design"
+    },
+    {
+      "pattern": "SELLER_PROFILES_QUERY_KEY constant in store and payments",
+      "description": "The string 'seller-profiles' is defined as SELLER_PROFILES_QUERY_KEY in both apps/payments/src/features/checkout/domain/constants.ts and apps/store/src/features/cart/domain/constants.ts. These are in separate apps with separate query caches, so sharing the same key string is coincidental and the constants should remain in their respective domains.",
+      "verdict": "acceptable_coincidence"
+    }
+  ]
+}

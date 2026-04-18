@@ -2,29 +2,25 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { tid } from "shared";
 
 import { DisplaySectionEditor } from "./DisplaySectionEditor";
 import { FormSectionEditor } from "./FormSectionEditor";
 
-import { useUpdatePaymentMethod } from "@/features/payment-methods/application/hooks/usePaymentMethodMutations";
+import { useAutoSavePaymentMethod } from "@/features/payment-methods/application/hooks/useAutoSavePaymentMethod";
 import type {
   DisplayBlock,
   FormField,
   SellerPaymentMethod,
 } from "@/features/payment-methods/domain/types";
 
-const DEBOUNCE_MS = 500;
-
 interface PaymentMethodEditorProps {
   method: SellerPaymentMethod;
-  onClose?: () => void;
 }
 
 export function PaymentMethodEditor({ method }: PaymentMethodEditorProps) {
   const t = useTranslations("paymentMethods");
-  const updateMutation = useUpdatePaymentMethod();
 
   const [nameEn, setNameEn] = useState(method.name_en);
   const [nameEs, setNameEs] = useState(method.name_es ?? "");
@@ -35,58 +31,24 @@ export function PaymentMethodEditor({ method }: PaymentMethodEditorProps) {
     method.form_fields ?? [],
   );
   const [nameEnError, setNameEnError] = useState<string | null>(null);
-  const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved">(
-    "idle",
-  );
 
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const { saveStatus } = useAutoSavePaymentMethod({
+    paymentMethodId: method.id,
+    nameEn,
+    nameEs,
+    displayBlocks,
+    formFields,
+  });
 
-  const triggerSave = useCallback(
-    (patch: Parameters<typeof updateMutation.mutate>[0]["patch"]) => {
-      if (debounceRef.current) clearTimeout(debounceRef.current);
-      setSaveStatus("saving");
-      debounceRef.current = setTimeout(() => {
-        updateMutation.mutate(
-          { id: method.id, patch },
-          {
-            onSuccess: () => setSaveStatus("saved"),
-            onError: () => setSaveStatus("idle"),
-          },
-        );
-      }, DEBOUNCE_MS);
-    },
-    [method.id, updateMutation],
-  );
-
-  // Auto-save name changes
+  // Validate name on change (UI-only concern, separate from auto-save)
   useEffect(() => {
-    if (!nameEn.trim()) {
+    if (nameEn.trim()) {
+      setNameEnError(null);
+    } else {
       setNameEnError(t("nameRequired"));
-      return;
     }
-    setNameEnError(null);
-    triggerSave({ name_en: nameEn, name_es: nameEs || undefined });
     // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional: only trigger on name changes
-  }, [nameEn, nameEs]);
-
-  // Auto-save display blocks
-  useEffect(() => {
-    triggerSave({ display_blocks: displayBlocks });
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional: only trigger on block changes
-  }, [displayBlocks]);
-
-  // Auto-save form fields
-  useEffect(() => {
-    triggerSave({ form_fields: formFields });
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional: only trigger on field changes
-  }, [formFields]);
-
-  // Cleanup debounce on unmount
-  useEffect(() => {
-    return () => {
-      if (debounceRef.current) clearTimeout(debounceRef.current);
-    };
-  }, []);
+  }, [nameEn]);
 
   return (
     <div className="flex flex-col gap-6 pt-4">

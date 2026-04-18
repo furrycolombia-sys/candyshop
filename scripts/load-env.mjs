@@ -94,12 +94,28 @@ export function loadEnv(targetEnv) {
 
   // If ENV_DEBUG=true, serialize all resolved vars into a single NEXT_PUBLIC_ var
   // so the playground can display them without needing turbo globalEnv entries.
+  // Guard: never expose env vars in production builds.
+  const isProduction =
+    process.env.NODE_ENV === "production" ||
+    env === "prod" ||
+    env === "production";
+
   if (vars.ENV_DEBUG === "true") {
-    const snapshot = {
-      ...vars,
-      TARGET_ENV: env,
-      NODE_ENV: process.env.NODE_ENV ?? "",
-    };
-    process.env.NEXT_PUBLIC_ENV_DEBUG = JSON.stringify(snapshot);
+    if (isProduction) {
+      console.warn(
+        "[load-env] WARNING: ENV_DEBUG=true is ignored in production. NEXT_PUBLIC_ENV_DEBUG will not be set.",
+      );
+    } else {
+      // Only expose NEXT_PUBLIC_ vars — never expose server-side secrets or keys
+      const publicEntries = Object.entries(vars).filter(([k]) =>
+        k.startsWith("NEXT_PUBLIC_"),
+      );
+      const snapshot = {
+        ...Object.fromEntries(publicEntries),
+        TARGET_ENV: env,
+        NODE_ENV: process.env.NODE_ENV ?? "",
+      };
+      process.env.NEXT_PUBLIC_ENV_DEBUG = JSON.stringify(snapshot);
+    }
   }
 }

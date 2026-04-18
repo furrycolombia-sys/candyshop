@@ -9,6 +9,8 @@ export {
   getCategoryTheme,
 } from "@/shared/domain/categoryConstants";
 
+export const STORE_PRODUCTS_QUERY_KEY = "store-products";
+
 export const PRODUCT_TYPES: { value: ProductType }[] = [
   { value: "merch" },
   { value: "digital" },

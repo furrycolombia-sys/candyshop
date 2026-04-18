@@ -1,0 +1,97 @@
+{
+  "agent": "component-patterns",
+  "review_id": "2026-04-17_20-00-00",
+  "timestamp": "2026-04-17T20:00:00",
+  "scope": "apps/",
+  "summary": {
+    "filesAnalyzed": 264,
+    "issuesFound": 6,
+    "critical": 0,
+    "warning": 5,
+    "suggestion": 1,
+    "info": 0
+  },
+  "issues": [
+    {
+      "id": "COMP-001",
+      "severity": "warning",
+      "file": "apps/payments/src/features/received-orders/presentation/components/ReceivedOrderCard.tsx",
+      "line": 81,
+      "description": "Hook ordering violation: useMemo called before useState. The component calculates `expiresAt` with useMemo (line 81) and then immediately uses it in the useState initializer (line 86). While functional, this breaks the recommended hook ordering (useState first) and creates an unusual dependency pattern.",
+      "rule": "component-patterns.md#standard-component-template",
+      "fix": "Move the expiresAt computation into the useState initializer directly: `const [isExpiringSoon, setIsExpiringSoon] = useState(() => { const d = order.expires_at ? new Date(order.expires_at) : null; return d === null ? false : d.getTime() - Date.now() < EXPIRING_SOON_THRESHOLD_MS; })` and keep a derived variable for expiresAt after state declaration."
+    },
+    {
+      "id": "COMP-002",
+      "severity": "warning",
+      "file": "apps/studio/src/features/products/presentation/components/inline-editor/TemplatePicker.tsx",
+      "line": 26,
+      "description": "Container/Presenter pattern violation: TemplatePicker is a UI component (lives in /components/) but directly calls `useProductTemplates()` to fetch data. Presentation components should receive data as props rather than fetching it themselves.",
+      "rule": "component-patterns.md#containerpresenter-pattern",
+      "fix": "Extract a TemplatePickerContainer that calls useProductTemplates and passes data to a pure TemplatePicker presentational component, or move TemplatePicker to a page-level component if its data fetching is inherent to its purpose."
+    },
+    {
+      "id": "COMP-003",
+      "severity": "warning",
+      "file": "apps/payments/src/features/checkout/presentation/components/SellerCheckoutCard.tsx",
+      "line": 10,
+      "description": "Container/Presenter pattern violation: SellerCheckoutCard is a UI component (lives in /components/) but directly calls `useSellerPaymentMethods()` for data fetching. This mixes data fetching with presentation.",
+      "rule": "component-patterns.md#containerpresenter-pattern",
+      "fix": "Either pass sellerPaymentMethods as a prop from the parent page, or create a dedicated container that manages this data concern separately from the presentational rendering."
+    },
+    {
+      "id": "COMP-004",
+      "severity": "warning",
+      "file": "apps/admin/src/features/audit/presentation/components/AuditFilters.tsx",
+      "line": 22,
+      "description": "Container/Presenter pattern violation: AuditFilters calls `useAuditTableNames()` to fetch available filter options directly in a /components/ file. Presentational filter components should receive options as props.",
+      "rule": "component-patterns.md#containerpresenter-pattern",
+      "fix": "Pass `tableNames` as a prop from the parent page/container. The parent (AuditLogPageContent) already uses useAuditLog and can supply the table names."
+    },
+    {
+      "id": "COMP-005",
+      "severity": "warning",
+      "file": "apps/studio/src/features/orders/presentation/components/PendingOrdersBadge.tsx",
+      "line": null,
+      "description": "Container/Presenter pattern: PendingOrdersBadge directly calls `usePendingOrderCount()` inside a presentational component. Badge components should ideally receive their count as a prop for better testability and separation of concerns.",
+      "rule": "component-patterns.md#containerpresenter-pattern",
+      "fix": "Consider accepting `count: number` as a prop and creating a PendingOrdersBadgeContainer that fetches the count and renders the badge. This allows the badge to be used in Storybook/tests without mocking the API hook."
+    },
+    {
+      "id": "COMP-006",
+      "severity": "suggestion",
+      "file": "apps/admin/src/features/users/presentation/components/delegates/",
+      "line": null,
+      "description": "Multiple delegate sub-components (RemoveButton.tsx, AsSellerRow.tsx, AsDelegateRow.tsx) all independently call useUserDelegates() for data. This creates redundant API calls and tight coupling in presentational components.",
+      "rule": "component-patterns.md#containerpresenter-pattern",
+      "fix": "Lift the useUserDelegates() call to a parent container component and pass the data/callbacks as props to the delegate sub-components. This avoids duplicate API calls and improves component reusability."
+    }
+  ],
+  "patterns": [
+    {
+      "pattern": "One Component Per File",
+      "status": "compliant",
+      "description": "All 264 non-test, non-UI .tsx files correctly export only one React component. No violations found."
+    },
+    {
+      "pattern": "use client Directive",
+      "status": "compliant",
+      "description": "All components using useState, useEffect, useCallback, useRef, or useReducer correctly include the 'use client' directive. Zero files found with client hooks but missing the directive. No async component functions mistakenly marked as client components."
+    },
+    {
+      "pattern": "Nested Component Definitions",
+      "status": "compliant",
+      "description": "No actual nested component definitions found. All instances of uppercase variable assignments inside JSX map callbacks (const Icon = ..., const NavIcon = ...) are icon component references, not component definitions."
+    },
+    {
+      "pattern": "Application Layer Abstraction",
+      "status": "compliant",
+      "description": "No presentation components import directly from 'api/generated'. All API hook usage goes through application/hooks abstractions, correctly following Clean Architecture's dependency inversion."
+    },
+    {
+      "pattern": "Container/Presenter Separation",
+      "status": "partial",
+      "description": "Most pages correctly use a Page + PageContent split. However, several components in /components/ subdirectories directly call data-fetching application hooks instead of receiving data as props. Specifically: TemplatePicker, SellerCheckoutCard, AuditFilters, PendingOrdersBadge, and three delegate sub-components."
+    }
+  ]
+}

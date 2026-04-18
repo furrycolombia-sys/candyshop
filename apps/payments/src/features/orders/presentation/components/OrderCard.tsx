@@ -4,8 +4,13 @@ import { ChevronDown, ChevronUp, Clock } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useCallback, useState } from "react";
 import { tid } from "shared";
+import { cn } from "ui";
 
 import { useResubmitEvidence } from "@/features/orders/application/hooks/useResubmitEvidence";
+import {
+  STATUS_CLASS_DEFAULT,
+  STATUS_CLASS_MAP,
+} from "@/features/orders/domain/constants";
 import type { OrderWithItems } from "@/features/orders/domain/types";
 import { ExpirationLabel } from "@/features/orders/presentation/components/ExpirationLabel";
 import { OrderItemsList } from "@/features/orders/presentation/components/OrderItemsList";
@@ -17,28 +22,6 @@ const TERMINAL_STATUSES = new Set(["approved", "rejected", "expired"]);
 
 interface OrderCardProps {
   order: OrderWithItems;
-}
-
-function getOrderBannerClass(status: OrderWithItems["payment_status"]): string {
-  switch (status) {
-    case "awaiting_payment":
-    case "evidence_requested": {
-      return "bg-warning/15 text-warning border-warning/30";
-    }
-    case "pending_verification": {
-      return "bg-info/15 text-info border-info/30";
-    }
-    case "approved":
-    case "paid": {
-      return "bg-success/15 text-success border-success/30";
-    }
-    case "rejected": {
-      return "bg-destructive/15 text-destructive border-destructive/30";
-    }
-    default: {
-      return "bg-muted text-muted-foreground";
-    }
-  }
 }
 
 export function OrderCard({ order }: OrderCardProps) {
@@ -64,7 +47,10 @@ export function OrderCard({ order }: OrderCardProps) {
     >
       {/* Status banner — full width at top */}
       <div
-        className={`px-4 py-2.5 ${getOrderBannerClass(order.payment_status)}`}
+        className={cn(
+          "px-4 py-2.5",
+          STATUS_CLASS_MAP[order.payment_status] ?? STATUS_CLASS_DEFAULT,
+        )}
       >
         <OrderStatusBadge status={order.payment_status} />
       </div>

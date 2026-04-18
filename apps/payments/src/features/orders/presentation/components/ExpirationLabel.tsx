@@ -9,6 +9,17 @@ const MS_PER_HOUR = 3_600_000;
 /** Re-compute interval (every minute) */
 const TICK_INTERVAL_MS = MS_PER_MINUTE;
 
+const relativeFormatterCache = new Map<string, Intl.RelativeTimeFormat>();
+
+function getRelativeFormatter(locale: string): Intl.RelativeTimeFormat {
+  let formatter = relativeFormatterCache.get(locale);
+  if (!formatter) {
+    formatter = new Intl.RelativeTimeFormat(locale, { numeric: "auto" });
+    relativeFormatterCache.set(locale, formatter);
+  }
+  return formatter;
+}
+
 function computeTimeRemaining(
   expiresAt: string,
   locale: string,
@@ -21,9 +32,7 @@ function computeTimeRemaining(
 
   const hours = Math.floor(diffMs / MS_PER_HOUR);
   const minutes = Math.floor((diffMs % MS_PER_HOUR) / MS_PER_MINUTE);
-  const relativeFormatter = new Intl.RelativeTimeFormat(locale, {
-    numeric: "auto",
-  });
+  const relativeFormatter = getRelativeFormatter(locale);
 
   if (hours > 0) {
     return relativeFormatter.format(hours, "hour");

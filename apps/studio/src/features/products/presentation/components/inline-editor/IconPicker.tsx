@@ -4,7 +4,7 @@ import { DynamicIcon, iconNames, type IconName } from "lucide-react/dynamic";
 import { useTranslations } from "next-intl";
 import { useCallback, useMemo, useState } from "react";
 import { tid } from "shared";
-import { Popover, PopoverContent, PopoverTrigger } from "ui";
+import { cn, Popover, PopoverContent, PopoverTrigger } from "ui";
 
 const MAX_VISIBLE = 42;
 
@@ -24,7 +24,7 @@ interface IconPickerProps {
 
 export function IconPicker({ value, onChange, themeBg }: IconPickerProps) {
   const t = useTranslations("form.inlineEditor");
-  const [open, setOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState("");
 
   const filtered = useMemo(() => {
@@ -36,7 +36,7 @@ export function IconPicker({ value, onChange, themeBg }: IconPickerProps) {
   const handleSelect = useCallback(
     (name: string) => {
       onChange(name);
-      setOpen(false);
+      setIsOpen(false);
       setSearch("");
     },
     [onChange],
@@ -46,16 +46,19 @@ export function IconPicker({ value, onChange, themeBg }: IconPickerProps) {
 
   return (
     <Popover
-      open={open}
+      open={isOpen}
       onOpenChange={(v) => {
-        setOpen(v);
+        setIsOpen(v);
         if (!v) setSearch("");
       }}
     >
       <PopoverTrigger asChild>
         <button
           type="button"
-          className={`w-fit border-strong border-foreground ${themeBg} p-2 shadow-brutal-sm cursor-pointer transition-opacity hover:opacity-80`}
+          className={cn(
+            "w-fit border-strong border-foreground p-2 shadow-brutal-sm cursor-pointer transition-opacity hover:opacity-80",
+            themeBg,
+          )}
           aria-label={t("chooseIcon")}
           {...tid("icon-picker-trigger")}
         >
@@ -84,13 +87,17 @@ export function IconPicker({ value, onChange, themeBg }: IconPickerProps) {
         <div className="grid max-h-64 grid-cols-8 gap-1 overflow-y-auto p-2">
           {filtered.map((name) => {
             const isSelected = name === toKebab(value);
-            const selectedClass = `${themeBg} border-2 border-foreground`;
             return (
               <button
                 key={name}
                 type="button"
                 onClick={() => handleSelect(name)}
-                className={`flex items-center justify-center size-8 transition-colors ${isSelected ? selectedClass : "hover:bg-muted"}`}
+                className={cn(
+                  "flex items-center justify-center size-8 transition-colors",
+                  isSelected
+                    ? cn(themeBg, "border-2 border-foreground")
+                    : "hover:bg-muted",
+                )}
                 title={name}
               >
                 <DynamicIcon name={name} className="size-4" />

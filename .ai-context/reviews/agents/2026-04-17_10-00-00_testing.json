@@ -1,0 +1,154 @@
+{
+  "agent": "testing",
+  "review_id": "2026-04-17_10-00-00",
+  "timestamp": "2026-04-17T10:00:00Z",
+  "scope": "apps/",
+  "summary": {
+    "filesAnalyzed": 92,
+    "issuesFound": 8,
+    "critical": 0,
+    "warning": 3,
+    "suggestion": 5,
+    "info": 0,
+    "coverage": {
+      "hooks": { "total": 48, "tested": 41, "percentage": 85 },
+      "utils": { "total": 6, "tested": 5, "percentage": 83 }
+    }
+  },
+  "issues": [
+    {
+      "id": "TEST-001",
+      "severity": "warning",
+      "title": "usePaymentMethodsManager has no test file",
+      "file": "apps/payments/src/features/payment-methods/application/hooks/usePaymentMethodsManager.ts",
+      "testFile": "MISSING",
+      "description": "This hook orchestrates payment method CRUD operations (create, update, delete, reorder), manages expanded/collapsed UI state, and calls confirm() before deletion. It contains non-trivial business logic: sort-order swap on move up/down, auto-expand on create, and guard on move boundaries. None of this is covered by tests.",
+      "rule": "testing.md#missing-test-files",
+      "fix": "Create apps/payments/src/features/payment-methods/application/hooks/usePaymentMethodsManager.test.tsx. Cover: (1) handleCreate expands the new item on success; (2) handleDelete calls confirm and aborts if rejected; (3) handleMoveUp swaps sort_order with previous item; (4) handleMoveDown swaps sort_order with next item; (5) boundary guards (first/last item)."
+    },
+    {
+      "id": "TEST-002",
+      "severity": "warning",
+      "title": "useSupabaseAuth is duplicated across 5 apps with no test coverage",
+      "file": "apps/admin/src/features/auth/application/hooks/useSupabaseAuth.ts",
+      "testFile": "MISSING",
+      "description": "useSupabaseAuth exists in apps/admin, apps/auth, apps/payments, apps/store, and apps/studio (5 copies), none have test files. While each may be structurally similar, differences in session handling or redirect logic between apps could silently diverge. The hook is security-critical (auth state management).",
+      "rule": "testing.md#missing-test-files",
+      "fix": "Add a test file for at least one representative app (e.g. apps/store/src/features/auth/application/hooks/useSupabaseAuth.test.ts). Cover: (1) returns authenticated user from session; (2) returns null when not authenticated; (3) sign-in/sign-out mutations call Supabase client correctly."
+    },
+    {
+      "id": "TEST-003",
+      "severity": "warning",
+      "title": "getInitials util has no test file",
+      "file": "apps/admin/src/features/users/application/utils/getInitials.ts",
+      "testFile": "MISSING",
+      "description": "getInitials extracts up to 2-character initials from a name or falls back to the email's first character. It has distinct branches (name present, name absent, empty email) and a MAX_INITIALS_LENGTH cap that are worth verifying explicitly.",
+      "rule": "testing.md#missing-test-files",
+      "fix": "Create apps/admin/src/features/users/application/utils/getInitials.test.ts. Cover: (1) single-word name returns 1 uppercase char; (2) two-word name returns 2 initials; (3) name with 3+ words is capped at 2 chars; (4) null name falls back to email first char; (5) null name + empty email returns '?'."
+    },
+    {
+      "id": "TEST-004",
+      "severity": "suggestion",
+      "title": "useClearCartCookie has no test (trivial wrapper — low priority)",
+      "file": "apps/payments/src/features/checkout/application/hooks/useClearCartCookie.ts",
+      "testFile": "MISSING",
+      "description": "The hook is a one-liner that returns the clearCartCookie function directly. Its behavior is entirely covered by testing clearCartCookie itself. A dedicated hook test adds little value but is noted for completeness.",
+      "rule": "testing.md#missing-test-files",
+      "fix": "Consider testing clearCartCookie directly via its own infrastructure test rather than wrapping it here."
+    },
+    {
+      "id": "TEST-005",
+      "severity": "suggestion",
+      "title": "apps/playground hooks not tested (playground — intentionally relaxed)",
+      "file": "apps/playground/src/features/auth/application/hooks/useSupabaseAuth.ts",
+      "testFile": "MISSING",
+      "description": "The playground app follows relaxed quality expectations per monorepo-architecture.md. No test requirement applies here.",
+      "rule": "monorepo-architecture.md#playground-app-incubation-sandbox",
+      "fix": "No action required — playground is an incubation sandbox."
+    },
+    {
+      "id": "TEST-006",
+      "severity": "suggestion",
+      "title": "usePaymentMethodsManager: handleDelete uses globalThis.confirm — difficult to test without spy setup",
+      "file": "apps/payments/src/features/payment-methods/application/hooks/usePaymentMethodsManager.ts",
+      "testFile": "MISSING",
+      "description": "Using globalThis.confirm in a hook couples business logic to browser dialog APIs, making unit tests require vi.stubGlobal('confirm', ...) setup. Consider extracting the confirmation step to a prop callback (onDeleteConfirm) or a React dialog to make the hook testable without stubs.",
+      "rule": "solid-principles.md#d---dependency-inversion-principle",
+      "fix": "Replace globalThis.confirm(t('deleteConfirm')) with an optional prop or context-provided confirmation function. This also improves DIP compliance — the hook would depend on an abstraction rather than the browser confirm dialog."
+    },
+    {
+      "id": "TEST-007",
+      "severity": "suggestion",
+      "title": "No edge-case tests for loading/error states in useRecentActivity (already has test file)",
+      "file": "apps/admin/src/features/dashboard/application/hooks/useRecentActivity.ts",
+      "testFile": "apps/admin/src/features/dashboard/application/hooks/useRecentActivity.test.tsx",
+      "description": "The test file exists (added in previous pass). Verify it covers the error state (API returning 500) and the empty-array case, as these are common dashboard edge cases that affect UX.",
+      "rule": "testing.md#edge-cases",
+      "fix": "Ensure useRecentActivity.test.tsx includes: (1) isError = true path; (2) empty data array path rendering empty state."
+    },
+    {
+      "id": "TEST-008",
+      "severity": "suggestion",
+      "title": "usePaymentMethodsManager sort-order swap logic is a bug-prone edge case worth specific test coverage",
+      "file": "apps/payments/src/features/payment-methods/application/hooks/usePaymentMethodsManager.ts",
+      "testFile": "MISSING",
+      "description": "handleMoveUp and handleMoveDown swap sort_order values by calling updateMutation.mutate twice. If the first mutation succeeds but the second fails, the list becomes inconsistent. The boundary guards (index === 0, index === methods.length - 1) are also easy to get wrong.",
+      "rule": "testing.md#edge-cases",
+      "fix": "In the usePaymentMethodsManager test, mock updateMutation and assert it is called exactly twice with the correct swapped sort_order values. Also verify no mutation is called when at the boundary."
+    }
+  ],
+  "missingTests": [
+    {
+      "sourceFile": "apps/payments/src/features/payment-methods/application/hooks/usePaymentMethodsManager.ts",
+      "type": "hook",
+      "priority": "high"
+    },
+    {
+      "sourceFile": "apps/admin/src/features/auth/application/hooks/useSupabaseAuth.ts",
+      "type": "hook",
+      "priority": "high"
+    },
+    {
+      "sourceFile": "apps/auth/src/features/auth/application/hooks/useSupabaseAuth.ts",
+      "type": "hook",
+      "priority": "high"
+    },
+    {
+      "sourceFile": "apps/payments/src/features/auth/application/hooks/useSupabaseAuth.ts",
+      "type": "hook",
+      "priority": "high"
+    },
+    {
+      "sourceFile": "apps/store/src/features/auth/application/hooks/useSupabaseAuth.ts",
+      "type": "hook",
+      "priority": "high"
+    },
+    {
+      "sourceFile": "apps/studio/src/features/auth/application/hooks/useSupabaseAuth.ts",
+      "type": "hook",
+      "priority": "high"
+    },
+    {
+      "sourceFile": "apps/admin/src/features/users/application/utils/getInitials.ts",
+      "type": "util",
+      "priority": "medium"
+    },
+    {
+      "sourceFile": "apps/payments/src/features/checkout/application/hooks/useClearCartCookie.ts",
+      "type": "hook",
+      "priority": "low"
+    }
+  ],
+  "patterns": [
+    {
+      "pattern": "useSupabaseAuth duplicated across all 6 apps without any test",
+      "observation": "Every app has its own copy of useSupabaseAuth with no test coverage. If this hook is structurally identical, it should be moved to packages/shared or packages/auth to reduce duplication and centralise testing. If app-specific differences exist, each variant should be tested independently.",
+      "recommendation": "Consider consolidating into packages/auth (already listed in monorepo structure) and adding a single shared test."
+    },
+    {
+      "pattern": "globalThis.confirm used in hooks",
+      "observation": "useClearCartCookie and usePaymentMethodsManager reference browser globals directly, violating DIP and making unit tests harder to write.",
+      "recommendation": "Extract confirmation dialogs to component-level or via a passed callback to keep hooks pure."
+    }
+  ]
+}

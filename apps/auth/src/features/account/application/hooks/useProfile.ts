@@ -1,12 +1,14 @@
 import { useQuery } from "@tanstack/react-query";
-import { createBrowserSupabaseClient } from "api/supabase";
-import { useMemo } from "react";
+import { useSupabase } from "shared";
 
-import { PROFILE_QUERY_KEY } from "@/features/account/domain/constants";
+import {
+  PROFILE_QUERY_KEY,
+  PROFILE_STALE_TIME_MS,
+} from "@/features/account/domain/constants";
 import { fetchProfile } from "@/features/account/infrastructure/profileQueries";
 
 export function useProfile(userId: string | undefined) {
-  const supabase = useMemo(() => createBrowserSupabaseClient(), []);
+  const supabase = useSupabase();
 
   return useQuery({
     // eslint-disable-next-line @tanstack/query/exhaustive-deps -- supabase client is stable (memoized)
@@ -16,6 +18,6 @@ export function useProfile(userId: string | undefined) {
       return fetchProfile(supabase, userId);
     },
     enabled: !!userId,
-    staleTime: 30_000,
+    staleTime: PROFILE_STALE_TIME_MS,
   });
 }

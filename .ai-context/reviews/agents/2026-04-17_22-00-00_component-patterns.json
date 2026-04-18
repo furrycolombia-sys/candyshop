@@ -1,0 +1,92 @@
+{
+  "agent": "component-patterns",
+  "review_id": "2026-04-17_22-00-00",
+  "timestamp": "2026-04-17T22:00:00",
+  "scope": "apps/",
+  "summary": {
+    "filesAnalyzed": 50,
+    "issuesFound": 6,
+    "critical": 0,
+    "warning": 5,
+    "suggestion": 1,
+    "info": 0
+  },
+  "issues": [
+    {
+      "id": "COMP-001",
+      "severity": "warning",
+      "title": "React hook (useMemo) used without 'use client' directive",
+      "file": "apps/store/src/features/products/presentation/components/product-detail/sections/AccordionSection.tsx",
+      "line": 1,
+      "description": "This component uses `useMemo` (a React client hook) but has no 'use client' directive. It works currently only because its parent chain includes a client component (ProductDetailPage has 'use client'), but this creates an implicit dependency. In Next.js App Router, components using React hooks should declare 'use client' explicitly to be self-contained and safe from future refactors that could move them into a different rendering context.",
+      "fix": "Add '\"use client\";' as the first line of the file."
+    },
+    {
+      "id": "COMP-002",
+      "severity": "warning",
+      "title": "React hook (useMemo) used without 'use client' directive",
+      "file": "apps/store/src/features/products/presentation/components/product-detail/sections/CardsSection.tsx",
+      "line": 1,
+      "description": "Same issue as COMP-001. Uses `useMemo` without 'use client'. Works only due to client-component parent propagation.",
+      "fix": "Add '\"use client\";' as the first line of the file."
+    },
+    {
+      "id": "COMP-003",
+      "severity": "warning",
+      "title": "React hook (useMemo) used without 'use client' directive",
+      "file": "apps/store/src/features/products/presentation/components/product-detail/sections/GallerySection.tsx",
+      "line": 1,
+      "description": "Same issue as COMP-001. Uses `useMemo` without 'use client'. Works only due to client-component parent propagation.",
+      "fix": "Add '\"use client\";' as the first line of the file."
+    },
+    {
+      "id": "COMP-004",
+      "severity": "warning",
+      "title": "React hook (useMemo) used without 'use client' directive",
+      "file": "apps/store/src/features/products/presentation/components/product-detail/sections/TwoColumnSection.tsx",
+      "line": 1,
+      "description": "Same issue as COMP-001. Uses `useMemo` without 'use client'. Works only due to client-component parent propagation.",
+      "fix": "Add '\"use client\";' as the first line of the file."
+    },
+    {
+      "id": "COMP-005",
+      "severity": "warning",
+      "title": "React hook (useMemo) used without 'use client' directive",
+      "file": "apps/store/src/features/products/presentation/components/product-detail/ProductSections.tsx",
+      "line": 1,
+      "description": "Uses `useMemo` without 'use client'. Works only due to client-component parent (ProductDetailPage). This is also the parent of the section components listed in COMP-001 through COMP-004 — adding 'use client' here would fix the entire subtree at once, since client components propagate context to their children.",
+      "fix": "Add '\"use client\";' as the first line of the file. This is the highest-leverage fix: once ProductSections is a client component, all child section components are automatically client-rendered, and COMP-001 through COMP-004 become optional."
+    },
+    {
+      "id": "COMP-006",
+      "severity": "suggestion",
+      "title": "Unnecessary 'use client' on pure display component",
+      "file": "apps/admin/src/features/users/presentation/components/RoleBadge.tsx",
+      "line": 1,
+      "description": "RoleBadge only uses `useTranslations` from next-intl, which works in both Server and Client Components in next-intl v3+. The component has no state, effects, event handlers, or browser APIs. Marking it 'use client' forces it and all its parent subtree to be treated as a client bundle unnecessarily. This is a minor bundle-size concern.",
+      "fix": "Remove the '\"use client\";' directive and verify the component renders correctly as a Server Component. If it's consistently used inside already-client parent trees, this is low priority."
+    }
+  ],
+  "patterns": [
+    {
+      "name": "Multiple-component files with eslint-disable comment",
+      "description": "Several files in the inline-editor and payments folders contain a private helper component alongside the main exported component (e.g. GalleryItemEditor inside SectionItemsGallery.tsx, BuyerInfoValue inside ReceivedOrderCard.tsx, FileInput inside DynamicFormField.tsx, BlockContent inside DisplayBlockRenderer.tsx). Each has a deliberate `/* eslint-disable react/no-multi-comp */` comment explaining the co-location rationale (tight coupling, private helper). This is an accepted exception per project rules (compound components / private helpers).",
+      "verdict": "ACCEPTABLE — well-documented pattern used consistently with explanatory ESLint disable comments."
+    },
+    {
+      "name": "Hook ordering",
+      "description": "All reviewed components correctly place useState calls before useMemo/useCallback in the hook declaration order. No ordering violations were found across 50+ files inspected.",
+      "verdict": "GOOD — hook ordering follows the expected pattern throughout the codebase."
+    },
+    {
+      "name": "Render helper functions inside components",
+      "description": "Some components use internal `render*` functions (renderItems in SectionCard, renderThumbContent arrow function in InlineImageCarousel, renderInput in DynamicFormField). None of these use React hooks internally, so they are plain helper functions, not nested component definitions. This pattern is acceptable.",
+      "verdict": "ACCEPTABLE — none of the render helpers use hooks, so they don't create component-identity issues."
+    },
+    {
+      "name": "'use client' usage accuracy",
+      "description": "With the exception of RoleBadge (COMP-006) and the missing directives on store section components (COMP-001 to COMP-005), all other client-directive usage is correct: files using useState, useEffect, useRef, onClick/onChange handlers, or browser APIs all carry 'use client'.",
+      "verdict": "GOOD — the majority of client/server boundary decisions are correct."
+    }
+  ]
+}

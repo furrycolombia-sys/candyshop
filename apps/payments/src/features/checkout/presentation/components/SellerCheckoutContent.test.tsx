@@ -112,20 +112,26 @@ describe("SellerCheckoutContent", () => {
     items: mockItems,
     subtotalCop: 10_000,
     getItemName: (item: CartItem) => item.name_en,
-    isSubmitted: false,
-    isSubmitting: false,
-    isDisabled: false,
-    error: null,
-    hasStockIssues: false,
-    isLoadingMethods: false,
-    methods: [mockMethodWithFields],
-    selectedMethodId: null,
-    selectedMethod: undefined,
-    buyerSubmission: {},
-    validationError: null,
-    onSelectMethod: vi.fn(),
-    onBuyerSubmissionChange: vi.fn(),
-    onFileSelected: vi.fn(),
+    submission: {
+      isSubmitted: false,
+      isSubmitting: false,
+      isDisabled: false,
+      error: null,
+      hasStockIssues: false,
+    },
+    methodSelection: {
+      isLoadingMethods: false,
+      methods: [mockMethodWithFields],
+      selectedMethodId: null,
+      selectedMethod: undefined,
+      onSelectMethod: vi.fn(),
+    },
+    buyerForm: {
+      buyerSubmission: {},
+      validationError: null,
+      onBuyerSubmissionChange: vi.fn(),
+      onFileSelected: vi.fn(),
+    },
     onSubmit: vi.fn(),
   };
 
@@ -144,14 +150,27 @@ describe("SellerCheckoutContent", () => {
   });
 
   it("shows loading spinner when loading methods", () => {
-    render(<SellerCheckoutContent {...defaultProps} isLoadingMethods={true} />);
+    render(
+      <SellerCheckoutContent
+        {...defaultProps}
+        methodSelection={{
+          ...defaultProps.methodSelection,
+          isLoadingMethods: true,
+        }}
+      />,
+    );
     expect(
       screen.queryByTestId("payment-method-selector"),
     ).not.toBeInTheDocument();
   });
 
   it("shows submitted badge when order is submitted", () => {
-    render(<SellerCheckoutContent {...defaultProps} isSubmitted={true} />);
+    render(
+      <SellerCheckoutContent
+        {...defaultProps}
+        submission={{ ...defaultProps.submission, isSubmitted: true }}
+      />,
+    );
     expect(
       screen.getByTestId("seller-checkout-submitted-s1"),
     ).toBeInTheDocument();
@@ -160,13 +179,24 @@ describe("SellerCheckoutContent", () => {
 
   it("shows error message when error is present", () => {
     render(
-      <SellerCheckoutContent {...defaultProps} error="Something went wrong" />,
+      <SellerCheckoutContent
+        {...defaultProps}
+        submission={{
+          ...defaultProps.submission,
+          error: "Something went wrong",
+        }}
+      />,
     );
     expect(screen.getByText("Something went wrong")).toBeInTheDocument();
   });
 
   it("translates stock_error to stockError", () => {
-    render(<SellerCheckoutContent {...defaultProps} error="stock_error" />);
+    render(
+      <SellerCheckoutContent
+        {...defaultProps}
+        submission={{ ...defaultProps.submission, error: "stock_error" }}
+      />,
+    );
     expect(screen.getByText("stockError")).toBeInTheDocument();
   });
 
@@ -174,10 +204,16 @@ describe("SellerCheckoutContent", () => {
     render(
       <SellerCheckoutContent
         {...defaultProps}
-        hasStockIssues={true}
-        error="stock_error"
-        selectedMethodId="pm-1"
-        selectedMethod={mockMethodWithFields}
+        submission={{
+          ...defaultProps.submission,
+          hasStockIssues: true,
+          error: "stock_error",
+        }}
+        methodSelection={{
+          ...defaultProps.methodSelection,
+          selectedMethodId: "pm-1",
+          selectedMethod: mockMethodWithFields,
+        }}
       />,
     );
 
@@ -192,8 +228,11 @@ describe("SellerCheckoutContent", () => {
     render(
       <SellerCheckoutContent
         {...defaultProps}
-        selectedMethodId="pm-1"
-        selectedMethod={mockMethodWithFields}
+        methodSelection={{
+          ...defaultProps.methodSelection,
+          selectedMethodId: "pm-1",
+          selectedMethod: mockMethodWithFields,
+        }}
       />,
     );
     expect(screen.getByTestId("dynamic-field-f1")).toBeInTheDocument();
@@ -203,9 +242,12 @@ describe("SellerCheckoutContent", () => {
     render(
       <SellerCheckoutContent
         {...defaultProps}
-        methods={[mockMethodWithBlocks]}
-        selectedMethodId="pm-2"
-        selectedMethod={mockMethodWithBlocks}
+        methodSelection={{
+          ...defaultProps.methodSelection,
+          methods: [mockMethodWithBlocks],
+          selectedMethodId: "pm-2",
+          selectedMethod: mockMethodWithBlocks,
+        }}
       />,
     );
     expect(screen.getByTestId("display-block-renderer")).toBeInTheDocument();
@@ -215,7 +257,10 @@ describe("SellerCheckoutContent", () => {
     render(
       <SellerCheckoutContent
         {...defaultProps}
-        validationError="methodRequired"
+        buyerForm={{
+          ...defaultProps.buyerForm,
+          validationError: "methodRequired",
+        }}
       />,
     );
     expect(screen.getByText("methodRequired")).toBeInTheDocument();
@@ -226,7 +271,10 @@ describe("SellerCheckoutContent", () => {
     render(
       <SellerCheckoutContent
         {...defaultProps}
-        selectedMethodId="pm-1"
+        methodSelection={{
+          ...defaultProps.methodSelection,
+          selectedMethodId: "pm-1",
+        }}
         onSubmit={onSubmit}
       />,
     );
@@ -244,8 +292,11 @@ describe("SellerCheckoutContent", () => {
     render(
       <SellerCheckoutContent
         {...defaultProps}
-        selectedMethodId="pm-1"
-        isSubmitting={true}
+        methodSelection={{
+          ...defaultProps.methodSelection,
+          selectedMethodId: "pm-1",
+        }}
+        submission={{ ...defaultProps.submission, isSubmitting: true }}
       />,
     );
     expect(screen.getByText("submitting")).toBeInTheDocument();

@@ -16,6 +16,7 @@ import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { tid } from "shared";
+import { cn } from "ui";
 
 import { ADMIN_APP_ACCESS_KEYS } from "@/shared/domain/constants";
 import { Link } from "@/shared/infrastructure/i18n";
@@ -90,7 +91,7 @@ const NAV_SECTIONS: readonly NavSection[] = [
 export function AdminSidebar() {
   const t = useTranslations("sidebar");
   const pathname = usePathname();
-  const [collapsed, setCollapsed] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(false);
   const { grantedKeys, isLoading } = useCurrentUserPermissions();
 
   const appPath = pathname.replace(/^\/[a-z]{2}/, "") || "/";
@@ -105,20 +106,21 @@ export function AdminSidebar() {
 
   return (
     <aside
-      className={`relative flex shrink-0 flex-col border-r-3 border-foreground bg-background transition-all duration-300 ease-in-out ${
-        collapsed ? "w-sidebar-collapsed" : "w-60"
-      }`}
+      className={cn(
+        "relative flex shrink-0 flex-col border-r-3 border-foreground bg-background transition-all duration-300 ease-in-out",
+        isCollapsed ? "w-sidebar-collapsed" : "w-60",
+      )}
       {...tid("admin-sidebar")}
     >
       {/* Collapse toggle */}
       <button
         type="button"
-        onClick={() => setCollapsed((prev) => !prev)}
+        onClick={() => setIsCollapsed((prev) => !prev)}
         className="absolute -right-3.5 top-5 z-10 flex size-7 items-center justify-center border-2 border-foreground bg-background text-foreground transition-colors hover:bg-foreground hover:text-background"
-        aria-label={collapsed ? t("expand") : t("collapse")}
+        aria-label={isCollapsed ? t("expand") : t("collapse")}
         {...tid("sidebar-collapse-toggle")}
       >
-        {collapsed ? (
+        {isCollapsed ? (
           <ChevronRight className="size-4" strokeWidth={3} />
         ) : (
           <ChevronLeft className="size-4" strokeWidth={3} />
@@ -130,7 +132,7 @@ export function AdminSidebar() {
         {visibleSections.map((section) => (
           <div key={section.labelKey} className="mb-2">
             {/* Section label */}
-            {!collapsed && (
+            {!isCollapsed && (
               <span className="text-section-label mb-1.5 block px-2 font-mono text-muted-foreground/60">
                 {t(section.labelKey)}
               </span>
@@ -147,13 +149,13 @@ export function AdminSidebar() {
                   <Link
                     key={key}
                     href={href}
-                    className={`group relative flex items-center gap-3 overflow-hidden rounded-md px-2.5 py-2 transition-all duration-150 ${
-                      collapsed ? "justify-center" : ""
-                    } ${
+                    className={cn(
+                      "group relative flex items-center gap-3 overflow-hidden rounded-md px-2.5 py-2 transition-all duration-150",
+                      isCollapsed && "justify-center",
                       isActive
                         ? "bg-foreground text-background"
-                        : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                    }`}
+                        : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                    )}
                     aria-current={isActive ? "page" : undefined}
                     {...tid(`sidebar-${key}`)}
                   >
@@ -163,10 +165,13 @@ export function AdminSidebar() {
                     )}
 
                     <NavIcon
-                      className={`shrink-0 ${collapsed ? "size-5" : "size-4"}`}
+                      className={cn(
+                        "shrink-0",
+                        isCollapsed ? "size-5" : "size-4",
+                      )}
                     />
 
-                    {!collapsed && (
+                    {!isCollapsed && (
                       <span className="font-display text-sm font-bold uppercase tracking-wider">
                         {t(key)}
                       </span>
@@ -181,9 +186,12 @@ export function AdminSidebar() {
 
       {/* System status footer */}
       <div
-        className={`border-t-2 border-foreground/10 px-2.5 py-3 ${collapsed ? "text-center" : ""}`}
+        className={cn(
+          "border-t-2 border-foreground/10 px-2.5 py-3",
+          isCollapsed && "text-center",
+        )}
       >
-        {collapsed ? (
+        {isCollapsed ? (
           <Radio className="mx-auto size-3.5 text-success animate-pulse" />
         ) : (
           <div className="flex flex-col gap-1">

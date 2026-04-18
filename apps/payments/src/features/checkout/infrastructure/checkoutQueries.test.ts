@@ -194,7 +194,7 @@ describe("fetchSellerProfiles", () => {
     });
   });
 
-  it("throws on error", async () => {
+  it("returns empty object on error", async () => {
     supabase._chain.in.mockResolvedValue({
       data: null,
       error: new Error("DB error"),
@@ -205,7 +205,7 @@ describe("fetchSellerProfiles", () => {
         supabase as unknown as Parameters<typeof fetchSellerProfiles>[0],
         ["s1"],
       ),
-    ).rejects.toThrow("DB error");
+    ).resolves.toEqual({});
   });
 });
 
@@ -235,6 +235,12 @@ describe("createOrder", () => {
   });
 
   it("reserves stock, inserts order and items, returns order id", async () => {
+    // products price fetch returns price data
+    supabase._chain.in.mockResolvedValueOnce({
+      data: [{ id: "prod-1", price_cop: 5000 }],
+      error: null,
+    });
+
     // reserve_stock succeeds
     supabase.rpc.mockResolvedValue({ data: true, error: null });
 
@@ -274,6 +280,15 @@ describe("createOrder", () => {
   });
 
   it("releases stock and throws on reserve_stock failure", async () => {
+    // products price fetch returns price data for both items
+    supabase._chain.in.mockResolvedValueOnce({
+      data: [
+        { id: "prod-1", price_cop: 5000 },
+        { id: "prod-2", price_cop: 3000 },
+      ],
+      error: null,
+    });
+
     // First rpc call succeeds, second fails (simulating two items)
     supabase.rpc
       .mockResolvedValueOnce({ data: true, error: null }) // first item ok

@@ -1,0 +1,85 @@
+{
+  "agent": "security",
+  "timestamp": "2026-04-17T18:00:00",
+  "scope": "apps/",
+  "summary": {
+    "filesAnalyzed": 18,
+    "issuesFound": 4,
+    "critical": 2,
+    "warning": 2,
+    "suggestion": 0,
+    "info": 0
+  },
+  "issues": [
+    {
+      "id": "SEC-001",
+      "severity": "critical",
+      "title": "Checkout orders route skips stock validation before creating an order",
+      "file": "apps/payments/src/app/api/checkout/orders/route.ts",
+      "line": 164,
+      "vulnerabilityType": "auth",
+      "description": "The POST /api/checkout/orders route fetches server-side prices correctly and validates input structure, but it does NOT validate stock availability (max_quantity, is_active, or seller_id ownership of each product) before inserting the order. A buyer can submit a checkout order for products that are sold out, inactive, or belong to a different seller. The companion route POST /api/checkout/payment-methods does perform this validation (validateStock), but orders/route.ts bypasses it entirely.",
+      "risk": "Buyers can create orders for out-of-stock or inactive products, violating the checkout stock integrity contract defined in .claude/rules/checkout-stock-integrity.md. A tampered or stale cart can bypass the stock gate and complete an order, potentially leading to overselling, negative inventory, and unfulfillable orders. Combined with direct browser access to the orders endpoint, the payment-methods gate can be completely bypassed.",
+      "rule": "checkout-stock-integrity.md — 'Checkout must re-validate stock on the server using current product data.'",
+      "fix": "Replicate the validateStock logic from payment-methods/route.ts into orders/route.ts. Before calling insertOrder, fetch the relevant products via adminFetchJson, verify each item's is_active flag, seller_id, and quantity <= max_quantity. If any item fails validation, return a 422 with an appropriate error rather than creating the order."
+    },
+    {
+      "id": "SEC-002",
+      "severity": "critical",
+      "title": "Checkout orders route missing permission check (no orders.create / receipts.create guard)",
+      "file": "apps/payments/src/app/api/checkout/orders/route.ts",
+      "line": 84,
+      "vulnerabilityType": "auth",
+      "description": "POST /api/checkout/orders only verifies that the caller is authenticated (auth.getUser()) but does NOT check whether the user holds the required permissions (orders.create, receipts.create). The parallel route POST /api/checkout/payment-methods enforces these permissions explicitly via fetchGrantedPermissions / hasRequiredPermissions with REQUIRED_PERMISSION_KEYS = ['orders.create', 'receipts.create']. Any authenticated user—regardless of their permission set—can call orders/route.ts and create an order.",
+      "risk": "Any authenticated user can create orders even if their account is not authorized to place orders (e.g., suspended buyers, internal service accounts, or sellers). This is an authorization bypass that circumvents the permission model enforced elsewhere in the checkout flow.",
+      "rule": "code-review-standards.md#security-standards — 'Missing authentication checks, exposed internal endpoints'",
+      "fix": "Add the same REQUIRED_PERMISSION_KEYS check used in payment-methods/route.ts to orders/route.ts. After verifying the user identity, call fetchGrantedPermissions(user.id) and hasRequiredPermissions(rows). Return 403 if the check fails. Alternatively, extract a shared withCheckoutPermissions middleware to keep both routes consistent."
+    },
+    {
+      "id": "SEC-003",
+      "severity": "warning",
+      "title": "NEXT_PUBLIC_ENV_DEBUG can serialize all environment variables (including non-public ones) to a client-accessible value",
+      "file": "scripts/load-env.mjs",
+      "line": 109,
+      "vulnerabilityType": "exposure",
+      "description": "When ENV_DEBUG=true, load-env.mjs serializes the entire resolved `vars` object (all keys from the loaded .env.* file) into NEXT_PUBLIC_ENV_DEBUG as JSON. The `vars` snapshot includes every key from the env file—not just NEXT_PUBLIC_* entries. If a .env.dev or .env.test file includes server-only keys (e.g., SUPABASE_SERVICE_ROLE_KEY, database credentials, third-party API secrets), they are all bundled into a single NEXT_PUBLIC_ variable and rendered in the browser by apps/playground/src/app/[locale]/env/page.tsx. Production is guarded (isProduction check), but staging/test environments may expose secrets.",
+      "risk": "A developer who accidentally enables ENV_DEBUG=true against a staging environment where env files contain real service-role keys or API secrets would expose those secrets to anyone who can reach the playground app at /playground/en/env. This is especially risky in shared staging environments.",
+      "rule": "code-review-standards.md#security-standards — 'Sensitive data in logs, PII in error messages; secrets exposed to client'",
+      "fix": "Filter the snapshot to only include keys whose names start with NEXT_PUBLIC_ before assigning to NEXT_PUBLIC_ENV_DEBUG. Example: const snapshot = Object.fromEntries(Object.entries(vars).filter(([k]) => k.startsWith('NEXT_PUBLIC_') || k === 'TARGET_ENV' || k === 'NODE_ENV')). This ensures server-only keys are never serialized to the client variable even in debug mode."
+    },
+    {
+      "id": "SEC-004",
+      "severity": "warning",
+      "title": "console.error logs full Error object in checkout routes — may leak internal details to server logs",
+      "file": "apps/payments/src/app/api/checkout/orders/route.ts",
+      "line": 194,
+      "vulnerabilityType": "exposure",
+      "description": "Both checkout routes (orders/route.ts:194 and payment-methods/route.ts:214) log the raw `error` object via console.error. If the error originates from a failed Supabase REST call, the error object may contain full Supabase/PostgREST error messages, internal SQL fragments, table names, or query details. The admin/adminRest.ts already mitigates this correctly: it logs errorText server-side and throws a sanitized error message to callers. The checkout routes do not apply this same pattern.",
+      "risk": "In environments where server logs are accessible to a wider audience (e.g., shared CI, Vercel logs visible to team members), this can leak internal database structure, table names, or query syntax to non-privileged observers. The external response is already sanitized ('Failed to create order'), but the server-side log is not.",
+      "rule": "code-review-standards.md#security-standards — 'Sensitive data in logs'",
+      "fix": "Follow the same pattern as adminRest.ts: extract a meaningful message from the error before logging. Example: console.error('[checkout/orders] Unexpected error:', error instanceof Error ? error.message : String(error)). For Supabase errors, avoid logging the full HTTP response body in production."
+    }
+  ],
+  "patterns": [
+    {
+      "type": "positive",
+      "description": "Price integrity is well-enforced: orders/route.ts explicitly fetches prices from the DB and calculates totals server-side, explicitly rejecting client-provided totals. Comments in code confirm this intent."
+    },
+    {
+      "type": "positive",
+      "description": "All admin API routes (admin/users/[userId]/permissions and delegates) correctly verify admin identity and required permissions via getAuthorizedAdmin() before executing any DB mutations."
+    },
+    {
+      "type": "positive",
+      "description": "No hardcoded secrets found anywhere in application source files. Service role keys and anon keys are always read from process.env variables."
+    },
+    {
+      "type": "positive",
+      "description": "The auth/refresh API endpoint implements a strict CORS allowlist using ALLOWED_ORIGINS (Set of NEXT_PUBLIC_ env URLs) and validates the Origin header before setting Access-Control-Allow-Origin, preventing CORS exploitation from unknown origins."
+    },
+    {
+      "type": "positive",
+      "description": "auditRestClient.ts validates server-side user identity via supabase.auth.getUser() before using the session token, following the recommended Supabase auth pattern."
+    }
+  ]
+}

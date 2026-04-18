@@ -1,4 +1,3 @@
-/* eslint-disable i18next/no-literal-string */
 "use client";
 
 import { Download, Search } from "lucide-react";
@@ -141,18 +140,18 @@ export function UserTable({
             onChange={(e) => onRoleFilterChange(e.target.value)}
             className="h-10 rounded-none border-2 border-foreground bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
           >
-            <option value="all">All Roles</option>
-            <option value="buyer">Buyer</option>
-            <option value="seller">Seller</option>
+            <option value="all">{t("filters.allRoles")}</option>
+            <option value="buyer">{t("roles.buyer")}</option>
+            <option value="seller">{t("roles.seller")}</option>
           </select>
           <select
             value={itemFilter}
             onChange={(e) => onItemFilterChange(e.target.value)}
             className="h-10 rounded-none border-2 border-foreground bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
           >
-            <option value="all">All Items</option>
-            <option value="has_items">Has Items</option>
-            <option value="no_items">No Items</option>
+            <option value="all">{t("filters.allItems")}</option>
+            <option value="has_items">{t("filters.hasItems")}</option>
+            <option value="no_items">{t("filters.noItems")}</option>
           </select>
         </div>
         {canExport && (
@@ -163,7 +162,7 @@ export function UserTable({
               className="gap-2"
             >
               <Download className="size-4" />
-              Export Selected as CSV
+              {t("exportCsv")}
             </Button>
           </div>
         )}

@@ -2,7 +2,7 @@
 
 import { createContext, useContext } from "react";
 
-import { useFlyToCart } from "./useFlyToCart";
+import { useFlyToCart } from "./hooks/useFlyToCart";
 
 type FlyToCartContextValue = ReturnType<typeof useFlyToCart>;
 

@@ -1,5 +1,5 @@
 /* eslint-disable i18next/no-literal-string -- Supabase query params are not UI strings */
-import type { createBrowserSupabaseClient } from "api/supabase";
+import { escapeLikePattern } from "shared";
 
 import {
   ADMIN_UI_GRANT_REASON,
@@ -10,8 +10,7 @@ import type {
   PaginatedUsers,
   UserProfileSummary,
 } from "@/features/users/domain/types";
-
-type SupabaseClient = ReturnType<typeof createBrowserSupabaseClient>;
+import type { SupabaseClient } from "@/shared/domain/types";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- tables not in generated types yet
 const USER_PROFILES_TABLE = "user_profiles" as any;
@@ -21,11 +20,6 @@ const PERMISSIONS_TABLE = "permissions" as any;
 const RESOURCE_PERMISSIONS_TABLE = "resource_permissions" as any;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- tables not in generated types yet
 const USER_PERMISSIONS_TABLE = "user_permissions" as any;
-
-/** Escape SQL LIKE wildcards to prevent pattern injection */
-function escapeLikePattern(input: string): string {
-  return input.replaceAll(/[%_\\]/g, (char) => `\\${char}`);
-}
 
 /** List users with server-side pagination and optional search filter */
 export async function listUsers(

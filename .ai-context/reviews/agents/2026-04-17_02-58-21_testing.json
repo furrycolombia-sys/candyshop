@@ -1,0 +1,100 @@
+{
+  "agent": "testing",
+  "timestamp": "2026-04-17T02:58:21",
+  "scope": "apps/",
+  "summary": {
+    "filesAnalyzed": 120,
+    "issuesFound": 7,
+    "critical": 0,
+    "warning": 4,
+    "suggestion": 3,
+    "info": 0
+  },
+  "issues": [
+    {
+      "id": "TEST-001",
+      "severity": "warning",
+      "category": "TEST",
+      "file": "apps/admin/src/features/users/application/hooks/useApplyTemplate.ts",
+      "description": "No test file found for useApplyTemplate. This hook applies permission templates to users — an admin-critical mutation with no coverage.",
+      "rule": "Custom hooks for mutations on critical admin paths should have tests.",
+      "fix": "Create apps/admin/src/features/users/application/hooks/useApplyTemplate.test.tsx covering success and error cases."
+    },
+    {
+      "id": "TEST-002",
+      "severity": "warning",
+      "category": "TEST",
+      "file": "apps/admin/src/features/users/application/hooks/useTogglePermission.ts",
+      "description": "No test file found for useTogglePermission. This hook grants/revokes user permissions — a security-relevant mutation with no coverage.",
+      "rule": "Custom hooks for mutations on critical admin paths should have tests.",
+      "fix": "Create apps/admin/src/features/users/application/hooks/useTogglePermission.test.tsx covering grant=true, grant=false, and error cases."
+    },
+    {
+      "id": "TEST-003",
+      "severity": "warning",
+      "category": "TEST",
+      "file": "apps/admin/src/features/users/application/hooks/useUserPermissions.ts",
+      "description": "No test file found for useUserPermissions. This hook fetches current permissions for a user, used in the admin permission management flow.",
+      "rule": "Custom hooks for data-fetching on critical admin paths should have tests.",
+      "fix": "Create apps/admin/src/features/users/application/hooks/useUserPermissions.test.tsx."
+    },
+    {
+      "id": "TEST-004",
+      "severity": "warning",
+      "category": "TEST",
+      "file": "apps/payments/src/features/checkout/application/hooks/useCartFromCookie.ts",
+      "description": "No test file found for useCartFromCookie. This is the central hook that reads the cart, groups items by seller, and resolves seller names — a critical path in checkout.",
+      "rule": "Custom hooks for critical checkout data-loading paths should have tests.",
+      "fix": "Create apps/payments/src/features/checkout/application/hooks/useCartFromCookie.test.tsx covering empty cart, single seller, multi-seller, hydration guard (EMPTY vs populated), and seller name resolution."
+    },
+    {
+      "id": "TEST-005",
+      "severity": "suggestion",
+      "category": "TEST",
+      "file": "apps/payments/src/features/payment-methods/application/hooks/useAutoSavePaymentMethod.ts",
+      "description": "No test file found for useAutoSavePaymentMethod. This hook implements debounced auto-save logic for seller payment method forms, including cleanup on unmount.",
+      "rule": "Hooks with non-trivial debouncing/timer/cleanup logic benefit from tests.",
+      "fix": "Create apps/payments/src/features/payment-methods/application/hooks/useAutoSavePaymentMethod.test.tsx using fake timers to verify debounce, save status transitions, and cleanup."
+    },
+    {
+      "id": "TEST-006",
+      "severity": "suggestion",
+      "category": "TEST",
+      "file": "apps/payments/src/features/payment-methods/application/hooks/usePaymentMethodsManager.ts",
+      "description": "No test file found for usePaymentMethodsManager. This orchestrator hook wires create/update/delete mutations and sort-order swaps for payment methods.",
+      "rule": "Orchestrator hooks with multiple mutations and UI state interactions benefit from tests.",
+      "fix": "Create apps/payments/src/features/payment-methods/application/hooks/usePaymentMethodsManager.test.tsx."
+    },
+    {
+      "id": "TEST-007",
+      "severity": "suggestion",
+      "category": "TEST",
+      "file": "apps/studio/src/features/seller-admins/application/hooks/useDelegateSearch.ts",
+      "description": "No test file found for useDelegateSearch. Other seller-admin hooks (useDelegates, useDelegateMutations, useDelegateCountsByProduct) all have tests; this hook is missing coverage.",
+      "rule": "Hooks in a feature with otherwise thorough test coverage should be consistent.",
+      "fix": "Create apps/studio/src/features/seller-admins/application/hooks/useDelegateSearch.test.tsx."
+    }
+  ],
+  "patterns": [
+    {
+      "pattern": "Strong checkout/payment-methods route-level coverage",
+      "description": "apps/payments/src/app/api/checkout/payment-methods/route.test.ts thoroughly covers the stock-integrity server route: valid cart, stock exceeded (payment methods suppressed), missing permissions (403), and invalid payload (400). This matches the checkout-stock-integrity rule.",
+      "quality": "good"
+    },
+    {
+      "pattern": "Good E2E coverage of critical purchase flows",
+      "description": "apps/auth/e2e/full-purchase-flow.spec.ts and apps/auth/e2e/checkout-stock-integrity.spec.ts provide end-to-end coverage of the multi-seller purchase flow and the tampered-cart/stock-guard scenario required by the checkout-stock-integrity rule.",
+      "quality": "good"
+    },
+    {
+      "pattern": "tid() adoption is partial in cart/checkout components",
+      "description": "Checkout components (SellerCheckoutCard, PaymentMethodSelector, ReceiptUpload, etc.) use tid(). Cart components CartDrawer and CartItemRow use tid(). However CartDrawerWithItems test targets CartDrawer directly (no separate source file exists), suggesting a test file was not cleaned up after a refactor.",
+      "quality": "info"
+    },
+    {
+      "pattern": "Auth hooks (useSupabaseAuth) have no unit tests across apps",
+      "description": "apps/store, apps/admin, apps/payments, apps/studio each have a useSupabaseAuth.ts hook with no corresponding test file. Auth session behavior is covered at E2E level (apps/auth/e2e/auth-session.spec.ts) but not at the unit level.",
+      "quality": "neutral"
+    }
+  ]
+}

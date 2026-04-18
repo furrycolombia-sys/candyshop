@@ -1,0 +1,113 @@
+{
+  "agent": "component-patterns",
+  "timestamp": "2026-04-17T00:00:00Z",
+  "scope": "apps/",
+  "summary": {
+    "filesAnalyzed": 258,
+    "issuesFound": 6,
+    "critical": 0,
+    "warning": 4,
+    "suggestion": 2,
+    "info": 0
+  },
+  "issues": [
+    {
+      "id": "COMP-001",
+      "severity": "warning",
+      "title": "Multiple components in one file — DisplayBlockRenderer.tsx",
+      "file": "apps/payments/src/features/checkout/presentation/components/DisplayBlockRenderer.tsx",
+      "line": 33,
+      "description": "The file defines three functions returning JSX: `DisplayBlockRenderer` (exported), `BlockContent` (private), and `ImageBlock` (private). The file carries an eslint-disable comment `react/no-multi-comp` with justification. While the private helpers are small, `ImageBlock` has its own state (`useState`) and is large enough to warrant its own file. Keeping stateful components co-located with their parent obscures the dependency surface and makes the file harder to test in isolation.",
+      "rule": "component-patterns.md#one-component-per-file",
+      "fix": "Extract `ImageBlock` (stateful, ~20 lines) to `ImageBlock.tsx` in the same folder. `BlockContent` is a pure switch dispatcher and can stay as an internal helper or also be extracted. Remove the eslint-disable comment once done."
+    },
+    {
+      "id": "COMP-002",
+      "severity": "warning",
+      "title": "Multiple components in one file — SellerCheckoutContent.tsx",
+      "file": "apps/payments/src/features/checkout/presentation/components/SellerCheckoutContent.tsx",
+      "line": 46,
+      "description": "The file defines `DisplayBlocksSection` and `FormFieldsSection` as unexported helper components alongside the exported `SellerCheckoutContent`. An eslint-disable comment acknowledges this. Both helpers are pure presentational, 10-15 lines each, and accept their own typed props — they are candidates for standalone files. Co-location blows up a 225-line file unnecessarily.",
+      "rule": "component-patterns.md#one-component-per-file",
+      "fix": "Extract `DisplayBlocksSection` and `FormFieldsSection` to separate files (e.g., `DisplayBlocksSection.tsx`, `FormFieldsSection.tsx`) in the same folder. Remove the eslint-disable comment."
+    },
+    {
+      "id": "COMP-003",
+      "severity": "warning",
+      "title": "Multiple components in one file — DisplaySectionEditor.tsx (FormSectionEditor.tsx pattern)",
+      "file": "apps/payments/src/features/payment-methods/presentation/components/DisplaySectionEditor.tsx",
+      "line": 196,
+      "description": "Exports `DisplaySectionEditor` but also defines `BlockEditor` and `VideoBlockEditor` as private helper components (both use hooks). The file is 370 lines. The same pattern appears in `FormSectionEditor.tsx` (exports `FormSectionEditor`, private `FieldRow` with its own layout logic and drag-and-drop binding). Both files carry eslint-disable comments.",
+      "rule": "component-patterns.md#one-component-per-file",
+      "fix": "Extract `BlockEditor` and `VideoBlockEditor` to separate files. For `FormSectionEditor.tsx`, extract `FieldRow`. This also reduces file sizes to more manageable units and allows isolated testing of each sub-component."
+    },
+    {
+      "id": "COMP-004",
+      "severity": "warning",
+      "title": "Context file exports both Provider and hook — CartContext.tsx",
+      "file": "apps/store/src/features/cart/application/CartContext.tsx",
+      "line": 125,
+      "description": "`CartContext.tsx` exports both `CartProvider` (a React component) and `useCart` (a hook). The same pattern appears in `FlyToCartContext.tsx` (exports `FlyToCartProvider` + `useFlyToCartContext`). Exporting a hook and a component from the same file does not strictly violate the one-component rule, but hooks should generally live in separate files following the project's naming convention (`use*.ts`). This creates a naming ambiguity: is the file a component file or a hook file?",
+      "rule": "component-patterns.md#standard-component-template",
+      "fix": "Move `useCart` to a dedicated `useCart.ts` hook file under the `application/hooks/` layer. Move `CartProvider` to `CartProvider.tsx`. The same split applies to `FlyToCartContext.tsx`. This aligns with the Clean Architecture separation and the project's naming conventions."
+    },
+    {
+      "id": "COMP-005",
+      "severity": "suggestion",
+      "title": "renderItems() function defined inside component body — SectionCard.tsx",
+      "file": "apps/studio/src/features/products/presentation/components/inline-editor/SectionCard.tsx",
+      "line": 103,
+      "description": "`SectionCard` defines `renderItems()` as a regular function inside its component body (not a hook or a component, just a helper that returns JSX). While this is not a nested component definition (it is not a PascalCase function), it is still a function that returns JSX living inside a component. This pattern bypasses the KISS principle — the switch logic could be extracted to a standalone function or a small mapping outside the component, avoiding re-creation on every render.",
+      "rule": "component-patterns.md#standard-component-structure",
+      "fix": "Move the `renderItems` logic outside the component as a pure function `getSectionItemsComponent(type, props)` that returns the JSX element, or inline the switch directly into the JSX. Since `renderItems` closes over `sectionIndex`, `control`, `theme`, `fieldArray`, and `handleAddItem`, the cleanest move is to inline it as a derived variable: `const sectionItems = renderItems()` placed after the derived state section."
+    },
+    {
+      "id": "COMP-006",
+      "severity": "suggestion",
+      "title": "renderInput() function defined inside component — DynamicFormField.tsx",
+      "file": "apps/payments/src/features/checkout/presentation/components/DynamicFormField.tsx",
+      "line": 38,
+      "description": "`DynamicFormField` defines `renderInput()` as an inner function inside the component body that returns JSX. It closes over `field`, `value`, `onChange`, `onFileChange`, `disabled`, `inputId`, and `baseInputClass`. This creates a new function reference on every render. The KISS fix (inline the call site or use a derived variable) is simpler than extracting to a hook.",
+      "rule": "component-patterns.md#standard-component-structure",
+      "fix": "Replace `function renderInput() { ... }` with `const inputElement = (() => { ... })()` or simply inline the switch directly into the JSX render at the call site. Alternatively, since `FileInput` is already extracted, the remaining two branches (textarea, regular input) can be inlined directly."
+    }
+  ],
+  "patterns": [
+    {
+      "id": "PAT-COMP-001",
+      "type": "good",
+      "title": "Consistent use of eslint-disable with justification comments",
+      "description": "Files that deviate from the one-component-per-file rule consistently add `/* eslint-disable react/no-multi-comp -- <reason> */` at the top with a clear justification. This demonstrates developer awareness of the rule even where exceptions are taken."
+    },
+    {
+      "id": "PAT-COMP-002",
+      "type": "good",
+      "title": "Private helper components always unexported",
+      "description": "In all multi-component files (DisplayBlockRenderer, SellerCheckoutContent, DisplaySectionEditor, FormSectionEditor, SectionItemsAccordion, SectionItemsCards, SectionItemsTwoColumn, ReceivedOrderCard), the companion components are kept private (not exported), correctly limiting their API surface."
+    },
+    {
+      "id": "PAT-COMP-003",
+      "type": "good",
+      "title": "Container/Presenter pattern followed correctly",
+      "description": "Page components (e.g., DashboardPageContent, UsersPageContent, TemplatesPageContent) handle data fetching via hooks and pass data to focused presenter components. The pattern is consistently applied across admin, payments, and studio apps."
+    },
+    {
+      "id": "PAT-COMP-004",
+      "type": "good",
+      "title": "Standard component structure followed in most files",
+      "description": "Spot-checked files (CartDrawer, ProductCard, SellerCheckoutCard, TemplateEditor, DashboardPageContent, UserDelegatesCard) all follow the hooks → derived state → handlers → early returns → render ordering correctly."
+    },
+    {
+      "id": "PAT-COMP-005",
+      "type": "good",
+      "title": "'use client' directive used appropriately",
+      "description": "Server components (GalleryOverlays, layout files, page server-side wrappers) correctly omit 'use client'. Client-interactive components (CartDrawer, SellerCheckoutCard, InlineEditor, etc.) correctly include it. No cases of 'use client' misuse were found in the spot-check."
+    },
+    {
+      "id": "PAT-COMP-006",
+      "type": "info",
+      "title": "Rule suggestion: allow Context file pattern (Provider + hook co-location)",
+      "description": "The project uses a Context file pattern that co-locates the Provider component and its companion hook (e.g., CartContext.tsx exports CartProvider + useCart). This is a widely-accepted React pattern. Consider documenting this as an explicitly allowed exception in the component-patterns rule, to avoid future false positives in reviews."
+    }
+  ]
+}

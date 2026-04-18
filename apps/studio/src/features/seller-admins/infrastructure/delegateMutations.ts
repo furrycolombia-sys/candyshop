@@ -1,12 +1,9 @@
-import type { createBrowserSupabaseClient } from "api/supabase";
-
 import type {
   DelegatePermission,
   SellerAdmin,
 } from "@/features/seller-admins/domain/types";
 import { validateDelegateInput } from "@/features/seller-admins/domain/validation";
-
-type SupabaseClient = ReturnType<typeof createBrowserSupabaseClient>;
+import type { SupabaseClient } from "@/shared/domain/types";
 
 /**
  * Add a new delegate for a seller, scoped to a specific product.

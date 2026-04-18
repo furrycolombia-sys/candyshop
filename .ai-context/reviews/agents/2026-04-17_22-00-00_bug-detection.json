@@ -1,0 +1,89 @@
+{
+  "agent": "bug-detection",
+  "review_id": "2026-04-17_22-00-00",
+  "timestamp": "2026-04-17T22:00:00",
+  "scope": "apps/",
+  "summary": {
+    "filesAnalyzed": 38,
+    "issuesFound": 5,
+    "critical": 1,
+    "warning": 3,
+    "suggestion": 1,
+    "info": 0
+  },
+  "issues": [
+    {
+      "id": "BUG-001",
+      "severity": "critical",
+      "title": "Null context (`ctx`) accessed unsafely inside async `.then()` callback",
+      "file": "apps/store/src/features/products/presentation/components/FeaturedRibbon.tsx",
+      "line": 180,
+      "bugType": "null-access",
+      "description": "The variable `ctx` is declared as `CanvasRenderingContext2D | null` (line 78). After the guard `if (!ctx) return` at line 87, TypeScript narrows `ctx` to non-null in the synchronous body. However, inside the `document.fonts.ready.then(...)` async callback (line 178), TypeScript loses the narrowing — `ctx` is typed as `CanvasRenderingContext2D | null` in that closure scope. At runtime this is safe because the guard above already returned early if `ctx` was null, so the `.then()` is never reached in that case. BUT if TypeScript strict-null checks are enforced this generates a compile error, and more importantly the pattern is fragile: any future refactor that reorganises the guard could silently introduce a null-dereference. The same concern applies to the inner `draw()` function which already defensively checks `if (!ctx) return` (line 127) — suggesting the author was aware — but the `.then()` callback at line 180 skips this guard entirely.",
+      "impact": "Currently safe at runtime because the `if (!ctx) return` guard prevents the callback from executing when `ctx` is null. However a TypeScript strict-null-checks build may report an error. Any future refactor that removes or relocates the guard would cause a `TypeError: Cannot set properties of null (setting 'font')` at runtime.",
+      "fix": "Change the `.then()` callback to guard against null before accessing `ctx`:\n\n```ts\ndocument.fonts.ready\n  .then(() => {\n    if (cancelled || !ctx) return;  // add !ctx guard\n    ctx.font = `800 ${String(baseFontSize)}px ${FONT_STACK}`;\n    // ...\n  })\n```"
+    },
+    {
+      "id": "BUG-002",
+      "severity": "warning",
+      "title": "Race condition: `cartCleared` ref only guards the first checkout completion, not re-navigations",
+      "file": "apps/payments/src/features/checkout/presentation/pages/CheckoutPageContent.tsx",
+      "line": 115,
+      "bugType": "state",
+      "description": "The second `useEffect` (line 115) reads `cartCleared.current` to decide whether to clear the `CHECKOUT_COMPLETED_SESSION_KEY` flag when new cart items appear after a completed checkout. However, `cartCleared` is a `useRef` initialized to `false` and set to `true` only the first time `allSubmitted` becomes true (line 109). If the user navigates away and returns to the checkout page (same session, component remounts), the ref resets to `false` and the condition `!cartCleared.current` in the second effect evaluates to `true`. This means the completed-checkout flag is cleared prematurely — before the cart is actually changed — potentially hiding the success state on re-render before the cart cookie update propagates.",
+      "impact": "The success confirmation screen may flash briefly and then disappear when the checkout page remounts within the same browser session, even if the cart has not actually changed. Minor UX regression, not a data integrity issue.",
+      "fix": "Replace the `cartCleared` ref check in the second effect with a direct comparison based on state, or use a session-storage flag (already written via `writeCompletedCheckoutFlag`) consistently:\n\n```ts\nuseEffect(() => {\n  // Only reset the session flag when there are real new items (groups changed)\n  // and the cart has NOT been cleared yet in this mount.\n  if (groups.length > 0 && hasCompletedCheckout && !allSubmitted) {\n    writeCompletedCheckoutFlag(false);\n  }\n}, [groups.length, hasCompletedCheckout, allSubmitted]);\n```"
+    },
+    {
+      "id": "BUG-003",
+      "severity": "warning",
+      "title": "Stock release loop not awaited inside a try/catch — silent failures swallowed",
+      "file": "apps/payments/src/features/checkout/infrastructure/checkoutQueries.ts",
+      "line": 103,
+      "bugType": "async-error",
+      "description": "When `reserve_stock` fails (line 101), the code iterates over already-reserved items and calls `supabase.rpc('release_stock', ...)` in a `for` loop (lines 103-108). Each `await` inside this loop can throw (e.g., network timeout, RPC error), but there is no try/catch around the release loop. If any release call throws, the loop exits early, leaving subsequent reserved items permanently locked until they expire naturally. The same pattern also exists for the release loop after the order insert failure (lines 141-146).",
+      "impact": "If the compensating `release_stock` RPC call fails mid-loop, some stock units remain reserved and unavailable to other buyers until the order expires. This can manifest as phantom stock shortages under high-concurrency or transient network conditions.",
+      "fix": "Wrap the release loop in a try/catch and log failures, or use `Promise.allSettled` to ensure all releases are attempted regardless of individual failures:\n\n```ts\n// Release already-reserved items — best-effort\nfor (const r of reserved) {\n  try {\n    await supabase.rpc('release_stock', {\n      p_product_id: r.productId,\n      p_quantity: r.quantity,\n    });\n  } catch (releaseErr) {\n    console.error('Failed to release stock for', r.productId, releaseErr);\n  }\n}\nthrow new Error('stock_error');\n```"
+    },
+    {
+      "id": "BUG-004",
+      "severity": "warning",
+      "title": "`resolveColors()` closes over a potentially stale `canvas` reference after effect cleanup",
+      "file": "apps/store/src/features/products/presentation/components/FeaturedRibbon.tsx",
+      "line": 93,
+      "bugType": "state",
+      "description": "The inner function `resolveColors()` (line 93) closes over the `canvas` variable declared at line 75. The `MutationObserver` callback (line 109-113) calls `resolveColors()` whenever the theme class changes. The cleanup function (line 198-202) calls `themeObserver.disconnect()`, which stops future callbacks — this is correct. However, if the cleanup runs (component unmounts / effect re-runs) but the MutationObserver fires once more between the `cancelled = true` assignment and `themeObserver.disconnect()`, `resolveColors()` would call `getComputedStyle(canvas)` on a canvas that is no longer in the DOM. This is benign in most browsers (returns empty strings) but could cause a brief frame with wrong colors.",
+      "impact": "Cosmetic only: a single animation frame may render with incorrect colors during teardown. No crash risk.",
+      "fix": "Add a `cancelled` guard inside the MutationObserver callback, mirroring the guard already used in `draw()`:\n\n```ts\nconst themeObserver = new MutationObserver(() => {\n  if (cancelled) return;\n  const colors = resolveColors();\n  foregroundColor = colors.fg;\n  bgColor = colors.bg;\n});\n```"
+    },
+    {
+      "id": "BUG-005",
+      "severity": "suggestion",
+      "title": "Object URL for receipt preview not revoked when `file` prop changes externally in `ReceiptUpload`",
+      "file": "apps/payments/src/features/checkout/presentation/components/ReceiptUpload.tsx",
+      "line": 53,
+      "bugType": "useEffect",
+      "description": "When the user selects a file, `setPreviewUrl` is called with a revoke-and-replace pattern (line 53-55) — this correctly revokes the previous URL. On unmount, the stored `previewUrlRef.current` is revoked (line 36-38). However, there is no effect that revokes the URL when the parent calls `onFileChange(null)` and the `file` prop becomes `null` from outside without going through `handleRemove`. In that scenario `previewUrl` state remains set (stale object URL), the `<img>` element may still display the old preview, and the object URL is never revoked until unmount.",
+      "impact": "Minor memory leak: a Blob object URL is retained until the component unmounts. The stale preview could also briefly display wrong content if the parent resets `file` to null.",
+      "fix": "Add an effect that revokes the preview URL when `file` becomes null externally:\n\n```ts\nuseEffect(() => {\n  if (!file && previewUrl) {\n    URL.revokeObjectURL(previewUrl);\n    setPreviewUrl(null);\n  }\n}, [file, previewUrl]);\n```"
+    }
+  ],
+  "patterns": [
+    {
+      "pattern": "Compensating async loops without error handling",
+      "description": "Two locations in checkoutQueries.ts use `await` inside `for` loops to release reserved stock without try/catch. This pattern appears in both the reserve-failure path and the order-insert-failure path. Recommend a shared `releaseReservedStock` helper with error resilience.",
+      "severity": "warning",
+      "files": [
+        "apps/payments/src/features/checkout/infrastructure/checkoutQueries.ts"
+      ]
+    },
+    {
+      "pattern": "Async closures capturing TypeScript-narrowed variables",
+      "description": "TypeScript narrowing via `if (!x) return` does not persist into async callbacks (.then(), async arrow functions defined later). Seen in FeaturedRibbon. Defensive null checks inside async callbacks improve both type safety and resilience to future refactors.",
+      "severity": "info",
+      "files": [
+        "apps/store/src/features/products/presentation/components/FeaturedRibbon.tsx"
+      ]
+    }
+  ]
+}

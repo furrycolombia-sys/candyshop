@@ -163,17 +163,16 @@ export async function fetchReceivedOrders(
     );
   }
 
-  const { data: ownData, error: ownError } = await ownQuery;
-  if (ownError) throw ownError;
+  // Run own-orders query and delegated-orders fetch in parallel
+  const [ownResult, delegatedResult] = await Promise.all([
+    ownQuery,
+    fetchDelegatedOrderRows(supabase, user.id, filter),
+  ]);
 
-  const ownRows = (ownData ?? []) as OrderRow[];
+  if (ownResult.error) throw ownResult.error;
 
-  // ── Delegated orders ──────────────────────────────────────────
-  const { rows: delegatedRows, sellerNameMap } = await fetchDelegatedOrderRows(
-    supabase,
-    user.id,
-    filter,
-  );
+  const ownRows = (ownResult.data ?? []) as OrderRow[];
+  const { rows: delegatedRows, sellerNameMap } = delegatedResult;
 
   // ── Merge & deduplicate ───────────────────────────────────────
   const seenIds = new Set(ownRows.map((r) => r.id));

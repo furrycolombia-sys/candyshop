@@ -19,6 +19,8 @@ export function RatingStars({ rating, theme }: RatingStarsProps) {
       {Array.from({ length: 5 }, (_, i) => (
         <Star
           key={i}
+          data-testid="rating-star"
+          data-filled={i < rounded}
           className={i < rounded ? filledClass : "size-4 text-muted-foreground"}
           style={i < rounded ? filledStyle : undefined}
         />

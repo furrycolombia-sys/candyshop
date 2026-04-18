@@ -1,0 +1,67 @@
+{
+  "audit_type": "bug-detection",
+  "timestamp": "2026-04-17T00-00-00",
+  "outputFile": ".ai-context/reviews/agents/2026-04-17_00-00-00_bug-detection.json",
+  "summary": {
+    "totalFilesAnalyzed": 506,
+    "issuesFound": 4,
+    "critical": 0,
+    "warning": 3,
+    "suggestion": 1
+  },
+  "issues": [
+    {
+      "id": "BUG-001",
+      "severity": "warning",
+      "category": "Memory Leak / RAF Cleanup",
+      "file": "apps/store/src/features/products/presentation/components/FeaturedRibbon.tsx",
+      "lines": [107, 160, 176],
+      "title": "requestAnimationFrame loop starts after component unmount via document.fonts.ready",
+      "description": "The useEffect declares `let animId: number` (uninitialized) and schedules work inside a `document.fonts.ready.then(...)` callback. If the component unmounts before fonts finish loading, the cleanup function runs with `animId = undefined`, so `cancelAnimationFrame(undefined)` is a no-op. When fonts eventually resolve, the Promise callback fires anyway — outside the React component lifecycle — and kicks off the recursive RAF draw loop with no way to cancel it. This loop calls `setState`-equivalent operations on an unmounted component and runs indefinitely.",
+      "impact": "Memory leak and potential 'Cannot update state on an unmounted component' errors in development. The animation loop continues consuming CPU after the component is gone.",
+      "fix": "Introduce a `cancelled` boolean flag in the effect closure and check it inside the `fonts.ready.then()` callback before starting the RAF loop:\n\n```ts\nuseEffect(() => {\n  let animId: number;\n  let cancelled = false;\n\n  document.fonts.ready.then(() => {\n    if (cancelled) return;  // component already unmounted\n    const draw = () => {\n      if (cancelled) return;\n      // ... render logic ...\n      animId = requestAnimationFrame(draw);\n    };\n    animId = requestAnimationFrame(draw);\n  });\n\n  return () => {\n    cancelled = true;\n    cancelAnimationFrame(animId);\n  };\n}, [...deps]);\n```"
+    },
+    {
+      "id": "BUG-002",
+      "severity": "warning",
+      "category": "Unhandled Promise Rejection",
+      "file": "apps/studio/src/features/seller-admins/presentation/components/AddDelegateForm.tsx",
+      "lines": [46, 62],
+      "title": "handleSearch swallows errors from searchUsers — unhandled promise rejection",
+      "description": "`handleSearch` uses `try/finally` without a `catch` block. If `searchUsers` (which propagates Supabase errors directly) throws — e.g., on a network failure or RLS policy error — the error propagates as an unhandled promise rejection. The `finally` block correctly resets `isSearching`, but `results` is never cleared, leaving stale results visible. There is no user-facing error message.",
+      "impact": "Unhandled promise rejection warnings/errors; stale search results remain on screen after a failed query; user has no feedback that the search failed.",
+      "fix": "Add a `catch` block to clear results and optionally surface an error:\n\n```ts\nconst handleSearch = useCallback(\n  async (value: string) => {\n    setQuery(value);\n    if (!user || value.trim().length < MIN_SEARCH_LENGTH) {\n      setResults([]);\n      return;\n    }\n    setIsSearching(true);\n    try {\n      const users = await searchUsers(supabase, value, user.id);\n      setResults(users);\n    } catch {\n      setResults([]);  // clear stale results on error\n    } finally {\n      setIsSearching(false);\n    }\n  },\n  [supabase, user],\n);\n```"
+    },
+    {
+      "id": "BUG-003",
+      "severity": "warning",
+      "category": "Null/Undefined Access",
+      "file": "apps/admin/src/features/users/application/utils/getInitials.ts",
+      "lines": [13],
+      "title": "getInitials throws TypeError when email is an empty string",
+      "description": "When `name` is null/falsy, the function returns `email[0].toUpperCase()`. If `email` is an empty string `\"\"`, `email[0]` evaluates to `undefined`, and calling `.toUpperCase()` on `undefined` throws `TypeError: Cannot read properties of undefined (reading 'toUpperCase')`. This can occur if user data arrives with an empty email field.",
+      "impact": "Runtime crash (`TypeError`) wherever `getInitials` is called with an empty email string. Could crash user list/avatar rendering in the admin panel.",
+      "fix": "Guard against empty email before accessing `email[0]`:\n\n```ts\nexport function getInitials(name: string | null, email: string): string {\n  if (name) {\n    return name\n      .split(\" \")\n      .map((n) => n[0])\n      .join(\"\")\n      .toUpperCase()\n      .slice(0, MAX_INITIALS_LENGTH);\n  }\n  if (!email) return \"?\";\n  return email[0].toUpperCase();\n}\n```"
+    },
+    {
+      "id": "BUG-004",
+      "severity": "suggestion",
+      "category": "Logic Error / Silent Default",
+      "file": "apps/payments/src/app/api/checkout/orders/route.ts",
+      "lines": [109, 112],
+      "title": "Invalid total_cop silently defaults to 0, allowing $0 order creation",
+      "description": "When `total_cop` is not a valid finite number (e.g., `null`, `NaN`, `Infinity`, or missing entirely), the code silently substitutes `0` rather than returning a 400 error. This means a malformed or malicious request could create an order with a $0 total, bypassing payment validation.",
+      "impact": "Potential business logic bypass: orders with zero total could be processed. Downstream payment logic may assume a valid positive amount.",
+      "fix": "Return a 400 error for invalid `total_cop` instead of defaulting to 0:\n\n```ts\nif (typeof total_cop !== \"number\" || !Number.isFinite(total_cop) || total_cop <= 0) {\n  return NextResponse.json(\n    { error: \"Invalid total_cop: must be a positive finite number\" },\n    { status: 400 },\n  );\n}\nconst totalCop = total_cop;\n```"
+    }
+  ],
+  "cleanFiles": [
+    "apps/payments/src/features/checkout/infrastructure/cartCookie.ts",
+    "apps/payments/src/features/received-orders/presentation/components/ReceivedOrderCard.tsx",
+    "apps/store/src/features/cart/application/CartContext.tsx",
+    "apps/payments/src/features/checkout/presentation/pages/CheckoutPageContent.tsx",
+    "apps/store/src/features/cart/application/cartReducer.ts",
+    "apps/payments/src/features/checkout/presentation/components/ReceiptUpload.tsx",
+    "apps/auth/src/app/[locale]/page.tsx"
+  ]
+}

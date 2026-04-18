@@ -76,8 +76,11 @@ export async function adminFetch(path: string, init?: RequestInit) {
   });
 
   if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(errorText || `Admin API failed for ${path}`);
+    // Consume body to avoid connection leaks; do not log raw text (may contain schema details)
+    await response.text();
+    throw new Error(
+      `Admin API failed for ${path} (${String(response.status)})`,
+    );
   }
 
   return response;

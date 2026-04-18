@@ -1,0 +1,81 @@
+{
+  "agent": "tailwind",
+  "timestamp": "2026-04-17T04:08:32",
+  "scope": "apps/",
+  "summary": {
+    "filesAnalyzed": 14,
+    "issuesFound": 2,
+    "critical": 0,
+    "warning": 2,
+    "suggestion": 0,
+    "info": 0
+  },
+  "issues": [
+    {
+      "id": "STYLE-001",
+      "severity": "warning",
+      "category": "CSS Consistency",
+      "title": "@source directive inconsistency across apps",
+      "description": "Three apps (auth, landing, playground) include an extra '@source \"../\\*\\*/*.{ts,tsx}\"' directive to scan their own source files, while four apps (store, admin, payments, studio) do not. This means Tailwind may miss local class usage in store/admin/payments/studio if the JIT scanner doesn't pick up app-local files via the ui/globals import chain.",
+      "files": [
+        "apps/auth/src/app/globals.css",
+        "apps/landing/src/app/globals.css",
+        "apps/playground/src/app/globals.css"
+      ],
+      "missingIn": [
+        "apps/store/src/app/globals.css",
+        "apps/admin/src/app/globals.css",
+        "apps/payments/src/app/globals.css",
+        "apps/studio/src/app/globals.css"
+      ],
+      "rule": "css-consistency.md",
+      "fix": "Add '@source \"../\\*\\*/*.{ts,tsx}\";' to store, admin, payments, and studio globals.css — OR — confirm that Tailwind v4's automatic content detection already covers these apps and the extra @source is redundant in auth/landing/playground. Either way, all apps should be consistent.",
+      "code": "@source \"..//**/*.{ts,tsx}\";"
+    },
+    {
+      "id": "STYLE-002",
+      "severity": "warning",
+      "category": "CSS Colors — Non-OKLCH Format",
+      "title": "CSS variables in packages/ui/src/styles/colors.css use hex values instead of OKLCH",
+      "description": "The shared color palette definition uses hex (#ff4890, #1a1a1a, #0e0e10, etc.) instead of the OKLCH format mandated by the Tailwind CSS rules. The project rule states: 'PREFER: OKLCH format — Colors use OKLCH in theme.' This affects the single source of truth for all apps in the monorepo.",
+      "files": ["packages/ui/src/styles/colors.css"],
+      "examples": [
+        "--background: #fff;",
+        "--foreground: #1a1a1a;",
+        "--brand: #ff4890;",
+        "--destructive: #e11d48;",
+        "--success: #16a34a;"
+      ],
+      "rule": "tailwind.md — 'Use OKLCH Colors: CORRECT: OKLCH format — --primary: oklch(0.205 0 0); AVOID: Legacy formats — --primary: hsl(0 0% 20%); / --primary: #333333;'",
+      "fix": "Convert hex color values to OKLCH format in packages/ui/src/styles/colors.css. Example: '--brand: #ff4890' → '--brand: oklch(0.65 0.26 345)'. Use a converter tool (e.g. https://oklch.com) to translate each hex value.",
+      "note": "This is a KISS-informed warning — the colors work correctly as hex; converting to OKLCH is a standards-compliance improvement. Since this is a shared file that affects all apps simultaneously, the fix is straightforward but should be done carefully."
+    }
+  ],
+  "patterns": [
+    {
+      "type": "positive",
+      "description": "No non-semantic Tailwind palette colors found in any .tsx files across all apps. No direct text-red-*, text-green-*, text-blue-*, text-gray-*, text-slate-*, text-yellow-*, text-amber-*, bg-red-*, bg-green-*, bg-blue-*, bg-gray-*, bg-slate-*, text-yellow-*, text-amber-* classes found.",
+      "verdict": "All component color usage is fully semantic."
+    },
+    {
+      "type": "positive",
+      "description": "No hardcoded hex colors (bg-[#...], text-[#...]) found in any .tsx component files across all apps.",
+      "verdict": "No arbitrary color values in components."
+    },
+    {
+      "type": "positive",
+      "description": "All 7 apps (store, admin, payments, studio, auth, landing, playground) include the required '@source \"../../../../packages/ui/src/**/*.{ts,tsx}\";' directive to ensure Tailwind scans the shared ui package.",
+      "verdict": "UI package scanning is correctly configured in all apps."
+    },
+    {
+      "type": "positive",
+      "description": "All apps import shared theme via '@import \"ui/globals\";' which points to packages/ui/src/styles/globals.css — a single source of truth for CSS variables, theme configuration, and semantic utility classes.",
+      "verdict": "CSS consistency is maintained through shared package imports. The theme and utility classes are identical across all apps by design."
+    },
+    {
+      "type": "positive",
+      "description": "The semantic utility class system is comprehensive: surface-success/warning/destructive/info, status-healthy/warning/critical/info, indicator-*, icon-* classes are all defined centrally and map to semantic tokens.",
+      "verdict": "Excellent semantic color class system in place."
+    }
+  ]
+}

@@ -7,7 +7,7 @@ import { tid } from "shared";
 import { ProductCard } from "./ProductCard";
 
 import { buildGridOrder } from "@/features/products/application/buildGridOrder";
-import { useGridCols } from "@/features/products/application/useGridCols";
+import { useGridCols } from "@/features/products/application/hooks/useGridCols";
 import type { Product } from "@/features/products/domain/types";
 
 // ---------------------------------------------------------------------------
