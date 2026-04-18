@@ -8,6 +8,9 @@
     ".": "./src/index.ts",
     "./app-root-layout": "./src/components/AppRootLayout.tsx",
     "./utils": "./src/utils/index.ts",
+    "./utils/*": "./src/utils/*.ts",
+    "./constants": "./src/constants/index.ts",
+    "./constants/*": "./src/constants/*.ts",
     "./hooks": "./src/hooks/index.ts",
     "./hooks/*": "./src/hooks/*.ts",
     "./i18n/createAppI18n": "./src/i18n/createAppI18n.ts",
@@ -17,6 +20,7 @@
     "./providers": "./src/providers/index.ts",
     "./components": "./src/components/index.ts",
     "./types": "./src/types/index.ts",
+    "./types/*": "./src/types/*.ts",
     "./config": "./src/config/index.ts",
     "./config/*": "./src/config/*.ts"
   },

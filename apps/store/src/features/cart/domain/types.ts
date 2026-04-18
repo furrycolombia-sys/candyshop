@@ -1,7 +1,22 @@
-import type { Tables } from "api/supabase/types";
+import type { Product } from "shared/types";
 
-/** A cart item is the full product row + a quantity */
-export interface CartItem extends Tables<"products"> {
+type CartProductSnapshot = Pick<
+  Product,
+  | "id"
+  | "name_en"
+  | "name_es"
+  | "price_cop"
+  | "price_usd"
+  | "seller_id"
+  | "images"
+  | "max_quantity"
+  | "category"
+  | "type"
+  | "refundable"
+>;
+
+/** A cart item is a compact product snapshot + quantity for cookie portability */
+export interface CartItem extends CartProductSnapshot {
   quantity: number;
 }
 

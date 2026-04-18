@@ -32,4 +32,25 @@ describe("i18nPrice", () => {
     const result = i18nPrice({ price_usd: 0, price_cop: 0 }, "es");
     expect(result).toContain("0");
   });
+
+  it("falls back to COP when USD is 0 and COP is non-zero (en locale)", () => {
+    const result = i18nPrice({ price_usd: 0, price_cop: 185_000 }, "en");
+    expect(result).toContain("185");
+    expect(result).toMatch(/COP|185\.000/i);
+  });
+
+  it("falls back to USD when COP is 0 and USD is non-zero (es locale)", () => {
+    const result = i18nPrice({ price_usd: 25, price_cop: 0 }, "es");
+    expect(result).toMatch(/\$25/);
+  });
+
+  it("shows locale price when both are non-zero (en locale picks USD)", () => {
+    const result = i18nPrice({ price_usd: 25, price_cop: 185_000 }, "en");
+    expect(result).toMatch(/\$25/);
+  });
+
+  it("shows locale price when both are non-zero (es locale picks COP)", () => {
+    const result = i18nPrice({ price_usd: 25, price_cop: 185_000 }, "es");
+    expect(result).toContain("185");
+  });
 });
