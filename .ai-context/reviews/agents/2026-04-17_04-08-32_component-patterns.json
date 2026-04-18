@@ -1,0 +1,69 @@
+{
+  "agent": "component-patterns",
+  "timestamp": "2026-04-17T04:08:32",
+  "scope": "apps/",
+  "summary": {
+    "filesAnalyzed": 264,
+    "issuesFound": 2,
+    "critical": 0,
+    "warning": 2,
+    "suggestion": 0,
+    "info": 0
+  },
+  "issues": [
+    {
+      "id": "COMP-001",
+      "severity": "warning",
+      "category": "COMP",
+      "file": "apps/payments/src/features/checkout/presentation/components/DisplayBlockRenderer.tsx",
+      "line": 31,
+      "description": "File exports one primary component (DisplayBlockRenderer) but also defines a private component (BlockContent) at module scope without an ESLint disable comment acknowledging the intentional exception. All other similar patterns in the codebase use '/* eslint-disable react/no-multi-comp -- reason */' to document intent.",
+      "rule": "one-component-per-file.md",
+      "fix": "Add an ESLint disable comment at the top of the file: '/* eslint-disable react/no-multi-comp -- BlockContent is a private render-switch helper co-located with its parent */'",
+      "context": "BlockContent is a render-switch (switch statement over block.type) that is tightly coupled to DisplayBlockRenderer. The pattern is valid but undocumented. Other files with identical patterns (ReceivedOrderCard, DynamicFormField, SectionItemsAccordion, SectionItemsGallery, SectionItemsTwoColumn, SectionItemsCards) all include the required ESLint disable comment."
+    },
+    {
+      "id": "COMP-002",
+      "severity": "warning",
+      "category": "COMP",
+      "file": "apps/admin/src/features/users/presentation/components/delegates/ProductName.tsx",
+      "line": 5,
+      "description": "Component props use an inline object type annotation instead of a named Props interface: `{ product: { name_en: string; name_es: string } }`. Per naming conventions, component prop types should be named interfaces (e.g., ProductNameProps).",
+      "rule": "naming-conventions.md / component-patterns.md",
+      "fix": "Extract the inline type to a named interface:\n```tsx\ninterface ProductNameProps {\n  product: { name_en: string; name_es: string };\n}\nexport function ProductName({ product }: ProductNameProps) { ... }\n```",
+      "context": "This is a minor violation. The inline type is simple (one prop with two string fields), so KISS suggests keeping it simple, but consistency with the rest of the codebase (which uses named Props interfaces) argues for extraction."
+    }
+  ],
+  "patterns": [
+    {
+      "id": "PAT-001",
+      "type": "good",
+      "description": "Private helper components (not exported) co-located with their parent component are consistently documented with '/* eslint-disable react/no-multi-comp -- reason */' comments in 5 out of 6 affected files. This is a clear, well-established pattern in the codebase."
+    },
+    {
+      "id": "PAT-002",
+      "type": "good",
+      "description": "All 264 non-test TSX files with React hooks (useState, useEffect, useRef, useCallback, useMemo, useReducer) correctly include the 'use client' directive. No missing client directives found."
+    },
+    {
+      "id": "PAT-003",
+      "type": "good",
+      "description": "Zero nested component definitions found — no component functions defined inside other component function bodies. All helper components are defined at module scope."
+    },
+    {
+      "id": "PAT-004",
+      "type": "good",
+      "description": "One component per file rule is followed throughout the codebase. No file exports more than one primary React component."
+    },
+    {
+      "id": "PAT-005",
+      "type": "good",
+      "description": "App Router page files (page.tsx) contain only thin wrappers that import and render feature pages. No business logic, hooks, or data fetching found directly in route files."
+    },
+    {
+      "id": "PAT-006",
+      "type": "good",
+      "description": "Presentation components do not import from infrastructure layer, maintaining proper Clean Architecture layer dependencies."
+    }
+  ]
+}

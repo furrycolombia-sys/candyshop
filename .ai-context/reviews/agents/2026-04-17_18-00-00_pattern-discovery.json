@@ -1,0 +1,176 @@
+{
+  "agent": "pattern-discovery",
+  "timestamp": "2026-04-17T18:00:00",
+  "scope": "apps/",
+  "summary": {
+    "filesAnalyzed": 30,
+    "patternsFound": 9,
+    "goodPatterns": 5,
+    "antiPatterns": 2,
+    "inconsistencies": 2,
+    "ruleCandidates": 4
+  },
+  "patterns": [
+    {
+      "id": "PAT-001",
+      "type": "good",
+      "severity": "info",
+      "title": "Query keys and staleTime constants live in domain/constants.ts",
+      "description": "Most features define their TanStack Query keys and staleTime values as named constants in the feature's domain/constants.ts file (e.g., PROFILE_QUERY_KEY, PROFILE_STALE_TIME_MS, SETTINGS_QUERY_KEY, TEMPLATES_STALE_TIME_MS). These constants are exported, tested, and imported by the hooks. This keeps query keys stable, avoids magic strings, and makes invalidation calls consistent. The constants are even covered by unit tests (e.g., auth constants.test.ts checks that PROFILE_QUERY_KEY === 'user-profile').",
+      "files": [
+        "apps/auth/src/features/account/domain/constants.ts",
+        "apps/payments/src/features/orders/domain/constants.ts",
+        "apps/payments/src/features/received-orders/domain/constants.ts",
+        "apps/admin/src/features/templates/domain/constants.ts",
+        "apps/admin/src/features/settings/domain/constants.ts",
+        "apps/admin/src/features/users/domain/constants.ts",
+        "apps/store/src/features/cart/domain/constants.ts"
+      ],
+      "recommendation": "Document this pattern as a project rule: query keys and staleTime values MUST be defined in domain/constants.ts, exported, and tested. Promote the pattern to ensure full coverage (see PAT-002 for the inconsistency)."
+    },
+    {
+      "id": "PAT-002",
+      "type": "inconsistency",
+      "severity": "warning",
+      "title": "Some query keys and staleTime values are defined inline in hooks instead of domain/constants.ts",
+      "description": "Several hooks define their query key strings and/or staleTime values as local constants inside the hook file rather than in domain/constants.ts. Examples:\n- apps/admin/src/features/audit/application/hooks/useAuditLog.ts defines AUDIT_QUERY_KEY = 'audit-log', TABLE_NAMES_KEY = 'audit-table-names', and STALE_TIME_MS = 30_000 locally.\n- apps/admin/src/features/dashboard/application/hooks/useRecentActivity.ts defines RECENT_ACTIVITY_QUERY_KEY and STALE_TIME_MS locally.\n- apps/studio/src/features/orders/application/hooks/usePendingOrderCount.ts defines STALE_TIME_MS and REFETCH_INTERVAL_MS locally.\n- apps/store/src/features/products/application/hooks/useStoreProducts.ts uses the literal string 'store-product' (not a constant) for the single-product query key.\n- apps/payments/src/features/payment-methods/application/hooks/usePaymentMethods.ts uses inline literal 'payment-methods'.\nThis inconsistency means some query keys are not tested, not exported, and cannot be safely referenced in invalidation calls.",
+      "files": [
+        "apps/admin/src/features/audit/application/hooks/useAuditLog.ts",
+        "apps/admin/src/features/dashboard/application/hooks/useRecentActivity.ts",
+        "apps/studio/src/features/orders/application/hooks/usePendingOrderCount.ts",
+        "apps/store/src/features/products/application/hooks/useStoreProducts.ts",
+        "apps/payments/src/features/payment-methods/application/hooks/usePaymentMethods.ts"
+      ],
+      "recommendation": "Move all query key strings and staleTime/refetchInterval constants to the feature's domain/constants.ts to match the established pattern. Add unit tests for these constants."
+    },
+    {
+      "id": "PAT-003",
+      "type": "good",
+      "severity": "info",
+      "title": "Supabase eslint-disable workaround for tables not in generated types",
+      "description": "When Supabase tables are not yet included in the auto-generated TypeScript types, infrastructure files use a documented pattern to bypass the type error: `const TABLE = 'table_name' as any` or `(supabase.from as any)('table_name')`. Each usage is accompanied by a consistent eslint-disable comment explaining the reason: '-- tables not in generated types yet'. This is a known, accepted workaround that is clearly marked and contains a 'yet' hint indicating it should be resolved when the types are regenerated.",
+      "files": [
+        "apps/admin/src/features/settings/infrastructure/settingsQueries.ts",
+        "apps/admin/src/features/templates/infrastructure/templateQueries.ts",
+        "apps/admin/src/features/users/infrastructure/userPermissionQueries.ts",
+        "apps/payments/src/features/payment-methods/infrastructure/paymentMethodQueries.ts"
+      ],
+      "recommendation": "This pattern is acceptable as a temporary bridge. Document it as the standard approach for tables not yet in generated types. Periodically run pnpm codegen:supabase and remove the 'as any' casts when types are generated."
+    },
+    {
+      "id": "PAT-004",
+      "type": "good",
+      "severity": "info",
+      "title": "Permission guard + content split pattern for protected admin pages",
+      "description": "Admin pages consistently use a two-component pattern: a guard Page component (e.g., SettingsPage.tsx) that checks permissions with useCurrentUserPermissions(), shows null while loading, shows AccessDeniedState if unauthorized, then renders a Content component (e.g., SettingsPageContent.tsx) that receives permission-derived capabilities as props (canUpdate, canCreate, canDelete). This cleanly separates authorization from presentation, follows the Container/Presenter pattern, and makes the content components independently testable without auth mocks.",
+      "files": [
+        "apps/admin/src/features/settings/presentation/pages/SettingsPage.tsx",
+        "apps/admin/src/features/settings/presentation/pages/SettingsPageContent.tsx",
+        "apps/admin/src/features/templates/presentation/pages/TemplatesPage.tsx",
+        "apps/admin/src/features/templates/presentation/pages/TemplatesPageContent.tsx",
+        "apps/admin/src/features/dashboard/presentation/pages/DashboardPage.tsx",
+        "apps/admin/src/features/audit/presentation/pages/AuditLogPage.tsx"
+      ],
+      "recommendation": "Document this as the required pattern for permission-guarded admin pages. Enforce: Page = guard + early returns + renders Content; Content = pure UI receiving can* boolean props."
+    },
+    {
+      "id": "PAT-005",
+      "type": "good",
+      "severity": "info",
+      "title": "useSupabaseAuth re-exported as thin wrapper from each app's auth feature",
+      "description": "Every app (store, payments, admin, auth, studio, playground) has an identical thin wrapper at apps/[app]/src/features/auth/application/hooks/useSupabaseAuth.ts that simply re-exports from the shared 'auth/client' package: `export { useSupabaseAuth } from 'auth/client'`. Similarly, ProtectedRoute.tsx in each app is a one-liner that calls createProtectedRoute(appUrls.auth) from 'auth/client'. This pattern cleanly defers auth implementation to the shared auth package while allowing each app to have its own feature/auth module for cleaner internal imports.",
+      "files": [
+        "apps/store/src/features/auth/application/hooks/useSupabaseAuth.ts",
+        "apps/payments/src/features/auth/application/hooks/useSupabaseAuth.ts",
+        "apps/admin/src/features/auth/application/hooks/useSupabaseAuth.ts",
+        "apps/store/src/features/auth/presentation/components/ProtectedRoute.tsx",
+        "apps/payments/src/features/auth/presentation/components/ProtectedRoute.tsx",
+        "apps/admin/src/features/auth/presentation/components/ProtectedRoute.tsx"
+      ],
+      "recommendation": "This is a good documented pattern already working well. Consider adding a note in the monorepo architecture docs explaining this re-export pattern for auth."
+    },
+    {
+      "id": "PAT-006",
+      "type": "good",
+      "severity": "info",
+      "title": "Consistent eslint-disable comments for infrastructure literal strings with documented justification",
+      "description": "Infrastructure files that must use literal strings (Supabase table names, HTTP headers, SQL identifiers) suppress the i18next/no-literal-string rule with consistent, descriptive comments explaining WHY it is not a violation. Examples: '-- infrastructure file: Supabase table/column names are SQL identifiers, not user-facing text', '-- HTTP header', '-- root global error runs without app i18n context'. The pattern is applied at file level for infrastructure files and at line level for isolated cases. This is better than a blanket disable without context.",
+      "files": [
+        "apps/payments/src/features/checkout/infrastructure/checkoutQueries.ts",
+        "apps/admin/src/shared/infrastructure/auditRestClient.ts",
+        "apps/admin/src/features/audit/infrastructure/auditQueries.ts",
+        "apps/store/src/app/global-error.tsx"
+      ],
+      "recommendation": "This is a well-established pattern. Document the standard comment formats to use for each category (infrastructure, error boundaries, HTTP headers, permission keys) to keep suppressions consistent."
+    },
+    {
+      "id": "PAT-007",
+      "type": "anti",
+      "severity": "warning",
+      "title": "createWrapper() function duplicated in every hook test file instead of using a shared test utility",
+      "description": "Every hook test file that needs a React Query context defines its own identical createWrapper() function that creates a QueryClient with retry: false and wraps with QueryClientProvider. This pattern is repeated in at least 20 test files (useTemplates.test.tsx, useUpdateProfile.test.tsx, usePaymentMethods.test.tsx, useProducts.test.tsx, etc.). None of the apps have a shared test utility file (apps/*/src/test/utils.tsx does not exist). This is a DRY violation that makes tests harder to maintain if the wrapper needs to change (e.g., to add NuqsTestingAdapter or other providers).",
+      "files": [
+        "apps/admin/src/features/templates/application/hooks/useTemplates.test.tsx",
+        "apps/auth/src/features/account/application/hooks/useUpdateProfile.test.tsx",
+        "apps/payments/src/features/payment-methods/application/hooks/usePaymentMethods.test.tsx",
+        "apps/studio/src/features/products/application/hooks/useProducts.test.tsx",
+        "apps/admin/src/features/users/application/hooks/useTogglePermission.test.tsx"
+      ],
+      "recommendation": "Create a shared test utility per app at apps/[app]/src/test/utils.tsx that exports a createWrapper() function (and possibly a custom render). Import from @/test/utils in all hook tests. The vitest config already points at a setup.ts in the test/ folder, making this a natural extension."
+    },
+    {
+      "id": "PAT-008",
+      "type": "inconsistency",
+      "severity": "suggestion",
+      "title": "Supabase client passed as parameter in some apps but obtained from hook in others",
+      "description": "There are two approaches to accessing the Supabase client in infrastructure/query functions:\n1. The client is obtained from useSupabase() inside the hook and PASSED as a parameter to the infrastructure function (most apps: admin, auth, payments, studio, store). Example: useProfile() calls useSupabase(), then passes supabase to fetchProfile(supabase, userId).\n2. The store/productQueries.ts creates the client directly inside the query function: createBrowserSupabaseClient() is called inside fetchStoreProducts().\nThe parameter-passing approach is dominant, testable (client can be mocked), and correct per Clean Architecture. The inline creation approach is used only for store products and couples the infrastructure function to browser context.",
+      "files": [
+        "apps/store/src/features/products/infrastructure/productQueries.ts",
+        "apps/auth/src/features/account/infrastructure/profileQueries.ts",
+        "apps/admin/src/features/templates/infrastructure/templateQueries.ts"
+      ],
+      "recommendation": "Refactor apps/store/src/features/products/infrastructure/productQueries.ts to accept supabase as a parameter (passed from the hook) to match the dominant pattern and improve testability."
+    },
+    {
+      "id": "PAT-009",
+      "type": "good",
+      "severity": "info",
+      "title": "STATUS_CLASS_MAP pattern for semantic order status styling in domain/constants",
+      "description": "The payments app defines a STATUS_CLASS_MAP constant in domain/constants.ts that maps order status strings to semantic Tailwind CSS class strings (using project design tokens like bg-warning/15, bg-success/15, text-destructive). This keeps status-to-style mapping as a single source of truth in the domain layer, reusable by multiple components (OrderStatusBadge, OrderCard). It uses satisfies Partial<Record<string, string>> for type safety without over-constraining the type.",
+      "files": ["apps/payments/src/features/orders/domain/constants.ts"],
+      "recommendation": "This is a good pattern for any feature that needs status-based styling. Document it as the preferred approach: define status -> class mappings in domain/constants.ts using semantic color tokens."
+    }
+  ],
+  "ruleSuggestions": [
+    {
+      "title": "Query key constants must live in domain/constants.ts",
+      "description": "All TanStack Query key strings and staleTime/refetchInterval values must be defined as named constants exported from the feature's domain/constants.ts. They must not be defined as local constants inside hook files or as inline string literals. Query key constants must have unit tests asserting their value.",
+      "rationale": "Ensures query keys are stable, discoverable, testable, and consistently referenceable in invalidation calls. Follows the single source of truth principle."
+    },
+    {
+      "title": "Supabase client must be injected as parameter into infrastructure functions",
+      "description": "Infrastructure query functions must accept the Supabase client as the first parameter rather than creating it internally via createBrowserSupabaseClient(). The hook is responsible for obtaining the client and passing it down.",
+      "rationale": "Improves testability (client can be mocked), follows Dependency Inversion Principle, and matches the dominant pattern already established across 90% of the codebase."
+    },
+    {
+      "title": "Permission-guarded pages must use Page + Content split pattern",
+      "description": "Admin pages that require permission checks must split into two components: a Page component that handles isLoading null-guard, AccessDeniedState, and passes can* booleans as props; and a Content component that is pure UI receiving those capabilities.",
+      "rationale": "Makes content components independently testable without auth setup. Clearly separates authorization concern from presentation concern."
+    },
+    {
+      "title": "Each app should have a shared test utility at src/test/utils.tsx",
+      "description": "Each app that has hook tests should export a createWrapper() factory function from apps/[app]/src/test/utils.tsx. Hook tests must import createWrapper from @/test/utils instead of defining it locally.",
+      "rationale": "Eliminates the current DRY violation of duplicating createWrapper() in every hook test file. Centralizes test setup so that adding new providers (e.g., NuqsTestingAdapter) only requires one change."
+    }
+  ],
+  "positiveObservations": [
+    "Strong adoption of nuqs (useQueryStates) for URL state across all apps — filters, pagination, and search are bookmarkable.",
+    "Consistent use of tid() for test IDs across presentation components in all apps.",
+    "ESLint suppressions are consistently justified with specific reasons — no bare disable comments without explanation.",
+    "The 30_000ms staleTime (30 seconds) is a de facto project-wide standard, consistently applied across all features.",
+    "The infrastructure layer pattern (pure async functions accepting supabase + params, throwing errors directly) is clean, consistent, and well-tested.",
+    "Feature index.ts barrel exports are consistently used to define each feature's public API surface.",
+    "The auth feature thin-wrapper re-export pattern allows any app to use useSupabaseAuth from its own feature namespace while the implementation lives in the shared auth package.",
+    "Domain constants files are tested (e.g., domain/constants.test.ts asserting specific values), which prevents accidental regressions from renaming constants."
+  ]
+}

@@ -1,0 +1,81 @@
+{
+  "agent": "pattern-discovery",
+  "review_id": "2026-04-17_20-00-00",
+  "timestamp": "2026-04-17T20:00:00",
+  "scope": "apps/",
+  "summary": {
+    "patternsFound": 7,
+    "goodPatterns": 4,
+    "badPatterns": 2,
+    "suggestions": 1
+  },
+  "patterns": [
+    {
+      "id": "PAT-001",
+      "type": "good",
+      "category": "CSS/Styling",
+      "title": "cn() adoption is complete — template literals eliminated",
+      "description": "The previous cycle's fixes appear to have been effective. Only 1 remaining use of className={`...`} exists in the entire apps/ directory (apps/studio/src/features/products/presentation/components/inline-editor/PriceInput.tsx, line 58), and it is a legitimate edge case: measuring invisible text width with whitespace-pre where the className is a prop-passed variable concatenated with fixed Tailwind classes. All other conditional class logic uses cn() as required.",
+      "files": [
+        "apps/studio/src/features/products/presentation/components/inline-editor/PriceInput.tsx"
+      ],
+      "note": "The remaining template literal in PriceInput.tsx is a justified exception — it builds a measurement span with a forwarded className prop combined with static utilities. This is not a cn() violation."
+    },
+    {
+      "id": "PAT-002",
+      "type": "good",
+      "category": "Security / API Routes",
+      "title": "Checkout orders route now validates stock server-side before inserting",
+      "description": "apps/payments/src/app/api/checkout/orders/route.ts performs comprehensive server-side validation: UUID format checks on all input IDs, seller_id cross-check (all cart items must belong to the same seller as the payment method), product.is_active check, and quantity-vs-max_quantity stock cap. The total price is re-computed server-side from DB values — the client-submitted total is never trusted. This matches the Checkout Stock Integrity standard.",
+      "files": ["apps/payments/src/app/api/checkout/orders/route.ts"]
+    },
+    {
+      "id": "PAT-003",
+      "type": "good",
+      "category": "Security / API Routes",
+      "title": "Payment-methods route enforces stock gate before revealing seller payment details",
+      "description": "apps/payments/src/app/api/checkout/payment-methods/route.ts calls validateStock() before returning any SellerPaymentMethodWithType data. If stock issues are detected, it returns { methods: [], hasStockIssues: true } without exposing any seller payment information. This correctly implements the rule that UI hiding is not sufficient — the backend response itself must suppress payment details when stock validation fails.",
+      "files": ["apps/payments/src/app/api/checkout/payment-methods/route.ts"]
+    },
+    {
+      "id": "PAT-004",
+      "type": "good",
+      "category": "Testing",
+      "title": "tid() utility is the universal test-ID pattern across all apps",
+      "description": "All 123 component files that add test IDs import tid from the 'shared' package and use it consistently. Test files mock tid locally as `(id: string) => ({ 'data-testid': id })` which mirrors the production tid() behavior. This pattern is uniform across admin, auth, landing, payments, playground, store, and studio apps. The auth app imports tid directly from 'shared' (not from a local config/tid re-export) — a minor inconsistency but functionally identical.",
+      "files": []
+    },
+    {
+      "id": "PAT-005",
+      "type": "bad",
+      "category": "DRY / Architecture",
+      "title": "Duplicate admin REST client utilities across apps (payments vs admin)",
+      "description": "Two separate admin REST client implementations exist: apps/payments/src/shared/infrastructure/adminRestClient.ts and apps/admin/src/app/api/admin/_shared/adminRest.ts. Both implement the same core functionality (UUID validation, URL building, service-role-key headers, adminFetch). Critically, the UUID regex patterns differ: payments uses a loose pattern `/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i` (accepts UUID v1-v5 and invalid variant bits) while admin uses a strict RFC-4122 pattern `/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i`. This is a DRY violation with a real security edge: the stricter validation in admin would be preferable everywhere. Additionally, adminRest.ts has a superior pattern where errors are logged server-side without forwarding raw DB error text to callers, while adminRestClient.ts does `throw new Error(await response.text())` which could expose internal DB details.",
+      "severity": "warning",
+      "files": [
+        "apps/payments/src/shared/infrastructure/adminRestClient.ts",
+        "apps/admin/src/app/api/admin/_shared/adminRest.ts"
+      ],
+      "recommendation": "Consolidate into a shared package (packages/api or a new packages/supabase-admin) with the stricter RFC-4122 UUID pattern and the safer error-handling approach from adminRest.ts. Both apps would then import from the shared package."
+    },
+    {
+      "id": "PAT-006",
+      "type": "bad",
+      "category": "Architecture",
+      "title": "Admin REST client placed inside Next.js route folder instead of infrastructure layer",
+      "description": "apps/admin/src/app/api/admin/_shared/adminRest.ts lives under the app/ directory (Next.js routing layer) rather than in apps/admin/src/shared/infrastructure/. This violates the Clean Architecture rule that the App Router directory is for routing only. The shared infrastructure helper for Supabase admin access is an infrastructure-layer concern and should live in apps/admin/src/shared/infrastructure/adminRest.ts.",
+      "severity": "warning",
+      "files": ["apps/admin/src/app/api/admin/_shared/adminRest.ts"],
+      "recommendation": "Move to apps/admin/src/shared/infrastructure/adminRest.ts and update all route imports. This also makes it easier to test independently of the Next.js routing layer."
+    }
+  ],
+  "issues": [],
+  "rulesSuggestions": [
+    {
+      "id": "RULE-SUGGEST-001",
+      "title": "Add a rule: Admin REST clients must use strict RFC-4122 UUID validation",
+      "description": "Both admin REST clients validate UUIDs, but use different regexes. The loose regex in payments would accept malformed UUIDs that pass the format check but are not valid v1-v5 UUIDs. A project rule should mandate the strict pattern everywhere: `/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i`. This should also be documented in the Checkout Stock Integrity standard.",
+      "category": "Security"
+    }
+  ]
+}

@@ -15,7 +15,7 @@ import { InlineAddButton } from "./InlineAddButton";
 import { InlineRemoveButton } from "./InlineRemoveButton";
 import type { SectionFieldArray } from "./sectionItemTypes";
 
-import { useLangToggle } from "@/features/products/application/useLangToggle";
+import { useLangToggle } from "@/features/products/application/hooks/useLangToggle";
 import {
   ITEM_DROPPABLE_PREFIX,
   SECTION_I18N_NAMESPACE,
@@ -61,7 +61,10 @@ function TwoColumnRow({
       ref={dragProvided.innerRef}
       {...dragProvided.draggableProps}
       className="relative flex items-stretch border-b-strong border-foreground last:border-b-0"
-      style={{ backgroundColor: zebraClass }}
+      style={{
+        backgroundColor: zebraClass,
+        ...dragProvided.draggableProps.style,
+      }}
       {...tid(`section-${sectionIndex}-item-${itemIndex}`)}
     >
       {/* Remove */}
@@ -143,7 +146,7 @@ export function SectionItemsTwoColumn({
     <div className="flex flex-col gap-3 p-4">
       <Droppable
         droppableId={`${ITEM_DROPPABLE_PREFIX}${sectionIndex}`}
-        type="ITEM"
+        type={`${ITEM_DROPPABLE_PREFIX}${sectionIndex}`}
       >
         {/* eslint-disable sonarjs/no-nested-functions -- @hello-pangea/dnd requires render-prop pattern */}
         {(provided) => (

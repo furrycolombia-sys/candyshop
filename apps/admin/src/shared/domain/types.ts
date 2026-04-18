@@ -1,3 +1,5 @@
+export type { SupabaseClient } from "shared/types/supabase";
+
 export interface RecentActivityEntry {
   event_id: number;
   table_name: string;

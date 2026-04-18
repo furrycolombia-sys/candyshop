@@ -18,7 +18,7 @@ import type {
 import { useWatch } from "react-hook-form";
 import { tid } from "shared";
 import type { ProductSection, ProductType } from "shared/types";
-import { Switch } from "ui";
+import { Switch, cn } from "ui";
 
 import { TemplatePicker } from "./TemplatePicker";
 
@@ -95,11 +95,12 @@ export function EditorToolbar({
               key={type}
               type="button"
               onClick={() => setValue("type", type)}
-              className={`flex items-center gap-1 rounded-full px-3 py-1 font-display text-ui-xs font-bold uppercase tracking-wider transition-colors ${
+              className={cn(
+                "flex items-center gap-1 rounded-full px-3 py-1 font-display text-ui-xs font-bold uppercase tracking-wider transition-colors",
                 isSelected
                   ? "bg-background text-foreground"
-                  : "text-background/60 hover:text-background"
-              }`}
+                  : "text-background/60 hover:text-background",
+              )}
               {...tid(`toolbar-type-${type}`)}
             >
               <Icon className="size-3" />

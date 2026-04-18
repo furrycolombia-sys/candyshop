@@ -10,6 +10,7 @@ vi.mock("shared", () => ({
 }));
 
 vi.mock("ui", () => ({
+  cn: (...args: unknown[]) => args.filter(Boolean).join(" "),
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   Button: ({ children, ...props }: any) => (
     <button type="button" {...props}>
@@ -24,7 +25,7 @@ vi.mock("api/supabase", () => ({
   createBrowserSupabaseClient: () => ({}),
 }));
 
-vi.mock("@/features/auth/application/hooks/useSupabaseAuth", () => ({
+vi.mock("@/shared/application/hooks/useSupabaseAuth", () => ({
   useSupabaseAuth: () => ({ user: { id: "seller-1" } }),
 }));
 

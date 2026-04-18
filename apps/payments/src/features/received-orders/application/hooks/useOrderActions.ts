@@ -1,8 +1,7 @@
 "use client";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { createBrowserSupabaseClient } from "api/supabase";
-import { useMemo } from "react";
+import { useSupabase } from "shared";
 
 import { RECEIVED_ORDERS_QUERY_KEY } from "@/features/received-orders/domain/constants";
 import type { SellerAction } from "@/features/received-orders/domain/types";
@@ -15,7 +14,7 @@ interface OrderActionParams {
 }
 
 export function useOrderActions() {
-  const supabase = useMemo(() => createBrowserSupabaseClient(), []);
+  const supabase = useSupabase();
   const queryClient = useQueryClient();
 
   return useMutation({

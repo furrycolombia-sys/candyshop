@@ -3,7 +3,7 @@
 import { useTranslations } from "next-intl";
 import { tid } from "shared";
 
-import { useStoreProduct } from "@/features/products/application/useStoreProducts";
+import { useStoreProduct } from "@/features/products/application/hooks/useStoreProducts";
 import { MobileBarWithCart } from "@/features/products/presentation/components/product-detail/MobileBarWithCart";
 import { ProductSections } from "@/features/products/presentation/components/product-detail/ProductSections";
 import { getCategoryTheme } from "@/shared/domain/categoryConstants";

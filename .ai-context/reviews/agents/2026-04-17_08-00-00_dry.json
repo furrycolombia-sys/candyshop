@@ -1,0 +1,115 @@
+{
+  "agent": "dry",
+  "review_id": "2026-04-17_08-00-00",
+  "timestamp": "2026-04-17T08:00:00.000Z",
+  "scope": "apps/",
+  "summary": {
+    "filesAnalyzed": 38,
+    "issuesFound": 6,
+    "critical": 0,
+    "warning": 4,
+    "suggestion": 2,
+    "info": 0
+  },
+  "issues": [
+    {
+      "id": "DRY-001",
+      "severity": "warning",
+      "category": "Type Duplication",
+      "title": "SupabaseClient type alias duplicated in 3 app-level shared domains",
+      "description": "The type alias `export type SupabaseClient = ReturnType<typeof createBrowserSupabaseClient>` is defined identically in three separate apps. Each app imports from 'api/supabase' and re-declares the same type alias.",
+      "files": [
+        "apps/admin/src/shared/domain/types.ts:4",
+        "apps/studio/src/shared/domain/types.ts:4",
+        "apps/payments/src/shared/domain/types.ts:5"
+      ],
+      "recommendation": "Export `SupabaseClient` from `packages/api/src` (or `packages/shared`) so all apps can import from a single source. The type alias is purely derived from `createBrowserSupabaseClient` and carries no app-specific knowledge.",
+      "rule": "DRY - Type Duplication / Single Source of Truth"
+    },
+    {
+      "id": "DRY-002",
+      "severity": "warning",
+      "category": "Logic Duplication",
+      "title": "escapeLikePattern utility function duplicated in admin and studio",
+      "description": "The function `escapeLikePattern` (escaping SQL LIKE wildcards `%_\\`) has identical implementations in two different infrastructure files in different apps. The studio version is exported; the admin version is a private local function.",
+      "files": [
+        "apps/studio/src/features/seller-admins/infrastructure/delegateQueries.ts:8-10",
+        "apps/admin/src/features/users/infrastructure/userPermissionQueries.ts:23-25"
+      ],
+      "recommendation": "Extract `escapeLikePattern` to `packages/shared/src/utils/` and export it from there. Both apps already depend on the `shared` package. This is a pure utility with no app-specific logic.",
+      "rule": "DRY - Rule of Three / Duplicate Code Blocks"
+    },
+    {
+      "id": "DRY-003",
+      "severity": "warning",
+      "category": "Logic Duplication",
+      "title": "Seller profile display-name resolution logic duplicated across store and payments",
+      "description": "Two separate `useSellerProfiles` hooks and an infrastructure-level `fetchSellerProfiles` function all query the same Supabase `user_profiles` table with the same `select('id, display_name, email').in('id', ids)` pattern. The store hook inlines the query and uses `email.split('@')[0]` as fallback; the payments version delegates to `fetchSellerProfiles` which uses a `FALLBACK_SELLER_NAME` constant. Both resolve the same business need (seller display name map).",
+      "files": [
+        "apps/store/src/features/cart/application/useSellerProfiles.ts",
+        "apps/payments/src/features/checkout/application/hooks/useSellerProfiles.ts",
+        "apps/payments/src/features/checkout/infrastructure/checkoutQueries.ts:175-194",
+        "apps/payments/src/shared/infrastructure/fetchUserDisplayNames.ts"
+      ],
+      "recommendation": "The `fetchUserDisplayNames` function in `apps/payments/src/shared/infrastructure/fetchUserDisplayNames.ts` already abstracts the user_profiles query. The store's `useSellerProfiles` should be refactored to use a similar extracted query function. Longer-term, if both store and payments display seller names, a shared infrastructure utility in `packages/shared` could eliminate the cross-app duplication.",
+      "rule": "DRY - Duplicate Code Blocks"
+    },
+    {
+      "id": "DRY-004",
+      "severity": "warning",
+      "category": "Type Duplication",
+      "title": "Product type alias duplicated in store and studio feature domains",
+      "description": "`export type Product = Tables<'products'>` is defined identically in both `apps/store/src/features/products/domain/types.ts` and `apps/studio/src/features/products/domain/types.ts`. Both apps import from `api/supabase/types` and re-declare the same derived type.",
+      "files": [
+        "apps/store/src/features/products/domain/types.ts:4",
+        "apps/studio/src/features/products/domain/types.ts:4"
+      ],
+      "recommendation": "The `Product` type could be exported from `packages/api/src` (alongside the Supabase generated types) or from `packages/shared/src/types`. The store's version adds a helper function `isProductAvailable` and re-exports shared types, so it may need to remain as a thin wrapper — but the raw `Tables<'products'>` alias should come from a single source.",
+      "rule": "DRY - Type Duplication"
+    },
+    {
+      "id": "DRY-005",
+      "severity": "suggestion",
+      "category": "Repeated Patterns",
+      "title": "Time-conversion constants defined in 3 separate feature domains",
+      "description": "`MS_PER_SECOND = 1000`, `SECONDS_PER_MINUTE = 60`, `MINUTES_PER_HOUR = 60` are defined in:\n- `apps/payments/src/features/checkout/domain/constants.ts`\n- `apps/admin/src/features/users/domain/constants.ts`\n- `apps/store/src/features/cart/application/cartCookiePersistence.ts` (private inline constants with same values)\n\nThese are universal mathematical constants with no business meaning.",
+      "files": [
+        "apps/payments/src/features/checkout/domain/constants.ts:15-17",
+        "apps/admin/src/features/users/domain/constants.ts:182-184",
+        "apps/store/src/features/cart/application/cartCookiePersistence.ts:9-10"
+      ],
+      "recommendation": "Export these time-conversion constants from `packages/shared/src/utils/time.ts` (or a `constants.ts`). All three apps depend on `shared` already. This is a low-priority cleanup since the values are obvious, but having a single source prevents future drift.",
+      "rule": "DRY - Rule of Three / Magic Values"
+    },
+    {
+      "id": "DRY-006",
+      "severity": "suggestion",
+      "category": "Repeated Patterns",
+      "title": "Nearly-identical vitest.config.ts files across all apps",
+      "description": "All 5 production app vitest configs (`store`, `admin`, `payments`, `auth`, `studio`) share the same structure: identical plugin setup, same test/coverage/timeout settings, and the same coverage exclude patterns. The only per-app differences are minor exclusion additions. The root already has a shared `vitest.aliases.ts` helper but no shared base config.\n\nNote: Two apps (`payments` and `auth`) also contain the duplicate string `.next/**` in their coverage exclude arrays.",
+      "files": [
+        "apps/store/vitest.config.ts",
+        "apps/admin/vitest.config.ts",
+        "apps/payments/vitest.config.ts",
+        "apps/auth/vitest.config.ts",
+        "apps/studio/vitest.config.ts"
+      ],
+      "recommendation": "Extract a `createVitestConfig(options)` factory (similar to `createVitestAliases`) to the repo root (`vitest.base.ts`). Each app's config calls the factory and passes only the app-specific overrides (e.g., additional coverage excludes). This is a config-level KISS improvement — not urgent, but prevents config drift. Also fix the duplicate `.next/**` entry in `payments` and `auth` vitest configs.",
+      "rule": "DRY - Repeated Patterns"
+    }
+  ],
+  "patterns": [
+    {
+      "name": "fetchUserDisplayNames abstraction (positive)",
+      "description": "The payments app correctly extracted `fetchUserDisplayNames` into `apps/payments/src/shared/infrastructure/` as a reusable function used by both `orderQueries` and `receivedOrderQueries`. This is the right pattern and should be the model for the store's `useSellerProfiles` inline logic.",
+      "files": [
+        "apps/payments/src/shared/infrastructure/fetchUserDisplayNames.ts"
+      ]
+    },
+    {
+      "name": "Vitest aliases factory (positive)",
+      "description": "The repo root `vitest.aliases.ts` already extracts the shared alias configuration into a factory function. This pattern should be extended to the full vitest base config.",
+      "files": ["vitest.aliases.ts"]
+    }
+  ]
+}

@@ -2,6 +2,7 @@ import path from "node:path";
 
 import type { BrowserContext } from "@playwright/test";
 import { createClient } from "@supabase/supabase-js";
+import { AUTH_COOKIE_NAMES, TOKEN_TTL_SECONDS } from "auth";
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports -- shared Node helper
 const { resolveE2EAppUrls } = require(
@@ -298,9 +299,25 @@ export async function injectSession(
       ? refHostname
       : refHostname.split(".")[0];
   const cookieBase = `sb-${projectRef}-auth-token`;
+  const authHost = new URL(AUTH_URL).hostname;
   const sharedDomain = buildSharedCookieDomain(AUTH_URL);
-  const isLocalhost =
-    sharedDomain === "localhost" || sharedDomain === "127.0.0.1";
+  const isLocalhost = authHost === "localhost" || authHost === "127.0.0.1";
+  const targetDomains = Array.from(
+    new Set(
+      isLocalhost || sharedDomain === authHost
+        ? [authHost]
+        : [authHost, sharedDomain],
+    ),
+  );
+  const sessionPayload = JSON.stringify({
+    access_token: user.accessToken,
+    refresh_token: user.refreshToken,
+    token_type: "bearer",
+    expires_in: SESSION_EXPIRY_SECONDS,
+    expires_at: Math.floor(Date.now() / 1000) + SESSION_EXPIRY_SECONDS,
+    user: { id: user.userId, email: user.email },
+  });
+  const encodedSession = `base64-${toBase64URL(sessionPayload)}`;
 
   // Clear existing auth cookies first
   const cookies = await context.cookies();
@@ -309,24 +326,36 @@ export async function injectSession(
     await context.clearCookies();
   }
 
-  await context.addCookies([
+  const cookiesToInject = targetDomains.flatMap((domain) => [
     {
-      name: `${cookieBase}.0`,
-      value: `base64-${toBase64URL(
-        JSON.stringify({
-          access_token: user.accessToken,
-          refresh_token: user.refreshToken,
-          token_type: "bearer",
-          expires_in: SESSION_EXPIRY_SECONDS,
-          expires_at: Math.floor(Date.now() / 1000) + SESSION_EXPIRY_SECONDS,
-          user: { id: user.userId, email: user.email },
-        }),
-      )}`,
-      domain: sharedDomain,
+      name: cookieBase,
+      value: encodedSession,
+      domain,
       path: "/",
       httpOnly: false,
       secure: !isLocalhost,
-      sameSite: "Lax",
+      sameSite: "Lax" as const,
+    },
+    {
+      name: `${cookieBase}.0`,
+      value: encodedSession,
+      domain,
+      path: "/",
+      httpOnly: false,
+      secure: !isLocalhost,
+      sameSite: "Lax" as const,
+    },
+    {
+      name: AUTH_COOKIE_NAMES.accessToken,
+      value: user.accessToken,
+      domain,
+      path: "/",
+      httpOnly: false,
+      secure: !isLocalhost,
+      sameSite: "Lax" as const,
+      expires: Math.floor(Date.now() / 1000) + TOKEN_TTL_SECONDS.access,
     },
   ]);
+
+  await context.addCookies(cookiesToInject);
 }

@@ -2,7 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { tid } from "shared";
-import { Button } from "ui";
+import { Button, cn } from "ui";
 
 import type { TemplateKey } from "@/features/users/application/utils/templatePermissions";
 import { PERMISSION_TEMPLATES } from "@/features/users/domain/constants";
@@ -57,9 +57,10 @@ export function TemplateButtons({
             disabled={isPending || !canManage}
             variant={active ? "default" : "outline"}
             size="sm"
-            className={`rounded-none border-2 border-foreground font-display text-xs font-bold uppercase tracking-wider ${
-              active ? "bg-foreground text-background" : ""
-            }`}
+            className={cn(
+              "rounded-none border-2 border-foreground font-display text-xs font-bold uppercase tracking-wider",
+              active && "bg-foreground text-background",
+            )}
             {...tid(`template-btn-${key}`)}
           >
             {t(labelKey)}

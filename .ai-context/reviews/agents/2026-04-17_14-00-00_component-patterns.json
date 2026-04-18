@@ -1,0 +1,53 @@
+{
+  "agent": "component-patterns",
+  "review_id": "2026-04-17_14-00-00",
+  "timestamp": "2026-04-17T14:00:00Z",
+  "scope": "apps/",
+  "summary": {
+    "filesAnalyzed": 749,
+    "issuesFound": 2,
+    "critical": 0,
+    "warning": 2,
+    "suggestion": 0,
+    "info": 0
+  },
+  "issues": [
+    {
+      "id": "COMP-001",
+      "severity": "warning",
+      "category": "COMP",
+      "file": "apps/store/src/features/cart/application/CartContext.tsx",
+      "line": 1,
+      "description": "CartContext.tsx exports two components: CartProvider (line 40) and useCart hook (line 125). While useCart is technically a hook not a component, having a Context Provider component and a hook in the same file creates a multi-export pattern. This is a common and accepted pattern for Context files, but it's worth noting.",
+      "rule": "one-component-per-file.md",
+      "fix": "Context+hook pairing in the same file is an accepted pattern (similar to compound components exception). No action needed unless the file grows significantly."
+    },
+    {
+      "id": "COMP-002",
+      "severity": "warning",
+      "category": "COMP",
+      "file": "apps/store/src/features/cart/application/FlyToCartContext.tsx",
+      "line": 1,
+      "description": "FlyToCartContext.tsx exports two functions: FlyToCartProvider (line 11) and useFlyToCartContext (line 21). Same pattern as CartContext.tsx - context+hook pairing.",
+      "rule": "one-component-per-file.md",
+      "fix": "Context+hook co-location is acceptable convention. No action needed."
+    }
+  ],
+  "patterns": [
+    {
+      "id": "PAT-COMP-001",
+      "description": "InlineTagEditor.tsx correctly uses isInputVisible (renamed from showInput in cycle 3). The test InlineTagEditor.test.tsx also correctly tests the isInputVisible behavior by clicking the add button and checking input visibility.",
+      "verdict": "CLEAN - NAME-003 fix verified"
+    },
+    {
+      "id": "PAT-COMP-002",
+      "description": "Standard component structure (hooks → derived → handlers → render) is consistently followed across reviewed components. usePaymentMethodsManager is a well-structured hook.",
+      "verdict": "COMPLIANT"
+    },
+    {
+      "id": "PAT-COMP-003",
+      "description": "Container/Presenter pattern is properly used in key components: ProductListPage (data) + ProductListPageContent (presentation), CheckoutPage + CheckoutPageContent, etc.",
+      "verdict": "COMPLIANT"
+    }
+  ]
+}

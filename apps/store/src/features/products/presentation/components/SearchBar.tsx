@@ -17,8 +17,12 @@ export function SearchBar() {
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Sync local value when URL param changes externally (browser back/forward)
+  // Equality guard prevents debounce→URL→sync cycle from overwriting user input mid-type
   useEffect(() => {
-    setLocalValue(query);
+    if ((query ?? "") !== localValue) {
+      setLocalValue(query);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query]);
 
   // Cleanup debounce timer on unmount

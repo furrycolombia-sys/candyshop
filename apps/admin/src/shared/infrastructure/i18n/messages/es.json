@@ -181,6 +181,13 @@
       "custom": "Personalizado",
       "none": "Ninguno"
     },
+    "filters": {
+      "allRoles": "Todos los Roles",
+      "allItems": "Todos los Articulos",
+      "hasItems": "Con Articulos",
+      "noItems": "Sin Articulos"
+    },
+    "exportCsv": "Exportar Seleccionados como CSV",
     "groups": {
       "products": "Productos",
       "reviews": "Resenas",

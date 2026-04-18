@@ -4,6 +4,7 @@ import { useTranslations } from "next-intl";
 import type { Control, FieldErrors } from "react-hook-form";
 import { useController, useWatch } from "react-hook-form";
 import { tid } from "shared";
+import { cn } from "ui";
 
 import { InlineImageCarousel } from "./InlineImageCarousel";
 import { InlinePriceFields } from "./InlinePriceFields";
@@ -121,7 +122,7 @@ export function InlineHero({ control, errors }: InlineHeroProps) {
 
               {/* Type badge */}
               <span
-                className={`bg-background ${badgeBase} text-muted-foreground`}
+                className={cn("bg-background text-muted-foreground", badgeBase)}
                 {...tid("hero-type")}
               >
                 {tTypes(type)}
@@ -129,7 +130,12 @@ export function InlineHero({ control, errors }: InlineHeroProps) {
 
               {/* Stock badge */}
               <span
-                className={`${isAvailable ? "bg-success text-success-foreground" : "bg-warning text-warning-foreground"} ${badgeBase}`}
+                className={cn(
+                  isAvailable
+                    ? "bg-success text-success-foreground" // eslint-disable-line sonarjs/no-duplicate-string -- Tailwind classes must remain inline per project rules
+                    : "bg-warning text-warning-foreground", // eslint-disable-line sonarjs/no-duplicate-string -- Tailwind classes must remain inline per project rules
+                  badgeBase,
+                )}
               >
                 {isAvailable ? tProducts("inStock") : tProducts("outOfStock")}
               </span>
@@ -137,14 +143,20 @@ export function InlineHero({ control, errors }: InlineHeroProps) {
               {/* Refundable badge */}
               {refundable === true && (
                 <span
-                  className={`bg-success text-success-foreground ${badgeBase}`}
+                  className={cn(
+                    "bg-success text-success-foreground",
+                    badgeBase,
+                  )}
                 >
                   {tProducts("refundable")}
                 </span>
               )}
               {refundable === false && (
                 <span
-                  className={`bg-warning text-warning-foreground ${badgeBase}`}
+                  className={cn(
+                    "bg-warning text-warning-foreground",
+                    badgeBase,
+                  )}
                 >
                   {tProducts("nonRefundable")}
                 </span>

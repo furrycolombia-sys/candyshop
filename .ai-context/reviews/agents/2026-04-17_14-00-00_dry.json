@@ -1,0 +1,58 @@
+{
+  "agent": "dry",
+  "review_id": "2026-04-17_14-00-00",
+  "timestamp": "2026-04-17T14:00:00Z",
+  "scope": "apps/",
+  "summary": {
+    "filesAnalyzed": 749,
+    "issuesFound": 3,
+    "critical": 0,
+    "warning": 2,
+    "suggestion": 1,
+    "info": 0
+  },
+  "issues": [
+    {
+      "id": "DRY-001",
+      "severity": "warning",
+      "category": "DRY",
+      "file": "apps/studio/src/features/products/presentation/pages/ProductListPage.tsx",
+      "line": 34,
+      "description": "The string 'seller_admins.read' is hardcoded here and in apps/admin/src/features/users/presentation/pages/UserDetailPage.tsx (line 33). The SELLER_ADMINS_READ_PERMISSION constant was extracted to seller-admins/domain/constants.ts in cycle 3 but was NOT applied in these two consumer files.",
+      "rule": "dry-principle.md",
+      "fix": "Use the existing SELLER_ADMINS_READ_PERMISSION constant from '@/features/seller-admins/domain/constants' (studio) and define a similar constant in admin domain constants."
+    },
+    {
+      "id": "DRY-002",
+      "severity": "warning",
+      "category": "DRY",
+      "file": "apps/admin/src/app/api/admin/users/[userId]/delegates/route.ts",
+      "line": 12,
+      "description": "The string 'seller_admins.read' appears as a local constant in this route file, duplicating the same value in studio domain constants and admin domain constants array (ALL_PERMISSION_KEYS). Within the admin app, a shared constant should be used.",
+      "rule": "dry-principle.md",
+      "fix": "Import the permission string from admin domain constants, or share through a well-placed admin shared constants file."
+    },
+    {
+      "id": "DRY-003",
+      "severity": "suggestion",
+      "category": "DRY",
+      "file": "apps/auth/e2e/helpers/session.ts",
+      "line": 154,
+      "description": "The string 'seller_admins.read' also appears in the e2e session helper as a hardcoded string in a permissions array. This is a test file so lower severity, but it would benefit from referencing a shared constant.",
+      "rule": "dry-principle.md",
+      "fix": "E2E helpers may keep inline strings for readability (test code exception). Acceptable as-is per KISS."
+    }
+  ],
+  "patterns": [
+    {
+      "id": "PAT-DRY-001",
+      "description": "PRODUCT_SEARCH_DEBOUNCE_MS extraction was correctly applied - the constant is defined once in products/domain/constants.ts and imported in ProductFilters.tsx. No other hardcoded 300ms debounce values found.",
+      "verdict": "CLEAN - ARCH-008 fix verified"
+    },
+    {
+      "id": "PAT-DRY-002",
+      "description": "UUID_REGEX is defined once in apps/payments/src/shared/infrastructure/adminRestClient.ts and imported in orders/route.ts - no duplication found.",
+      "verdict": "COMPLIANT"
+    }
+  ]
+}

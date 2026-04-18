@@ -1,6 +1,7 @@
 import { ShoppingCart } from "lucide-react";
 import Image from "next/image";
 import { getCoverImageUrl, tid } from "shared";
+import { cn } from "ui";
 
 import { FeaturedRibbon } from "./FeaturedRibbon";
 
@@ -37,11 +38,12 @@ export function ProductCardImage({
 
   return (
     <div
-      className={`relative flex items-center justify-center overflow-hidden border-foreground ${
+      className={cn(
+        "relative flex items-center justify-center overflow-hidden border-foreground",
         isFeatured
           ? "h-56 sm:h-auto sm:w-1/2 border-b-strong sm:border-b-0 sm:border-r-3"
-          : "h-48 border-b-strong"
-      }`}
+          : "h-48 border-b-strong",
+      )}
       style={{ backgroundColor: categoryColor }}
       {...tid("product-card-image")}
     >
@@ -55,9 +57,10 @@ export function ProductCardImage({
         />
       ) : (
         <span
-          className={`font-display font-extrabold uppercase tracking-widest opacity-40 ${
-            isFeatured ? "text-2xl sm:text-4xl" : "text-lg"
-          }`}
+          className={cn(
+            "font-display font-extrabold uppercase tracking-widest opacity-40",
+            isFeatured ? "text-2xl sm:text-4xl" : "text-lg",
+          )}
           style={{ color: categoryForeground }}
         >
           {typeLabel}

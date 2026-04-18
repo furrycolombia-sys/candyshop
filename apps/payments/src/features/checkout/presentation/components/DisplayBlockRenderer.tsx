@@ -1,15 +1,14 @@
-/* eslint-disable i18next/no-literal-string -- renderer uses internal/fallback text, not user-facing */
-/* eslint-disable @next/next/no-img-element -- dynamic user-uploaded images, no Next.js Image optimization needed */
-/* eslint-disable react/no-multi-comp -- BlockContent and ImageBlock are private helpers co-located with their parent */
+/* eslint-disable react/no-multi-comp -- BlockContent is a private render-switch helper co-located with its parent */
 "use client";
 
 import { useLocale } from "next-intl";
-import { useState } from "react";
 import { i18nField, tid } from "shared";
+
+import { ImageBlock } from "./ImageBlock";
 
 import type {
   DisplayBlock,
-  ImageBlock,
+  ImageBlock as ImageBlockType,
   LinkBlock,
   TextBlock,
   UrlBlock,
@@ -18,6 +17,11 @@ import type {
 
 interface DisplayBlockRendererProps {
   block: DisplayBlock;
+}
+
+interface BlockContentProps {
+  block: DisplayBlock;
+  locale: string;
 }
 
 export function DisplayBlockRenderer({ block }: DisplayBlockRendererProps) {
@@ -30,13 +34,7 @@ export function DisplayBlockRenderer({ block }: DisplayBlockRendererProps) {
   );
 }
 
-function BlockContent({
-  block,
-  locale,
-}: {
-  block: DisplayBlock;
-  locale: string;
-}) {
+function BlockContent({ block, locale }: BlockContentProps) {
   switch (block.type) {
     case "text": {
       const b = block as TextBlock;
@@ -46,20 +44,20 @@ function BlockContent({
       );
     }
     case "image": {
-      const b = block as ImageBlock;
+      const b = block as ImageBlockType;
       const alt = i18nField(b, "alt", locale) || "";
       return <ImageBlock block={b} alt={alt} />;
     }
     case "video": {
       const b = block as VideoBlock;
       return (
-        <div className="relative w-full" style={{ paddingBottom: "56.25%" }}>
+        <div className="relative w-full aspect-video">
           <iframe
             src={b.url}
             className="absolute inset-0 size-full rounded-lg border border-border"
             sandbox="allow-scripts allow-same-origin"
             allowFullScreen
-            title="Video"
+            title="Video" // eslint-disable-line i18next/no-literal-string -- HTML accessibility attribute on iframe, not user-facing text
           />
         </div>
       );
@@ -95,26 +93,4 @@ function BlockContent({
       );
     }
   }
-}
-
-function ImageBlock({ block, alt }: { block: ImageBlock; alt: string }) {
-  const [errored, setErrored] = useState(false);
-
-  if (errored || !block.url) {
-    return (
-      <div className="flex h-32 w-full items-center justify-center rounded-lg border border-dashed border-border bg-muted/30 text-xs text-muted-foreground">
-        Image unavailable
-      </div>
-    );
-  }
-
-  return (
-    // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- onError is not a user interaction, it's an error handler
-    <img
-      src={block.url}
-      alt={alt}
-      className="max-w-full rounded-lg border border-border"
-      onError={() => setErrored(true)}
-    />
-  );
 }

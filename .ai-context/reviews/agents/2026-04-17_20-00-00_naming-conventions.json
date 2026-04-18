@@ -1,0 +1,131 @@
+{
+  "agent": "naming-conventions",
+  "review_id": "2026-04-17_20-00-00",
+  "timestamp": "2026-04-17T20:00:00",
+  "scope": "apps/",
+  "summary": {
+    "filesAnalyzed": 180,
+    "issuesFound": 8,
+    "critical": 0,
+    "warning": 4,
+    "suggestion": 4,
+    "info": 0
+  },
+  "issues": [
+    {
+      "id": "NAME-001",
+      "severity": "warning",
+      "category": "File Naming",
+      "file": "apps/admin/src/features/users/application/utils/export-csv.test.ts",
+      "description": "Test file uses kebab-case (export-csv.test.ts) while its implementation file uses camelCase (exportCsv.ts). Test file names must match the source file they test.",
+      "rule": "Test files should be named as `[source-file-name].test.ts`. The source is `exportCsv.ts`, so the test should be `exportCsv.test.ts`.",
+      "fix": "Rename `export-csv.test.ts` to `exportCsv.test.ts` to match the source file."
+    },
+    {
+      "id": "NAME-002",
+      "severity": "warning",
+      "category": "File Naming",
+      "file": "apps/auth/src/features/auth/presentation/components/SocialIcons.test.tsx",
+      "description": "Test file `SocialIcons.test.tsx` has no matching source file. It actually tests `DiscordIcon.tsx` and `GoogleIcon.tsx`, making the name misleading.",
+      "rule": "Test files should correspond to the component they test. A test named SocialIcons.test.tsx implies a SocialIcons.tsx component.",
+      "fix": "Rename to `SocialIconsGroup.test.tsx` or split into `DiscordIcon.test.tsx` and `GoogleIcon.test.tsx` co-located with each source component."
+    },
+    {
+      "id": "NAME-003",
+      "severity": "warning",
+      "category": "File Naming",
+      "file": "apps/store/src/features/cart/presentation/components/CartDrawerWithItems.test.tsx",
+      "description": "Test file `CartDrawerWithItems.test.tsx` has no matching source file. It tests `CartDrawer.tsx` (filled with items scenario) but the name implies a non-existent `CartDrawerWithItems.tsx` component.",
+      "rule": "Test file names should match the source file they primarily test.",
+      "fix": "If this is a scenario-based test for CartDrawer, rename to `CartDrawer.withItems.test.tsx` or merge into a shared `CartDrawer.test.tsx`."
+    },
+    {
+      "id": "NAME-004",
+      "severity": "warning",
+      "category": "File Naming",
+      "file": "apps/landing/src/features/home/presentation/components/HomeSections.test.tsx",
+      "description": "Test file `HomeSections.test.tsx` has no matching source file `HomeSections.tsx`. The test imports from multiple landing page components (CtaSection, HeroSection, etc.).",
+      "rule": "Test file names should correspond to the source component or module they test.",
+      "fix": "Rename to reflect what is actually being tested, e.g. `LandingPage.sections.test.tsx`, or split into per-component test files."
+    },
+    {
+      "id": "NAME-005",
+      "severity": "suggestion",
+      "category": "File Naming — Inconsistency",
+      "file": "apps/store/src/features/products/domain/GalleryTypes.ts",
+      "relatedFiles": [
+        "apps/store/src/shared/domain/CategoryTypes.ts",
+        "apps/payments/src/shared/domain/PaymentMethodTypes.ts",
+        "apps/studio/src/features/products/presentation/components/inline-editor/SectionItemTypes.ts"
+      ],
+      "description": "Some type files use a PascalCase descriptive name (`GalleryTypes.ts`, `CategoryTypes.ts`, `PaymentMethodTypes.ts`, `SectionItemTypes.ts`) while the predominant convention across the codebase is a plain `types.ts` file inside the appropriate domain folder.",
+      "rule": "Per naming conventions, type files should be `types.ts` (inside a scoped directory) or follow `UserTypes.ts` pattern when aggregating types outside a domain/ directory. The inconsistency is noticeable since every other feature uses `types.ts`.",
+      "fix": "Consider standardising all shared type files to `types.ts` within their respective domain/ directories. If a single `types.ts` is too broad, use descriptive camelCase file names (`galleryTypes.ts`, `categoryTypes.ts`) rather than PascalCase to be consistent with utility file naming."
+    },
+    {
+      "id": "NAME-006",
+      "severity": "suggestion",
+      "category": "File Naming — Misplaced Types",
+      "file": "apps/studio/src/features/products/presentation/components/inline-editor/SectionItemTypes.ts",
+      "description": "A types file lives inside the `presentation/components` layer rather than the `domain/` layer. Type definitions used by multiple components should live in `domain/types/` per Clean Architecture rules.",
+      "rule": "Types belong in the `domain/` layer. Placing `SectionItemTypes.ts` inside `presentation/components/inline-editor/` violates layer boundaries.",
+      "fix": "Move to `apps/studio/src/features/products/domain/types/sectionItemTypes.ts` (or merge into `domain/types.ts`) and import from there in the inline-editor components."
+    },
+    {
+      "id": "NAME-007",
+      "severity": "suggestion",
+      "category": "File Naming — Inconsistency",
+      "file": "apps/payments/src/shared/infrastructure/receiptStorage.ts",
+      "relatedFiles": [
+        "apps/payments/src/features/checkout/infrastructure/receiptStorage.ts"
+      ],
+      "description": "There are two files named `receiptStorage.ts` in the payments app — one in `shared/infrastructure/` and one in `features/checkout/infrastructure/`. This is a naming collision that can cause confusion about which one is in use.",
+      "rule": "File names within an app should be sufficiently unique to avoid ambiguity.",
+      "fix": "Investigate if these are duplicates (DRY violation) or distinct. If distinct, rename the shared one to reflect the broader scope (e.g. `receiptStorageShared.ts` or move and rename to clarify purpose)."
+    },
+    {
+      "id": "NAME-008",
+      "severity": "suggestion",
+      "category": "File Naming",
+      "file": "apps/store/src/features/cart/application/CartContext.tsx",
+      "relatedFiles": [
+        "apps/store/src/features/cart/application/FlyToCartContext.tsx"
+      ],
+      "description": "Context provider files (CartContext.tsx, FlyToCartContext.tsx) live in the `application/` layer directly instead of `application/context/`. Other apps (admin, store shared, studio) consistently use an `application/context/` subfolder for context files.",
+      "rule": "For consistency, context files should be placed in `application/context/` to match the established pattern across all other apps.",
+      "fix": "Move `CartContext.tsx` and `FlyToCartContext.tsx` to `apps/store/src/features/cart/application/context/` and update imports accordingly."
+    }
+  ],
+  "patterns": [
+    {
+      "name": "Consistent component file naming",
+      "description": "All React component files (.tsx) in features/ and shared/presentation/ use PascalCase correctly (e.g. CartDrawer.tsx, ProductCard.tsx, TemplateEditor.tsx). No violations found.",
+      "status": "good"
+    },
+    {
+      "name": "Consistent hook file naming",
+      "description": "All custom hook files use camelCase with 'use' prefix (e.g. useProducts.ts, useCartFromCookie.ts, useSupabaseAuth.ts). No violations found.",
+      "status": "good"
+    },
+    {
+      "name": "Consistent constant naming",
+      "description": "Exported global constants across domain/constants.ts files use SCREAMING_SNAKE_CASE correctly (e.g. USERS_PER_PAGE, CHECKOUT_COMPLETED_SESSION_KEY). Local variables use camelCase. No violations found.",
+      "status": "good"
+    },
+    {
+      "name": "Consistent folder naming",
+      "description": "Feature folders use kebab-case (seller-admins, payment-methods, received-orders, product-detail). Layer folders use lowercase (domain, application, infrastructure, presentation). No PascalCase folders found.",
+      "status": "good"
+    },
+    {
+      "name": "Next.js reserved file names",
+      "description": "Next.js special files (page.tsx, layout.tsx, error.tsx, global-error.tsx, not-found.tsx, providers.tsx) all correctly use lowercase as required by the framework. These are intentional exceptions to PascalCase component naming.",
+      "status": "good"
+    },
+    {
+      "name": "E2E test file naming",
+      "description": "E2E spec files in e2e/ directories use kebab-case (auth-session.spec.ts, permission-management.spec.ts). This is an accepted convention for Playwright test files and is consistent across all apps.",
+      "status": "good"
+    }
+  ]
+}

@@ -25,6 +25,7 @@ vi.mock("@/shared/infrastructure/i18n", () => ({
 }));
 
 vi.mock("ui", () => ({
+  cn: (...args: unknown[]) => args.filter(Boolean).join(" "),
   Switch: ({
     checked,
     onCheckedChange,

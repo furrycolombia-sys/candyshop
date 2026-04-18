@@ -4,8 +4,9 @@ import { useRef } from "react";
 import type { Control, FieldPath } from "react-hook-form";
 import { useController } from "react-hook-form";
 import { tid } from "shared";
+import { cn } from "ui";
 
-import { useAutoResize } from "@/features/products/application/useAutoResize";
+import { useAutoResize } from "@/features/products/application/hooks/useAutoResize";
 import type { ProductFormValues } from "@/features/products/domain/validationSchema";
 
 const MULTILINE_ROWS = 3;
@@ -59,9 +60,12 @@ export function LangTextarea({
       placeholder={placeholder}
       rows={isMultiline ? MULTILINE_ROWS : 1}
       tabIndex={visible ? 0 : -1}
-      className={`w-full bg-transparent outline-none placeholder:text-muted-foreground/50 transition-colors focus:border-b-2 focus:border-solid focus:border-foreground/40 resize-none overflow-hidden ${borderClass} ${className} ${
-        visible ? "" : "absolute inset-0 opacity-0 pointer-events-none"
-      }`}
+      className={cn(
+        "w-full bg-transparent outline-none placeholder:text-muted-foreground/50 transition-colors focus:border-b-2 focus:border-solid focus:border-foreground/40 resize-none overflow-hidden",
+        borderClass,
+        className,
+        !visible && "absolute inset-0 opacity-0 pointer-events-none",
+      )}
       {...tid(testId)}
     />
   );

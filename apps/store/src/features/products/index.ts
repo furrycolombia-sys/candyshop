@@ -6,7 +6,7 @@ export { PRODUCT_CATEGORIES, PRODUCT_TYPES } from "./domain";
 export {
   useStoreProducts,
   useStoreProduct,
-} from "./application/useStoreProducts";
+} from "./application/hooks/useStoreProducts";
 
 // Presentation
 export { ProductCard } from "./presentation/components/ProductCard";

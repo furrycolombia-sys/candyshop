@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { tid } from "shared";
+import { cn } from "ui";
 
 import { Link } from "@/shared/infrastructure/i18n";
 
@@ -120,13 +121,13 @@ export function PaymentsSidebarNav({
                   key={key}
                   href={href}
                   onClick={onNavigate}
-                  className={`group relative flex items-center gap-3 overflow-hidden rounded-md px-2.5 py-2 transition-all duration-150 ${
-                    collapsed ? "justify-center" : ""
-                  } ${
+                  className={cn(
+                    "group relative flex items-center gap-3 overflow-hidden rounded-md px-2.5 py-2 transition-all duration-150",
+                    collapsed && "justify-center",
                     isActive
                       ? "bg-foreground text-background"
-                      : INACTIVE_LINK_CLASS
-                  }`}
+                      : INACTIVE_LINK_CLASS,
+                  )}
                   aria-current={isActive ? "page" : undefined}
                   {...tid(`sidebar-${key}`)}
                 >
@@ -135,7 +136,7 @@ export function PaymentsSidebarNav({
                   )}
 
                   <NavIcon
-                    className={`shrink-0 ${collapsed ? "size-5" : "size-4"}`}
+                    className={cn("shrink-0", collapsed ? "size-5" : "size-4")}
                   />
 
                   {!collapsed && (

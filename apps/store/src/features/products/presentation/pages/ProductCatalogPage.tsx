@@ -5,12 +5,10 @@ import { useQueryStates } from "nuqs";
 import { useMemo } from "react";
 import { i18nField, tid } from "shared";
 
-import { useStoreProducts } from "@/features/products/application/useStoreProducts";
+import { useStoreProducts } from "@/features/products/application/hooks/useStoreProducts";
 import { catalogSearchParams } from "@/features/products/domain/searchParams";
-import { CategoryFilter } from "@/features/products/presentation/components/CategoryFilter";
+import { ProductFilters } from "@/features/products/presentation/components/ProductFilters";
 import { ProductGrid } from "@/features/products/presentation/components/ProductGrid";
-import { SearchBar } from "@/features/products/presentation/components/SearchBar";
-import { TypeFilter } from "@/features/products/presentation/components/TypeFilter";
 import type {
   ProductCategory,
   ProductType,
@@ -97,14 +95,8 @@ export function ProductCatalogPage() {
           <p className="mt-1 text-sm text-muted-foreground">{t("subtitle")}</p>
         </header>
 
-        {/* Search */}
-        <SearchBar />
-
-        {/* Category filter pills */}
-        <CategoryFilter />
-
-        {/* Type filter tabs */}
-        <TypeFilter />
+        {/* Filters: search + type + category */}
+        <ProductFilters />
 
         {/* Product grid */}
         <ProductGrid products={filteredProducts} />

@@ -1,5 +1,6 @@
 import Image from "next/image";
 import { useLocale } from "next-intl";
+import { useMemo } from "react";
 import { i18nField, tid } from "shared";
 import type { ProductSection } from "shared/types";
 
@@ -13,7 +14,10 @@ interface GallerySectionProps {
 export function GallerySection({ section, theme }: GallerySectionProps) {
   const locale = useLocale();
   const name = i18nField(section, "name", locale);
-  const sorted = [...section.items].sort((a, b) => a.sort_order - b.sort_order);
+  const sorted = useMemo(
+    () => [...section.items].sort((a, b) => a.sort_order - b.sort_order),
+    [section.items],
+  );
 
   if (sorted.length === 0) return null;
 

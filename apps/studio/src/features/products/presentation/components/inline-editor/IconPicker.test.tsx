@@ -17,6 +17,7 @@ vi.mock("lucide-react/dynamic", () => ({
 }));
 
 vi.mock("ui", () => ({
+  cn: (...args: unknown[]) => args.filter(Boolean).join(" "),
   Popover: ({ children }: { children: React.ReactNode }) => (
     <div>{children}</div>
   ),

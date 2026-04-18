@@ -1,0 +1,92 @@
+{
+  "agent": "performance",
+  "timestamp": "2026-04-17T00:00:00Z",
+  "scope": "apps/",
+  "summary": {
+    "filesAnalyzed": 659,
+    "issuesFound": 6,
+    "critical": 0,
+    "warning": 3,
+    "suggestion": 3,
+    "info": 0
+  },
+  "issues": [
+    {
+      "id": "PERF-001",
+      "severity": "warning",
+      "title": "Sequential awaits for independent operations in checkout API route",
+      "file": "apps/payments/src/app/api/checkout/payment-methods/route.ts",
+      "line": 250,
+      "description": "The POST handler awaits fetchGrantedPermissions(user.id) then awaits validateStock(sellerId, sanitizedItems) sequentially. These two operations are independent and could run in parallel with Promise.all, reducing latency for every checkout request.",
+      "rule": "code-review-standards.md#performance-standards",
+      "fix": "Replace the sequential awaits with: const [permissions, hasStockIssues] = await Promise.all([fetchGrantedPermissions(user.id), validateStock(sellerId, sanitizedItems)]). Then guard on permissions before using hasStockIssues. Note: if the permissions check is intended to short-circuit before the stock query hits the DB, keep it sequential — but add a comment explaining the decision."
+    },
+    {
+      "id": "PERF-002",
+      "severity": "warning",
+      "title": "Per-row getReceiptUrl calls run sequentially inside Promise.all mapping in fetchMyOrders",
+      "file": "apps/payments/src/features/orders/infrastructure/orderQueries.ts",
+      "line": 47,
+      "description": "fetchMyOrders calls Promise.all over rows, and each row's mapper individually awaits getReceiptUrl — which makes a Supabase signed-URL RPC call per order. For a user with N orders this fires N sequential Supabase Storage calls per row (each Promise.all slot awaits in serial within its slot). The same pattern exists in receivedOrderQueries.ts (mapRowToOrder). While Promise.all parallelises across rows, each signed-URL call is a network round trip; batching or caching signed URLs would reduce total latency.",
+      "rule": "code-review-standards.md#performance-standards",
+      "fix": "Consider either (1) extracting storage path lists and generating all signed URLs in a single batch call before the map, or (2) using Supabase's createSignedUrls (plural) API to generate all URLs in one request. Also consider caching signed URLs with a short TTL since they expire on their own."
+    },
+    {
+      "id": "PERF-003",
+      "severity": "warning",
+      "title": "new Intl.NumberFormat instantiated on every render in ProductTableRow",
+      "file": "apps/studio/src/features/products/presentation/components/ProductTableRow.tsx",
+      "line": 41,
+      "description": "formatCOP is a module-level helper but internally calls new Intl.NumberFormat(...) on every invocation. Intl.NumberFormat construction is relatively expensive. In a table that re-renders on every drag-and-drop sort tick or filter change this adds unnecessary overhead for every visible row.",
+      "rule": "code-review-standards.md#performance-standards",
+      "fix": "Hoist the formatter to module scope: const COP_FORMATTER = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0, maximumFractionDigits: 0 }); then call COP_FORMATTER.format(value) in formatCOP."
+    },
+    {
+      "id": "PERF-004",
+      "severity": "warning",
+      "title": "new Intl.RelativeTimeFormat instantiated on every tick in ExpirationLabel",
+      "file": "apps/payments/src/features/orders/presentation/components/ExpirationLabel.tsx",
+      "line": 24,
+      "description": "computeTimeRemaining creates a new Intl.RelativeTimeFormat on each call. It is called once on mount and then every 60 seconds via setInterval. While the interval is infrequent, the formatter is also recreated every locale change through the effect dependency. A module-level or memoised formatter would be cleaner and faster.",
+      "rule": "code-review-standards.md#performance-standards",
+      "fix": "Cache the formatter by locale: use a simple Map<string, Intl.RelativeTimeFormat> at module scope, or useMemo inside the component for the formatter keyed on locale."
+    },
+    {
+      "id": "PERF-005",
+      "severity": "suggestion",
+      "title": "Inline arrow function passed as onSubmit prop inside .map() in CheckoutPageContent",
+      "file": "apps/payments/src/features/checkout/presentation/pages/CheckoutPageContent.tsx",
+      "line": 209,
+      "description": "Each render of CheckoutPageContent creates a new arrow function per group in the .map() call: onSubmit={(params) => handleSubmit(group.sellerId, group.items, group.subtotalCop, params)}. If SellerCheckoutCard is ever wrapped in React.memo, or the prop is used in a useEffect dependency array inside the child, this will cause unnecessary re-renders because the function reference changes every parent render. Currently SellerCheckoutCard is not memoised so the impact is low, but the pattern is fragile.",
+      "rule": "code-review-standards.md#performance-standards",
+      "fix": "If SellerCheckoutCard is to be memoised in the future, wrap the handlers with useCallback or pass sellerId as a stable prop and let the child close over it. For now, document that memoisation requires stable prop references."
+    },
+    {
+      "id": "PERF-006",
+      "severity": "suggestion",
+      "title": "No dynamic imports for heavy inline-editor components in studio",
+      "file": "apps/studio/src/features/products/presentation/components/inline-editor/InlineEditor.tsx",
+      "line": 1,
+      "description": "The studio inline product editor imports many sub-components (InlineHero, InlineSections, InlineImageCarousel, IconPicker, etc.) statically. This entire editor tree is loaded upfront for every page in the studio app. Given that the editor is only shown when editing a product, lazily loading the editor (or the heaviest sub-components) with next/dynamic would reduce the initial page bundle for list/dashboard views.",
+      "rule": "code-review-standards.md#performance-standards",
+      "fix": "Consider wrapping InlineEditor itself with next/dynamic({ ssr: false }) at the product detail page level, or at minimum lazily import InlineImageCarousel and IconPicker which pull in image/icon picker logic only needed during editing."
+    }
+  ],
+  "patterns": [
+    {
+      "pattern": "Good: useMemo for expensive computations",
+      "description": "ProductCatalogPage, ProductGrid, CartDrawer, and CheckoutPageContent all correctly use useMemo for derived state (filteredProducts, orderedProducts, sellerGroups, allSubmitted). CartContext and SellerCheckoutCard use useCallback for stable function references passed to children.",
+      "verdict": "positive"
+    },
+    {
+      "pattern": "Good: next/image used throughout",
+      "description": "All production component files use next/image (Image from 'next/image') for images. The raw <img> tags found are exclusively in test files (mocking next/image), which is the correct pattern.",
+      "verdict": "positive"
+    },
+    {
+      "pattern": "Good: TanStack Query for server state",
+      "description": "All data fetching uses TanStack Query hooks (useQuery/useMutation), providing automatic caching, deduplication, and background refetching with no manual request management.",
+      "verdict": "positive"
+    }
+  ]
+}

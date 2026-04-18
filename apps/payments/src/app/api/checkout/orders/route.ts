@@ -4,38 +4,10 @@ import { NextResponse } from "next/server";
 
 import type { FormField } from "@/shared/domain/paymentMethodTypes";
 import { validateBuyerSubmission } from "@/shared/domain/paymentMethodUtils";
-
-// Dynamic key access prevents Turbopack from inlining at build time.
-const supabaseUrl =
-  process.env["SUPABASE_URL_INTERNAL"] || process.env.NEXT_PUBLIC_SUPABASE_URL;
-const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-function getRestHeaders() {
-  if (!supabaseUrl || !serviceRoleKey) {
-    throw new Error("Supabase admin REST client is not configured");
-  }
-  return {
-    apikey: serviceRoleKey,
-    Authorization: `Bearer ${serviceRoleKey}`,
-    "Content-Type": "application/json",
-    Prefer: "return=representation",
-  };
-}
-
-function getRestUrl(path: string) {
-  if (!supabaseUrl) throw new Error("Supabase URL is not configured");
-  return `${supabaseUrl}/rest/v1/${path}`;
-}
-
-async function adminFetchJson<T>(path: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(getRestUrl(path), {
-    ...init,
-    headers: { ...getRestHeaders(), ...init?.headers },
-    cache: "no-store",
-  });
-  if (!response.ok) throw new Error(await response.text());
-  return (await response.json()) as T;
-}
+import {
+  adminFetchJson,
+  UUID_REGEX,
+} from "@/shared/infrastructure/adminRestClient";
 
 type PaymentMethodRow = {
   seller_id: string;
@@ -51,6 +23,25 @@ async function fetchPaymentMethod(
   return rows[0] ?? null;
 }
 
+type ProductRow = {
+  id: string;
+  price_cop: number;
+  max_quantity: number;
+  is_active: boolean;
+  seller_id: string;
+};
+
+async function fetchProductData(
+  productIds: string[],
+): Promise<Map<string, ProductRow>> {
+  if (productIds.length === 0) return new Map();
+  const idList = productIds.map((id) => encodeURIComponent(id)).join(",");
+  const rows = await adminFetchJson<ProductRow[]>(
+    `products?id=in.(${idList})&select=id,price_cop,max_quantity,is_active,seller_id`,
+  );
+  return new Map(rows.map((r) => [r.id, r]));
+}
+
 type OrderRow = { id: string };
 
 async function insertOrder(params: {
@@ -62,6 +53,7 @@ async function insertOrder(params: {
 }): Promise<string> {
   const rows = await adminFetchJson<OrderRow[]>("orders", {
     method: "POST",
+    headers: { Prefer: "return=representation" },
     body: JSON.stringify({
       user_id: params.userId,
       seller_id: params.sellerId,
@@ -75,6 +67,143 @@ async function insertOrder(params: {
   const row = rows[0];
   if (!row?.id) throw new Error("Order insert returned no id");
   return row.id;
+}
+
+async function insertOrderItems(
+  orderId: string,
+  items: Array<{ id: string; quantity: number }>,
+  productMap: Map<string, ProductRow>,
+): Promise<void> {
+  const orderItems = items.map((item) => {
+    const product = productMap.get(item.id);
+    if (!product) throw new Error(`Missing product data for ${item.id}`);
+    return {
+      order_id: orderId,
+      product_id: item.id,
+      quantity: item.quantity,
+      unit_price_cop: product.price_cop,
+    };
+  });
+
+  await adminFetchJson<unknown>("order_items", {
+    method: "POST",
+    body: JSON.stringify(orderItems),
+  });
+}
+
+function isValidItem(item: unknown): item is { id: string; quantity: number } {
+  if (typeof item !== "object" || item === null) return false;
+  const obj = item as Record<string, unknown>;
+  if (typeof obj.id !== "string" || !UUID_REGEX.test(obj.id)) return false;
+  if (typeof obj.quantity !== "number" || !Number.isInteger(obj.quantity))
+    return false;
+  return (obj.quantity as number) > 0;
+}
+
+type ParsedPayload =
+  | {
+      ok: true;
+      paymentMethodId: string;
+      submission: Record<string, string>;
+      cartItems: Array<{ id: string; quantity: number }>;
+    }
+  | { ok: false; response: NextResponse };
+
+function parseAndValidatePayload(body: {
+  payment_method_id?: unknown;
+  buyer_submission?: unknown;
+  items?: unknown;
+}): ParsedPayload {
+  const { payment_method_id, buyer_submission, items } = body;
+  const invalidPayload = NextResponse.json(
+    { error: "Invalid payload" },
+    { status: 400 },
+  );
+
+  if (
+    typeof payment_method_id !== "string" ||
+    payment_method_id.length === 0 ||
+    typeof buyer_submission !== "object" ||
+    buyer_submission === null ||
+    !UUID_REGEX.test(payment_method_id)
+  ) {
+    return { ok: false, response: invalidPayload };
+  }
+
+  if (
+    !Array.isArray(items) ||
+    items.length === 0 ||
+    !items.every((item) => isValidItem(item))
+  ) {
+    return {
+      ok: false,
+      response: NextResponse.json(
+        {
+          error:
+            "Invalid items: must be a non-empty array of {id: uuid, quantity: positive integer}",
+        },
+        { status: 400 },
+      ),
+    };
+  }
+
+  if (
+    Object.values(buyer_submission as Record<string, unknown>).some(
+      (v) => typeof v !== "string",
+    )
+  ) {
+    return { ok: false, response: invalidPayload };
+  }
+
+  return {
+    ok: true,
+    paymentMethodId: payment_method_id,
+    submission: buyer_submission as Record<string, string>,
+    cartItems: items,
+  };
+}
+
+type CartValidationResult =
+  | { ok: true; totalCop: number }
+  | { ok: false; error: string; status: number };
+
+function validateCartItems(
+  cartItems: Array<{ id: string; quantity: number }>,
+  productMap: Map<string, ProductRow>,
+  sellerId: string,
+): CartValidationResult {
+  let totalCop = 0;
+  for (const item of cartItems) {
+    const product = productMap.get(item.id);
+    if (!product) {
+      return { ok: false, error: `Product ${item.id} not found`, status: 422 };
+    }
+    // SEC-002: All products must belong to the same seller as the payment method
+    if (product.seller_id !== sellerId) {
+      return {
+        ok: false,
+        error: `Product ${item.id} does not belong to this seller`,
+        status: 422,
+      };
+    }
+    // SEC-001: Product must be active and have sufficient stock
+    if (!product.is_active) {
+      return {
+        ok: false,
+        error: `Product ${item.id} is no longer available`,
+        status: 422,
+      };
+    }
+    if (item.quantity > product.max_quantity) {
+      return {
+        ok: false,
+        error: `Product ${item.id} only has ${product.max_quantity} units available`,
+        status: 422,
+      };
+    }
+    totalCop += product.price_cop * item.quantity;
+  }
+  return { ok: true, totalCop };
 }
 
 export async function POST(request: Request) {
@@ -91,28 +220,15 @@ export async function POST(request: Request) {
     const body = (await request.json()) as {
       payment_method_id?: unknown;
       buyer_submission?: unknown;
-      total_cop?: unknown;
+      items?: unknown;
     };
 
-    const { payment_method_id, buyer_submission, total_cop } = body;
+    const parsed = parseAndValidatePayload(body);
+    if (!parsed.ok) return parsed.response;
 
-    if (
-      typeof payment_method_id !== "string" ||
-      payment_method_id.length === 0 ||
-      typeof buyer_submission !== "object" ||
-      buyer_submission === null
-    ) {
-      return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
-    }
+    const { paymentMethodId, submission, cartItems } = parsed;
 
-    const submission = buyer_submission as Record<string, string>;
-    const totalCop =
-      typeof total_cop === "number" && Number.isFinite(total_cop)
-        ? total_cop
-        : 0;
-
-    // Fetch payment method to get seller_id and form_fields
-    const method = await fetchPaymentMethod(payment_method_id);
+    const method = await fetchPaymentMethod(paymentMethodId);
     if (!method) {
       return NextResponse.json(
         { error: "Payment method not found" },
@@ -120,12 +236,10 @@ export async function POST(request: Request) {
       );
     }
 
-    // Validate required form fields
     const formFields = Array.isArray(method.form_fields)
       ? (method.form_fields as FormField[])
       : [];
     const missingFields = validateBuyerSubmission(formFields, submission);
-
     if (missingFields.length > 0) {
       return NextResponse.json(
         { error: "missing_fields", fields: missingFields },
@@ -133,18 +247,35 @@ export async function POST(request: Request) {
       );
     }
 
-    // Insert order with buyer_info
+    const productMap = await fetchProductData(cartItems.map((item) => item.id));
+    const cartValidation = validateCartItems(
+      cartItems,
+      productMap,
+      method.seller_id,
+    );
+    if (!cartValidation.ok) {
+      return NextResponse.json(
+        { error: cartValidation.error },
+        { status: cartValidation.status },
+      );
+    }
+
     const orderId = await insertOrder({
       userId: user.id,
       sellerId: method.seller_id,
-      paymentMethodId: payment_method_id,
-      totalCop,
+      paymentMethodId,
+      totalCop: cartValidation.totalCop,
       buyerInfo: submission,
     });
 
+    await insertOrderItems(orderId, cartItems, productMap);
+
     return NextResponse.json({ orderId }, { status: 201 });
   } catch (error) {
-    console.error("[checkout/orders]", error);
+    console.error(
+      "[checkout/orders]",
+      error instanceof Error ? error.message : String(error),
+    );
     return NextResponse.json(
       { error: "Failed to create order" },
       { status: 500 },

@@ -1,8 +1,6 @@
-import type { createBrowserSupabaseClient } from "api/supabase";
 import type { Database } from "api/supabase/types";
 
-/** Supabase client type alias used across payment features. */
-export type SupabaseClient = ReturnType<typeof createBrowserSupabaseClient>;
+export type { SupabaseClient } from "shared/types/supabase";
 
 /** Reuse the Supabase enum as the single source of truth for order status. */
 export type OrderStatus = Database["public"]["Enums"]["payment_status"];

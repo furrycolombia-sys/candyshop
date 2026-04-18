@@ -9,9 +9,11 @@ import { Button } from "ui";
 import { ConfirmActionPanel } from "./ConfirmActionPanel";
 import { SellerNoteInput } from "./SellerNoteInput";
 
-import type {
-  OrderStatus,
-  SellerAction,
+import {
+  canActOnOrder,
+  canRequestEvidence,
+  type OrderStatus,
+  type SellerAction,
 } from "@/features/received-orders/domain/types";
 
 interface ActionButtonsProps {
@@ -32,11 +34,9 @@ export function ActionButtons({
   const t = useTranslations("receivedOrders");
   const [mode, setMode] = useState<ActionMode>(null);
 
-  const canApprove =
-    status === "pending_verification" || status === "evidence_requested";
-  const canReject =
-    status === "pending_verification" || status === "evidence_requested";
-  const canRequestEvidence = status === "pending_verification";
+  const canApprove = canActOnOrder(status);
+  const canReject = canActOnOrder(status);
+  const canEvidence = canRequestEvidence(status);
 
   const handleConfirmApprove = useCallback(() => {
     onAction("approved");
@@ -125,7 +125,7 @@ export function ActionButtons({
             {t("reject")}
           </Button>
         )}
-        {canRequestEvidence && (
+        {canEvidence && (
           <Button
             type="button"
             onClick={() => setMode("evidence")}

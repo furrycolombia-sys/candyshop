@@ -5,7 +5,7 @@ import { tid } from "shared";
 
 import { LangTextarea } from "./LangTextarea";
 
-import { useLangToggle } from "@/features/products/application/useLangToggle";
+import { useLangToggle } from "@/features/products/application/hooks/useLangToggle";
 import type { ProductFormValues } from "@/features/products/domain/validationSchema";
 
 interface InlineTextFieldProps {

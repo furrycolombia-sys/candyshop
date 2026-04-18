@@ -81,7 +81,7 @@ describe("UserTable", () => {
     };
     render(<UserTable {...propsWithSelection} />);
     const downloadBtn = screen.getByRole("button", {
-      name: /Export Selected/i,
+      name: /exportCsv/i,
     });
     fireEvent.click(downloadBtn);
     expect(defaultProps.onExportCsv).toHaveBeenCalled();

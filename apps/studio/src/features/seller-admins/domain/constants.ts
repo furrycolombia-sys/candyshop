@@ -8,3 +8,6 @@ export const DELEGATE_PERMISSIONS: DelegatePermission[] = [
 
 /** TanStack Query key for the seller-admins list */
 export const SELLER_ADMINS_QUERY_KEY = "seller-admins";
+
+/** Permission required to manage seller admins / delegates */
+export const SELLER_ADMINS_READ_PERMISSION = "seller_admins.read";

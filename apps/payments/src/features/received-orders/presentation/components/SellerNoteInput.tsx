@@ -20,14 +20,14 @@ export function SellerNoteInput({
 }: SellerNoteInputProps) {
   const t = useTranslations("receivedOrders");
   const [note, setNote] = useState("");
-  const [error, setError] = useState(false);
+  const [hasError, setHasError] = useState(false);
 
   function handleSubmit() {
     if (!note.trim()) {
-      setError(true);
+      setHasError(true);
       return;
     }
-    setError(false);
+    setHasError(false);
     onSubmit(note.trim());
   }
 
@@ -37,7 +37,7 @@ export function SellerNoteInput({
         value={note}
         onChange={(e) => {
           setNote(e.target.value);
-          if (error) setError(false);
+          if (hasError) setHasError(false);
         }}
         placeholder={placeholder ?? t("notePlaceholder")}
         aria-label={t("notePlaceholder")}
@@ -45,7 +45,7 @@ export function SellerNoteInput({
         disabled={isPending}
         {...tid("seller-note-textarea")}
       />
-      {error && (
+      {hasError && (
         <p className="text-xs font-bold text-destructive">
           {t("noteRequired")}
         </p>

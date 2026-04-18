@@ -3,7 +3,7 @@
 import { AlertTriangle } from "lucide-react";
 import { useCallback, useState } from "react";
 import { tid } from "shared";
-import { Button } from "ui";
+import { Button, cn } from "ui";
 
 interface ConfirmActionPanelProps {
   warning: string;
@@ -26,11 +26,11 @@ export function ConfirmActionPanel({
   onCancel,
   isPending,
 }: ConfirmActionPanelProps) {
-  const [checked, setChecked] = useState(false);
+  const [isChecked, setIsChecked] = useState(false);
 
   const handleConfirm = useCallback(() => {
-    if (checked) onConfirm();
-  }, [checked, onConfirm]);
+    if (isChecked) onConfirm();
+  }, [isChecked, onConfirm]);
 
   const borderColor =
     variant === "approve" ? "border-success/50" : "border-destructive/50";
@@ -42,7 +42,7 @@ export function ConfirmActionPanel({
 
   return (
     <div
-      className={`space-y-3 border-strong ${borderColor} ${bgColor} p-4`}
+      className={cn("space-y-3 border-strong p-4", borderColor, bgColor)}
       {...tid("confirm-action-panel")}
     >
       {/* Warning */}
@@ -55,8 +55,8 @@ export function ConfirmActionPanel({
       <label className="flex cursor-pointer items-start gap-2">
         <input
           type="checkbox"
-          checked={checked}
-          onChange={(e) => setChecked(e.target.checked)}
+          checked={isChecked}
+          onChange={(e) => setIsChecked(e.target.checked)}
           className="mt-0.5 size-4 shrink-0 accent-foreground"
           {...tid("confirm-checkbox")}
         />
@@ -68,8 +68,11 @@ export function ConfirmActionPanel({
         <Button
           type="button"
           onClick={handleConfirm}
-          disabled={!checked || isPending}
-          className={`button-brutal rounded-lg border-strong border-foreground px-4 py-1.5 font-display text-xs font-bold uppercase tracking-wider disabled:cursor-not-allowed disabled:opacity-40 ${btnBg}`}
+          disabled={!isChecked || isPending}
+          className={cn(
+            "button-brutal rounded-lg border-strong border-foreground px-4 py-1.5 font-display text-xs font-bold uppercase tracking-wider disabled:cursor-not-allowed disabled:opacity-40",
+            btnBg,
+          )}
           {...tid("confirm-action-submit")}
         >
           {isPending ? "..." : confirmLabel}

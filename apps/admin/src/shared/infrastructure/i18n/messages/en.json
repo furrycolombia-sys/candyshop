@@ -179,6 +179,13 @@
       "custom": "Custom",
       "none": "None"
     },
+    "filters": {
+      "allRoles": "All Roles",
+      "allItems": "All Items",
+      "hasItems": "Has Items",
+      "noItems": "No Items"
+    },
+    "exportCsv": "Export Selected as CSV",
     "groups": {
       "products": "Products",
       "reviews": "Reviews",

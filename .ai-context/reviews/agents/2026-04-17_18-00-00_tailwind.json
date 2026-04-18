@@ -1,0 +1,155 @@
+{
+  "agent": "tailwind",
+  "timestamp": "2026-04-17T18:00:00",
+  "scope": "apps/",
+  "summary": {
+    "filesAnalyzed": 28,
+    "issuesFound": 9,
+    "critical": 0,
+    "warning": 4,
+    "suggestion": 5,
+    "info": 0
+  },
+  "issues": [
+    {
+      "id": "STYLE-001",
+      "severity": "warning",
+      "title": "Missing @source directive for app sources in admin/globals.css",
+      "file": "apps/admin/src/app/globals.css",
+      "line": 5,
+      "currentClasses": "@source \"../../../../packages/ui/src/**/*.{ts,tsx}\";",
+      "suggestedClasses": "@source \"../../../**/*.{ts,tsx}\";\n@source \"../../../../packages/ui/src/**/*.{ts,tsx}\";",
+      "description": "The admin app globals.css is missing the @source directive for its own app source files. apps/landing, apps/playground, and apps/auth all include @source \"../../../**/*.{ts,tsx}\" before the ui package source. Without this, Tailwind v4 JIT may not generate CSS for classes only used within this app's own files.",
+      "rule": "css-consistency.md#required-ui-package-scanning",
+      "fix": "Add @source \"../../../**/*.{ts,tsx}\"; on line 5, before the existing ui @source directive. (Note: the exact relative path may be \"../../../**\" or \"../**\" depending on the glob glob base — match the pattern from apps/landing which uses \"../\")"
+    },
+    {
+      "id": "STYLE-002",
+      "severity": "warning",
+      "title": "Missing @source directive for app sources in payments/globals.css",
+      "file": "apps/payments/src/app/globals.css",
+      "line": 5,
+      "currentClasses": "@source \"../../../../packages/ui/src/**/*.{ts,tsx}\";",
+      "suggestedClasses": "@source \"../../../**/*.{ts,tsx}\";\n@source \"../../../../packages/ui/src/**/*.{ts,tsx}\";",
+      "description": "The payments app globals.css is missing the @source directive for its own app source files. The reference apps (landing, playground, auth) include both directives. Tailwind v4 JIT may silently skip classes only present in this app.",
+      "rule": "css-consistency.md#required-ui-package-scanning",
+      "fix": "Add @source \"../../../**/*.{ts,tsx}\"; before the existing ui @source directive to ensure all app classes are scanned."
+    },
+    {
+      "id": "STYLE-003",
+      "severity": "warning",
+      "title": "Missing @source directive for app sources in store/globals.css",
+      "file": "apps/store/src/app/globals.css",
+      "line": 5,
+      "currentClasses": "@source \"../../../../packages/ui/src/**/*.{ts,tsx}\";",
+      "suggestedClasses": "@source \"../../../**/*.{ts,tsx}\";\n@source \"../../../../packages/ui/src/**/*.{ts,tsx}\";",
+      "description": "The store app globals.css only scans the ui package but not the store app's own source files. While Next.js + Tailwind v4 may infer some sources automatically, the pattern used in landing/playground/auth (explicit dual @source) is the project standard.",
+      "rule": "css-consistency.md#required-ui-package-scanning",
+      "fix": "Add @source \"../../../**/*.{ts,tsx}\"; before the existing ui @source directive."
+    },
+    {
+      "id": "STYLE-004",
+      "severity": "warning",
+      "title": "Missing @source directive for app sources in studio/globals.css",
+      "file": "apps/studio/src/app/globals.css",
+      "line": 5,
+      "currentClasses": "@source \"../../../../packages/ui/src/**/*.{ts,tsx}\";",
+      "suggestedClasses": "@source \"../../../**/*.{ts,tsx}\";\n@source \"../../../../packages/ui/src/**/*.{ts,tsx}\";",
+      "description": "The studio app globals.css only scans the ui package but not the studio app's own source files. This is inconsistent with the landing, playground, and auth apps which include both @source directives.",
+      "rule": "css-consistency.md#required-ui-package-scanning",
+      "fix": "Add @source \"../../../**/*.{ts,tsx}\"; before the existing ui @source directive."
+    },
+    {
+      "id": "STYLE-005",
+      "severity": "suggestion",
+      "title": "Template literal instead of cn() for conditional className interpolation",
+      "file": "apps/landing/src/features/home/presentation/components/FeaturesSection.tsx",
+      "line": 100,
+      "currentClasses": "className={`group shadow-brutal-lg ... ${tilt} xl:even:translate-y-6`}",
+      "suggestedClasses": "className={cn(\"group shadow-brutal-lg ... xl:even:translate-y-6\", tilt)}",
+      "description": "Template literals are used to compose className with the dynamic `tilt` variable. The project standard is to use cn() for class composition and conditional classes. Using template literals bypasses cn()'s merging logic and can produce incorrect results if tilt contains conflicting Tailwind classes.",
+      "rule": "tailwind.md#use-cn-for-conditional-classes",
+      "fix": "Replace the template literal with cn(\"static classes\", tilt) to use the project-standard cn() utility."
+    },
+    {
+      "id": "STYLE-006",
+      "severity": "suggestion",
+      "title": "Template literal instead of cn() for conditional className interpolation",
+      "file": "apps/store/src/features/products/presentation/components/ProductCardImage.tsx",
+      "line": 55,
+      "currentClasses": "className={`font-display font-extrabold uppercase tracking-widest opacity-40 ${isFeatured ? \"text-2xl sm:text-4xl\" : \"text-lg\"}`}",
+      "suggestedClasses": "className={cn(\"font-display font-extrabold uppercase tracking-widest opacity-40\", isFeatured ? \"text-2xl sm:text-4xl\" : \"text-lg\")}",
+      "description": "A conditional class is expressed as a template literal ternary instead of using cn(). cn() is already imported in this file (line 4), so this is inconsistent with the surrounding code.",
+      "rule": "tailwind.md#use-cn-for-conditional-classes",
+      "fix": "Use cn() with the ternary as a second argument: cn(\"font-display font-extrabold uppercase tracking-widest opacity-40\", isFeatured ? \"text-2xl sm:text-4xl\" : \"text-lg\")"
+    },
+    {
+      "id": "STYLE-007",
+      "severity": "suggestion",
+      "title": "Template literal instead of cn() for className with dynamic variable",
+      "file": "apps/studio/src/features/products/presentation/components/inline-editor/IconPicker.tsx",
+      "line": 58,
+      "currentClasses": "className={`w-fit border-strong border-foreground ${themeBg} p-2 shadow-brutal-sm cursor-pointer transition-opacity hover:opacity-80`}",
+      "suggestedClasses": "className={cn(\"w-fit border-strong border-foreground p-2 shadow-brutal-sm cursor-pointer transition-opacity hover:opacity-80\", themeBg)}",
+      "description": "Template literal is used to combine static classes with the dynamic `themeBg` variable. The cn() utility is already imported in the file (or available from 'ui') and should be used for class composition.",
+      "rule": "tailwind.md#use-cn-for-conditional-classes",
+      "fix": "Replace template literal with cn(\"static classes\", themeBg)."
+    },
+    {
+      "id": "STYLE-008",
+      "severity": "suggestion",
+      "title": "Template literal instead of cn() for ternary conditional className",
+      "file": "apps/studio/src/features/products/presentation/components/inline-editor/IconPicker.tsx",
+      "line": 93,
+      "currentClasses": "className={`flex items-center justify-center size-8 transition-colors ${isSelected ? selectedClass : \"hover:bg-muted\"}`}",
+      "suggestedClasses": "className={cn(\"flex items-center justify-center size-8 transition-colors\", isSelected ? selectedClass : \"hover:bg-muted\")}",
+      "description": "A ternary conditional class is expressed in a template literal. This bypasses cn()'s merge logic and should be replaced with cn().",
+      "rule": "tailwind.md#use-cn-for-conditional-classes",
+      "fix": "Use cn(\"flex items-center justify-center size-8 transition-colors\", isSelected ? selectedClass : \"hover:bg-muted\")"
+    },
+    {
+      "id": "STYLE-009",
+      "severity": "suggestion",
+      "title": "Template literal instead of cn() for className with dynamic variable",
+      "file": "apps/studio/src/features/products/presentation/components/inline-editor/InlineHero.tsx",
+      "line": 125,
+      "currentClasses": "className={`bg-background ${badgeBase} text-muted-foreground`}",
+      "suggestedClasses": "className={cn(\"bg-background text-muted-foreground\", badgeBase)}",
+      "description": "Template literal merges `badgeBase` (a string variable defined just above) with static classes. The cn() utility should be used for consistency.",
+      "rule": "tailwind.md#use-cn-for-conditional-classes",
+      "fix": "Replace with cn(\"bg-background text-muted-foreground\", badgeBase)."
+    }
+  ],
+  "patterns": [
+    {
+      "type": "good",
+      "description": "No hardcoded hex colors (#rrggbb) found in any .tsx files — all colors are semantic tokens or CSS variables.",
+      "files": "apps/**/*.tsx"
+    },
+    {
+      "type": "good",
+      "description": "No direct Tailwind palette colors (bg-blue-500, text-red-400, etc.) found in any .tsx files — semantic color tokens are consistently used.",
+      "files": "apps/**/*.tsx"
+    },
+    {
+      "type": "good",
+      "description": "globals.css files do not use hsl(), rgb(), or hex color formats — all color definitions use OKLCH (via the imported 'ui/globals') or are absent from app-level globals.css.",
+      "files": "apps/**/globals.css"
+    },
+    {
+      "type": "good",
+      "description": "All apps correctly include the @source directive for the shared ui package.",
+      "files": "apps/**/globals.css"
+    },
+    {
+      "type": "info",
+      "description": "All dynamic style={{}} usages in store, studio, landing apps are justified — they use runtime CSS variable values from the CategoryTheme system (e.g., 'var(--pink)', 'color-mix(...)') that cannot be expressed as static Tailwind classes. This pattern is acceptable.",
+      "files": "apps/store/src/features/**, apps/studio/src/features/**, apps/landing/src/features/**"
+    },
+    {
+      "type": "info",
+      "description": "CSS consistency: admin, payments, store, studio apps delegate all theme variables to the 'ui/globals' import rather than defining their own CSS variables — this is consistent and means the CSS variables are centralized in packages/ui.",
+      "files": "apps/admin, apps/payments, apps/store, apps/studio"
+    }
+  ]
+}

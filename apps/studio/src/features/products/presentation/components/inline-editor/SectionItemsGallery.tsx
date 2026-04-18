@@ -15,7 +15,7 @@ import { InlineAddButton } from "./InlineAddButton";
 import { InlineRemoveButton } from "./InlineRemoveButton";
 import type { SectionFieldArray } from "./sectionItemTypes";
 
-import { useLangToggle } from "@/features/products/application/useLangToggle";
+import { useLangToggle } from "@/features/products/application/hooks/useLangToggle";
 import {
   ITEM_DROPPABLE_PREFIX,
   SECTION_I18N_NAMESPACE,
@@ -58,28 +58,22 @@ function GalleryItemEditor({
     <div
       ref={dragProvided.innerRef}
       {...dragProvided.draggableProps}
-      className="relative flex flex-col gap-2"
+      className="flex items-start gap-3 border-strong border-foreground bg-background p-3 shadow-brutal-sm"
       {...tid(`section-${sectionIndex}-item-${itemIndex}`)}
     >
-      {/* Remove */}
-      <InlineRemoveButton
-        onClick={onRemove}
-        ariaLabel={t("removeItem", { number: itemIndex + 1 })}
-      />
-
       {/* Drag handle */}
       <div
         {...dragProvided.dragHandleProps}
-        className="absolute left-1 top-1 z-10 cursor-grab rounded-sm bg-background/80 p-0.5 text-muted-foreground hover:text-foreground"
+        className="mt-1 shrink-0 cursor-grab text-muted-foreground hover:text-foreground"
         aria-label={t("dragToReorder")}
       >
-        <GripVertical className="size-3" />
+        <GripVertical className="size-4" />
       </div>
 
       {/* eslint-disable @next/next/no-img-element -- studio editor uses raw img for arbitrary user URLs */}
-      {/* Image preview / placeholder — mirrors store GallerySection */}
+      {/* Image thumbnail */}
       <div
-        className="relative flex h-44 items-center justify-center overflow-hidden border-strong border-foreground shadow-brutal-sm"
+        className="size-20 shrink-0 overflow-hidden border-strong border-foreground"
         style={{ backgroundColor: theme.bg }}
       >
         {imageUrl ? (
@@ -89,44 +83,55 @@ function GalleryItemEditor({
             className="size-full object-cover"
           />
         ) : (
-          <ImageIcon className="size-8 text-foreground/20" />
+          <div className="flex size-full items-center justify-center">
+            <ImageIcon className="size-5 text-foreground/20" />
+          </div>
         )}
       </div>
       {/* eslint-enable @next/next/no-img-element */}
 
-      {/* Image URL input */}
-      <AutoTextarea
-        ref={imageField.field.ref}
-        name={imageField.field.name}
-        value={imageUrl}
-        onChange={imageField.field.onChange}
-        onBlur={imageField.field.onBlur}
-        placeholder={t("imageUrl")}
-        className="border-none bg-transparent p-0 text-ui-xs text-muted-foreground shadow-none focus-visible:ring-0"
-        {...tid(`section-item-image-${sectionIndex}-${itemIndex}`)}
-      />
-
-      {/* Lang toggle + caption */}
-      <div className="flex items-center gap-1 px-1">
-        <button
-          type="button"
-          onClick={toggleLang}
-          className="shrink-0 rounded-sm border-2 border-foreground/30 px-1 py-0.5 font-display text-ui-xs font-extrabold uppercase tracking-widest text-muted-foreground hover:border-foreground hover:text-foreground"
-          {...tid(`section-item-lang-toggle-${sectionIndex}-${itemIndex}`)}
-        >
-          {lang.toUpperCase()}
-        </button>
+      {/* Fields */}
+      <div className="flex min-w-0 flex-1 flex-col gap-2">
+        {/* Image URL input */}
         <AutoTextarea
-          ref={titleField.field.ref}
-          name={titleField.field.name}
-          value={String(titleField.field.value ?? "")}
-          onChange={titleField.field.onChange}
-          onBlur={titleField.field.onBlur}
-          placeholder={`${t("itemTitle")} (${lang.toUpperCase()})`}
-          className="flex-1 border-none bg-transparent p-0 text-xs font-medium text-muted-foreground shadow-none focus-visible:ring-0"
-          {...tid(`section-item-title-${sectionIndex}-${itemIndex}`)}
+          ref={imageField.field.ref}
+          name={imageField.field.name}
+          value={imageUrl}
+          onChange={imageField.field.onChange}
+          onBlur={imageField.field.onBlur}
+          placeholder={t("imageUrl")}
+          className="border-none bg-transparent p-0 text-ui-xs text-muted-foreground shadow-none focus-visible:ring-0"
+          {...tid(`section-item-image-${sectionIndex}-${itemIndex}`)}
         />
+
+        {/* Lang toggle + caption */}
+        <div className="flex items-center gap-1">
+          <button
+            type="button"
+            onClick={toggleLang}
+            className="shrink-0 rounded-sm border-2 border-foreground/30 px-1 py-0.5 font-display text-ui-xs font-extrabold uppercase tracking-widest text-muted-foreground hover:border-foreground hover:text-foreground"
+            {...tid(`section-item-lang-toggle-${sectionIndex}-${itemIndex}`)}
+          >
+            {lang.toUpperCase()}
+          </button>
+          <AutoTextarea
+            ref={titleField.field.ref}
+            name={titleField.field.name}
+            value={String(titleField.field.value ?? "")}
+            onChange={titleField.field.onChange}
+            onBlur={titleField.field.onBlur}
+            placeholder={`${t("itemTitle")} (${lang.toUpperCase()})`}
+            className="flex-1 border-none bg-transparent p-0 text-xs font-medium text-muted-foreground shadow-none focus-visible:ring-0"
+            {...tid(`section-item-title-${sectionIndex}-${itemIndex}`)}
+          />
+        </div>
       </div>
+
+      {/* Remove */}
+      <InlineRemoveButton
+        onClick={onRemove}
+        ariaLabel={t("removeItem", { number: itemIndex + 1 })}
+      />
     </div>
   );
   /* eslint-enable react-hooks/refs */
@@ -155,14 +160,14 @@ export function SectionItemsGallery({
     <div className="flex flex-col gap-3 p-4">
       <Droppable
         droppableId={`${ITEM_DROPPABLE_PREFIX}${sectionIndex}`}
-        type="ITEM"
+        type={`${ITEM_DROPPABLE_PREFIX}${sectionIndex}`}
       >
         {/* eslint-disable sonarjs/no-nested-functions -- @hello-pangea/dnd requires render-prop pattern */}
         {(provided) => (
           <div
             ref={provided.innerRef}
             {...provided.droppableProps}
-            className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4"
+            className="flex flex-col gap-2"
           >
             {fields.map((field, itemIndex) => (
               <Draggable

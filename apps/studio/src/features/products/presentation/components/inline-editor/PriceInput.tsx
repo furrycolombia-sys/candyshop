@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef } from "react";
 import { tid } from "shared";
+import { cn } from "ui";
 
 /** Strip everything except digits */
 function digitsOnly(value: string): string {
@@ -54,7 +55,7 @@ export function PriceInput({
     <span className="relative inline-block">
       <span
         ref={measureRef}
-        className={`invisible absolute whitespace-pre ${className}`}
+        className={cn("invisible absolute whitespace-pre", className)}
         aria-hidden="true"
       />
       <input
@@ -72,7 +73,10 @@ export function PriceInput({
         }}
         onBlur={onBlur}
         placeholder={placeholder}
-        className={`bg-transparent outline-none placeholder:text-muted-foreground/30 ${className}`}
+        className={cn(
+          "bg-transparent outline-none placeholder:text-muted-foreground/30",
+          className,
+        )}
         {...tid(testId)}
       />
     </span>

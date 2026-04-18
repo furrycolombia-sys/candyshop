@@ -6,12 +6,12 @@ import { useQueryStates } from "nuqs";
 import { useEffect, useState } from "react";
 import { tid } from "shared";
 
-import { useLogExport } from "@/features/audit/application/useAuditLog";
+import { useLogExport } from "@/features/audit/application/hooks/useAuditLog";
 import { useUsers } from "@/features/users/application/hooks/useUsers";
 import {
   exportUsersToCsv,
   downloadCsv,
-} from "@/features/users/application/utils/export-csv";
+} from "@/features/users/application/utils/exportCsv";
 import { USER_SEARCH_DEBOUNCE_MS } from "@/features/users/domain/constants";
 import { usersSearchParams } from "@/features/users/domain/searchParams";
 import { UserTable } from "@/features/users/presentation/components/UserTable";
@@ -27,8 +27,15 @@ export function UsersPageContent() {
   const { mutate: logExport } = useLogExport();
 
   const [selectedUsers, setSelectedUsers] = useState<Set<string>>(new Set());
-  const [roleFilter, setRoleFilter] = useState("all");
-  const [itemFilter, setItemFilter] = useState("all");
+
+  // Sync external URL changes back to local state (equality guard breaks debounce→URL→sync cycle)
+  useEffect(() => {
+    const urlValue = params.search ?? "";
+    if (urlValue !== filterInput) {
+      setFilterInput(urlValue);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [params.search]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -84,10 +91,14 @@ export function UsersPageContent() {
           onSelectUsersChange={setSelectedUsers}
           filterInput={filterInput}
           onFilterInputChange={setFilterInput}
-          roleFilter={roleFilter}
-          onRoleFilterChange={setRoleFilter}
-          itemFilter={itemFilter}
-          onItemFilterChange={setItemFilter}
+          roleFilter={params.roleFilter}
+          onRoleFilterChange={(v) =>
+            setParams({ roleFilter: v }, { history: "replace" })
+          }
+          itemFilter={params.itemFilter}
+          onItemFilterChange={(v) =>
+            setParams({ itemFilter: v }, { history: "replace" })
+          }
           canExport={canExport}
           onExportCsv={handleExportCsv}
         />

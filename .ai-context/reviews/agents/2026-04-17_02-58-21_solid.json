@@ -1,0 +1,83 @@
+{
+  "agent": "solid",
+  "timestamp": "2026-04-17T02:58:21",
+  "scope": "apps/",
+  "summary": {
+    "filesAnalyzed": 14,
+    "issuesFound": 2,
+    "critical": 0,
+    "warning": 1,
+    "suggestion": 1,
+    "info": 0
+  },
+  "issues": [
+    {
+      "id": "SOLID-001",
+      "severity": "warning",
+      "principle": "Interface Segregation (I)",
+      "file": "apps/admin/src/features/users/presentation/components/UserTable.tsx",
+      "description": "UserTableProps has 17 props covering filtering, selection, pagination, and export concerns. A consumer needing only rendering has to accept handler props for features it may not use (e.g., onExportCsv, onSelectUsersChange). Consider splitting into focused sub-interfaces or delegating filter/selection state to a container hook so the presentational table only receives data + minimal callbacks.",
+      "props": [
+        "users",
+        "total",
+        "isLoading",
+        "page",
+        "onPageChange",
+        "onSelectUser",
+        "selectedUsers",
+        "onSelectUsersChange",
+        "filterInput",
+        "onFilterInputChange",
+        "roleFilter",
+        "onRoleFilterChange",
+        "itemFilter",
+        "onItemFilterChange",
+        "canExport",
+        "onExportCsv"
+      ],
+      "recommendation": "Extract filter/selection state to a useUserTableState hook and pass a smaller, focused props set to the table component. Alternatively, split into UserTableFilters, UserTableBody, and UserTablePagination sub-components each with narrow interfaces."
+    },
+    {
+      "id": "SOLID-002",
+      "severity": "suggestion",
+      "principle": "Open/Closed (O)",
+      "file": "apps/payments/src/features/payment-methods/presentation/components/BlockEditor.tsx",
+      "description": "The BlockEditor switch on block.type (5 cases: text, image, video, link, url) is an OCP concern — adding a new block type requires modifying this file. The current count (5) is below the >8 critical threshold, but the pattern is established enough that a block-type registry (e.g., a blockEditors map keyed by type) would make extensions additive rather than modificatory. The related DisplayBlockRenderer has the same pattern.",
+      "recommendation": "Consider a registry map: const BLOCK_EDITORS: Record<BlockType, ComponentType<...>> = { text: TextBlockEditor, image: ImageBlockEditor, ... }. New types then only require adding an entry, not editing the switch. Only worth doing if the block type list is expected to grow."
+    }
+  ],
+  "refactoredFilesVerification": [
+    {
+      "file": "apps/studio/src/features/products/presentation/components/ProductTableRow.tsx",
+      "status": "COMPLIANT",
+      "notes": "Mutations fully removed. Uses onToggle(field, value) and onDelete() callbacks. No direct mutation hooks. SRP is clean — pure presentation with delegated actions."
+    },
+    {
+      "file": "apps/studio/src/features/products/presentation/components/ProductTable.tsx",
+      "status": "COMPLIANT",
+      "notes": "Correctly holds the mutation hooks (useReorderProducts, useToggleProduct, useDeleteProduct) and passes callbacks down to ProductTableRow. Container/presenter split is correct."
+    },
+    {
+      "file": "apps/payments/src/features/payment-methods/presentation/pages/PaymentMethodsPageContent.tsx",
+      "status": "COMPLIANT",
+      "notes": "All data-fetching and mutation logic delegated to usePaymentMethodsManager. Component is now a thin presenter consuming the hook's return values."
+    },
+    {
+      "file": "apps/payments/src/features/payment-methods/application/hooks/usePaymentMethodsManager.ts",
+      "status": "COMPLIANT",
+      "notes": "New hook correctly encapsulates all data-fetching, mutations, and UI state (expandedId). SRP is appropriate — single responsibility of managing the payment methods page state. Uses useTranslations for one confirm dialog string; acceptable."
+    }
+  ],
+  "patterns": [
+    {
+      "name": "Switch-based renderer pattern",
+      "description": "Multiple components (DisplayBlockRenderer, BlockEditor, SectionRenderer, SectionCard, ReceivedStatusBadge, StatusRow) use switch statements for type-to-component or type-to-config mapping. All are 2–5 cases — below the >8 OCP threshold. The pattern is intentional and consistent across the codebase. Only flagging BlockEditor as a suggestion given it has 5 cases and is likely to grow.",
+      "verdict": "Acceptable — not a SOLID violation at current scale."
+    },
+    {
+      "name": "Application hooks with Supabase access",
+      "description": "useSellerProfiles, useProducts, and useDelegateSearch use Supabase directly in application/hooks via useSupabase()/createBrowserSupabaseClient. This is within the expected architecture — application hooks ARE the infrastructure adapter in this project's layer model. No presentation-layer direct API calls were found.",
+      "verdict": "Compliant — DIP is respected through hook abstraction."
+    }
+  ]
+}

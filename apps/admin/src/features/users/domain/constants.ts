@@ -153,6 +153,8 @@ export const PERMISSION_TEMPLATES: Record<string, string[]> = {
 /** @deprecated Import from `@/shared/domain/constants` instead */
 export { ADMIN_APP_ACCESS_KEYS } from "@/shared/domain/constants";
 
+export const SELLER_ADMINS_READ_PERMISSION = "seller_admins.read";
+
 export const USER_PERMISSIONS_QUERY_KEY = "user-permissions";
 export const USERS_QUERY_KEY = "users";
 export const USER_PROFILE_QUERY_KEY = "user-profile";
@@ -179,10 +181,12 @@ export const USER_PROFILE_SELECT_COLUMNS =
 /** Maximum characters for user initials */
 export const MAX_INITIALS_LENGTH = 2;
 
-export const MS_PER_SECOND = 1000;
-export const SECONDS_PER_MINUTE = 60;
-export const MINUTES_PER_HOUR = 60;
-export const HOURS_PER_DAY = 24;
+export {
+  MS_PER_SECOND,
+  SECONDS_PER_MINUTE,
+  MINUTES_PER_HOUR,
+  HOURS_PER_DAY,
+} from "shared/constants/time";
 export const DAYS_PER_MONTH = 30;
 export const DAYS_PER_YEAR = 365;
 export const MONTHS_PER_YEAR = 12;
