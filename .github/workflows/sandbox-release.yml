@@ -22,6 +22,9 @@ jobs:
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v6
+        with:
+          version: ${{ env.PNPM_VERSION }}
+          package_json_file: apps/store/package.json
 
       - name: Setup Node.js
         uses: actions/setup-node@v6
@@ -118,4 +121,3 @@ jobs:
               ref: 'staging',
             });
             console.log('Deploy workflow triggered on staging branch');
-
