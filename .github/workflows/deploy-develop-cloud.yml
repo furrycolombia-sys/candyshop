@@ -1,0 +1,136 @@
+name: Deploy Develop Cloud
+
+on:
+  push:
+    branches:
+      - develop
+    paths:
+      - "apps/**"
+      - "packages/**"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - "docker/**"
+      - "scripts/server/**"
+      - ".github/workflows/deploy-develop-cloud.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-develop-cloud
+  cancel-in-progress: false
+
+jobs:
+  ci-gate:
+    name: CI Gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Type check
+        run: pnpm run typecheck
+
+      - name: Lint
+        run: pnpm run lint
+
+      - name: Unit tests
+        run: pnpm run test
+
+  deploy:
+    name: Deploy Develop to Cloud
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: ci-gate
+    environment: develop-cloud
+    env:
+      DEVELOP_HOST_PORT: ${{ vars.DEVELOP_HOST_PORT || '9092' }}
+      DEVELOP_DEPLOY_DIR: ${{ vars.DEVELOP_DEPLOY_DIR || '/home/furrycolombia/candyshop-develop' }}
+      DEVELOP_CONTAINER_NAME: ${{ vars.DEVELOP_CONTAINER_NAME || 'candyshop-develop' }}
+      DEVELOP_IMAGE_NAME: ${{ vars.DEVELOP_IMAGE_NAME || 'candyshop-develop' }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Install cloudflared
+        run: |
+          curl -fsSL https://pkg.cloudflare.com/cloudflare-main.gpg | sudo tee /usr/share/keyrings/cloudflare-main.gpg > /dev/null
+          echo "deb [signed-by=/usr/share/keyrings/cloudflare-main.gpg] https://pkg.cloudflare.com/cloudflared $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/cloudflared.list
+          sudo apt-get update -qq && sudo apt-get install -y -qq cloudflared
+
+      - name: Setup SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.DEVELOP_SERVER_SSH_KEY }}" | tr -d '\r' > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          cat >> ~/.ssh/config << EOF
+          Host ${{ secrets.DEVELOP_SERVER_HOST }}
+            HostName ${{ secrets.DEVELOP_SERVER_HOST }}
+            User ${{ secrets.DEVELOP_SERVER_USER }}
+            IdentityFile ~/.ssh/deploy_key
+            StrictHostKeyChecking no
+            ProxyCommand cloudflared access ssh --hostname %h
+          EOF
+
+      - name: Write ephemeral env file on server
+        run: |
+          ssh ${{ secrets.DEVELOP_SERVER_HOST }} \
+            'cat > /tmp/.candyshop-develop.env << ENVEOF
+          SITE_PROD_CONTAINER_NAME=${{ env.DEVELOP_CONTAINER_NAME }}
+          SITE_PROD_IMAGE_NAME=${{ env.DEVELOP_IMAGE_NAME }}
+          HOST_PORT=${{ env.DEVELOP_HOST_PORT }}
+          APP_INTERNAL_ORIGIN=http://${{ env.DEVELOP_CONTAINER_NAME }}:80
+          TARGET_ENV=develop
+          STANDALONE=true
+          BASE_PATH_PREFIX=
+          NEXT_PUBLIC_SUPABASE_URL=${{ secrets.DEVELOP_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.DEVELOP_SUPABASE_ANON_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY=${{ secrets.DEVELOP_SUPABASE_SERVICE_ROLE_KEY }}
+          NEXT_PUBLIC_STORE_URL=${{ secrets.DEVELOP_BASE_URL }}/store
+          NEXT_PUBLIC_ADMIN_URL=${{ secrets.DEVELOP_BASE_URL }}/admin
+          NEXT_PUBLIC_AUTH_URL=${{ secrets.DEVELOP_BASE_URL }}/auth
+          NEXT_PUBLIC_AUTH_HOST_URL=${{ secrets.DEVELOP_BASE_URL }}/auth
+          NEXT_PUBLIC_LANDING_URL=${{ secrets.DEVELOP_BASE_URL }}
+          NEXT_PUBLIC_PAYMENTS_URL=${{ secrets.DEVELOP_BASE_URL }}/payments
+          NEXT_PUBLIC_PLAYGROUND_URL=${{ secrets.DEVELOP_BASE_URL }}/playground
+          NEXT_PUBLIC_STUDIO_URL=${{ secrets.DEVELOP_BASE_URL }}/studio
+          NEXT_PUBLIC_ENABLE_MOCKS=true
+          ENVEOF'
+
+      - name: Copy deploy script to server
+        run: |
+          cat scripts/server/deploy.sh | ssh ${{ secrets.DEVELOP_SERVER_HOST }} \
+            'cat > /tmp/deploy-cloud.sh && chmod +x /tmp/deploy-cloud.sh'
+
+      - name: Run deployment
+        run: |
+          ssh ${{ secrets.DEVELOP_SERVER_HOST }} \
+            "REPO_URL='https://github.com/${{ github.repository }}.git' \
+             BRANCH='develop' \
+             ENV_FILE='/tmp/.candyshop-develop.env' \
+             DEPLOY_DIR='${{ env.DEVELOP_DEPLOY_DIR }}' \
+             HEALTH_PATH='/health' \
+             bash /tmp/deploy-cloud.sh"
+
+      - name: Verify deployment
+        run: |
+          ssh ${{ secrets.DEVELOP_SERVER_HOST }} \
+            'curl -sf http://localhost:${{ env.DEVELOP_HOST_PORT }}/health'
+
+      - name: Cleanup
+        if: always()
+        run: |
+          ssh ${{ secrets.DEVELOP_SERVER_HOST }} \
+            'rm -f /tmp/.candyshop-develop.env /tmp/deploy-cloud.sh' 2>/dev/null || true
+          rm -f ~/.ssh/deploy_key

@@ -10,6 +10,7 @@ A multi-seller store and payment platform for selling products, services, ticket
 - [Quick Start](#quick-start)
 - [Development](#development)
 - [Staging](#staging)
+- [Cloud Develop Environment](#cloud-develop-environment)
 - [E2E Testing](#e2e-testing)
 - [Supabase](#supabase)
 - [Secrets](#secrets)
@@ -122,6 +123,49 @@ The Supabase stack is defined in `docker/compose.staging.yml`. On first start it
 ```bash
 docker volume rm candyshop-staging_db-data
 ```
+
+---
+
+## Cloud Develop Environment
+
+`develop` is now wired to a dedicated cloud deployment workflow so collaborators can test from a browser without local installs.
+
+### Deploy trigger
+
+- Automatic on push to `develop` (workflow: `Deploy Develop Cloud`)
+- Manual run from Actions (`workflow_dispatch`)
+
+### Required GitHub environment
+
+Create a GitHub environment named `develop-cloud` and set these secrets:
+
+| Secret                              | Purpose                                                              |
+| ----------------------------------- | -------------------------------------------------------------------- |
+| `DEVELOP_SERVER_HOST`               | SSH hostname through Cloudflare Access                               |
+| `DEVELOP_SERVER_USER`               | SSH username on the server                                           |
+| `DEVELOP_SERVER_SSH_KEY`            | private key used by the deploy workflow                              |
+| `DEVELOP_SUPABASE_URL`              | Supabase Cloud project URL for develop                               |
+| `DEVELOP_SUPABASE_ANON_KEY`         | Supabase anon key for develop                                        |
+| `DEVELOP_SUPABASE_SERVICE_ROLE_KEY` | Supabase service role key for develop                                |
+| `DEVELOP_BASE_URL`                  | Public base URL (example: `https://develop-store.furrycolombia.com`) |
+
+Optional GitHub environment variables (with defaults):
+
+| Variable                 | Default                                 |
+| ------------------------ | --------------------------------------- |
+| `DEVELOP_HOST_PORT`      | `9092`                                  |
+| `DEVELOP_DEPLOY_DIR`     | `/home/furrycolombia/candyshop-develop` |
+| `DEVELOP_CONTAINER_NAME` | `candyshop-develop`                     |
+| `DEVELOP_IMAGE_NAME`     | `candyshop-develop`                     |
+
+### Resulting runtime
+
+- Deploy path on server: from `DEVELOP_DEPLOY_DIR`
+- Container: from `DEVELOP_CONTAINER_NAME`
+- Port: from `DEVELOP_HOST_PORT`
+- Health check: `http://localhost:<DEVELOP_HOST_PORT>/health`
+
+Point a Cloudflare tunnel hostname to `http://127.0.0.1:9092` so the environment is reachable from anywhere.
 
 ---
 

@@ -7,11 +7,12 @@ set -euo pipefail
 # Limits build to half the CPU cores to keep the running site responsive.
 # ==============================================================================
 
-DEPLOY_DIR="/home/furrycolombia/candyshop"
+DEPLOY_DIR="${DEPLOY_DIR:-/home/furrycolombia/candyshop}"
 REPO_URL="${REPO_URL:-https://github.com/furrycolombia-sys/candyshop.git}"
 BRANCH="${BRANCH:-main}"
 ENV_FILE="${ENV_FILE:-/home/furrycolombia/.env.prod}"
-COMPOSE_FILE="$DEPLOY_DIR/docker/compose.yml"
+COMPOSE_FILE="${COMPOSE_FILE:-$DEPLOY_DIR/docker/compose.yml}"
+HEALTH_PATH="${HEALTH_PATH:-/health}"
 LOCKFILE="/tmp/candyshop-deploy.lock"
 MAX_BUILD_CPUS=4
 
@@ -36,7 +37,13 @@ trap 'rm -f "$LOCKFILE"' EXIT
 
 log "Starting deploy at $(date -u +%Y-%m-%dT%H:%M:%SZ)"
 
-# Pull latest code
+# Pull latest code (clone on first deploy)
+if [ ! -d "$DEPLOY_DIR/.git" ]; then
+  log "First deploy - cloning repository..."
+  mkdir -p "$(dirname "$DEPLOY_DIR")"
+  git clone --branch "$BRANCH" --depth 1 "$REPO_URL" "$DEPLOY_DIR"
+fi
+
 cd "$DEPLOY_DIR"
 git remote set-url origin "$REPO_URL" 2>/dev/null || true
 git fetch origin "$BRANCH" --depth 1
@@ -50,6 +57,9 @@ set -o allexport
 # shellcheck disable=SC1090
 source "$ENV_FILE"
 set +o allexport
+
+CONTAINER_NAME="${SITE_PROD_CONTAINER_NAME:-candyshop-prod}"
+HEALTH_PORT="${HOST_PORT:-9090}"
 
 BUILD_ARG_KEYS=(
   NEXT_PUBLIC_SUPABASE_URL
@@ -89,13 +99,13 @@ docker compose -f "$COMPOSE_FILE" --env-file "$ENV_FILE" up -d
 # Wait for health
 log "Waiting for health check..."
 for i in $(seq 1 60); do
-  if curl -sf http://localhost:9090/health > /dev/null 2>&1; then
+  if curl -sf "http://localhost:${HEALTH_PORT}${HEALTH_PATH}" > /dev/null 2>&1; then
     log "Container healthy after ${i}s"
     break
   fi
   if [ "$i" -eq 60 ]; then
     warn "Container not healthy after 60s"
-    docker logs candyshop-prod --tail 20
+    docker logs "$CONTAINER_NAME" --tail 20
   fi
   sleep 1
 done
