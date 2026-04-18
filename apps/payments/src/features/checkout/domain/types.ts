@@ -1,8 +1,8 @@
 /**
  * Checkout feature domain types.
  *
- * CartItem matches the shape stored in the "candystore-cart" cookie
- * by the store app (full product row + quantity).
+ * CartItem is the enriched checkout shape after resolving product IDs from
+ * the "candystore-cart" cookie ({id, quantity}) against the backend.
  */
 
 export interface CartItem {

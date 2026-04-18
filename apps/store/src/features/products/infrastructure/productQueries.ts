@@ -22,3 +22,18 @@ export async function fetchStoreProductById(id: string) {
   if (error) throw error;
   return data;
 }
+
+export async function fetchStoreProductsByIds(ids: string[]) {
+  if (ids.length === 0) return [];
+
+  const supabase = createBrowserSupabaseClient();
+  const uniqueIds = [...new Set(ids)];
+  const { data, error } = await supabase
+    .from("products")
+    .select("*")
+    .in("id", uniqueIds)
+    .eq("is_active", true);
+
+  if (error) throw error;
+  return data ?? [];
+}
