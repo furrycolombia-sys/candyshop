@@ -10,7 +10,6 @@ export function useRecentActivity() {
   const supabase = useSupabase();
 
   return useQuery({
-    // eslint-disable-next-line @tanstack/query/exhaustive-deps -- supabase client is not serializable and is stable (memoized above)
     queryKey: [RECENT_ACTIVITY_QUERY_KEY],
     queryFn: () => fetchRecentActivity(supabase),
     staleTime: STALE_TIME_MS,

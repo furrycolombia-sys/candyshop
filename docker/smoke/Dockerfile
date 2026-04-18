@@ -7,7 +7,7 @@
 # =============================================================================
 
 # ── Stage 1: install deps ─────────────────────────────────────────────────────
-FROM node:22-alpine AS deps
+FROM node:24-alpine AS deps
 RUN corepack enable && corepack prepare pnpm@latest --activate
 WORKDIR /app
 
@@ -69,7 +69,7 @@ RUN pnpm --filter store run build && \
     pnpm --filter studio run build
 
 # ── Stage 3: runner ───────────────────────────────────────────────────────────
-FROM node:22-alpine AS runner
+FROM node:24-alpine AS runner
 
 RUN apk add --no-cache nginx supervisor && \
     addgroup --system --gid 1001 nodejs && \
