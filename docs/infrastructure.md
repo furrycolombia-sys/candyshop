@@ -482,7 +482,6 @@ docker compose -f ~/candyshop/docker/compose.yml --env-file ~/.env.prod up -d --
 
 ```bash
 TARGET_ENV=prod \
-PLAYWRIGHT_USE_EXISTING_STACK=true \
 pnpm --filter store exec playwright test --reporter=list
 ```
 

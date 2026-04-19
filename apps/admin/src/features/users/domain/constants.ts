@@ -72,6 +72,7 @@ export const PERMISSION_GROUPS: PermissionGroup[] = [
       "user_permissions.read",
       "user_permissions.update",
       "user_permissions.delete",
+      "users.export",
     ],
   },
   {
