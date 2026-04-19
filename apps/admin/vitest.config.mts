@@ -1,5 +1,6 @@
 import { defineConfig } from "vitest/config";
 import react from "@vitejs/plugin-react";
+import path from "node:path";
 import { createVitestAliases } from "../../vitest.aliases";
 
 export default defineConfig({
@@ -56,6 +57,11 @@ export default defineConfig({
     bail: 0,
   },
   resolve: {
-    alias: createVitestAliases(__dirname),
+    alias: {
+      ...createVitestAliases(__dirname),
+      react: path.resolve(__dirname, "node_modules/react"),
+      "react-dom": path.resolve(__dirname, "node_modules/react-dom"),
+    },
+    dedupe: ["react", "react-dom"],
   },
 });
