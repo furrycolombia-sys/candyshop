@@ -186,6 +186,7 @@
       "noItems": "No Items"
     },
     "exportCsv": "Export Selected as CSV",
+    "exportExcel": "Export Selected as Excel",
     "groups": {
       "products": "Products",
       "reviews": "Reviews",
@@ -278,6 +279,9 @@
       "update": "Modify Permission Grants",
       "delete": "Revoke Permissions"
     },
+    "users": {
+      "export": "Export Users Data"
+    },
     "events": {
       "create": "Create Events",
       "read": "View Events",
@@ -343,6 +347,9 @@
       "read": "View which permissions users have",
       "update": "Modify existing permission grants",
       "delete": "Revoke permissions from users"
+    },
+    "users": {
+      "export": "Export selected users and receipt backups from the users table"
     },
     "events": {
       "create": "Create new events in the system",

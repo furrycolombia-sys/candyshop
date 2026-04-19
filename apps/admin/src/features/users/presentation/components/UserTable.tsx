@@ -30,7 +30,7 @@ interface UserTableProps {
   itemFilter: string;
   onItemFilterChange: (item: string) => void;
   canExport: boolean;
-  onExportCsv: () => void;
+  onExportExcel: () => void | Promise<void>;
 }
 
 function renderTableBody(
@@ -96,7 +96,7 @@ export function UserTable({
   itemFilter,
   onItemFilterChange,
   canExport,
-  onExportCsv,
+  onExportExcel,
 }: UserTableProps) {
   const t = useTranslations("users");
 
@@ -157,12 +157,13 @@ export function UserTable({
         {canExport && (
           <div>
             <Button
-              onClick={onExportCsv}
+              onClick={onExportExcel}
               disabled={selectedUsers.size === 0}
               className="gap-2"
+              {...tid("users-export-excel-button")}
             >
               <Download className="size-4" />
-              {t("exportCsv")}
+              {t("exportExcel")}
             </Button>
           </div>
         )}
