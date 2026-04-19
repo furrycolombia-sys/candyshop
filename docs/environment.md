@@ -35,13 +35,12 @@ Every script in this project reads configuration from a single `.env.<name>` fil
 
 ### Available environments
 
-| File           | Purpose                                    | Committed |
-| -------------- | ------------------------------------------ | --------- |
-| `.env.dev`     | Local dev — Supabase CLI on port 54321     | ✅        |
-| `.env.test`    | Isolated test — Supabase CLI on port 64321 | ✅        |
-| `.env.staging` | Staging — Docker app + Docker Supabase     | ✅        |
-| `.env.prod`    | Production — Docker app + Supabase Cloud   | ✅        |
-| `.secrets`     | Resolved secret values (never committed)   | ❌        |
+| File           | Purpose                                     | Committed |
+| -------------- | ------------------------------------------- | --------- |
+| `.env.dev`     | Dev apps + dedicated Supabase Cloud project | yes       |
+| `.env.staging` | Staging - Docker app + Docker Supabase      | yes       |
+| `.env.prod`    | Production - Docker app + Supabase Cloud    | yes       |
+| `.secrets`     | Resolved secret values (never committed)    | no        |
 
 ### Key groups in every env file
 
@@ -165,11 +164,10 @@ This derivation happens in `scripts/supabase-docker.mjs` → `derivePorts(base)`
 
 | Environment | `SUPABASE_PORT` | App port (`HOST_PORT`) |
 | ----------- | --------------- | ---------------------- |
-| dev         | 54321           | 8088                   |
-| test        | 64321           | 8088                   |
+| dev         | N/A             | 8088                   |
 | staging     | 3030            | 3000                   |
 
-Dev and test use the Supabase CLI defaults. Staging uses lower ports to avoid conflicts with the CLI instances.
+Dev uses Supabase Cloud, so SUPABASE_PORT is not used. Staging uses an explicit base port for the Docker Supabase stack.
 
 ---
 
@@ -177,7 +175,6 @@ Dev and test use the Supabase CLI defaults. Staging uses lower ports to avoid co
 
 ```bash
 pnpm dev              # uses .env.dev
-pnpm dev:test         # uses .env.test
 ```
 
 `scripts/start.mjs`:

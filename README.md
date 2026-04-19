@@ -33,8 +33,8 @@ A multi-seller store and payment platform for selling products, services, ticket
 
 ```bash
 pnpm install
-pnpm supabase:start   # start local Supabase (port 54321)
-pnpm dev              # start all apps in dev mode
+pnpm sync-secrets    # load dev Supabase cloud credentials
+pnpm dev             # start all apps in dev mode
 ```
 
 Apps will be available at:
@@ -183,12 +183,11 @@ The staging e2e environment:
 
 ## Supabase
 
-### Local dev Supabase (port 54321)
+### Dev Supabase (cloud project)
 
 ```bash
-pnpm supabase:start   # start local Supabase
-pnpm supabase:stop    # stop
-pnpm supabase:reset   # reset DB (re-runs migrations + seed)
+pnpm sync-secrets    # pull cloud credentials into .secrets
+# pnpm dev uses .env.dev with SUPABASE_MODE=cloud
 ```
 
 ### Migrations and seed
@@ -218,10 +217,14 @@ pnpm sync-secrets     # pull secrets from GitHub repository secrets into .secret
 
 To set up manually, copy `.secrets.example` to `.secrets` and fill in the values.
 
-Required secrets for staging and e2e:
+Required secrets:
 
 | Key                                       | Used by                            |
 | ----------------------------------------- | ---------------------------------- |
+| `DEV_SUPABASE_URL`                        | Dev cloud Supabase URL             |
+| `DEV_SUPABASE_ANON_KEY`                   | Dev app browser client             |
+| `DEV_SUPABASE_SERVICE_ROLE_KEY`           | Dev server-side/admin operations   |
+| `DEV_SUPABASE_AUTH_EXTERNAL_REDIRECT_URI` | Dev OAuth redirect callback        |
 | `STAGING_SUPABASE_ANON_KEY`               | Staging app + tests                |
 | `STAGING_SUPABASE_SERVICE_ROLE_KEY`       | Staging tests (admin API)          |
 | `STAGING_JWT_SECRET`                      | Staging Supabase stack             |
@@ -348,13 +351,12 @@ The site will be live at `https://store.ffxivbe.org` once the tunnel connects.
 
 ## Environment files
 
-| File           | Purpose                                    | Committed |
-| -------------- | ------------------------------------------ | --------- |
-| `.env.dev`     | Local dev — Supabase CLI on port 54321     | ✅        |
-| `.env.test`    | Isolated test — Supabase CLI on port 64321 | ✅        |
-| `.env.staging` | Staging — Docker app + Docker Supabase     | ✅        |
-| `.env.prod`    | Production — Docker app + Supabase Cloud   | ✅        |
-| `.secrets`     | Resolved secret values (never committed)   | ❌        |
+| File           | Purpose                                     | Committed |
+| -------------- | ------------------------------------------- | --------- |
+| `.env.dev`     | Dev apps + dedicated Supabase Cloud project | ✅        |
+| `.env.staging` | Staging — Docker app + Docker Supabase      | ✅        |
+| `.env.prod`    | Production — Docker app + Supabase Cloud    | ✅        |
+| `.secrets`     | Resolved secret values (never committed)    | ❌        |
 
 Secrets in env files use `$secret:KEY_NAME` syntax and are resolved at runtime by `scripts/load-env.mjs`. Run `pnpm sync-secrets` to pull them from GitHub.
 
