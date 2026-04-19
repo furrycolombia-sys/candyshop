@@ -28,7 +28,7 @@ APPS=$(echo "$SELECT_OUTPUT" | grep '^APPS=' | cut -d= -f2-)
 # Unit tests (scoped to changed apps)
 if [ "$RUN_ALL" = "true" ]; then
   echo "Running all unit tests (packages/tooling changed)."
-  pnpm run test || exit 1
+  pnpm run test -- --concurrency=1 || exit 1
 else
   [ -z "$APPS" ] && echo "No workspace apps changed, skipping tests." && exit 0
   for APP in $APPS; do
