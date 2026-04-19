@@ -4,6 +4,28 @@ import createNextIntlPlugin from "next-intl/plugin";
 const withNextIntl = createNextIntlPlugin(
   "./src/shared/infrastructure/i18n/request.ts",
 );
+const supabaseOrigin = (() => {
+  try {
+    return new URL(process.env.NEXT_PUBLIC_SUPABASE_URL ?? "").origin;
+  } catch {
+    return "";
+  }
+})();
+const supabaseSocketOrigin = (() => {
+  if (!supabaseOrigin) return "";
+  const parsed = new URL(supabaseOrigin);
+  const socketProtocol = parsed.protocol === "https:" ? "wss:" : "ws:";
+  return `${socketProtocol}//${parsed.host}`;
+})();
+const cspConnectSrc = [
+  "'self'",
+  "https://*.supabase.co",
+  "wss://*.supabase.co",
+  supabaseOrigin,
+  supabaseSocketOrigin,
+]
+  .filter(Boolean)
+  .join(" ");
 
 const securityHeaders = [
   { key: "X-DNS-Prefetch-Control", value: "on" },
@@ -21,8 +43,7 @@ const securityHeaders = [
   },
   {
     key: "Content-Security-Policy",
-    value:
-      "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' https://*.supabase.co wss://*.supabase.co; frame-ancestors 'none'; object-src 'none';",
+    value: `default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src ${cspConnectSrc}; frame-ancestors 'none'; object-src 'none';`,
   },
 ];
 

@@ -37,13 +37,6 @@ export default defineConfig({
     navigationTimeout: 45_000,
   },
   projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
-  webServer:
-    process.env.PLAYWRIGHT_USE_EXISTING_STACK === "true"
-      ? undefined
-      : {
-          command: process.env.CI ? "pnpm start" : "pnpm dev",
-          url: "http://localhost:5004",
-          reuseExistingServer: !process.env.CI,
-          timeout: process.env.CI ? 60_000 : 120_000,
-        },
+  // Full-stack E2E only: app server is managed externally.
+  webServer: undefined,
 });

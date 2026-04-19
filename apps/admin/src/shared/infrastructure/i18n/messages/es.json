@@ -188,6 +188,7 @@
       "noItems": "Sin Articulos"
     },
     "exportCsv": "Exportar Seleccionados como CSV",
+    "exportExcel": "Exportar Seleccionados como Excel",
     "groups": {
       "products": "Productos",
       "reviews": "Resenas",
@@ -280,6 +281,9 @@
       "update": "Modificar Permisos",
       "delete": "Revocar Permisos"
     },
+    "users": {
+      "export": "Exportar Datos de Usuarios"
+    },
     "events": {
       "create": "Crear Eventos",
       "read": "Ver Eventos",
@@ -345,6 +349,9 @@
       "read": "Ver que permisos tienen los usuarios",
       "update": "Modificar permisos otorgados existentes",
       "delete": "Revocar permisos de usuarios"
+    },
+    "users": {
+      "export": "Exportar usuarios seleccionados y respaldos de comprobantes desde la tabla de usuarios"
     },
     "events": {
       "create": "Crear nuevos eventos en el sistema",

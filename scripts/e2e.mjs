@@ -161,18 +161,21 @@ if (targetEnv === "staging") {
 
 // ── Playwright ────────────────────────────────────────────────────────────────
 
-const configPath = resolve(rootDir, `apps/${targetApp}/playwright.config.ts`);
+const appDir = resolve(rootDir, `apps/${targetApp}`);
+const configPath = resolve(appDir, "playwright.config.ts");
 if (!existsSync(configPath)) {
   console.error(`ERROR: No playwright config at ${configPath}`);
   process.exit(1);
 }
 
 const pwArgs = [
+  "--dir",
+  appDir,
   "exec",
   "playwright",
   "test",
   "--config",
-  configPath,
+  "playwright.config.ts",
   "--max-failures=1",
 ];
 if (headed) pwArgs.push("--headed");

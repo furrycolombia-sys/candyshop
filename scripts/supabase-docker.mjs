@@ -199,10 +199,12 @@ process.on("SIGTERM", () => {
 
 function runSupabase(subcommand) {
   console.log(`Running: supabase ${subcommand} ...`);
+  const commandArgs =
+    subcommand === "reset" ? ["supabase", "db", "reset"] : ["supabase", subcommand];
 
   const result = spawnSync(
     isWindows ? "pnpm.cmd" : "pnpm",
-    ["supabase", subcommand],
+    commandArgs,
     {
       cwd: rootDir,
       stdio: "inherit",

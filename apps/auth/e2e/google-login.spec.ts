@@ -173,7 +173,7 @@ test("Google OAuth login flow", async () => {
   test.setTimeout(120_000);
 
   const browser = await chromium.launch({
-    headless: false,
+    headless: true,
     channel: "chrome",
     args: ["--disable-blink-features=AutomationControlled"],
   });

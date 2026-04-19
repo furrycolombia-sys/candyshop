@@ -172,6 +172,7 @@ export const ADMIN_PERMISSIONS = [
     "user_permissions.read",
     "user_permissions.update",
     "user_permissions.delete",
+    "users.export",
     "events.create",
     "events.read",
     "events.update",

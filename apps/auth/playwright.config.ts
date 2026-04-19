@@ -35,7 +35,7 @@ const stagingPathRoutingIgnores =
  * Playwright config for E2E tests.
  *
  * All e2e tests run against the Docker e2e container (port 8089).
- * Set E2E_PUBLIC_ORIGIN and PLAYWRIGHT_USE_EXISTING_STACK=true
+ * Set TARGET_ENV to load the desired env file
  * (handled automatically by `pnpm test:e2e`).
  *
  * No webServer — the Docker container is managed externally by
