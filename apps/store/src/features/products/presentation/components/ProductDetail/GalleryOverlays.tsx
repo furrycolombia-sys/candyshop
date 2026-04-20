@@ -1,7 +1,7 @@
 import { tid } from "shared";
 
 import type { CategoryTheme } from "@/features/products/domain/constants";
-import type { GalleryView } from "@/features/products/domain/GalleryTypes";
+import type { GalleryView } from "@/features/products/domain/galleryTypes";
 import {
   isProductAvailable,
   type Product,

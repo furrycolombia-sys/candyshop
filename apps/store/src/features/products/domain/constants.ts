@@ -1,4 +1,4 @@
-import type { ProductType } from "@/shared/domain/CategoryTypes";
+import type { ProductType } from "@/shared/domain/categoryTypes";
 
 // Re-exported from shared domain — single source of truth
 export type { CategoryTheme } from "@/shared/domain/categoryConstants";
