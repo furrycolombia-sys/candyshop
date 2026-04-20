@@ -24,16 +24,18 @@ if (!SUPABASE_URL)
   throw new Error(
     "NEXT_PUBLIC_SUPABASE_URL is not set. Ensure the correct .env.* file is loaded.",
   );
+const SUPABASE_URL_VALUE: string = SUPABASE_URL;
 
 const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 if (!SERVICE_ROLE_KEY)
   throw new Error(
     "SUPABASE_SERVICE_ROLE_KEY is not set. Ensure the correct .env.* file is loaded.",
   );
+const SERVICE_ROLE_KEY_VALUE: string = SERVICE_ROLE_KEY;
 
 const AUTH_URL = resolveE2EAppUrls().auth;
 
-export const hasAdminTestEnv = SERVICE_ROLE_KEY.split(".").length === 3;
+export const hasAdminTestEnv = SERVICE_ROLE_KEY_VALUE.split(".").length === 3;
 
 /** Session token lifetime in seconds for injected cookies. */
 export const SESSION_EXPIRY_SECONDS = 3600;
@@ -53,15 +55,19 @@ export function buildSharedCookieDomain(url: string): string {
 /** Reusable headers for admin REST API calls. */
 function adminHeaders(extra?: Record<string, string>): Record<string, string> {
   return {
-    apikey: SERVICE_ROLE_KEY,
-    Authorization: `Bearer ${SERVICE_ROLE_KEY}`,
+    apikey: SERVICE_ROLE_KEY_VALUE,
+    Authorization: `Bearer ${SERVICE_ROLE_KEY_VALUE}`,
     ...extra,
   };
 }
 
-export const supabaseAdmin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
-  auth: { autoRefreshToken: false, persistSession: false },
-});
+export const supabaseAdmin = createClient(
+  SUPABASE_URL_VALUE,
+  SERVICE_ROLE_KEY_VALUE,
+  {
+    auth: { autoRefreshToken: false, persistSession: false },
+  },
+);
 
 /**
  * Direct REST helper for data operations that need to bypass RLS.
@@ -72,7 +78,7 @@ export async function adminInsert(
   table: string,
   data: Record<string, unknown>,
 ): Promise<Record<string, unknown>> {
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}`, {
+  const res = await fetch(`${SUPABASE_URL_VALUE}/rest/v1/${table}`, {
     method: "POST",
     headers: adminHeaders({
       "Content-Type": "application/json",
@@ -95,7 +101,7 @@ export async function adminQuery(
   table: string,
   params: string,
 ): Promise<Record<string, unknown>[]> {
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?${params}`, {
+  const res = await fetch(`${SUPABASE_URL_VALUE}/rest/v1/${table}?${params}`, {
     headers: adminHeaders(),
   });
   if (!res.ok) {
@@ -112,7 +118,7 @@ export async function adminDelete(
   table: string,
   params: string,
 ): Promise<void> {
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?${params}`, {
+  const res = await fetch(`${SUPABASE_URL_VALUE}/rest/v1/${table}?${params}`, {
     method: "DELETE",
     headers: adminHeaders(),
   });
@@ -172,6 +178,7 @@ export const ADMIN_PERMISSIONS = [
     "user_permissions.read",
     "user_permissions.update",
     "user_permissions.delete",
+    "users.export",
     "events.create",
     "events.read",
     "events.update",
@@ -293,7 +300,7 @@ export async function injectSession(
   // Derive project ref from SUPABASE_URL (already resolved from env file above).
   // Must match SUPABASE_COOKIE_KEY in packages/api/src/supabase/config.ts
   // which uses deriveProjectRef: 127.0.0.1 → "127.0.0.1", localhost → "localhost"
-  const refHostname = new URL(SUPABASE_URL).hostname;
+  const refHostname = new URL(SUPABASE_URL_VALUE).hostname;
   const projectRef =
     refHostname === "localhost" || refHostname === "127.0.0.1"
       ? refHostname

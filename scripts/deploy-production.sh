@@ -23,7 +23,7 @@ err()  { echo -e "${RED}[ERROR]${NC} $1"; exit 1; }
 # Load nvm
 export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && source "$NVM_DIR/nvm.sh"
-nvm use 24 --silent || err "Node 24 not available via nvm"
+nvm use 22 --silent || err "Node 22 not available via nvm"
 
 log "Node $(node --version) | pnpm $(pnpm --version) | PM2 $(pm2 --version)"
 

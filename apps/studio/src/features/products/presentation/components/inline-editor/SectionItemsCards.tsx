@@ -65,6 +65,7 @@ function CardItem({
     name: `sections.${sectionIndex}.items.${itemIndex}.icon` as any,
   });
 
+  /* eslint-disable react-hooks/refs -- useController field refs must be spread during render for react-hook-form binding */
   return (
     <div
       ref={dragProvided.innerRef}
@@ -133,6 +134,7 @@ function CardItem({
       />
     </div>
   );
+  /* eslint-enable react-hooks/refs */
 }
 /* eslint-enable @typescript-eslint/no-explicit-any, i18next/no-literal-string */
 

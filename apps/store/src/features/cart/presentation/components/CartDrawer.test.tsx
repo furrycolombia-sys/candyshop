@@ -69,9 +69,10 @@ vi.mock("@/features/cart/application/groupBySeller", () => ({
 vi.mock("@/features/cart/application/hooks/useSellerProfiles", () => ({
   useSellerProfiles: () => ({ data: null }),
 }));
-vi.mock("@/shared/infrastructure/config", () => ({
-  appUrls: { payments: "http://localhost:5005" },
-}));
+vi.mock("@/shared/infrastructure/config", async () => {
+  const { mockStoreConfig } = await import("@/test/fixtures/appUrls");
+  return mockStoreConfig;
+});
 describe("CartDrawer", () => {
   beforeEach(() => {
     vi.clearAllMocks();

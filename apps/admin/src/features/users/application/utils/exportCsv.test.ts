@@ -1,12 +1,12 @@
 import { describe, it, expect, vi } from "vitest";
 
-import { exportUsersToCsv, downloadCsv } from "./exportCsv";
+import { downloadExcel, exportUsersToExcel } from "./exportCsv";
 
 import type { UserProfileSummary } from "@/features/users/domain/types";
 
-describe("export-csv", () => {
-  describe("exportUsersToCsv", () => {
-    it("should format users and export them to a csv string", () => {
+describe("export-excel", () => {
+  describe("exportUsersToExcel", () => {
+    it("should format users and export them to excel xml", () => {
       const mockUsers: UserProfileSummary[] = [
         {
           id: "1",
@@ -18,18 +18,43 @@ describe("export-csv", () => {
         },
       ];
 
-      const csv = exportUsersToCsv(mockUsers);
+      const content = exportUsersToExcel(
+        mockUsers,
+        {
+          "1": ["receipts.read"],
+        },
+        [
+          {
+            userId: "1",
+            orderId: "order-1",
+            storagePath: "order-1/receipt.png",
+            fileName: "receipt.png",
+            mimeType: "image/png",
+            byteSize: 12,
+            fileBase64: "dGVzdA==",
+          },
+        ],
+      );
 
-      expect(csv).toContain("ID,Email,Display Name,Last Seen");
-      expect(csv).toContain(`1,test@example.com,"Test ""User"""`);
-    });
-
-    it("should return empty string for empty array", () => {
-      expect(exportUsersToCsv([])).toBe("");
+      expect(content).toContain('<?xml version="1.0"?>');
+      expect(content).toContain('<Data ss:Type="String">ID</Data>');
+      expect(content).toContain(
+        '<Data ss:Type="String">test@example.com</Data>',
+      );
+      expect(content).toContain(
+        '<Data ss:Type="String">Test &quot;User&quot;</Data>',
+      );
+      expect(content).toContain('<Data ss:Type="String">Yes</Data>');
+      expect(content).toContain('<Data ss:Type="String">No</Data>');
+      expect(content).toContain('<Worksheet ss:Name="Receipts"><Table>');
+      expect(content).toContain(
+        '<Data ss:Type="String">order-1/receipt.png</Data>',
+      );
+      expect(content).toContain('<Data ss:Type="String">dGVzdA==</Data>');
     });
   });
 
-  describe("downloadCsv", () => {
+  describe("downloadExcel", () => {
     it("should create a link and trigger download", () => {
       const mockLink = {
         setAttribute: vi.fn(),
@@ -48,7 +73,7 @@ describe("export-csv", () => {
       globalThis.URL.createObjectURL = vi.fn().mockReturnValue("blob:mock-url");
       globalThis.URL.revokeObjectURL = vi.fn();
 
-      downloadCsv("test,csv", "test.csv");
+      downloadExcel("<Workbook/>", "test.xls");
 
       expect(createElementSpy).toHaveBeenCalledWith("a");
       expect(mockLink.setAttribute).toHaveBeenCalledWith(
@@ -57,7 +82,7 @@ describe("export-csv", () => {
       );
       expect(mockLink.setAttribute).toHaveBeenCalledWith(
         "download",
-        "test.csv",
+        "test.xls",
       );
       expect(appendChildSpy).toHaveBeenCalledWith(mockLink);
       expect(mockLink.click).toHaveBeenCalled();

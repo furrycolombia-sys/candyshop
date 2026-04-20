@@ -6,20 +6,14 @@ import {
   Droppable,
   type DropResult,
 } from "@hello-pangea/dnd";
-import {
-  AlignLeft,
-  ClipboardList,
-  Hash,
-  Mail,
-  Type,
-  Upload,
-} from "lucide-react";
+import { ClipboardList } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useCallback } from "react";
 import { tid } from "shared";
 
 import { FieldRow } from "./FieldRow";
 
+import { FIELD_TYPE_ICONS } from "@/features/payment-methods/domain/constants";
 import type {
   FormField,
   FormFieldType,
@@ -29,14 +23,6 @@ interface FormSectionEditorProps {
   fields: FormField[];
   onChange: (fields: FormField[]) => void;
 }
-
-const FIELD_TYPE_ICONS: Record<FormFieldType, typeof Type> = {
-  text: Type,
-  email: Mail,
-  number: Hash,
-  file: Upload,
-  textarea: AlignLeft,
-};
 
 function createField(type: FormFieldType): FormField {
   return {

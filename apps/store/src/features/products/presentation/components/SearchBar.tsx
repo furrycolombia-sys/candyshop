@@ -13,14 +13,14 @@ const DEBOUNCE_MS = 300;
 export function SearchBar() {
   const t = useTranslations("products");
   const [query, setQuery] = useQueryState("q", catalogSearchParams.q);
-  const [localValue, setLocalValue] = useState(query);
+  const [localValue, setLocalValue] = useState(query ?? "");
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Sync local value when URL param changes externally (browser back/forward)
   // Equality guard prevents debounce→URL→sync cycle from overwriting user input mid-type
   useEffect(() => {
     if ((query ?? "") !== localValue) {
-      setLocalValue(query);
+      setLocalValue(query ?? "");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query]);
@@ -41,15 +41,18 @@ export function SearchBar() {
     [setQuery],
   );
 
-  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const { value } = e.target;
-    setLocalValue(value);
+  const handleChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const { value } = e.target;
+      setLocalValue(value);
 
-    if (timerRef.current !== null) {
-      clearTimeout(timerRef.current);
-    }
-    timerRef.current = setTimeout(() => commitQuery(value), DEBOUNCE_MS);
-  }
+      if (timerRef.current !== null) {
+        clearTimeout(timerRef.current);
+      }
+      timerRef.current = setTimeout(() => commitQuery(value), DEBOUNCE_MS);
+    },
+    [commitQuery],
+  );
 
   return (
     <div className="relative" {...tid("search-bar")}>
