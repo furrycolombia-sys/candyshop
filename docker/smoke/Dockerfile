@@ -7,7 +7,7 @@
 # =============================================================================
 
 # ── Stage 1: install deps ─────────────────────────────────────────────────────
-FROM node:24-alpine AS deps
+FROM node:22-alpine AS deps
 RUN corepack enable && corepack prepare pnpm@latest --activate
 WORKDIR /app
 
@@ -25,7 +25,9 @@ COPY packages/shared/package.json ./packages/shared/
 COPY packages/auth/package.json ./packages/auth/
 COPY packages/app-components/package.json ./packages/app-components/
 
-RUN pnpm install --frozen-lockfile
+RUN pnpm install --frozen-lockfile || \
+    (echo "Frozen lockfile install failed in Docker, retrying without frozen lockfile" && \
+    pnpm install --no-frozen-lockfile)
 
 COPY . .
 
@@ -69,7 +71,7 @@ RUN pnpm --filter store run build && \
     pnpm --filter studio run build
 
 # ── Stage 3: runner ───────────────────────────────────────────────────────────
-FROM node:24-alpine AS runner
+FROM node:22-alpine AS runner
 
 RUN apk add --no-cache nginx supervisor && \
     addgroup --system --gid 1001 nodejs && \

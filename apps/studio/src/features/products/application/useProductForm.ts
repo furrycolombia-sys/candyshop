@@ -34,6 +34,7 @@ export function useProductById(productId?: string) {
   const supabase = useMemo(() => createBrowserSupabaseClient(), []);
 
   return useQuery({
+    // eslint-disable-next-line @tanstack/query/exhaustive-deps -- supabase client is stable (memoized)
     queryKey: [PRODUCTS_QUERY_KEY, productId],
     queryFn: () => {
       if (!productId) throw new Error("Product ID is required");

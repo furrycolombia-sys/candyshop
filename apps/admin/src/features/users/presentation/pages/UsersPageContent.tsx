@@ -7,24 +7,30 @@ import { useEffect, useState } from "react";
 import { tid } from "shared";
 
 import { useLogExport } from "@/features/audit/application/hooks/useAuditLog";
+import { useUserPermissionsBatch } from "@/features/users/application/hooks/useUserPermissionsBatch";
+import { useUserReceiptsBatch } from "@/features/users/application/hooks/useUserReceiptsBatch";
 import { useUsers } from "@/features/users/application/hooks/useUsers";
 import {
-  exportUsersToCsv,
-  downloadCsv,
+  downloadExcel,
+  exportUsersToExcel,
 } from "@/features/users/application/utils/exportCsv";
 import { USER_SEARCH_DEBOUNCE_MS } from "@/features/users/domain/constants";
 import { usersSearchParams } from "@/features/users/domain/searchParams";
 import { UserTable } from "@/features/users/presentation/components/UserTable";
+import { useErrorContext } from "@/shared/application/context/ErrorContext";
 import { useRouter } from "@/shared/infrastructure/i18n";
 
 export function UsersPageContent() {
   const t = useTranslations("users");
   const router = useRouter();
   const [params, setParams] = useQueryStates(usersSearchParams);
-  const [filterInput, setFilterInput] = useState(params.search);
+  const [filterInput, setFilterInput] = useState(params.search ?? "");
+  const { fetchPermissions } = useUserPermissionsBatch();
+  const { fetchReceipts } = useUserReceiptsBatch();
   const { grantedKeys } = useCurrentUserPermissions();
   const canExport = grantedKeys.includes("users.export");
   const { mutate: logExport } = useLogExport();
+  const { setError } = useErrorContext();
 
   const [selectedUsers, setSelectedUsers] = useState<Set<string>>(new Set());
 
@@ -55,16 +61,31 @@ export function UsersPageContent() {
     router.push(`/users/${userId}`);
   };
 
-  const handleExportCsv = () => {
+  const handleExportExcel = async () => {
     const selected = users.filter((u) => selectedUsers.has(u.id));
     if (selected.length === 0) return;
 
-    const timestamp = new Date().toISOString().replaceAll(/[:.]/g, "-");
-    const csvContent = exportUsersToCsv(selected);
+    try {
+      const selectedIds = selected.map((user) => user.id);
 
-    downloadCsv(csvContent, `users-export-${timestamp}.csv`);
+      const [permissionsByUserId, receipts] = await Promise.all([
+        fetchPermissions(selected),
+        fetchReceipts(selectedIds),
+      ]);
 
-    logExport({ table: "users", count: selected.length });
+      const timestamp = new Date().toISOString().replaceAll(/[:.]/g, "-");
+      const excelContent = exportUsersToExcel(
+        selected,
+        permissionsByUserId,
+        receipts,
+      );
+
+      downloadExcel(excelContent, `users-export-${timestamp}.xls`);
+
+      logExport({ table: "users", count: selected.length });
+    } catch {
+      setError(t("exportError"));
+    }
   };
 
   return (
@@ -100,7 +121,7 @@ export function UsersPageContent() {
             setParams({ itemFilter: v }, { history: "replace" })
           }
           canExport={canExport}
-          onExportCsv={handleExportCsv}
+          onExportExcel={handleExportExcel}
         />
       </div>
     </main>

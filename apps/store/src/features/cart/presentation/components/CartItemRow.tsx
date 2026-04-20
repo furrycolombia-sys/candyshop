@@ -19,13 +19,17 @@ import {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- next-intl Translator type is complex; accepting any callable
 type TranslatorFn = (...args: any[]) => string;
 
-interface CartItemRowProps {
-  item: CartItem;
-  locale: string;
+export interface CartItemTranslators {
+  t: TranslatorFn;
   tProducts: TranslatorFn;
   tTypes: TranslatorFn;
   tCategories: TranslatorFn;
-  t: TranslatorFn;
+}
+
+interface CartItemRowProps {
+  item: CartItem;
+  locale: string;
+  translators: CartItemTranslators;
   removeItem: (id: string) => void;
   updateQuantity: (id: string, qty: number) => void;
 }
@@ -33,10 +37,7 @@ interface CartItemRowProps {
 export function CartItemRow({
   item,
   locale,
-  tProducts,
-  tTypes,
-  tCategories,
-  t,
+  translators: { t, tProducts, tTypes, tCategories },
   removeItem,
   updateQuantity,
 }: CartItemRowProps) {

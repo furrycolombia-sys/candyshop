@@ -4,8 +4,8 @@ import { useTranslations } from "next-intl";
 import { tid } from "shared";
 
 import { useStoreProduct } from "@/features/products/application/hooks/useStoreProducts";
-import { MobileBarWithCart } from "@/features/products/presentation/components/product-detail/MobileBarWithCart";
-import { ProductSections } from "@/features/products/presentation/components/product-detail/ProductSections";
+import { MobileBarWithCart } from "@/features/products/presentation/components/ProductDetail/MobileBarWithCart";
+import { ProductSections } from "@/features/products/presentation/components/ProductDetail/ProductSections";
 import { getCategoryTheme } from "@/shared/domain/categoryConstants";
 import { Link } from "@/shared/infrastructure/i18n";
 

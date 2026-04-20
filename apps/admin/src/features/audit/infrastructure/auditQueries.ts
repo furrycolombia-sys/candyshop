@@ -1,4 +1,7 @@
-import { AUDIT_PAGE_SIZE } from "@/features/audit/domain/constants";
+import {
+  AUDIT_ACTION_TYPES,
+  AUDIT_PAGE_SIZE,
+} from "@/features/audit/domain/constants";
 import type { AuditEntry, AuditFilters } from "@/features/audit/domain/types";
 import type { SupabaseClient } from "@/shared/domain/types";
 import {
@@ -28,11 +31,21 @@ export async function fetchAuditLog(
   params.set("limit", String(AUDIT_PAGE_SIZE));
 
   if (filters?.tableName) {
-    params.set(PARAM_TABLE_NAME, POSTGREST_EQ_PREFIX + filters.tableName);
+    const safeName = filters.tableName.replaceAll(/\W/g, "");
+    if (safeName) {
+      params.set(PARAM_TABLE_NAME, POSTGREST_EQ_PREFIX + safeName);
+    }
   }
 
   if (filters?.actionType) {
-    params.set(PARAM_ACTION_TYPE, POSTGREST_EQ_PREFIX + filters.actionType);
+    const safeActionType = (AUDIT_ACTION_TYPES as readonly string[]).includes(
+      filters.actionType,
+    )
+      ? filters.actionType
+      : null;
+    if (safeActionType) {
+      params.set(PARAM_ACTION_TYPE, POSTGREST_EQ_PREFIX + safeActionType);
+    }
   }
 
   const data = await auditRestQuery(

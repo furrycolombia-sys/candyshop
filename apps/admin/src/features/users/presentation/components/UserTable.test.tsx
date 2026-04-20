@@ -53,7 +53,7 @@ describe("UserTable", () => {
     itemFilter: "all",
     onItemFilterChange: vi.fn(),
     canExport: true,
-    onExportCsv: vi.fn(),
+    onExportExcel: vi.fn(),
   };
 
   it("renders users and filter inputs correctly", () => {
@@ -81,10 +81,10 @@ describe("UserTable", () => {
     };
     render(<UserTable {...propsWithSelection} />);
     const downloadBtn = screen.getByRole("button", {
-      name: /exportCsv/i,
+      name: /exportExcel/i,
     });
     fireEvent.click(downloadBtn);
-    expect(defaultProps.onExportCsv).toHaveBeenCalled();
+    expect(defaultProps.onExportExcel).toHaveBeenCalled();
   });
 
   it("shows loading state", () => {

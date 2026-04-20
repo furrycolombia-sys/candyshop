@@ -1,14 +1,11 @@
 import * as path from "node:path";
 import { existsSync, readFileSync } from "node:fs";
 
-import { chromium, expect, test } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 
 /* eslint-disable @typescript-eslint/no-require-imports */
 const { loadRootEnv } = require("../../../scripts/load-root-env.cjs");
-const {
-  getE2EExtraHTTPHeaders,
-  resolveE2EAppUrls,
-} = require("../../../scripts/app-url-resolver.js");
+const { resolveE2EAppUrls } = require("../../../scripts/app-url-resolver.js");
 /* eslint-enable @typescript-eslint/no-require-imports */
 loadRootEnv({ targetEnv: process.env.TARGET_ENV });
 
@@ -58,8 +55,6 @@ const PUBLIC_PLAYGROUND_URL =
 // Use public URLs for cross-app checks so the session carries over.
 const isOAuthEnv = PUBLIC_AUTH_URL !== AUTH_URL;
 
-const IGNORABLE_REQUEST_FAILURE_PATTERNS = ["/cdn-cgi/rum?"];
-
 const APP_CHECKS = [
   {
     name: "landing",
@@ -92,21 +87,6 @@ const APP_CHECKS = [
     readyTestIds: ["product-list-page", "access-denied"],
   },
 ] as const;
-
-async function clickFirstVisible(
-  page: import("@playwright/test").Page,
-  selectors: string[],
-) {
-  for (const selector of selectors) {
-    const button = page.locator(selector).first();
-    if (await button.isVisible({ timeout: 2000 }).catch(() => false)) {
-      await button.click();
-      return true;
-    }
-  }
-
-  return false;
-}
 
 async function waitForAnyVisible(
   page: import("@playwright/test").Page,
@@ -155,13 +135,16 @@ async function expectAuthenticatedAcrossApps(
   }
 }
 
-function shouldIgnoreRequestFailure(url: string) {
-  return IGNORABLE_REQUEST_FAILURE_PATTERNS.some((pattern) =>
-    url.includes(pattern),
+test("Google OAuth login flow", async ({ page }) => {
+  // This test requires a pre-seeded Chrome profile with an active Google session.
+  // It does not work on macOS with Playwright's bundled browsers due to Google's
+  // automation detection. Run manually on a Linux CI environment with a real Chrome
+  // profile that has an active Google session.
+  test.skip(
+    process.platform === "darwin",
+    "Google OAuth automation is not supported on macOS — Google blocks Playwright browsers. Run on Linux CI with a pre-seeded Chrome profile.",
   );
-}
 
-test("Google OAuth login flow", async () => {
   const googleEmail = process.env.GOOGLE_TEST_EMAIL;
   const googlePassword = process.env.GOOGLE_TEST_PASSWORD;
 
@@ -172,157 +155,74 @@ test("Google OAuth login flow", async () => {
 
   test.setTimeout(120_000);
 
-  const browser = await chromium.launch({
-    headless: false,
-    channel: "chrome",
-    args: ["--disable-blink-features=AutomationControlled"],
+  const oauthStartUrl =
+    PUBLIC_AUTH_URL !== AUTH_URL ? PUBLIC_AUTH_URL : AUTH_URL;
+  await page.goto(`${oauthStartUrl}/en/login`);
+  await expect(page.getByTestId("login-google")).toBeVisible();
+  console.log("[e2e] Login page loaded");
+
+  await page.waitForTimeout(1000);
+  await page.getByTestId("login-google").click();
+  console.log("[e2e] Clicked Google");
+
+  await page.waitForURL((url) => url.hostname.includes("google"), {
+    timeout: 30000,
   });
-  const context = await browser.newContext({
-    viewport: { width: 1280, height: 720 },
-    extraHTTPHeaders: getE2EExtraHTTPHeaders(),
-  });
-  context.on("requestfailed", (request) => {
-    if (shouldIgnoreRequestFailure(request.url())) return;
-    console.log(
-      `[browser:requestfailed] ${request.method()} ${request.url()} ${request.failure()?.errorText ?? ""}`,
-    );
-  });
-  const page = await context.newPage();
-  page.on("console", (message) => {
-    if (message.type() === "error") {
-      console.log(`[browser:error] ${message.text()}`);
-    }
-  });
-  page.on("pageerror", (error) =>
-    console.log(`[browser:pageerror] ${error.message}`),
-  );
+  console.log("[e2e] Navigated to:", page.url());
 
-  try {
-    // Use the public URL for OAuth so the redirect_to parameter uses the
-    // tunnel-accessible URL that Supabase's allowed redirect list accepts.
-    const oauthStartUrl =
-      PUBLIC_AUTH_URL !== AUTH_URL ? PUBLIC_AUTH_URL : AUTH_URL;
-    await page.goto(`${oauthStartUrl}/en/login`);
-    await expect(page.getByTestId("login-google")).toBeVisible();
-    console.log("[e2e] Login page loaded");
-
-    await page.waitForTimeout(1000);
-    await page.getByTestId("login-google").click();
-    console.log("[e2e] Clicked Google");
-
-    let oauthPage = page;
-    const popupPromise = page
-      .waitForEvent("popup", { timeout: 10000 })
-      .catch(() => null);
-    const newPagePromise = context
-      .waitForEvent("page", { timeout: 10000 })
-      .catch(() => null);
-    const navigated = await page
-      .waitForURL((url) => url.hostname.includes("google"), { timeout: 10000 })
-      .then(() => "same-tab")
-      .catch(() => null);
-
-    if (!navigated) {
-      const popup = (await popupPromise) ?? (await newPagePromise);
-      if (popup) {
-        oauthPage = popup;
-        await oauthPage.waitForLoadState("domcontentloaded");
-      } else {
-        await page.getByTestId("login-google").click();
-        await page.waitForURL((url) => url.hostname.includes("google"), {
-          timeout: 30000,
-        });
-      }
-    }
-
-    console.log("[e2e] Navigated to:", oauthPage.url());
-
-    const emailChoice = oauthPage
-      .locator(`[data-identifier="${googleEmail!}"]`)
-      .first();
-    if (await emailChoice.isVisible({ timeout: 5000 }).catch(() => false)) {
-      await emailChoice.click();
-      console.log("[e2e] Selected existing Google account");
-    }
-
-    const emailInput = oauthPage.locator('input[type="email"]');
-    if (await emailInput.isVisible({ timeout: 10000 }).catch(() => false)) {
-      await emailInput.fill(googleEmail!);
-      await clickFirstVisible(oauthPage, [
-        "#identifierNext button",
-        'button:has-text("Next")',
-        'button:has-text("Siguiente")',
-      ]);
-      console.log("[e2e] Submitted email");
-    }
-
-    const passwordInput = await waitForAnyVisible(oauthPage, [
-      'input[name="Passwd"]',
-      'input[type="password"]',
-      'input[aria-label*="password" i]',
-      'input[aria-label*="contraseña" i]',
-    ]);
-    if (passwordInput) {
-      await passwordInput.fill(googlePassword!);
-      await clickFirstVisible(oauthPage, [
-        "#passwordNext button",
-        'div[role="button"]:has-text("Next")',
-        'div[role="button"]:has-text("Siguiente")',
-        'button:has-text("Next")',
-        'button:has-text("Siguiente")',
-      ]);
-      console.log("[e2e] Submitted password");
-    }
-
-    await oauthPage.waitForTimeout(3000);
-    await oauthPage.screenshot({
-      path: "e2e/screenshots/google-after-processing.png",
-    });
-
-    await clickFirstVisible(oauthPage, [
-      'button:has-text("Continue")',
-      'button:has-text("Continuar")',
-      'button:has-text("Allow")',
-      'button:has-text("Permitir")',
-      "#submit_approve_access",
-      'button[data-idom-class*="primary"]',
-    ]);
-
-    await oauthPage.waitForURL(
-      (url) =>
-        url.href.startsWith(AUTH_URL) || url.href.startsWith(PUBLIC_AUTH_URL),
-      { timeout: 45000 },
-    );
-    console.log("[e2e] Back on app:", oauthPage.url());
-
-    await oauthPage.waitForLoadState("networkidle", { timeout: 15000 });
-    await oauthPage.waitForTimeout(2000);
-    await oauthPage.screenshot({ path: "e2e/screenshots/google-final.png" });
-
-    const isAccountPage = await oauthPage
-      .getByTestId("account-settings-page")
-      .isVisible({ timeout: 5000 })
-      .catch(() => false);
-
-    if (!isAccountPage) {
-      const cookies = await context.cookies();
-      console.log(
-        "[e2e] Cookies:",
-        cookies.map((c) => c.name),
-      );
-      console.log("[e2e] URL:", oauthPage.url());
-    }
-
-    expect(isAccountPage, "Should show account page").toBe(true);
-    await expect(oauthPage.getByTestId("profile-card")).toBeVisible();
-    await expect(oauthPage.getByTestId("sign-out")).toBeVisible();
-    await expectAuthenticatedAcrossApps(oauthPage);
-    await oauthPage.screenshot({
-      path: "e2e/screenshots/google-store-final.png",
-    });
-    console.log("[e2e] All passed");
-  } finally {
-    await context.close();
-    await browser.close();
+  const emailChoice = page
+    .locator(`[data-identifier="${googleEmail!}"]`)
+    .first();
+  if (await emailChoice.isVisible({ timeout: 5000 }).catch(() => false)) {
+    await emailChoice.click();
+    console.log("[e2e] Selected existing Google account");
   }
+
+  const emailInput = page.locator('input[type="email"]');
+  if (await emailInput.isVisible({ timeout: 10000 }).catch(() => false)) {
+    await emailInput.fill(googleEmail!);
+    const nextBtn = page
+      .locator(
+        "#identifierNext button, button:has-text('Next'), button:has-text('Siguiente')",
+      )
+      .first();
+    await nextBtn.click();
+    console.log("[e2e] Submitted email");
+  }
+
+  const passwordInput = page
+    .locator('input[name="Passwd"], input[type="password"]')
+    .first();
+  if (await passwordInput.isVisible({ timeout: 10000 }).catch(() => false)) {
+    await passwordInput.fill(googlePassword!);
+    const nextBtn = page
+      .locator(
+        "#passwordNext button, button:has-text('Next'), button:has-text('Siguiente')",
+      )
+      .first();
+    await nextBtn.click();
+    console.log("[e2e] Submitted password");
+    await page.waitForTimeout(3000);
+  }
+
+  await page.waitForURL(
+    (url) =>
+      url.href.startsWith(AUTH_URL) || url.href.startsWith(PUBLIC_AUTH_URL),
+    { timeout: 45000 },
+  );
+  console.log("[e2e] Back on app:", page.url());
+
+  await page.waitForLoadState("networkidle", { timeout: 15000 });
+  await page.waitForTimeout(2000);
+
+  const isAccountPage = await page
+    .getByTestId("account-settings-page")
+    .isVisible({ timeout: 5000 })
+    .catch(() => false);
+
+  expect(isAccountPage, "Should show account page").toBe(true);
+  await expect(page.getByTestId("profile-card")).toBeVisible();
+  await expect(page.getByTestId("sign-out")).toBeVisible();
+  await expectAuthenticatedAcrossApps(page);
+  console.log("[e2e] All passed");
 });

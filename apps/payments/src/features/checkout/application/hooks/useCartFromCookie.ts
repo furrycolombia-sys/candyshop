@@ -20,7 +20,7 @@ import { FALLBACK_SELLER_NAME } from "@/shared/domain/constants";
 
 /** Stable empty array so the server snapshot reference never changes. */
 const EMPTY_COOKIE_ITEMS: CartCookieItem[] = [];
-const EMPTY_PRODUCTS: Array<Omit<CartItem, "quantity">> = [];
+const EMPTY_PRODUCTS: Array<Omit<CartItem, "quantity" | "rawQuantity">> = [];
 
 function getSnapshot(): CartCookieItem[] {
   return readCartFromCookie();
@@ -50,6 +50,7 @@ export function useCartFromCookie() {
   );
   const { data: products = EMPTY_PRODUCTS, isLoading: isLoadingProducts } =
     useQuery({
+      // eslint-disable-next-line @tanstack/query/exhaustive-deps -- supabase is not serializable (circular refs)
       queryKey: [CHECKOUT_CART_PRODUCTS_QUERY_KEY, cartIds],
       queryFn: () => fetchCheckoutProductsByIds(supabase, cartIds),
       enabled: cartIds.length > 0,
@@ -80,7 +81,8 @@ export function useCartFromCookie() {
           return {
             ...product,
             quantity,
-          };
+            rawQuantity: cookieItem.quantity,
+          } as CartItem;
         })
         .filter((item): item is CartItem => item !== null),
     [cookieItems, productById],

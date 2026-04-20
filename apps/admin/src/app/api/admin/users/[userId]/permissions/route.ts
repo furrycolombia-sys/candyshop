@@ -152,12 +152,10 @@ async function replacePermissions(
     .filter((permission) => !desiredByKey.has(permission.key))
     .map((permission) => permission.resourcePermissionId);
 
-  await revokePermissions(validatedUserId, resourcePermissionIdsToRevoke);
-  await grantPermissions(
-    validatedUserId,
-    resourcePermissionIdsToGrant,
-    grantedBy,
-  );
+  await Promise.all([
+    revokePermissions(validatedUserId, resourcePermissionIdsToRevoke),
+    grantPermissions(validatedUserId, resourcePermissionIdsToGrant, grantedBy),
+  ]);
 }
 
 export async function GET(

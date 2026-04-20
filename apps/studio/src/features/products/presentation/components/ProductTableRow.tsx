@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/refs -- @hello-pangea/dnd requires ref access during render for drag-and-drop binding */
 "use client";
 
 import type { DraggableProvided } from "@hello-pangea/dnd";
