@@ -11,6 +11,7 @@ export function useProfile(userId: string | undefined) {
   const supabase = useSupabase();
 
   return useQuery({
+    // eslint-disable-next-line @tanstack/query/exhaustive-deps -- supabase client is stable (memoized)
     queryKey: [PROFILE_QUERY_KEY, userId],
     queryFn: () => {
       if (!userId) throw new Error("User ID is required");

@@ -108,7 +108,9 @@ test.describe("Smoke test -- all apps", () => {
     }
   });
 
-  test("all apps load without errors", async ({ page }) => {
+  test("all apps load without errors", async ({ page, authenticatedPage }) => {
+    expect(authenticatedPage.email).toBeTruthy();
+
     for (const [appName, url] of Object.entries(APPS)) {
       const errors: string[] = [];
       page.on("pageerror", (err) => errors.push(err.message));

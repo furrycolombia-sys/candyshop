@@ -326,6 +326,9 @@ test.describe.serial("Full purchase flow: two sellers, one buyer", () => {
     await snap(page, "store-catalog");
 
     // ── Add Seller A's product ──────────────────────────────────
+    await expect(page.getByTestId("search-bar-input")).toBeVisible({
+      timeout: ELEMENT_TIMEOUT_MS,
+    });
     await page.getByTestId("search-bar-input").fill(PRODUCT_ALPHA);
     await page.waitForTimeout(DEBOUNCE_WAIT_MS);
     await snap(page, "store-search-alpha");
@@ -344,6 +347,9 @@ test.describe.serial("Full purchase flow: two sellers, one buyer", () => {
     await page.goto(`${APP_URLS.STORE}/en`);
     await page.waitForLoadState("networkidle");
 
+    await expect(page.getByTestId("search-bar-input")).toBeVisible({
+      timeout: ELEMENT_TIMEOUT_MS,
+    });
     await page.getByTestId("search-bar-input").fill(PRODUCT_BETA);
     await page.waitForTimeout(DEBOUNCE_WAIT_MS);
     await snap(page, "store-search-beta");

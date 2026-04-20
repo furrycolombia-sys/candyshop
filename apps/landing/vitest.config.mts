@@ -1,6 +1,6 @@
 import { defineConfig } from "vitest/config";
 import react from "@vitejs/plugin-react";
-import { createVitestAliases } from "../../vitest.aliases";
+import path from "node:path";
 
 export default defineConfig({
   plugins: [react()],
@@ -8,6 +8,10 @@ export default defineConfig({
     environment: "jsdom",
     globals: true,
     setupFiles: ["./src/test/setup.ts"],
+    env: {
+      NEXT_PUBLIC_SUPABASE_URL: "http://localhost:54321",
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: "test-anon-key",
+    },
     include: ["**/*.test.{ts,tsx}"],
     passWithNoTests: true,
     exclude: [
@@ -55,6 +59,20 @@ export default defineConfig({
     bail: 0,
   },
   resolve: {
-    alias: createVitestAliases(__dirname),
+    alias: {
+      "@": path.resolve(__dirname, "./src"),
+      "@shared": path.resolve(__dirname, "../../packages/shared/src"),
+      "@ui": path.resolve(__dirname, "../../packages/ui/src"),
+      "@app-components": path.resolve(
+        __dirname,
+        "../../packages/app-components/src",
+      ),
+      shared: path.resolve(__dirname, "../../packages/shared/src"),
+      ui: path.resolve(__dirname, "../../packages/ui/src"),
+      "@monorepo/app-components": path.resolve(
+        __dirname,
+        "../../packages/app-components/src",
+      ),
+    },
   },
 });

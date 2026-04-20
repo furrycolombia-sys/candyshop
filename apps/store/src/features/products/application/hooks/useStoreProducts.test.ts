@@ -2,11 +2,17 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { renderHook, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
 import React from "react";
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 
 import { useStoreProducts, useStoreProduct } from "./useStoreProducts";
 
-const mockProducts = [{ id: "p1", name_en: "Product 1" }];
+import type { Product } from "@/features/products/domain/types";
+import * as productQueries from "@/features/products/infrastructure/productQueries";
+
+type PartialProduct = Pick<Product, "id" | "name_en">;
+const mockProducts = [
+  { id: "p1", name_en: "Product 1" },
+] as unknown as Product[];
 
 vi.mock("@/features/products/infrastructure/productQueries", () => ({
   fetchStoreProducts: vi
@@ -31,6 +37,12 @@ function createWrapper() {
 }
 
 describe("useStoreProducts", () => {
+  beforeEach(() => {
+    vi.mocked(productQueries.fetchStoreProducts).mockResolvedValue(
+      mockProducts,
+    );
+  });
+
   it("fetches products", async () => {
     const { result } = renderHook(() => useStoreProducts(), {
       wrapper: createWrapper(),
@@ -38,14 +50,31 @@ describe("useStoreProducts", () => {
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(result.current.data).toEqual(mockProducts);
   });
+
+  it("sets isError when fetchStoreProducts rejects", async () => {
+    vi.mocked(productQueries.fetchStoreProducts).mockRejectedValue(
+      new Error("Network error"),
+    );
+
+    const { result } = renderHook(() => useStoreProducts(), {
+      wrapper: createWrapper(),
+    });
+
+    await waitFor(() => expect(result.current.isError).toBe(true));
+  });
 });
 
 describe("useStoreProduct", () => {
   it("fetches a single product by id", async () => {
+    const mockProduct = { id: "p1", name_en: "Product 1" } as PartialProduct;
+    vi.mocked(productQueries.fetchStoreProductById).mockResolvedValue(
+      mockProduct as unknown as Product,
+    );
+
     const { result } = renderHook(() => useStoreProduct("p1"), {
       wrapper: createWrapper(),
     });
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(result.current.data).toEqual({ id: "p1", name_en: "Product 1" });
+    expect(result.current.data).toEqual(mockProduct);
   });
 });

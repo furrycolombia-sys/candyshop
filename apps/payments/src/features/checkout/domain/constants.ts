@@ -15,6 +15,8 @@ export const CHECKOUT_CART_PRODUCTS_QUERY_KEY = "checkout-cart-products";
 export const ORDER_EXPIRY_HOURS = 48;
 
 /** Time conversion constants */
-export const MINUTES_PER_HOUR = 60;
-export const SECONDS_PER_MINUTE = 60;
-export const MS_PER_SECOND = 1000;
+export {
+  MINUTES_PER_HOUR,
+  SECONDS_PER_MINUTE,
+  MS_PER_SECOND,
+} from "shared/constants/time";

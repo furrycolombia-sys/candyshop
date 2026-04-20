@@ -3,6 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useSupabase } from "shared";
 
+import { PENDING_ORDER_COUNT_QUERY_KEY } from "@/features/orders/domain/constants";
 import { fetchPendingOrderCount } from "@/features/orders/infrastructure/pendingOrderCount";
 
 /** Stale time for pending order count (30 seconds) */
@@ -15,7 +16,8 @@ export function usePendingOrderCount() {
   const supabase = useSupabase();
 
   return useQuery({
-    queryKey: ["pending-order-count"],
+    // eslint-disable-next-line @tanstack/query/exhaustive-deps -- supabase client is not serializable and is stable (memoized above)
+    queryKey: [PENDING_ORDER_COUNT_QUERY_KEY],
     queryFn: () => fetchPendingOrderCount(supabase),
     staleTime: STALE_TIME_MS,
     refetchInterval: REFETCH_INTERVAL_MS,

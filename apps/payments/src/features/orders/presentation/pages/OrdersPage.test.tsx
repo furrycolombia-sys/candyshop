@@ -32,9 +32,10 @@ vi.mock("ui", () => ({
   ),
 }));
 
-vi.mock("@/shared/infrastructure/config", () => ({
-  appUrls: { store: "http://localhost:5001/store" },
-}));
+vi.mock("@/shared/infrastructure/config", async () => {
+  const { mockPaymentsConfig } = await import("@/test/fixtures/appUrls");
+  return mockPaymentsConfig;
+});
 
 const mockUseMyOrders = vi.fn();
 vi.mock("@/features/orders/application/hooks/useMyOrders", () => ({

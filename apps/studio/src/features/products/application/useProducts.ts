@@ -10,6 +10,7 @@ export function useProducts(filters?: Partial<ProductFilters>) {
   const supabase = useMemo(() => createBrowserSupabaseClient(), []);
 
   return useQuery({
+    // eslint-disable-next-line @tanstack/query/exhaustive-deps -- supabase client is stable (memoized)
     queryKey: [PRODUCTS_QUERY_KEY, filters],
     queryFn: () => fetchProducts(supabase, filters),
   });
