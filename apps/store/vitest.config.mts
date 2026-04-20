@@ -1,6 +1,6 @@
 import { defineConfig } from "vitest/config";
 import react from "@vitejs/plugin-react";
-import { createVitestAliases } from "../../vitest.aliases";
+import path from "node:path";
 
 export default defineConfig({
   plugins: [react()],
@@ -46,7 +46,7 @@ export default defineConfig({
         "**/domain/types.ts",
         "**/domain/types/**",
         // Type-only file: pure interface definitions for product gallery
-        "**/domain/GalleryTypes.ts",
+        "**/domain/galleryTypes.ts",
         // Supabase auth shim — thin wrappers around Supabase SDK, tested via integration/E2E
         "**/auth/application/hooks/useSupabaseAuth.ts",
         "**/auth/presentation/components/ProtectedRoute.tsx",
@@ -56,12 +56,35 @@ export default defineConfig({
         global: { branches: 85, functions: 85, lines: 85, statements: 85 },
       },
     },
+    server: {
+      deps: {
+        // Force Vite to transform next-intl so its internal "next/navigation" bare
+        // specifier resolves correctly (Node ESM requires explicit .js extensions).
+        inline: ["next-intl"],
+      },
+    },
     testTimeout: 10_000,
     hookTimeout: 10_000,
     allowOnly: false,
     bail: 0,
   },
   resolve: {
-    alias: createVitestAliases(__dirname),
+    alias: {
+      "@": path.resolve(__dirname, "./src"),
+      "@shared": path.resolve(__dirname, "../../packages/shared/src"),
+      "@ui": path.resolve(__dirname, "../../packages/ui/src"),
+      "@api": path.resolve(__dirname, "../../packages/api/src"),
+      "@app-components": path.resolve(
+        __dirname,
+        "../../packages/app-components/src",
+      ),
+      shared: path.resolve(__dirname, "../../packages/shared/src"),
+      ui: path.resolve(__dirname, "../../packages/ui/src"),
+      api: path.resolve(__dirname, "../../packages/api/src"),
+      "@monorepo/app-components": path.resolve(
+        __dirname,
+        "../../packages/app-components/src",
+      ),
+    },
   },
 });

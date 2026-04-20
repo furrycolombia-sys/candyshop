@@ -140,10 +140,7 @@ export function CartDrawer() {
                           key={item.id}
                           item={item}
                           locale={locale}
-                          tProducts={tProducts}
-                          tTypes={tTypes}
-                          tCategories={tCategories}
-                          t={t}
+                          translators={{ t, tProducts, tTypes, tCategories }}
                           removeItem={removeItem}
                           updateQuantity={updateQuantity}
                         />

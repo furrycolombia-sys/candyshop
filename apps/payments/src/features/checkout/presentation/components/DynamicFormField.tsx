@@ -1,9 +1,8 @@
 /* eslint-disable react/no-multi-comp -- FileInput is a private helper co-located with its parent */
-/* eslint-disable i18next/no-literal-string -- alert message is dev-facing, not user-facing UI */
 "use client";
 
-import { useLocale } from "next-intl";
-import { useId } from "react";
+import { useLocale, useTranslations } from "next-intl";
+import { useId, useState } from "react";
 import { i18nField, tid } from "shared";
 import { cn } from "ui";
 
@@ -29,6 +28,7 @@ export function DynamicFormField({
 }: DynamicFormFieldProps) {
   const locale = useLocale();
   const inputId = useId();
+  const [fileSizeError, setFileSizeError] = useState<string | null>(null);
 
   const label = i18nField(field, "label", locale) || field.label_en;
   const placeholder = i18nField(field, "placeholder", locale) || "";
@@ -57,6 +57,7 @@ export function DynamicFormField({
           disabled={disabled}
           onFileChange={onFileChange}
           onChange={onChange}
+          onFileSizeError={setFileSizeError}
         />
       );
     }
@@ -82,6 +83,9 @@ export function DynamicFormField({
 
       {renderInput()}
 
+      {fileSizeError && (
+        <p className="text-xs text-destructive">{fileSizeError}</p>
+      )}
       {error && <p className="text-xs text-destructive">{error}</p>}
     </div>
   );
@@ -97,29 +101,35 @@ function FileInput({
   disabled,
   onFileChange,
   onChange,
+  onFileSizeError,
 }: {
   id: string;
   disabled: boolean;
   onFileChange?: (file: File | null) => void;
   onChange: (value: string) => void;
+  onFileSizeError?: (message: string | null) => void;
 }) {
+  const t = useTranslations("checkout");
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] ?? null;
     if (!file) {
       onFileChange?.(null);
       onChange("");
+      onFileSizeError?.(null);
       return;
     }
     if (!validateFileSize(file.size)) {
       e.target.value = "";
       onFileChange?.(null);
       onChange("");
-      // Show error via alert for simplicity — parent can handle via error prop
-      alert(
-        `File exceeds 10 MB limit (${(file.size / MAX_FILE_BYTES).toFixed(1)}x)`,
+      onFileSizeError?.(
+        t("fileSizeExceeded", {
+          multiplier: (file.size / MAX_FILE_BYTES).toFixed(1),
+        }),
       );
       return;
     }
+    onFileSizeError?.(null);
     onFileChange?.(file);
     onChange(file.name);
   };

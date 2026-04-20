@@ -137,32 +137,33 @@ describe("usePaymentMethodsManager", () => {
   });
 
   it("handleDelete calls deleteMutation when confirmed", () => {
-    vi.stubGlobal("confirm", () => true);
-    const { result } = renderHook(() => usePaymentMethodsManager(SELLER_ID));
+    const { result } = renderHook(() =>
+      usePaymentMethodsManager(SELLER_ID, { onConfirm: () => true }),
+    );
 
     act(() => {
       result.current.handleDelete("pm-1");
     });
 
     expect(mockDeleteMutate).toHaveBeenCalledWith("pm-1");
-    vi.unstubAllGlobals();
   });
 
   it("handleDelete does not call deleteMutation when cancelled", () => {
-    vi.stubGlobal("confirm", () => false);
-    const { result } = renderHook(() => usePaymentMethodsManager(SELLER_ID));
+    const { result } = renderHook(() =>
+      usePaymentMethodsManager(SELLER_ID, { onConfirm: () => false }),
+    );
 
     act(() => {
       result.current.handleDelete("pm-1");
     });
 
     expect(mockDeleteMutate).not.toHaveBeenCalled();
-    vi.unstubAllGlobals();
   });
 
   it("handleDelete collapses the deleted method if it was expanded", () => {
-    vi.stubGlobal("confirm", () => true);
-    const { result } = renderHook(() => usePaymentMethodsManager(SELLER_ID));
+    const { result } = renderHook(() =>
+      usePaymentMethodsManager(SELLER_ID, { onConfirm: () => true }),
+    );
 
     act(() => {
       result.current.handleToggleExpand("pm-1");
@@ -172,7 +173,6 @@ describe("usePaymentMethodsManager", () => {
     });
 
     expect(result.current.expandedId).toBeNull();
-    vi.unstubAllGlobals();
   });
 
   it("handleToggleActive calls updateMutation with is_active patch", () => {

@@ -189,6 +189,7 @@
     },
     "exportCsv": "Exportar Seleccionados como CSV",
     "exportExcel": "Exportar Seleccionados como Excel",
+    "exportError": "Error al exportar usuarios. Por favor intente de nuevo.",
     "groups": {
       "products": "Productos",
       "reviews": "Resenas",
