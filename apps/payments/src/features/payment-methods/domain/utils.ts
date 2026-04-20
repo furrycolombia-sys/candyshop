@@ -5,7 +5,7 @@ import type {
   DisplayBlockType,
   FormField,
   FormFieldType,
-} from "@/shared/domain/PaymentMethodTypes";
+} from "@/shared/domain/paymentMethodTypes";
 
 // Re-export shared utils so existing internal imports keep working.
 export {

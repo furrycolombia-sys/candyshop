@@ -4,7 +4,7 @@
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 
-import type { ImageBlock as ImageBlockType } from "@/shared/domain/PaymentMethodTypes";
+import type { ImageBlock as ImageBlockType } from "@/shared/domain/paymentMethodTypes";
 
 interface ImageBlockProps {
   block: ImageBlockType;

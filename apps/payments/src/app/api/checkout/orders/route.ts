@@ -2,7 +2,7 @@
 import { createServerSupabaseClient } from "api/supabase/server";
 import { NextResponse } from "next/server";
 
-import type { FormField } from "@/shared/domain/PaymentMethodTypes";
+import type { FormField } from "@/shared/domain/paymentMethodTypes";
 import { validateBuyerSubmission } from "@/shared/domain/paymentMethodUtils";
 import {
   adminFetchJson,

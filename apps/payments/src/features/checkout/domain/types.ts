@@ -31,7 +31,7 @@ export interface SellerGroup {
 import type {
   DisplayBlock,
   FormField,
-} from "@/shared/domain/PaymentMethodTypes";
+} from "@/shared/domain/paymentMethodTypes";
 
 export interface SellerPaymentMethodWithType {
   id: string;

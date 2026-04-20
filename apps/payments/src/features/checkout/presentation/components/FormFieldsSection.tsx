@@ -2,7 +2,7 @@
 
 import { DynamicFormField } from "./DynamicFormField";
 
-import type { FormField } from "@/shared/domain/PaymentMethodTypes";
+import type { FormField } from "@/shared/domain/paymentMethodTypes";
 
 interface FormFieldsSectionProps {
   fields: FormField[];
