@@ -13,13 +13,6 @@ vi.mock("shared", () => ({
     obj[`${field}_${locale}`] ?? obj[`${field}_en`] ?? "",
 }));
 
-vi.mock("next/image", () => ({
-  default: ({ src, alt }: { src: string; alt: string }) => (
-    // eslint-disable-next-line @next/next/no-img-element -- test mock
-    <img src={src} alt={alt} data-testid="next-image" />
-  ),
-}));
-
 const theme = {
   bg: "var(--mint)",
   bgLight: "color-mix(in srgb, var(--mint) 15%, transparent)",
@@ -77,7 +70,7 @@ describe("GallerySection", () => {
     };
     render(<GallerySection section={section as never} theme={theme} />);
     expect(screen.getByTestId("gallery-item-0")).toBeInTheDocument();
-    expect(screen.getByTestId("next-image")).toBeInTheDocument();
+    expect(screen.getByRole("img")).toBeInTheDocument();
   });
 
   it("renders placeholder number when no image_url", () => {

@@ -1,7 +1,6 @@
 /* eslint-disable sonarjs/no-duplicate-string -- Tailwind classes must stay inline per styling policy */
 "use client";
 
-import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
 import { tid } from "shared";
@@ -121,12 +120,13 @@ export function ImageGallery({ product, theme }: ImageGalleryProps) {
                   }
                   {...tid(`image-gallery-thumb-${String(idx)}`)}
                 >
-                  <Image
+                  {/* eslint-disable-next-line @next/next/no-img-element -- user-provided image URLs can come from arbitrary hosts */}
+                  <img
                     src={img.url}
                     alt={img.alt ?? ""}
-                    fill
-                    className="object-cover"
-                    sizes="64px"
+                    className="absolute inset-0 size-full object-cover"
+                    loading="lazy"
+                    decoding="async"
                   />
                 </button>
               );
@@ -140,14 +140,16 @@ export function ImageGallery({ product, theme }: ImageGalleryProps) {
           style={{ backgroundColor: theme.bg }}
           {...tid(TID_GALLERY_MAIN)}
         >
-          <Image
+          {/* eslint-disable-next-line @next/next/no-img-element -- user-provided image URLs can come from arbitrary hosts */}
+          <img
             src={activeImage.url}
             alt={activeImage.alt ?? product.name_en}
-            fill
-            className={
-              activeImage.fit === "contain" ? "object-contain" : "object-cover"
-            }
-            sizes="(min-width: 1024px) 55vw, 100vw"
+            className={cn(
+              "absolute inset-0 size-full",
+              activeImage.fit === "contain" ? "object-contain" : "object-cover",
+            )}
+            loading="eager"
+            decoding="async"
           />
 
           {/* Bottom bar: caption + counter */}
@@ -185,14 +187,16 @@ export function ImageGallery({ product, theme }: ImageGalleryProps) {
           style={{ backgroundColor: theme.bg }}
           {...tid("image-gallery-main-mobile")}
         >
-          <Image
+          {/* eslint-disable-next-line @next/next/no-img-element -- user-provided image URLs can come from arbitrary hosts */}
+          <img
             src={activeImage.url}
             alt={activeImage.alt ?? product.name_en}
-            fill
-            className={
-              activeImage.fit === "contain" ? "object-contain" : "object-cover"
-            }
-            sizes="100vw"
+            className={cn(
+              "absolute inset-0 size-full",
+              activeImage.fit === "contain" ? "object-contain" : "object-cover",
+            )}
+            loading="eager"
+            decoding="async"
           />
 
           {/* Bottom bar: caption + counter */}
@@ -241,12 +245,13 @@ export function ImageGallery({ product, theme }: ImageGalleryProps) {
                   style={isActive ? { backgroundColor: theme.bg } : undefined}
                   aria-label={img.alt ?? String(idx + 1)}
                 >
-                  <Image
+                  {/* eslint-disable-next-line @next/next/no-img-element -- user-provided image URLs can come from arbitrary hosts */}
+                  <img
                     src={img.url}
                     alt={img.alt ?? ""}
-                    fill
-                    className="object-cover"
-                    sizes="20vw"
+                    className="absolute inset-0 size-full object-cover"
+                    loading="lazy"
+                    decoding="async"
                   />
                 </button>
               );
