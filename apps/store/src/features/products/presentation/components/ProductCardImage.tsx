@@ -1,5 +1,4 @@
 import { ShoppingCart } from "lucide-react";
-import Image from "next/image";
 import { getCoverImageUrl, tid } from "shared";
 import { cn } from "ui";
 
@@ -48,12 +47,14 @@ export function ProductCardImage({
       {...tid("product-card-image")}
     >
       {imageUrl ? (
-        <Image
+        // eslint-disable-next-line @next/next/no-img-element -- user-provided image URLs can come from arbitrary hosts
+        <img
           src={imageUrl}
           alt={product.name_en}
-          fill
-          className="object-cover"
-          sizes={isFeatured ? "(min-width: 640px) 50vw, 100vw" : "300px"}
+          className="size-full object-cover"
+          loading="lazy"
+          decoding="async"
+          data-testid="next-image"
         />
       ) : (
         <span
