@@ -1,9 +1,7 @@
-/* eslint-disable react-hooks/refs -- @hello-pangea/dnd requires ref access during render for drag-and-drop binding */
 "use client";
 
 import type { DraggableProvided } from "@hello-pangea/dnd";
 import { GripVertical, Pencil, Trash2, Users } from "lucide-react";
-import Image from "next/image";
 import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
 import type { ReactNode } from "react";
@@ -166,12 +164,14 @@ export function ProductTableRow({
       <td className="px-4 py-3">
         <div className="size-10 overflow-hidden rounded-lg border-2 border-border bg-muted">
           {imageUrl ? (
-            <Image
+            // eslint-disable-next-line @next/next/no-img-element -- user-provided image URLs can come from arbitrary hosts
+            <img
               src={imageUrl}
               alt={name}
-              width={40}
-              height={40}
               className="size-full object-cover"
+              loading="lazy"
+              decoding="async"
+              data-testid="product-image"
             />
           ) : (
             <div className="flex size-full items-center justify-center text-xs text-muted-foreground">
