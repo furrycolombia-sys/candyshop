@@ -26,7 +26,7 @@ import {
 import { isValidCartItems } from "./cartValidation";
 
 import type { CartItem, CartState } from "@/features/cart/domain/types";
-import { fetchStoreProductsByIds } from "@/features/products";
+import { fetchStoreProductsByIds } from "@/features/products/infrastructure/productQueries";
 
 interface CartContextValue extends CartState {
   addItem: (
