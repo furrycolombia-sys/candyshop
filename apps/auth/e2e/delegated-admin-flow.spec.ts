@@ -57,12 +57,11 @@ test.describe.serial("Delegated admin purchase flow", () => {
     resetCounter();
     seller = await createTestUser("delegSeller", SELLER_PERMISSIONS);
     buyer = await createTestUser("delegBuyer", BUYER_PERMISSIONS);
-    // Delegate gets the permissions needed to access the sales page and act on orders
-    delegate = await createTestUser("delegUser", [
-      "orders.read",
-      "orders.update",
-      "receipts.read",
-    ]);
+    // Delegate has ONLY buyer permissions — no seller permissions whatsoever.
+    // The ability to approve / request proof comes exclusively from the
+    // seller_admins assignment in Phase 4, proving buyers can manage assigned
+    // items without ever receiving seller-level access.
+    delegate = await createTestUser("delegUser", BUYER_PERMISSIONS);
   });
 
   test.afterAll(async () => {
@@ -356,16 +355,16 @@ test.describe.serial("Delegated admin purchase flow", () => {
     page,
   }) => {
     await injectSession(context, delegate);
-    await page.goto(`${APP_URLS.PAYMENTS}/en/sales`);
+    await page.goto(`${APP_URLS.PAYMENTS}/en/assigned`);
     await page.waitForLoadState("networkidle");
 
-    await expect(page.getByTestId("received-orders-page")).toBeVisible({
+    await expect(page.getByTestId("assigned-orders-page")).toBeVisible({
       timeout: ELEMENT_TIMEOUT_MS,
     });
     await snap(page, "delegate-orders-page");
 
     // Verify orders are visible in the list
-    const ordersList = page.getByTestId("received-orders-list");
+    const ordersList = page.getByTestId("assigned-orders-list");
     await expect(ordersList).toBeVisible({ timeout: ELEMENT_TIMEOUT_MS });
 
     // Find the order — match received-order-{uuid}
@@ -393,6 +392,9 @@ test.describe.serial("Delegated admin purchase flow", () => {
     await page.reload();
     await page.waitForLoadState("networkidle");
 
+    await expect(page.getByTestId("assigned-orders-list")).toBeVisible({
+      timeout: ELEMENT_TIMEOUT_MS,
+    });
     await expect(
       page.getByTestId(/^received-order-[0-9a-f]/).first(),
     ).toBeVisible({ timeout: ELEMENT_TIMEOUT_MS });
@@ -451,10 +453,10 @@ test.describe.serial("Delegated admin purchase flow", () => {
     page,
   }) => {
     await injectSession(context, delegate);
-    await page.goto(`${APP_URLS.PAYMENTS}/en/sales`);
+    await page.goto(`${APP_URLS.PAYMENTS}/en/assigned`);
     await page.waitForLoadState("networkidle");
 
-    await expect(page.getByTestId("received-orders-page")).toBeVisible({
+    await expect(page.getByTestId("assigned-orders-page")).toBeVisible({
       timeout: ELEMENT_TIMEOUT_MS,
     });
 
@@ -476,14 +478,14 @@ test.describe.serial("Delegated admin purchase flow", () => {
     await page.waitForTimeout(MUTATION_WAIT_MS);
     await snap(page, "delegate-order-approved");
 
-    // Reload and verify order is no longer in the actionable list
+    // Reload and verify order is no longer in the assigned list
+    // (assigned only shows pending_verification / evidence_requested)
     await page.reload();
     await page.waitForLoadState("networkidle");
 
-    // After approval, the order should no longer appear (only pending/evidence_requested shown for delegates)
-    await expect(
-      page.getByTestId(/^received-order-[0-9a-f]/).first(),
-    ).not.toBeVisible({ timeout: ELEMENT_TIMEOUT_MS });
+    await expect(page.getByTestId("assigned-orders-empty")).toBeVisible({
+      timeout: ELEMENT_TIMEOUT_MS,
+    });
     await snap(page, "delegate-no-more-orders");
   });
 

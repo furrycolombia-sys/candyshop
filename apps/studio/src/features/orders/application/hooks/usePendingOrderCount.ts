@@ -16,7 +16,6 @@ export function usePendingOrderCount() {
   const supabase = useSupabase();
 
   return useQuery({
-    // eslint-disable-next-line @tanstack/query/exhaustive-deps -- supabase client is not serializable and is stable (memoized above)
     queryKey: [PENDING_ORDER_COUNT_QUERY_KEY],
     queryFn: () => fetchPendingOrderCount(supabase),
     staleTime: STALE_TIME_MS,

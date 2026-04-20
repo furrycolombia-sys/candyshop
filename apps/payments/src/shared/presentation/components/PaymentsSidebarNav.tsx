@@ -1,11 +1,15 @@
 "use client";
 
-import { matchesPermissions } from "auth/client";
+import {
+  matchesPermissions,
+  type PermissionRequirementMode,
+} from "auth/client";
 import {
   ClipboardCheck,
   CreditCard,
   Package,
   ShoppingCart,
+  UserCheck,
   type LucideIcon,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -19,6 +23,7 @@ type NavItem = {
   href: string;
   icon: LucideIcon;
   required: readonly string[];
+  mode?: PermissionRequirementMode;
 };
 
 type NavSection = {
@@ -35,6 +40,10 @@ const SALES_PERMISSIONS = [
 ] as const;
 const SELLER_PAYMENT_METHOD_PERMISSIONS = [
   "seller_payment_methods.read",
+] as const;
+const ASSIGNED_PERMISSIONS = [
+  "orders.approve",
+  "orders.request_proof",
 ] as const;
 
 const NAV_SECTIONS: readonly NavSection[] = [
@@ -72,6 +81,18 @@ const NAV_SECTIONS: readonly NavSection[] = [
       },
     ],
   },
+  {
+    labelKey: "delegate" as const,
+    items: [
+      {
+        key: "assigned" as const,
+        href: "/assigned",
+        icon: UserCheck,
+        required: ASSIGNED_PERMISSIONS,
+        mode: "any" as const,
+      },
+    ],
+  },
 ] as const;
 
 const INACTIVE_LINK_CLASS =
@@ -96,7 +117,9 @@ export function PaymentsSidebarNav({
   const visibleSections = NAV_SECTIONS.map((section) => ({
     ...section,
     items: section.items.filter((item) =>
-      isLoading ? false : matchesPermissions(grantedKeys, item.required),
+      isLoading
+        ? false
+        : matchesPermissions(grantedKeys, item.required, item.mode),
     ),
   })).filter((section) => section.items.length > 0);
 

@@ -30,11 +30,13 @@
   "sidebar": {
     "buyer": "Buyer",
     "seller": "Seller",
+    "delegate": "Assigned",
     "menu": "Payments Menu",
     "checkout": "Checkout",
     "myPurchases": "My Purchases",
     "paymentMethods": "Payment Methods",
     "sales": "Sales",
+    "assigned": "Assigned Items",
     "collapse": "Collapse sidebar",
     "expand": "Expand sidebar"
   },
@@ -121,6 +123,12 @@
     "viewDetails": "View details",
     "hideDetails": "Hide details",
     "total": "Total"
+  },
+  "assignedOrders": {
+    "title": "Assigned Items",
+    "subtitle": "Orders for items assigned to you by sellers",
+    "noOrders": "No assigned orders",
+    "noOrdersHint": "When a seller assigns you to one of their products, pending orders will appear here"
   },
   "receivedOrders": {
     "title": "Received Orders",

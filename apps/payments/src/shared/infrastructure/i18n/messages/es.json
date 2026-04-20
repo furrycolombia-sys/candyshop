@@ -30,11 +30,13 @@
   "sidebar": {
     "buyer": "Comprador",
     "seller": "Vendedor",
+    "delegate": "Asignado",
     "menu": "Menu de Pagos",
     "checkout": "Pagar",
     "myPurchases": "Mis Compras",
     "paymentMethods": "Metodos de Pago",
     "sales": "Ventas",
+    "assigned": "Items Asignados",
     "collapse": "Colapsar barra lateral",
     "expand": "Expandir barra lateral"
   },
@@ -121,6 +123,12 @@
     "viewDetails": "Ver detalles",
     "hideDetails": "Ocultar detalles",
     "total": "Total"
+  },
+  "assignedOrders": {
+    "title": "Items Asignados",
+    "subtitle": "Ordenes de items que te han asignado los vendedores",
+    "noOrders": "Sin ordenes asignadas",
+    "noOrdersHint": "Cuando un vendedor te asigne a uno de sus productos, las ordenes pendientes apareceran aqui"
   },
   "receivedOrders": {
     "title": "Ordenes Recibidas",
