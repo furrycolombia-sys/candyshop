@@ -18,5 +18,6 @@ export function useSellerProfiles(sellerIds: string[]) {
     queryKey: [SELLER_PROFILES_QUERY_KEY, sellerIds],
     queryFn: () => fetchSellerProfiles(supabase, sellerIds),
     enabled: sellerIds.length > 0,
+    staleTime: 60_000,
   });
 }

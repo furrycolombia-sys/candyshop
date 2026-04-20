@@ -51,12 +51,15 @@ export function TemplateEditor({
   );
   const editorId = useId();
 
-  const updateField = <K extends keyof TemplateFormValues>(
-    key: K,
-    value: TemplateFormValues[K],
-  ) => {
-    setForm((prev) => ({ ...prev, [key]: value }));
-  };
+  const updateField = useCallback(
+    (
+      key: keyof TemplateFormValues,
+      value: TemplateFormValues[keyof TemplateFormValues],
+    ) => {
+      setForm((prev) => ({ ...prev, [key]: value }));
+    },
+    [],
+  );
 
   const updateSection = useCallback(
     (index: number, partial: Partial<ProductSection>) => {

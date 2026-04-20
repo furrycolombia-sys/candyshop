@@ -33,7 +33,7 @@ export async function fetchCheckoutPaymentMethods({
       sellerId,
       items: items.map((item) => ({
         id: item.id,
-        quantity: item.quantity,
+        quantity: item.rawQuantity ?? item.quantity,
       })),
     }),
   });

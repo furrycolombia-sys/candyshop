@@ -2,6 +2,7 @@
 
 import { ArrowLeft } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { useCallback } from "react";
 import { tid } from "shared";
 import { Button } from "ui";
 
@@ -49,31 +50,34 @@ export function UserDetailPageContent({
     (!canCreate && !canDelete);
   const isLoading = profileLoading || permissionsLoading;
 
-  const handleToggle = (key: string, grant: boolean) => {
-    if ((grant && !canCreate) || (!grant && !canDelete)) return;
-    toggleMutation.mutate({ userId, permissionKey: key, grant });
-  };
+  const handleToggle = useCallback(
+    (key: string, grant: boolean) => {
+      if ((grant && !canCreate) || (!grant && !canDelete)) return;
+      toggleMutation.mutate({ userId, permissionKey: key, grant });
+    },
+    [canCreate, canDelete, toggleMutation, userId],
+  );
 
-  const handleToggleTemplate = (
-    templateKey: TemplateKey,
-    activate: boolean,
-  ) => {
-    if (!canCreate || !canDelete) return;
+  const handleToggleTemplate = useCallback(
+    (templateKey: TemplateKey, activate: boolean) => {
+      if (!canCreate || !canDelete) return;
 
-    templateMutation.mutate({
-      userId,
-      permissionKeys: getUpdatedPermissionKeysForTemplateToggle(
-        grantedKeys,
-        templateKey,
-        activate,
-      ),
-    });
-  };
+      templateMutation.mutate({
+        userId,
+        permissionKeys: getUpdatedPermissionKeysForTemplateToggle(
+          grantedKeys,
+          templateKey,
+          activate,
+        ),
+      });
+    },
+    [canCreate, canDelete, grantedKeys, templateMutation, userId],
+  );
 
-  const handleReset = () => {
+  const handleReset = useCallback(() => {
     if (!canDelete) return;
     templateMutation.mutate({ userId, permissionKeys: [] });
-  };
+  }, [canDelete, templateMutation, userId]);
 
   if (isLoading) {
     return (

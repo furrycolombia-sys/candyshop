@@ -44,7 +44,9 @@
     "supabase:start": "docker rm -f supabase_vector_candystore 2>nul & node scripts/supabase-cmd.mjs start",
     "supabase:stop": "node scripts/supabase-cmd.mjs stop",
     "supabase:reset": "node scripts/supabase-cmd.mjs db reset",
-    "prepare": "husky"
+    "prepare": "husky",
+    "clean:builds": "find . -name '.next' -type d -not -path '*/node_modules/*' -exec rm -rf '{}' + ; find . -name '.turbo' -type d -not -path '*/node_modules/*' -exec rm -rf '{}' + ; find . -name 'tsconfig.tsbuildinfo' -not -path '*/node_modules/*' -delete",
+    "clean": "pnpm clean:builds && find . -name 'node_modules' -type d -prune -exec rm -rf '{}' +"
   },
   "devDependencies": {
     "@ls-lint/ls-lint": "^2.3.1",

@@ -10,8 +10,16 @@ import {
 } from "@/features/payment-methods/application/hooks/usePaymentMethodMutations";
 import { usePaymentMethods } from "@/features/payment-methods/application/hooks/usePaymentMethods";
 
+interface UsePaymentMethodsManagerOptions {
+  /** Override the browser confirm dialog (e.g. for testing or custom modals). */
+  onConfirm?: (message: string) => boolean;
+}
+
 /** Encapsulates all data-fetching, mutations, and UI state for the payment methods page. */
-export function usePaymentMethodsManager(sellerId: string) {
+export function usePaymentMethodsManager(
+  sellerId: string,
+  { onConfirm }: UsePaymentMethodsManagerOptions = {},
+) {
   const t = useTranslations("paymentMethods");
 
   const { data: methods, isLoading } = usePaymentMethods(sellerId);
@@ -39,12 +47,12 @@ export function usePaymentMethodsManager(sellerId: string) {
 
   const handleDelete = useCallback(
     (id: string) => {
-      if (globalThis.confirm(t("deleteConfirm"))) {
+      if ((onConfirm ?? globalThis.confirm)(t("deleteConfirm"))) {
         if (expandedId === id) setExpandedId(null);
         deleteMutation.mutate(id);
       }
     },
-    [deleteMutation, expandedId, t],
+    [deleteMutation, expandedId, onConfirm, t],
   );
 
   const handleToggleActive = useCallback(

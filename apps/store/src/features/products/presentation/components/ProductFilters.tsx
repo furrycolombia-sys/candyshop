@@ -30,7 +30,7 @@ export function ProductFilters() {
 
   const [{ type, category, q }, setParams] =
     useQueryStates(catalogSearchParams);
-  const [searchInput, setSearchInput] = useState(q);
+  const [searchInput, setSearchInput] = useState(q ?? "");
 
   // Debounce search input to URL
   useEffect(() => {
@@ -73,7 +73,7 @@ export function ProductFilters() {
           value={searchInput}
           onChange={(e) => setSearchInput(e.target.value)}
           className="border-strong border-foreground pl-10 font-medium"
-          {...tid("product-search")}
+          {...tid("search-bar-input")}
         />
       </div>
 

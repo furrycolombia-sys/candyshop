@@ -2,7 +2,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { tid } from "shared";
 
 import { DisplaySectionEditor } from "./DisplaySectionEditor";
@@ -30,7 +30,7 @@ export function PaymentMethodEditor({ method }: PaymentMethodEditorProps) {
   const [formFields, setFormFields] = useState<FormField[]>(
     method.form_fields ?? [],
   );
-  const [nameEnError, setNameEnError] = useState<string | null>(null);
+  const nameEnError = nameEn.trim() ? null : t("nameRequired");
 
   const { saveStatus } = useAutoSavePaymentMethod({
     paymentMethodId: method.id,
@@ -39,16 +39,6 @@ export function PaymentMethodEditor({ method }: PaymentMethodEditorProps) {
     displayBlocks,
     formFields,
   });
-
-  // Validate name on change (UI-only concern, separate from auto-save)
-  useEffect(() => {
-    if (nameEn.trim()) {
-      setNameEnError(null);
-    } else {
-      setNameEnError(t("nameRequired"));
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional: only trigger on name changes
-  }, [nameEn]);
 
   return (
     <div className="flex flex-col gap-6 pt-4">

@@ -14,5 +14,6 @@ export function useDelegateCountsByProduct(sellerId?: string) {
     queryKey: [SELLER_ADMINS_QUERY_KEY, DELEGATE_COUNTS_KEY, sellerId],
     queryFn: () => fetchDelegateCountsByProduct(supabase, sellerId ?? ""),
     enabled: !!sellerId,
+    staleTime: 60_000,
   });
 }
