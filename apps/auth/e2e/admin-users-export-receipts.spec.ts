@@ -30,9 +30,14 @@ function asBuffer(chunks: DownloadChunk[]): Uint8Array {
 }
 
 function resolveAdminUsersUrl(): string {
-  const base = APP_URLS.ADMIN.endsWith("/admin")
+  const adminBase = APP_URLS.ADMIN.endsWith("/admin")
     ? APP_URLS.ADMIN
     : `${APP_URLS.ADMIN}/admin`;
+  // In dev mode APP_URLS.ADMIN is http://localhost:5002 (no basePath prefix)
+  // In Docker/production APP_URLS.ADMIN ends with /admin
+  const base = APP_URLS.ADMIN.includes("localhost")
+    ? APP_URLS.ADMIN
+    : adminBase;
   return `${base}/en/users`;
 }
 

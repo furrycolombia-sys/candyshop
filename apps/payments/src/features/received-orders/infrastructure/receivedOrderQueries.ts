@@ -87,10 +87,12 @@ async function fetchDelegatedOrderRows(
   userId: string,
   filter?: string,
 ): Promise<{ rows: OrderRow[]; sellerNameMap: Record<string, string> }> {
-  const { data: delegations } = await supabase
+  const { data: delegations, error: delegationsError } = await supabase
     .from("seller_admins")
     .select("seller_id")
     .eq("admin_user_id", userId);
+
+  if (delegationsError) throw delegationsError;
 
   const delegatedSellerIds = (delegations ?? []).map((d) => d.seller_id);
 

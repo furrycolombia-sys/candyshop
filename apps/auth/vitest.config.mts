@@ -1,6 +1,6 @@
 import { defineConfig } from "vitest/config";
 import react from "@vitejs/plugin-react";
-import { createVitestAliases } from "../../vitest.aliases";
+import path from "node:path";
 
 export default defineConfig({
   plugins: [react()],
@@ -62,6 +62,22 @@ export default defineConfig({
     bail: 0,
   },
   resolve: {
-    alias: createVitestAliases(__dirname),
+    alias: {
+      "@": path.resolve(__dirname, "./src"),
+      "@shared": path.resolve(__dirname, "../../packages/shared/src"),
+      "@ui": path.resolve(__dirname, "../../packages/ui/src"),
+      "@api": path.resolve(__dirname, "../../packages/api/src"),
+      "@app-components": path.resolve(
+        __dirname,
+        "../../packages/app-components/src",
+      ),
+      shared: path.resolve(__dirname, "../../packages/shared/src"),
+      ui: path.resolve(__dirname, "../../packages/ui/src"),
+      api: path.resolve(__dirname, "../../packages/api/src"),
+      "@monorepo/app-components": path.resolve(
+        __dirname,
+        "../../packages/app-components/src",
+      ),
+    },
   },
 });

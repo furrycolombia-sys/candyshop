@@ -52,6 +52,7 @@
     "uploadReceipt": "Upload Receipt",
     "uploadReceiptHint": "Photo of your payment confirmation",
     "maxFileSize": "Max file size: 5MB",
+    "fileSizeExceeded": "File exceeds 10 MB limit ({multiplier}x)",
     "submit": "Submit Payment",
     "submitting": "Submitting...",
     "submitted": "Payment Submitted",

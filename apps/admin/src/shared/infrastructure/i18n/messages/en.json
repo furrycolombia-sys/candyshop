@@ -187,6 +187,7 @@
     },
     "exportCsv": "Export Selected as CSV",
     "exportExcel": "Export Selected as Excel",
+    "exportError": "Failed to export users. Please try again.",
     "groups": {
       "products": "Products",
       "reviews": "Reviews",

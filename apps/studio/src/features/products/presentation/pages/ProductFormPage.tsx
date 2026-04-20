@@ -11,7 +11,7 @@ import {
   useProductById,
   useUpdateProduct,
 } from "@/features/products/application/hooks/useProductForm";
-import { InlineEditor } from "@/features/products/presentation/components/inline-editor";
+import { InlineEditor } from "@/features/products/presentation/components/InlineEditor";
 import { AccessDeniedState } from "@/shared/presentation/components/AccessDeniedState";
 
 interface ProductFormPageProps {

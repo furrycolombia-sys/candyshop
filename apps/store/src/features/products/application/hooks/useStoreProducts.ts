@@ -12,6 +12,7 @@ export function useStoreProducts() {
   return useQuery({
     queryKey: [STORE_PRODUCTS_QUERY_KEY],
     queryFn: fetchStoreProducts,
+    staleTime: 60_000,
   });
 }
 
@@ -19,5 +20,6 @@ export function useStoreProduct(id: string) {
   return useQuery({
     queryKey: ["store-product", id],
     queryFn: () => fetchStoreProductById(id),
+    staleTime: 60_000,
   });
 }

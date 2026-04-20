@@ -44,14 +44,14 @@ vi.mock("@/features/products/application/hooks/useStoreProducts", () => ({
 }));
 
 vi.mock(
-  "@/features/products/presentation/components/product-detail/MobileBarWithCart",
+  "@/features/products/presentation/components/ProductDetail/MobileBarWithCart",
   () => ({
     MobileBarWithCart: () => <div data-testid="mobile-bar-mock" />,
   }),
 );
 
 vi.mock(
-  "@/features/products/presentation/components/product-detail/ProductSections",
+  "@/features/products/presentation/components/ProductDetail/ProductSections",
   () => ({
     ProductSections: () => <div data-testid="product-sections-mock" />,
   }),

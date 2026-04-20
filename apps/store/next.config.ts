@@ -63,8 +63,8 @@ const nextConfig: NextConfig = {
   }),
   images: {
     remotePatterns: [
-      // Product images are user-provided URLs — allow all HTTPS hosts
-      { protocol: "https", hostname: "**" },
+      // Supabase Storage (primary image host for product images)
+      { protocol: "https", hostname: "*.supabase.co" },
     ],
   },
   transpilePackages: [

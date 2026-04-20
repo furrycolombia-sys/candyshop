@@ -20,7 +20,7 @@ import { FALLBACK_SELLER_NAME } from "@/shared/domain/constants";
 
 /** Stable empty array so the server snapshot reference never changes. */
 const EMPTY_COOKIE_ITEMS: CartCookieItem[] = [];
-const EMPTY_PRODUCTS: Array<Omit<CartItem, "quantity">> = [];
+const EMPTY_PRODUCTS: Array<Omit<CartItem, "quantity" | "rawQuantity">> = [];
 
 function getSnapshot(): CartCookieItem[] {
   return readCartFromCookie();
@@ -81,7 +81,8 @@ export function useCartFromCookie() {
           return {
             ...product,
             quantity,
-          };
+            rawQuantity: cookieItem.quantity,
+          } as CartItem;
         })
         .filter((item): item is CartItem => item !== null),
     [cookieItems, productById],

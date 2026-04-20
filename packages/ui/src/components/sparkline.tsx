@@ -1,6 +1,6 @@
 import * as React from "react";
 
-import { UI_CONSTANTS } from "@ui/constants/ui-constants";
+import { UI_CONSTANTS } from "@ui/constants/uiConstants";
 import { cn } from "@ui/utils/cn";
 
 interface SparklineProps extends React.HTMLAttributes<HTMLDivElement> {

@@ -1,31 +1,13 @@
 "use client";
 
 import { type DraggableProvided } from "@hello-pangea/dnd";
-import {
-  AlignLeft,
-  GripVertical,
-  Hash,
-  Mail,
-  Type,
-  Upload,
-  X,
-} from "lucide-react";
+import { GripVertical, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { tid } from "shared";
 import { Switch } from "ui";
 
-import type {
-  FormField,
-  FormFieldType,
-} from "@/features/payment-methods/domain/types";
-
-const FIELD_TYPE_ICONS: Record<FormFieldType, typeof Type> = {
-  text: Type,
-  email: Mail,
-  number: Hash,
-  file: Upload,
-  textarea: AlignLeft,
-};
+import { FIELD_TYPE_ICONS } from "@/features/payment-methods/domain/constants";
+import type { FormField } from "@/features/payment-methods/domain/types";
 
 const inputClass =
   "flex h-8 w-full border-strong border-foreground bg-background px-2 py-1 text-sm shadow-brutal-sm focus:outline-none focus:ring-2 focus:ring-brand";

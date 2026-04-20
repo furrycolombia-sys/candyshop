@@ -13,5 +13,6 @@ export function useProducts(filters?: Partial<ProductFilters>) {
     // eslint-disable-next-line @tanstack/query/exhaustive-deps -- supabase client is stable (memoized)
     queryKey: [PRODUCTS_QUERY_KEY, filters],
     queryFn: () => fetchProducts(supabase, filters),
+    staleTime: 60_000,
   });
 }

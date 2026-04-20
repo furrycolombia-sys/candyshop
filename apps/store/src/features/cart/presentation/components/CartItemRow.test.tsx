@@ -72,6 +72,12 @@ function makeCartItem(overrides: Partial<CartItem> = {}): CartItem {
 }
 
 const identity = (...args: unknown[]) => String(args[0]);
+const translators = {
+  t: identity,
+  tProducts: identity,
+  tTypes: identity,
+  tCategories: identity,
+};
 
 // ---------------------------------------------------------------------------
 // Tests
@@ -90,10 +96,7 @@ describe("CartItemRow", () => {
       <CartItemRow
         item={makeCartItem()}
         locale="en"
-        tProducts={identity}
-        tTypes={identity}
-        tCategories={identity}
-        t={identity}
+        translators={translators}
         removeItem={mockRemoveItem}
         updateQuantity={mockUpdateQuantity}
       />,
@@ -106,10 +109,7 @@ describe("CartItemRow", () => {
       <CartItemRow
         item={makeCartItem({ quantity: 3 })}
         locale="en"
-        tProducts={identity}
-        tTypes={identity}
-        tCategories={identity}
-        t={identity}
+        translators={translators}
         removeItem={mockRemoveItem}
         updateQuantity={mockUpdateQuantity}
       />,
@@ -122,10 +122,7 @@ describe("CartItemRow", () => {
       <CartItemRow
         item={makeCartItem({ id: "abc" })}
         locale="en"
-        tProducts={identity}
-        tTypes={identity}
-        tCategories={identity}
-        t={identity}
+        translators={translators}
         removeItem={mockRemoveItem}
         updateQuantity={mockUpdateQuantity}
       />,
@@ -139,10 +136,7 @@ describe("CartItemRow", () => {
       <CartItemRow
         item={makeCartItem({ id: "abc", quantity: 2 })}
         locale="en"
-        tProducts={identity}
-        tTypes={identity}
-        tCategories={identity}
-        t={identity}
+        translators={translators}
         removeItem={mockRemoveItem}
         updateQuantity={mockUpdateQuantity}
       />,
@@ -156,10 +150,7 @@ describe("CartItemRow", () => {
       <CartItemRow
         item={makeCartItem({ id: "abc", quantity: 2, max_quantity: 2 })}
         locale="en"
-        tProducts={identity}
-        tTypes={identity}
-        tCategories={identity}
-        t={identity}
+        translators={translators}
         removeItem={mockRemoveItem}
         updateQuantity={mockUpdateQuantity}
       />,
@@ -173,10 +164,7 @@ describe("CartItemRow", () => {
       <CartItemRow
         item={makeCartItem({ id: "abc", quantity: 2 })}
         locale="en"
-        tProducts={identity}
-        tTypes={identity}
-        tCategories={identity}
-        t={identity}
+        translators={translators}
         removeItem={mockRemoveItem}
         updateQuantity={mockUpdateQuantity}
       />,
@@ -190,10 +178,7 @@ describe("CartItemRow", () => {
       <CartItemRow
         item={makeCartItem({ category: "fursuits", type: "digital" })}
         locale="en"
-        tProducts={identity}
-        tTypes={identity}
-        tCategories={identity}
-        t={identity}
+        translators={translators}
         removeItem={mockRemoveItem}
         updateQuantity={mockUpdateQuantity}
       />,
@@ -208,10 +193,7 @@ describe("CartItemRow", () => {
       <CartItemRow
         item={makeCartItem({ refundable: true })}
         locale="en"
-        tProducts={identity}
-        tTypes={identity}
-        tCategories={identity}
-        t={identity}
+        translators={translators}
         removeItem={mockRemoveItem}
         updateQuantity={mockUpdateQuantity}
       />,
@@ -224,10 +206,7 @@ describe("CartItemRow", () => {
       <CartItemRow
         item={makeCartItem({ refundable: false })}
         locale="en"
-        tProducts={identity}
-        tTypes={identity}
-        tCategories={identity}
-        t={identity}
+        translators={translators}
         removeItem={mockRemoveItem}
         updateQuantity={mockUpdateQuantity}
       />,
@@ -244,10 +223,7 @@ describe("CartItemRow", () => {
           ] as unknown as CartItem["images"],
         })}
         locale="en"
-        tProducts={identity}
-        tTypes={identity}
-        tCategories={identity}
-        t={identity}
+        translators={translators}
         removeItem={mockRemoveItem}
         updateQuantity={mockUpdateQuantity}
       />,

@@ -72,8 +72,8 @@ const nextConfig: NextConfig = {
         protocol: supabaseUrl.startsWith("https") ? "https" : "http",
         hostname: supabaseHostname,
       },
-      // Sellers can paste any image URL — allow all HTTPS hosts
-      { protocol: "https", hostname: "**" },
+      // Supabase Storage wildcard (covers preview/staging/local Supabase projects)
+      { protocol: "https", hostname: "*.supabase.co" },
     ],
   },
   transpilePackages: [
