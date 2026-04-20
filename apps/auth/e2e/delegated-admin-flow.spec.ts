@@ -227,6 +227,9 @@ test.describe.serial("Delegated admin purchase flow", () => {
     await page.waitForLoadState("networkidle");
 
     // Search for the product
+    await expect(page.getByTestId("search-bar-input")).toBeVisible({
+      timeout: ELEMENT_TIMEOUT_MS,
+    });
     await page.getByTestId("search-bar-input").fill("E2E Delegated Product");
     await page.waitForTimeout(DEBOUNCE_WAIT_MS);
     await snap(page, "buyer-search-product");

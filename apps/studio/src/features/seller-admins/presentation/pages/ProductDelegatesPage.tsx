@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 import { useCallback } from "react";
 import { tid } from "shared";
 
-import { useProductById } from "@/features/products/application/hooks/useProductForm";
+import { useProductById } from "@/features/products";
 import {
   useAddDelegate,
   useRemoveDelegate,

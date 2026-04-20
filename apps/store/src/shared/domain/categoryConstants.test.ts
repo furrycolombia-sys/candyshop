@@ -6,7 +6,7 @@ import {
   getCategoryColor,
   getCategoryTheme,
 } from "@/shared/domain/categoryConstants";
-import type { ProductCategory } from "@/shared/domain/categoryTypes";
+import type { ProductCategory } from "@/shared/domain/CategoryTypes";
 
 // ---------------------------------------------------------------------------
 // Tests

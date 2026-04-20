@@ -39,7 +39,7 @@ vi.mock("@/features/products/application/hooks/useProductForm", () => ({
   useUpdateProduct: () => mockUpdate,
 }));
 
-vi.mock("@/features/products/presentation/components/inline-editor", () => ({
+vi.mock("@/features/products/presentation/components/InlineEditor", () => ({
   InlineEditor: ({ isEdit }: { isEdit: boolean }) => (
     <div data-testid="inline-editor">{isEdit ? "edit" : "create"}</div>
   ),

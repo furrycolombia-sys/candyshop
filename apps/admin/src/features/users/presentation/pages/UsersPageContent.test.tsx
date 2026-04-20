@@ -33,6 +33,10 @@ vi.mock("@/shared/application/hooks/useSupabase", () => ({
   useSupabase: vi.fn(() => ({})),
 }));
 
+vi.mock("@/shared/application/context/ErrorContext", () => ({
+  useErrorContext: vi.fn(() => ({ setError: vi.fn() })),
+}));
+
 vi.mock("@/features/users/application/hooks/useUsers", () => ({
   useUsers: vi.fn(() => ({
     data: { users: [], total: 0 },

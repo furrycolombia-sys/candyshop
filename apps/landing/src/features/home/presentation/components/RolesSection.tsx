@@ -52,11 +52,12 @@ export function RolesSection() {
       <div className="mx-auto max-w-6xl px-6 lg:px-8">
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
           {ROLES.map(({ key, cardBg, cardText, btnBg, btnText }) => (
+            /* Static card container — no cursor-pointer, no hover translate */
             <div
               key={key}
               role="group"
               aria-labelledby={`${key}-heading`}
-              className="group shadow-brutal-lg flex flex-col border-strong border-foreground p-8 transition-all duration-150 hover:-translate-0.5 lg:p-10"
+              className="shadow-brutal-lg flex flex-col border-strong border-foreground p-8 lg:p-10"
               style={{ backgroundColor: cardBg, color: cardText }}
               {...tid(`role-${key}`)}
             >
@@ -72,9 +73,10 @@ export function RolesSection() {
               <p className="mb-8 text-base/relaxed opacity-90">
                 {t(`${key}.description`)}
               </p>
+              {/* The only interactive element — explicitly a button */}
               <Link
                 href={appUrls.store}
-                className="button-brutal button-press-sm shadow-brutal-sm mt-auto self-start px-6 py-3 text-sm"
+                className="button-brutal button-press-sm shadow-brutal-sm mt-auto inline-flex self-start px-6 py-3 text-sm font-extrabold"
                 style={{
                   backgroundColor: btnBg,
                   color: btnText,

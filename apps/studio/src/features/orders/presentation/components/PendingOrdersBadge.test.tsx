@@ -13,9 +13,10 @@ vi.mock("shared", () => ({
   tid: (id: string) => ({ "data-testid": id }),
 }));
 
-vi.mock("@/shared/infrastructure/config", () => ({
-  appUrls: { payments: "http://localhost:5005/payments" },
-}));
+vi.mock("@/shared/infrastructure/config", async () => {
+  const { mockStudioConfig } = await import("@/test/fixtures/appUrls");
+  return mockStudioConfig;
+});
 
 const mockUsePendingOrderCount = vi.fn();
 

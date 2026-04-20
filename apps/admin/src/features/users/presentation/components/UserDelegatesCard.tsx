@@ -4,8 +4,8 @@ import { Users } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { tid } from "shared";
 
-import { AsDelegateRow } from "./delegates/AsDelegateRow";
-import { AsSellerRow } from "./delegates/AsSellerRow";
+import { AsDelegateRow } from "./Delegates/AsDelegateRow";
+import { AsSellerRow } from "./Delegates/AsSellerRow";
 
 import { useUserDelegates } from "@/features/users/application/hooks/useUserDelegates";
 

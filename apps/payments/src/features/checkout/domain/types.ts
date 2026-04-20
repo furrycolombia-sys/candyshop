@@ -12,7 +12,10 @@ export interface CartItem {
   price_cop: number;
   price_usd: number;
   seller_id: string | null;
+  /** Display/subtotal quantity — capped to max_quantity. */
   quantity: number;
+  /** Original cookie quantity — used for stock validation. Falls back to quantity if not set. */
+  rawQuantity?: number;
   images: Array<{ url: string; alt: string }>;
   max_quantity: number | null;
   [key: string]: unknown;
@@ -28,7 +31,7 @@ export interface SellerGroup {
 import type {
   DisplayBlock,
   FormField,
-} from "@/shared/domain/paymentMethodTypes";
+} from "@/shared/domain/PaymentMethodTypes";
 
 export interface SellerPaymentMethodWithType {
   id: string;

@@ -1,5 +1,9 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
 
+import {
+  AUDIT_QUERY_KEY,
+  TABLE_NAMES_KEY,
+} from "@/features/audit/domain/constants";
 import type { AuditFilters } from "@/features/audit/domain/types";
 import {
   fetchAuditLog,
@@ -7,9 +11,6 @@ import {
   insertAuditLog,
 } from "@/features/audit/infrastructure/auditQueries";
 import { useSupabase } from "@/shared/application/hooks/useSupabase";
-
-const AUDIT_QUERY_KEY = "audit-log";
-const TABLE_NAMES_KEY = "audit-table-names";
 
 /** Keep data fresh for 30s so back-navigation shows cached results instantly */
 const STALE_TIME_MS = 30_000;

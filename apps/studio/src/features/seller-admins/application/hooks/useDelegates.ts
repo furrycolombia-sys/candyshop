@@ -12,5 +12,6 @@ export function useDelegates(sellerId?: string, productId?: string) {
     queryKey: [SELLER_ADMINS_QUERY_KEY, sellerId, productId],
     queryFn: () => fetchDelegates(supabase, sellerId ?? "", productId ?? ""),
     enabled: !!sellerId && !!productId,
+    staleTime: 60_000,
   });
 }

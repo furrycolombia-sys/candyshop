@@ -75,7 +75,10 @@ export function FeaturesSection() {
     >
       <div className="mx-auto max-w-6xl px-6 lg:px-8">
         <div className="mb-10 max-w-2xl lg:mb-12">
-          <div className="shadow-brutal-sm mb-5 inline-block border-strong border-foreground bg-background px-4 py-1.5 text-sm font-extrabold uppercase tracking-wider text-foreground">
+          <div
+            className="shadow-brutal-sm mb-5 inline-block border-strong border-foreground bg-background px-4 py-1.5 text-sm font-extrabold uppercase tracking-wider text-foreground"
+            aria-hidden="true"
+          >
             {tSections(SECTION_LABEL_KEY)}
           </div>
           <h2
@@ -88,6 +91,7 @@ export function FeaturesSection() {
             {tSections("categoriesIntro")}
           </p>
         </div>
+        {/* Static display grid — no hover affordance, not interactive */}
         <ul
           className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3"
           aria-label={tSections(SECTION_LABEL_KEY)}
@@ -99,7 +103,7 @@ export function FeaturesSection() {
               <li key={key} className="list-none" {...tid(`category-${key}`)}>
                 <article
                   className={cn(
-                    "group shadow-brutal-lg relative flex h-full min-h-52 flex-col overflow-hidden border-strong border-foreground p-6 transition-transform duration-150 hover:-translate-y-1 sm:min-h-56 lg:p-7 xl:even:translate-y-6",
+                    "shadow-brutal-lg relative flex h-full min-h-52 flex-col overflow-hidden border-strong border-foreground p-6 sm:min-h-56 lg:p-7 xl:even:translate-y-6",
                     tilt,
                   )}
                   style={{ backgroundColor: bg, color: fg }}
@@ -113,7 +117,10 @@ export function FeaturesSection() {
                     aria-hidden="true"
                   />
                   <div className="mb-8 flex items-start justify-between gap-4">
-                    <span className="border-strong border-foreground bg-background/70 px-3 py-1 text-label-xs font-bold uppercase tracking-section">
+                    <span
+                      className="border-strong border-foreground bg-background/70 px-3 py-1 text-label-xs font-bold uppercase tracking-section"
+                      aria-hidden="true"
+                    >
                       {tSections("categories")}
                     </span>
                     <span
@@ -127,7 +134,10 @@ export function FeaturesSection() {
                     <p className="max-w-full text-pretty font-display text-[1.55rem] leading-[0.94] font-extrabold uppercase sm:text-[1.8rem] lg:text-[2rem]">
                       {t(key)}
                     </p>
-                    <div className="mt-5 flex items-center gap-2">
+                    <div
+                      className="mt-5 flex items-center gap-2"
+                      aria-hidden="true"
+                    >
                       <div className="h-1.5 w-16 border-strong border-foreground bg-background/70" />
                       <div className="h-1.5 w-6 border-strong border-foreground bg-background/40" />
                     </div>

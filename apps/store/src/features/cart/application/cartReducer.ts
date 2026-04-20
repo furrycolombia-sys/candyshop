@@ -92,7 +92,10 @@ export function deriveState(items: CartItem[]): CartState {
   return {
     items,
     itemCount: items.reduce((sum, item) => sum + item.quantity, 0),
-    total: items.reduce((sum, item) => sum + item.price_usd * item.quantity, 0),
+    total: items.reduce(
+      (sum, item) => sum + (item.price_usd ?? 0) * item.quantity,
+      0,
+    ),
   };
 }
 

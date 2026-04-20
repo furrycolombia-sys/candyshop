@@ -5,6 +5,15 @@ import { CartProvider, useCart } from "@/features/cart/application/CartContext";
 import type { CartItem } from "@/features/cart/domain/types";
 
 // ---------------------------------------------------------------------------
+// Mock next-intl — pulled in transitively via @/features/products barrel
+// ---------------------------------------------------------------------------
+
+vi.mock("next-intl", () => ({
+  useTranslations: () => (key: string) => key,
+  useLocale: () => "en",
+}));
+
+// ---------------------------------------------------------------------------
 // Mock cookies-next — prevent cookie side-effects in tests
 // ---------------------------------------------------------------------------
 

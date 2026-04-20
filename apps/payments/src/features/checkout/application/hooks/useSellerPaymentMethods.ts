@@ -17,5 +17,6 @@ export function useSellerPaymentMethods(sellerId: string, items: CartItem[]) {
     ],
     queryFn: () => fetchCheckoutPaymentMethods({ sellerId, items }),
     enabled: !!sellerId && items.length > 0,
+    staleTime: 30_000,
   });
 }
