@@ -34,6 +34,7 @@
     "user:grant-role": "node scripts/grant-user-role.mjs",
     "user:grant-admin": "node scripts/grant-user-role.mjs --email furrycolombia@gmail.com --role admin",
     "sync-secrets": "node scripts/sync-secrets.mjs",
+    "provision:account": "node scripts/provision-account.mjs",
     "e2e:dev": "node scripts/e2e.mjs --env dev",
     "e2e:dev:headed": "node scripts/e2e.mjs --env dev --headed",
     "e2e:staging": "node scripts/e2e.mjs --env staging",
