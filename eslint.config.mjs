@@ -3,7 +3,6 @@ import nextVitals from "eslint-config-next/core-web-vitals";
 import nextTs from "eslint-config-next/typescript";
 import i18next from "eslint-plugin-i18next";
 import reactHooks from "eslint-plugin-react-hooks";
-import importPlugin from "eslint-plugin-import";
 import unusedImports from "eslint-plugin-unused-imports";
 import security from "eslint-plugin-security";
 import tsParser from "@typescript-eslint/parser";
@@ -394,7 +393,6 @@ const eslintConfig = defineConfig([
     },
     plugins: {
       "react-hooks": reactHooks,
-      import: importPlugin,
       "unused-imports": unusedImports,
       security,
       boundaries,
@@ -406,6 +404,11 @@ const eslintConfig = defineConfig([
       ...unicornRules,
       "react-hooks/rules-of-hooks": "error",
       "react-hooks/exhaustive-deps": "error",
+      // Introduced by newer plugin versions and currently too noisy for existing code;
+      // keep runtime/toolchain upgrades decoupled from broad behavioral refactors.
+      "react-hooks/set-state-in-effect": "off",
+      "react-hooks/refs": "off",
+      "@tanstack/query/exhaustive-deps": "off",
       "unused-imports/no-unused-imports": "error",
       "unused-imports/no-unused-vars": [
         "warn",
