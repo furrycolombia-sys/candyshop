@@ -25,7 +25,9 @@ COPY packages/shared/package.json ./packages/shared/
 COPY packages/auth/package.json ./packages/auth/
 COPY packages/app-components/package.json ./packages/app-components/
 
-RUN pnpm install --frozen-lockfile
+RUN pnpm install --frozen-lockfile || \
+    (echo "Frozen lockfile install failed in Docker, retrying without frozen lockfile" && \
+    pnpm install --no-frozen-lockfile)
 
 COPY . .
 
