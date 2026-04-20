@@ -21,17 +21,6 @@ vi.mock("shared", () => ({
   tid: (id: string) => ({ "data-testid": id }),
 }));
 
-vi.mock("next/image", () => ({
-  default: ({
-    src,
-    alt,
-  }: {
-    src: string;
-    alt: string;
-    // eslint-disable-next-line @next/next/no-img-element -- test mock
-  }) => <img src={src} alt={alt} data-testid="next-image" />,
-}));
-
 vi.mock("@/features/products/presentation/components/FeaturedRibbon", () => ({
   FeaturedRibbon: ({ label }: { label: string }) => (
     <span data-testid="featured-ribbon">{label}</span>
@@ -136,7 +125,7 @@ describe("ImageGallery", () => {
       <ImageGallery product={makeProduct({ images })} theme={defaultTheme} />,
     );
     expect(screen.getByTestId("image-gallery")).toBeInTheDocument();
-    const imgs = screen.getAllByTestId("next-image");
+    const imgs = screen.getAllByRole("img");
     expect(imgs.length).toBeGreaterThan(0);
   });
 
@@ -184,7 +173,7 @@ describe("ImageGallery", () => {
         theme={defaultTheme}
       />,
     );
-    expect(screen.getAllByTestId("next-image").length).toBeGreaterThan(0);
+    expect(screen.getAllByRole("img").length).toBeGreaterThan(0);
   });
 
   it("renders featured ribbon on images when featured", () => {

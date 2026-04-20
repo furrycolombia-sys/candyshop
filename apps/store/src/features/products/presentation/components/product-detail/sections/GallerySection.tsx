@@ -1,4 +1,3 @@
-import Image from "next/image";
 import { useLocale } from "next-intl";
 import { useMemo } from "react";
 import { i18nField, tid } from "shared";
@@ -53,11 +52,13 @@ export function GallerySection({ section, theme }: GallerySectionProps) {
                   style={{ backgroundColor: theme.bg }}
                 >
                   {item.image_url ? (
-                    <Image
+                    // eslint-disable-next-line @next/next/no-img-element -- user-provided image URLs can come from arbitrary hosts
+                    <img
                       src={item.image_url}
                       alt={caption || ""}
-                      fill
-                      className="object-cover"
+                      className="absolute inset-0 size-full object-cover"
+                      loading="lazy"
+                      decoding="async"
                     />
                   ) : (
                     <span className="font-display text-sm font-extrabold uppercase tracking-widest text-foreground/30 select-none">
