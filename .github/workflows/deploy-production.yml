@@ -102,6 +102,8 @@ jobs:
             IdentityFile ~/.ssh/deploy_key
             StrictHostKeyChecking no
             ProxyCommand cloudflared access ssh --hostname %h
+            ServerAliveInterval 30
+            ServerAliveCountMax 20
           EOF
 
       - name: Write ephemeral env file on server
@@ -141,7 +143,7 @@ jobs:
       - name: Verify deployment
         run: |
           ssh ${{ secrets.PROD_SERVER_HOST }} \
-            'export NVM_DIR="$HOME/.nvm" && source "$NVM_DIR/nvm.sh" && pm2 list'
+            'docker ps --filter name=candyshop-prod --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"'
 
       - name: Cleanup
         if: always()
