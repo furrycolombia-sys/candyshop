@@ -1,0 +1,84 @@
+{
+  "agent": "architecture",
+  "review_id": "2026-04-21_06-46-58",
+  "outputFile": ".ai-context/reviews/agents/2026-04-21_06-46-58_architecture.json",
+  "scope": "apps/ packages/ scripts/",
+  "issues": [
+    {
+      "id": "ARCH-001",
+      "severity": "warning",
+      "file": "apps/store/src/features/products/presentation/components/ProductDetail/MobileBarWithCart.tsx",
+      "line": 5,
+      "title": "Cross-feature import: products feature imports from cart feature",
+      "description": "MobileBarWithCart.tsx (inside features/products) directly imports `useAddToCart` from `@/features/cart`. Features must not import directly from other features. Cross-feature communication should go through shared hooks in `/shared/application/` or be composed at the page/app level.",
+      "rule": "architecture.md#feature-isolation",
+      "fix": "Move the composition of the cart hook and product display up to the page or a shared integration component. Alternatively, place `useAddToCart` in `@/shared/application/hooks/` if it is truly shared, and have both features depend on the shared abstraction."
+    },
+    {
+      "id": "ARCH-002",
+      "severity": "warning",
+      "file": "apps/payments/src/features/checkout/infrastructure/checkoutQueries.ts",
+      "line": 157,
+      "title": "Hardcoded magic string 'stock_error' without a constant",
+      "description": "The string literal `\"stock_error\"` is thrown as an error message in infrastructure and then compared in two presentation components (SellerCheckoutContent.tsx:83 and SellerCheckoutCard.tsx:159). There is no named constant for this sentinel value in the checkout domain constants file. A typo in any one location would silently break the stock-error UI path.",
+      "rule": "no-hardcoding.md#1-magic-numbers--strings--constants",
+      "fix": "Add `export const STOCK_ERROR_CODE = \"stock_error\";` to `apps/payments/src/features/checkout/domain/constants.ts` and replace the three raw string literals with the constant."
+    },
+    {
+      "id": "ARCH-003",
+      "severity": "warning",
+      "file": "apps/payments/src/features/checkout/presentation/pages/CheckoutPageContent.tsx",
+      "line": 21,
+      "title": "Hardcoded session-storage value sentinel \"1\" without a constant",
+      "description": "The value `\"1\"` used to flag checkout completion in sessionStorage is a magic string. It is set at line 29 and compared at line 21. While the key itself is properly extracted to `CHECKOUT_COMPLETED_SESSION_KEY`, the value is not.",
+      "rule": "no-hardcoding.md#1-magic-numbers--strings--constants",
+      "fix": "Add `export const CHECKOUT_COMPLETED_VALUE = \"1\";` to the checkout domain constants and use it in both the set and get calls."
+    },
+    {
+      "id": "ARCH-004",
+      "severity": "suggestion",
+      "file": "apps/payments/src/features/reports/presentation/pages/SellerReportsPage.tsx",
+      "line": 39,
+      "title": "Internal render helper function returns JSX inside component",
+      "description": "`renderContent()` is defined as a named function inside `SellerReportsPage` and returns JSX. While it does not call hooks (so it avoids the stale-closure pitfall), extracting loading/error/data states into a standalone component is the preferred pattern (see component-patterns.md). This is a minor style concern and does not cause a runtime issue.",
+      "rule": "component-patterns.md#container-presenter-pattern",
+      "fix": "Consider extracting the conditional content to `<SellerReportsContent orders={orders} total={total} isLoading={isLoading} isError={isError} />` as a separate component or just inline the conditional JSX directly in the render return."
+    },
+    {
+      "id": "ARCH-005",
+      "severity": "suggestion",
+      "file": "apps/payments/src/features/",
+      "line": null,
+      "title": "Missing barrel index.ts files for feature layers across multiple apps",
+      "description": "The architecture rule requires each feature layer (domain, application, infrastructure, presentation) to have an `index.ts` exporting its public API. None of the layer subdirectories in features/reports, features/checkout, features/assigned-orders, features/orders, features/payment-methods, features/received-orders (payments), nor in store features/auth, store features/cart, store features/products layers have these barrel files. This means consumers must import deep internal paths instead of layer-level public APIs.",
+      "rule": "architecture.md#feature-isolation",
+      "fix": "Add `index.ts` to each feature layer directory, re-exporting the intended public surface. This is a widespread pattern inconsistency across all apps; prioritize the most-imported layers first (e.g. checkout/domain, checkout/application)."
+    },
+    {
+      "id": "ARCH-006",
+      "severity": "info",
+      "file": "packages/app-components/src/components/AppNavigation.tsx",
+      "line": 3,
+      "title": "app-components package uses next-intl directly (by design)",
+      "description": "AppNavigation, LocaleSwitcher, ThemeToggle, EmptyState, ErrorState, LoadingState, and ExportDropdown in packages/app-components all call `useTranslations` from next-intl. The standard rule for packages is no i18n (props injection instead). However, CLAUDE.md explicitly annotates this package as '# App-level shared components (uses next-intl)', indicating this is a deliberate architectural decision — app-components is a shared-but-i18n-aware layer. No action required, but future components added to this package should follow the same documented exception.",
+      "rule": "monorepo-architecture.md#package-types",
+      "fix": "No fix needed — this is intentional per CLAUDE.md. Document the exception for new contributors."
+    },
+    {
+      "id": "ARCH-007",
+      "severity": "info",
+      "file": "scripts/seed-moonfest.mjs",
+      "line": 16,
+      "title": "Hardcoded production URL in seed script",
+      "description": "`IMG_BASE` is hardcoded to `https://moonfest.furrycolombia.com` and the final console.log references `https://store.furrycolombia.com/store`. Seed scripts are DevOps tooling and this is acceptable — they are not production application code. Noted for awareness only.",
+      "rule": "no-hardcoding.md#4-configuration--config-files",
+      "fix": "Optional: accept IMG_BASE and STORE_URL as environment variables for flexibility across environments. Not required."
+    }
+  ],
+  "summary": {
+    "critical": 0,
+    "warning": 3,
+    "suggestion": 2,
+    "info": 2
+  }
+}

@@ -1,0 +1,358 @@
+import { expect, test } from "@playwright/test";
+
+import {
+  DEBOUNCE_WAIT_MS,
+  ELEMENT_TIMEOUT_MS,
+  MUTATION_WAIT_MS,
+} from "../../auth/e2e/helpers/constants";
+import {
+  ADMIN_PERMISSIONS,
+  adminDelete,
+  adminInsert,
+  createTestUser,
+  injectSession,
+  supabaseAdmin,
+  type TestUser,
+} from "../../auth/e2e/helpers/session";
+
+// ─── Test data ────────────────────────────────────────────────────
+
+const TEST_ORDER = {
+  total: 50000,
+  currency: "COP",
+  payment_status: "approved",
+  transfer_number: "E2E-REPORT-001",
+  receipt_url: null,
+};
+
+const TEST_ORDER_ITEM = {
+  quantity: 2,
+  unit_price: 25000,
+  currency: "COP",
+};
+
+// ─── Helpers ─────────────────────────────────────────────────────
+
+function getAdminBaseUrl(): string {
+  const url = process.env.NEXT_PUBLIC_ADMIN_URL;
+  if (!url) throw new Error("NEXT_PUBLIC_ADMIN_URL is required.");
+  return url;
+}
+
+// ─── Test suite ───────────────────────────────────────────────────
+
+test.describe.serial("Reports page", () => {
+  let adminUser: TestUser;
+  let buyerUser: TestUser;
+  let orderId: string;
+  let productId: string;
+
+  test.beforeAll(async () => {
+    adminUser = await createTestUser("admin-reports", [
+      ...ADMIN_PERMISSIONS,
+      "admin.reports",
+    ]);
+
+    buyerUser = await createTestUser("buyer-reports", []);
+
+    // Create a minimal product so order_items FK resolves
+    const product = await adminInsert("products", {
+      name: "E2E Report Product",
+      description: "Created for reports E2E test",
+      price: 25000,
+      currency: "COP",
+      stock: 10,
+      max_quantity: 5,
+      owner_id: adminUser.userId,
+    });
+    productId = product.id as string;
+
+    // Create an order for the buyer
+    const order = await adminInsert("orders", {
+      ...TEST_ORDER,
+      user_id: buyerUser.userId,
+      seller_id: adminUser.userId,
+    });
+    orderId = order.id as string;
+
+    // Create an order item
+    await adminInsert("order_items", {
+      order_id: orderId,
+      product_id: productId,
+      ...TEST_ORDER_ITEM,
+    });
+  });
+
+  test.afterAll(async () => {
+    await adminDelete("order_items", `order_id=eq.${orderId}`).catch(() => {});
+    await adminDelete("orders", `id=eq.${orderId}`).catch(() => {});
+    await adminDelete("products", `id=eq.${productId}`).catch(() => {});
+    await supabaseAdmin.auth.admin.deleteUser(buyerUser.userId).catch(() => {});
+    await supabaseAdmin.auth.admin.deleteUser(adminUser.userId).catch(() => {});
+  });
+
+  // ─── Page structure ─────────────────────────────────────────────
+
+  test("displays page with filters, table and export button", async ({
+    context,
+    page,
+  }) => {
+    await injectSession(context, adminUser);
+    await page.goto(`${getAdminBaseUrl()}/en/reports`, {
+      waitUntil: "networkidle",
+    });
+
+    await expect(page.getByTestId("reports-page")).toBeVisible({
+      timeout: ELEMENT_TIMEOUT_MS,
+    });
+    await expect(page.getByTestId("reports-filters-bar")).toBeVisible({
+      timeout: ELEMENT_TIMEOUT_MS,
+    });
+    await expect(page.getByTestId("reports-export-button")).toBeVisible({
+      timeout: ELEMENT_TIMEOUT_MS,
+    });
+  });
+
+  test("shows the orders table once data loads", async ({ context, page }) => {
+    await injectSession(context, adminUser);
+    await page.goto(`${getAdminBaseUrl()}/en/reports`, {
+      waitUntil: "networkidle",
+    });
+
+    await expect(page.getByTestId("report-table")).toBeVisible({
+      timeout: ELEMENT_TIMEOUT_MS,
+    });
+
+    await expect(page.getByTestId("reports-total-count")).toBeVisible({
+      timeout: ELEMENT_TIMEOUT_MS,
+    });
+    await expect(page.getByTestId("reports-total-count")).not.toBeEmpty();
+  });
+
+  // ─── Filter interactions ─────────────────────────────────────────
+
+  test("status filter updates URL query param and re-fetches", async ({
+    context,
+    page,
+  }) => {
+    await injectSession(context, adminUser);
+    await page.goto(`${getAdminBaseUrl()}/en/reports`, {
+      waitUntil: "networkidle",
+    });
+
+    await expect(page.getByTestId("reports-filters-bar")).toBeVisible({
+      timeout: ELEMENT_TIMEOUT_MS,
+    });
+
+    const statusSelect = page.getByTestId("reports-filter-status");
+    await statusSelect.selectOption("approved");
+
+    await page.waitForTimeout(DEBOUNCE_WAIT_MS);
+
+    const url = new URL(page.url());
+    expect(url.searchParams.get("status")).toBe("approved");
+  });
+
+  test("date range filters update URL query params", async ({
+    context,
+    page,
+  }) => {
+    await injectSession(context, adminUser);
+    await page.goto(`${getAdminBaseUrl()}/en/reports`, {
+      waitUntil: "networkidle",
+    });
+
+    await expect(page.getByTestId("reports-filters-bar")).toBeVisible({
+      timeout: ELEMENT_TIMEOUT_MS,
+    });
+
+    await page.getByTestId("reports-filter-date-from").fill("2024-01-01");
+    await page.getByTestId("reports-filter-date-to").fill("2099-12-31");
+
+    await page.waitForTimeout(DEBOUNCE_WAIT_MS);
+
+    const url = new URL(page.url());
+    expect(url.searchParams.get("dateFrom")).toBe("2024-01-01");
+    expect(url.searchParams.get("dateTo")).toBe("2099-12-31");
+  });
+
+  test("amount min/max filters update URL query params", async ({
+    context,
+    page,
+  }) => {
+    await injectSession(context, adminUser);
+    await page.goto(`${getAdminBaseUrl()}/en/reports`, {
+      waitUntil: "networkidle",
+    });
+
+    await expect(page.getByTestId("reports-filters-bar")).toBeVisible({
+      timeout: ELEMENT_TIMEOUT_MS,
+    });
+
+    await page.getByTestId("reports-filter-amount-min").fill("1000");
+    await page.getByTestId("reports-filter-amount-max").fill("999999");
+
+    await page.waitForTimeout(DEBOUNCE_WAIT_MS);
+
+    const url = new URL(page.url());
+    expect(url.searchParams.get("amountMin")).toBe("1000");
+    expect(url.searchParams.get("amountMax")).toBe("999999");
+  });
+
+  test("clear button removes all active filters", async ({ context, page }) => {
+    await injectSession(context, adminUser);
+    await page.goto(
+      `${getAdminBaseUrl()}/en/reports?status=approved&amountMin=100`,
+      { waitUntil: "networkidle" },
+    );
+
+    await expect(page.getByTestId("reports-filters-bar")).toBeVisible({
+      timeout: ELEMENT_TIMEOUT_MS,
+    });
+
+    await expect(page.getByTestId("reports-filter-clear")).toBeVisible({
+      timeout: ELEMENT_TIMEOUT_MS,
+    });
+
+    await page.getByTestId("reports-filter-clear").click();
+    await page.waitForTimeout(DEBOUNCE_WAIT_MS);
+
+    const url = new URL(page.url());
+    expect(url.searchParams.get("status")).toBeNull();
+    expect(url.searchParams.get("amountMin")).toBeNull();
+  });
+
+  test("URL filter params are respected on page load", async ({
+    context,
+    page,
+  }) => {
+    await injectSession(context, adminUser);
+    await page.goto(`${getAdminBaseUrl()}/en/reports?status=approved`, {
+      waitUntil: "networkidle",
+    });
+
+    await expect(page.getByTestId("reports-filters-bar")).toBeVisible({
+      timeout: ELEMENT_TIMEOUT_MS,
+    });
+
+    const statusSelect = page.getByTestId("reports-filter-status");
+    await expect(statusSelect).toHaveValue("approved");
+  });
+
+  // ─── Test data visibility ────────────────────────────────────────
+
+  test("shows the seeded order in the table", async ({ context, page }) => {
+    await injectSession(context, adminUser);
+    await page.goto(`${getAdminBaseUrl()}/en/reports?status=approved`, {
+      waitUntil: "networkidle",
+    });
+
+    await expect(page.getByTestId("report-table")).toBeVisible({
+      timeout: ELEMENT_TIMEOUT_MS,
+    });
+
+    // The transfer number is unique to this test run — find its cell by test id
+    await expect(
+      page.locator(`[data-testid^="report-row-transfer-"]`).filter({
+        hasText: TEST_ORDER.transfer_number,
+      }),
+    ).toBeVisible({ timeout: MUTATION_WAIT_MS });
+  });
+
+  test("status=pending filter hides the approved order", async ({
+    context,
+    page,
+  }) => {
+    await injectSession(context, adminUser);
+    await page.goto(`${getAdminBaseUrl()}/en/reports?status=pending`, {
+      waitUntil: "networkidle",
+    });
+
+    await page.waitForTimeout(MUTATION_WAIT_MS);
+
+    // Transfer number should not be visible under pending filter
+    await expect(
+      page.locator(`[data-testid^="report-row-transfer-"]`).filter({
+        hasText: TEST_ORDER.transfer_number,
+      }),
+    ).not.toBeVisible();
+  });
+
+  // ─── Export ───────────────────────────────────────────────────────
+
+  test("export button is disabled when no orders are loaded", async ({
+    context,
+    page,
+  }) => {
+    await injectSession(context, adminUser);
+    // Use a filter that will return no results
+    await page.goto(
+      `${getAdminBaseUrl()}/en/reports?status=pending&amountMin=9999999`,
+      { waitUntil: "networkidle" },
+    );
+
+    await page.waitForTimeout(MUTATION_WAIT_MS);
+
+    const exportButton = page.getByTestId("reports-export-button");
+    await expect(exportButton).toBeVisible({ timeout: ELEMENT_TIMEOUT_MS });
+    await expect(exportButton).toBeDisabled();
+  });
+
+  test("export button downloads an XLS file", async ({ context, page }) => {
+    await injectSession(context, adminUser);
+    await page.goto(`${getAdminBaseUrl()}/en/reports?status=approved`, {
+      waitUntil: "networkidle",
+    });
+
+    await expect(page.getByTestId("report-table")).toBeVisible({
+      timeout: ELEMENT_TIMEOUT_MS,
+    });
+
+    const exportButton = page.getByTestId("reports-export-button");
+    await expect(exportButton).toBeEnabled({ timeout: ELEMENT_TIMEOUT_MS });
+
+    const downloadPromise = page.waitForEvent("download");
+    await exportButton.click();
+    const download = await downloadPromise;
+
+    expect(download.suggestedFilename()).toMatch(/sales-report-.*\.xls$/i);
+  });
+
+  // ─── Access control ───────────────────────────────────────────────
+
+  test("user without admin.reports permission gets redirected or sees error", async ({
+    context,
+    page,
+  }) => {
+    const limitedUser = await createTestUser("limited-reports", [
+      ...ADMIN_PERMISSIONS,
+      // no admin.reports permission
+    ]);
+
+    try {
+      await injectSession(context, limitedUser);
+      const response = await page.goto(`${getAdminBaseUrl()}/en/reports`, {
+        waitUntil: "networkidle",
+      });
+
+      // Either gets redirected away from reports or the API returns 403
+      // The page should NOT show the reports table with real data
+      const isOnReportsPage = page.url().includes("/reports");
+
+      if (isOnReportsPage) {
+        // If still on the page, the table should show an error state (API 403)
+        await page.waitForTimeout(MUTATION_WAIT_MS);
+        await expect(page.getByTestId("report-table")).not.toBeVisible({
+          timeout: ELEMENT_TIMEOUT_MS,
+        });
+      } else {
+        // Redirected — acceptable outcome
+        expect(response?.status()).not.toBe(200);
+      }
+    } finally {
+      await supabaseAdmin.auth.admin
+        .deleteUser(limitedUser.userId)
+        .catch(() => {});
+    }
+  });
+});

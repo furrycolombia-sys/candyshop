@@ -60,13 +60,6 @@ describe("PriceBlock", () => {
     expect(screen.getByText("$25")).toBeInTheDocument();
   });
 
-  it("renders USD label for English locale", () => {
-    render(
-      <PriceBlock product={makeProduct()} discountLabel={discountLabel} />,
-    );
-    expect(screen.getByText("USD")).toBeInTheDocument();
-  });
-
   it("renders compare-at price when discount exists", () => {
     const product = makeProduct({
       price: 20,

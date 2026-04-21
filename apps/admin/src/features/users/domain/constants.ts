@@ -100,6 +100,11 @@ export const PERMISSION_GROUPS: PermissionGroup[] = [
       "seller_admins.delete",
     ],
   },
+  {
+    key: "adminReports",
+    labelKey: "adminReports",
+    permissions: ["admin.reports"],
+  },
 ];
 
 export const ALL_PERMISSION_KEYS: string[] = PERMISSION_GROUPS.flatMap(

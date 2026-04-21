@@ -1,0 +1,71 @@
+{
+  "agent": "component-patterns",
+  "review_id": "2026-04-21_03-17-10",
+  "outputFile": ".ai-context/reviews/agents/2026-04-21_03-17-10_component-patterns.json",
+  "scope": "apps/admin/src/features/reports/",
+  "timestamp": "2026-04-21T03:17:10Z",
+  "files_analyzed": 4,
+  "issues": [
+    {
+      "id": "COMP-001",
+      "severity": "suggestion",
+      "file": "apps/admin/src/features/reports/presentation/pages/ReportsPage.tsx",
+      "line": 45,
+      "title": "Inline helper function in component body",
+      "description": "The renderContent() function is defined inline within the ReportsPage component. While this is technically not a nested component definition, extracting it as a separate function outside the component improves readability and follows the standard structure pattern: hooks → derived state → handlers → render. This also makes the function easier to test independently.",
+      "rule": "component-patterns.md#standard-structure",
+      "fix": "Extract renderContent() as a separate function outside the ReportsPage component or move it to a utility file."
+    }
+  ],
+  "component_details": {
+    "ReportTable.tsx": {
+      "components_count": 1,
+      "has_use_client": true,
+      "structure_order_correct": true,
+      "props_interface_colocated": true,
+      "nested_components": false,
+      "status": "compliant"
+    },
+    "OrderStatusBadge.tsx": {
+      "components_count": 1,
+      "has_use_client": true,
+      "structure_order_correct": true,
+      "props_interface_colocated": true,
+      "nested_components": false,
+      "status": "compliant"
+    },
+    "ReportFiltersBar.tsx": {
+      "components_count": 1,
+      "has_use_client": true,
+      "structure_order_correct": true,
+      "props_interface_colocated": true,
+      "nested_components": false,
+      "inline_handlers": true,
+      "status": "compliant"
+    },
+    "ReportsPage.tsx": {
+      "components_count": 1,
+      "has_use_client": true,
+      "structure_order_correct": true,
+      "props_interface_colocated": true,
+      "nested_components": false,
+      "inline_helper_functions": true,
+      "status": "mostly_compliant_with_suggestions"
+    }
+  },
+  "architecture_assessment": {
+    "container_presenter_separation": "good",
+    "data_fetching_pattern": "hook-based (useReportOrders) - correct separation",
+    "one_component_per_file": "compliant",
+    "export_patterns": "correct - named exports with function declarations"
+  },
+  "summary": {
+    "critical": 0,
+    "warning": 0,
+    "suggestion": 1,
+    "info": 0,
+    "total_issues": 1,
+    "compliance_percentage": 98
+  },
+  "notes": "The reports feature demonstrates strong adherence to component patterns. The architecture properly separates concerns: ReportsPage as a container component handling data fetching and state, while ReportTable, OrderStatusBadge, and ReportFiltersBar are pure presenter components. The useReportOrders hook is correctly placed in the application layer, isolating data fetching logic from UI rendering. Only one minor suggestion for code organization."
+}

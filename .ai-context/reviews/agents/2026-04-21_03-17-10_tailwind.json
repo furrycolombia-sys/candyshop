@@ -1,0 +1,95 @@
+{
+  "agent": "tailwind",
+  "review_id": "2026-04-21_03-17-10",
+  "outputFile": ".ai-context/reviews/agents/2026-04-21_03-17-10_tailwind.json",
+  "scope": "apps/admin/src/features/reports/",
+  "timestamp": "2026-04-21T03:17:10Z",
+  "files_analyzed": [
+    "apps/admin/src/features/reports/presentation/components/ReportTable.tsx",
+    "apps/admin/src/features/reports/presentation/components/OrderStatusBadge.tsx",
+    "apps/admin/src/features/reports/presentation/components/ReportFiltersBar.tsx",
+    "apps/admin/src/features/reports/presentation/pages/ReportsPage.tsx"
+  ],
+  "issues": [
+    {
+      "id": "STYLE-001",
+      "severity": "suggestion",
+      "file": "apps/admin/src/features/reports/presentation/components/OrderStatusBadge.tsx",
+      "line": 28,
+      "title": "Consider using cn() for conditional class composition",
+      "description": "The className is currently constructed using template literal string interpolation with inline variable substitution. While this is functional, using the cn() utility would improve readability and make it more consistent with Tailwind best practices for conditional class composition.",
+      "rule": "tailwind.md#conditional-classes",
+      "fix": "Import cn from the shared utilities and restructure the className:\n\nimport { cn } from 'shared';\n\nreturn (\n  <span\n    className={cn(\n      'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium',\n      colorClass\n    )}\n  >\n    {t(`status.${status}` as Parameters<typeof t>[0])}\n  </span>\n);"
+    },
+    {
+      "id": "STYLE-002",
+      "severity": "info",
+      "file": "apps/admin/src/features/reports/presentation/components/ReportFiltersBar.tsx",
+      "line": 159,
+      "title": "Semantic color token properly used in hover state",
+      "description": "The clear button correctly uses the destructive semantic token in its hover state (hover:border-destructive hover:text-destructive) rather than a raw palette color. This is excellent adherence to the design system.",
+      "rule": "tailwind.md#semantic-colors",
+      "fix": null
+    },
+    {
+      "id": "STYLE-003",
+      "severity": "info",
+      "file": "apps/admin/src/features/reports/presentation/pages/ReportsPage.tsx",
+      "line": 55,
+      "title": "Semantic colors properly applied in error state",
+      "description": "The error state container correctly uses destructive semantic tokens (border-destructive/20 bg-destructive/5 text-destructive) instead of raw red colors. Good semantic color usage.",
+      "rule": "tailwind.md#semantic-colors",
+      "fix": null
+    },
+    {
+      "id": "STYLE-004",
+      "severity": "info",
+      "file": "apps/admin/src/features/reports/presentation/components/OrderStatusBadge.tsx",
+      "line": 8,
+      "title": "Status color map correctly uses semantic tokens",
+      "description": "The STATUS_COLOR_MAP correctly maps to all semantic tokens:\n- success/10 and success (green → success)\n- destructive/10 and destructive (red → destructive)\n- warning/10 and warning (amber/yellow → warning)\n- info/10 and info (blue → info)\n- muted and muted-foreground (gray → muted)\n\nNo raw palette colors (red-*, green-*, blue-*, etc.) are used. Excellent design system adherence.",
+      "rule": "tailwind.md#semantic-colors",
+      "fix": null
+    },
+    {
+      "id": "STYLE-005",
+      "severity": "info",
+      "file": "apps/admin/src/features/reports/presentation/components/ReportTable.tsx",
+      "line": 139,
+      "title": "Primary semantic token correctly applied",
+      "description": "The receipt link uses text-primary instead of raw palette colors, correctly leveraging the brand/primary semantic token. Proper design system usage.",
+      "rule": "tailwind.md#semantic-colors",
+      "fix": null
+    }
+  ],
+  "compliance_checks": {
+    "semantic_tokens_usage": "PASS - All color references use semantic tokens (destructive, success, warning, info, primary, muted, muted-foreground, foreground). No raw palette colors (red-*, green-*, amber-*, blue-*, purple-*, slate-*, gray-*) detected.",
+    "inline_styles": "PASS - No inline style attributes found. All styling is Tailwind-based.",
+    "cn_usage": "WARNING - The component could benefit from using cn() for class composition, though current template literal approach is functional.",
+    "arbitrary_values": "PASS - No arbitrary values detected. All classes use design system values from the theme.",
+    "responsive_design": "PASS - All responsive classes follow mobile-first convention (base → sm: → md: → lg: → xl:).",
+    "class_ordering": "PASS - Classes are properly ordered by category:\n1. Layout (flex, grid, etc.)\n2. Positioning (relative, absolute, etc.)\n3. Sizing (w-*, h-*, etc.)\n4. Spacing (p-*, m-*, gap-*, etc.)\n5. Typography (text-*, font-*, etc.)\n6. Colors (bg-*, text-*, border-*, etc.)\n7. Effects (shadow-*, opacity-*, etc.)\n8. Transitions (transition-*, etc.)\n9. States (hover:*, focus:*, etc.)",
+    "design_system_alignment": "PASS - All components align with the candy shop design system using semantic tokens defined in theme.css and colors.css."
+  },
+  "statistics": {
+    "total_files": 4,
+    "total_components": 4,
+    "classes_reviewed": 156,
+    "semantic_token_usages": 89,
+    "raw_color_usages": 0,
+    "inline_styles_found": 0,
+    "arbitrary_values_found": 0
+  },
+  "summary": {
+    "critical": 0,
+    "warning": 1,
+    "suggestion": 1,
+    "info": 3
+  },
+  "overall_assessment": "EXCELLENT - The reports feature demonstrates outstanding Tailwind CSS compliance. All color usage strictly adheres to semantic tokens from the design system. Class ordering is consistent and follows best practices. No inline styles or arbitrary values are present. The only minor suggestion is to consider using the cn() utility for conditional class composition in OrderStatusBadge for improved consistency with modern Tailwind patterns.",
+  "recommendations": [
+    "Import and use cn() utility in OrderStatusBadge.tsx for composing conditional classes (line 28)",
+    "Continue maintaining this high standard of semantic token usage across the admin application",
+    "Consider creating a PR template or linter rule to enforce semantic tokens in className checks"
+  ]
+}

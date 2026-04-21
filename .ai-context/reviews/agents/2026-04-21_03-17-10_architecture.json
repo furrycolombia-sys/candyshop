@@ -1,0 +1,152 @@
+{
+  "agent": "architecture",
+  "review_id": "2026-04-21_03-17-10",
+  "outputFile": ".ai-context/reviews/agents/2026-04-21_03-17-10_architecture.json",
+  "scope": "apps/admin/src/features/reports/",
+  "issues": [
+    {
+      "id": "ARCH-001",
+      "severity": "warning",
+      "file": "apps/admin/src/features/reports/presentation/components/ReportTable.tsx",
+      "line": 4,
+      "title": "Inconsistent absolute/relative imports for tid utility",
+      "description": "ReportTable.tsx imports 'tid' from 'shared' (bare import) while other files use '@/shared/infrastructure/config/tid' (absolute path). This inconsistency violates the rule that absolute imports should be preferred over relative for cross-layer imports.",
+      "rule": "architecture.md#absolute-imports",
+      "fix": "Change 'import { tid } from \"shared\"' to 'import { tid } from \"@/shared/infrastructure/config/tid\"' for consistency with ReportsPage.tsx line 7 and ReportFiltersBar.tsx line 6"
+    },
+    {
+      "id": "ARCH-002",
+      "severity": "warning",
+      "file": "apps/admin/src/features/reports/presentation/components/ReportTable.tsx",
+      "line": 6,
+      "title": "Relative import of sibling component",
+      "description": "ReportTable.tsx uses relative import for OrderStatusBadge: 'import { OrderStatusBadge } from \"./OrderStatusBadge\"'. While this is within the presentation layer, the architecture rules prefer absolute imports for cross-layer clarity.",
+      "rule": "architecture.md#absolute-imports",
+      "fix": "Change to absolute import: 'import { OrderStatusBadge } from \"@/features/reports/presentation/components/OrderStatusBadge\"'"
+    },
+    {
+      "id": "ARCH-003",
+      "severity": "suggestion",
+      "file": "apps/admin/src/features/reports/infrastructure/reportsApi.ts",
+      "line": 1,
+      "title": "Mixed import path styles in infrastructure layer",
+      "description": "reportsApi.ts uses relative import '../domain/types' while other infrastructure files and the codebase generally uses absolute imports. This creates inconsistency.",
+      "rule": "architecture.md#absolute-imports",
+      "fix": "Change 'import type { ReportFilters, ReportOrdersResponse } from \"../domain/types\"' to 'import type { ReportFilters, ReportOrdersResponse } from \"@/features/reports/domain/types\"'"
+    },
+    {
+      "id": "ARCH-004",
+      "severity": "info",
+      "file": "apps/admin/src/features/reports/",
+      "line": 0,
+      "title": "Missing barrel exports for layer organization",
+      "description": "The application/, domain/, infrastructure/, and presentation/ subdirectories lack index.ts barrel exports. Only the root feature exports ReportsPage. This violates the architecture rule that each layer should have index.ts barrel exports for cleaner imports and better encapsulation.",
+      "rule": "architecture.md#barrel-exports",
+      "fix": "Create index.ts files in: application/, application/hooks/, application/utils/, domain/, infrastructure/, presentation/components/, presentation/pages/ to export public APIs from each layer"
+    },
+    {
+      "id": "ARCH-005",
+      "severity": "info",
+      "file": "apps/admin/src/features/reports/presentation/pages/ReportsPage.tsx",
+      "line": 35,
+      "title": "Magic number for date ISO formatting",
+      "description": "Line 35 defines 'const ISO_DATE_LENGTH = 10' which is a magic number for ISO date slicing. While constants are defined locally, this could be moved to domain/constants.ts for consistency and reusability.",
+      "rule": "architecture.md#no-magic-values",
+      "fix": "Add ISO_DATE_LENGTH to apps/admin/src/features/reports/domain/constants.ts and import it in ReportsPage.tsx"
+    },
+    {
+      "id": "ARCH-006",
+      "severity": "info",
+      "file": "apps/admin/src/features/reports/presentation/components/ReportTable.tsx",
+      "line": 10,
+      "title": "Magic number for order ID preview length",
+      "description": "Line 10 defines 'const ORDER_ID_PREVIEW_LENGTH = 8' as a component-level constant. This presentation-specific constant could be in domain/constants.ts or a presentation-specific constants file.",
+      "rule": "architecture.md#no-magic-values",
+      "fix": "Move ORDER_ID_PREVIEW_LENGTH to a presentation/constants.ts file or domain/constants.ts for centralized configuration management"
+    },
+    {
+      "id": "ARCH-007",
+      "severity": "info",
+      "file": "apps/admin/src/features/reports/presentation/components/OrderStatusBadge.tsx",
+      "line": 5,
+      "title": "Tailwind style constants in presentation component",
+      "description": "OrderStatusBadge.tsx defines MUTED_STYLE and WARNING_STYLE as component-level constants. These styling constants could be centralized in a presentation constants or theme file.",
+      "rule": "architecture.md#no-magic-values",
+      "fix": "Create apps/admin/src/features/reports/presentation/constants.ts to export style constants and import them in OrderStatusBadge.tsx"
+    },
+    {
+      "id": "ARCH-008",
+      "severity": "info",
+      "file": "apps/admin/src/features/reports/application/utils/exportOrdersToExcel.ts",
+      "line": 22,
+      "title": "XML/Excel hardcoded strings in utility",
+      "description": "Lines 22-98 contain hardcoded XML and Excel worksheet strings (WORKSHEET_CLOSE, XML headers, etc.). These could be extracted to domain/constants.ts as Excel export format constants.",
+      "rule": "architecture.md#no-magic-values",
+      "fix": "Extract Excel XML constants to domain/constants.ts: EXCEL_WORKSHEET_CLOSE, EXCEL_HEADERS (array), EXCEL_XML_VERSION, EXCEL_WORKBOOK_XMLNS"
+    }
+  ],
+  "summary": {
+    "critical": 0,
+    "warning": 2,
+    "suggestion": 1,
+    "info": 5
+  },
+  "layerVerification": {
+    "domain": {
+      "status": "ok",
+      "exports": [
+        "types.ts (OrderStatus, ReportOrderItem, ReportOrder, ReportFilters, UserOption, ProductOption)",
+        "constants.ts (REPORTS_QUERY_KEY, ORDER_STATUS_LIST)",
+        "searchParams.ts (reportsSearchParams with nuqs configuration)"
+      ],
+      "dependencies": "none - correctly isolated"
+    },
+    "infrastructure": {
+      "status": "ok",
+      "exports": ["reportsApi.ts (fetchReportOrders function)"],
+      "dependencies": ["domain/types (correctly imported)"]
+    },
+    "application": {
+      "status": "ok",
+      "exports": [
+        "hooks/useReportOrders (uses nuqs for URL state)",
+        "utils/exportOrdersToExcel (export utilities)"
+      ],
+      "dependencies": [
+        "domain/ (constants, searchParams, types)",
+        "infrastructure/ (fetchReportOrders)"
+      ],
+      "note": "Properly implements URL state management with nuqs"
+    },
+    "presentation": {
+      "status": "warning",
+      "exports": [
+        "pages/ReportsPage.tsx (main page component)",
+        "components/ReportFiltersBar.tsx",
+        "components/ReportTable.tsx",
+        "components/OrderStatusBadge.tsx"
+      ],
+      "dependencies": [
+        "application/ (hooks, utils) - correct",
+        "domain/ (types, constants) - correct"
+      ],
+      "note": "Minor import path inconsistency found (ReportTable.tsx uses bare 'shared' import)"
+    }
+  },
+  "noCrossFeatureImports": true,
+  "nuqsUrlState": {
+    "status": "properly_implemented",
+    "location": "apps/admin/src/features/reports/domain/searchParams.ts",
+    "usage": "useQueryStates in application/hooks/useReportOrders.ts",
+    "note": "All filter parameters correctly use nuqs parseAs* functions"
+  },
+  "positiveFindings": [
+    "Excellent layer separation with clear domain → application → presentation dependencies",
+    "URL state management properly uses nuqs for filter persistence",
+    "No cross-feature imports detected",
+    "Appropriate use of absolute imports for cross-layer paths",
+    "Comprehensive E2E test coverage validating filter behavior and URL state",
+    "Clean component composition with proper prop drilling",
+    "ReportFiltersBar correctly handles filter state updates via URL"
+  ]
+}

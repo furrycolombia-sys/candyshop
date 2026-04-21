@@ -149,12 +149,9 @@ export function CartItemRow({
 
           {/* Line total */}
           <span
-            className="flex shrink-0 items-baseline gap-1 font-display text-sm font-extrabold"
+            className="shrink-0 font-display text-sm font-extrabold"
             {...tid("cart-item-price")}
           >
-            <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-              {item.currency}
-            </span>
             {formatPrice(lineTotal, item.currency)}
           </span>
         </div>
