@@ -28,6 +28,8 @@ interface SellerCheckoutCardProps {
   onSubmit: (params: {
     paymentMethodId: string;
     buyerSubmission: Record<string, string>;
+    receiptFile: File | null;
+    transferNumber: string | null;
   }) => void;
 }
 
@@ -48,6 +50,8 @@ export function SellerCheckoutCard({
   const [buyerSubmission, setBuyerSubmission] = useState<
     Record<string, string>
   >({});
+  const [receiptFile, setReceiptFile] = useState<File | null>(null);
+  const [transferNumber, setTransferNumber] = useState("");
   const [validationError, setValidationError] = useState<string | null>(null);
 
   const { data, isLoading: isLoadingMethods } = useSellerPaymentMethods(
@@ -73,10 +77,6 @@ export function SellerCheckoutCard({
     [],
   );
 
-  const handleFileSelected = useCallback((fieldId: string, file: File) => {
-    setBuyerSubmission((prev) => ({ ...prev, [fieldId]: file.name }));
-  }, []);
-
   const handleSubmit = useCallback(async () => {
     if (hasStockIssues) return;
 
@@ -98,15 +98,29 @@ export function SellerCheckoutCard({
       }
     }
 
+    if (selectedMethod.requires_receipt && !receiptFile) {
+      setValidationError(t("receiptRequired"));
+      return;
+    }
+
+    if (selectedMethod.requires_transfer_number && !transferNumber.trim()) {
+      setValidationError(t("transferRequired"));
+      return;
+    }
+
     setValidationError(null);
     onSubmit({
       paymentMethodId: effectiveSelectedMethodId,
       buyerSubmission,
+      receiptFile,
+      transferNumber: transferNumber.trim() || null,
     });
   }, [
     effectiveSelectedMethodId,
     selectedMethod,
     buyerSubmission,
+    receiptFile,
+    transferNumber,
     onSubmit,
     hasStockIssues,
     t,
@@ -170,9 +184,12 @@ export function SellerCheckoutCard({
           }}
           buyerForm={{
             buyerSubmission,
+            receiptFile,
+            transferNumber,
             validationError,
             onBuyerSubmissionChange: handleBuyerSubmissionChange,
-            onFileSelected: handleFileSelected,
+            onReceiptChange: setReceiptFile,
+            onTransferNumberChange: setTransferNumber,
           }}
           onSubmit={handleSubmit}
         />

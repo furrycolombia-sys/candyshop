@@ -213,7 +213,6 @@
       "text": "Text",
       "email": "Email",
       "number": "Number",
-      "file": "File Upload",
       "textarea": "Long Text"
     },
     "fieldLabel": "Label",
@@ -240,7 +239,11 @@
     "dragToReorder": "Drag to reorder",
     "removeBlock": "Remove block",
     "removeField": "Remove field",
-    "imageUnavailable": "Image unavailable"
+    "imageUnavailable": "Image unavailable",
+    "requiresReceipt": "Require receipt upload",
+    "requiresReceiptHint": "Buyers must upload a payment screenshot before submitting",
+    "requiresTransferNumber": "Require transfer number",
+    "requiresTransferNumberHint": "Buyers must enter a reference/transfer number before submitting"
   },
   "sellerReports": {
     "title": "My Sales Report",

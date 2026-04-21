@@ -30,6 +30,12 @@ export function PaymentMethodEditor({ method }: PaymentMethodEditorProps) {
   const [formFields, setFormFields] = useState<FormField[]>(
     method.form_fields ?? [],
   );
+  const [requiresReceipt, setRequiresReceipt] = useState(
+    method.requires_receipt,
+  );
+  const [requiresTransferNumber, setRequiresTransferNumber] = useState(
+    method.requires_transfer_number,
+  );
   const nameEnError = nameEn.trim() ? null : t("nameRequired");
 
   const { saveStatus } = useAutoSavePaymentMethod({
@@ -38,6 +44,8 @@ export function PaymentMethodEditor({ method }: PaymentMethodEditorProps) {
     nameEs,
     displayBlocks,
     formFields,
+    requiresReceipt,
+    requiresTransferNumber,
   });
 
   return (
@@ -93,6 +101,45 @@ export function PaymentMethodEditor({ method }: PaymentMethodEditorProps) {
             {...tid("payment-method-name-es")}
           />
         </div>
+      </div>
+
+      {/* Buyer proof toggles */}
+      <div className="flex flex-col gap-3">
+        <label className="flex cursor-pointer items-start gap-3">
+          <input
+            type="checkbox"
+            checked={requiresReceipt}
+            onChange={(e) => setRequiresReceipt(e.target.checked)}
+            className="mt-0.5 size-4 shrink-0 accent-foreground"
+            {...tid("payment-method-requires-receipt")}
+          />
+          <div className="flex flex-col gap-0.5">
+            <span className="font-display text-xs font-bold uppercase tracking-wider">
+              {t("requiresReceipt")}
+            </span>
+            <span className="text-xs text-muted-foreground">
+              {t("requiresReceiptHint")}
+            </span>
+          </div>
+        </label>
+
+        <label className="flex cursor-pointer items-start gap-3">
+          <input
+            type="checkbox"
+            checked={requiresTransferNumber}
+            onChange={(e) => setRequiresTransferNumber(e.target.checked)}
+            className="mt-0.5 size-4 shrink-0 accent-foreground"
+            {...tid("payment-method-requires-transfer-number")}
+          />
+          <div className="flex flex-col gap-0.5">
+            <span className="font-display text-xs font-bold uppercase tracking-wider">
+              {t("requiresTransferNumber")}
+            </span>
+            <span className="text-xs text-muted-foreground">
+              {t("requiresTransferNumberHint")}
+            </span>
+          </div>
+        </label>
       </div>
 
       {/* Display Section */}

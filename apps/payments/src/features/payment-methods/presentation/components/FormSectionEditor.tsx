@@ -74,23 +74,23 @@ export function FormSectionEditor({
 
       {/* Field type buttons row */}
       <div className="flex flex-wrap gap-2" {...tid("add-form-field")}>
-        {(
-          ["text", "email", "number", "file", "textarea"] as FormFieldType[]
-        ).map((type) => {
-          const Icon = FIELD_TYPE_ICONS[type];
-          return (
-            <button
-              key={type}
-              type="button"
-              onClick={() => addField(type)}
-              className="button-brutal inline-flex items-center gap-1.5 border-strong border-foreground bg-background px-3 py-1.5 text-xs font-bold uppercase tracking-wider shadow-brutal-sm hover:bg-muted"
-              {...tid(`add-field-type-${type}`)}
-            >
-              <Icon className="size-3.5" />
-              {t(`fieldTypes.${type}`)}
-            </button>
-          );
-        })}
+        {(["text", "email", "number", "textarea"] as FormFieldType[]).map(
+          (type) => {
+            const Icon = FIELD_TYPE_ICONS[type];
+            return (
+              <button
+                key={type}
+                type="button"
+                onClick={() => addField(type)}
+                className="button-brutal inline-flex items-center gap-1.5 border-strong border-foreground bg-background px-3 py-1.5 text-xs font-bold uppercase tracking-wider shadow-brutal-sm hover:bg-muted"
+                {...tid(`add-field-type-${type}`)}
+              >
+                <Icon className="size-3.5" />
+                {t(`fieldTypes.${type}`)}
+              </button>
+            );
+          },
+        )}
       </div>
 
       {fields.length === 0 && (

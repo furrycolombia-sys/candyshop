@@ -10,7 +10,6 @@ interface FormFieldsSectionProps {
   isDisabled: boolean;
   label: string;
   onBuyerSubmissionChange: (fieldId: string, value: string) => void;
-  onFileSelected: (fieldId: string, file: File) => void;
 }
 
 export function FormFieldsSection({
@@ -19,7 +18,6 @@ export function FormFieldsSection({
   isDisabled,
   label,
   onBuyerSubmissionChange,
-  onFileSelected,
 }: FormFieldsSectionProps) {
   if (fields.length === 0) return null;
   return (
@@ -34,9 +32,6 @@ export function FormFieldsSection({
             field={field}
             value={buyerSubmission[field.id] ?? ""}
             onChange={(value) => onBuyerSubmissionChange(field.id, value)}
-            onFileChange={(file) => {
-              if (file) onFileSelected(field.id, file);
-            }}
             disabled={isDisabled}
           />
         ))}
