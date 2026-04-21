@@ -24,7 +24,6 @@ const VALID_FIELD_TYPES: FormFieldType[] = [
   "text",
   "email",
   "number",
-  "file",
   "textarea",
 ];
 

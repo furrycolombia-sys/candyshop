@@ -29,6 +29,8 @@ describe("useSellerPaymentMethods", () => {
           display_blocks: [],
           form_fields: [],
           is_active: true,
+          requires_receipt: false,
+          requires_transfer_number: false,
         },
       ];
     vi.mocked(fetch).mockResolvedValue({

@@ -14,6 +14,8 @@ interface UseAutoSavePaymentMethodParams {
   nameEs: string;
   displayBlocks: DisplayBlock[];
   formFields: FormField[];
+  requiresReceipt: boolean;
+  requiresTransferNumber: boolean;
 }
 
 type SaveStatus = "idle" | "saving" | "saved";
@@ -30,6 +32,8 @@ export function useAutoSavePaymentMethod({
   nameEs,
   displayBlocks,
   formFields,
+  requiresReceipt,
+  requiresTransferNumber,
 }: UseAutoSavePaymentMethodParams): { saveStatus: SaveStatus } {
   const updateMutation = useUpdatePaymentMethod();
   const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle");
@@ -63,6 +67,8 @@ export function useAutoSavePaymentMethod({
   const nameFirstRenderRef = useRef(true);
   const blocksFirstRenderRef = useRef(true);
   const fieldsFirstRenderRef = useRef(true);
+  const receiptFirstRenderRef = useRef(true);
+  const transferFirstRenderRef = useRef(true);
 
   // Auto-save name changes (validation is handled by the caller)
   useEffect(() => {
@@ -94,6 +100,26 @@ export function useAutoSavePaymentMethod({
     triggerSave({ form_fields: formFields });
     // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional: only trigger on field changes
   }, [formFields]);
+
+  // Auto-save requires_receipt toggle
+  useEffect(() => {
+    if (receiptFirstRenderRef.current) {
+      receiptFirstRenderRef.current = false;
+      return;
+    }
+    triggerSave({ requires_receipt: requiresReceipt });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional: only trigger on receipt flag changes
+  }, [requiresReceipt]);
+
+  // Auto-save requires_transfer_number toggle
+  useEffect(() => {
+    if (transferFirstRenderRef.current) {
+      transferFirstRenderRef.current = false;
+      return;
+    }
+    triggerSave({ requires_transfer_number: requiresTransferNumber });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional: only trigger on transfer flag changes
+  }, [requiresTransferNumber]);
 
   // Cleanup debounce timer on unmount
   useEffect(() => {

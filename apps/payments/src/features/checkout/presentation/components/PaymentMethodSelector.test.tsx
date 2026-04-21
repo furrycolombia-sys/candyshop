@@ -35,6 +35,8 @@ const mockMethods: SellerPaymentMethodWithType[] = [
     display_blocks: [],
     form_fields: [],
     is_active: true,
+    requires_receipt: false,
+    requires_transfer_number: false,
   },
   {
     id: "pm-2",
@@ -43,6 +45,8 @@ const mockMethods: SellerPaymentMethodWithType[] = [
     display_blocks: [],
     form_fields: [],
     is_active: true,
+    requires_receipt: false,
+    requires_transfer_number: false,
   },
 ];
 
