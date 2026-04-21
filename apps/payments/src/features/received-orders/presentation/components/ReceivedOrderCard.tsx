@@ -17,7 +17,7 @@ import type {
   ReceivedOrder,
   SellerAction,
 } from "@/features/received-orders/domain/types";
-import { formatCop } from "@/shared/application/utils/formatCop";
+import { formatPrice } from "@/shared/application/utils/formatPrice";
 import { getItemName } from "@/shared/domain/orderUtils";
 
 /** Re-compute interval for "expiring soon" check (every minute) */
@@ -130,7 +130,7 @@ export function ReceivedOrderCard({
           </span>
         </div>
         <span className="font-display text-lg font-extrabold">
-          {formatCop(order.total_cop)}
+          {formatPrice(order.total, order.currency)}
         </span>
       </div>
 
@@ -148,7 +148,7 @@ export function ReceivedOrderCard({
                   {item.quantity}x {name}
                 </span>
                 <span className="font-mono text-xs text-muted-foreground">
-                  {formatCop(item.unit_price_cop * item.quantity)}
+                  {formatPrice(item.unit_price * item.quantity, item.currency)}
                 </span>
               </li>
             );

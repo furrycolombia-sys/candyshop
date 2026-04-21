@@ -75,8 +75,8 @@ const mockItems: CartItem[] = [
     id: "p1",
     name_en: "Widget",
     name_es: "Widget",
-    price_cop: 5000,
-    price_usd: 1.5,
+    price: 5000,
+    currency: "COP",
     seller_id: "s1",
     quantity: 2,
     images: [],
@@ -110,7 +110,8 @@ describe("SellerCheckoutContent", () => {
   const defaultProps = {
     sellerId: "s1",
     items: mockItems,
-    subtotalCop: 10_000,
+    subtotal: 10_000,
+    currency: "COP",
     getItemName: (item: CartItem) => item.name_en,
     submission: {
       isSubmitted: false,

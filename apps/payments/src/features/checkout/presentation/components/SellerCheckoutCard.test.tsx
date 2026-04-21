@@ -13,10 +13,8 @@ vi.mock("next-intl", () => ({
 
 vi.mock("shared", () => ({
   tid: (id: string) => ({ "data-testid": id }),
-}));
-
-vi.mock("@/shared/application/utils/formatCop", () => ({
-  formatCop: (amount: number) => `${amount.toLocaleString()} COP`,
+  formatPrice: (amount: number, currency: string) =>
+    `${amount.toLocaleString()} ${currency}`,
 }));
 
 vi.mock(
@@ -56,8 +54,8 @@ const mockItems: CartItem[] = [
     id: "p1",
     name_en: "Widget",
     name_es: "Widget",
-    price_cop: 5000,
-    price_usd: 1.5,
+    price: 5000,
+    currency: "COP",
     seller_id: "s1",
     quantity: 2,
     images: [],
@@ -70,7 +68,8 @@ describe("SellerCheckoutCard", () => {
     sellerId: "s1",
     sellerName: "Test Seller",
     items: mockItems,
-    subtotalCop: 10_000,
+    subtotal: 10_000,
+    currency: "COP",
     status: "pending" as const,
     error: null,
     getItemName: (item: CartItem) => item.name_en,

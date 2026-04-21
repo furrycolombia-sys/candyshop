@@ -1,0 +1,96 @@
+{
+  "agent": "bug-detection",
+  "timestamp": "2026-04-20T23:21:50",
+  "scope": "apps/",
+  "summary": {
+    "filesAnalyzed": 30,
+    "issuesFound": 5,
+    "critical": 0,
+    "warning": 4,
+    "suggestion": 1,
+    "info": 0
+  },
+  "issues": [
+    {
+      "id": "BUG-001",
+      "severity": "warning",
+      "category": "State Race Condition / Double Write",
+      "file": "apps/store/src/features/cart/application/CartContext.tsx",
+      "lines": "118-137",
+      "description": "Double cookie write on every mutation. The `addItem`, `removeItem`, and `updateQuantity` callbacks each call `persistCartCookie` eagerly, AND the separate `useEffect` on `state.items` (line 118) also calls `persistCartCookie` after every state update. This causes two cookie writes per mutation: one synchronous (in the callback) and one asynchronous (in the effect after React processes the dispatch). The synchronous write passes the pre-dispatch `state.items` array (stale), while the effect write uses the post-dispatch array (correct). In practice the effect always wins, but the eager write is wasted and could create a brief window where the cookie contains an outdated value.",
+      "fix": "Remove the eager `persistCartCookie` calls inside `addItem`, `removeItem`, and `updateQuantity` callbacks and let the `useEffect` on `state.items` be the single source of truth for cookie persistence. The guard `if (!mountedRef.current) return;` already prevents premature writes on hydration."
+    },
+    {
+      "id": "BUG-002",
+      "severity": "warning",
+      "category": "Memory Leak / Missing cleanup",
+      "file": "apps/store/src/features/products/presentation/components/FeaturedRibbon.tsx",
+      "lines": "186-196",
+      "description": "A `MutationObserver` is created to track theme (class attribute) changes on `document.documentElement`. The cleanup function (line 220-224) correctly calls `themeObserver.disconnect()`. However, the observer is created BEFORE the `document.fonts.ready` `.then()` branch, so if the component unmounts between observer creation and the font-ready callback, the `state.cancelled = true` flag stops rendering but the `themeObserver` is disconnected only in the outer `useEffect` cleanup — which does run. This flow is actually correct. However, the `requestAnimationFrame` returned ID in `state.animId` is initialized to `0`. If `cancelAnimationFrame(0)` is called (when cleanup runs before the first rAF is scheduled), most browsers treat id `0` as a no-op, so this is safe. No actual bug here, but the pattern is fragile — noted as informational.",
+      "fix": "No immediate action needed; the cleanup is correct. Consider initializing `state.animId` to `null` and adding a null check before `cancelAnimationFrame` for clarity."
+    },
+    {
+      "id": "BUG-003",
+      "severity": "warning",
+      "category": "Stale closure / Logic error",
+      "file": "apps/store/src/features/products/presentation/components/ProductFilters.tsx",
+      "lines": "44-50",
+      "description": "The sync-back effect `if (q !== searchInput)` compares `q` (a string with default `\"\"`) against `searchInput` (initialized to `q ?? \"\"`). Since `q` always has a value (defaults to `\"\"`), `q !== searchInput` can be `true` when `q` is `\"\"` and `searchInput` is `\"\"` only if they are not strictly equal. In practice this works correctly. However the eslint-disable comment suppressing `react-hooks/exhaustive-deps` on this effect means that if `searchInput` changes after `q` has already changed (e.g. very fast typing followed by back-navigation), the equality guard could fail to prevent the overwrite because `searchInput` is a captured closure value at the time the effect runs. This is a known but accepted trade-off in debounced URL state patterns. Flagged as a warning to document the known race window.",
+      "fix": "Consider using a `useRef` to track whether the last URL change originated from the user's own debounce flush (to avoid the sync-back), or accept the current behavior as sufficient."
+    },
+    {
+      "id": "BUG-004",
+      "severity": "warning",
+      "category": "Missing error handling",
+      "file": "apps/admin/src/features/users/application/hooks/useUserPermissionsBatch.ts",
+      "lines": "8-19",
+      "description": "`fetchPermissions` fires `getUserPermissionKeys` for every user in parallel via `Promise.all`. If any individual user's permissions query rejects (e.g., network error, Supabase RLS denial), the entire `Promise.all` rejects and the Excel export in `UsersPageContent.handleExportExcel` catches it with a generic `setError(t('exportError'))`. The per-user rejection is silently aggregated, meaning a partial set of permissions is never returned even if only one user fails. Depending on product intent, a partial result might be more useful than a complete failure.",
+      "fix": "Consider using `Promise.allSettled` and filtering fulfilled results, falling back to empty arrays for rejected users. This yields partial data instead of blocking the whole export."
+    },
+    {
+      "id": "BUG-005",
+      "severity": "suggestion",
+      "category": "Potential null dereference",
+      "file": "apps/payments/src/features/checkout/infrastructure/checkoutQueries.ts",
+      "lines": "133-134",
+      "description": "`priceMap.values().next().value` is used to get `firstItem` for determining `orderCurrency`. If `productPrices` returns an empty array (all products inactive or deleted between cart load and checkout), `priceMap` is empty and `firstItem` is `undefined`. `orderCurrency` then falls back to `\"USD\"` (line 134), which may be incorrect for non-USD sellers. More critically, the subsequent `items.reduce` will throw `new Error('Product X not found')` for every item since `priceMap` is empty, which triggers stock release and a thrown error — so this is safe in terms of not silently inserting bad data. The `\"USD\"` fallback for `orderCurrency` could be misleading in error logs.",
+      "fix": "Add an explicit guard: if `priceMap.size === 0`, throw early with a clear error like `'No server prices found for order items'` before attempting to derive currency or calculate totals."
+    }
+  ],
+  "patterns": [
+    {
+      "name": "Debounce + URL sync pattern",
+      "description": "Multiple components (SearchBar, ProductFilters in store and studio, UsersPageContent in admin) use the same debounce-to-URL + sync-back-from-URL pattern with a nuqs `useQueryState`/`useQueryStates` and a local `useState`. The equality guard (`if (q !== searchInput)`) prevents infinite loops. This pattern is consistent and intentional across the codebase.",
+      "files": [
+        "apps/store/src/features/products/presentation/components/SearchBar.tsx",
+        "apps/store/src/features/products/presentation/components/ProductFilters.tsx",
+        "apps/studio/src/features/products/presentation/components/ProductFilters.tsx",
+        "apps/admin/src/features/users/presentation/pages/UsersPageContent.tsx"
+      ]
+    },
+    {
+      "name": "setInterval with cleanup",
+      "description": "All `setInterval` usages correctly return `clearInterval` from their `useEffect` cleanup functions. No memory leaks detected.",
+      "files": [
+        "apps/payments/src/features/orders/presentation/components/ExpirationLabel.tsx",
+        "apps/payments/src/features/received-orders/presentation/components/ReceivedOrderCard.tsx"
+      ]
+    },
+    {
+      "name": "Object URL lifecycle management",
+      "description": "Components that create blob/object URLs for receipt previews correctly revoke them on unmount and on file removal using a ref for the unmount cleanup. Pattern is consistent and correct.",
+      "files": [
+        "apps/payments/src/features/checkout/presentation/components/ReceiptUpload.tsx",
+        "apps/payments/src/features/orders/presentation/components/ResubmitEvidenceForm.tsx"
+      ]
+    },
+    {
+      "name": "Event listener subscribe/unsubscribe",
+      "description": "All manual addEventListener calls either return an unsubscribe function (cartCookie.ts) or are scoped to a Promise constructor that resolves once (userReceiptQueries.ts). No leaking listeners detected.",
+      "files": [
+        "apps/payments/src/features/checkout/infrastructure/cartCookie.ts",
+        "apps/admin/src/features/users/infrastructure/userReceiptQueries.ts"
+      ]
+    }
+  ]
+}

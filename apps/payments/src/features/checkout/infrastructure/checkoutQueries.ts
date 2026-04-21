@@ -1,4 +1,6 @@
 /* eslint-disable i18next/no-literal-string -- infrastructure file: Supabase table/column names are SQL identifiers, not user-facing text */
+import type { Database } from "api/supabase/types";
+
 import {
   MINUTES_PER_HOUR,
   MS_PER_SECOND,
@@ -12,6 +14,8 @@ import type {
 import { FALLBACK_SELLER_NAME } from "@/shared/domain/constants";
 import type { SupabaseClient } from "@/shared/domain/types";
 import { fetchUserDisplayNames } from "@/shared/infrastructure/fetchUserDisplayNames";
+
+type CurrencyCode = Database["public"]["Enums"]["currency_code"];
 
 /**
  * Fetch a seller's active payment methods directly from seller_payment_methods.
@@ -48,7 +52,6 @@ interface CreateOrderParams {
   sellerId: string;
   paymentMethodId: string;
   items: CartItem[];
-  totalCop: number;
   checkoutSessionId: string;
 }
 
@@ -62,7 +65,7 @@ export async function fetchCheckoutProductsByIds(
   const { data, error } = await supabase
     .from("products")
     .select(
-      "id, name_en, name_es, price_cop, price_usd, seller_id, images, max_quantity, is_active",
+      "id, name_en, name_es, price, currency, seller_id, images, max_quantity, is_active",
     )
     .in("id", uniqueIds)
     .eq("is_active", true);
@@ -73,8 +76,8 @@ export async function fetchCheckoutProductsByIds(
     id: product.id,
     name_en: product.name_en,
     name_es: product.name_es,
-    price_cop: product.price_cop,
-    price_usd: product.price_usd,
+    price: product.price,
+    currency: product.currency,
     seller_id: product.seller_id,
     images: product.images,
     max_quantity: product.max_quantity,
@@ -111,7 +114,7 @@ export async function createOrder(
   // Fetch current prices from DB to prevent price manipulation via cart cookie
   const { data: productPrices, error: pricesError } = await supabase
     .from("products")
-    .select("id, price_cop")
+    .select("id, price, currency")
     .in(
       "id",
       items.map((item) => item.id),
@@ -119,14 +122,24 @@ export async function createOrder(
   if (pricesError) throw pricesError;
 
   const priceMap = new Map(
-    (productPrices ?? []).map((p) => [p.id, p.price_cop as number]),
+    (productPrices ?? []).map((p) => [
+      p.id,
+      { price: p.price as number, currency: p.currency as CurrencyCode },
+    ]),
   );
 
+  if (priceMap.size === 0) throw new Error("No products found for this order");
+
   // Calculate total server-side from DB prices (never trust client-provided total)
-  const serverTotalCop = items.reduce((sum, item) => {
-    const dbPrice = priceMap.get(item.id);
-    if (dbPrice === undefined) throw new Error(`Product ${item.id} not found`);
-    return sum + dbPrice * item.quantity;
+  // All items in a seller group share the same currency
+  const firstItem = priceMap.values().next().value;
+  const orderCurrency = firstItem?.currency ?? "USD";
+
+  const serverTotal = items.reduce((sum, item) => {
+    const dbProduct = priceMap.get(item.id);
+    if (dbProduct === undefined)
+      throw new Error(`Product ${item.id} not found`);
+    return sum + dbProduct.price * item.quantity;
   }, 0);
 
   // Reserve stock for each item
@@ -163,7 +176,8 @@ export async function createOrder(
       user_id: userId,
       seller_id: sellerId,
       payment_method_id: paymentMethodId,
-      total_cop: serverTotalCop,
+      total: serverTotal,
+      currency: orderCurrency,
       payment_status: "awaiting_payment",
       checkout_session_id: checkoutSessionId,
       expires_at: expiresAt,
@@ -180,13 +194,20 @@ export async function createOrder(
   const orderId = order.id;
 
   // Build order items using DB prices
-  const orderItems = items.map((item) => ({
-    order_id: orderId,
-    product_id: item.id,
-    quantity: item.quantity,
-    unit_price_cop: priceMap.get(item.id) as number,
-    metadata: { name_en: item.name_en ?? "", name_es: item.name_es ?? "" },
-  }));
+  const orderItems = items.map((item) => {
+    const dbProduct = priceMap.get(item.id) ?? {
+      price: 0,
+      currency: "USD" as CurrencyCode,
+    };
+    return {
+      order_id: orderId,
+      product_id: item.id,
+      quantity: item.quantity,
+      unit_price: dbProduct.price,
+      currency: dbProduct.currency,
+      metadata: { name_en: item.name_en ?? "", name_es: item.name_es ?? "" },
+    };
+  });
 
   const { error: itemsError } = await supabase
     .from("order_items")

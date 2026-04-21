@@ -8,14 +8,14 @@ vi.mock("@/shared/application/hooks/useSupabase", () => ({
   useSupabase: vi.fn(),
 }));
 
-vi.mock("@/shared/infrastructure/recentActivityQueries", () => ({
+vi.mock("@/features/dashboard/infrastructure/recentActivityQueries", () => ({
   fetchRecentActivity: vi.fn(),
 }));
 
 import { useRecentActivity } from "./useRecentActivity";
 
+import { fetchRecentActivity } from "@/features/dashboard/infrastructure/recentActivityQueries";
 import { useSupabase } from "@/shared/application/hooks/useSupabase";
-import { fetchRecentActivity } from "@/shared/infrastructure/recentActivityQueries";
 
 function createWrapper() {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });

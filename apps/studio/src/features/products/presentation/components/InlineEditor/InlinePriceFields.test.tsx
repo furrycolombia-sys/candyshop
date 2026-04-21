@@ -8,6 +8,7 @@ vi.mock("next-intl", () => ({
 
 vi.mock("shared", () => ({
   tid: (id: string) => ({ "data-testid": id }),
+  POPULAR_CURRENCIES: ["USD", "EUR", "COP"],
 }));
 
 vi.mock("./PriceInput", () => ({
@@ -21,10 +22,9 @@ import { InlinePriceFields } from "./InlinePriceFields";
 function Wrapper() {
   const methods = useForm({
     defaultValues: {
-      price_cop: 50_000,
-      price_usd: "",
-      compare_at_price_cop: null,
-      compare_at_price_usd: null,
+      price: 50_000,
+      currency: "COP",
+      compare_at_price: null,
     },
   });
 
@@ -42,35 +42,28 @@ describe("InlinePriceFields", () => {
     expect(screen.getByTestId("inline-price-fields")).toBeInTheDocument();
   });
 
-  it("renders COP price input", () => {
+  it("renders price input", () => {
     render(<Wrapper />);
-    expect(screen.getByTestId("inline-price-cop")).toBeInTheDocument();
+    expect(screen.getByTestId("inline-price")).toBeInTheDocument();
   });
 
-  it("renders USD price input", () => {
+  it("renders currency selector", () => {
     render(<Wrapper />);
-    expect(screen.getByTestId("inline-price-usd")).toBeInTheDocument();
+    expect(screen.getByTestId("inline-currency")).toBeInTheDocument();
   });
 
-  it("renders compare-at COP price input", () => {
+  it("renders compare-at price input", () => {
     render(<Wrapper />);
-    expect(screen.getByTestId("inline-compare-price-cop")).toBeInTheDocument();
+    expect(screen.getByTestId("inline-compare-price")).toBeInTheDocument();
   });
 
-  it("renders compare-at USD price input", () => {
+  it("renders price label", () => {
     render(<Wrapper />);
-    expect(screen.getByTestId("inline-compare-price-usd")).toBeInTheDocument();
+    expect(screen.getByText("price")).toBeInTheDocument();
   });
 
-  it("renders price labels", () => {
+  it("renders compare-at label", () => {
     render(<Wrapper />);
-    expect(screen.getByText("priceCop")).toBeInTheDocument();
-    expect(screen.getByText("priceUsd")).toBeInTheDocument();
-  });
-
-  it("renders compare-at labels", () => {
-    render(<Wrapper />);
-    expect(screen.getByText("comparePriceCop")).toBeInTheDocument();
-    expect(screen.getByText("comparePriceUsd")).toBeInTheDocument();
+    expect(screen.getByText("comparePrice")).toBeInTheDocument();
   });
 });

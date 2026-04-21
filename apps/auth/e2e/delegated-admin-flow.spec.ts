@@ -122,7 +122,7 @@ test.describe.serial("Delegated admin purchase flow", () => {
     await nameField.click();
     await nameField.fill(productName);
 
-    const priceField = page.getByTestId("inline-price-cop");
+    const priceField = page.getByTestId("inline-price");
     await priceField.click();
     await priceField.fill(price);
     await snap(page, `${snapPrefix}-product-filled`);
