@@ -50,8 +50,11 @@ export function HeroSection({ product, theme }: HeroSectionProps) {
             {/* Tagline */}
             {tagline && (
               <p
-                className="text-xs font-bold uppercase tracking-section"
-                style={{ color: theme.text }}
+                className="inline-block self-start border-strong border-foreground px-2 py-0.5 text-xs font-bold uppercase tracking-section"
+                style={{
+                  backgroundColor: theme.bg,
+                  color: theme.foreground,
+                }}
                 {...tid("hero-tagline")}
               >
                 {tagline}
