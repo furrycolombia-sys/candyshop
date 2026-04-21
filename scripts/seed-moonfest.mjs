@@ -84,10 +84,19 @@ const NEQUI_PAYMENT_METHOD = {
   sort_order: 0,
   display_blocks: [
     {
-      id: "nequi-number",
+      id: "nequi-info",
       type: "text",
-      content_en: "Send the payment to Nequi number: **3001234567**",
-      content_es: "Envia el pago al numero Nequi: **3001234567**",
+      content_en:
+        "Send payment to tag **@NEQUISAN15697**, number **3108747789**, or scan the QR below:",
+      content_es:
+        "Envía el pago al tag **@NEQUISAN15697**, al número **3108747789**, o escanea el QR:",
+    },
+    {
+      id: "nequi-qr",
+      type: "image",
+      url: "https://filedn.com/leGgCrrYIXV0YvzNNKbdzBb/3108747789.jpg",
+      alt_en: "Nequi QR code",
+      alt_es: "Código QR Nequi",
     },
     {
       id: "nequi-amount",
@@ -99,9 +108,9 @@ const NEQUI_PAYMENT_METHOD = {
       id: "nequi-instructions",
       type: "text",
       content_en:
-        "After sending the payment, fill in the fields below and upload a screenshot of the transaction.",
+        "After sending, fill in the fields below and upload a screenshot of the transaction.",
       content_es:
-        "Despues de enviar el pago, completa los campos a continuacion y sube una captura de pantalla del comprobante.",
+        "Después de enviar, completa los campos y sube una captura de pantalla del comprobante.",
     },
   ],
   form_fields: [
