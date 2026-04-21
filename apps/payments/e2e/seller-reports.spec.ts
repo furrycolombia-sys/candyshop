@@ -55,13 +55,16 @@ test.describe.serial("Seller Reports page", () => {
     buyerUser = await createTestUser("buyer-reports-payments", []);
 
     const product = await adminInsert("products", {
-      name: "E2E Seller Report Product",
-      description: "Created for seller reports E2E test",
+      slug: `e2e-seller-report-${Date.now()}`,
+      name_en: "E2E Seller Report Product",
+      name_es: "Producto de Reporte E2E",
+      description_en: "Created for seller reports E2E test",
+      description_es: "Creado para prueba E2E de reportes",
+      type: "merch",
       price: 25000,
       currency: "COP",
-      stock: 10,
       max_quantity: 5,
-      owner_id: sellerUser.userId,
+      seller_id: sellerUser.userId,
     });
     productId = product.id as string;
 
@@ -320,7 +323,7 @@ test.describe.serial("Seller Reports page", () => {
     await exportButton.click();
     const download = await downloadPromise;
 
-    expect(download.suggestedFilename()).toMatch(/my-sales-report\.xls$/i);
+    expect(download.suggestedFilename()).toMatch(/^my-sales-report.*\.xls$/i);
   });
 
   // ─── Access control ───────────────────────────────────────────────
