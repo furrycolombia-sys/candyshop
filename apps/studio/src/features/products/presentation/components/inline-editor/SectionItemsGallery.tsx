@@ -53,7 +53,6 @@ function GalleryItemEditor({
 
   const imageUrl = String(imageField.field.value ?? "");
 
-  /* eslint-disable react-hooks/refs -- useController field refs must be spread during render for react-hook-form binding */
   return (
     <div
       ref={dragProvided.innerRef}
@@ -134,7 +133,6 @@ function GalleryItemEditor({
       />
     </div>
   );
-  /* eslint-enable react-hooks/refs */
 }
 /* eslint-enable @typescript-eslint/no-explicit-any, i18next/no-literal-string */
 
