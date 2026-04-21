@@ -1,6 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import type { Json } from "api/supabase/types";
+import type { Database, Json } from "api/supabase/types";
 import { useSupabase } from "shared";
+
+type CurrencyCode = Database["public"]["Enums"]["currency_code"];
 
 import { PRODUCTS_QUERY_KEY } from "@/features/products/domain/constants";
 import type { Product } from "@/features/products/domain/types";
@@ -73,16 +75,15 @@ export function productToFormValues(product: Product): ProductFormValues {
     long_description_es: product.long_description_es,
     type: product.type,
     category: product.category,
-    price_cop: product.price_cop,
-    price_usd: product.price_usd || "",
+    price: product.price,
+    currency: product.currency,
     tags: product.tags?.join(", ") ?? "",
     featured: product.featured,
     is_active: product.is_active,
     images,
     sections: rawSections ?? [],
     max_quantity: product.max_quantity ?? null,
-    compare_at_price_cop: product.compare_at_price_cop ?? null,
-    compare_at_price_usd: product.compare_at_price_usd ?? null,
+    compare_at_price: product.compare_at_price ?? null,
     refundable: product.refundable ?? null,
   };
 }
@@ -100,16 +101,15 @@ function buildProductPayload(values: ProductFormValues) {
     long_description_es: values.long_description_es,
     type: values.type,
     category: values.category,
-    price_cop: values.price_cop,
-    price_usd: typeof values.price_usd === "number" ? values.price_usd : 0,
+    price: values.price,
+    currency: values.currency as CurrencyCode,
     tags: parseTags(values.tags ?? ""),
     featured: values.featured ?? false,
     is_active: values.is_active ?? true,
     images: (values.images ?? []) as Json,
     sections: (values.sections ?? []) as Json,
     max_quantity: values.max_quantity ?? null,
-    compare_at_price_cop: values.compare_at_price_cop ?? null,
-    compare_at_price_usd: values.compare_at_price_usd ?? null,
+    compare_at_price: values.compare_at_price ?? null,
     refundable: values.refundable ?? null,
   };
 }

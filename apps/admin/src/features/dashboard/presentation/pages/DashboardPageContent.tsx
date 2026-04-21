@@ -10,8 +10,6 @@ import { StatusRow } from "@/features/dashboard/presentation/components/StatusRo
 import { Link } from "@/shared/infrastructure/i18n";
 
 const SYSTEM_STATUS_KEYS = ["database", "auth", "storage", "realtime"] as const;
-const NO_ACTIVITY_CLASS =
-  "px-5 py-6 text-center font-mono text-xs text-muted-foreground";
 const NO_ACTIVITY_TEXT_KEY = "activity.noActivity";
 
 interface DashboardPageContentProps {
@@ -54,7 +52,7 @@ export function DashboardPageContent({
               </div>
               <div className="divide-y divide-foreground/10">
                 {!canViewAudit && (
-                  <div className={NO_ACTIVITY_CLASS}>
+                  <div className="px-5 py-6 text-center font-mono text-xs text-muted-foreground">
                     {t(NO_ACTIVITY_TEXT_KEY)}
                   </div>
                 )}
@@ -81,7 +79,7 @@ export function DashboardPageContent({
                     />
                   ))}
                 {canViewAudit && recentEntries?.length === 0 && (
-                  <div className={NO_ACTIVITY_CLASS}>
+                  <div className="px-5 py-6 text-center font-mono text-xs text-muted-foreground">
                     {t(NO_ACTIVITY_TEXT_KEY)}
                   </div>
                 )}

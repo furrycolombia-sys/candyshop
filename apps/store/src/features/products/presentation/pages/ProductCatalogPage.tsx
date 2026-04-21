@@ -12,7 +12,7 @@ import { ProductGrid } from "@/features/products/presentation/components/Product
 import type {
   ProductCategory,
   ProductType,
-} from "@/shared/domain/categoryTypes";
+} from "@/shared/domain/CategoryTypes";
 
 /* eslint-disable sonarjs/no-duplicate-string -- Tailwind class strings are not DRY violations */
 export function ProductCatalogPage() {

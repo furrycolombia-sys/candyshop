@@ -17,12 +17,7 @@ import {
   persistCartCookie,
   removeCartCookie,
 } from "./cartCookiePersistence";
-import {
-  addItemToItems,
-  cartReducer,
-  initialState,
-  updateItemQuantity,
-} from "./cartReducer";
+import { cartReducer, initialState } from "./cartReducer";
 import { isValidCartItems } from "./cartValidation";
 
 import type { CartItem, CartState } from "@/features/cart/domain/types";
@@ -80,8 +75,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
               id: product.id,
               name_en: product.name_en,
               name_es: product.name_es,
-              price_cop: product.price_cop,
-              price_usd: product.price_usd,
+              price: product.price,
+              currency: product.currency,
               seller_id: product.seller_id,
               images: product.images,
               max_quantity: product.max_quantity,
@@ -130,35 +125,20 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   const addItem = useCallback(
     (item: Omit<CartItem, "quantity"> & { quantity?: number }) => {
-      persistCartCookie(addItemToItems(state.items, item));
       dispatch({ type: "ADD_ITEM", payload: item });
     },
-    [state.items],
+    [],
   );
 
-  const removeItem = useCallback(
-    (id: string) => {
-      persistCartCookie(state.items.filter((item) => item.id !== id));
-      dispatch({ type: "REMOVE_ITEM", payload: { id } });
-    },
-    [state.items],
-  );
+  const removeItem = useCallback((id: string) => {
+    dispatch({ type: "REMOVE_ITEM", payload: { id } });
+  }, []);
 
-  const updateQuantity = useCallback(
-    (id: string, quantity: number) => {
-      const nextItems = updateItemQuantity(state.items, id, quantity);
-      if (nextItems.length === 0) {
-        removeCartCookie();
-      } else {
-        persistCartCookie(nextItems);
-      }
-      dispatch({ type: "UPDATE_QUANTITY", payload: { id, quantity } });
-    },
-    [state.items],
-  );
+  const updateQuantity = useCallback((id: string, quantity: number) => {
+    dispatch({ type: "UPDATE_QUANTITY", payload: { id, quantity } });
+  }, []);
 
   const clearCart = useCallback(() => {
-    removeCartCookie();
     dispatch({ type: "CLEAR_CART" });
   }, []);
 

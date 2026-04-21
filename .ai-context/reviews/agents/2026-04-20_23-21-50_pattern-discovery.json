@@ -1,0 +1,252 @@
+{
+  "agent": "pattern-discovery",
+  "timestamp": "2026-04-20T23:21:50",
+  "scope": "apps/",
+  "summary": {
+    "filesAnalyzed": 42,
+    "patternsFound": 12,
+    "goodPatterns": 5,
+    "antiPatterns": 4,
+    "inconsistencies": 5,
+    "ruleCandidates": 4
+  },
+  "patterns": [
+    {
+      "id": "PAT-001",
+      "name": "Permission Guard + Content Split (Page / PageContent)",
+      "category": "ARCH",
+      "type": "good_pattern",
+      "description": "Every guarded feature page is split into two components: a thin `*Page` that handles permission loading and access-denied rendering, and a `*PageContent` that receives resolved permissions as props and renders the real UI. This pattern is used consistently in admin, payments, and studio apps.",
+      "examples": [
+        "apps/admin/src/features/settings/presentation/pages/SettingsPage.tsx + SettingsPageContent.tsx",
+        "apps/payments/src/features/checkout/presentation/pages/CheckoutPage.tsx + CheckoutPageContent.tsx",
+        "apps/payments/src/features/received-orders/presentation/pages/ReceivedOrdersPage.tsx + ReceivedOrdersPageContent.tsx",
+        "apps/studio/src/features/products/presentation/pages/ProductListPage.tsx + ProductListPageContent.tsx"
+      ],
+      "severity": "info",
+      "verdict": "Well-designed, should be documented as the standard pattern."
+    },
+    {
+      "id": "PAT-002",
+      "name": "Permission loading renders null (invisible loading)",
+      "category": "ARCH",
+      "type": "good_pattern",
+      "description": "All *Page components that check permissions return `null` while `isLoading` is true, preventing flash of AccessDeniedState. Some do `return null;` and some `return null` without braces or semicolons — minor formatting inconsistency but consistent in intent.",
+      "examples": [
+        "if (isLoading) return null;  // admin/settings, admin/users, etc.",
+        "if (isLoading) { return null; }  // payments/checkout, payments/orders, etc."
+      ],
+      "severity": "info",
+      "verdict": "Consistent intent, minor formatting inconsistency (one-liner vs block). Could be standardised to one form."
+    },
+    {
+      "id": "PAT-003",
+      "name": "Feature index.ts exports only the page component",
+      "category": "ARCH",
+      "type": "good_pattern",
+      "description": "Feature `index.ts` barrel files export only the minimal public surface — usually just the page component(s). This keeps cross-feature coupling minimal.",
+      "examples": [
+        "apps/admin/src/features/audit/index.ts — exports AuditLogPage only",
+        "apps/payments/src/features/checkout/index.ts — exports CheckoutPage only",
+        "apps/studio/src/features/products/index.ts — exports ProductFormPage, ProductListPage, and useProductById"
+      ],
+      "severity": "info",
+      "verdict": "Good disciplined pattern."
+    },
+    {
+      "id": "PAT-004",
+      "name": "App-level route files are thin wrappers",
+      "category": "ARCH",
+      "type": "good_pattern",
+      "description": "Next.js `page.tsx` files in the `app/` directory do nothing but call `setRequestLocale` and render the feature page component. Business logic is zero.",
+      "examples": [
+        "apps/studio/src/app/[locale]/products/new/page.tsx",
+        "apps/payments/src/app/[locale]/purchases/page.tsx"
+      ],
+      "severity": "info",
+      "verdict": "Perfectly compliant with the architecture rule."
+    },
+    {
+      "id": "PAT-005",
+      "name": "AccessDeniedState re-exported from shared package via local shim",
+      "category": "ARCH",
+      "type": "good_pattern",
+      "description": "Each app's `shared/presentation/components/AccessDeniedState.tsx` is a one-liner re-export from the `shared` package (`export { AccessDeniedState } from 'shared/components'`). This preserves the absolute import path `@/shared/presentation/components/AccessDeniedState` across apps while keeping the implementation in the shared package.",
+      "examples": [
+        "apps/admin/src/shared/presentation/components/AccessDeniedState.tsx",
+        "apps/payments/src/shared/presentation/components/AccessDeniedState.tsx",
+        "apps/studio/src/shared/presentation/components/AccessDeniedState.tsx"
+      ],
+      "severity": "info",
+      "verdict": "Clean delegation pattern — worth documenting."
+    },
+    {
+      "id": "PAT-006",
+      "name": "Duplicate hook files (application root vs application/hooks/)",
+      "category": "ARCH",
+      "type": "anti_pattern",
+      "description": "Several features have two copies of the same hook: one at `application/*.ts` (an older version using `createBrowserSupabaseClient` + `useMemo`) and another at `application/hooks/*.ts` (the current version using `useSupabase` from `shared`). The `application/hooks/` version is what production code imports; the root-level files appear to be leftover migration artefacts.",
+      "affectedFiles": [
+        "apps/studio/src/features/products/application/useProducts.ts (legacy)",
+        "apps/studio/src/features/products/application/hooks/useProducts.ts (current)",
+        "apps/studio/src/features/products/application/useProductForm.ts (legacy)",
+        "apps/studio/src/features/products/application/hooks/useProductForm.ts (current)",
+        "apps/studio/src/features/products/application/useProductMutations.ts (legacy)",
+        "apps/studio/src/features/products/application/hooks/useProductMutations.ts (current)",
+        "apps/admin/src/features/audit/application/useAuditLog.ts (legacy — inline constants)",
+        "apps/admin/src/features/audit/application/hooks/useAuditLog.ts (current)",
+        "apps/store/src/features/cart/application/useSellerProfiles.ts (legacy)",
+        "apps/store/src/features/cart/application/hooks/useSellerProfiles.ts (current)"
+      ],
+      "severity": "warning",
+      "recommendation": "Delete the root-level legacy hook files. Verify no import points to them, then remove."
+    },
+    {
+      "id": "PAT-007",
+      "name": "Duplicate component folders with different casing (PascalCase vs kebab-case)",
+      "category": "NAME",
+      "type": "anti_pattern",
+      "description": "Two feature folders contain identical files duplicated under two differently-named directories: `ProductDetail/` (PascalCase) and `product-detail/` (kebab-case) in the store, and `InlineEditor/` (PascalCase) and `inline-editor/` (kebab-case) in studio. `diff` confirms the files are identical. This wastes disk space, confuses navigation, and may cause import ambiguity.",
+      "affectedPaths": [
+        "apps/store/src/features/products/presentation/components/ProductDetail/ (PascalCase)",
+        "apps/store/src/features/products/presentation/components/product-detail/ (kebab-case)",
+        "apps/studio/src/features/products/presentation/components/InlineEditor/ (PascalCase)",
+        "apps/studio/src/features/products/presentation/components/inline-editor/ (kebab-case)"
+      ],
+      "severity": "warning",
+      "recommendation": "Keep only one version (kebab-case for folders, per naming conventions). Remove the PascalCase folder after verifying all imports point to the kept one."
+    },
+    {
+      "id": "PAT-008",
+      "name": "Inconsistent Supabase client instantiation in hooks",
+      "category": "ARCH",
+      "type": "inconsistency",
+      "description": "Two approaches coexist: (1) `useSupabase()` from the `shared` package (current, preferred) and (2) `useMemo(() => createBrowserSupabaseClient(), [])` (older, raw). The legacy hooks in studio and store still use the raw `useMemo` form. The preferred hook form wraps the same logic but keeps instantiation consistent and testable.",
+      "examples": [
+        "PREFERRED: import { useSupabase } from 'shared'; const supabase = useSupabase();",
+        "LEGACY: import { createBrowserSupabaseClient } from 'api/supabase'; const supabase = useMemo(() => createBrowserSupabaseClient(), []);"
+      ],
+      "affectedFiles": [
+        "apps/studio/src/features/products/application/useProducts.ts",
+        "apps/studio/src/features/products/application/useProductForm.ts",
+        "apps/studio/src/features/products/application/useProductMutations.ts",
+        "apps/store/src/features/cart/application/useSellerProfiles.ts",
+        "apps/studio/src/features/seller-admins/application/hooks/useDelegateSearch.ts",
+        "apps/payments/src/features/checkout/application/hooks/useCartFromCookie.ts"
+      ],
+      "severity": "warning",
+      "recommendation": "Migrate all hooks to `useSupabase()`. `useDelegateSearch.ts` and `useCartFromCookie.ts` are in the `hooks/` layer but still use the old form — these should be updated."
+    },
+    {
+      "id": "PAT-009",
+      "name": "AppTopNavigation implemented slightly differently across apps",
+      "category": "DRY",
+      "type": "inconsistency",
+      "description": "All 7 apps have a local `AppTopNavigation.tsx` that wraps `@monorepo/app-components`'s `AppNavigation`, but they pass `permissionState` in four different ways: (1) spread via `useCurrentUserPermissions()` return directly, (2) destructure and create inline object, (3) destructure and assign to a `permissionState` variable first, (4) destructure with different prop ordering. All compile to the same result but the inconsistency suggests the component was copied and independently tweaked.",
+      "affectedFiles": [
+        "apps/store/src/shared/presentation/components/AppTopNavigation.tsx (spreads all of useCurrentUserPermissions)",
+        "apps/payments/src/shared/presentation/components/AppTopNavigation.tsx (destructures + inline object)",
+        "apps/admin/src/shared/presentation/components/AppTopNavigation.tsx (destructures + inline object, different prop order)",
+        "apps/studio/src/shared/presentation/components/AppTopNavigation.tsx (destructures + named variable)",
+        "apps/landing/src/shared/presentation/components/AppTopNavigation.tsx (uses `permissions` alias)"
+      ],
+      "severity": "suggestion",
+      "recommendation": "Standardise to the simplest approach: `const permissionState = useCurrentUserPermissions(); return <AppNavigation {...props} permissionState={permissionState} />;`"
+    },
+    {
+      "id": "PAT-010",
+      "name": "Supabase tables not in generated types use `as any` pattern",
+      "category": "ARCH",
+      "type": "inconsistency",
+      "description": "Two infrastructure query files suppress TypeScript errors for table names not yet in the generated Supabase types using `const TABLE = '...' as any;` with an ESLint disable comment. This is a temporary workaround that should be resolved by regenerating Supabase types.",
+      "affectedFiles": [
+        "apps/admin/src/features/templates/infrastructure/templateQueries.ts — `product_templates` table",
+        "apps/admin/src/features/settings/infrastructure/settingsQueries.ts — `payment_settings` table"
+      ],
+      "severity": "warning",
+      "recommendation": "Run `pnpm codegen:supabase` to regenerate types and remove the `as any` casts."
+    },
+    {
+      "id": "PAT-011",
+      "name": "Magic staleTime value repeated without constants in some hooks",
+      "category": "DRY",
+      "type": "inconsistency",
+      "description": "Most hooks correctly reference a named constant (e.g., `SETTINGS_STALE_TIME_MS`, `ORDERS_STALE_TIME_MS`) for their TanStack Query `staleTime`. However, several hooks inline the raw number directly (`staleTime: 60_000` or `staleTime: 30_000`) without naming it. The value 60_000 appears 10+ times inline; 30_000 appears 5 times inline.",
+      "affectedFiles": [
+        "apps/store/src/features/cart/application/useSellerProfiles.ts — staleTime: 60_000",
+        "apps/store/src/features/products/application/hooks/useStoreProducts.ts — staleTime: 60_000 (twice)",
+        "apps/payments/src/features/checkout/application/hooks/useSellerProfiles.ts — staleTime: 60_000",
+        "apps/payments/src/features/checkout/application/hooks/useCartFromCookie.ts — staleTime: 30_000",
+        "apps/payments/src/features/payment-methods/application/hooks/usePaymentMethods.ts — staleTime: 60_000",
+        "apps/studio/src/features/seller-admins/application/hooks/useDelegates.ts — staleTime: 60_000",
+        "apps/studio/src/features/seller-admins/application/hooks/useDelegateCountsByProduct.ts — staleTime: 60_000",
+        "apps/studio/src/features/products/application/hooks/useProducts.ts — staleTime: 60_000",
+        "apps/admin/src/features/dashboard/application/hooks/useRecentActivity.ts — STALE_TIME_MS (local constant, not from domain)"
+      ],
+      "severity": "suggestion",
+      "recommendation": "Move 60_000 and 30_000 to named constants in each feature's domain/constants.ts (or to a shared time constants file). This already exists in the `shared` package: `shared/constants/time` — extend it or add a `DEFAULT_STALE_TIME_MS` there."
+    },
+    {
+      "id": "PAT-012",
+      "name": "Test mock pattern for useTranslations is consistent and idiomatic",
+      "category": "TEST",
+      "type": "good_pattern",
+      "description": "All test files mock `useTranslations` the same way: `useTranslations: () => (key: string) => key`. This returns the translation key itself, making assertions like `toHaveTextContent('title')` stable and locale-independent.",
+      "occurrences": 90,
+      "severity": "info",
+      "verdict": "Well-established pattern across all apps. Worth documenting in testing rules."
+    }
+  ],
+  "ruleSuggestions": [
+    {
+      "id": "RULE-CAND-001",
+      "title": "Page/PageContent Split Pattern",
+      "description": "Every guarded page MUST be split into a thin `*Page` (permission check + access-denied) and a `*PageContent` (actual UI with resolved permissions passed as props). The `*Page` returns `null` while permissions load.",
+      "rationale": "Already used uniformly across admin, payments, and studio. Formalising it prevents inconsistent implementations in new features.",
+      "appliesTo": "All apps with permission-gated pages"
+    },
+    {
+      "id": "RULE-CAND-002",
+      "title": "Hooks must live in application/hooks/ only",
+      "description": "Hook files MUST be placed in `application/hooks/` and never directly under `application/`. Files at `application/*.ts` that are hooks are legacy artefacts and should be deleted after migration.",
+      "rationale": "Removes ambiguity about which version is canonical and prevents bugs from importing the wrong copy.",
+      "appliesTo": "All apps — especially studio and store"
+    },
+    {
+      "id": "RULE-CAND-003",
+      "title": "Always use useSupabase() from shared — never raw createBrowserSupabaseClient in hooks",
+      "description": "Hooks that need a Supabase client MUST use `import { useSupabase } from 'shared'; const supabase = useSupabase();`. Direct calls to `createBrowserSupabaseClient()` inside hooks are forbidden.",
+      "rationale": "Standardises the instantiation pattern, simplifies mocking in tests, and ensures a single Supabase client singleton per render.",
+      "appliesTo": "All apps"
+    },
+    {
+      "id": "RULE-CAND-004",
+      "title": "Component group folders must use kebab-case",
+      "description": "Component group folders (non-single-component directories) must use kebab-case. PascalCase folders are reserved for future single-component folder groups only if the component name itself requires it — and even then kebab-case is preferred.",
+      "rationale": "Removes the ambiguity that led to duplicated PascalCase/kebab-case folder pairs in store and studio.",
+      "appliesTo": "All apps"
+    }
+  ],
+  "positiveObservations": [
+    {
+      "observation": "All 7 apps' globals.css files are byte-for-byte identical — CSS consistency rule is perfectly enforced.",
+      "files": "apps/*/src/app/globals.css"
+    },
+    {
+      "observation": "nuqs is used correctly and consistently for URL state in all filterable/paginated pages (audit log, users, store products, studio products, received orders).",
+      "files": "Multiple SearchParams domain files and PageContent hooks"
+    },
+    {
+      "observation": "Domain constants (query keys, stale times, pagination sizes) are well-organised in feature domain/constants.ts files. The majority of hooks reference named constants rather than magic numbers.",
+      "files": "apps/*/src/features/*/domain/constants.ts"
+    },
+    {
+      "observation": "Test coverage of `*Page` permission-guard components is thorough — each Page component has a corresponding `.test.tsx` that verifies loading, access-denied, and content-rendered states.",
+      "files": "apps/*/src/features/*/presentation/pages/*.test.tsx"
+    },
+    {
+      "observation": "The `useTranslations: () => (key: string) => key` test mock is applied uniformly across all 90+ test files, ensuring locale-independent assertions.",
+      "files": "All *.test.tsx files"
+    }
+  ]
+}

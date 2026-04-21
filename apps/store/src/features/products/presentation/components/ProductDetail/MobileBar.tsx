@@ -1,8 +1,8 @@
 "use client";
 
 import { ShoppingCart } from "lucide-react";
-import { useLocale, useTranslations } from "next-intl";
-import { i18nCurrencyCode, i18nPrice, tid } from "shared";
+import { useTranslations } from "next-intl";
+import { formatPrice, tid } from "shared";
 
 import type { CategoryTheme } from "@/features/products/domain/constants";
 import {
@@ -28,7 +28,6 @@ export function MobileBar({
   quantityInCart,
 }: MobileBarProps) {
   const t = useTranslations("products");
-  const locale = useLocale();
 
   return (
     <div
@@ -38,10 +37,10 @@ export function MobileBar({
       <div className="min-w-0 flex flex-col">
         <span className="flex min-w-0 items-baseline gap-1">
           <span className="shrink-0 font-display text-xs font-bold uppercase tracking-wider text-muted-foreground">
-            {i18nCurrencyCode(product, locale)}
+            {product.currency}
           </span>
           <span className="min-w-0 break-all font-display text-lg font-extrabold sm:text-xl">
-            {i18nPrice(product, locale)}
+            {formatPrice(product.price, product.currency)}
           </span>
         </span>
         {quantityInCart > 0 && (

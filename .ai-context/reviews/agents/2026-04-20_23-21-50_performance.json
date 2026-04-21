@@ -1,0 +1,82 @@
+{
+  "agent": "performance",
+  "timestamp": "2026-04-20T23:21:50",
+  "scope": "apps/",
+  "summary": {
+    "filesAnalyzed": 22,
+    "issuesFound": 5,
+    "critical": 0,
+    "warning": 3,
+    "suggestion": 2,
+    "info": 0
+  },
+  "issues": [
+    {
+      "id": "PERF-001",
+      "severity": "warning",
+      "category": "Rendering Issues",
+      "file": "apps/store/src/features/cart/presentation/components/CartDrawer.tsx",
+      "line": 142,
+      "description": "Inline object literal `translators={{ t, tProducts, tTypes, tCategories }}` is passed as a prop to `CartItemRow` on every render. A new object reference is created each render cycle, which prevents React from bailing out of re-renders in CartItemRow even when the translators have not changed.",
+      "rule": "Inline object literals in JSX props are recreated on each render",
+      "fix": "Memoize the translators object with useMemo: `const translators = useMemo(() => ({ t, tProducts, tTypes, tCategories }), [t, tProducts, tTypes, tCategories]);` and pass `translators={translators}`."
+    },
+    {
+      "id": "PERF-002",
+      "severity": "warning",
+      "category": "Callback Issues",
+      "file": "apps/store/src/features/cart/presentation/components/CartItemRow.tsx",
+      "lines": [112, 129, 141],
+      "description": "Three inline arrow functions are used directly in onClick props: `onClick={() => removeItem(item.id)}`, `onClick={() => updateQuantity(item.id, item.quantity - 1)}`, and `onClick={() => updateQuantity(item.id, item.quantity + 1)}`. Since CartItemRow is rendered in a list (one per cart item), these closures are recreated on every render of the parent list. This component is a good candidate for React.memo paired with stable callbacks.",
+      "rule": "Callback functions recreated every render without useCallback",
+      "fix": "Wrap CartItemRow with React.memo and convert the three inline handlers to useCallback inside the component, depending on `item.id`, `item.quantity`, `removeItem`, and `updateQuantity`."
+    },
+    {
+      "id": "PERF-003",
+      "severity": "warning",
+      "category": "Lazy Loading",
+      "file": "apps/studio/src/features/products/presentation/components/InlineEditor/InlineEditor.tsx",
+      "description": "`@hello-pangea/dnd` (drag-and-drop library) is imported directly in multiple studio components (SectionItemsAccordion, SectionItemsCards, SectionItemsGallery, SectionItemsTwoColumn, InlineSections). This heavy library is bundled into the initial chunk for the InlineEditor page. The InlineEditor is only used by authenticated sellers and the DnD functionality is not needed until the user starts editing sections.",
+      "rule": "Large components/libraries not lazy loaded",
+      "fix": "Wrap the components that import @hello-pangea/dnd with `next/dynamic` and `{ ssr: false }` so the DnD library is only loaded when the editor is actually rendered, e.g. `const InlineSections = dynamic(() => import('./InlineSections'), { ssr: false })`."
+    },
+    {
+      "id": "PERF-004",
+      "severity": "suggestion",
+      "category": "Rendering Issues",
+      "file": "apps/store/src/features/products/presentation/components/ProductDetail/Sections/TwoColumnSection.tsx",
+      "lines": [51, 52, 53],
+      "description": "Inside a `.map()` loop, a new inline style object is constructed on each iteration: `style={{ backgroundColor: index % MODULO_ZEBRA === 0 ? theme.rowEven : theme.rowOdd }}`. While the values derive from `theme` (stable), a new object reference is created per row per render. With large section item arrays this produces unnecessary allocations.",
+      "rule": "Object/array creation in render inside loops",
+      "fix": "Pre-compute the two possible style objects outside the map: `const evenStyle = { backgroundColor: theme.rowEven }` and `const oddStyle = { backgroundColor: theme.rowOdd }`, then select between them: `style={index % MODULO_ZEBRA === 0 ? evenStyle : oddStyle}`. Wrap with useMemo on `theme` if needed."
+    },
+    {
+      "id": "PERF-005",
+      "severity": "suggestion",
+      "category": "Rendering Issues",
+      "file": "apps/store/src/features/products/presentation/components/ProductDetail/HeroSection.tsx",
+      "line": 141,
+      "description": "The `discountLabel` prop passed to `PriceBlock` is an inline arrow function: `discountLabel={(values) => t('detail.discount', values)}`. This creates a new function reference on every render of HeroSection. If PriceBlock is memoized or uses the prop in a dependency array, this will cause unnecessary re-renders or effect re-runs.",
+      "rule": "Callback function recreated every render passed as prop",
+      "fix": "Extract to a `useCallback`: `const discountLabel = useCallback((values) => t('detail.discount', values), [t]);` and pass `discountLabel={discountLabel}`."
+    }
+  ],
+  "patterns": [
+    {
+      "pattern": "theme object inline styles are pervasive",
+      "description": "Throughout the store and studio apps, dynamic theme colors (from CategoryTheme) are applied via inline `style={{ backgroundColor: theme.bg }}` etc. This pattern is intentional and necessary because CSS variables cannot express arbitrary runtime palette values. The pattern is consistent and correctly scoped — no action needed beyond awareness.",
+      "files_count": 20,
+      "verdict": "Acceptable — runtime dynamic colors require inline styles"
+    },
+    {
+      "pattern": "useMemo for sorted section items",
+      "description": "GallerySection, TwoColumnSection, CardsSection, and AccordionSection all memoize `[...section.items].sort(...)` with useMemo. This is a correct pattern since sorting allocates a new array.",
+      "verdict": "Good pattern — correctly memoizing array derivations"
+    },
+    {
+      "pattern": "CartContext uses useMemo for context value",
+      "description": "CartContext correctly wraps the context value in useMemo and all mutating callbacks in useCallback, preventing unnecessary consumer re-renders.",
+      "verdict": "Good pattern — well-optimized context"
+    }
+  ]
+}

@@ -206,6 +206,7 @@ export async function POST(
   const requiredKeys = grant
     ? [USER_PERMISSIONS_CREATE]
     : [USER_PERMISSIONS_DELETE];
+
   const adminUserId = await getAuthorizedAdmin(requiredKeys);
   if (!adminUserId) {
     return NextResponse.json({ error: FORBIDDEN_ERROR }, { status: 403 });

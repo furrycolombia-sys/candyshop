@@ -1,0 +1,108 @@
+{
+  "agent": "dry",
+  "timestamp": "2026-04-20T23:21:50",
+  "scope": "apps/",
+  "summary": {
+    "filesAnalyzed": 30,
+    "issuesFound": 7,
+    "critical": 0,
+    "warning": 4,
+    "suggestion": 3,
+    "info": 0
+  },
+  "issues": [
+    {
+      "id": "DRY-001",
+      "severity": "warning",
+      "title": "Duplicate ProductDetail component tree (PascalCase vs kebab-case folder)",
+      "description": "There are two nearly identical product detail component trees: `apps/store/src/features/products/presentation/components/ProductDetail/` and `apps/store/src/features/products/presentation/components/product-detail/`. The files are 100% identical in logic — the only diffs are import paths that reference their own sibling folder. The active tree imported by `ProductDetailPage.tsx` is `ProductDetail/` (PascalCase). The `product-detail/` tree appears to be a leftover copy from a rename/refactor.",
+      "files": [
+        "apps/store/src/features/products/presentation/components/ProductDetail/",
+        "apps/store/src/features/products/presentation/components/product-detail/"
+      ],
+      "fix": "Delete the unused `product-detail/` (kebab-case) folder entirely. `ProductDetailPage.tsx` already imports only from `ProductDetail/` (PascalCase). Verify no other consumer imports from `product-detail/` before deleting."
+    },
+    {
+      "id": "DRY-002",
+      "severity": "warning",
+      "title": "Duplicate lucideIconMap file",
+      "description": "The file `lucideIconMap.ts` (containing `ICON_MAP`, `DEFAULT_ICON_NAME`, and `getIcon`) is 100% identical in two locations:\n- `apps/store/src/features/products/presentation/utils/lucideIconMap.ts`\n- `apps/store/src/features/products/presentation/components/product-detail/lucideIconMap.ts`\n\nThe `CardsSection` in `ProductDetail/Sections/` imports from the `utils/` path, while the `product-detail/` copy is only used within its own (duplicate) tree.",
+      "files": [
+        "apps/store/src/features/products/presentation/utils/lucideIconMap.ts",
+        "apps/store/src/features/products/presentation/components/product-detail/lucideIconMap.ts"
+      ],
+      "fix": "Remove `product-detail/lucideIconMap.ts` as part of the same cleanup in DRY-001. The canonical copy is `presentation/utils/lucideIconMap.ts`."
+    },
+    {
+      "id": "DRY-003",
+      "severity": "warning",
+      "title": "Duplicate useSellerProfiles hook (root application/ vs application/hooks/)",
+      "description": "The `useSellerProfiles` hook is defined twice:\n- `apps/store/src/features/cart/application/useSellerProfiles.ts` — uses `createBrowserSupabaseClient()` directly and hardcodes query key `\"seller-profiles\"`.\n- `apps/store/src/features/cart/application/hooks/useSellerProfiles.ts` — uses `useSupabase()` from shared and references `SELLER_PROFILES_QUERY_KEY` constant.\n\nThe `hooks/` version is the canonical one (imported in the barrel `cart/index.ts` and used by `CartDrawer`). The root-level file is a stale copy. Both have their own test files with near-identical content.",
+      "files": [
+        "apps/store/src/features/cart/application/useSellerProfiles.ts",
+        "apps/store/src/features/cart/application/useSellerProfiles.test.ts",
+        "apps/store/src/features/cart/application/hooks/useSellerProfiles.ts",
+        "apps/store/src/features/cart/application/hooks/useSellerProfiles.test.ts"
+      ],
+      "fix": "Delete `application/useSellerProfiles.ts` and `application/useSellerProfiles.test.ts` (root-level copies). The canonical versions are under `application/hooks/`."
+    },
+    {
+      "id": "DRY-004",
+      "severity": "warning",
+      "title": "Duplicate useFlyToCart hook (root application/ vs application/hooks/)",
+      "description": "Same duplication pattern as DRY-003. `useFlyToCart` exists at both:\n- `apps/store/src/features/cart/application/useFlyToCart.ts`\n- `apps/store/src/features/cart/application/hooks/useFlyToCart.ts`\n\nBoth files and their test files (`useFlyToCart.test.ts`) are identical. The `hooks/` location is canonical (used by `FlyToCartContext.tsx`).",
+      "files": [
+        "apps/store/src/features/cart/application/useFlyToCart.ts",
+        "apps/store/src/features/cart/application/useFlyToCart.test.ts",
+        "apps/store/src/features/cart/application/hooks/useFlyToCart.ts",
+        "apps/store/src/features/cart/application/hooks/useFlyToCart.test.ts"
+      ],
+      "fix": "Delete `application/useFlyToCart.ts` and `application/useFlyToCart.test.ts` (root-level copies). The canonical versions are under `application/hooks/`."
+    },
+    {
+      "id": "DRY-005",
+      "severity": "suggestion",
+      "title": "Duplicated Supabase admin REST client utility code across apps",
+      "description": "The core logic of the Supabase service-role REST client is duplicated across two apps:\n- `apps/admin/src/app/api/admin/_shared/adminRest.ts`\n- `apps/payments/src/shared/infrastructure/adminRestClient.ts`\n\nBoth share:\n- Identical `SUPABASE_URL_INTERNAL` / `NEXT_PUBLIC_SUPABASE_URL` resolution logic\n- Identical `SUPABASE_SERVICE_ROLE_KEY` usage pattern\n- Identical `createRestPath(table, query)` implementation (only minor diff: admin version allows optional `query`, payments version requires it)\n- Identical `adminFetch` / `adminFetchJson` pattern: `fetch` + `cache: no-store` + body-consume-on-error\n- Identical `validateUuid` function (different regex variants: admin uses RFC4122 version-constrained pattern, payments uses a more permissive pattern)\n\nThese are two separate apps so some duplication is acceptable per monorepo rules. However, since the utility is purely infrastructure with no app-specific config or i18n, it is a candidate for a shared package.",
+      "files": [
+        "apps/admin/src/app/api/admin/_shared/adminRest.ts",
+        "apps/payments/src/shared/infrastructure/adminRestClient.ts"
+      ],
+      "fix": "Consider extracting a shared `supabase-admin-rest` utility into `packages/shared` or a new `packages/api-server` package. At minimum, unify the `validateUuid` regex — the two regexes differ in strictness (version bits) which could cause inconsistent behavior."
+    },
+    {
+      "id": "DRY-006",
+      "severity": "suggestion",
+      "title": "Duplicate product filter search params between store and studio",
+      "description": "The product filter search params object is defined twice with identical fields:\n- `apps/store/src/features/products/domain/searchParams.ts` exports `catalogSearchParams` with `{ category, type, q }`\n- `apps/studio/src/features/products/domain/searchParams.ts` exports `productsSearchParams` with `{ type, category, q }` (same fields, different order)\n\nBoth use `parseAsString.withDefault(\"\")` for all three fields.",
+      "files": [
+        "apps/store/src/features/products/domain/searchParams.ts",
+        "apps/studio/src/features/products/domain/searchParams.ts"
+      ],
+      "fix": "These are in separate apps so duplication is less impactful. If both apps are expected to stay in sync on product filter params, consider a shared constant for the field names (e.g. in `packages/shared`). Otherwise, this is acceptable given the apps evolve independently."
+    },
+    {
+      "id": "DRY-007",
+      "severity": "suggestion",
+      "title": "MAX_INITIALS_LENGTH magic constant defined twice",
+      "description": "The value `2` for max initials length is defined as:\n- `MAX_INITIALS_LENGTH = 2` in `apps/admin/src/features/users/domain/constants.ts` (properly imported by `getInitials.ts`)\n- `const MAX_INITIALS_LENGTH = 2` as a local constant inside `apps/studio/src/features/seller-admins/presentation/components/DelegateList.tsx`\n\nThe studio component also computes initials inline (`getDisplayName(profile).slice(0, MAX_INITIALS_LENGTH).toUpperCase()`) rather than using a shared utility.",
+      "files": [
+        "apps/admin/src/features/users/domain/constants.ts",
+        "apps/studio/src/features/seller-admins/presentation/components/DelegateList.tsx"
+      ],
+      "fix": "Since `getInitials` is an admin-specific utility, the simplest fix (KISS) is just removing the local `MAX_INITIALS_LENGTH` constant in `DelegateList.tsx` and inlining the value `.slice(0, 2)`. Alternatively, if initials computation is needed in studio beyond this component, extract a `getInitials` util to `packages/shared`."
+    }
+  ],
+  "patterns": [
+    {
+      "name": "Leftover root-level hook files after migration to hooks/ subfolder",
+      "description": "Multiple hooks in `apps/store/src/features/cart/application/` exist at both the root application level and under `application/hooks/`. This pattern suggests an in-progress or incomplete migration. Root-level files (useFlyToCart, useSellerProfiles) are stale copies of their `hooks/` counterparts.",
+      "recommendation": "Establish a rule that all feature hooks live under `application/hooks/` and clean up root-level duplicates."
+    },
+    {
+      "name": "Duplicate folder for product detail components",
+      "description": "The `ProductDetail/` and `product-detail/` directories appear to be the result of a naming convention change (PascalCase to kebab-case or vice versa) that was never completed. The production code uses `ProductDetail/` (PascalCase), while `product-detail/` is unreferenced by any non-self-referencing file.",
+      "recommendation": "Complete the cleanup by deleting the unused `product-detail/` tree."
+    }
+  ]
+}

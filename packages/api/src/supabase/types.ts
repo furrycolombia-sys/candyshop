@@ -7,30 +7,10 @@ export type Json =
   | Json[];
 
 export type Database = {
-  graphql_public: {
-    Tables: {
-      [_ in never]: never;
-    };
-    Views: {
-      [_ in never]: never;
-    };
-    Functions: {
-      graphql: {
-        Args: {
-          extensions?: Json;
-          operationName?: string;
-          query?: string;
-          variables?: Json;
-        };
-        Returns: Json;
-      };
-    };
-    Enums: {
-      [_ in never]: never;
-    };
-    CompositeTypes: {
-      [_ in never]: never;
-    };
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: "14.5";
   };
   public: {
     Tables: {
@@ -171,30 +151,33 @@ export type Database = {
       order_items: {
         Row: {
           created_at: string;
+          currency: Database["public"]["Enums"]["currency_code"];
           id: string;
           metadata: Json;
           order_id: string;
           product_id: string;
           quantity: number;
-          unit_price_cop: number;
+          unit_price: number;
         };
         Insert: {
           created_at?: string;
+          currency: Database["public"]["Enums"]["currency_code"];
           id?: string;
           metadata?: Json;
           order_id: string;
           product_id: string;
           quantity?: number;
-          unit_price_cop: number;
+          unit_price: number;
         };
         Update: {
           created_at?: string;
+          currency?: Database["public"]["Enums"]["currency_code"];
           id?: string;
           metadata?: Json;
           order_id?: string;
           product_id?: string;
           quantity?: number;
-          unit_price_cop?: number;
+          unit_price?: number;
         };
         Relationships: [
           {
@@ -218,6 +201,7 @@ export type Database = {
           buyer_info: Json | null;
           checkout_session_id: string | null;
           created_at: string;
+          currency: Database["public"]["Enums"]["currency_code"];
           expires_at: string | null;
           id: string;
           payment_method_id: string | null;
@@ -226,7 +210,7 @@ export type Database = {
           seller_id: string | null;
           seller_note: string | null;
           stripe_session_id: string | null;
-          total_cop: number;
+          total: number;
           transfer_number: string | null;
           user_id: string;
         };
@@ -234,6 +218,7 @@ export type Database = {
           buyer_info?: Json | null;
           checkout_session_id?: string | null;
           created_at?: string;
+          currency: Database["public"]["Enums"]["currency_code"];
           expires_at?: string | null;
           id?: string;
           payment_method_id?: string | null;
@@ -242,7 +227,7 @@ export type Database = {
           seller_id?: string | null;
           seller_note?: string | null;
           stripe_session_id?: string | null;
-          total_cop: number;
+          total: number;
           transfer_number?: string | null;
           user_id: string;
         };
@@ -250,6 +235,7 @@ export type Database = {
           buyer_info?: Json | null;
           checkout_session_id?: string | null;
           created_at?: string;
+          currency?: Database["public"]["Enums"]["currency_code"];
           expires_at?: string | null;
           id?: string;
           payment_method_id?: string | null;
@@ -258,7 +244,7 @@ export type Database = {
           seller_id?: string | null;
           seller_note?: string | null;
           stripe_session_id?: string | null;
-          total_cop?: number;
+          total?: number;
           transfer_number?: string | null;
           user_id?: string;
         };
@@ -438,9 +424,9 @@ export type Database = {
       products: {
         Row: {
           category: Database["public"]["Enums"]["product_category"];
-          compare_at_price_cop: number | null;
-          compare_at_price_usd: number | null;
+          compare_at_price: number | null;
           created_at: string;
+          currency: Database["public"]["Enums"]["currency_code"];
           description_en: string;
           description_es: string;
           event_id: string | null;
@@ -453,8 +439,7 @@ export type Database = {
           max_quantity: number | null;
           name_en: string;
           name_es: string;
-          price_cop: number;
-          price_usd: number;
+          price: number;
           rating: number | null;
           refundable: boolean | null;
           review_count: number;
@@ -470,9 +455,9 @@ export type Database = {
         };
         Insert: {
           category?: Database["public"]["Enums"]["product_category"];
-          compare_at_price_cop?: number | null;
-          compare_at_price_usd?: number | null;
+          compare_at_price?: number | null;
           created_at?: string;
+          currency: Database["public"]["Enums"]["currency_code"];
           description_en?: string;
           description_es?: string;
           event_id?: string | null;
@@ -485,8 +470,7 @@ export type Database = {
           max_quantity?: number | null;
           name_en: string;
           name_es: string;
-          price_cop: number;
-          price_usd?: number;
+          price: number;
           rating?: number | null;
           refundable?: boolean | null;
           review_count?: number;
@@ -502,9 +486,9 @@ export type Database = {
         };
         Update: {
           category?: Database["public"]["Enums"]["product_category"];
-          compare_at_price_cop?: number | null;
-          compare_at_price_usd?: number | null;
+          compare_at_price?: number | null;
           created_at?: string;
+          currency?: Database["public"]["Enums"]["currency_code"];
           description_en?: string;
           description_es?: string;
           event_id?: string | null;
@@ -517,8 +501,7 @@ export type Database = {
           max_quantity?: number | null;
           name_en?: string;
           name_es?: string;
-          price_cop?: number;
-          price_usd?: number;
+          price?: number;
           rating?: number | null;
           refundable?: boolean | null;
           review_count?: number;
@@ -833,6 +816,59 @@ export type Database = {
     };
     Enums: {
       audit_action: "check-in" | "uncheck" | "transfer";
+      currency_code:
+        | "USD"
+        | "EUR"
+        | "GBP"
+        | "COP"
+        | "MXN"
+        | "BRL"
+        | "ARS"
+        | "CLP"
+        | "PEN"
+        | "CAD"
+        | "AUD"
+        | "JPY"
+        | "CNY"
+        | "KRW"
+        | "INR"
+        | "CHF"
+        | "SEK"
+        | "NOK"
+        | "DKK"
+        | "NZD"
+        | "SGD"
+        | "HKD"
+        | "CZK"
+        | "HUF"
+        | "PLN"
+        | "RON"
+        | "TRY"
+        | "ZAR"
+        | "ILS"
+        | "SAR"
+        | "AED"
+        | "THB"
+        | "IDR"
+        | "MYR"
+        | "PHP"
+        | "VND"
+        | "NGN"
+        | "KES"
+        | "GHS"
+        | "UYU"
+        | "BOB"
+        | "PYG"
+        | "GTQ"
+        | "HNL"
+        | "NIO"
+        | "CRC"
+        | "DOP"
+        | "CUP"
+        | "JMD"
+        | "TTD"
+        | "BBD"
+        | "XCD";
       entitlement_type:
         | "transport"
         | "entry"
@@ -987,12 +1023,63 @@ export type CompositeTypes<
     : never;
 
 export const Constants = {
-  graphql_public: {
-    Enums: {},
-  },
   public: {
     Enums: {
       audit_action: ["check-in", "uncheck", "transfer"],
+      currency_code: [
+        "USD",
+        "EUR",
+        "GBP",
+        "COP",
+        "MXN",
+        "BRL",
+        "ARS",
+        "CLP",
+        "PEN",
+        "CAD",
+        "AUD",
+        "JPY",
+        "CNY",
+        "KRW",
+        "INR",
+        "CHF",
+        "SEK",
+        "NOK",
+        "DKK",
+        "NZD",
+        "SGD",
+        "HKD",
+        "CZK",
+        "HUF",
+        "PLN",
+        "RON",
+        "TRY",
+        "ZAR",
+        "ILS",
+        "SAR",
+        "AED",
+        "THB",
+        "IDR",
+        "MYR",
+        "PHP",
+        "VND",
+        "NGN",
+        "KES",
+        "GHS",
+        "UYU",
+        "BOB",
+        "PYG",
+        "GTQ",
+        "HNL",
+        "NIO",
+        "CRC",
+        "DOP",
+        "CUP",
+        "JMD",
+        "TTD",
+        "BBD",
+        "XCD",
+      ],
       entitlement_type: [
         "transport",
         "entry",

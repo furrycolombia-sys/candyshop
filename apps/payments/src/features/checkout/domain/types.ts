@@ -9,8 +9,8 @@ export interface CartItem {
   id: string;
   name_en: string;
   name_es: string;
-  price_cop: number;
-  price_usd: number;
+  price: number;
+  currency: string;
   seller_id: string | null;
   /** Display/subtotal quantity — capped to max_quantity. */
   quantity: number;
@@ -25,13 +25,14 @@ export interface SellerGroup {
   sellerId: string;
   sellerName: string;
   items: CartItem[];
-  subtotalCop: number;
+  subtotal: number;
+  currency: string;
 }
 
 import type {
   DisplayBlock,
   FormField,
-} from "@/shared/domain/paymentMethodTypes";
+} from "@/shared/domain/PaymentMethodTypes";
 
 export interface SellerPaymentMethodWithType {
   id: string;

@@ -10,8 +10,6 @@ import { cn } from "ui";
 
 import { PaymentsSidebarNav } from "@/shared/presentation/components/PaymentsSidebarNav";
 
-const COLLAPSED_WIDTH_CLASS = "w-sidebar-collapsed";
-
 export function PaymentsSidebar() {
   const t = useTranslations("sidebar");
   const pathname = usePathname();
@@ -24,7 +22,7 @@ export function PaymentsSidebar() {
     <aside
       className={cn(
         "relative hidden shrink-0 flex-col border-r-3 border-foreground bg-background transition-all duration-300 ease-in-out lg:flex",
-        isCollapsed ? COLLAPSED_WIDTH_CLASS : "w-60",
+        isCollapsed ? "w-sidebar-collapsed" : "w-60",
       )}
       data-loading={isLoading}
       {...tid("payments-sidebar")}

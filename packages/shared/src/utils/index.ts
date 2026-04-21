@@ -6,8 +6,8 @@ export type { TidOptionProps } from "./tid";
 
 export { stripTrailingSlash } from "./url";
 export { i18nField } from "./i18nField";
-export { i18nPrice, i18nCurrencyCode } from "./i18nPrice";
-export { formatCop, COP_CURRENCY_CODE } from "./formatCop";
+export { formatPrice } from "./formatPrice";
+export { POPULAR_CURRENCIES } from "./currencies";
 export { slugify } from "./slugify";
 export { typeDetails } from "./typeDetails";
 export { escapeLikePattern } from "./escapeLikePattern";
