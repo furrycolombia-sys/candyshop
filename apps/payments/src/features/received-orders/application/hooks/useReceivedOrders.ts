@@ -13,7 +13,6 @@ export function useReceivedOrders(filter?: string) {
   const supabase = useSupabase();
 
   return useQuery({
-    // eslint-disable-next-line @tanstack/query/exhaustive-deps -- supabase client is not serializable and is stable (memoized above)
     queryKey: [RECEIVED_ORDERS_QUERY_KEY, filter],
     queryFn: () => fetchReceivedOrders(supabase, filter),
     staleTime: RECEIVED_ORDERS_STALE_TIME_MS,

@@ -68,11 +68,19 @@ export function useCurrentUserPermissions() {
       // from briefly appearing after a session change or page navigation.
       setIsLoading(true);
 
-      const { data, error } = await supabase
-        .from("user_permissions")
-        .select("expires_at,resource_permissions!inner(permissions!inner(key))")
-        .eq("user_id", userId)
-        .eq("mode", "grant");
+      const [{ data, error }, { data: delegateData }] = await Promise.all([
+        supabase
+          .from("user_permissions")
+          .select(
+            "expires_at,resource_permissions!inner(permissions!inner(key))",
+          )
+          .eq("user_id", userId)
+          .eq("mode", "grant"),
+        supabase
+          .from("seller_admins")
+          .select("permissions")
+          .eq("admin_user_id", userId),
+      ]);
 
       if (!isActive) return;
 
@@ -89,6 +97,12 @@ export function useCurrentUserPermissions() {
           .filter((row) => !row.expires_at || Date.parse(row.expires_at) > now)
           .map((row) => row.resource_permissions.permissions.key),
       );
+
+      for (const row of delegateData ?? []) {
+        for (const key of row.permissions ?? []) {
+          uniqueKeys.add(key);
+        }
+      }
 
       setGrantedKeys([...uniqueKeys]);
       loadedUserIdRef.current = userId;

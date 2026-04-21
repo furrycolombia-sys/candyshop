@@ -8,13 +8,6 @@ import { ProductCardImage } from "@/features/products/presentation/components/Pr
 // Mocks
 // ---------------------------------------------------------------------------
 
-vi.mock("next/image", () => ({
-  default: ({ src, alt }: { src: string; alt: string }) => (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img src={src} alt={alt} data-testid="next-image" />
-  ),
-}));
-
 vi.mock("@/features/products/presentation/components/FeaturedRibbon", () => ({
   FeaturedRibbon: () => <div data-testid="featured-ribbon" />,
 }));
@@ -83,7 +76,7 @@ describe("ProductCardImage", () => {
     expect(screen.getByTestId("product-card-image")).toBeInTheDocument();
   });
 
-  it("renders a next/image when product has images", () => {
+  it("renders an image when product has images", () => {
     const product = makeProduct({
       images: [{ url: "https://example.com/img.jpg", alt: "test" }],
     });
