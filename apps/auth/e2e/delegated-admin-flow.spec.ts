@@ -109,6 +109,10 @@ test.describe.serial("Delegated admin purchase flow", () => {
     await injectSession(context, user);
     await page.goto(`${APP_URLS.STUDIO}/en`);
     await page.waitForLoadState("networkidle");
+    // Wait for permissions to load — page renders null while isLoading=true
+    await expect(page.getByTestId("new-product-button")).toBeVisible({
+      timeout: LONG_OPERATION_TIMEOUT_MS,
+    });
     await snap(page, `${snapPrefix}-product-list`);
 
     await page.getByTestId("new-product-button").click();
