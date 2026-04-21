@@ -1,4 +1,4 @@
-import type { Database } from "api/supabase/types";
+import type { Database, Json } from "api/supabase/types";
 
 export type { SupabaseClient } from "shared/types/supabase";
 
@@ -15,6 +15,7 @@ export interface OrderRow {
   transfer_number: string | null;
   receipt_url: string | null;
   seller_note: string | null;
+  buyer_info: Json | null;
   expires_at: string | null;
   checkout_session_id: string | null;
   created_at: string;

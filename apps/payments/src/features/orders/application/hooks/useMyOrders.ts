@@ -16,7 +16,6 @@ export function useMyOrders() {
   const supabase = useSupabase();
 
   return useQuery({
-    // eslint-disable-next-line @tanstack/query/exhaustive-deps -- supabase client is not serializable and is stable (memoized above)
     queryKey: [MY_ORDERS_QUERY_KEY],
     queryFn: () => fetchMyOrders(supabase),
     staleTime: ORDERS_STALE_TIME_MS,
