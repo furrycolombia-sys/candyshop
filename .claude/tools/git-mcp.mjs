@@ -87,7 +87,7 @@ const helperScriptPath = path.join(
   os.tmpdir(),
   isWindows
     ? `git-askpass-helper-${process.pid}.bat`
-    : `git-askpass-helper-${process.pid}.sh`,
+    : `git-askpass-helper-${process.pid}.sh`
 );
 
 // Create helper script content based on platform
@@ -121,31 +121,35 @@ process.on("SIGTERM", () => {
 });
 
 // Spawn git-mcp-server with environment configured for authentication
-const gitMcpServer = spawn("npx", ["@cyanheads/git-mcp-server@latest"], {
-  env: {
-    ...process.env,
-    // Authentication via GIT_ASKPASS (secure - no command-line exposure)
-    GIT_ASKPASS: helperScriptPath,
-    GIT_TERMINAL_PROMPT: "0", // Disable interactive prompts
+const gitMcpServer = spawn(
+  "npx",
+  ["@cyanheads/git-mcp-server@latest"],
+  {
+    env: {
+      ...process.env,
+      // Authentication via GIT_ASKPASS (secure - no command-line exposure)
+      GIT_ASKPASS: helperScriptPath,
+      GIT_TERMINAL_PROMPT: "0", // Disable interactive prompts
 
-    // MCP transport configuration
-    MCP_TRANSPORT_TYPE: "stdio",
-    MCP_LOG_LEVEL: process.env.MCP_LOG_LEVEL || "error",
+      // MCP transport configuration
+      MCP_TRANSPORT_TYPE: "stdio",
+      MCP_LOG_LEVEL: process.env.MCP_LOG_LEVEL || "error",
 
-    // Git identity (falls back to global git config if not set)
-    GIT_AUTHOR_NAME: process.env.GIT_AUTHOR_NAME || undefined,
-    GIT_AUTHOR_EMAIL: process.env.GIT_AUTHOR_EMAIL || undefined,
+      // Git identity (falls back to global git config if not set)
+      GIT_AUTHOR_NAME: process.env.GIT_AUTHOR_NAME || undefined,
+      GIT_AUTHOR_EMAIL: process.env.GIT_AUTHOR_EMAIL || undefined,
 
-    // Optional: Restrict operations to project directory for security
-    GIT_BASE_DIR: projectRoot,
+      // Optional: Restrict operations to project directory for security
+      GIT_BASE_DIR: projectRoot,
 
-    // Optional: Commit signing
-    GIT_SIGN_COMMITS: process.env.GIT_SIGN_COMMITS || "false",
-  },
-  stdio: "inherit",
-  cwd: projectRoot,
-  shell: isWindows, // Required on Windows to find npx in PATH
-});
+      // Optional: Commit signing
+      GIT_SIGN_COMMITS: process.env.GIT_SIGN_COMMITS || "false",
+    },
+    stdio: "inherit",
+    cwd: projectRoot,
+    shell: isWindows, // Required on Windows to find npx in PATH
+  }
+);
 
 // Handle server process events
 gitMcpServer.on("error", (error) => {
