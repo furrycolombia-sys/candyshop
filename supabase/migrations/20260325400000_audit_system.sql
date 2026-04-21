@@ -16,7 +16,7 @@ grant select on all tables in schema audit to authenticated;
 -- -----------------------------------------------------------------------------
 -- Audit log table
 -- -----------------------------------------------------------------------------
-create table audit.logged_actions (
+create table if not exists audit.logged_actions (
   event_id bigserial primary key,
   schema_name text not null,
   table_name text not null,
@@ -35,21 +35,22 @@ create table audit.logged_actions (
 );
 
 -- Indexes for efficient querying
-create index logged_actions_timestamp on audit.logged_actions
+create index if not exists logged_actions_timestamp on audit.logged_actions
   using brin(action_timestamp);
-create index logged_actions_table on audit.logged_actions
+create index if not exists logged_actions_table on audit.logged_actions
   using btree(table_name);
-create index logged_actions_user_id on audit.logged_actions
+create index if not exists logged_actions_user_id on audit.logged_actions
   using btree(user_id) where user_id is not null;
-create index logged_actions_action_type on audit.logged_actions
+create index if not exists logged_actions_action_type on audit.logged_actions
   using btree(action_type);
-create index logged_actions_row_data on audit.logged_actions
+create index if not exists logged_actions_row_data on audit.logged_actions
   using gin(row_data);
 
 -- RLS: restrict audit access to admin users only
 alter table audit.logged_actions enable row level security;
 
 -- Only users with 'audit-view' or 'manage' permission can read audit entries
+drop policy if exists "Audit: admin read only" on audit.logged_actions;
 create policy "Audit: admin read only"
   on audit.logged_actions for select
   using (
@@ -146,6 +147,10 @@ begin
   v_trigger_name := replace(replace(v_trigger_name, '.', '_'), '"', '');
 
   execute format(
+    'drop trigger if exists %I on %s',
+    v_trigger_name, target_table
+  );
+  execute format(
     'create trigger %I after insert or update or delete on %s '
     'for each row execute function audit.log_changes()',
     v_trigger_name, target_table
@@ -191,7 +196,7 @@ select audit.enable_tracking('public.user_permissions'::regclass);
 -- -----------------------------------------------------------------------------
 create schema if not exists audit_archive;
 
-create table audit_archive.logged_actions (like audit.logged_actions including all);
+create table if not exists audit_archive.logged_actions (like audit.logged_actions including all);
 
 -- Archive function: moves records older than retention_days in batches
 create or replace function audit.archive_old_logs(
