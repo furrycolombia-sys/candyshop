@@ -1,0 +1,94 @@
+{
+  "agent": "dry",
+  "review_id": "2026-04-21_03-17-10",
+  "outputFile": ".ai-context/reviews/agents/2026-04-21_03-17-10_dry.json",
+  "scope": "apps/admin/src/features/reports/",
+  "issues": [
+    {
+      "id": "DRY-001",
+      "severity": "critical",
+      "file": "apps/admin/src/features/reports/domain/constants.ts",
+      "line": 3,
+      "title": "Duplicate ORDER_STATUS_VALUES definition",
+      "description": "ORDER_STATUS_LIST is defined in constants.ts but the same values are duplicated in searchParams.ts as ORDER_STATUS_VALUES (lines 9-17). This creates maintenance burden - if status values change, both files must be updated.",
+      "rule": "dry-principle.md#same-logic-one-place",
+      "fix": "Export ORDER_STATUS_LIST from constants.ts and import it in searchParams.ts. Change searchParams.ts line 22 to use: status: parseAsStringEnum<OrderStatus>(ORDER_STATUS_LIST)"
+    },
+    {
+      "id": "DRY-002",
+      "severity": "critical",
+      "file": "apps/admin/src/features/reports/application/utils/exportOrdersToExcel.ts",
+      "line": 44,
+      "title": "Duplicated row value building logic in export function",
+      "description": "Lines 47-63 (no items case) and lines 68-85 (with items case) both build nearly identical values arrays. They share ~10 duplicate lines (order.id, created_at, payment_status, buyer_email, seller_email, seller_display_name, currency, transfer_number, receipt_url). Only product_name and quantities differ.",
+      "rule": "dry-principle.md#same-logic-one-place",
+      "fix": "Extract a helper function that builds common order row values. Pattern: function buildOrderRowValues(order: ReportOrder, item?: ReportOrderItem) that returns the common values array. Then call it from both branches with conditional item values."
+    },
+    {
+      "id": "DRY-003",
+      "severity": "warning",
+      "file": "apps/admin/src/features/reports/application/utils/exportOrdersToExcel.ts",
+      "line": 24,
+      "title": "XML escape function could be reused",
+      "description": "escapeXml() function (lines 24-30) is a utility that should be considered for extraction to a shared utilities module if similar XML export functionality is needed elsewhere in the application.",
+      "rule": "dry-principle.md#abstract-after-3-occurrences",
+      "fix": "If XML export patterns appear in 2+ other features, create apps/admin/src/shared/utils/xmlEscape.ts. Currently only 1 occurrence, so keep inline but note for future refactoring."
+    },
+    {
+      "id": "DRY-004",
+      "severity": "warning",
+      "file": "apps/admin/src/features/reports/presentation/components/ReportFiltersBar.tsx",
+      "line": 26,
+      "title": "Magic filter reset object created inline",
+      "description": "The filter reset object (lines 27-37) with all null values is created inline in handleClear(). If this reset pattern is used elsewhere, it should be a constant or utility function.",
+      "rule": "dry-principle.md#no-magic-values",
+      "fix": "Create a constant in domain/constants.ts: export const EMPTY_REPORT_FILTERS: ReportFilters = { dateFrom: null, dateTo: null, status: null, ... }. Import and use it in ReportFiltersBar."
+    },
+    {
+      "id": "DRY-005",
+      "severity": "info",
+      "file": "apps/admin/src/features/reports/presentation/components/ReportTable.tsx",
+      "line": 10,
+      "title": "Magic number for preview length lacks semantic constant",
+      "description": "ORDER_ID_PREVIEW_LENGTH = 8 is a magic number defined locally in ReportTable.tsx. If this preview length is used elsewhere (e.g., in exportOrdersToExcel.ts or other components), it should be centralized.",
+      "rule": "dry-principle.md#no-magic-values",
+      "fix": "Move ORDER_ID_PREVIEW_LENGTH to domain/constants.ts and import it. Currently it's only used in ReportTable (line 71), but if used in export or elsewhere, centralize it."
+    },
+    {
+      "id": "DRY-006",
+      "severity": "info",
+      "file": "apps/admin/src/features/reports/presentation/pages/ReportsPage.tsx",
+      "line": 35,
+      "title": "Magic number ISO_DATE_LENGTH lacks semantic meaning",
+      "description": "ISO_DATE_LENGTH = 10 is defined inline in handleExport() at line 35. This magic number (ISO 8601 date YYYY-MM-DD length) should be a named constant if used in multiple places.",
+      "rule": "dry-principle.md#no-magic-values",
+      "fix": "Add to domain/constants.ts: export const ISO_DATE_LENGTH = 10. Import and use in ReportsPage.tsx line 38."
+    },
+    {
+      "id": "DRY-007",
+      "severity": "info",
+      "file": "apps/admin/src/features/reports/application/utils/exportOrdersToExcel.ts",
+      "line": 22,
+      "title": "Magic XML strings hardcoded",
+      "description": "XML template strings are hardcoded inline (lines 91-98) with magic values like worksheet name 'Sales Report' and XML namespaces. These should be constants for maintainability.",
+      "rule": "dry-principle.md#no-magic-values",
+      "fix": "Extract to constants: export const XLSX_WORKSHEET_NAME = 'Sales Report', XLSX_HEADER_XML, XLSX_FOOTER_XML, etc. Or better: move all XML generation to a template module."
+    },
+    {
+      "id": "DRY-008",
+      "severity": "info",
+      "file": "apps/admin/src/features/reports/application/utils/exportOrdersToExcel.ts",
+      "line": 103,
+      "title": "Magic MIME type hardcoded in downloadExcel",
+      "description": "MIME type 'application/vnd.ms-excel;charset=utf-8;' is hardcoded as a magic string in downloadExcel() function. Should be a constant.",
+      "rule": "dry-principle.md#no-magic-values",
+      "fix": "Add to constants.ts: export const EXCEL_MIME_TYPE = 'application/vnd.ms-excel;charset=utf-8;'. Import and use in exportOrdersToExcel.ts line 104."
+    }
+  ],
+  "summary": {
+    "critical": 2,
+    "warning": 2,
+    "suggestion": 0,
+    "info": 4
+  }
+}

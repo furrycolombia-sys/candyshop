@@ -5,6 +5,7 @@ import {
   type PermissionRequirementMode,
 } from "auth/client";
 import {
+  BarChart3,
   ClipboardCheck,
   CreditCard,
   Package,
@@ -77,6 +78,12 @@ const NAV_SECTIONS: readonly NavSection[] = [
         key: "sales" as const,
         href: "/sales",
         icon: ClipboardCheck,
+        required: SALES_PERMISSIONS,
+      },
+      {
+        key: "reports" as const,
+        href: "/reports",
+        icon: BarChart3,
         required: SALES_PERMISSIONS,
       },
     ],

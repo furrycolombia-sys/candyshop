@@ -1,0 +1,64 @@
+{
+  "agent": "dry",
+  "review_id": "2026-04-21_06-46-58",
+  "outputFile": ".ai-context/reviews/agents/2026-04-21_06-46-58_dry.json",
+  "scope": "apps/ packages/",
+  "issues": [
+    {
+      "id": "DRY-001",
+      "severity": "warning",
+      "file": "apps/payments/src/features/reports/application/utils/exportSellerOrdersToExcel.ts",
+      "line": 26,
+      "title": "Excel utility functions duplicated across 3 files",
+      "description": "The functions `escapeXml`, `toCell`, `toNumberCell`, and `downloadExcel` are defined identically in three separate files:\n1. apps/payments/src/features/reports/application/utils/exportSellerOrdersToExcel.ts\n2. apps/admin/src/features/reports/application/utils/exportOrdersToExcel.ts\n3. apps/admin/src/features/users/application/utils/exportCsv.ts\n\nAll three have byte-for-byte identical `escapeXml`, `toCell`, `toNumberCell`, and `downloadExcel` implementations. This is a classic Rule-of-Three knowledge duplication violation. The XML escape logic in particular is business-critical — if a bug is found, it must be fixed in 3 places.",
+      "rule": "dry-principle.md#extract-utility-functions",
+      "fix": "Extract these four functions into a shared utility, e.g. apps/admin/src/shared/application/utils/excelUtils.ts (or a cross-app shared package if admin and payments both need it). Import from the shared location in all three files."
+    },
+    {
+      "id": "DRY-002",
+      "severity": "warning",
+      "file": "apps/payments/src/features/reports/domain/types.ts",
+      "line": 1,
+      "title": "OrderStatus type re-defined as inline literal union in reports features instead of using shared source",
+      "description": "The `OrderStatus` type is defined as a standalone literal union in two feature-local files:\n1. apps/payments/src/features/reports/domain/types.ts (lines 1-8)\n2. apps/admin/src/features/reports/domain/types.ts (lines 1-8)\n\nBoth list the exact same 7 statuses: pending | awaiting_payment | pending_verification | evidence_requested | approved | rejected | expired.\n\nMeanwhile, the authoritative single source of truth already exists at apps/payments/src/shared/domain/types.ts where `OrderStatus` is derived from the Supabase database enum (`Database[\"public\"][\"Enums\"][\"payment_status\"]`). The orders and received-orders features already correctly import from the shared location.\n\nIf a new status is added to the database, the reports features will silently use a stale type.",
+      "rule": "dry-principle.md#extract-types",
+      "fix": "In both reports feature types.ts files, replace the inline union definition with:\n```ts\nexport type { OrderStatus } from \"@/shared/domain/types\";\n```\nThis is exactly how apps/payments/src/features/orders/domain/types.ts already handles it."
+    },
+    {
+      "id": "DRY-003",
+      "severity": "warning",
+      "file": "apps/admin/src/features/reports/domain/constants.ts",
+      "line": 3,
+      "title": "ORDER_STATUS_LIST duplicated in payments/reports and admin/reports",
+      "description": "The `ORDER_STATUS_LIST` constant is defined identically in two locations:\n1. apps/payments/src/features/reports/domain/constants.ts\n2. apps/admin/src/features/reports/domain/constants.ts\n\nBoth list the same 7 order status strings as a `const` array. Used for the nuqs search params enum parser and filter bar dropdowns. If a new status is added, it must be updated in both places.",
+      "rule": "dry-principle.md#extract-constants",
+      "fix": "Once DRY-002 is resolved (OrderStatus from shared), this list can be derived programmatically or extracted to a cross-app constant. At minimum the two lists should be consolidated into a single file imported by both apps."
+    },
+    {
+      "id": "DRY-004",
+      "severity": "warning",
+      "file": "apps/admin/src/features/reports/presentation/components/OrderStatusBadge.tsx",
+      "line": 11,
+      "title": "STATUS_COLOR_MAP duplicated with identical values across admin and payments reports",
+      "description": "The `STATUS_COLOR_MAP` object (and its two helper constants `MUTED_STYLE` and `WARNING_STYLE`) are defined with identical content in:\n1. apps/admin/src/features/reports/presentation/components/OrderStatusBadge.tsx (lines 8-19)\n2. apps/payments/src/features/reports/presentation/components/OrderStatusBadge.tsx (lines 8-19)\n\nBoth components also share the same rendering logic (inline-flex badge, rounded-full, same class pattern). The only difference is the translation namespace ('reports' vs 'sellerReports'). This means a styling change must be made in two places.",
+      "rule": "dry-principle.md#extract-components",
+      "fix": "Extract an `OrderStatusBadge` component to `packages/app-components/src/components/OrderStatusBadge.tsx` that accepts a `label` prop (injected by each app via i18n) instead of calling `useTranslations` internally. Or at minimum move the STATUS_COLOR_MAP to a shared location inside the payments app's shared domain."
+    },
+    {
+      "id": "DRY-005",
+      "severity": "suggestion",
+      "file": "apps/payments/src/features/reports/infrastructure/reportsApi.ts",
+      "line": 6,
+      "title": "toQueryString pattern duplicated in reports API files",
+      "description": "The private `toQueryString` function follows the same structural pattern in two files:\n1. apps/payments/src/features/reports/infrastructure/reportsApi.ts\n2. apps/admin/src/features/reports/infrastructure/reportsApi.ts\n\nBoth iterate over filter fields and conditionally append to URLSearchParams. The admin version has 2 extra fields (sellerId, productId). The pattern is similar but not identical, and the filter types differ — this is borderline structural duplication vs coincidental similarity. Applying KISS: the existing duplication is modest and each feature may evolve its filter set independently.",
+      "rule": "dry-principle.md#rule-of-three",
+      "fix": "If a third reports API is added or the pattern stabilizes, consider a generic `buildReportQueryString(filters: Record<string, unknown>): string` utility. For now, leaving as-is is acceptable per KISS."
+    }
+  ],
+  "summary": {
+    "critical": 0,
+    "warning": 4,
+    "suggestion": 1,
+    "info": 0
+  }
+}
