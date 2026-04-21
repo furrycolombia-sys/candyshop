@@ -84,8 +84,15 @@ const NEQUI_PAYMENT_METHOD = {
     {
       id: "nequi-number",
       type: "text",
-      content_en: "Send the payment to Nequi number: **3001234567**",
-      content_es: "Envia el pago al numero Nequi: **3001234567**",
+      content_en: "Send the payment to Nequi number: **3108747789**",
+      content_es: "Envia el pago al numero Nequi: **3108747789**",
+    },
+    {
+      id: "6ffb079e-3b03-4c6d-b6e8-c8aeceb60171",
+      type: "image",
+      url: "https://filedn.com/leGgCrrYIXV0YvzNNKbdzBb/3108747789.jpg",
+      alt_en: "Nequi QR 3108747789",
+      alt_es: "Nequi QR 3108747789",
     },
     {
       id: "nequi-amount",
