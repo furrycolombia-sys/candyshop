@@ -13,12 +13,14 @@ interface ReceiptUploadProps {
   file: File | null;
   onFileChange: (file: File | null) => void;
   disabled?: boolean;
+  required?: boolean;
 }
 
 export function ReceiptUpload({
   file,
   onFileChange,
   disabled = false,
+  required = false,
 }: ReceiptUploadProps) {
   const t = useTranslations("checkout");
   const inputRef = useRef<HTMLInputElement>(null);
@@ -78,6 +80,7 @@ export function ReceiptUpload({
     <div className="space-y-2" {...tid("receipt-upload")}>
       <label className="font-display text-xs font-extrabold uppercase tracking-widest">
         {t("uploadReceipt")}
+        {required && <span className="ml-1 text-destructive">*</span>}
       </label>
       <p className="text-xs text-muted-foreground">{t("uploadReceiptHint")}</p>
 

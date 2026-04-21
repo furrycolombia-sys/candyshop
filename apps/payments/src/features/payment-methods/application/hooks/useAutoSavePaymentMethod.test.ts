@@ -18,6 +18,8 @@ const defaultParams = {
   nameEs: "Nequi",
   displayBlocks: [],
   formFields: [],
+  requiresReceipt: false,
+  requiresTransferNumber: false,
 };
 
 describe("useAutoSavePaymentMethod", () => {

@@ -213,7 +213,6 @@
       "text": "Texto",
       "email": "Correo",
       "number": "Numero",
-      "file": "Subir Archivo",
       "textarea": "Texto Largo"
     },
     "fieldLabel": "Etiqueta",
@@ -240,7 +239,11 @@
     "dragToReorder": "Arrastra para reordenar",
     "removeBlock": "Eliminar bloque",
     "removeField": "Eliminar campo",
-    "imageUnavailable": "Imagen no disponible"
+    "imageUnavailable": "Imagen no disponible",
+    "requiresReceipt": "Requerir comprobante de pago",
+    "requiresReceiptHint": "Los compradores deben subir una captura de pantalla del pago antes de enviar",
+    "requiresTransferNumber": "Requerir número de transferencia",
+    "requiresTransferNumberHint": "Los compradores deben ingresar un número de referencia/transferencia antes de enviar"
   },
   "sellerReports": {
     "title": "Mi Reporte de Ventas",
