@@ -1,0 +1,104 @@
+{
+  "agent": "security",
+  "timestamp": "2026-04-20T23:21:50",
+  "scope": "apps/",
+  "summary": {
+    "filesAnalyzed": 12,
+    "issuesFound": 4,
+    "critical": 0,
+    "warning": 3,
+    "suggestion": 1,
+    "info": 0
+  },
+  "issues": [
+    {
+      "id": "SEC-001",
+      "severity": "warning",
+      "category": "Environment Variables",
+      "file": "apps/admin/src/shared/infrastructure/auditRestClient.ts",
+      "line": 14,
+      "title": "NEXT_PUBLIC_ fallback for anon key",
+      "description": "The `getSupabaseConfig()` function falls back to `process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY` when the server-only `SUPABASE_ANON_KEY` is not set. While Supabase anon keys are considered public by design (they have Row-Level Security enforcing authorization), having the fallback in server-side infrastructure code creates a subtle misconfiguration risk: if the server-only key is missing in a deployment, the code silently uses the client-side key without any warning. This makes it hard to detect misconfigured environments.",
+      "recommendation": "Log a warning or throw a configuration error when falling back to `NEXT_PUBLIC_SUPABASE_ANON_KEY` in server-side infrastructure code, so misconfigurations are caught at startup rather than silently accepted.",
+      "codeSnippet": "const key =\n  process.env.SUPABASE_ANON_KEY ??\n  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ??\n  \"\";"
+    },
+    {
+      "id": "SEC-002",
+      "severity": "warning",
+      "category": "Environment Variables",
+      "file": ".env.prod and .env.staging (repository root)",
+      "line": 19,
+      "title": "Production Supabase project URL committed to repository",
+      "description": "The production Supabase project URL (`https://olafyajipvsltohagiah.supabase.co`) and staging URL (`https://supabase.ffxivbe.org`) are committed in plain text in `.env.prod` and `.env.staging`. While these are not secrets per se, exposing the project ID in a public repository makes the Supabase instance a more visible target for credential stuffing against its REST/auth endpoints (e.g., brute-forcing anon-key tokens or enumerating public data). All actual secrets (anon key, service role key) correctly use `$secret:` references.",
+      "recommendation": "Consider moving the `NEXT_PUBLIC_SUPABASE_URL` for production/staging into GitHub secrets (`$secret:PROD_SUPABASE_URL`) similarly to how the anon key and service role key are handled, especially if the repository is or will be public.",
+      "codeSnippet": "NEXT_PUBLIC_SUPABASE_URL=https://olafyajipvsltohagiah.supabase.co"
+    },
+    {
+      "id": "SEC-003",
+      "severity": "warning",
+      "category": "API Security",
+      "file": "apps/admin/src/app/api/admin/users/[userId]/permissions/route.ts",
+      "lines": [197, 255],
+      "title": "Permission check happens after body parsing in POST/PUT handlers",
+      "description": "In the `POST` and `PUT` handlers of the permissions route, the request body (`request.json()`) is read and parsed before the `getAuthorizedAdmin()` authorization check is performed. This means unauthenticated/unauthorized requests cause full body deserialization before the request is rejected. While this is unlikely to have exploitable consequences in practice (Next.js limits request body size by default), it is a defense-in-depth concern: authorization should always be checked first to minimize unnecessary processing for unauthorized requests.",
+      "recommendation": "Move `getAuthorizedAdmin()` calls to the top of POST/PUT handlers, before reading and parsing the request body. See `payment-methods/route.ts` which correctly checks auth before reading the body.",
+      "codeSnippet": "// POST - reads body before checking authorization\nconst { permissionKey, grant } = (await request.json()) as { ... };\nif (!permissionKey || typeof grant !== 'boolean') { ... }\nconst adminUserId = await getAuthorizedAdmin(requiredKeys); // auth check too late"
+    },
+    {
+      "id": "SEC-004",
+      "severity": "suggestion",
+      "category": "API Security",
+      "file": "apps/payments/src/app/api/checkout/orders/route.ts and apps/payments/src/app/api/checkout/payment-methods/route.ts",
+      "title": "No rate limiting on checkout API routes",
+      "description": "The checkout endpoints (`POST /api/checkout/payment-methods` and `POST /api/checkout/orders`) perform multiple database reads and writes per request, require Supabase auth token validation, and touch sensitive payment data. There is no rate limiting in place at the Next.js route level. A legitimate user or an attacker who obtains a valid session token could submit a high volume of checkout requests, causing excessive database load or order spam.",
+      "recommendation": "Consider adding rate limiting at the reverse proxy/CDN layer (Cloudflare, Nginx) or via a Next.js middleware using an in-memory or Redis-backed limiter (e.g. `@upstash/ratelimit`). A basic limit of N requests per minute per authenticated user is sufficient for checkout flows."
+    }
+  ],
+  "patterns": [
+    {
+      "pattern": "Server-side auth verification via getUser() before getSession()",
+      "description": "All API routes correctly call `supabase.auth.getUser()` first (which contacts the Supabase auth server for JWT verification) rather than relying solely on `getSession()` which only reads the local cookie. This is the correct and secure pattern.",
+      "files": [
+        "apps/payments/src/app/api/checkout/payment-methods/route.ts",
+        "apps/payments/src/app/api/checkout/orders/route.ts",
+        "apps/auth/src/app/api/auth/refresh/route.ts",
+        "apps/admin/src/shared/infrastructure/auditRestClient.ts"
+      ]
+    },
+    {
+      "pattern": "UUID validation before database queries",
+      "description": "Both admin and payments API routes consistently validate UUIDs using regex before using them in database queries (`validateUuid()` helper in both `adminRest.ts` and `adminRestClient.ts`). This prevents injection via malformed identifiers.",
+      "files": [
+        "apps/admin/src/app/api/admin/_shared/adminRest.ts",
+        "apps/payments/src/shared/infrastructure/adminRestClient.ts"
+      ]
+    },
+    {
+      "pattern": "SUPABASE_SERVICE_ROLE_KEY correctly kept server-side only",
+      "description": "The service role key is consistently accessed only via `process.env.SUPABASE_SERVICE_ROLE_KEY` (no NEXT_PUBLIC_ prefix) in server-only routes and infrastructure files. It is never exposed in client-side code.",
+      "files": [
+        "apps/admin/src/app/api/admin/_shared/adminRest.ts",
+        "apps/payments/src/shared/infrastructure/adminRestClient.ts"
+      ]
+    },
+    {
+      "pattern": "CORS origin validation using allowlist on auth refresh endpoint",
+      "description": "The auth refresh route correctly implements CORS with an explicit allowlist of known app origins loaded from env vars, rather than using wildcard `*`. Only Origins matching the allowlist receive CORS headers.",
+      "files": ["apps/auth/src/app/api/auth/refresh/route.ts"]
+    },
+    {
+      "pattern": "Error messages do not leak internal details to clients",
+      "description": "All API route error handlers use generic error messages (e.g., 'Failed to create order', 'Failed to load payment methods') and do not expose stack traces, database schema details, or internal IDs in 5xx responses. The raw error text from failed HTTP responses is consumed and discarded server-side.",
+      "files": [
+        "apps/payments/src/app/api/checkout/orders/route.ts",
+        "apps/payments/src/app/api/checkout/payment-methods/route.ts",
+        "apps/admin/src/app/api/admin/_shared/adminRest.ts"
+      ]
+    },
+    {
+      "pattern": "Stock and seller ownership validated server-side before returning payment methods",
+      "description": "The checkout payment-methods route correctly validates product stock and seller ownership server-side before returning seller payment details, preventing payment data leakage for tampered or stale carts.",
+      "files": ["apps/payments/src/app/api/checkout/payment-methods/route.ts"]
+    }
+  ]
+}

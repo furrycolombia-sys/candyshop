@@ -15,7 +15,7 @@ export function groupCartBySeller(items: CartItem[]): SellerGroup[] {
     sellerId,
     items: groupItems,
     subtotal: groupItems.reduce(
-      (sum, item) => sum + item.price_usd * item.quantity,
+      (sum, item) => sum + item.price * item.quantity,
       0,
     ),
   }));

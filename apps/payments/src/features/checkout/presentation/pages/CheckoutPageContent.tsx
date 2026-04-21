@@ -62,7 +62,6 @@ export function CheckoutPageContent() {
     async (
       sellerId: string,
       items: (typeof groups)[number]["items"],
-      subtotalCop: number,
       params: {
         paymentMethodId: string;
         buyerSubmission: Record<string, string>;
@@ -78,7 +77,6 @@ export function CheckoutPageContent() {
           sellerId,
           paymentMethodId: params.paymentMethodId,
           items,
-          totalCop: subtotalCop,
           checkoutSessionId,
           buyerInfo: params.buyerSubmission,
         });
@@ -202,17 +200,13 @@ export function CheckoutPageContent() {
             sellerId={group.sellerId}
             sellerName={group.sellerName}
             items={group.items}
-            subtotalCop={group.subtotalCop}
+            subtotal={group.subtotal}
+            currency={group.currency}
             status={sellerStates[group.sellerId]?.status ?? "pending"}
             error={sellerStates[group.sellerId]?.error ?? null}
             getItemName={getItemName}
             onSubmit={(params) =>
-              handleSubmit(
-                group.sellerId,
-                group.items,
-                group.subtotalCop,
-                params,
-              )
+              handleSubmit(group.sellerId, group.items, params)
             }
           />
         ))}

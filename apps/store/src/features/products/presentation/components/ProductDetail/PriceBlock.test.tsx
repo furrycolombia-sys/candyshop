@@ -11,12 +11,7 @@ vi.mock("next-intl", () => ({
 
 vi.mock("shared", () => ({
   tid: (id: string) => ({ "data-testid": id }),
-  i18nPrice: (product: Record<string, unknown>, locale: string) => {
-    const price = locale === "en" ? product.price_usd : product.price_cop;
-    return `$${price}`;
-  },
-  i18nCurrencyCode: (_product: unknown, locale: string) =>
-    locale === "en" ? "USD" : "COP",
+  formatPrice: (amount: number) => `$${amount}`,
 }));
 
 function makeProduct(overrides: Partial<Product> = {}): Product {
@@ -33,10 +28,9 @@ function makeProduct(overrides: Partial<Product> = {}): Product {
     long_description_es: "",
     type: "merch",
     category: "merch",
-    price_cop: 100_000,
-    price_usd: 25,
-    compare_at_price_cop: null,
-    compare_at_price_usd: null,
+    price: 25,
+    currency: "USD",
+    compare_at_price: null,
     max_quantity: null,
     is_active: true,
     featured: false,
@@ -75,8 +69,8 @@ describe("PriceBlock", () => {
 
   it("renders compare-at price when discount exists", () => {
     const product = makeProduct({
-      price_usd: 20,
-      compare_at_price_usd: 30,
+      price: 20,
+      compare_at_price: 30,
     });
     render(<PriceBlock product={product} discountLabel={discountLabel} />);
     // Should show both current and compare price
@@ -86,8 +80,8 @@ describe("PriceBlock", () => {
 
   it("renders discount label when discount exists", () => {
     const product = makeProduct({
-      price_usd: 20,
-      compare_at_price_usd: 30,
+      price: 20,
+      compare_at_price: 30,
     });
     render(<PriceBlock product={product} discountLabel={discountLabel} />);
     expect(screen.getByText("Save $10")).toBeInTheDocument();

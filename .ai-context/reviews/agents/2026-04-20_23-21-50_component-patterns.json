@@ -1,0 +1,153 @@
+{
+  "agent": "component-patterns",
+  "timestamp": "2026-04-20T23:21:50",
+  "scope": "apps/",
+  "summary": {
+    "filesAnalyzed": 90,
+    "issuesFound": 7,
+    "critical": 0,
+    "warning": 4,
+    "suggestion": 3,
+    "info": 0
+  },
+  "issues": [
+    {
+      "id": "COMP-001",
+      "severity": "warning",
+      "category": "Component Patterns",
+      "title": "Duplicate InlineEditor directory in studio app",
+      "description": "Two nearly-identical directories exist side by side: `InlineEditor/` (PascalCase) and `inline-editor/` (kebab-case), each containing 47 files. Production code imports from `InlineEditor/` only. The `inline-editor/` folder appears to be an unresolved rename/migration artifact. Both folders are tracked in git, resulting in ~47 duplicate source files that must be kept in sync manually.",
+      "files": [
+        "apps/studio/src/features/products/presentation/components/InlineEditor/",
+        "apps/studio/src/features/products/presentation/components/inline-editor/"
+      ],
+      "rule": "DRY - No knowledge duplication",
+      "fix": "Remove the unused `inline-editor/` (kebab-case) directory. Confirm no imports reference it, then delete the folder and its test files."
+    },
+    {
+      "id": "COMP-002",
+      "severity": "warning",
+      "category": "Component Patterns",
+      "title": "'use client' placed after eslint-disable comments",
+      "description": "In several files, one or more `/* eslint-disable */` block comments appear before the `'use client'` directive. While Next.js accepts comments before `'use client'`, the project standard (and `@next/next/first-file-directive` lint rule intent) is for `'use client'` to appear on line 1 as the very first statement for clarity and tooling consistency.",
+      "files": [
+        "apps/payments/src/features/received-orders/presentation/components/ReceivedOrderCard.tsx",
+        "apps/payments/src/features/checkout/presentation/components/DynamicFormField.tsx",
+        "apps/payments/src/features/checkout/presentation/components/ImageBlock.tsx",
+        "apps/payments/src/features/checkout/presentation/components/ReceiptUpload.tsx",
+        "apps/payments/src/features/checkout/presentation/components/DisplayBlockRenderer.tsx",
+        "apps/payments/src/features/payment-methods/presentation/components/DisplaySectionEditor.tsx",
+        "apps/payments/src/features/payment-methods/presentation/components/PaymentMethodEditor.tsx",
+        "apps/payments/src/features/payment-methods/presentation/pages/PaymentMethodsPageContent.tsx",
+        "apps/store/src/features/products/presentation/components/product-detail/ImageGallery.tsx",
+        "apps/store/src/features/products/presentation/components/ProductDetail/ImageGallery.tsx"
+      ],
+      "rule": "Component Patterns - 'use client' directive placement",
+      "fix": "Move `'use client'` to the very first line of each file, then place the eslint-disable comments after it."
+    },
+    {
+      "id": "COMP-003",
+      "severity": "warning",
+      "category": "Component Patterns",
+      "title": "Exported components missing named Props interface (inline props)",
+      "description": "Several exported components use inline object type destructuring instead of a named `ComponentNameProps` interface. This prevents the props type from being imported by consumers, reduces IDE discoverability, and violates the component patterns convention.",
+      "files": [
+        "apps/studio/src/features/products/presentation/components/InlineEditor/LangTextarea.tsx",
+        "apps/studio/src/features/products/presentation/components/InlineEditor/PriceInput.tsx",
+        "apps/studio/src/features/products/presentation/components/inline-editor/LangTextarea.tsx",
+        "apps/studio/src/features/products/presentation/components/inline-editor/PriceInput.tsx"
+      ],
+      "rule": "Component Patterns - Props Interface Co-location",
+      "fix": "Extract the inline object type into a named interface (e.g. `interface LangTextareaProps { ... }`) co-located with the component, and reference it in the function signature."
+    },
+    {
+      "id": "COMP-004",
+      "severity": "warning",
+      "category": "Component Patterns",
+      "title": "`as any` used for react-hook-form dynamic nested field paths",
+      "description": "Multiple InlineEditor components (SectionCard, SectionItemsAccordion, SectionItemsCards, SectionItemsGallery, SectionItemsTwoColumn, InlineEditor) use `as any` to pass dynamically constructed field path strings to `useController`/`useFieldArray`. The casts have `/* eslint-disable @typescript-eslint/no-explicit-any */` guards with explanatory comments, but the underlying issue is that `react-hook-form` cannot infer types for template-literal paths. This is a widespread pattern inside the InlineEditor sub-feature.",
+      "files": [
+        "apps/studio/src/features/products/presentation/components/InlineEditor/SectionCard.tsx",
+        "apps/studio/src/features/products/presentation/components/InlineEditor/SectionItemsAccordion.tsx",
+        "apps/studio/src/features/products/presentation/components/InlineEditor/SectionItemsCards.tsx",
+        "apps/studio/src/features/products/presentation/components/InlineEditor/SectionItemsGallery.tsx",
+        "apps/studio/src/features/products/presentation/components/InlineEditor/SectionItemsTwoColumn.tsx",
+        "apps/studio/src/features/products/presentation/components/InlineEditor/InlineEditor.tsx"
+      ],
+      "rule": "No `any` type usage in production components",
+      "fix": "Consider creating a typed helper such as `type SectionItemPath<T> = ...` using template-literal types from the form schema, or using `useWatch` with a typed selector. If the cast cannot be avoided, keep the existing eslint-disable with comment. The approach is already documented inline, so this is informational."
+    },
+    {
+      "id": "COMP-005",
+      "severity": "suggestion",
+      "category": "Component Patterns",
+      "title": "`type TranslatorFn = (...args: any[]) => string` in CartItemRow",
+      "description": "A `TranslatorFn` type using `any[]` parameters is defined to type the `next-intl` translator passed as a prop. This pattern works but loses type safety. The `useTranslations` return type from `next-intl` is a publicly exported `TranslationValues`-based callable that can be typed more precisely.",
+      "files": [
+        "apps/store/src/features/cart/presentation/components/CartItemRow.tsx"
+      ],
+      "rule": "No `any` type usage",
+      "fix": "Import `useTranslations` return type from `next-intl` (available as `ReturnType<typeof useTranslations>`), or use `Parameters<typeof t>` to derive the signature, eliminating the `any[]`."
+    },
+    {
+      "id": "COMP-006",
+      "severity": "suggestion",
+      "category": "Component Patterns",
+      "title": "Internal render helper function defined inside component body",
+      "description": "In `SectionCard.tsx` and `DynamicFormField.tsx`, a `renderItems()` / `renderInput()` function is defined inside the component body. Per the standard component structure template, the render phase should be a single JSX block; conditional rendering switch logic should either be extracted to a sibling function outside the component or converted to a dedicated sub-component.",
+      "files": [
+        "apps/studio/src/features/products/presentation/components/InlineEditor/SectionCard.tsx",
+        "apps/studio/src/features/products/presentation/components/inline-editor/SectionCard.tsx",
+        "apps/payments/src/features/checkout/presentation/components/DynamicFormField.tsx"
+      ],
+      "rule": "Component Patterns - Standard Structure",
+      "fix": "Move `renderItems()` / `renderInput()` outside the component function as a plain function that accepts the required props, or extract into a dedicated presentational component."
+    },
+    {
+      "id": "COMP-007",
+      "severity": "suggestion",
+      "category": "Component Patterns",
+      "title": "Private compound component helper props typed inline without interface",
+      "description": "Several private internal compound component helpers (e.g. `AccordionItemEditor`, `GalleryItemEditor`, `FileInput`) use inline object types for their props instead of named interfaces. While these helpers are not exported (acceptable exception per one-component-per-file rule), giving them named interfaces improves readability and IDE support.",
+      "files": [
+        "apps/studio/src/features/products/presentation/components/InlineEditor/SectionItemsAccordion.tsx",
+        "apps/studio/src/features/products/presentation/components/InlineEditor/SectionItemsGallery.tsx",
+        "apps/payments/src/features/checkout/presentation/components/DynamicFormField.tsx"
+      ],
+      "rule": "Component Patterns - Props Interface Co-location",
+      "fix": "Add a private named interface (e.g. `interface AccordionItemEditorProps { ... }`) above each internal helper function to document the expected props shape."
+    }
+  ],
+  "patterns": [
+    {
+      "type": "good",
+      "description": "All production components using React hooks (useState, useEffect, useCallback) correctly include the `'use client'` directive. No missing directives were found across the entire apps/ directory.",
+      "prevalence": "62 files checked"
+    },
+    {
+      "type": "good",
+      "description": "Component structure consistently follows hooks → derived state → handlers → render order across reviewed files (UsersPageContent, AssignedOrdersPageContent, OrderCard, CartItemRow, SectionCard).",
+      "prevalence": "All spot-checked files"
+    },
+    {
+      "type": "good",
+      "description": "Named Props interfaces (ComponentNameProps pattern) are consistently used for exported public components across admin, store, payments, and auth apps. The pattern is missing only in a small subset of studio/InlineEditor components (COMP-003).",
+      "prevalence": "~95% of exported components"
+    },
+    {
+      "type": "good",
+      "description": "Container/Presenter pattern is well applied. All PageContent components perform data fetching via hooks and pass results as props to pure UI components (e.g. UsersPageContent → UserTable, AssignedOrdersPageContent → ReceivedOrderCard).",
+      "prevalence": "All *PageContent files reviewed"
+    },
+    {
+      "type": "good",
+      "description": "`as any` usage in InlineEditor components is consistently guarded by `eslint-disable` comments with detailed justifications referencing the react-hook-form template-literal path limitation. The casts are intentional and documented.",
+      "prevalence": "InlineEditor sub-feature"
+    },
+    {
+      "type": "info",
+      "description": "The `inline-editor` (kebab-case) folder in studio is a full duplicate of `InlineEditor` (PascalCase). Both appear in git history from the same initial commit. Production imports use only `InlineEditor`. The kebab-case folder may be an artifact of a file-rename operation on a case-insensitive filesystem.",
+      "prevalence": "apps/studio only"
+    }
+  ]
+}

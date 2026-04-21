@@ -3,7 +3,7 @@
 import { CheckCircle, ChevronDown, ChevronUp } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useCallback, useMemo, useState } from "react";
-import { tid } from "shared";
+import { formatPrice, tid } from "shared";
 
 import { SellerCheckoutContent } from "./SellerCheckoutContent";
 
@@ -13,14 +13,14 @@ import type {
   CheckoutSellerStatus,
   SellerPaymentMethodWithType,
 } from "@/features/checkout/domain/types";
-import { formatCop } from "@/shared/application/utils/formatCop";
-import type { FormField } from "@/shared/domain/paymentMethodTypes";
+import type { FormField } from "@/shared/domain/PaymentMethodTypes";
 
 interface SellerCheckoutCardProps {
   sellerId: string;
   sellerName: string;
   items: CartItem[];
-  subtotalCop: number;
+  subtotal: number;
+  currency: string;
   status: CheckoutSellerStatus;
   error: string | null;
   getItemName: (item: CartItem) => string;
@@ -34,7 +34,8 @@ export function SellerCheckoutCard({
   sellerId,
   sellerName,
   items,
-  subtotalCop,
+  subtotal,
+  currency,
   status,
   error,
   getItemName,
@@ -72,7 +73,6 @@ export function SellerCheckoutCard({
   );
 
   const handleFileSelected = useCallback((fieldId: string, file: File) => {
-    // Store filename as placeholder until upload completes
     setBuyerSubmission((prev) => ({ ...prev, [fieldId]: file.name }));
   }, []);
 
@@ -84,7 +84,6 @@ export function SellerCheckoutCard({
       return;
     }
 
-    // Validate required fields
     const formFields: FormField[] = selectedMethod.form_fields ?? [];
     for (const field of formFields) {
       if (field.required) {
@@ -132,7 +131,7 @@ export function SellerCheckoutCard({
             </h3>
             <p className="text-xs text-muted-foreground sm:whitespace-nowrap">
               {t("items", { count: items.length })} &middot;{" "}
-              {formatCop(subtotalCop)}
+              {formatPrice(subtotal, currency)}
             </p>
           </div>
         </div>
@@ -150,7 +149,8 @@ export function SellerCheckoutCard({
         <SellerCheckoutContent
           sellerId={sellerId}
           items={items}
-          subtotalCop={subtotalCop}
+          subtotal={subtotal}
+          currency={currency}
           getItemName={getItemName}
           submission={{
             isSubmitted,

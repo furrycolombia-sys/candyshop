@@ -3,7 +3,7 @@
 import { useTranslations } from "next-intl";
 import type { Control } from "react-hook-form";
 import { useController } from "react-hook-form";
-import { tid } from "shared";
+import { POPULAR_CURRENCIES, tid } from "shared";
 
 import { PriceInput } from "./PriceInput";
 
@@ -21,15 +21,11 @@ interface InlinePriceFieldsProps {
 export function InlinePriceFields({ control }: InlinePriceFieldsProps) {
   const t = useTranslations("form.inlineEditor");
 
-  const { field: copField } = useController({ control, name: "price_cop" });
-  const { field: usdField } = useController({ control, name: "price_usd" });
-  const { field: compareCopField } = useController({
+  const { field: priceField } = useController({ control, name: "price" });
+  const { field: currencyField } = useController({ control, name: "currency" });
+  const { field: compareField } = useController({
     control,
-    name: "compare_at_price_cop",
-  });
-  const { field: compareUsdField } = useController({
-    control,
-    name: "compare_at_price_usd",
+    name: "compare_at_price",
   });
 
   return (
@@ -37,80 +33,63 @@ export function InlinePriceFields({ control }: InlinePriceFieldsProps) {
       className="border-strong border-foreground bg-background p-4 shadow-brutal-sm"
       {...tid("inline-price-fields")}
     >
-      {/* Main prices — big display like store PriceBlock */}
+      {/* Currency selector + price */}
       <div className="flex items-baseline gap-4 flex-wrap">
-        {/* COP Price */}
-        <div className="flex items-baseline gap-1">
+        {/* Currency */}
+        <div className="flex flex-col gap-1">
           <span className="font-display text-xs font-bold uppercase tracking-wider text-muted-foreground">
-            {t("priceCop")}
+            {t("currency")}
           </span>
-          <span className="font-display text-5xl font-extrabold">$</span>
-          <PriceInput
-            inputRef={copField.ref}
-            value={copField.value}
-            onChange={(v) => copField.onChange(parsePrice(v, 0))}
-            onBlur={copField.onBlur}
-            placeholder="0"
-            className="font-display text-5xl font-extrabold"
-            testId="inline-price-cop"
-          />
+          <select
+            ref={currencyField.ref}
+            value={currencyField.value}
+            onChange={(e) => currencyField.onChange(e.target.value)}
+            onBlur={currencyField.onBlur}
+            className="border-strong border-foreground bg-background font-display text-sm font-bold px-2 py-1"
+            {...tid("inline-currency")}
+          >
+            {POPULAR_CURRENCIES.map((code) => (
+              <option key={code} value={code}>
+                {code}
+              </option>
+            ))}
+          </select>
         </div>
 
-        {/* USD Price */}
+        {/* Price */}
         <div className="flex items-baseline gap-1">
           <span className="font-display text-xs font-bold uppercase tracking-wider text-muted-foreground">
-            {t("priceUsd")}
-          </span>
-          <span className="font-display text-2xl font-bold text-muted-foreground">
-            $
+            {t("price")}
           </span>
           <PriceInput
-            inputRef={usdField.ref}
-            value={usdField.value ?? null}
-            onChange={(v) => usdField.onChange(parsePrice(v, 0))}
-            onBlur={usdField.onBlur}
+            inputRef={priceField.ref}
+            value={priceField.value}
+            onChange={(v) => priceField.onChange(parsePrice(v, 0))}
+            onBlur={priceField.onBlur}
             placeholder="0"
-            className="font-display text-2xl font-bold text-muted-foreground"
-            testId="inline-price-usd"
+            className="font-display text-5xl font-extrabold"
+            testId="inline-price"
           />
         </div>
       </div>
 
-      {/* Compare-at prices — strikethrough style */}
+      {/* Compare-at price */}
       <div className="mt-3 flex items-baseline gap-4 flex-wrap">
         <div className="flex items-baseline gap-1">
           <span className="font-display text-ui-xs font-bold uppercase tracking-wider text-muted-foreground">
-            {t("comparePriceCop")}
+            {t("comparePrice")}
           </span>
           <span className="font-display text-lg font-bold text-muted-foreground line-through">
-            $
+            {currencyField.value}
           </span>
           <PriceInput
-            inputRef={compareCopField.ref}
-            value={compareCopField.value}
-            onChange={(v) => compareCopField.onChange(parsePrice(v, null))}
-            onBlur={compareCopField.onBlur}
+            inputRef={compareField.ref}
+            value={compareField.value}
+            onChange={(v) => compareField.onChange(parsePrice(v, null))}
+            onBlur={compareField.onBlur}
             placeholder="—"
             className="font-display text-lg font-bold text-muted-foreground line-through"
-            testId="inline-compare-price-cop"
-          />
-        </div>
-
-        <div className="flex items-baseline gap-1">
-          <span className="font-display text-ui-xs font-bold uppercase tracking-wider text-muted-foreground">
-            {t("comparePriceUsd")}
-          </span>
-          <span className="font-display text-lg font-bold text-muted-foreground line-through">
-            $
-          </span>
-          <PriceInput
-            inputRef={compareUsdField.ref}
-            value={compareUsdField.value}
-            onChange={(v) => compareUsdField.onChange(parsePrice(v, null))}
-            onBlur={compareUsdField.onBlur}
-            placeholder="—"
-            className="font-display text-lg font-bold text-muted-foreground line-through"
-            testId="inline-compare-price-usd"
+            testId="inline-compare-price"
           />
         </div>
       </div>

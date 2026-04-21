@@ -20,8 +20,8 @@ function toCartSnapshot(
     id: payload.id,
     name_en: payload.name_en,
     name_es: payload.name_es,
-    price_cop: payload.price_cop,
-    price_usd: payload.price_usd,
+    price: payload.price,
+    currency: payload.currency,
     seller_id: payload.seller_id,
     images: payload.images,
     max_quantity: payload.max_quantity,
@@ -92,10 +92,7 @@ export function deriveState(items: CartItem[]): CartState {
   return {
     items,
     itemCount: items.reduce((sum, item) => sum + item.quantity, 0),
-    total: items.reduce(
-      (sum, item) => sum + (item.price_usd ?? 0) * item.quantity,
-      0,
-    ),
+    total: items.reduce((sum, item) => sum + item.price * item.quantity, 0),
   };
 }
 
