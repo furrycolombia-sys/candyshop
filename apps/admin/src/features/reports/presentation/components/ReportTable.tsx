@@ -127,7 +127,10 @@ export function ReportTable({ orders }: ReportTableProps) {
               <td className="px-3 py-2 text-xs uppercase text-muted-foreground">
                 {order.currency}
               </td>
-              <td className="px-3 py-2 font-mono text-xs text-muted-foreground">
+              <td
+                className="px-3 py-2 font-mono text-xs text-muted-foreground"
+                {...tid(`report-row-transfer-${order.id}`)}
+              >
                 {order.transfer_number ?? (
                   <span className="text-muted-foreground/40">—</span>
                 )}
