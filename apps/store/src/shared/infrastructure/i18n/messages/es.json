@@ -159,7 +159,7 @@
     "removeItem": "Eliminar {name}",
     "sellerGroup": "{sellerName}",
     "unknownSeller": "Vendedor desconocido",
-    "subtotal": "Subtotal"
+    "subtotal": "Total"
   },
   "categories": {
     "fursuits": "Fursuits",
