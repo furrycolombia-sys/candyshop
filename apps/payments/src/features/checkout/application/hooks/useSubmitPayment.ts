@@ -8,6 +8,7 @@ import {
   createOrder,
   submitReceipt,
 } from "@/features/checkout/infrastructure/checkoutQueries";
+import { uploadReceipt } from "@/shared/infrastructure/receiptStorage";
 
 interface SubmitPaymentParams {
   userId: string;
@@ -15,8 +16,9 @@ interface SubmitPaymentParams {
   paymentMethodId: string;
   items: CartItem[];
   checkoutSessionId: string;
-  /** Key = FormField.id, value = string (file fields store the Supabase Storage URL) */
   buyerInfo: Record<string, string>;
+  receiptFile: File | null;
+  transferNumber: string | null;
 }
 
 /**
@@ -37,6 +39,8 @@ export function useSubmitPayment() {
         items,
         checkoutSessionId,
         buyerInfo,
+        receiptFile,
+        transferNumber,
       } = params;
 
       // 1. Create order and reserve stock
@@ -48,9 +52,20 @@ export function useSubmitPayment() {
         checkoutSessionId,
       });
 
-      // 2. Submit buyer info and move to pending_verification
-      // File fields store URLs (uploaded client-side); transfer_number and receipt_url are null
-      await submitReceipt(supabase, orderId, null, null, buyerInfo);
+      // 2. Upload receipt file if provided
+      let receiptPath: string | null = null;
+      if (receiptFile) {
+        receiptPath = await uploadReceipt(supabase, receiptFile, orderId);
+      }
+
+      // 3. Submit buyer info and move to pending_verification
+      await submitReceipt(
+        supabase,
+        orderId,
+        transferNumber,
+        receiptPath,
+        buyerInfo,
+      );
 
       return orderId;
     },

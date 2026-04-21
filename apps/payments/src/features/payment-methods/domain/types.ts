@@ -35,6 +35,8 @@ export type UpdatePaymentMethodPatch = Partial<
     | "display_blocks"
     | "form_fields"
     | "is_active"
+    | "requires_receipt"
+    | "requires_transfer_number"
     | "sort_order"
   >
 >;
