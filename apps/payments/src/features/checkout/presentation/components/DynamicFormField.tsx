@@ -6,7 +6,7 @@ import { useId, useState } from "react";
 import { i18nField, tid } from "shared";
 import { cn } from "ui";
 
-import type { FormField } from "@/shared/domain/paymentMethodTypes";
+import type { FormField } from "@/shared/domain/PaymentMethodTypes";
 import { validateFileSize } from "@/shared/domain/paymentMethodUtils";
 
 interface DynamicFormFieldProps {

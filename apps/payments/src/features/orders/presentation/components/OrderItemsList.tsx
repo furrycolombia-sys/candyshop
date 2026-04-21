@@ -4,7 +4,7 @@ import { useLocale } from "next-intl";
 import { tid } from "shared";
 
 import type { OrderItem } from "@/features/orders/domain/types";
-import { formatCop } from "@/shared/application/utils/formatCop";
+import { formatPrice } from "@/shared/application/utils/formatPrice";
 import { getItemName } from "@/shared/domain/orderUtils";
 
 interface OrderItemsListProps {
@@ -23,7 +23,7 @@ export function OrderItemsList({ items }: OrderItemsListProps) {
             <span className="text-muted-foreground">x{item.quantity}</span>
           </span>
           <span className="ml-2 shrink-0 font-medium">
-            {formatCop(item.unit_price_cop * item.quantity)}
+            {formatPrice(item.unit_price * item.quantity, item.currency)}
           </span>
         </li>
       ))}

@@ -10,7 +10,7 @@ import type { CartItem } from "@/features/cart/domain/types";
 function makeCartItem(
   overrides: Partial<CartItem> & {
     id: string;
-    price_usd: number;
+    price: number;
     quantity: number;
   },
 ): CartItem {
@@ -22,7 +22,7 @@ function makeCartItem(
     description_es: "",
     type: "merch",
     category: "merch",
-    price_cop: 0,
+    currency: "COP",
     max_quantity: null,
     is_active: true,
     created_at: "2025-01-01",
@@ -31,8 +31,7 @@ function makeCartItem(
     long_description_es: "",
     tagline_en: "",
     tagline_es: "",
-    compare_at_price_cop: null,
-    compare_at_price_usd: null,
+    compare_at_price: null,
     tags: [],
     rating: null,
     review_count: 0,
@@ -60,13 +59,13 @@ describe("groupCartBySeller", () => {
     const items = [
       makeCartItem({
         id: "1",
-        price_usd: 10,
+        price: 10,
         quantity: 2,
         seller_id: "seller-a",
       }),
       makeCartItem({
         id: "2",
-        price_usd: 5,
+        price: 5,
         quantity: 1,
         seller_id: "seller-a",
       }),
@@ -84,19 +83,19 @@ describe("groupCartBySeller", () => {
     const items = [
       makeCartItem({
         id: "1",
-        price_usd: 10,
+        price: 10,
         quantity: 1,
         seller_id: "seller-a",
       }),
       makeCartItem({
         id: "2",
-        price_usd: 20,
+        price: 20,
         quantity: 2,
         seller_id: "seller-b",
       }),
       makeCartItem({
         id: "3",
-        price_usd: 5,
+        price: 5,
         quantity: 3,
         seller_id: "seller-a",
       }),
@@ -120,8 +119,8 @@ describe("groupCartBySeller", () => {
 
   it("groups items with no seller_id under 'unknown'", () => {
     const items = [
-      makeCartItem({ id: "1", price_usd: 10, quantity: 1, seller_id: null }),
-      makeCartItem({ id: "2", price_usd: 15, quantity: 2 }), // defaults to null via makeCartItem
+      makeCartItem({ id: "1", price: 10, quantity: 1, seller_id: null }),
+      makeCartItem({ id: "2", price: 15, quantity: 2 }), // defaults to null via makeCartItem
     ];
 
     const result = groupCartBySeller(items);
@@ -136,14 +135,14 @@ describe("groupCartBySeller", () => {
     const items = [
       makeCartItem({
         id: "1",
-        price_usd: 10,
+        price: 10,
         quantity: 1,
         seller_id: "seller-a",
       }),
-      makeCartItem({ id: "2", price_usd: 20, quantity: 1, seller_id: null }),
+      makeCartItem({ id: "2", price: 20, quantity: 1, seller_id: null }),
       makeCartItem({
         id: "3",
-        price_usd: 30,
+        price: 30,
         quantity: 1,
         seller_id: "seller-a",
       }),
@@ -162,7 +161,7 @@ describe("groupCartBySeller", () => {
 
   it("calculates subtotals correctly with fractional prices", () => {
     const items = [
-      makeCartItem({ id: "1", price_usd: 9.99, quantity: 3, seller_id: "s1" }),
+      makeCartItem({ id: "1", price: 9.99, quantity: 3, seller_id: "s1" }),
     ];
 
     const result = groupCartBySeller(items);
@@ -174,7 +173,7 @@ describe("groupCartBySeller", () => {
     const items = [
       makeCartItem({
         id: "1",
-        price_usd: 42,
+        price: 42,
         quantity: 1,
         seller_id: "seller-x",
       }),
@@ -190,14 +189,14 @@ describe("groupCartBySeller", () => {
 
   it("preserves item order within each group", () => {
     const items = [
-      makeCartItem({ id: "first", price_usd: 1, quantity: 1, seller_id: "s1" }),
+      makeCartItem({ id: "first", price: 1, quantity: 1, seller_id: "s1" }),
       makeCartItem({
         id: "second",
-        price_usd: 2,
+        price: 2,
         quantity: 1,
         seller_id: "s1",
       }),
-      makeCartItem({ id: "third", price_usd: 3, quantity: 1, seller_id: "s1" }),
+      makeCartItem({ id: "third", price: 3, quantity: 1, seller_id: "s1" }),
     ];
 
     const result = groupCartBySeller(items);

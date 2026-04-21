@@ -164,11 +164,11 @@ export function InlineHero({ control, errors }: InlineHeroProps) {
             </div>
 
             {/* 4. Price block — bordered card matching store PriceBlock */}
-            <div className={errors?.price_cop ? errorRing : ""}>
+            <div className={errors?.price ? errorRing : ""}>
               <InlinePriceFields control={control} />
-              {errors?.price_cop && (
+              {errors?.price && (
                 <p className="mt-1 font-mono text-xs text-destructive">
-                  {errors.price_cop.message}
+                  {errors.price.message}
                 </p>
               )}
             </div>

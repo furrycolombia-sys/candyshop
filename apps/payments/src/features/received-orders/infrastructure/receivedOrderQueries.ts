@@ -17,7 +17,8 @@ const ORDER_SELECT = `
   user_id,
   seller_id,
   payment_status,
-  total_cop,
+  total,
+  currency,
   transfer_number,
   receipt_url,
   seller_note,
@@ -29,7 +30,8 @@ const ORDER_SELECT = `
     id,
     product_id,
     quantity,
-    unit_price_cop,
+    unit_price,
+    currency,
     metadata
   )
 `;
@@ -51,7 +53,8 @@ async function mapRowToOrder(
     user_id: row.user_id,
     seller_id: row.seller_id,
     payment_status: row.payment_status as ReceivedOrder["payment_status"],
-    total_cop: row.total_cop,
+    total: row.total,
+    currency: row.currency,
     transfer_number: row.transfer_number,
     receipt_url: await getReceiptUrl(supabase, row.receipt_url),
     seller_note: row.seller_note,

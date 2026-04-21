@@ -22,7 +22,8 @@ vi.mock("shared", () => ({
     }
     return null;
   },
-  formatCop: (amount: number) => `${amount.toLocaleString()} COP`,
+  formatPrice: (amount: number, currency: string) =>
+    `${amount.toLocaleString()} ${currency}`,
 }));
 
 vi.mock("next/image", () => ({
@@ -72,7 +73,8 @@ const mockProduct = {
   name_es: "Producto de Prueba",
   type: "merch" as const,
   category: "merch" as const,
-  price_cop: 50_000,
+  price: 50_000,
+  currency: "COP",
   is_active: true,
   featured: false,
   sort_order: 1,

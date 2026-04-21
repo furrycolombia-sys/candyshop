@@ -9,6 +9,7 @@ vi.mock("next-intl", () => ({
 
 vi.mock("shared", () => ({
   tid: (id: string) => ({ "data-testid": id }),
+  formatPrice: (amount: number, currency: string) => `${currency} ${amount}`,
 }));
 
 // eslint-disable-next-line import/order -- vi.mock must be hoisted before this import
@@ -19,8 +20,8 @@ const mockItems: CartItem[] = [
     id: "p1",
     name_en: "Widget",
     name_es: "Widget ES",
-    price_cop: 5000,
-    price_usd: 1.5,
+    price: 5000,
+    currency: "COP",
     seller_id: "s1",
     quantity: 2,
     images: [{ url: "https://example.com/img.jpg", alt: "Widget image" }],
@@ -30,8 +31,8 @@ const mockItems: CartItem[] = [
     id: "p2",
     name_en: "Gadget",
     name_es: "Gadget ES",
-    price_cop: 3000,
-    price_usd: 1,
+    price: 3000,
+    currency: "COP",
     seller_id: "s1",
     quantity: 1,
     images: [],
@@ -46,7 +47,8 @@ describe("CheckoutItemsSummary", () => {
     render(
       <CheckoutItemsSummary
         items={mockItems}
-        subtotalCop={13_000}
+        subtotal={13_000}
+        currency="COP"
         getItemName={getItemName}
       />,
     );
@@ -59,7 +61,8 @@ describe("CheckoutItemsSummary", () => {
     render(
       <CheckoutItemsSummary
         items={mockItems}
-        subtotalCop={13_000}
+        subtotal={13_000}
+        currency="COP"
         getItemName={getItemName}
       />,
     );
@@ -72,7 +75,8 @@ describe("CheckoutItemsSummary", () => {
     render(
       <CheckoutItemsSummary
         items={mockItems}
-        subtotalCop={13_000}
+        subtotal={13_000}
+        currency="COP"
         getItemName={getItemName}
       />,
     );
@@ -85,7 +89,8 @@ describe("CheckoutItemsSummary", () => {
     render(
       <CheckoutItemsSummary
         items={mockItems}
-        subtotalCop={13_000}
+        subtotal={13_000}
+        currency="COP"
         getItemName={getItemName}
       />,
     );
@@ -99,7 +104,8 @@ describe("CheckoutItemsSummary", () => {
     render(
       <CheckoutItemsSummary
         items={mockItems}
-        subtotalCop={13_000}
+        subtotal={13_000}
+        currency="COP"
         getItemName={getItemName}
       />,
     );

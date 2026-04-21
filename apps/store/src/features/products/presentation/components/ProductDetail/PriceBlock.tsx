@@ -1,5 +1,4 @@
-import { useLocale } from "next-intl";
-import { i18nCurrencyCode, i18nPrice, tid } from "shared";
+import { formatPrice, tid } from "shared";
 
 import type { Product } from "@/features/products/domain/types";
 
@@ -9,15 +8,8 @@ interface PriceBlockProps {
 }
 
 export function PriceBlock({ product, discountLabel }: PriceBlockProps) {
-  const locale = useLocale();
-
-  const currencyCode = i18nCurrencyCode(product, locale);
-  const isUsd = currencyCode === "USD";
-  const price = isUsd ? product.price_usd : product.price_cop;
-  const compareAtPrice = isUsd
-    ? product.compare_at_price_usd
-    : product.compare_at_price_cop;
-  const hasDiscount = compareAtPrice != null && compareAtPrice > price;
+  const { price, currency, compare_at_price } = product;
+  const hasDiscount = compare_at_price != null && compare_at_price > price;
 
   return (
     <div
@@ -27,41 +19,23 @@ export function PriceBlock({ product, discountLabel }: PriceBlockProps) {
       <div className="flex items-baseline gap-3 flex-wrap">
         <div className="flex min-w-0 items-baseline gap-1">
           <span className="shrink-0 font-display text-xs font-bold uppercase tracking-wider text-muted-foreground">
-            {currencyCode}
+            {currency}
           </span>
           <span className="min-w-0 break-all font-display text-3xl font-extrabold sm:text-4xl lg:text-5xl">
-            {i18nPrice(product, locale)}
+            {formatPrice(price, currency)}
           </span>
         </div>
-        {hasDiscount && compareAtPrice != null && (
+        {hasDiscount && compare_at_price != null && (
           <span className="font-display text-xl font-bold line-through text-muted-foreground sm:text-2xl">
-            {i18nPrice(
-              {
-                ...product,
-                price_usd: product.compare_at_price_usd ?? product.price_usd,
-                price_cop: product.compare_at_price_cop ?? product.price_cop,
-              },
-              locale,
-            )}
+            {formatPrice(compare_at_price, currency)}
           </span>
         )}
       </div>
-      {hasDiscount && compareAtPrice != null && (
+      {hasDiscount && compare_at_price != null && (
         <div className="mt-2">
           <span className="border-strong border-foreground bg-warning px-2 py-0.5 text-xs font-bold uppercase tracking-widest text-warning-foreground">
             {discountLabel({
-              amount: i18nPrice(
-                {
-                  ...product,
-                  price_usd:
-                    (product.compare_at_price_usd ?? product.price_usd) -
-                    product.price_usd,
-                  price_cop:
-                    (product.compare_at_price_cop ?? product.price_cop) -
-                    product.price_cop,
-                },
-                locale,
-              ),
+              amount: formatPrice(compare_at_price - price, currency),
             })}
           </span>
         </div>

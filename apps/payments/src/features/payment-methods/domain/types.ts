@@ -1,7 +1,7 @@
 /**
  * Re-export payment method types from the shared layer.
  *
- * These types were promoted to `@/shared/domain/paymentMethodTypes` because
+ * These types were promoted to `@/shared/domain/PaymentMethodTypes` because
  * they are used across multiple features (checkout, orders, API routes).
  * This re-export keeps internal payment-methods imports working unchanged.
  */
@@ -17,9 +17,9 @@ export type {
   TextBlock,
   UrlBlock,
   VideoBlock,
-} from "@/shared/domain/paymentMethodTypes";
+} from "@/shared/domain/PaymentMethodTypes";
 
-import type { SellerPaymentMethod } from "@/shared/domain/paymentMethodTypes";
+import type { SellerPaymentMethod } from "@/shared/domain/PaymentMethodTypes";
 
 export interface CreatePaymentMethodParams {
   sellerId: string;

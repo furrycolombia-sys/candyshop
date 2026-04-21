@@ -14,7 +14,6 @@ interface SubmitPaymentParams {
   sellerId: string;
   paymentMethodId: string;
   items: CartItem[];
-  totalCop: number;
   checkoutSessionId: string;
   /** Key = FormField.id, value = string (file fields store the Supabase Storage URL) */
   buyerInfo: Record<string, string>;
@@ -36,7 +35,6 @@ export function useSubmitPayment() {
         sellerId,
         paymentMethodId,
         items,
-        totalCop,
         checkoutSessionId,
         buyerInfo,
       } = params;
@@ -47,7 +45,6 @@ export function useSubmitPayment() {
         sellerId,
         paymentMethodId,
         items,
-        totalCop,
         checkoutSessionId,
       });
 

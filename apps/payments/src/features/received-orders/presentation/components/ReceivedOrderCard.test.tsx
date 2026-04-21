@@ -16,8 +16,9 @@ vi.mock("shared", async (importOriginal) => {
   };
 });
 
-vi.mock("@/shared/application/utils/formatCop", () => ({
-  formatCop: (amount: number) => `$${amount.toLocaleString()} COP`,
+vi.mock("@/shared/application/utils/formatPrice", () => ({
+  formatPrice: (amount: number, currency: string) =>
+    `$${amount.toLocaleString()} ${currency}`,
 }));
 
 vi.mock("./ReceivedStatusBadge", () => ({
@@ -45,7 +46,8 @@ function makeOrder(overrides: Partial<ReceivedOrder> = {}): ReceivedOrder {
     user_id: "buyer-1",
     seller_id: "seller-1",
     payment_status: "pending_verification",
-    total_cop: 15_000,
+    total: 15_000,
+    currency: "COP",
     transfer_number: "TX-1",
     receipt_url: null,
     seller_note: null,
@@ -59,7 +61,8 @@ function makeOrder(overrides: Partial<ReceivedOrder> = {}): ReceivedOrder {
         id: "oi1",
         product_id: "p1",
         quantity: 1,
-        unit_price_cop: 15_000,
+        unit_price: 15_000,
+        currency: "COP",
         metadata: { name_en: "Widget" },
       },
     ],

@@ -73,8 +73,12 @@ describe("products domain constants", () => {
       expect(PRODUCT_FORM_DEFAULTS.category).toBe("merch");
     });
 
-    it("has zero price_cop", () => {
-      expect(PRODUCT_FORM_DEFAULTS.price_cop).toBe(0);
+    it("has zero price", () => {
+      expect(PRODUCT_FORM_DEFAULTS.price).toBe(0);
+    });
+
+    it("has default currency", () => {
+      expect(PRODUCT_FORM_DEFAULTS.currency).toBe("USD");
     });
 
     it("has empty arrays for images and sections", () => {
@@ -88,8 +92,7 @@ describe("products domain constants", () => {
     });
 
     it("has null for nullable fields", () => {
-      expect(PRODUCT_FORM_DEFAULTS.compare_at_price_cop).toBeNull();
-      expect(PRODUCT_FORM_DEFAULTS.compare_at_price_usd).toBeNull();
+      expect(PRODUCT_FORM_DEFAULTS.compare_at_price).toBeNull();
       expect(PRODUCT_FORM_DEFAULTS.max_quantity).toBeNull();
       expect(PRODUCT_FORM_DEFAULTS.refundable).toBeNull();
     });

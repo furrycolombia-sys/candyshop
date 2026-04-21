@@ -63,8 +63,8 @@ function makeProduct(overrides: Partial<Product> = {}): Product {
     description_es: "Un traje genial",
     type: "merch",
     category: "merch",
-    price_cop: 100_000,
-    price_usd: 25,
+    price: 25,
+    currency: "USD",
     max_quantity: null,
     is_active: true,
     created_at: "2025-01-01",
@@ -73,8 +73,7 @@ function makeProduct(overrides: Partial<Product> = {}): Product {
     long_description_es: "",
     tagline_en: "",
     tagline_es: "",
-    compare_at_price_cop: null,
-    compare_at_price_usd: null,
+    compare_at_price: null,
     tags: [],
     rating: null,
     review_count: 0,
@@ -108,7 +107,7 @@ describe("ProductCard", () => {
   });
 
   it("renders product price", () => {
-    const product = makeProduct({ price_usd: 25 });
+    const product = makeProduct({ price: 25 });
     render(<ProductCard product={product} />);
 
     expect(screen.getByTestId("product-card-price")).toBeInTheDocument();

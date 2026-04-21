@@ -15,8 +15,8 @@ const cartItems = [
     slug: "item-1",
     name_en: "Product A",
     name_es: "Producto A",
-    price_usd: 10,
-    price_cop: 40_000,
+    price: 10,
+    currency: "USD",
     quantity: 2,
     category: "merch",
     type: "merch",
@@ -35,8 +35,7 @@ vi.mock("next-intl", () => ({
 
 vi.mock("shared", () => ({
   tid: (id: string) => ({ "data-testid": id }),
-  i18nPrice: (product: Record<string, unknown>) =>
-    `$${product.price_usd ?? product.price_cop}`,
+  formatPrice: (amount: number, currency: string) => `${currency} ${amount}`,
   useSupabase: () => ({}),
 }));
 

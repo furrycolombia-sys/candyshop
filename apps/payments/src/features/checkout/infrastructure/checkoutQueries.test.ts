@@ -221,8 +221,8 @@ describe("createOrder", () => {
       id: "prod-1",
       name_en: "Widget",
       name_es: "Widget",
-      price_cop: 5000,
-      price_usd: 1.5,
+      price: 5000,
+      currency: "COP",
       seller_id: "s1",
       quantity: 2,
       images: [],
@@ -237,7 +237,7 @@ describe("createOrder", () => {
   it("reserves stock, inserts order and items, returns order id", async () => {
     // products price fetch returns price data
     supabase._chain.in.mockResolvedValueOnce({
-      data: [{ id: "prod-1", price_cop: 5000 }],
+      data: [{ id: "prod-1", price: 5000, currency: "COP" }],
       error: null,
     });
 
@@ -267,7 +267,6 @@ describe("createOrder", () => {
         sellerId: "seller-1",
         paymentMethodId: "pm-1",
         items: mockItems,
-        totalCop: 10_000,
         checkoutSessionId: "session-1",
       },
     );
@@ -283,8 +282,8 @@ describe("createOrder", () => {
     // products price fetch returns price data for both items
     supabase._chain.in.mockResolvedValueOnce({
       data: [
-        { id: "prod-1", price_cop: 5000 },
-        { id: "prod-2", price_cop: 3000 },
+        { id: "prod-1", price: 5000, currency: "COP" },
+        { id: "prod-2", price: 3000, currency: "COP" },
       ],
       error: null,
     });
@@ -300,8 +299,8 @@ describe("createOrder", () => {
         id: "prod-2",
         name_en: "Gadget",
         name_es: "Gadget",
-        price_cop: 3000,
-        price_usd: 1,
+        price: 3000,
+        currency: "COP",
         seller_id: "s1",
         quantity: 1,
         images: [],
@@ -315,7 +314,6 @@ describe("createOrder", () => {
         sellerId: "seller-1",
         paymentMethodId: "pm-1",
         items: twoItems,
-        totalCop: 13_000,
         checkoutSessionId: "session-1",
       }),
     ).rejects.toThrow("stock_error");
