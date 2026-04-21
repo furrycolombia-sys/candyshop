@@ -1,0 +1,74 @@
+{
+  "agent": "naming-conventions",
+  "review_id": "2026-04-21_06-46-58",
+  "outputFile": ".ai-context/reviews/agents/2026-04-21_06-46-58_naming-conventions.json",
+  "scope": "apps/ packages/",
+  "issues": [
+    {
+      "id": "NAME-001",
+      "severity": "warning",
+      "file": "apps/payments/src/features/reports/presentation/pages/SellerReportsPage.tsx",
+      "line": 5,
+      "title": "React imports appear after third-party imports",
+      "description": "The import order rule requires React → Third-party → Shared → Feature → Types. In SellerReportsPage.tsx, React (`useCallback, useMemo, useState`) is imported on line 5, after `lucide-react` (line 3) and `next-intl` (line 4). React imports must come first.",
+      "rule": "naming-conventions.md#import-order",
+      "fix": "Move `import { useCallback, useMemo, useState } from 'react'` to the top before third-party imports."
+    },
+    {
+      "id": "NAME-002",
+      "severity": "suggestion",
+      "file": "apps/payments/src/features/reports/presentation/components/OrderStatusBadge.tsx",
+      "line": 8,
+      "title": "Non-exported module-level constants use SCREAMING_SNAKE_CASE instead of camelCase",
+      "description": "SCREAMING_SNAKE_CASE is reserved for exported global constants. `MUTED_STYLE` (line 8) and `WARNING_STYLE` (line 9) are non-exported module-level constants. Per naming conventions, non-exported constants should use camelCase: `mutedStyle` and `warningStyle`.",
+      "rule": "naming-conventions.md#constants",
+      "fix": "Rename `MUTED_STYLE` to `mutedStyle` and `WARNING_STYLE` to `warningStyle` throughout the file."
+    },
+    {
+      "id": "NAME-003",
+      "severity": "suggestion",
+      "file": "apps/payments/src/features/reports/application/utils/exportSellerOrdersToExcel.ts",
+      "line": 7,
+      "title": "Non-exported module-level constants use SCREAMING_SNAKE_CASE instead of camelCase",
+      "description": "`ORDERS_HEADERS` (line 7), `ISO_DATE_LENGTH` (line 23), and `ISO_DATETIME_LENGTH` (line 24) are non-exported module-level constants. Per naming conventions, only exported globals should use SCREAMING_SNAKE_CASE; non-exported constants should use camelCase: `ordersHeaders`, `isoDateLength`, `isoDatetimeLength`.",
+      "rule": "naming-conventions.md#constants",
+      "fix": "Rename to `ordersHeaders`, `isoDateLength`, and `isoDatetimeLength` throughout the file."
+    },
+    {
+      "id": "NAME-004",
+      "severity": "suggestion",
+      "file": "scripts/seed-moonfest.mjs",
+      "line": 13,
+      "title": "Module-level local variable `KEY` uses SCREAMING_SNAKE_CASE inconsistently",
+      "description": "`const KEY = process.env.SUPABASE_SERVICE_ROLE_KEY` on line 13 is a non-exported module-level constant. While the other constants in the file (`SUPABASE_URL`, `SELLER_EMAIL`, `IMG_BASE`) consistently use SCREAMING_SNAKE_CASE (which is acceptable for module-level config constants in scripts), `KEY` is an overly terse and ambiguous name. It should either follow the same pattern as the others (`SERVICE_ROLE_KEY` or `SUPABASE_KEY`) or be renamed to be more descriptive (`supabaseKey` if camelCase is preferred).",
+      "rule": "naming-conventions.md#constants",
+      "fix": "Rename `KEY` to `SUPABASE_KEY` or `SERVICE_ROLE_KEY` to match the descriptive pattern used by the other module-level constants in the file."
+    },
+    {
+      "id": "NAME-005",
+      "severity": "suggestion",
+      "file": "apps/payments/src/features/reports/infrastructure/reportsApi.ts",
+      "line": 23,
+      "title": "Variable `qs` is an unexpressive abbreviation",
+      "description": "On line 23, `const qs = toQueryString(filters)` uses a two-letter abbreviation `qs` for `queryString`. While common, abbreviated names reduce readability. A more descriptive name like `queryString` or `queryParams` follows the camelCase convention while being self-documenting.",
+      "rule": "naming-conventions.md#variables--functions",
+      "fix": "Rename `qs` to `queryString` or `queryParams` throughout the function."
+    },
+    {
+      "id": "NAME-006",
+      "severity": "info",
+      "file": "packages/app-components/src/components/AppNavigation.tsx",
+      "line": 31,
+      "title": "Non-exported module-level constants use SCREAMING_SNAKE_CASE",
+      "description": "`APP_ORDER` (line 31), `ADMIN_PERMISSIONS` (line 41), and `APP_ACCESS_RULES` (line 48) are not exported from the file. Per naming conventions, non-exported constants should use camelCase. However, these are effectively configuration constants at module scope and SCREAMING_SNAKE_CASE is widely accepted for module-level config even when not exported. This is a low-priority observation.",
+      "rule": "naming-conventions.md#constants",
+      "fix": "Consider renaming to `appOrder`, `adminPermissions`, `appAccessRules` for strict compliance, or export them to justify the SCREAMING_SNAKE_CASE convention."
+    }
+  ],
+  "summary": {
+    "critical": 0,
+    "warning": 1,
+    "suggestion": 4,
+    "info": 1
+  }
+}

@@ -1,0 +1,114 @@
+{
+  "agent": "performance",
+  "review_id": "2026-04-21_03-17-10",
+  "outputFile": ".ai-context/reviews/agents/2026-04-21_03-17-10_performance.json",
+  "scope": "apps/admin/src/features/reports/",
+  "issues": [
+    {
+      "id": "PERF-001",
+      "severity": "warning",
+      "file": "apps/admin/src/features/reports/presentation/pages/ReportsPage.tsx",
+      "line": 22,
+      "title": "Expensive currency array computed on every render",
+      "description": "The currencies array is created by extracting unique currencies from orders using Set and sort on every render. This operation scales with the number of orders and is computed even when orders haven't changed.",
+      "rule": "code-review-standards.md#performance-standards",
+      "fix": "Wrap the currencies calculation in useMemo with orders as dependency: const currencies = useMemo(() => [...new Set(orders.map((o) => o.currency))].sort(), [orders]);"
+    },
+    {
+      "id": "PERF-002",
+      "severity": "warning",
+      "file": "apps/admin/src/features/reports/presentation/pages/ReportsPage.tsx",
+      "line": 24,
+      "title": "handleFiltersChange callback not memoized",
+      "description": "The handleFiltersChange callback is redefined on every render and passed to ReportFiltersBar. This can trigger unnecessary re-renders of the child component if it's not already memoized.",
+      "rule": "code-review-standards.md#performance-standards",
+      "fix": "Wrap handleFiltersChange in useCallback: const handleFiltersChange = useCallback((updates: Partial<ReportFilters>) => { ... }, [setFilters]);"
+    },
+    {
+      "id": "PERF-003",
+      "severity": "warning",
+      "file": "apps/admin/src/features/reports/presentation/pages/ReportsPage.tsx",
+      "line": 33,
+      "title": "handleExport callback not memoized",
+      "description": "The handleExport async callback is redefined on every render and passed to the export button. This is inefficient as it captures orders and other dependencies without proper memoization.",
+      "rule": "code-review-standards.md#performance-standards",
+      "fix": "Wrap handleExport in useCallback: const handleExport = useCallback(async () => { ... }, [orders]);"
+    },
+    {
+      "id": "PERF-004",
+      "severity": "warning",
+      "file": "apps/admin/src/features/reports/presentation/components/ReportTable.tsx",
+      "line": 74,
+      "title": "Date formatting happens on every table render",
+      "description": "Date is formatted using toLocaleDateString() on every render for each order row. With hundreds of orders, this creates many date formatting operations on each re-render.",
+      "rule": "code-review-standards.md#performance-standards",
+      "fix": "Memoize the table rows or move date formatting to a useMemo hook that formats all dates at once during data fetching phase."
+    },
+    {
+      "id": "PERF-005",
+      "severity": "warning",
+      "file": "apps/admin/src/features/reports/presentation/components/ReportTable.tsx",
+      "line": 120,
+      "title": "toLocaleString formatting happens on every table render",
+      "description": "Currency amount formatting with toLocaleString() is done on every render for each row. This is an expensive operation repeated for every order.",
+      "rule": "code-review-standards.md#performance-standards",
+      "fix": "Consider creating a formatted amount in the data fetching layer or memoize the formatting function and call it only when needed."
+    },
+    {
+      "id": "PERF-006",
+      "severity": "suggestion",
+      "file": "apps/admin/src/features/reports/presentation/components/ReportTable.tsx",
+      "line": 65,
+      "title": "OrderStatusBadge not memoized in list",
+      "description": "OrderStatusBadge component is rendered in a list without React.memo. When parent re-renders, all badges re-render even if their status prop hasn't changed.",
+      "rule": "code-review-standards.md#performance-standards",
+      "fix": "Wrap OrderStatusBadge export with React.memo to prevent unnecessary re-renders: export const OrderStatusBadge = React.memo(function OrderStatusBadge({ status }: OrderStatusBadgeProps) { ... });"
+    },
+    {
+      "id": "PERF-007",
+      "severity": "suggestion",
+      "file": "apps/admin/src/features/reports/presentation/components/ReportFiltersBar.tsx",
+      "line": 24,
+      "title": "hasActiveFilters computed on every render",
+      "description": "The hasActiveFilters check iterates through all filter values on every render. While not expensive, it could be memoized to avoid re-computation.",
+      "rule": "code-review-standards.md#performance-standards",
+      "fix": "Use useMemo for hasActiveFilters: const hasActiveFilters = useMemo(() => Object.values(filters).some((v) => v != null), [filters]);"
+    },
+    {
+      "id": "PERF-008",
+      "severity": "suggestion",
+      "file": "apps/admin/src/features/reports/presentation/components/ReportFiltersBar.tsx",
+      "line": 26,
+      "title": "handleClear callback not memoized",
+      "description": "The handleClear callback is redefined on every render. While the function is simple, it should be memoized to maintain referential equality.",
+      "rule": "code-review-standards.md#performance-standards",
+      "fix": "Wrap handleClear in useCallback: const handleClear = useCallback(() => { onFiltersChange({ ... }) }, [onFiltersChange]);"
+    },
+    {
+      "id": "PERF-009",
+      "severity": "suggestion",
+      "file": "apps/admin/src/features/reports/application/utils/exportOrdersToExcel.ts",
+      "line": 49,
+      "title": "Duplicate date formatting in export loop",
+      "description": "Date is formatted twice with toLocaleString() in the export function - once for orders without items and once in the item mapping. This creates unnecessary duplicate operations.",
+      "rule": "code-review-standards.md#performance-standards",
+      "fix": "Extract date formatting to a variable before the if/else block: const formattedDate = new Date(order.created_at).toLocaleString();"
+    },
+    {
+      "id": "PERF-010",
+      "severity": "info",
+      "file": "apps/admin/src/features/reports/application/hooks/useReportOrders.ts",
+      "line": 27,
+      "title": "Query key includes entire filters object",
+      "description": "The query key includes the entire filters object which is recreated on every render. While React Query handles this, it could be optimized by creating a stable query key.",
+      "rule": "code-review-standards.md#performance-standards",
+      "fix": "Consider creating a stable query key string: queryKey: [REPORTS_QUERY_KEY, JSON.stringify(filters)] or move filters to a stable object reference using useMemo."
+    }
+  ],
+  "summary": {
+    "critical": 0,
+    "warning": 6,
+    "suggestion": 4,
+    "info": 1
+  }
+}

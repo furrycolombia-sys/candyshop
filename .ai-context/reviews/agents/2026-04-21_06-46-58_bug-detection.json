@@ -1,0 +1,104 @@
+{
+  "agent": "bug-detection",
+  "review_id": "2026-04-21_06-46-58",
+  "outputFile": ".ai-context/reviews/agents/2026-04-21_06-46-58_bug-detection.json",
+  "scope": "apps/ packages/",
+  "issues": [
+    {
+      "id": "BUG-001",
+      "severity": "warning",
+      "file": "apps/payments/src/features/checkout/presentation/components/ReceiptUpload.tsx",
+      "line": 43,
+      "title": "Blob URL not cleared from state when file is removed externally",
+      "description": "When `file` becomes null (external clear), the effect at line 43 calls `URL.revokeObjectURL(previewUrlRef.current)` but does NOT call `setPreviewUrl(null)`. While the component comment argues the stale state never renders because `file` being null causes the upload button to render instead of the img, this creates an internal state inconsistency: `previewUrl` state still holds a now-revoked URL. On the next re-render cycle if `file` transitions back quickly (fast file replacement), `previewUrl` could be briefly non-null and pointing to a revoked URL, causing a broken image flash. The ref cleanup path and state cleanup path are diverged.",
+      "rule": "code-review-standards.md#bug-detection-standards",
+      "fix": "In the `file` watcher effect (line 43-47), also call `setPreviewUrl(null)` after revoking the URL so state remains consistent:\n```ts\nuseEffect(() => {\n  if (!file && previewUrlRef.current) {\n    URL.revokeObjectURL(previewUrlRef.current);\n    setPreviewUrl(null);\n  }\n}, [file]);\n```"
+    },
+    {
+      "id": "BUG-002",
+      "severity": "warning",
+      "file": "apps/payments/src/features/reports/application/utils/exportSellerOrdersToExcel.ts",
+      "line": 52,
+      "title": "new Date() called on potentially invalid/empty created_at string",
+      "description": "In `buildOrderRow`, `new Date(order.created_at).toLocaleString()` will produce the string `'Invalid Date'` if `order.created_at` is an empty string or a malformed ISO string. The domain type `SellerReportOrder.created_at` is typed as `string` (not `string | null`), but if the API returns an unexpected value or empty string, the cell will contain 'Invalid Date' in the exported file without any warning. There is no guard or fallback.",
+      "rule": "code-review-standards.md#bug-detection-standards",
+      "fix": "Add a guard before constructing the Date:\n```ts\nconst dateStr = order.created_at\n  ? new Date(order.created_at).toLocaleString()\n  : '';\ntoCell(dateStr)\n```"
+    },
+    {
+      "id": "BUG-003",
+      "severity": "warning",
+      "file": "apps/payments/src/features/checkout/presentation/pages/CheckoutPageContent.tsx",
+      "line": 113,
+      "title": "Second useEffect can inadvertently reset the completed checkout flag",
+      "description": "At line 113, the effect fires whenever `groups.length` or `hasCompletedCheckout` changes. The condition `groups.length > 0 && hasCompletedCheckout && !cartCleared.current` was intended to reset the flag if the user navigated away and came back with a non-empty cart. However, `cartCleared.current` is a ref that persists only for the current component lifetime. If the component unmounts and remounts (e.g., navigating away and back), `cartCleared.current` is reset to `false` on the new mount, meaning this effect WILL fire and call `writeCompletedCheckoutFlag(false)` — clearing the session flag — even if the cart cookie was already cleared. This causes the completed checkout screen to not show on re-mount until cart cookie change is detected, creating a race between the cookie being cleared and the component reading the session flag.",
+      "rule": "code-review-standards.md#bug-detection-standards",
+      "fix": "Re-evaluate whether this cleanup effect is needed. If intentional, consider adding an additional condition or documentation explaining the lifecycle contract. At minimum, the second effect should be a no-op when `cartCleared.current` is false on re-mount after cookie was already cleared."
+    },
+    {
+      "id": "BUG-004",
+      "severity": "warning",
+      "file": "apps/payments/src/app/api/checkout/payment-methods/route.ts",
+      "line": 154,
+      "title": "validateStock returns true (has issues) when product belongs to DIFFERENT seller",
+      "description": "In `validateStock`, the condition at line 161 returns `true` (stock issue) when `product.seller_id !== sellerId`. This is used as a security guard: if a product doesn't belong to the expected seller, it's treated as a stock issue. However, this silently suppresses the payment methods response (`methods: []`) rather than returning an explicit error. A malicious client constructing an items payload with mixed-seller product IDs would receive `hasStockIssues: true` with an empty methods array — which is the correct outcome (no payment methods disclosed), but the client receives no indication of why. This is by design per the checkout-stock-integrity rule, but worth noting as a potential confusion source for debugging real stock issues vs. mis-matched seller attacks.",
+      "rule": "code-review-standards.md#bug-detection-standards",
+      "fix": "This is intentional security behavior per the checkout-stock-integrity rule. Consider adding a server-side log (not visible to clients) distinguishing stock issues from seller mismatch for debugging purposes."
+    },
+    {
+      "id": "BUG-005",
+      "severity": "suggestion",
+      "file": "scripts/seed-moonfest.mjs",
+      "line": 462,
+      "title": "No null/undefined guard on insert response array access",
+      "description": "At line 462, `ev[0].id` accesses the first element of the array returned by `insert('events', EVENT)`. The `insert` function returns `res.json()` which is typed as `any`. If Supabase returns an empty array (e.g., due to RLS rules or misconfiguration), `ev[0]` is `undefined` and `.id` will throw a TypeError. Similarly, `p[0].id` at line 522 and `method[0].id` at line 551 have the same issue.",
+      "rule": "code-review-standards.md#bug-detection-standards",
+      "fix": "Add guards before array access:\n```js\nif (!ev || ev.length === 0) throw new Error('Event insert returned no rows');\neventId = ev[0].id;\n```\nApply the same pattern to `p[0].id` and `method[0].id`."
+    },
+    {
+      "id": "BUG-006",
+      "severity": "suggestion",
+      "file": "apps/payments/src/features/payment-methods/application/hooks/useAutoSavePaymentMethod.ts",
+      "line": 50,
+      "title": "Debounced save may fire after unmount if component unmounts during debounce window",
+      "description": "The cleanup `useEffect` at line 99 clears the debounce timer on unmount. However, the `mutationRef.current.mutate(...)` call (line 49) uses a stored reference to the mutation object. If the component unmounts during the 500ms debounce window and the cleanup fires AFTER `setTimeout` has already been cleared (race), the saved `mutate` callback could still be called. In practice React's cleanup ordering prevents this, but the `onSuccess` callback at line 51 calls `setSaveStatus('saved')` on a potentially unmounted component. TanStack Query's `useMutation` does not automatically abort on unmount like `useQuery`.",
+      "rule": "code-review-standards.md#bug-detection-standards",
+      "fix": "The unmount cleanup at line 99 is correctly placed and should prevent the race in practice. However, consider adding a mounted ref guard in the mutation callbacks:\n```ts\nconst mountedRef = useRef(true);\nuseEffect(() => { return () => { mountedRef.current = false; }; }, []);\n// In triggerSave callbacks:\nonSuccess: () => { if (mountedRef.current) setSaveStatus('saved'); },\nonError: () => { if (mountedRef.current) setSaveStatus('idle'); },\n```"
+    },
+    {
+      "id": "BUG-007",
+      "severity": "info",
+      "file": "apps/payments/src/features/checkout/presentation/pages/CheckoutPageContent.tsx",
+      "line": 87,
+      "title": "Error message extraction falls through to error.message on non-Error objects",
+      "description": "At lines 88-90, the error message extraction first checks `error instanceof Error`, then uses `(error as { message?: string })?.message ?? t('errorOccurred')`. This is a safe pattern, but the double `.message` access (once via the Error branch and once via the cast) is slightly redundant. The fallback is correctly handled. No runtime bug, just a minor readability note.",
+      "rule": "code-review-standards.md#bug-detection-standards",
+      "fix": "No action required — the pattern is safe. Could be simplified to:\n```ts\nconst message = error instanceof Error ? error.message : t('errorOccurred');\n```"
+    },
+    {
+      "id": "BUG-008",
+      "severity": "info",
+      "file": "packages/shared/src/providers/ApiAuthBootstrap.tsx",
+      "line": 67,
+      "title": "Login URL construction may produce double-slash for relative authHostUrl paths",
+      "description": "At line 67, when `authHostUrl` starts with `/` (e.g. `/auth`), the `base` is set to `authHostUrl` directly. The `loginUrl` is built as `${globalThis.location.origin}${base}${loginPath}`. If `authHostUrl` is `/auth` and `loginPath` is `/en/login?returnTo=...`, the final URL is `http://origin/auth/en/login?returnTo=...` which is correct. However, if `authHostUrl` does NOT start with `/` and is also not an absolute URL (e.g. `auth`), `base` becomes `/auth` (prepending slash), which is correct. The logic appears safe but the string concatenation approach for URL construction is error-prone compared to using the URL constructor. This is informational.",
+      "rule": "code-review-standards.md#bug-detection-standards",
+      "fix": "Consider using `new URL()` constructor for URL assembly to avoid potential double-slash or malformed URL edge cases."
+    },
+    {
+      "id": "BUG-009",
+      "severity": "info",
+      "file": "apps/payments/src/features/reports/presentation/pages/SellerReportsPage.tsx",
+      "line": 24,
+      "title": "currencies memo filters with Boolean but currency is string - falsy empty string handled correctly",
+      "description": "At line 24, `.filter(Boolean)` on `orders.map(o => o.currency)` correctly removes any null/undefined/empty string currencies before deduplication. The `SellerReportOrder` type defines `currency` as `string` (not nullable), so this filter is a defensive guard. No bug — this is safe and correct.",
+      "rule": "code-review-standards.md#bug-detection-standards",
+      "fix": "No action required."
+    }
+  ],
+  "summary": {
+    "critical": 0,
+    "warning": 4,
+    "suggestion": 2,
+    "info": 3
+  }
+}

@@ -37,6 +37,7 @@
     "paymentMethods": "Metodos de Pago",
     "sales": "Ventas",
     "assigned": "Items Asignados",
+    "reports": "Mis Reportes",
     "collapse": "Colapsar barra lateral",
     "expand": "Expandir barra lateral"
   },
@@ -240,6 +241,49 @@
     "removeBlock": "Eliminar bloque",
     "removeField": "Eliminar campo",
     "imageUnavailable": "Imagen no disponible"
+  },
+  "sellerReports": {
+    "title": "Mi Reporte de Ventas",
+    "subtitle": "Consulta y exporta tu historial de ventas",
+    "loading": "Cargando ordenes...",
+    "error": "Error al cargar las ordenes. Intentalo de nuevo.",
+    "exportExcel": "Exportar a Excel",
+    "exporting": "Exportando...",
+    "totalOrders": "{count} {count, plural, one {orden} other {ordenes}}",
+    "noResults": "Ninguna orden coincide con los filtros seleccionados",
+    "filters": {
+      "dateFrom": "Desde",
+      "dateTo": "Hasta",
+      "status": "Estado",
+      "allStatuses": "Todos los estados",
+      "currency": "Moneda",
+      "allCurrencies": "Todas las monedas",
+      "amountMin": "Monto minimo",
+      "amountMax": "Monto maximo",
+      "clearFilters": "Limpiar filtros"
+    },
+    "status": {
+      "pending": "Pendiente",
+      "awaiting_payment": "En espera de pago",
+      "pending_verification": "Pendiente de verificacion",
+      "evidence_requested": "Evidencia solicitada",
+      "approved": "Aprobado",
+      "rejected": "Rechazado",
+      "expired": "Expirado"
+    },
+    "table": {
+      "orderId": "ID de orden",
+      "date": "Fecha",
+      "status": "Estado",
+      "buyer": "Comprador",
+      "product": "Producto",
+      "amount": "Monto",
+      "currency": "Moneda",
+      "transferNumber": "Transferencia #",
+      "receipt": "Comprobante",
+      "hasReceipt": "Ver",
+      "noReceipt": "—"
+    }
   },
   "common": {
     "loading": "Cargando...",

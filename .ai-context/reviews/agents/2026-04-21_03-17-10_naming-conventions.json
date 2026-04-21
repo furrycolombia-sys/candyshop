@@ -1,0 +1,29 @@
+{
+  "agent": "naming-conventions",
+  "review_id": "2026-04-21_03-17-10",
+  "outputFile": ".ai-context/reviews/agents/2026-04-21_03-17-10_naming-conventions.json",
+  "scope": "apps/admin/src/features/reports/",
+  "issues": [
+    {
+      "id": "NAME-001",
+      "severity": "warning",
+      "file": "apps/admin/src/features/reports/presentation/components/ReportTable.tsx",
+      "line": 10,
+      "title": "Local constant uses SCREAMING_SNAKE_CASE instead of camelCase",
+      "description": "ORDER_ID_PREVIEW_LENGTH is a local (non-exported) constant. Per naming conventions, local constants should use camelCase, not SCREAMING_SNAKE_CASE.",
+      "rule": "naming-conventions.md#constants",
+      "fix": "Rename to orderIdPreviewLength"
+    },
+    {
+      "id": "NAME-002",
+      "severity": "warning",
+      "file": "apps/admin/src/features/reports/presentation/pages/ReportsPage.tsx",
+      "line": 35,
+      "title": "Local constant uses SCREAMING_SNAKE_CASE instead of camelCase",
+      "description": "ISO_DATE_LENGTH is a local constant defined inside a function. Per naming conventions, local constants should use camelCase.",
+      "rule": "naming-conventions.md#constants",
+      "fix": "Rename to isoDateLength"
+    }
+  ],
+  "summary": { "critical": 0, "warning": 2, "suggestion": 0, "info": 0 }
+}

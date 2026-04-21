@@ -1,0 +1,139 @@
+{
+  "agent": "testing",
+  "review_id": "2026-04-21_03-17-10",
+  "outputFile": ".ai-context/reviews/agents/2026-04-21_03-17-10_testing.json",
+  "scope": "apps/admin/src/features/reports/",
+  "timestamp": "2026-04-21T03:17:10Z",
+  "issues": [
+    {
+      "id": "TEST-001",
+      "severity": "critical",
+      "file": "apps/admin/src/features/reports/presentation/pages/ReportsPage.tsx",
+      "line": 15,
+      "title": "Missing unit test file for ReportsPage component",
+      "description": "ReportsPage component has no corresponding .test.tsx file. This is a main page component that handles loading states, error states, filter changes, and export functionality - all critical for testing.",
+      "rule": "testing.md#unit-tests-required",
+      "fix": "Create apps/admin/src/features/reports/presentation/pages/ReportsPage.test.tsx with tests for: loading state, error state, filter change propagation, export button state (enabled/disabled), export action."
+    },
+    {
+      "id": "TEST-002",
+      "severity": "critical",
+      "file": "apps/admin/src/features/reports/presentation/components/ReportFiltersBar.tsx",
+      "line": 17,
+      "title": "Missing unit test file for ReportFiltersBar component",
+      "description": "ReportFiltersBar is a complex filter component with multiple inputs (date range, status select, currency select, amount range, clear button). It has no unit tests despite having tid() attributes.",
+      "rule": "testing.md#unit-tests-required",
+      "fix": "Create apps/admin/src/features/reports/presentation/components/ReportFiltersBar.test.tsx with tests for: date range filter changes, status filter changes, currency filter changes, amount range filter changes, clear button functionality, callback invocation."
+    },
+    {
+      "id": "TEST-003",
+      "severity": "critical",
+      "file": "apps/admin/src/features/reports/presentation/components/ReportTable.tsx",
+      "line": 16,
+      "title": "Missing unit test file for ReportTable component",
+      "description": "ReportTable is a data display component with complex data transformation logic (displaying multiple items per order, formatting currencies and dates, status badges). No unit tests exist.",
+      "rule": "testing.md#unit-tests-required",
+      "fix": "Create apps/admin/src/features/reports/presentation/components/ReportTable.test.tsx with tests for: empty state rendering, order rendering with multiple items, order rendering without items, currency formatting, date formatting, receipt link rendering."
+    },
+    {
+      "id": "TEST-004",
+      "severity": "warning",
+      "file": "apps/admin/src/features/reports/presentation/components/OrderStatusBadge.tsx",
+      "line": 22,
+      "title": "Missing unit test file for OrderStatusBadge component",
+      "description": "OrderStatusBadge has complex conditional styling logic (STATUS_COLOR_MAP with multiple status types) but no unit tests. Also lacks tid() attribute even though it's used in the table.",
+      "rule": "testing.md#unit-tests-required",
+      "fix": "Create apps/admin/src/features/reports/presentation/components/OrderStatusBadge.test.tsx with tests for all status types in STATUS_COLOR_MAP. Add tid() attribute for E2E testability."
+    },
+    {
+      "id": "TEST-005",
+      "severity": "critical",
+      "file": "apps/admin/src/features/reports/application/hooks/useReportOrders.ts",
+      "line": 11,
+      "title": "Missing unit test file for useReportOrders hook",
+      "description": "useReportOrders is a custom hook combining useQuery and useQueryStates. It has no unit tests for state management, filter handling, or query execution.",
+      "rule": "testing.md#unit-tests-required",
+      "fix": "Create apps/admin/src/features/reports/application/hooks/useReportOrders.test.ts with tests for: filter state initialization, filter updates, query execution, loading/error states, data transformation."
+    },
+    {
+      "id": "TEST-006",
+      "severity": "critical",
+      "file": "apps/admin/src/features/reports/application/utils/exportOrdersToExcel.ts",
+      "line": 41,
+      "title": "Missing unit test file for exportOrdersToExcel utility",
+      "description": "exportOrdersToExcel has complex XML generation logic with XML escaping, cell formatting, and order/item flattening. No unit tests for this critical business logic.",
+      "rule": "testing.md#unit-tests-required",
+      "fix": "Create apps/admin/src/features/reports/application/utils/exportOrdersToExcel.test.ts with tests for: XML escaping (special characters), cell generation, number cell generation, single-item orders, multi-item orders, orders without items, header row generation."
+    },
+    {
+      "id": "TEST-007",
+      "severity": "warning",
+      "file": "apps/admin/src/features/reports/presentation/components/ReportTable.tsx",
+      "line": 4,
+      "title": "Inconsistent tid() import path",
+      "description": "ReportTable imports tid from 'shared' while ReportsPage and ReportFiltersBar import from '@/shared/infrastructure/config/tid'. This inconsistency could lead to module resolution issues.",
+      "rule": "testing.md#consistent-imports",
+      "fix": "Change 'import { tid } from \"shared\";' to 'import { tid } from \"@/shared/infrastructure/config/tid\";' for consistency with other components in the feature."
+    },
+    {
+      "id": "TEST-008",
+      "severity": "warning",
+      "file": "apps/admin/src/features/reports/presentation/components/OrderStatusBadge.tsx",
+      "line": 22,
+      "title": "Missing test ID on OrderStatusBadge component",
+      "description": "OrderStatusBadge component has no tid() attribute. While E2E tests can still target it through the table row, granular testing would benefit from a dedicated test ID.",
+      "rule": "testing.md#tid-usage",
+      "fix": "Add {...tid('order-status-badge')} or status-specific tid like {...tid(`order-status-${status}`)} to the span element."
+    },
+    {
+      "id": "TEST-009",
+      "severity": "suggestion",
+      "file": "apps/admin/e2e/reports.spec.ts",
+      "line": 261,
+      "title": "E2E test uses getByText() for data visibility",
+      "description": "Line 261 uses page.getByText(TEST_ORDER.transfer_number) to verify the order is displayed. While this works, it could be more resilient with a dedicated test ID on the transfer number cell.",
+      "rule": "testing.md#e2e-selectors",
+      "fix": "Add tid() to transfer number cell in ReportTable, then update E2E test to use getByTestId() instead of getByText() for better resilience to formatting changes."
+    },
+    {
+      "id": "TEST-010",
+      "severity": "info",
+      "file": "apps/admin/e2e/reports.spec.ts",
+      "line": 96,
+      "title": "E2E test quality is good - follows best practices",
+      "description": "The E2E test follows testing rules well: uses test IDs consistently, no toContainText/toHaveText, proper async handling with waitForTimeout and DEBOUNCE_WAIT_MS, ARIA/data attributes for state assertions. Good coverage of happy path, filters, export, and access control.",
+      "rule": "testing.md#e2e-best-practices",
+      "fix": "No action required. E2E test is well-structured. Consider these enhancements: 1) Add granular test IDs to table rows and individual cells for more specific assertions. 2) Test empty state explicitly. 3) Add edge case tests for malformed data."
+    }
+  ],
+  "summary": {
+    "critical": 6,
+    "warning": 2,
+    "suggestion": 1,
+    "info": 1,
+    "total": 10
+  },
+  "coverage": {
+    "components_analyzed": 4,
+    "components_with_tests": 0,
+    "components_with_test_ids": 3,
+    "hooks_analyzed": 1,
+    "hooks_with_tests": 0,
+    "utils_analyzed": 1,
+    "utils_with_tests": 0,
+    "e2e_test_quality": "good"
+  },
+  "recommendations": {
+    "immediate": [
+      "Create unit tests for all components, hooks, and utilities",
+      "Fix import inconsistency in ReportTable.tsx",
+      "Add test ID to OrderStatusBadge component"
+    ],
+    "short_term": [
+      "Add granular test IDs to table rows and cells",
+      "Enhance E2E tests with more edge cases (empty states, malformed data)",
+      "Add unit tests for error boundaries and error states"
+    ],
+    "testing_strategy": "The reports feature uses a solid E2E test foundation with good practices. However, it lacks unit test coverage for critical business logic (data export, filtering, state management). Priority should be: 1) Hook tests (data fetching), 2) Utility tests (export logic), 3) Component tests (UI interactions)."
+  }
+}

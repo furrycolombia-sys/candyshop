@@ -1,0 +1,330 @@
+{
+  "agent": "pattern-discovery",
+  "review_id": "2026-04-21_03-17-10",
+  "outputFile": ".ai-context/reviews/agents/2026-04-21_03-17-10_pattern-discovery.json",
+  "scope": "apps/admin/src/features/reports/",
+  "timestamp": "2026-04-21T03:17:10Z",
+  "issues": [
+    {
+      "id": "PAT-001",
+      "severity": "warning",
+      "file": "apps/admin/src/features/reports/domain/searchParams.ts",
+      "line": 9,
+      "title": "Inconsistent search param defaults across features",
+      "description": "Reports feature does not use .withDefault() on search params like audit and users features do. This means null values propagate into components instead of sensible defaults.",
+      "rule": "pattern-discovery",
+      "fix": "Add .withDefault(null) to parseAsString and parseAsFloat params, or establish a pattern: either all features use defaults or all use null. Currently: reports (no defaults), audit (uses .withDefault()), users (uses .withDefault()).",
+      "comparison": {
+        "audit": "parseAsString.withDefault(''), parseAsInteger.withDefault(0)",
+        "users": "parseAsString.withDefault(''), parseAsInteger.withDefault(1)",
+        "reports": "parseAsString, parseAsFloat (no defaults)"
+      }
+    },
+    {
+      "id": "PAT-002",
+      "severity": "warning",
+      "file": "apps/admin/src/features/reports/domain/searchParams.ts",
+      "line": 9,
+      "title": "Duplicate status enum definition",
+      "description": "ORDER_STATUS_VALUES array is defined directly in searchParams.ts as a runtime duplicate of the exported ORDER_STATUS_LIST constant from constants.ts. Creates two sources of truth.",
+      "rule": "pattern-discovery",
+      "fix": "Import ORDER_STATUS_LIST from constants.ts and use it directly: parseAsStringEnum<OrderStatus>(ORDER_STATUS_LIST)"
+    },
+    {
+      "id": "PAT-003",
+      "severity": "warning",
+      "file": "apps/admin/src/features/reports/infrastructure/reportsApi.ts",
+      "line": 17,
+      "title": "Missing Partial<ReportFilters> in function signature",
+      "description": "fetchReportOrders accepts full ReportFilters, but audit feature (similar pagination/filtering pattern) uses Partial<AuditFilters> to allow flexible filtering. Reports requires all fields to be passed.",
+      "rule": "pattern-discovery",
+      "fix": "Change signature to: fetchReportOrders(filters: Partial<ReportFilters>): Promise<ReportOrdersResponse> for consistency with audit feature pattern and flexibility."
+    },
+    {
+      "id": "PAT-004",
+      "severity": "info",
+      "file": "apps/admin/src/features/reports/application/hooks/useReportOrders.ts",
+      "line": 11,
+      "title": "Missing stale time configuration in useQuery",
+      "description": "useReportOrders does not set staleTime, unlike useAuditLog which sets STALE_TIME_MS = 30_000. This means data is immediately stale and causes unnecessary refetches.",
+      "rule": "pattern-discovery",
+      "fix": "Add staleTime configuration to useQuery: const STALE_TIME_MS = 30_000; ... staleTime: STALE_TIME_MS"
+    },
+    {
+      "id": "PAT-005",
+      "severity": "suggestion",
+      "file": "apps/admin/src/features/reports/presentation/components/ReportFiltersBar.tsx",
+      "line": 26,
+      "title": "Hardcoded filter reset object - good candidate for utility function",
+      "description": "handleClear() manually lists all 9 filter fields set to null. This is error-prone and duplicates the ReportFilters interface structure.",
+      "rule": "pattern-discovery",
+      "fix": "Create a utility: export function createEmptyFilters(): ReportFilters { return { dateFrom: null, dateTo: null, ... } }. Reuse in ReportFiltersBar and anywhere filters are reset."
+    },
+    {
+      "id": "PAT-006",
+      "severity": "info",
+      "file": "apps/admin/src/features/reports/presentation/components/OrderStatusBadge.tsx",
+      "line": 8,
+      "title": "Good pattern: Status color mapping with fallback",
+      "description": "STATUS_COLOR_MAP uses Record<string, string> with ?? MUTED_STYLE fallback. This is safe and matches RoleBadge pattern in users feature. Excellent defensive programming.",
+      "rule": "pattern-discovery",
+      "fix": null
+    },
+    {
+      "id": "PAT-007",
+      "severity": "info",
+      "file": "apps/admin/src/features/reports/presentation/components/OrderStatusBadge.tsx",
+      "line": 30,
+      "title": "Good pattern: Type-safe translation keys with as Parameters<typeof t>[0]",
+      "description": "Uses 'as Parameters<typeof t>[0]' to safely cast dynamic translation key. Better than alternatives like any or string literals.",
+      "rule": "pattern-discovery",
+      "fix": null
+    },
+    {
+      "id": "PAT-008",
+      "severity": "info",
+      "file": "apps/admin/src/features/reports/application/utils/exportOrdersToExcel.ts",
+      "line": 24,
+      "title": "Good pattern: XML escaping function for data safety",
+      "description": "escapeXml() properly escapes all 5 XML entities (&, <, >, \", '). This prevents XML injection attacks. Well-implemented security practice.",
+      "rule": "pattern-discovery",
+      "fix": null
+    },
+    {
+      "id": "PAT-009",
+      "severity": "warning",
+      "file": "apps/admin/src/features/reports/application/utils/exportOrdersToExcel.ts",
+      "line": 41,
+      "title": "Complex conditional logic in flatMap - candidate for extraction",
+      "description": "Lines 45-87 contain complex nested conditionals (if items.length === 0 vs map items). Logic is duplicated across both branches for order data, making it hard to maintain.",
+      "rule": "pattern-discovery",
+      "fix": "Extract into helper functions: function orderRowsForExport(order: ReportOrder): string[] { if (items.length === 0) {...} else {...} }. Improves readability and testability."
+    },
+    {
+      "id": "PAT-010",
+      "severity": "info",
+      "file": "apps/admin/src/features/reports/application/utils/exportOrdersToExcel.ts",
+      "line": 102,
+      "title": "Good pattern: Download helper function is reusable and well-isolated",
+      "description": "downloadExcel() is a pure function that doesn't depend on React or feature logic. Can be extracted to shared utilities and reused across features for consistency.",
+      "rule": "pattern-discovery",
+      "fix": "Consider moving downloadExcel() to shared/application/utils/ for reuse in users feature (which also exports data)."
+    },
+    {
+      "id": "PAT-011",
+      "severity": "warning",
+      "file": "apps/admin/src/features/reports/presentation/pages/ReportsPage.tsx",
+      "line": 24,
+      "title": "Filter state synchronization complexity in handleFiltersChange",
+      "description": "Lines 24-31 use Object.fromEntries() and Object.entries() to ensure null values are properly set. This is fragile and hard to reason about.",
+      "rule": "pattern-discovery",
+      "fix": "Create a type-safe filter utility: function normalizeFilters(updates: Partial<ReportFilters>): ReportFilters { return { ...emptyFilters, ...updates } }"
+    },
+    {
+      "id": "PAT-012",
+      "severity": "suggestion",
+      "file": "apps/admin/src/features/reports/presentation/pages/ReportsPage.tsx",
+      "line": 22,
+      "title": "Currency deduplication on every render",
+      "description": "Line 22: [...new Set(orders.map((o) => o.currency))].sort() runs on every render. Should be memoized to avoid recalculation.",
+      "rule": "pattern-discovery",
+      "fix": "Use useMemo: const currencies = useMemo(() => [...new Set(orders.map(o => o.currency))].sort(), [orders])"
+    },
+    {
+      "id": "PAT-013",
+      "severity": "info",
+      "file": "apps/admin/src/features/reports/presentation/pages/ReportsPage.tsx",
+      "line": 45,
+      "title": "Good pattern: Conditional render function for loading/error states",
+      "description": "renderContent() function clearly separates concerns: loading, error, success states. Makes template cleaner and logic easier to test.",
+      "rule": "pattern-discovery",
+      "fix": null
+    },
+    {
+      "id": "PAT-014",
+      "severity": "info",
+      "file": "apps/admin/src/features/reports/presentation/pages/ReportsPage.tsx",
+      "line": 1,
+      "title": "Good pattern: Client component clearly marked with 'use client'",
+      "description": "Proper Next.js 13+ App Router pattern. All presentation/page files correctly mark interactivity boundary.",
+      "rule": "pattern-discovery",
+      "fix": null
+    },
+    {
+      "id": "PAT-015",
+      "severity": "warning",
+      "file": "apps/admin/src/features/reports/index.ts",
+      "line": 1,
+      "title": "Minimal feature barrel export - missing opportunities",
+      "description": "Index file only exports ReportsPage. Other features (audit, users) export multiple utilities and components from their index files for easier imports.",
+      "rule": "pattern-discovery",
+      "fix": "Consider exporting public types, constants, hooks: export { ReportsPage, ORDER_STATUS_LIST, useReportOrders, type ReportOrder, type ReportFilters }"
+    },
+    {
+      "id": "PAT-016",
+      "severity": "info",
+      "file": "apps/admin/src/features/reports/presentation/components/ReportTable.tsx",
+      "line": 10,
+      "title": "Good pattern: Magic number extracted to named constant",
+      "description": "ORDER_ID_PREVIEW_LENGTH = 8 clearly documents intent. Better than hardcoded 8 in slice(0, 8).",
+      "rule": "pattern-discovery",
+      "fix": null
+    },
+    {
+      "id": "PAT-017",
+      "severity": "warning",
+      "file": "apps/admin/src/features/reports/presentation/components/ReportTable.tsx",
+      "line": 106,
+      "title": "Missing key prop warning - item.id used but might not be unique",
+      "description": "Line 106 uses item.id as key in map(), but items within an order may not have globally unique IDs. Should use order.id + item index or compound key.",
+      "rule": "pattern-discovery",
+      "fix": "Use compound key: key={`${order.id}-${item.id}`} to ensure uniqueness across renders."
+    },
+    {
+      "id": "PAT-018",
+      "severity": "suggestion",
+      "file": "apps/admin/src/features/reports/presentation/components/ReportTable.tsx",
+      "line": 74,
+      "title": "Date formatting repeated - candidate for utility extraction",
+      "description": "new Date(order.created_at).toLocaleDateString() used in ReportTable and new Date(order.created_at).toLocaleString() in exportOrdersToExcel. Should be unified utility.",
+      "rule": "pattern-discovery",
+      "fix": "Create: export function formatOrderDate(date: string): string { return new Date(date).toLocaleDateString() }. Use everywhere."
+    },
+    {
+      "id": "PAT-019",
+      "severity": "info",
+      "file": "apps/admin/src/features/reports/presentation/components/ReportFiltersBar.tsx",
+      "line": 41,
+      "title": "Good pattern: Semantic HTML with accessibility attributes",
+      "description": "Uses proper <label>, <input type='date'>, <select> with tid() attributes for testing. Follows web standards.",
+      "rule": "pattern-discovery",
+      "fix": null
+    },
+    {
+      "id": "PAT-020",
+      "severity": "warning",
+      "file": "apps/admin/src/features/reports/infrastructure/reportsApi.ts",
+      "line": 3,
+      "title": "No error handling in fetch - could mask network issues",
+      "description": "fetchReportOrders doesn't log or provide details on failed responses. Generic 'Failed to fetch report orders' hides root cause.",
+      "rule": "pattern-discovery",
+      "fix": "Add error details: throw new Error(`Failed to fetch report orders: ${response.status} ${response.statusText}`)"
+    }
+  ],
+  "patterns_found": [
+    "Good: Status color mapping with fallback to MUTED_STYLE (PAT-006)",
+    "Good: Type-safe translation keys with Parameters<typeof t>[0] casting (PAT-007)",
+    "Good: XML escaping for data safety in exports (PAT-008)",
+    "Good: Download helper function is reusable and isolated (PAT-010)",
+    "Good: Conditional render function for state handling (PAT-013)",
+    "Good: Client component clearly marked with 'use client' (PAT-014)",
+    "Good: Magic number extracted to named constant (PAT-016)",
+    "Good: Semantic HTML with accessibility attributes (PAT-019)",
+    "Anti-pattern: Duplicate enum definitions (constants vs searchParams) (PAT-002)",
+    "Anti-pattern: Complex conditional logic in flatMap (PAT-009)",
+    "Anti-pattern: Object.fromEntries() for filter normalization (PAT-011)",
+    "Inconsistency: Search params lack .withDefault() like other features (PAT-001)",
+    "Inconsistency: fetchReportOrders requires full ReportFilters vs Partial in audit (PAT-003)",
+    "Inconsistency: No staleTime set in useReportOrders (PAT-004)",
+    "Opportunity: Feature barrel export is minimal (PAT-015)",
+    "Opportunity: Hardcoded filter reset object (PAT-005)",
+    "Opportunity: Currency dedup not memoized (PAT-012)",
+    "Opportunity: Date formatting logic repeated (PAT-018)",
+    "Risk: Missing error details in fetch (PAT-020)"
+  ],
+  "rules_to_create": [
+    {
+      "rule_id": "search-params-defaults",
+      "name": "Consistent Search Parameter Defaults",
+      "description": "All feature search params should use .withDefault() to provide sensible defaults or explicitly use null across the codebase",
+      "affected_files": ["apps/admin/src/features/*/domain/searchParams.ts"]
+    },
+    {
+      "rule_id": "no-duplicate-enums",
+      "name": "No Duplicate Enum Definitions",
+      "description": "Enum/constant lists should be defined once in constants.ts and imported everywhere else to maintain single source of truth",
+      "affected_files": [
+        "apps/admin/src/features/reports/domain/searchParams.ts"
+      ]
+    },
+    {
+      "rule_id": "partial-filters-api",
+      "name": "API Functions Accept Partial Filter Types",
+      "description": "Infrastructure layer functions that accept filter objects should use Partial<T> to allow flexible querying",
+      "affected_files": ["apps/admin/src/features/*/infrastructure/*Api.ts"]
+    },
+    {
+      "rule_id": "stale-time-configuration",
+      "name": "useQuery Must Configure Stale Time",
+      "description": "All useQuery hooks should set staleTime to prevent unnecessary refetches. 30s is typical for data views.",
+      "affected_files": ["apps/admin/src/features/*/application/hooks/use*.ts"]
+    },
+    {
+      "rule_id": "extract-export-utilities",
+      "name": "Export/Download Utilities Should Be in Shared",
+      "description": "Generic file download and export functions belong in shared/application/utils/ for reuse across features",
+      "affected_files": [
+        "apps/admin/src/features/*/application/utils/export*.ts"
+      ]
+    },
+    {
+      "rule_id": "feature-barrel-exports",
+      "name": "Feature Barrel Export Should Include Public API",
+      "description": "Feature index.ts should export key types, constants, and hooks for easier importing",
+      "affected_files": ["apps/admin/src/features/*/index.ts"]
+    }
+  ],
+  "comparison_with_features": {
+    "audit_vs_reports": {
+      "similarities": [
+        "Both use domain/types.ts, domain/constants.ts, domain/searchParams.ts pattern",
+        "Both use application/hooks pattern with useQuery",
+        "Both separate infrastructure queries from application hooks",
+        "Both use presentation/components and presentation/pages pattern"
+      ],
+      "differences": [
+        "Audit uses Partial<AuditFilters>, Reports uses full ReportFilters",
+        "Audit sets staleTime: 30_000, Reports does not",
+        "Audit uses .withDefault() in searchParams, Reports does not",
+        "Audit has more complex filtering logic (SQL safety checks)",
+        "Reports duplicates enum in searchParams vs importing from constants"
+      ]
+    },
+    "users_vs_reports": {
+      "similarities": [
+        "Both export utilities (exportCsv vs exportOrdersToExcel)",
+        "Both have status/role badge components with color mapping",
+        "Both use same Clean Architecture layers"
+      ],
+      "differences": [
+        "Users has duplicate export files (export-csv.ts, exportCsv.ts) - potential cleanup opportunity",
+        "Users feature is much larger (more hooks, utils, components)",
+        "Reports focuses on table export, Users focuses on permission management"
+      ]
+    }
+  },
+  "architectural_observations": {
+    "clean_architecture_adherence": "EXCELLENT - Clear separation: domain/types -> domain/constants -> domain/searchParams -> infrastructure -> application/hooks -> presentation/components/pages",
+    "layering_consistency": "GOOD - All features follow consistent layering, but could be stricter about Partial types in infrastructure",
+    "type_safety": "VERY_GOOD - Uses TypeScript union types, interfaces, and type-safe casting in translations",
+    "error_handling": "NEEDS_IMPROVEMENT - Missing error details in API fetch, generic error messages",
+    "testing": "NOT_VISIBLE_IN_REPORTS_FEATURE - No test files in reports (unlike audit, users, dashboard which have .test files)",
+    "accessibility": "GOOD - Proper semantic HTML, labels, testing IDs (tid), ARIA-friendly components"
+  },
+  "summary": {
+    "critical": 0,
+    "warning": 7,
+    "suggestion": 3,
+    "info": 10,
+    "total_issues": 20,
+    "key_findings": [
+      "Reports feature lacks test files (no .test.ts/.test.tsx) unlike all other features - recommend adding tests",
+      "Inconsistent search param defaults create friction compared to audit/users patterns - should standardize",
+      "Duplicate ORDER_STATUS_VALUES in searchParams.ts violates DRY principle - import from constants instead",
+      "Missing staleTime in useReportOrders causes unnecessary data refetches - add configuration",
+      "Complex filter reset logic is error-prone - create utility function for consistency",
+      "Date formatting logic is scattered - consolidate into shared utility",
+      "Feature barrel export is minimal - expose public API for better ergonomics"
+    ]
+  }
+}

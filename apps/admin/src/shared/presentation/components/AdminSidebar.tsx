@@ -2,6 +2,7 @@
 
 import { matchesPermissions, useCurrentUserPermissions } from "auth/client";
 import {
+  BarChart2,
   ChevronLeft,
   ChevronRight,
   FileText,
@@ -61,6 +62,12 @@ const NAV_SECTIONS: readonly NavSection[] = [
         href: "/audit",
         icon: FileText,
         required: ["audit.read"],
+      },
+      {
+        key: "salesReport" as const,
+        href: "/reports",
+        icon: BarChart2,
+        required: ["admin.reports"],
       },
     ],
   },
