@@ -8,6 +8,8 @@ import {
   createRestPath,
 } from "@/shared/infrastructure/adminRestClient";
 
+const JSON_CONTENT_TYPE = "application/json";
+
 type OrderRow = {
   id: string;
   created_at: string;
@@ -17,15 +19,20 @@ type OrderRow = {
   transfer_number: string | null;
   receipt_url: string | null;
   user_id: string;
-  user_profiles: { email: string; display_name: string | null } | null;
   order_items: Array<{
     id: string;
     product_id: string;
     quantity: number;
     unit_price: number;
     currency: string;
-    products: { name: string } | null;
+    products: { name_en: string } | null;
   }>;
+};
+
+type UserProfileRow = {
+  id: string;
+  email: string;
+  display_name: string | null;
 };
 
 function buildQuery(
@@ -35,7 +42,7 @@ function buildQuery(
   const query: Record<string, string> = {
     seller_id: `eq.${sellerId}`,
     select:
-      "id,created_at,payment_status,total,currency,transfer_number,receipt_url,user_id,user_profiles(email,display_name),order_items(id,product_id,quantity,unit_price,currency,products(name))",
+      "id,created_at,payment_status,total,currency,transfer_number,receipt_url,user_id,order_items(id,product_id,quantity,unit_price,currency,products(name_en))",
     order: "created_at.desc",
   };
 
@@ -79,7 +86,11 @@ function buildQuery(
   return query;
 }
 
-function mapOrder(row: OrderRow): SellerReportOrder {
+function mapOrder(
+  row: OrderRow,
+  profileMap: Map<string, UserProfileRow>,
+): SellerReportOrder {
+  const profile = profileMap.get(row.user_id);
   return {
     id: row.id,
     created_at: row.created_at,
@@ -89,12 +100,12 @@ function mapOrder(row: OrderRow): SellerReportOrder {
     transfer_number: row.transfer_number,
     receipt_url: row.receipt_url,
     buyer_id: row.user_id,
-    buyer_email: row.user_profiles?.email ?? "",
-    buyer_display_name: row.user_profiles?.display_name ?? null,
+    buyer_email: profile?.email ?? "",
+    buyer_display_name: profile?.display_name ?? null,
     items: (row.order_items ?? []).map((item) => ({
       id: item.id,
       product_id: item.product_id,
-      product_name: item.products?.name ?? item.product_id,
+      product_name: item.products?.name_en ?? item.product_id,
       quantity: item.quantity,
       unit_price: item.unit_price,
       currency: item.currency,
@@ -117,10 +128,26 @@ export async function GET(request: Request) {
     const query = buildQuery(user.id, searchParams);
     const path = createRestPath("orders", query);
     const rows = await adminFetchJson<OrderRow[]>(path, {
-      headers: { Accept: "application/json" },
+      headers: { Accept: JSON_CONTENT_TYPE },
     });
 
-    const orders = rows.map((row) => mapOrder(row));
+    // Fetch buyer profiles separately (no FK from orders.user_id to user_profiles)
+    const profileMap = new Map<string, UserProfileRow>();
+    if (rows.length > 0) {
+      const userIds = [...new Set(rows.map((r) => r.user_id))];
+      const profilesPath = createRestPath("user_profiles", {
+        id: `in.(${userIds.join(",")})`,
+        select: "id,email,display_name",
+      });
+      const profiles = await adminFetchJson<UserProfileRow[]>(profilesPath, {
+        headers: { Accept: JSON_CONTENT_TYPE },
+      });
+      for (const p of profiles) {
+        profileMap.set(p.id, p);
+      }
+    }
+
+    const orders = rows.map((row) => mapOrder(row, profileMap));
 
     return NextResponse.json({ orders, total: orders.length });
   } catch (error) {
