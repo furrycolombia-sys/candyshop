@@ -188,7 +188,7 @@ describe("updateOrderStatus", () => {
     });
   });
 
-  it("passes null for seller_note when not provided", async () => {
+  it("passes undefined for seller_note when not provided", async () => {
     supabase.rpc.mockResolvedValue({ error: null });
 
     await updateOrderStatus(
@@ -200,7 +200,7 @@ describe("updateOrderStatus", () => {
     expect(supabase.rpc).toHaveBeenCalledWith("update_order_status", {
       p_order_id: "order-1",
       p_new_status: "approved",
-      p_seller_note: null,
+      p_seller_note: undefined,
     });
   });
 

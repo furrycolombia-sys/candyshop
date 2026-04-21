@@ -8,7 +8,6 @@ export function useProductTemplates() {
   const supabase = useSupabase();
 
   return useQuery({
-    // eslint-disable-next-line @tanstack/query/exhaustive-deps -- supabase client is stable (memoized)
     queryKey: [TEMPLATES_QUERY_KEY],
     queryFn: () => fetchActiveTemplates(supabase),
     staleTime: 300_000,

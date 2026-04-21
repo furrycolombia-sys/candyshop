@@ -125,7 +125,6 @@ export function SectionCard({
     }
   }
 
-  /* eslint-disable react-hooks/refs -- useController field refs must be spread during render for react-hook-form binding */
   return (
     <div
       ref={dragProvided.innerRef}
@@ -200,7 +199,7 @@ export function SectionCard({
           ariaLabel={t("removeSection", { number: sectionIndex + 1 })}
         />
       </div>
-      {/* eslint-enable react-hooks/refs */}
+      {}
 
       {/* Section items (collapsible) — type-specific rendering */}
       {!isCollapsed && renderItems()}
