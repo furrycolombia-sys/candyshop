@@ -62,7 +62,7 @@
     "outOfStock": "Algunos articulos ya no estan disponibles",
     "stockError": "No se pudo reservar el stock de algunos articulos",
     "items": "{count} {count, plural, one {articulo} other {articulos}}",
-    "subtotal": "Subtotal",
+    "subtotal": "Total",
     "total": "Total",
     "allSubmitted": "Todos los pagos enviados!",
     "goToOrders": "Ver Mis Ordenes",
