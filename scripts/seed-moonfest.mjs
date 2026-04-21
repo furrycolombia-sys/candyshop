@@ -79,6 +79,8 @@ const NEQUI_PAYMENT_METHOD = {
   name_en: "Nequi",
   name_es: "Nequi",
   is_active: true,
+  requires_receipt: true,
+  requires_transfer_number: true,
   sort_order: 0,
   display_blocks: [
     {
@@ -97,21 +99,12 @@ const NEQUI_PAYMENT_METHOD = {
       id: "nequi-instructions",
       type: "text",
       content_en:
-        "After sending the payment, fill in the fields below and attach a screenshot of the transaction.",
+        "After sending the payment, fill in the fields below and upload a screenshot of the transaction.",
       content_es:
-        "Despues de enviar el pago, completa los campos a continuacion y adjunta una captura de pantalla de la transaccion.",
+        "Despues de enviar el pago, completa los campos a continuacion y sube una captura de pantalla del comprobante.",
     },
   ],
   form_fields: [
-    {
-      id: "transaction_photo",
-      type: "file",
-      label_en: "Transaction screenshot",
-      label_es: "Captura de pantalla de la transaccion",
-      placeholder_en: "Upload a photo or screenshot of the Nequi transfer",
-      placeholder_es: "Sube una foto o captura del comprobante de Nequi",
-      required: true,
-    },
     {
       id: "cedula",
       type: "text",

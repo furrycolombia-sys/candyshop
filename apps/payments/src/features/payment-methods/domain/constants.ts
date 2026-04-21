@@ -1,4 +1,4 @@
-import { AlignLeft, Hash, Mail, Type, Upload } from "lucide-react";
+import { AlignLeft, Hash, Mail, Type } from "lucide-react";
 
 import type { FormFieldType } from "./types";
 
@@ -11,6 +11,5 @@ export const FIELD_TYPE_ICONS: Record<FormFieldType, typeof Type> = {
   text: Type,
   email: Mail,
   number: Hash,
-  file: Upload,
   textarea: AlignLeft,
 };

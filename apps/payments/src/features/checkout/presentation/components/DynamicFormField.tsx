@@ -1,11 +1,9 @@
 "use client";
 
 import { useLocale } from "next-intl";
-import { useId, useState } from "react";
+import { useId } from "react";
 import { i18nField, tid } from "shared";
 import { cn } from "ui";
-
-import { FileInput } from "./FileInput";
 
 import type { FormField } from "@/shared/domain/PaymentMethodTypes";
 
@@ -13,7 +11,6 @@ interface DynamicFormFieldProps {
   field: FormField;
   value: string;
   onChange: (value: string) => void;
-  onFileChange?: (file: File | null) => void;
   disabled?: boolean;
   error?: string | null;
 }
@@ -22,13 +19,11 @@ export function DynamicFormField({
   field,
   value,
   onChange,
-  onFileChange,
   disabled = false,
   error,
 }: DynamicFormFieldProps) {
   const locale = useLocale();
   const inputId = useId();
-  const [fileSizeError, setFileSizeError] = useState<string | null>(null);
 
   const label = i18nField(field, "label", locale) || field.label_en;
   const placeholder = i18nField(field, "placeholder", locale) || "";
@@ -47,17 +42,6 @@ export function DynamicFormField({
           disabled={disabled}
           rows={3}
           className={cn(baseInputClass, "resize-y")}
-        />
-      );
-    }
-    if (field.type === "file") {
-      return (
-        <FileInput
-          id={inputId}
-          disabled={disabled}
-          onFileChange={onFileChange}
-          onChange={onChange}
-          onFileSizeError={setFileSizeError}
         />
       );
     }
@@ -83,9 +67,6 @@ export function DynamicFormField({
 
       {renderInput()}
 
-      {fileSizeError && (
-        <p className="text-xs text-destructive">{fileSizeError}</p>
-      )}
       {error && <p className="text-xs text-destructive">{error}</p>}
     </div>
   );
