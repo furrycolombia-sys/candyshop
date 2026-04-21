@@ -2,7 +2,6 @@
 import type { SupabaseClient } from "@/shared/domain/types";
 import { supabaseUrl } from "@/shared/infrastructure/config/environment";
 
-const AUDIT_SCHEMA = "audit";
 const JSON_CONTENT_TYPE = "application/json";
 
 /** Get the Supabase REST base URL and anon key from environment */
@@ -45,7 +44,9 @@ export async function auditRestQuery(
     headers: {
       apikey: key,
       Authorization: `Bearer ${token}`,
-      "Accept-Profile": AUDIT_SCHEMA,
+      // logged_actions_with_user is exposed in the public schema via a proxy view
+      // (migration 20260421100000_expose_audit_view_in_public.sql). PostgREST's
+      // audit schema is not exposed, so Accept-Profile: audit would cause 406.
       Accept: JSON_CONTENT_TYPE,
     },
   });
