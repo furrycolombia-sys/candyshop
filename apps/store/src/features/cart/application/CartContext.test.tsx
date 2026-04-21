@@ -28,37 +28,20 @@ vi.mock("cookies-next", () => ({
 // ---------------------------------------------------------------------------
 
 function makeCartItem(
-  overrides: Partial<CartItem> & { id: string; price_usd: number },
+  overrides: Partial<CartItem> & { id: string; price: number },
 ): Omit<CartItem, "quantity"> {
   return {
     slug: "test-slug",
     name_en: "Test Product",
     name_es: "Producto de Prueba",
-    description_en: "",
-    description_es: "",
     type: "merch",
     category: "merch",
-    price_cop: 0,
+    currency: "USD",
     max_quantity: null,
     is_active: true,
-    created_at: "2025-01-01",
-    event_id: null,
-    long_description_en: "",
-    long_description_es: "",
-    tagline_en: "",
-    tagline_es: "",
-    compare_at_price_cop: null,
-    compare_at_price_usd: null,
-    tags: [],
-    rating: null,
-    review_count: 0,
     images: [],
-    sections: [],
-    updated_at: "2025-01-01",
-    featured: false,
     seller_id: null,
     refundable: null,
-    sort_order: 0,
     ...overrides,
   } as Omit<CartItem, "quantity">;
 }
@@ -104,7 +87,7 @@ describe("CartContext", () => {
   describe("addItem", () => {
     it("adds a new item to the cart", () => {
       const { result } = renderCartHook();
-      const product = makeCartItem({ id: "p1", price_usd: 10 });
+      const product = makeCartItem({ id: "p1", price: 10 });
 
       act(() => {
         result.current.addItem(product);
@@ -117,7 +100,7 @@ describe("CartContext", () => {
 
     it("adds item with explicit quantity", () => {
       const { result } = renderCartHook();
-      const product = makeCartItem({ id: "p1", price_usd: 10 });
+      const product = makeCartItem({ id: "p1", price: 10 });
 
       act(() => {
         result.current.addItem({ ...product, quantity: 3 });
@@ -128,7 +111,7 @@ describe("CartContext", () => {
 
     it("increments quantity for existing item", () => {
       const { result } = renderCartHook();
-      const product = makeCartItem({ id: "p1", price_usd: 10 });
+      const product = makeCartItem({ id: "p1", price: 10 });
 
       act(() => {
         result.current.addItem(product);
@@ -144,7 +127,7 @@ describe("CartContext", () => {
 
     it("increments by explicit quantity for existing item", () => {
       const { result } = renderCartHook();
-      const product = makeCartItem({ id: "p1", price_usd: 10 });
+      const product = makeCartItem({ id: "p1", price: 10 });
 
       act(() => {
         result.current.addItem({ ...product, quantity: 2 });
@@ -161,7 +144,7 @@ describe("CartContext", () => {
       const { result } = renderCartHook();
       const product = makeCartItem({
         id: "p1",
-        price_usd: 10,
+        price: 10,
         max_quantity: 2,
       });
 
@@ -180,11 +163,11 @@ describe("CartContext", () => {
       const { result } = renderCartHook();
 
       act(() => {
-        result.current.addItem(makeCartItem({ id: "p1", price_usd: 10 }));
+        result.current.addItem(makeCartItem({ id: "p1", price: 10 }));
       });
 
       act(() => {
-        result.current.addItem(makeCartItem({ id: "p2", price_usd: 20 }));
+        result.current.addItem(makeCartItem({ id: "p2", price: 20 }));
       });
 
       expect(result.current.items).toHaveLength(2);
@@ -196,8 +179,8 @@ describe("CartContext", () => {
       const { result } = renderCartHook();
 
       act(() => {
-        result.current.addItem(makeCartItem({ id: "p1", price_usd: 10 }));
-        result.current.addItem(makeCartItem({ id: "p2", price_usd: 20 }));
+        result.current.addItem(makeCartItem({ id: "p1", price: 10 }));
+        result.current.addItem(makeCartItem({ id: "p2", price: 20 }));
       });
 
       act(() => {
@@ -212,7 +195,7 @@ describe("CartContext", () => {
       const { result } = renderCartHook();
 
       act(() => {
-        result.current.addItem(makeCartItem({ id: "p1", price_usd: 10 }));
+        result.current.addItem(makeCartItem({ id: "p1", price: 10 }));
       });
 
       act(() => {
@@ -228,7 +211,7 @@ describe("CartContext", () => {
       const { result } = renderCartHook();
 
       act(() => {
-        result.current.addItem(makeCartItem({ id: "p1", price_usd: 10 }));
+        result.current.addItem(makeCartItem({ id: "p1", price: 10 }));
       });
 
       act(() => {
@@ -243,7 +226,7 @@ describe("CartContext", () => {
 
       act(() => {
         result.current.addItem(
-          makeCartItem({ id: "p1", price_usd: 10, max_quantity: 3 }),
+          makeCartItem({ id: "p1", price: 10, max_quantity: 3 }),
         );
       });
 
@@ -258,7 +241,7 @@ describe("CartContext", () => {
       const { result } = renderCartHook();
 
       act(() => {
-        result.current.addItem(makeCartItem({ id: "p1", price_usd: 10 }));
+        result.current.addItem(makeCartItem({ id: "p1", price: 10 }));
       });
 
       act(() => {
@@ -272,7 +255,7 @@ describe("CartContext", () => {
       const { result } = renderCartHook();
 
       act(() => {
-        result.current.addItem(makeCartItem({ id: "p1", price_usd: 10 }));
+        result.current.addItem(makeCartItem({ id: "p1", price: 10 }));
       });
 
       act(() => {
@@ -288,8 +271,8 @@ describe("CartContext", () => {
       const { result } = renderCartHook();
 
       act(() => {
-        result.current.addItem(makeCartItem({ id: "p1", price_usd: 10 }));
-        result.current.addItem(makeCartItem({ id: "p2", price_usd: 20 }));
+        result.current.addItem(makeCartItem({ id: "p1", price: 10 }));
+        result.current.addItem(makeCartItem({ id: "p2", price: 20 }));
       });
 
       act(() => {
@@ -308,11 +291,11 @@ describe("CartContext", () => {
 
       act(() => {
         result.current.addItem({
-          ...makeCartItem({ id: "p1", price_usd: 10 }),
+          ...makeCartItem({ id: "p1", price: 10 }),
           quantity: 3,
         });
         result.current.addItem({
-          ...makeCartItem({ id: "p2", price_usd: 5 }),
+          ...makeCartItem({ id: "p2", price: 5 }),
           quantity: 2,
         });
       });
@@ -325,11 +308,11 @@ describe("CartContext", () => {
 
       act(() => {
         result.current.addItem({
-          ...makeCartItem({ id: "p1", price_usd: 10 }),
+          ...makeCartItem({ id: "p1", price: 10 }),
           quantity: 2,
         });
         result.current.addItem({
-          ...makeCartItem({ id: "p2", price_usd: 7.5 }),
+          ...makeCartItem({ id: "p2", price: 7.5 }),
           quantity: 4,
         });
       });
@@ -342,11 +325,11 @@ describe("CartContext", () => {
 
       act(() => {
         result.current.addItem({
-          ...makeCartItem({ id: "p1", price_usd: 10 }),
+          ...makeCartItem({ id: "p1", price: 10 }),
           quantity: 2,
         });
         result.current.addItem({
-          ...makeCartItem({ id: "p2", price_usd: 20 }),
+          ...makeCartItem({ id: "p2", price: 20 }),
           quantity: 1,
         });
       });

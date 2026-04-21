@@ -9,7 +9,6 @@ import type { DelegateWithProfile } from "@/features/seller-admins/domain/types"
 import { getDisplayName } from "@/features/seller-admins/domain/utils";
 
 const MAX_INITIALS_LENGTH = 2;
-const EMPTY_STATE_CLASS = "py-8 text-center text-muted-foreground";
 const DELEGATE_LIST_TID = "delegate-list";
 
 interface DelegateListProps {
@@ -27,7 +26,10 @@ export function DelegateList({
 
   if (delegates.length === 0) {
     return (
-      <div {...tid(DELEGATE_LIST_TID)} className={EMPTY_STATE_CLASS}>
+      <div
+        {...tid(DELEGATE_LIST_TID)}
+        className="py-8 text-center text-muted-foreground"
+      >
         {t("noDelegates")}
       </div>
     );

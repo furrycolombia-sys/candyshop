@@ -14,8 +14,9 @@ vi.mock("shared", () => ({
   tid: (id: string) => ({ "data-testid": id }),
 }));
 
-vi.mock("@/shared/application/utils/formatCop", () => ({
-  formatCop: (amount: number) => `$${amount.toLocaleString()} COP`,
+vi.mock("@/shared/application/utils/formatPrice", () => ({
+  formatPrice: (amount: number, currency: string) =>
+    `$${amount.toLocaleString()} ${currency}`,
 }));
 
 const mockMutate = vi.fn();
@@ -52,7 +53,8 @@ function makeOrder(overrides: Partial<OrderWithItems> = {}): OrderWithItems {
     user_id: "user-1",
     seller_id: "s1",
     payment_status: "pending_verification",
-    total_cop: 15_000,
+    total: 15_000,
+    currency: "COP",
     transfer_number: null,
     receipt_url: null,
     seller_note: null,
@@ -74,7 +76,7 @@ describe("OrderCard", () => {
   it("renders seller name and total", () => {
     render(<OrderCard order={makeOrder()} />);
     expect(screen.getByText("Test Seller")).toBeInTheDocument();
-    expect(screen.getByText("$15,000 COP")).toBeInTheDocument();
+    expect(screen.getByText("$15,000 COP")).toBeInTheDocument(); // formatPrice mock: `$${amount} ${currency}`
   });
 
   it("shows status badge", () => {

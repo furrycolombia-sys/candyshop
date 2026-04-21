@@ -34,7 +34,6 @@ const baseParams = {
   sellerId: "s1",
   paymentMethodId: "pm1",
   items: [],
-  totalCop: 100_000,
   checkoutSessionId: "sess-1",
   buyerInfo: {},
 };

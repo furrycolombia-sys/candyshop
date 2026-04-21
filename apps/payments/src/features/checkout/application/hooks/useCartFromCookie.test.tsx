@@ -65,20 +65,20 @@ describe("useCartFromCookie", () => {
       {
         id: "p1",
         seller_id: "s1",
-        price_cop: 10_000,
+        price: 10_000,
+        currency: "COP",
         name_en: "Hat",
         name_es: "Sombrero",
-        price_usd: 2.5,
         images: [],
         max_quantity: null,
       },
       {
         id: "p2",
         seller_id: "s1",
-        price_cop: 5000,
+        price: 5000,
+        currency: "COP",
         name_en: "Pin",
         name_es: "Pin",
-        price_usd: 1.25,
         images: [],
         max_quantity: null,
       },
@@ -102,7 +102,8 @@ describe("useCartFromCookie", () => {
     expect(result.current.groups[0].items).toHaveLength(2);
     expect(result.current.groups[0].items[0].quantity).toBe(2);
     expect(result.current.groups[0].items[1].quantity).toBe(1);
-    expect(result.current.groups[0].subtotalCop).toBe(25_000);
+    expect(result.current.groups[0].subtotal).toBe(25_000);
+    expect(result.current.groups[0].currency).toBe("COP");
   });
 
   it("subscribes to cart cookie changes", () => {

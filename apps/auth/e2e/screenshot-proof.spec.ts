@@ -113,7 +113,7 @@ test.describe.serial("Screenshot Proof — Studio UX Improvements", () => {
     await nameField.fill("Screenshot Proof Product");
 
     // Fill price
-    const priceField = page.getByTestId("inline-price-cop");
+    const priceField = page.getByTestId("inline-price");
     await priceField.click();
     await priceField.fill("25000");
 
@@ -193,7 +193,6 @@ test.describe.serial("Screenshot Proof — Studio UX Improvements", () => {
     await page.waitForTimeout(MUTATION_WAIT_MS);
 
     // Screenshot 2: Filled yellow star on cover image thumbnail
-    const starIcon = coverBtn1.locator("svg");
     await expect(coverBtn1).toHaveAttribute("data-cover", "true");
     await snapElement(
       desktopThumbs,

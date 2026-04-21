@@ -1,0 +1,131 @@
+{
+  "agent": "architecture",
+  "timestamp": "2026-04-20T23:21:50",
+  "scope": "apps/",
+  "summary": {
+    "filesAnalyzed": 28,
+    "issuesFound": 9,
+    "critical": 0,
+    "warning": 7,
+    "suggestion": 2,
+    "info": 0
+  },
+  "issues": [
+    {
+      "id": "ARCH-001",
+      "severity": "warning",
+      "category": "Feature Isolation",
+      "file": "apps/admin/src/features/users/presentation/pages/UsersPageContent.tsx",
+      "line": 9,
+      "description": "Cross-feature import: the 'users' feature imports 'useLogExport' directly from the 'audit' feature's application layer. Features must not import from each other; cross-feature communication should go through shared/ or be abstracted.",
+      "code": "import { useLogExport } from \"@/features/audit/application/hooks/useAuditLog\";",
+      "fix": "Move useLogExport to shared/application/hooks, or expose it via @/features/audit's public index.ts and consider whether this coupling is intentional. KISS note: if only used here, moving to shared or inlining a thin wrapper is the simplest fix."
+    },
+    {
+      "id": "ARCH-002",
+      "severity": "warning",
+      "category": "Feature Isolation",
+      "file": "apps/payments/src/features/assigned-orders/application/hooks/useAssignedOrders.ts",
+      "line": 6,
+      "description": "Cross-feature import: 'assigned-orders' imports 'fetchAssignedOrders' directly from 'received-orders' infrastructure layer. This bypasses feature boundaries and creates a tight coupling between two sibling features.",
+      "code": "import { fetchAssignedOrders } from \"@/features/received-orders/infrastructure/receivedOrderQueries\";",
+      "fix": "Extract 'fetchAssignedOrders' into a shared infrastructure module (e.g. apps/payments/src/shared/infrastructure/orderQueries.ts) or duplicate it within assigned-orders/infrastructure if the query is distinct."
+    },
+    {
+      "id": "ARCH-003",
+      "severity": "warning",
+      "category": "Feature Isolation",
+      "file": "apps/payments/src/features/assigned-orders/presentation/pages/AssignedOrdersPageContent.tsx",
+      "line": 9,
+      "description": "Cross-feature import: 'assigned-orders' presentation imports 'useOrderActions' from 'received-orders/application/hooks' and 'ReceivedOrderCard' from 'received-orders/presentation/components'. Multiple cross-feature dependencies indicate these features may be too tightly coupled.",
+      "code": "import { useOrderActions } from \"@/features/received-orders/application/hooks/useOrderActions\";\nimport type { SellerAction } from \"@/features/received-orders/domain/types\";\nimport { ReceivedOrderCard } from \"@/features/received-orders/presentation/components/ReceivedOrderCard\";",
+      "fix": "Either merge 'assigned-orders' and 'received-orders' into one feature (if they truly belong together), or extract shared types/components into payments/shared/. KISS note: a feature merger may be simpler than multiple indirections."
+    },
+    {
+      "id": "ARCH-004",
+      "severity": "warning",
+      "category": "Feature Isolation",
+      "file": "apps/studio/src/features/products/presentation/pages/ProductListPage.tsx",
+      "line": 8,
+      "description": "Cross-feature import: the 'products' feature imports 'useDelegateCountsByProduct' and 'SELLER_ADMINS_READ_PERMISSION' from the 'seller-admins' feature.",
+      "code": "import { useDelegateCountsByProduct } from \"@/features/seller-admins/application/hooks/useDelegateCountsByProduct\";\nimport { SELLER_ADMINS_READ_PERMISSION } from \"@/features/seller-admins/domain/constants\";",
+      "fix": "Expose the constant via a shared domain constants file or lift the delegate count data fetching to the page level and pass it as props. If these features are always used together, consider whether they should be one feature."
+    },
+    {
+      "id": "ARCH-005",
+      "severity": "warning",
+      "category": "Dead Code / Shared Code Policy",
+      "file": "apps/admin/src/shared/application/hooks/useRecentActivity.ts",
+      "description": "A duplicate 'useRecentActivity' hook exists in shared/ but is never consumed. The actual usage is in apps/admin/src/features/dashboard/application/hooks/useRecentActivity.ts. The shared version also has a magic string query key 'recent-activity' instead of using the constant from dashboard/domain/constants.ts.",
+      "fix": "Delete the unused hook from shared/application/hooks/. If it was intended to be the canonical version, remove the one in features/dashboard and update the import in DashboardPageContent."
+    },
+    {
+      "id": "ARCH-006",
+      "severity": "warning",
+      "category": "Shared Code Policy",
+      "file": "apps/admin/src/shared/infrastructure/recentActivityQueries.ts",
+      "description": "The 'fetchRecentActivity' function is in shared/infrastructure but is only used by the dashboard feature. Per the shared code policy, code in shared must be used by 2+ features. This is dashboard-specific infrastructure.",
+      "fix": "Move 'fetchRecentActivity' to apps/admin/src/features/dashboard/infrastructure/recentActivityQueries.ts and update the import in the dashboard hook."
+    },
+    {
+      "id": "ARCH-007",
+      "severity": "warning",
+      "category": "Barrel Exports",
+      "description": "Most feature layers (domain, application, infrastructure) lack index.ts barrel export files. Only a subset of features have a top-level index.ts. Layer-level barrel exports are missing across admin, payments, store, studio, and auth apps.",
+      "affectedPaths": [
+        "apps/admin/src/features/*/domain/",
+        "apps/admin/src/features/*/application/",
+        "apps/admin/src/features/*/infrastructure/",
+        "apps/payments/src/features/*/domain/",
+        "apps/payments/src/features/*/application/",
+        "apps/store/src/features/*/application/",
+        "apps/studio/src/features/*/application/"
+      ],
+      "fix": "Add index.ts barrel exports to each layer directory to define a clear public API per layer. This prevents deep internal imports from other layers. Note: KISS applies here — only add barrels where cross-layer imports are actually happening to avoid over-engineering."
+    },
+    {
+      "id": "ARCH-008",
+      "severity": "suggestion",
+      "category": "Inline Types",
+      "file": "apps/payments/src/features/orders/presentation/components/ExpirationLabel.tsx",
+      "line": 44,
+      "description": "Component function signature uses an inline type '{ expiresAt: string }' instead of a named interface. Minor but inconsistent with the project convention of co-located named Props interfaces.",
+      "code": "export function ExpirationLabel({ expiresAt }: { expiresAt: string }) {",
+      "fix": "Define 'interface ExpirationLabelProps { expiresAt: string }' and use it in the signature."
+    },
+    {
+      "id": "ARCH-009",
+      "severity": "suggestion",
+      "category": "DRY / Test Fixtures",
+      "description": "The 'mockAppUrls' fixture is duplicated across three apps: apps/store/src/test/fixtures/appUrls.ts, apps/payments/src/test/fixtures/appUrls.ts, and apps/studio/src/test/fixtures/appUrls.ts. All three files are identical in content (same localhost ports).",
+      "affectedFiles": [
+        "apps/store/src/test/fixtures/appUrls.ts",
+        "apps/payments/src/test/fixtures/appUrls.ts",
+        "apps/studio/src/test/fixtures/appUrls.ts"
+      ],
+      "fix": "KISS note: since these are test-only fixtures and already scoped per-app, the duplication is low-risk. Consider extracting to a shared test utility in packages/shared if all three apps always use the same ports. Only extract if the ports could drift independently causing subtle test failures."
+    }
+  ],
+  "patterns": [
+    {
+      "type": "good",
+      "description": "App Router thin wrappers: all checked route files (admin audit, store product detail, payments checkout) correctly import and delegate to feature pages with no business logic in the route files."
+    },
+    {
+      "type": "good",
+      "description": "Feature index.ts top-level barrel exports exist and correctly export only the page component, maintaining a clean public API for each feature."
+    },
+    {
+      "type": "good",
+      "description": "No hardcoded production URLs found in source code. All API base URLs are read from environment variables via shared/infrastructure/config."
+    },
+    {
+      "type": "good",
+      "description": "Domain constants files are consistently used (named constants for query keys, magic numbers wrapped in named constants with clear documentation)."
+    },
+    {
+      "type": "concern",
+      "description": "The 'assigned-orders' feature in payments has heavy coupling to 'received-orders' (importing from infrastructure, application/hooks, domain/types, and presentation/components). This suggests these two features may need to be merged or that shared components should be extracted to payments/shared/."
+    }
+  ]
+}

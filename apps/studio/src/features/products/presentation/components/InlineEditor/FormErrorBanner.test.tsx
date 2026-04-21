@@ -32,7 +32,7 @@ describe("FormErrorBanner", () => {
   it("renders multiple error messages", () => {
     const errors = {
       name_en: { message: "Name required", type: "required" },
-      price_cop: { message: "Price required", type: "required" },
+      price: { message: "Price required", type: "required" },
     };
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     render(<FormErrorBanner errors={errors as any} />);

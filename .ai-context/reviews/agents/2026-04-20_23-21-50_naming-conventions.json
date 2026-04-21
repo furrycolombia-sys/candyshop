@@ -1,0 +1,140 @@
+{
+  "agent": "naming-conventions",
+  "timestamp": "2026-04-20T23:21:50",
+  "scope": "apps/",
+  "summary": {
+    "filesAnalyzed": 120,
+    "issuesFound": 9,
+    "critical": 0,
+    "warning": 7,
+    "suggestion": 2,
+    "info": 0
+  },
+  "issues": [
+    {
+      "id": "NAME-001",
+      "severity": "warning",
+      "category": "Folder Naming",
+      "file": "apps/store/src/features/products/presentation/components/ProductDetail/",
+      "description": "Component grouping folder uses PascalCase 'ProductDetail' instead of kebab-case 'product-detail'. Both 'ProductDetail/' and 'product-detail/' coexist with identical contents, creating a duplicate directory structure.",
+      "rule": "Folders should use kebab-case per naming-conventions.md (Component folders: PascalCase only when used as a grouping for a single named component). The convention doc states feature folders use kebab-case.",
+      "fix": "Consolidate to a single folder. Prefer 'product-detail/' (kebab-case) for component grouping directories, and update all imports accordingly."
+    },
+    {
+      "id": "NAME-002",
+      "severity": "warning",
+      "category": "Folder Naming",
+      "file": "apps/studio/src/features/products/presentation/components/InlineEditor/",
+      "description": "Component grouping folder uses PascalCase 'InlineEditor' instead of kebab-case 'inline-editor'. Both 'InlineEditor/' and 'inline-editor/' coexist with near-identical contents, creating a duplicate directory.",
+      "rule": "Feature/grouping folders should use kebab-case per naming-conventions.md.",
+      "fix": "Consolidate to 'inline-editor/' (kebab-case) and update all imports. Remove the PascalCase duplicate."
+    },
+    {
+      "id": "NAME-003",
+      "severity": "warning",
+      "category": "Folder Naming",
+      "file": "apps/admin/src/features/users/presentation/components/Delegates/",
+      "description": "Component grouping folder uses PascalCase 'Delegates' instead of kebab-case 'delegates'.",
+      "rule": "Feature/grouping folders should use kebab-case per naming-conventions.md.",
+      "fix": "Rename to 'delegates/' and update all imports."
+    },
+    {
+      "id": "NAME-004",
+      "severity": "warning",
+      "category": "Folder Naming",
+      "file": "apps/store/src/features/products/presentation/components/ProductDetail/Sections/",
+      "description": "Sub-grouping folder uses PascalCase 'Sections' instead of kebab-case 'sections'. The parallel 'product-detail/sections/' folder uses the correct casing.",
+      "rule": "Feature/grouping folders should use kebab-case.",
+      "fix": "Rename to 'sections/' (already correct in the kebab-case counterpart)."
+    },
+    {
+      "id": "NAME-005",
+      "severity": "warning",
+      "category": "File Naming - Type File",
+      "file": "apps/studio/src/features/products/presentation/components/inline-editor/sectionItemTypes.ts",
+      "description": "Type definition file uses camelCase 'sectionItemTypes.ts'. Type files should use PascalCase per naming-conventions.md (Types/Interfaces: PascalCase → 'UserTypes.ts'). The PascalCase counterpart 'SectionItemTypes.ts' exists in the InlineEditor/ directory.",
+      "rule": "Types files must use PascalCase: 'SectionItemTypes.ts' not 'sectionItemTypes.ts'.",
+      "fix": "Rename to 'SectionItemTypes.ts' after consolidating the two duplicate folders."
+    },
+    {
+      "id": "NAME-006",
+      "severity": "warning",
+      "category": "Hook Placement / Duplicate",
+      "file": "apps/studio/src/features/products/application/",
+      "description": "Hook files (useProducts.ts, useProductForm.ts, useLangToggle.ts, useProductMutations.ts, useAutoResize.ts) exist directly in 'application/' AND are duplicated inside 'application/hooks/'. The convention is to place hooks inside 'hooks/' subdirectory.",
+      "affectedFiles": [
+        "apps/studio/src/features/products/application/useProducts.ts",
+        "apps/studio/src/features/products/application/useProductForm.ts",
+        "apps/studio/src/features/products/application/useLangToggle.ts",
+        "apps/studio/src/features/products/application/useProductMutations.ts",
+        "apps/studio/src/features/products/application/useAutoResize.ts",
+        "apps/studio/src/features/products/application/hooks/useProducts.ts",
+        "apps/studio/src/features/products/application/hooks/useProductForm.ts",
+        "apps/studio/src/features/products/application/hooks/useLangToggle.ts",
+        "apps/studio/src/features/products/application/hooks/useProductMutations.ts",
+        "apps/studio/src/features/products/application/hooks/useAutoResize.ts"
+      ],
+      "rule": "Hooks should be placed in the 'application/hooks/' subdirectory.",
+      "fix": "Remove the duplicates at the 'application/' root level, keeping only the 'application/hooks/' versions. Update all imports."
+    },
+    {
+      "id": "NAME-007",
+      "severity": "warning",
+      "category": "Hook Placement / Duplicate",
+      "file": "apps/admin/src/features/audit/application/",
+      "description": "Hook file 'useAuditLog.ts' exists directly in 'application/' AND is duplicated inside 'application/hooks/'. Similarly in store: 'useGridCols.ts', 'useStoreProducts.ts' exist in 'application/' and 'application/hooks/'.",
+      "affectedFiles": [
+        "apps/admin/src/features/audit/application/useAuditLog.ts",
+        "apps/admin/src/features/audit/application/hooks/useAuditLog.ts",
+        "apps/store/src/features/products/application/useGridCols.ts",
+        "apps/store/src/features/products/application/hooks/useGridCols.ts",
+        "apps/store/src/features/products/application/useStoreProducts.ts",
+        "apps/store/src/features/products/application/hooks/useStoreProducts.ts",
+        "apps/store/src/features/cart/application/useFlyToCart.ts",
+        "apps/store/src/features/cart/application/useSellerProfiles.ts"
+      ],
+      "rule": "Hooks should be placed in the 'application/hooks/' subdirectory.",
+      "fix": "Remove duplicates at the 'application/' root level. Ensure 'useFlyToCart' and 'useSellerProfiles' in store/cart are also moved to a 'hooks/' subfolder or consolidated."
+    },
+    {
+      "id": "NAME-008",
+      "severity": "suggestion",
+      "category": "File Naming - Utils",
+      "file": "apps/payments/src/shared/domain/PaymentMethodTypes.ts",
+      "description": "File is named 'PaymentMethodTypes.ts' (PascalCase). The naming convention for types files is PascalCase so this is technically correct. However, it lives in the 'domain/' layer alongside 'types.ts', which means there are two type files in the same domain folder with different naming patterns.",
+      "rule": "Types/Interfaces: PascalCase — this file is compliant. Informational only.",
+      "fix": "Consider consolidating into a single 'types.ts' file or ensuring consistent grouping strategy across domain type files."
+    },
+    {
+      "id": "NAME-009",
+      "severity": "suggestion",
+      "category": "File Naming - Utils",
+      "file": "apps/payments/src/shared/presentation/components/PaymentsSidebarNav.tsx",
+      "description": "Local module-level constants (ORDER_READ_PERMISSIONS, CHECKOUT_PERMISSIONS, SALES_PERMISSIONS, SELLER_PAYMENT_METHOD_PERMISSIONS, ASSIGNED_PERMISSIONS, INACTIVE_LINK_CLASS) use SCREAMING_SNAKE_CASE. These are not exported globals but file-level constants used only in this component. Per naming-conventions.md, local constants should use camelCase.",
+      "rule": "Constants: Global/exported → SCREAMING_SNAKE_CASE; Local → camelCase.",
+      "fix": "Rename to camelCase: orderReadPermissions, checkoutPermissions, salesPermissions, sellerPaymentMethodPermissions, assignedPermissions, inactiveLinkClass."
+    }
+  ],
+  "patterns": [
+    {
+      "id": "PAT-001",
+      "type": "duplicate-directory-migration",
+      "description": "Multiple apps show a migration pattern where PascalCase component folders (InlineEditor, ProductDetail) were being renamed to kebab-case counterparts (inline-editor, product-detail), but both old and new versions still coexist. This suggests an incomplete migration.",
+      "affectedApps": ["store", "studio"],
+      "recommendation": "Complete the migration: remove PascalCase folders after updating all imports to the kebab-case versions."
+    },
+    {
+      "id": "PAT-002",
+      "type": "hook-placement-migration",
+      "description": "Several features (audit in admin, products in store/studio, cart in store) have hooks placed both directly in 'application/' and in 'application/hooks/', suggesting an ongoing structural migration.",
+      "affectedApps": ["admin", "store", "studio"],
+      "recommendation": "Standardize: all hooks should live in 'application/hooks/', remove any duplicates at the 'application/' root."
+    },
+    {
+      "id": "PAT-003",
+      "type": "positive-pattern",
+      "description": "File naming for components is consistently PascalCase across all apps. Hook files uniformly use the 'use' prefix with camelCase. Props interfaces consistently use the 'ComponentNameProps' suffix pattern. Constants in domain/constants.ts files use correct SCREAMING_SNAKE_CASE. Overall naming discipline is high.",
+      "recommendation": "Continue the current discipline. Address the two migration-in-progress patterns noted above."
+    }
+  ]
+}
