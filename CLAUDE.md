@@ -283,6 +283,10 @@ If any fail, keep in app's `shared/` folder instead.
 - [Git Workflow](.claude/rules/git-workflow.md)
 - [Git Safety](.claude/rules/git-safety.md)
 
+### Database & Infrastructure
+
+- [Supabase Full Wipe & Re-Migration](.claude/rules/supabase-wipe.md) — PAT tokens, drop schema, apply migrations for dev/prod
+
 ### AI Configuration
 
 - [Generated Code Policy](.claude/rules/generated-code-policy.md)
