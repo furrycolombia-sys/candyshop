@@ -8,13 +8,6 @@ import { CartItemRow } from "@/features/cart/presentation/components/CartItemRow
 // Mocks
 // ---------------------------------------------------------------------------
 
-vi.mock("next/image", () => ({
-  default: ({ src, alt }: { src: string; alt: string }) => (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img src={src} alt={alt} data-testid="next-image" />
-  ),
-}));
-
 vi.mock("@/shared/domain/categoryConstants", () => ({
   getCategoryColor: () => "var(--pink)",
   getCategoryTheme: () => ({

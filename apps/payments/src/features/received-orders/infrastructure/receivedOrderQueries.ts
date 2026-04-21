@@ -56,8 +56,9 @@ async function mapRowToOrder(
     receipt_url: await getReceiptUrl(supabase, row.receipt_url),
     seller_note: row.seller_note,
     buyer_info:
-      (row as unknown as { buyer_info: Record<string, string> | null })
-        .buyer_info ?? null,
+      typeof row.buyer_info === "object" && !Array.isArray(row.buyer_info)
+        ? (row.buyer_info as Record<string, string> | null)
+        : null,
     expires_at: row.expires_at,
     checkout_session_id: row.checkout_session_id,
     created_at: row.created_at,
@@ -133,8 +134,45 @@ async function fetchDelegatedOrderRows(
 }
 
 /**
- * Fetch orders where the current user is the seller,
- * plus actionable orders from sellers who delegated to the current user.
+ * Fetch only the actionable orders delegated to the current user via seller_admins.
+ */
+export async function fetchAssignedOrders(
+  supabase: SupabaseClient,
+): Promise<ReceivedOrder[]> {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return [];
+
+  const { rows, sellerNameMap } = await fetchDelegatedOrderRows(
+    supabase,
+    user.id,
+  );
+
+  if (rows.length === 0) return [];
+
+  const buyerIds = [...new Set(rows.map((r) => r.user_id))];
+  const buyerMap = await fetchUserDisplayNames(
+    supabase,
+    buyerIds,
+    FALLBACK_BUYER_NAME,
+  );
+
+  return Promise.all(
+    rows.map((row) =>
+      mapRowToOrder(
+        supabase,
+        row,
+        buyerMap,
+        sellerNameMap[row.seller_id ?? ""] ?? "Seller",
+      ),
+    ),
+  );
+}
+
+/**
+ * Fetch orders where the current user is the seller (own orders only).
+ * Delegated orders are shown separately on the /assigned page.
  * Optionally filters by payment_status.
  */
 export async function fetchReceivedOrders(
@@ -146,15 +184,14 @@ export async function fetchReceivedOrders(
   } = await supabase.auth.getUser();
   if (!user) return [];
 
-  // ── Own orders ────────────────────────────────────────────────
-  let ownQuery = supabase
+  let query = supabase
     .from("orders")
     .select(ORDER_SELECT)
     .eq("seller_id", user.id)
     .order("created_at", { ascending: false });
 
   if (filter && filter !== "all") {
-    ownQuery = ownQuery.eq(
+    query = query.eq(
       "payment_status",
       filter as
         | "pending_verification"
@@ -165,69 +202,33 @@ export async function fetchReceivedOrders(
     );
   }
 
-  // Run own-orders query and delegated-orders fetch in parallel
-  const [ownResult, delegatedResult] = await Promise.all([
-    ownQuery,
-    fetchDelegatedOrderRows(supabase, user.id, filter),
-  ]);
+  const { data, error } = await query;
+  if (error) throw error;
 
-  if (ownResult.error) throw ownResult.error;
-
-  const ownRows = (ownResult.data ?? []) as OrderRow[];
-  const { rows: delegatedRows, sellerNameMap } = delegatedResult;
-
-  // ── Merge & deduplicate ───────────────────────────────────────
-  const seenIds = new Set(ownRows.map((r) => r.id));
-  const uniqueDelegated = delegatedRows.filter((r) => !seenIds.has(r.id));
-
-  const allRows = [...ownRows, ...uniqueDelegated];
-
-  // Resolve buyer names
-  const buyerIds = [...new Set(allRows.map((r) => r.user_id))];
+  const rows = (data ?? []) as OrderRow[];
+  const buyerIds = [...new Set(rows.map((r) => r.user_id))];
   const buyerMap = await fetchUserDisplayNames(
     supabase,
     buyerIds,
     FALLBACK_BUYER_NAME,
   );
 
-  return Promise.all([
-    ...ownRows.map((row) => mapRowToOrder(supabase, row, buyerMap, null)),
-    ...uniqueDelegated.map((row) =>
-      mapRowToOrder(
-        supabase,
-        row,
-        buyerMap,
-        sellerNameMap[row.seller_id ?? ""] ?? "Seller",
-      ),
-    ),
-  ]);
+  return Promise.all(
+    rows.map((row) => mapRowToOrder(supabase, row, buyerMap, null)),
+  );
 }
 
-/**
- * Call the update_order_status RPC for seller actions.
- *
- * Note: This RPC is defined in the migrations but not yet in the generated
- * Supabase types. We use a direct PostgREST call to invoke it.
- */
+/** Call the update_order_status RPC for seller actions. */
 export async function updateOrderStatus(
   supabase: SupabaseClient,
   orderId: string,
   newStatus: SellerAction,
   sellerNote?: string,
 ): Promise<void> {
-  // The update_order_status RPC is not in the generated Supabase types yet,
-  // so we call it via the generic rpc method with a type assertion.
-  const { error } = await (
-    supabase as unknown as {
-      rpc: (
-        fn: string,
-        args: Record<string, unknown>,
-      ) => Promise<{ error: Error | null }>;
-    }
-  ).rpc("update_order_status", {
+  const { error } = await supabase.rpc("update_order_status", {
     p_order_id: orderId,
     p_new_status: newStatus,
-    p_seller_note: sellerNote ?? null,
+    p_seller_note: sellerNote,
   });
 
   if (error) throw error;

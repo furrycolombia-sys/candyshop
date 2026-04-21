@@ -50,7 +50,6 @@ export function useCartFromCookie() {
   );
   const { data: products = EMPTY_PRODUCTS, isLoading: isLoadingProducts } =
     useQuery({
-      // eslint-disable-next-line @tanstack/query/exhaustive-deps -- supabase is not serializable (circular refs)
       queryKey: [CHECKOUT_CART_PRODUCTS_QUERY_KEY, cartIds],
       queryFn: () => fetchCheckoutProductsByIds(supabase, cartIds),
       enabled: cartIds.length > 0,
