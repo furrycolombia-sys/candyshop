@@ -37,6 +37,7 @@
     "paymentMethods": "Payment Methods",
     "sales": "Sales",
     "assigned": "Assigned Items",
+    "reports": "My Reports",
     "collapse": "Collapse sidebar",
     "expand": "Expand sidebar"
   },
@@ -240,6 +241,49 @@
     "removeBlock": "Remove block",
     "removeField": "Remove field",
     "imageUnavailable": "Image unavailable"
+  },
+  "sellerReports": {
+    "title": "My Sales Report",
+    "subtitle": "View and export your sales history",
+    "loading": "Loading orders...",
+    "error": "Failed to load orders. Please try again.",
+    "exportExcel": "Export to Excel",
+    "exporting": "Exporting...",
+    "totalOrders": "{count} {count, plural, one {order} other {orders}}",
+    "noResults": "No orders match the selected filters",
+    "filters": {
+      "dateFrom": "From",
+      "dateTo": "To",
+      "status": "Status",
+      "allStatuses": "All statuses",
+      "currency": "Currency",
+      "allCurrencies": "All currencies",
+      "amountMin": "Min amount",
+      "amountMax": "Max amount",
+      "clearFilters": "Clear filters"
+    },
+    "status": {
+      "pending": "Pending",
+      "awaiting_payment": "Awaiting Payment",
+      "pending_verification": "Pending Verification",
+      "evidence_requested": "Evidence Requested",
+      "approved": "Approved",
+      "rejected": "Rejected",
+      "expired": "Expired"
+    },
+    "table": {
+      "orderId": "Order ID",
+      "date": "Date",
+      "status": "Status",
+      "buyer": "Buyer",
+      "product": "Product",
+      "amount": "Amount",
+      "currency": "Currency",
+      "transferNumber": "Transfer #",
+      "receipt": "Receipt",
+      "hasReceipt": "View",
+      "noReceipt": "—"
+    }
   },
   "common": {
     "loading": "Loading...",

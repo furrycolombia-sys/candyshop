@@ -67,6 +67,8 @@ ROLE_TEMPLATES.admin = [
     "seller_admins.read",
     "seller_admins.update",
     "seller_admins.delete",
+    "users.export",
+    "admin.reports",
   ]),
 ];
 

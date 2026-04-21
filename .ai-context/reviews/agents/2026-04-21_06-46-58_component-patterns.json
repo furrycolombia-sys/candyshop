@@ -1,0 +1,64 @@
+{
+  "agent": "component-patterns",
+  "review_id": "2026-04-21_06-46-58",
+  "outputFile": ".ai-context/reviews/agents/2026-04-21_06-46-58_component-patterns.json",
+  "scope": "apps/ packages/",
+  "issues": [
+    {
+      "id": "COMP-001",
+      "severity": "warning",
+      "file": "apps/payments/src/features/checkout/presentation/components/DisplayBlockRenderer.tsx",
+      "line": 37,
+      "title": "Multiple exported/unexported components in one file (ESLint suppressed)",
+      "description": "The file defines two React components: `DisplayBlockRenderer` (exported, line 27) and `BlockContent` (unexported, line 37). The ESLint rule `react/no-multi-comp` is suppressed with a comment. While `BlockContent` is a private render-switch helper and the eslint-disable comment documents the intent, the one-component-per-file rule still applies. `BlockContent` receives a `locale` prop passed down from `DisplayBlockRenderer`, but could be an internal function that returns JSX without being a standalone component (i.e., rename it to `renderBlockContent` and call as a function instead of JSX). This avoids the multi-component violation entirely without extracting to a new file.",
+      "rule": "one-component-per-file.md",
+      "fix": "Rename `BlockContent` to `renderBlockContent` and call it as a plain function returning JSX: `{renderBlockContent({ block, locale })}`. This removes the React component lifecycle concerns and the need for the eslint-disable comment."
+    },
+    {
+      "id": "COMP-002",
+      "severity": "warning",
+      "file": "apps/payments/src/features/checkout/presentation/components/DynamicFormField.tsx",
+      "line": 99,
+      "title": "Multiple components in one file (ESLint suppressed)",
+      "description": "The file defines two React components: `DynamicFormField` (exported, line 21) and `FileInput` (unexported, line 99). The ESLint rule is suppressed with `eslint-disable react/no-multi-comp`. `FileInput` is a non-trivial component with its own hooks (`useTranslations`, event handler with logic), making it a real candidate for extraction rather than an inline helper. Unlike `BlockContent`, it has actual state-like logic and translations, making the multi-component pattern harder to justify as a simple helper.",
+      "rule": "one-component-per-file.md",
+      "fix": "Extract `FileInput` to its own file `FileInput.tsx` in the same directory, or convert it to a plain render function if it were stateless. Given it uses `useTranslations`, extraction to a separate file is the cleanest approach."
+    },
+    {
+      "id": "COMP-003",
+      "severity": "suggestion",
+      "file": "apps/payments/src/features/reports/presentation/pages/SellerReportsPage.tsx",
+      "line": 39,
+      "title": "Internal render function used instead of early return or sub-component",
+      "description": "`renderContent()` is defined as a named function inside the component body (line 39–67). While this pattern avoids creating a separate React component and is not a violation of the one-component rule, it does slightly obscure the component structure. The standard pattern for loading/error/empty states is early returns before the main render. The function is called at line 96 inside the JSX. This is a minor structural preference — early returns or extracting a simple `<ReportContent />` component would improve readability.",
+      "rule": "component-patterns.md#standard-component-template",
+      "fix": "Convert to early returns before the `return` statement, or extract a `SellerReportContent` presenter component that receives `{ isLoading, isError, orders, total }` as props."
+    },
+    {
+      "id": "COMP-004",
+      "severity": "info",
+      "file": "apps/payments/src/features/checkout/presentation/components/SellerCheckoutCard.tsx",
+      "line": 1,
+      "title": "Good Container/Presenter separation pattern",
+      "description": "`SellerCheckoutCard` (container) cleanly separates data fetching and state management from `SellerCheckoutContent` (presenter). The container manages: API calls via `useSellerPaymentMethods`, local state (selectedMethodId, buyerSubmission, validationError, isExpanded), and derived state. The presenter receives all state as structured props (submission, methodSelection, buyerForm objects). This is a textbook Container/Presenter implementation and should be used as a reference pattern for other checkout components.",
+      "rule": "component-patterns.md#containerpresenter-pattern",
+      "fix": "No fix needed. This is a positive example to follow."
+    },
+    {
+      "id": "COMP-005",
+      "severity": "info",
+      "file": "packages/app-components/src/components/AppNavigation.tsx",
+      "line": 76,
+      "title": "Non-component helper function co-located appropriately",
+      "description": "`matchesPermissions` (line 76) is a pure utility function defined in the same file as `AppNavigation`. It is not a React component and is not exported, making it a legitimate internal helper. The `localizedHref` (line 104) is similarly an internal function helper. Both are correctly not extracted since they are single-use helpers tightly coupled to this component's logic.",
+      "rule": "component-patterns.md#standard-component-template",
+      "fix": "No fix needed. This is correct usage of internal helpers."
+    }
+  ],
+  "summary": {
+    "critical": 0,
+    "warning": 2,
+    "suggestion": 1,
+    "info": 2
+  }
+}

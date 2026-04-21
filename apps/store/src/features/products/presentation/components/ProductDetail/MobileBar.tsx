@@ -36,9 +36,6 @@ export function MobileBar({
     >
       <div className="min-w-0 flex flex-col">
         <span className="flex min-w-0 items-baseline gap-1">
-          <span className="shrink-0 font-display text-xs font-bold uppercase tracking-wider text-muted-foreground">
-            {product.currency}
-          </span>
           <span className="min-w-0 break-all font-display text-lg font-extrabold sm:text-xl">
             {formatPrice(product.price, product.currency)}
           </span>

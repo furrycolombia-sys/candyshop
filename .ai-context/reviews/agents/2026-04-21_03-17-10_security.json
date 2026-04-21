@@ -1,0 +1,69 @@
+{
+  "agent": "security",
+  "review_id": "2026-04-21_03-17-10",
+  "outputFile": ".ai-context/reviews/agents/2026-04-21_03-17-10_security.json",
+  "scope": "apps/admin/src/features/reports/",
+  "issues": [
+    {
+      "id": "SEC-001",
+      "severity": "warning",
+      "file": "apps/admin/src/features/reports/infrastructure/reportsApi.ts",
+      "line": 8,
+      "title": "User IDs exposed in URL query parameters",
+      "description": "buyerId and sellerId are passed as URL query parameters, exposing user identifiers in browser history and server logs.",
+      "rule": "code-review-standards.md#security-standards",
+      "fix": "Consider POST with JSON body for sensitive filter parameters, or document acceptable exposure level"
+    },
+    {
+      "id": "SEC-002",
+      "severity": "warning",
+      "file": "apps/admin/src/app/api/admin/reports/orders/route.ts",
+      "line": 67,
+      "title": "Missing input validation on amount filter parameters",
+      "description": "amountMin and amountMax are not validated (e.g. no check for negative numbers or non-numeric input) before being used in query construction.",
+      "rule": "code-review-standards.md#security-standards",
+      "fix": "Add number validation and min-value checks (e.g. must be >= 0) before applying as filters"
+    },
+    {
+      "id": "SEC-003",
+      "severity": "warning",
+      "file": "apps/admin/src/app/api/admin/reports/orders/route.ts",
+      "line": 48,
+      "title": "Date parameters not validated for ISO format",
+      "description": "dateFrom and dateTo are used directly without validating they are valid ISO date strings.",
+      "rule": "code-review-standards.md#security-standards",
+      "fix": "Validate date strings with a regex or Date.parse() check before applying to queries"
+    },
+    {
+      "id": "SEC-004",
+      "severity": "info",
+      "file": "apps/admin/src/features/reports/presentation/components/ReportTable.tsx",
+      "line": 135,
+      "title": "receipt_url rendered as href without URL scheme validation",
+      "description": "Database-sourced receipt_url is rendered directly as an anchor href. Low risk since it's admin-only and from trusted DB, but worth validating scheme.",
+      "rule": "code-review-standards.md#security-standards",
+      "fix": "Add scheme validation: only allow https:// URLs in receipt_url"
+    },
+    {
+      "id": "SEC-005",
+      "severity": "info",
+      "file": "apps/admin/src/features/reports/application/utils/exportOrdersToExcel.ts",
+      "line": 41,
+      "title": "Excel export includes PII without additional protection",
+      "description": "Exported files include buyer/seller emails and transfer numbers with no watermarking or audit logging.",
+      "rule": "code-review-standards.md#security-standards",
+      "fix": "Consider adding audit log entry when export is triggered (who exported, when)"
+    },
+    {
+      "id": "SEC-006",
+      "severity": "info",
+      "file": "apps/admin/src/app/api/admin/reports/orders/route.ts",
+      "line": 13,
+      "title": "No rate limiting on reports API with 10,000 row limit",
+      "description": "The reports endpoint can return up to MAX_LIMIT=10000 rows with no rate limiting, potentially enabling data enumeration.",
+      "rule": "code-review-standards.md#security-standards",
+      "fix": "Add rate limiting middleware or consider reducing MAX_LIMIT; add audit logging"
+    }
+  ],
+  "summary": { "critical": 0, "warning": 3, "suggestion": 0, "info": 3 }
+}

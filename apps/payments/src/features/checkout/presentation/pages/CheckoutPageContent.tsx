@@ -10,7 +10,10 @@ import { Skeleton } from "ui";
 import { useCartFromCookie } from "@/features/checkout/application/hooks/useCartFromCookie";
 import { useClearCartCookie } from "@/features/checkout/application/hooks/useClearCartCookie";
 import { useSubmitPayment } from "@/features/checkout/application/hooks/useSubmitPayment";
-import { CHECKOUT_COMPLETED_SESSION_KEY } from "@/features/checkout/domain/constants";
+import {
+  CHECKOUT_COMPLETED_SESSION_KEY,
+  CHECKOUT_COMPLETED_VALUE,
+} from "@/features/checkout/domain/constants";
 import type { CheckoutSellerStatus } from "@/features/checkout/domain/types";
 import { SellerCheckoutCard } from "@/features/checkout/presentation/components/SellerCheckoutCard";
 import { appUrls } from "@/shared/infrastructure/config";
@@ -18,7 +21,8 @@ import { appUrls } from "@/shared/infrastructure/config";
 function readCompletedCheckoutFlag(): boolean {
   if (globalThis.window === undefined) return false;
   return (
-    globalThis.sessionStorage.getItem(CHECKOUT_COMPLETED_SESSION_KEY) === "1"
+    globalThis.sessionStorage.getItem(CHECKOUT_COMPLETED_SESSION_KEY) ===
+    CHECKOUT_COMPLETED_VALUE
   );
 }
 
@@ -26,7 +30,10 @@ function writeCompletedCheckoutFlag(value: boolean) {
   if (globalThis.window === undefined) return;
 
   if (value) {
-    globalThis.sessionStorage.setItem(CHECKOUT_COMPLETED_SESSION_KEY, "1");
+    globalThis.sessionStorage.setItem(
+      CHECKOUT_COMPLETED_SESSION_KEY,
+      CHECKOUT_COMPLETED_VALUE,
+    );
     return;
   }
 

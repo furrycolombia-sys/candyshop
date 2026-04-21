@@ -1,0 +1,49 @@
+{
+  "agent": "solid",
+  "review_id": "2026-04-21_03-17-10",
+  "outputFile": ".ai-context/reviews/agents/2026-04-21_03-17-10_solid.json",
+  "scope": "apps/admin/src/features/reports/",
+  "issues": [
+    {
+      "id": "SOLID-001",
+      "severity": "warning",
+      "file": "apps/admin/src/features/reports/presentation/pages/ReportsPage.tsx",
+      "line": 15,
+      "title": "ReportsPage handles too many responsibilities",
+      "description": "ReportsPage manages data fetching, export logic, filter state, loading states, and rendering all in one component, violating Single Responsibility Principle.",
+      "rule": "solid-principles.md#s---single-responsibility-principle",
+      "fix": "Extract export logic into a useExportOrders hook"
+    },
+    {
+      "id": "SOLID-002",
+      "severity": "warning",
+      "file": "apps/admin/src/features/reports/presentation/components/ReportFiltersBar.tsx",
+      "line": 26,
+      "title": "handleClear hardcodes all filter field names",
+      "description": "handleClear() explicitly lists every filter key, meaning adding a new filter requires modifying the component. Violates Open/Closed Principle.",
+      "rule": "solid-principles.md#o---openclosed-principle",
+      "fix": "Use Object.keys or pass a filter reset callback from parent; alternatively reset to a typed empty filters object"
+    },
+    {
+      "id": "SOLID-003",
+      "severity": "suggestion",
+      "file": "apps/admin/src/features/reports/presentation/components/OrderStatusBadge.tsx",
+      "line": 8,
+      "title": "STATUS_COLOR_MAP uses generic string keys instead of OrderStatus type",
+      "description": "Record<string, string> doesn't enforce that only valid OrderStatus values are keys. The props interface accepts any string status.",
+      "rule": "solid-principles.md#i---interface-segregation-principle",
+      "fix": "Type as Partial<Record<OrderStatus, string>> and type the status prop as OrderStatus"
+    },
+    {
+      "id": "SOLID-004",
+      "severity": "suggestion",
+      "file": "apps/admin/src/features/reports/application/hooks/useReportOrders.ts",
+      "line": 11,
+      "title": "Hook mixes data fetching with URL filter state",
+      "description": "useReportOrders combines useQuery (data fetching) with useQueryStates (URL state management), mixing two concerns in one hook.",
+      "rule": "solid-principles.md#s---single-responsibility-principle",
+      "fix": "Consider separating into useReportFilters (URL state) and useReportOrdersQuery (data fetching) if the hook grows"
+    }
+  ],
+  "summary": { "critical": 0, "warning": 2, "suggestion": 2, "info": 0 }
+}

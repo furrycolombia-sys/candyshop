@@ -1,0 +1,104 @@
+{
+  "agent": "bug-detection",
+  "review_id": "2026-04-21_03-17-10",
+  "outputFile": ".ai-context/reviews/agents/2026-04-21_03-17-10_bug-detection.json",
+  "scope": "apps/admin/src/features/reports/",
+  "issues": [
+    {
+      "id": "BUG-001",
+      "severity": "critical",
+      "file": "apps/admin/src/features/reports/presentation/components/ReportTable.tsx",
+      "line": 107,
+      "title": "Missing id field causes React key warning",
+      "description": "ReportTable maps order.items with key={item.id}, but ReportOrderItem interface (domain/types.ts:10-17) does not define an id field. This causes React console warnings and may lead to incorrect re-renders and state issues when items are modified. The UI will fall back to array index as implicit key.",
+      "rule": "code-review-standards.md#bug-detection-standards",
+      "fix": "Either: (1) Add id field to ReportOrderItem interface, or (2) Use a composite key like key={`${order.id}-${item.product_id}`}, or (3) If items are immutable within order, use index-based keys with a comment explaining why"
+    },
+    {
+      "id": "BUG-002",
+      "severity": "warning",
+      "file": "apps/admin/src/features/reports/infrastructure/reportsApi.ts",
+      "line": 22,
+      "title": "Missing error handling on fetch",
+      "description": "fetch() can fail for network/connection reasons before response.ok check. If response.json() fails or throws, the error is unhandled. No try/catch around the async operation means rejections propagate to caller but error type is unclear.",
+      "rule": "code-review-standards.md#bug-detection-standards",
+      "fix": "Wrap in try/catch and provide specific error messages. Example: catch (e) { throw new Error(`Failed to parse report orders: ${e.message}`); }"
+    },
+    {
+      "id": "BUG-003",
+      "severity": "warning",
+      "file": "apps/admin/src/features/reports/infrastructure/reportsApi.ts",
+      "line": 26,
+      "title": "Type assertion bypasses type safety",
+      "description": "Using 'as Promise<ReportOrdersResponse>' bypasses TypeScript's type checking. If the API returns malformed data, this will pass through silently. The actual data structure is not validated at runtime.",
+      "rule": "code-review-standards.md#bug-detection-standards",
+      "fix": "Use runtime validation: parse response with zod/io-ts or manually validate required fields before return"
+    },
+    {
+      "id": "BUG-004",
+      "severity": "warning",
+      "file": "apps/admin/src/features/reports/application/utils/exportOrdersToExcel.ts",
+      "line": 102,
+      "title": "Memory leak in downloadExcel - missing cleanup on error",
+      "description": "downloadExcel creates a blob, object URL, and DOM element but doesn't clean up if an error occurs (e.g., if link.click() fails). URL.revokeObjectURL is only called on success path. If document.body.append or link.click fails, resources leak.",
+      "rule": "code-review-standards.md#bug-detection-standards",
+      "fix": "Use try/finally: wrap link.click() and ensure URL.revokeObjectURL(url) is in finally block, and remove link with finally as well"
+    },
+    {
+      "id": "BUG-005",
+      "severity": "warning",
+      "file": "apps/admin/src/features/reports/presentation/pages/ReportsPage.tsx",
+      "line": 33,
+      "title": "Race condition in handleExport - concurrent exports not prevented",
+      "description": "setIsExporting(true) at start, but if user clicks export twice rapidly, both calls will proceed. The second call will start before first finishes, leading to duplicate exports and isExporting state inconsistency. The finally block resets flag but doesn't queue or deduplicate.",
+      "rule": "code-review-standards.md#bug-detection-standards",
+      "fix": "Check isExporting before proceeding: if (isExporting) return; or use AbortController for inflight cancellation"
+    },
+    {
+      "id": "BUG-006",
+      "severity": "suggestion",
+      "file": "apps/admin/src/features/reports/application/hooks/useReportOrders.ts",
+      "line": 26,
+      "title": "Missing error details in hook return",
+      "description": "Hook returns isError boolean but caller in ReportsPage (line 53-57) only shows generic 'error' message. No error details (error message, status code) available to display helpful info to user.",
+      "rule": "code-review-standards.md#bug-detection-standards",
+      "fix": "Extend useReportOrders return to include: error: useQuery.error instead of just isError. Update ReportsPage to display error?.message or fallback"
+    },
+    {
+      "id": "BUG-007",
+      "severity": "suggestion",
+      "file": "apps/admin/src/features/reports/presentation/pages/ReportsPage.tsx",
+      "line": 35,
+      "title": "Hardcoded magic constant for ISO date length",
+      "description": "Line 35 uses hardcoded 10 for ISO_DATE_LENGTH but this duplicates logic and is error-prone. If changed, bug could occur (e.g., if someone passes 11 by mistake).",
+      "rule": "code-review-standards.md#bug-detection-standards",
+      "fix": "Move ISO_DATE_LENGTH to domain/constants.ts and import: const date = new Date().toISOString().slice(0, REPORTS_DATE_LENGTH)"
+    },
+    {
+      "id": "BUG-008",
+      "severity": "info",
+      "file": "apps/admin/src/features/reports/application/utils/exportOrdersToExcel.ts",
+      "line": 62,
+      "title": "Order total displayed on every item row (redundant data)",
+      "description": "When order.items.length > 0, each item row includes order.total (line 80) which is the same for all items in an order. This is technically not a bug but misleading Excel output - users might think each item costs order.total.",
+      "rule": "code-review-standards.md#bug-detection-standards",
+      "fix": "Consider adding 'Item Total' column (quantity * unit_price) or clarifying that 'Order Total' is sum of all items. Document expected Excel format"
+    },
+    {
+      "id": "BUG-009",
+      "severity": "info",
+      "file": "apps/admin/src/features/reports/presentation/components/ReportFiltersBar.tsx",
+      "line": 79,
+      "title": "Inverted logic in status filter - empty string cast to null",
+      "description": "Line 79 casts e.target.value to OrderStatus or null, but e.target.value is always a string. Empty string '' is falsy, so ('' as OrderStatus) || null becomes null, which works but is confusing. Type assertion bypasses validation.",
+      "rule": "code-review-standards.md#bug-detection-standards",
+      "fix": "Simplify: onFiltersChange({ status: (e.target.value || null) as OrderStatus | null }) or use e.target.value ? (e.target.value as OrderStatus) : null"
+    }
+  ],
+  "summary": {
+    "critical": 1,
+    "warning": 5,
+    "suggestion": 2,
+    "info": 2
+  }
+}

@@ -38,6 +38,13 @@ const APP_ORDER: { id: AppId; labelKey: string }[] = [
   { id: "playground", labelKey: "playground" },
 ];
 
+const ADMIN_PERMISSIONS = [
+  "templates.read",
+  "payment_settings.read",
+  "audit.read",
+  "user_permissions.read",
+] as const;
+
 const APP_ACCESS_RULES: Partial<
   Record<AppId, { required: readonly string[]; mode?: "all" | "any" }>
 > = {
@@ -57,12 +64,11 @@ const APP_ACCESS_RULES: Partial<
     mode: "any",
   },
   admin: {
-    required: [
-      "templates.read",
-      "payment_settings.read",
-      "audit.read",
-      "user_permissions.read",
-    ],
+    required: ADMIN_PERMISSIONS,
+    mode: "any",
+  },
+  playground: {
+    required: ADMIN_PERMISSIONS,
     mode: "any",
   },
 };
