@@ -6,10 +6,6 @@ import { useCallback, useMemo, useState } from "react";
 import { tid } from "shared";
 
 import { useReportOrders } from "@/features/reports/application/hooks/useReportOrders";
-import {
-  downloadExcel,
-  exportOrdersToExcel,
-} from "@/features/reports/application/utils/exportOrdersToExcel";
 import type { ReportFilters } from "@/features/reports/domain/types";
 import { ReportFiltersBar } from "@/features/reports/presentation/components/ReportFiltersBar";
 import { ReportTable } from "@/features/reports/presentation/components/ReportTable";
@@ -41,15 +37,41 @@ export function ReportsPage() {
   const handleExport = useCallback(async () => {
     if (isExporting) return;
     setIsExporting(true);
-    const isoDateLength = 10;
     try {
-      const content = exportOrdersToExcel(orders);
-      const date = new Date().toISOString().slice(0, isoDateLength);
-      downloadExcel(content, `sales-report-${date}.xls`);
+      const params = new URLSearchParams();
+      if (filters.dateFrom) params.set("dateFrom", filters.dateFrom);
+      if (filters.dateTo) params.set("dateTo", filters.dateTo);
+      if (filters.status) params.set("status", filters.status);
+      if (filters.sellerId) params.set("sellerId", filters.sellerId);
+      if (filters.buyerId) params.set("buyerId", filters.buyerId);
+      if (filters.productId) params.set("productId", filters.productId);
+      if (filters.currency) params.set("currency", filters.currency);
+      if (filters.amountMin != null)
+        params.set("amountMin", String(filters.amountMin));
+      if (filters.amountMax != null)
+        params.set("amountMax", String(filters.amountMax));
+
+      const response = await fetch(
+        `/api/admin/reports/export?${params.toString()}`,
+      );
+      if (!response.ok) throw new Error("Export failed");
+
+      const blob = await response.blob();
+      const ISO_DATE_LENGTH = 10;
+      const date = new Date().toISOString().slice(0, ISO_DATE_LENGTH);
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `sales-report-${date}.xlsx`;
+      link.style.visibility = "hidden";
+      document.body.append(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
     } finally {
       setIsExporting(false);
     }
-  }, [isExporting, orders]);
+  }, [isExporting, filters]);
 
   function renderContent() {
     if (isLoading) {
