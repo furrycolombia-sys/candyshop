@@ -14,7 +14,6 @@ export function useSellerProfiles(sellerIds: string[]) {
   const supabase = useSupabase();
 
   return useQuery({
-    // eslint-disable-next-line @tanstack/query/exhaustive-deps -- supabase is not serializable (circular refs)
     queryKey: [SELLER_PROFILES_QUERY_KEY, sellerIds],
     queryFn: () => fetchSellerProfiles(supabase, sellerIds),
     enabled: sellerIds.length > 0,

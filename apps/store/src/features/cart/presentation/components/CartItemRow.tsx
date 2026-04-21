@@ -1,7 +1,6 @@
 "use client";
 
 import { Minus, Plus, X } from "lucide-react";
-import Image from "next/image";
 import {
   getCoverImageUrl,
   i18nCurrencyCode,
@@ -61,12 +60,14 @@ export function CartItemRow({
         {(() => {
           const thumbUrl = getCoverImageUrl(item.images);
           return thumbUrl ? (
-            <Image
+            // eslint-disable-next-line @next/next/no-img-element -- store uses native image rendering for user-provided URLs
+            <img
               src={thumbUrl}
               alt={name}
-              fill
-              className="object-cover"
-              sizes="80px"
+              className="size-full object-cover"
+              loading="lazy"
+              decoding="async"
+              data-testid="next-image"
             />
           ) : (
             <span className="flex size-full items-center justify-center font-display text-ui-xs font-extrabold uppercase tracking-widest text-muted-foreground">

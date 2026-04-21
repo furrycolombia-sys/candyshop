@@ -29,7 +29,6 @@ export function useAuditLog({
   const supabase = useSupabase();
 
   const { data, isLoading, isError } = useQuery({
-    // eslint-disable-next-line @tanstack/query/exhaustive-deps -- supabase client is stable (memoized)
     queryKey: [AUDIT_QUERY_KEY, filters, offset],
     queryFn: () => fetchAuditLog(supabase, filters, offset),
     staleTime: STALE_TIME_MS,
@@ -43,7 +42,6 @@ export function useAuditTableNames() {
   const supabase = useSupabase();
 
   return useQuery({
-    // eslint-disable-next-line @tanstack/query/exhaustive-deps -- supabase client is stable (memoized)
     queryKey: [TABLE_NAMES_KEY],
     queryFn: () => fetchAuditTableNames(supabase),
     staleTime: STALE_TIME_MS,

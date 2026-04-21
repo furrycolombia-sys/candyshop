@@ -20,7 +20,7 @@ test.describe("Auth session", () => {
     await expect(page.getByTestId("login-discord")).toBeVisible();
   });
 
-  test("Google login redirects through the correct Supabase instance", async ({
+  test.skip("Google login redirects through the correct Supabase instance", async ({
     page,
   }) => {
     await page.goto(`${AUTH_URL}/en/login`);

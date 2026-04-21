@@ -8,7 +8,6 @@ export function useDelegates(sellerId?: string, productId?: string) {
   const supabase = useSupabase();
 
   return useQuery({
-    // eslint-disable-next-line @tanstack/query/exhaustive-deps -- supabase client is stable (memoized)
     queryKey: [SELLER_ADMINS_QUERY_KEY, sellerId, productId],
     queryFn: () => fetchDelegates(supabase, sellerId ?? "", productId ?? ""),
     enabled: !!sellerId && !!productId,
