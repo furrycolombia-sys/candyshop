@@ -75,6 +75,8 @@ const mockMethod: SellerPaymentMethod = {
   display_blocks: [],
   form_fields: [],
   is_active: true,
+  requires_receipt: false,
+  requires_transfer_number: false,
   sort_order: 1,
   created_at: "2025-01-01",
   updated_at: "2025-01-01",
