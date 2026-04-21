@@ -67,6 +67,8 @@ describe("fetchSellerPaymentMethods", () => {
         display_blocks: [],
         form_fields: [],
         is_active: true,
+        requires_receipt: false,
+        requires_transfer_number: false,
       },
     ];
 
@@ -85,6 +87,8 @@ describe("fetchSellerPaymentMethods", () => {
       display_blocks: [],
       form_fields: [],
       is_active: true,
+      requires_receipt: false,
+      requires_transfer_number: false,
     });
   });
 

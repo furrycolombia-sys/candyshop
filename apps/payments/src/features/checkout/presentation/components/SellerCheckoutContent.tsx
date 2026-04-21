@@ -5,9 +5,8 @@ import { useTranslations } from "next-intl";
 import { tid } from "shared";
 
 import { CheckoutItemsSummary } from "./CheckoutItemsSummary";
-import { DisplayBlocksSection } from "./DisplayBlocksSection";
-import { FormFieldsSection } from "./FormFieldsSection";
 import { PaymentMethodSelector } from "./PaymentMethodSelector";
+import { SelectedMethodForm } from "./SelectedMethodForm";
 
 import type {
   CartItem,
@@ -32,9 +31,12 @@ interface MethodSelectionState {
 
 interface BuyerFormState {
   buyerSubmission: Record<string, string>;
+  receiptFile: File | null;
+  transferNumber: string;
   validationError: string | null;
   onBuyerSubmissionChange: (fieldId: string, value: string) => void;
-  onFileSelected: (fieldId: string, file: File) => void;
+  onReceiptChange: (file: File | null) => void;
+  onTransferNumberChange: (value: string) => void;
 }
 
 export interface SellerCheckoutContentProps {
@@ -73,9 +75,12 @@ export function SellerCheckoutContent({
   } = methodSelection;
   const {
     buyerSubmission,
+    receiptFile,
+    transferNumber,
     validationError,
     onBuyerSubmissionChange,
-    onFileSelected,
+    onReceiptChange,
+    onTransferNumberChange,
   } = buyerForm;
 
   const showForm = !isSubmitted && !isLoadingMethods && !hasStockIssues;
@@ -138,23 +143,16 @@ export function SellerCheckoutContent({
             disabled={isDisabled}
           />
 
-          {/* Display blocks */}
           {selectedMethod && (
-            <DisplayBlocksSection
-              blocks={selectedMethod.display_blocks}
-              label={t("paymentInstructions")}
-            />
-          )}
-
-          {/* Form fields */}
-          {selectedMethod && (
-            <FormFieldsSection
-              fields={selectedMethod.form_fields}
+            <SelectedMethodForm
+              method={selectedMethod}
               buyerSubmission={buyerSubmission}
+              transferNumber={transferNumber}
+              receiptFile={receiptFile}
               isDisabled={isDisabled}
-              label={t("fillForm")}
               onBuyerSubmissionChange={onBuyerSubmissionChange}
-              onFileSelected={onFileSelected}
+              onTransferNumberChange={onTransferNumberChange}
+              onReceiptChange={onReceiptChange}
             />
           )}
 

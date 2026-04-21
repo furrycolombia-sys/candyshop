@@ -48,7 +48,7 @@ export type DisplayBlock =
 
 // ─── Form Field Types ─────────────────────────────────────────────────────────
 
-export type FormFieldType = "text" | "email" | "number" | "file" | "textarea";
+export type FormFieldType = "text" | "email" | "number" | "textarea";
 
 export interface FormField {
   id: string;
@@ -70,6 +70,8 @@ export interface SellerPaymentMethod {
   display_blocks: DisplayBlock[];
   form_fields: FormField[];
   is_active: boolean;
+  requires_receipt: boolean;
+  requires_transfer_number: boolean;
   sort_order: number;
   created_at: string;
   updated_at: string;
