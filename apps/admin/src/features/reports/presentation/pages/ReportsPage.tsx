@@ -3,6 +3,7 @@
 import { Download } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useCallback, useMemo, useState } from "react";
+import { tid } from "shared";
 
 import { useReportOrders } from "@/features/reports/application/hooks/useReportOrders";
 import {
@@ -12,7 +13,6 @@ import {
 import type { ReportFilters } from "@/features/reports/domain/types";
 import { ReportFiltersBar } from "@/features/reports/presentation/components/ReportFiltersBar";
 import { ReportTable } from "@/features/reports/presentation/components/ReportTable";
-import { tid } from "@/shared/infrastructure/config/tid";
 
 export function ReportsPage() {
   const t = useTranslations("reports");

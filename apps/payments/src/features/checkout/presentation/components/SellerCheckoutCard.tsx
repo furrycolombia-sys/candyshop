@@ -8,6 +8,7 @@ import { formatPrice, tid } from "shared";
 import { SellerCheckoutContent } from "./SellerCheckoutContent";
 
 import { useSellerPaymentMethods } from "@/features/checkout/application/hooks/useSellerPaymentMethods";
+import { STOCK_ERROR_CODE } from "@/features/checkout/domain/constants";
 import type {
   CartItem,
   CheckoutSellerStatus,
@@ -89,8 +90,9 @@ export function SellerCheckoutCard({
       if (field.required) {
         const value = buyerSubmission[field.id];
         if (!value?.trim()) {
-          // eslint-disable-next-line i18next/no-literal-string -- field label is dynamic user data
-          setValidationError(`Please fill in: ${field.label_en}`);
+          setValidationError(
+            t("buyerFieldRequired", { field: field.label_en }),
+          );
           return;
         }
       }
@@ -156,7 +158,7 @@ export function SellerCheckoutCard({
             isSubmitted,
             isSubmitting,
             isDisabled,
-            error: hasStockIssues ? "stock_error" : error,
+            error: hasStockIssues ? STOCK_ERROR_CODE : error,
             hasStockIssues,
           }}
           methodSelection={{

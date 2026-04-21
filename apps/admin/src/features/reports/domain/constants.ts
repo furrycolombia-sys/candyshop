@@ -1,11 +1,3 @@
-export const REPORTS_QUERY_KEY = "reports-orders";
+export { ORDER_STATUS_LIST } from "shared";
 
-export const ORDER_STATUS_LIST = [
-  "pending",
-  "awaiting_payment",
-  "pending_verification",
-  "evidence_requested",
-  "approved",
-  "rejected",
-  "expired",
-] as const;
+export const REPORTS_QUERY_KEY = "reports-orders";

@@ -3,17 +3,17 @@
 import { useTranslations } from "next-intl";
 import { tid } from "shared";
 
-import type { ReportOrder } from "@/features/reports/domain/types";
+import type { SellerReportOrder } from "@/features/reports/domain/types";
 import { OrderStatusBadge } from "@/features/reports/presentation/components/OrderStatusBadge";
 
 const orderIdPreviewLength = 8;
 
-interface ReportTableProps {
-  orders: ReportOrder[];
+interface SellerReportTableProps {
+  orders: SellerReportOrder[];
 }
 
-export function ReportTable({ orders }: ReportTableProps) {
-  const t = useTranslations("reports");
+export function SellerReportTable({ orders }: SellerReportTableProps) {
+  const t = useTranslations("sellerReports");
 
   if (orders.length === 0) {
     return (
@@ -26,7 +26,7 @@ export function ReportTable({ orders }: ReportTableProps) {
   return (
     <div
       className="overflow-x-auto rounded-lg border border-foreground/10"
-      {...tid("report-table")}
+      {...tid("seller-report-table")}
     >
       <table className="w-full text-sm">
         <thead>
@@ -42,9 +42,6 @@ export function ReportTable({ orders }: ReportTableProps) {
             </th>
             <th className="px-3 py-2.5 text-left font-medium text-muted-foreground">
               {t("table.buyer")}
-            </th>
-            <th className="px-3 py-2.5 text-left font-medium text-muted-foreground">
-              {t("table.seller")}
             </th>
             <th className="px-3 py-2.5 text-left font-medium text-muted-foreground">
               {t("table.product")}
@@ -89,20 +86,6 @@ export function ReportTable({ orders }: ReportTableProps) {
                 </div>
               </td>
               <td className="px-3 py-2">
-                {order.seller_email ? (
-                  <div className="text-xs">
-                    <div>{order.seller_email}</div>
-                    {order.seller_display_name && (
-                      <div className="text-muted-foreground">
-                        {order.seller_display_name}
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <span className="text-muted-foreground/40">—</span>
-                )}
-              </td>
-              <td className="px-3 py-2">
                 {order.items.length > 0 ? (
                   <div className="flex flex-col gap-0.5">
                     {order.items.map((item) => (
@@ -129,7 +112,7 @@ export function ReportTable({ orders }: ReportTableProps) {
               </td>
               <td
                 className="px-3 py-2 font-mono text-xs text-muted-foreground"
-                {...tid(`report-row-transfer-${order.id}`)}
+                {...tid(`seller-report-row-transfer-${order.id}`)}
               >
                 {order.transfer_number ?? (
                   <span className="text-muted-foreground/40">—</span>

@@ -22,7 +22,7 @@ interface OrderStatusBadgeProps {
 }
 
 export function OrderStatusBadge({ status }: OrderStatusBadgeProps) {
-  const t = useTranslations("reports");
+  const t = useTranslations("sellerReports");
   const colorClass =
     STATUS_COLOR_MAP[status] ?? "bg-muted text-muted-foreground";
 

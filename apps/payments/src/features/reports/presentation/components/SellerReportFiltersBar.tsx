@@ -7,21 +7,21 @@ import { tid } from "shared";
 import { ORDER_STATUS_LIST } from "@/features/reports/domain/constants";
 import type {
   OrderStatus,
-  ReportFilters,
+  SellerReportFilters,
 } from "@/features/reports/domain/types";
 
-interface ReportFiltersBarProps {
-  filters: ReportFilters;
-  onFiltersChange: (updates: Partial<ReportFilters>) => void;
+interface SellerReportFiltersBarProps {
+  filters: SellerReportFilters;
+  onFiltersChange: (updates: Partial<SellerReportFilters>) => void;
   currencies: string[];
 }
 
-export function ReportFiltersBar({
+export function SellerReportFiltersBar({
   filters,
   onFiltersChange,
   currencies,
-}: ReportFiltersBarProps) {
-  const t = useTranslations("reports");
+}: SellerReportFiltersBarProps) {
+  const t = useTranslations("sellerReports");
 
   const hasActiveFilters = Object.values(filters).some((v) => v != null);
 
@@ -30,9 +30,7 @@ export function ReportFiltersBar({
       dateFrom: null,
       dateTo: null,
       status: null,
-      sellerId: null,
       buyerId: null,
-      productId: null,
       currency: null,
       amountMin: null,
       amountMax: null,
@@ -42,7 +40,7 @@ export function ReportFiltersBar({
   return (
     <div
       className="flex flex-wrap items-end gap-3 rounded-lg border border-foreground/10 bg-muted/30 p-4"
-      {...tid("reports-filters-bar")}
+      {...tid("seller-reports-filters-bar")}
     >
       {/* Date range */}
       <div className="flex flex-col gap-1">
@@ -56,7 +54,7 @@ export function ReportFiltersBar({
             onFiltersChange({ dateFrom: e.target.value || null })
           }
           className="h-8 rounded-sm border border-foreground/20 bg-background px-2 text-sm"
-          {...tid("reports-filter-date-from")}
+          {...tid("seller-reports-filter-date-from")}
         />
       </div>
       <div className="flex flex-col gap-1">
@@ -68,7 +66,7 @@ export function ReportFiltersBar({
           value={filters.dateTo ?? ""}
           onChange={(e) => onFiltersChange({ dateTo: e.target.value || null })}
           className="h-8 rounded-sm border border-foreground/20 bg-background px-2 text-sm"
-          {...tid("reports-filter-date-to")}
+          {...tid("seller-reports-filter-date-to")}
         />
       </div>
 
@@ -85,7 +83,7 @@ export function ReportFiltersBar({
             })
           }
           className="h-8 rounded-sm border border-foreground/20 bg-background px-2 text-sm"
-          {...tid("reports-filter-status")}
+          {...tid("seller-reports-filter-status")}
         >
           <option value="">{t("filters.allStatuses")}</option>
           {ORDER_STATUS_LIST.map((s) => (
@@ -108,7 +106,7 @@ export function ReportFiltersBar({
               onFiltersChange({ currency: e.target.value || null })
             }
             className="h-8 rounded-sm border border-foreground/20 bg-background px-2 text-sm"
-            {...tid("reports-filter-currency")}
+            {...tid("seller-reports-filter-currency")}
           >
             <option value="">{t("filters.allCurrencies")}</option>
             {currencies.map((c) => (
@@ -135,7 +133,7 @@ export function ReportFiltersBar({
             })
           }
           className="h-8 w-28 rounded-sm border border-foreground/20 bg-background px-2 text-sm"
-          {...tid("reports-filter-amount-min")}
+          {...tid("seller-reports-filter-amount-min")}
         />
       </div>
       <div className="flex flex-col gap-1">
@@ -152,7 +150,7 @@ export function ReportFiltersBar({
             })
           }
           className="h-8 w-28 rounded-sm border border-foreground/20 bg-background px-2 text-sm"
-          {...tid("reports-filter-amount-max")}
+          {...tid("seller-reports-filter-amount-max")}
         />
       </div>
 
@@ -162,7 +160,7 @@ export function ReportFiltersBar({
           type="button"
           onClick={handleClear}
           className="flex h-8 items-center gap-1.5 rounded-sm border border-foreground/20 bg-background px-3 text-sm text-muted-foreground transition-colors hover:border-destructive hover:text-destructive"
-          {...tid("reports-filter-clear")}
+          {...tid("seller-reports-filter-clear")}
         >
           <X className="size-3.5" />
           {t("filters.clearFilters")}

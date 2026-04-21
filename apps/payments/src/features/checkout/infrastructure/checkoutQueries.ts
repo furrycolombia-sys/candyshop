@@ -6,6 +6,7 @@ import {
   MS_PER_SECOND,
   ORDER_EXPIRY_HOURS,
   SECONDS_PER_MINUTE,
+  STOCK_ERROR_CODE,
 } from "@/features/checkout/domain/constants";
 import type {
   CartItem,
@@ -154,7 +155,7 @@ export async function createOrder(
     if (error || !success) {
       // Release already-reserved items — best-effort: continue even if individual releases fail
       await releaseReservedStock(supabase, reserved);
-      throw new Error("stock_error");
+      throw new Error(STOCK_ERROR_CODE);
     }
 
     reserved.push({ productId: item.id, quantity: item.quantity });

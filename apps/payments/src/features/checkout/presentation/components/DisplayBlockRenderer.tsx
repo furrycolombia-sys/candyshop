@@ -1,4 +1,3 @@
-/* eslint-disable react/no-multi-comp -- BlockContent is a private render-switch helper co-located with its parent */
 "use client";
 
 import { useLocale } from "next-intl";
@@ -19,22 +18,7 @@ interface DisplayBlockRendererProps {
   block: DisplayBlock;
 }
 
-interface BlockContentProps {
-  block: DisplayBlock;
-  locale: string;
-}
-
-export function DisplayBlockRenderer({ block }: DisplayBlockRendererProps) {
-  const locale = useLocale();
-
-  return (
-    <div {...tid(`display-block-${block.id}`)}>
-      <BlockContent block={block} locale={locale} />
-    </div>
-  );
-}
-
-function BlockContent({ block, locale }: BlockContentProps) {
+function renderBlockContent(block: DisplayBlock, locale: string) {
   switch (block.type) {
     case "text": {
       const b = block as TextBlock;
@@ -93,4 +77,14 @@ function BlockContent({ block, locale }: BlockContentProps) {
       );
     }
   }
+}
+
+export function DisplayBlockRenderer({ block }: DisplayBlockRendererProps) {
+  const locale = useLocale();
+
+  return (
+    <div {...tid(`display-block-${block.id}`)}>
+      {renderBlockContent(block, locale)}
+    </div>
+  );
 }

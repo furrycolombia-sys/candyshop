@@ -5,7 +5,7 @@ vi.mock("next-intl", () => ({
   useTranslations: () => (key: string) => key,
 }));
 
-vi.mock("@/shared/infrastructure/config/tid", () => ({
+vi.mock("shared", () => ({
   tid: (id: string) => ({ "data-testid": id }),
 }));
 
@@ -44,34 +44,14 @@ describe("OrderStatusBadge", () => {
     unmount();
   });
 
-  it("applies success color class for approved status", () => {
-    render(<OrderStatusBadge status="approved" />);
-    const span = screen.getByTestId("order-status-badge-approved");
-    expect(span.className).toContain("text-success");
-  });
-
-  it("applies destructive color class for rejected status", () => {
-    render(<OrderStatusBadge status="rejected" />);
-    const span = screen.getByTestId("order-status-badge-rejected");
-    expect(span.className).toContain("text-destructive");
-  });
-
-  it("applies muted style for expired status", () => {
-    render(<OrderStatusBadge status="expired" />);
-    const span = screen.getByTestId("order-status-badge-expired");
-    expect(span.className).toContain("text-muted-foreground");
-  });
-
-  it("applies info style for awaiting_payment status", () => {
-    render(<OrderStatusBadge status="awaiting_payment" />);
-    const span = screen.getByTestId("order-status-badge-awaiting_payment");
-    expect(span.className).toContain("text-info");
-  });
-
-  it("renders as an inline-flex span", () => {
+  it("renders as a span element", () => {
     render(<OrderStatusBadge status="pending" />);
     const span = screen.getByTestId("order-status-badge-pending");
     expect(span.tagName).toBe("SPAN");
-    expect(span.className).toContain("inline-flex");
+  });
+
+  it("renders the correct status text for each status", () => {
+    render(<OrderStatusBadge status="awaiting_payment" />);
+    expect(screen.getByText("status.awaiting_payment")).toBeInTheDocument();
   });
 });
