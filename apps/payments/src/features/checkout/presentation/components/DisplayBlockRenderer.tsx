@@ -1,6 +1,7 @@
 "use client";
 
 import { useLocale } from "next-intl";
+import ReactMarkdown from "react-markdown";
 import { i18nField, tid } from "shared";
 
 import { ImageBlock } from "./ImageBlock";
@@ -24,7 +25,15 @@ function renderBlockContent(block: DisplayBlock, locale: string) {
       const b = block as TextBlock;
       const content = i18nField(b, "content", locale) || b.content_en;
       return (
-        <div className="whitespace-pre-wrap text-sm/relaxed">{content}</div>
+        <div className="text-sm/relaxed [&_strong]:font-semibold">
+          <ReactMarkdown
+            components={{
+              p: ({ children }) => <p className="mb-0">{children}</p>,
+            }}
+          >
+            {content}
+          </ReactMarkdown>
+        </div>
       );
     }
     case "image": {
