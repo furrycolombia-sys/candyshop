@@ -72,15 +72,21 @@ console.log(`\n🧪 e2e  env=${targetEnv}  app=${targetApp}\n`);
 let devProc = null;
 
 if (targetEnv === "dev") {
-  // 1. Supabase — use supabase:docker so config.toml is generated from the
-  //    template with OAuth providers (Google, Discord) properly configured.
-  console.log("▶ supabase:docker start --env dev");
-  spawnSync("pnpm", ["supabase:docker", "start", "--env", "dev"], {
-    cwd: rootDir,
-    stdio: "inherit",
-    env: process.env,
-    shell: true,
-  });
+  // 1. Start Supabase only when using local Docker (SUPABASE_PORT is a valid number)
+  const supabasePort = Number.parseInt(process.env.SUPABASE_PORT ?? "", 10);
+  const useLocalSupabase = !Number.isNaN(supabasePort) && supabasePort > 0;
+
+  if (useLocalSupabase) {
+    console.log("▶ supabase:docker start --env dev");
+    spawnSync("pnpm", ["supabase:docker", "start", "--env", "dev"], {
+      cwd: rootDir,
+      stdio: "inherit",
+      env: process.env,
+      shell: true,
+    });
+  } else {
+    console.log("✓ Using Supabase Cloud — skipping local Supabase start\n");
+  }
 
   // 2. Start dev servers if not already up
   const port = portForApp(targetApp);
