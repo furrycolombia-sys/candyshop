@@ -1,0 +1,74 @@
+{
+  "agent": "solid",
+  "review_id": "2026-04-21_06-46-58",
+  "outputFile": ".ai-context/reviews/agents/2026-04-21_06-46-58_solid.json",
+  "scope": "apps/ packages/",
+  "issues": [
+    {
+      "id": "SOLID-001",
+      "severity": "warning",
+      "file": "apps/payments/src/features/checkout/presentation/components/SellerCheckoutCard.tsx",
+      "line": 79,
+      "title": "SRP: Form validation logic embedded directly in component",
+      "description": "SellerCheckoutCard.handleSubmit contains inline required-field validation logic (lines 87-97) that iterates form fields and constructs error messages. This is application/domain logic living in a presentation component. If validation rules change (e.g. adding min-length checks, regex patterns, or translating field labels properly) the component must change for a non-UI reason.",
+      "rule": "solid-principles.md#s---single-responsibility-principle",
+      "fix": "Extract field validation to a pure utility function in application/ or domain/ layer: e.g. `validateFormFields(fields, buyerSubmission): string | null`. The component then just calls it and sets the error state."
+    },
+    {
+      "id": "SOLID-002",
+      "severity": "warning",
+      "file": "apps/payments/src/features/checkout/presentation/components/SellerCheckoutCard.tsx",
+      "line": 92,
+      "title": "SRP + i18n: Hardcoded English string in validation — `Please fill in: ${field.label_en}`",
+      "description": "Line 93 constructs a validation error with a hardcoded English prefix and uses `field.label_en` directly. This is a presentation concern mixed with business validation and bypasses the i18n system. An eslint-disable comment already acknowledges the issue. The label is dynamic user data, but the surrounding sentence `Please fill in:` is UI copy that should go through `useTranslations`.",
+      "rule": "solid-principles.md#s---single-responsibility-principle",
+      "fix": "Pass a translation function or a pre-translated template string into the validator, or move the error formatting into the component after the validator returns which field failed."
+    },
+    {
+      "id": "SOLID-003",
+      "severity": "suggestion",
+      "file": "apps/payments/src/features/checkout/presentation/components/DynamicFormField.tsx",
+      "line": 39,
+      "title": "OCP: if/type chain for rendering different field inputs",
+      "description": "The `renderInput()` function at line 39 uses if/if/return to switch on `field.type` ('textarea', 'file', default). Adding a new field type (e.g. 'select', 'checkbox') requires modifying this function. The pattern is straightforward and the number of types is small, but it is a textbook OCP tension point.",
+      "rule": "solid-principles.md#o---openclosed-principle",
+      "fix": "Consider a renderer map: `const FIELD_RENDERERS: Record<string, (props) => JSX.Element> = { textarea: ..., file: ..., }`. New types extend the map without touching existing code. Given KISS, only apply if types are growing or the component is frequently changed."
+    },
+    {
+      "id": "SOLID-004",
+      "severity": "info",
+      "file": "apps/payments/src/features/reports/application/utils/exportSellerOrdersToExcel.ts",
+      "line": 136,
+      "title": "SRP: `downloadExcel` mixes file generation concern with DOM browser side-effect",
+      "description": "The file exports both `exportSellerOrdersToExcel` (pure XML/string generation) and `downloadExcel` (DOM manipulation to trigger a browser download). The XML builder is a pure function and could be tested in isolation. The `downloadExcel` function is a side-effectful browser utility that accesses `document`. Having them in the same file means testing the pure builder requires a DOM environment. This is a minor SRP concern — the file is small and cohesive around the export feature.",
+      "rule": "solid-principles.md#s---single-responsibility-principle",
+      "fix": "Optionally move `downloadExcel` to a shared browser utility (e.g. `shared/application/utils/downloadFile.ts`) if the download trigger pattern is needed elsewhere. Low priority given KISS — current co-location is acceptable for a feature-specific utility."
+    },
+    {
+      "id": "SOLID-005",
+      "severity": "info",
+      "file": "packages/app-components/src/components/AppNavigation.tsx",
+      "line": 48,
+      "title": "OCP: APP_ACCESS_RULES is an open configuration map — well-structured",
+      "description": "AppNavigation uses a `APP_ACCESS_RULES` configuration object (lines 48-74) to determine visibility per app, with a `matchesPermissions` function handling the evaluation. Adding a new app with access rules only requires adding an entry to the map. No conditional logic needs modification. This is a good application of OCP through configuration. Recording as Info/positive finding.",
+      "rule": "solid-principles.md#o---openclosed-principle",
+      "fix": "No action needed. This is a well-applied OCP pattern."
+    },
+    {
+      "id": "SOLID-006",
+      "severity": "info",
+      "file": "apps/payments/src/features/checkout/presentation/components/SellerCheckoutContent.tsx",
+      "line": 17,
+      "title": "ISP: Props decomposed into focused sub-interfaces — well-structured",
+      "description": "SellerCheckoutContent decomposes its props into `SubmissionState`, `MethodSelectionState`, and `BuyerFormState` interfaces rather than a single flat prop object. Each group represents a distinct concern. Components that would compose this (like SellerCheckoutCard) construct these objects explicitly. This is a textbook correct application of ISP. Recording as positive finding.",
+      "rule": "solid-principles.md#i---interface-segregation-principle",
+      "fix": "No action needed."
+    }
+  ],
+  "summary": {
+    "critical": 0,
+    "warning": 2,
+    "suggestion": 1,
+    "info": 3
+  }
+}

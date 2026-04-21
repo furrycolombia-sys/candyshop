@@ -6,4 +6,5 @@ export {
   TIME_CONSTANTS,
 } from "./time";
 export { CART_COOKIE_KEY } from "./cart";
+export { ORDER_STATUS_LIST } from "./orders";
 export { PROCESS_FLOW } from "./processFlow";

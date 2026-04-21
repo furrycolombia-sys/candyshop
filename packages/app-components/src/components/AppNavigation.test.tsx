@@ -109,7 +109,7 @@ describe("AppNavigation", () => {
     expect(screen.getByTestId("nav-link-store")).toBeInTheDocument();
     expect(screen.getByTestId("nav-link-landing")).toBeInTheDocument();
     expect(screen.getByTestId("nav-link-auth")).toBeInTheDocument();
-    expect(screen.getByTestId("nav-link-playground")).toBeInTheDocument();
+    expect(screen.queryByTestId("nav-link-playground")).not.toBeInTheDocument();
     expect(screen.queryByTestId("nav-link-admin")).not.toBeInTheDocument();
     expect(screen.queryByTestId("nav-link-studio")).not.toBeInTheDocument();
     expect(screen.queryByTestId("nav-link-payments")).not.toBeInTheDocument();
@@ -132,7 +132,7 @@ describe("AppNavigation", () => {
     expect(screen.getByTestId("nav-link-store")).toBeInTheDocument();
     expect(screen.getByTestId("nav-link-landing")).toBeInTheDocument();
     expect(screen.getByTestId("nav-link-auth")).toBeInTheDocument();
-    expect(screen.getByTestId("nav-link-playground")).toBeInTheDocument();
+    expect(screen.queryByTestId("nav-link-playground")).not.toBeInTheDocument();
     expect(screen.queryByTestId("nav-link-admin")).not.toBeInTheDocument();
     expect(screen.queryByTestId("nav-link-studio")).not.toBeInTheDocument();
     expect(screen.queryByTestId("nav-link-payments")).not.toBeInTheDocument();
@@ -157,6 +157,7 @@ describe("AppNavigation", () => {
     expect(screen.getByTestId("nav-link-studio")).toBeInTheDocument();
     expect(screen.getByTestId("nav-link-payments")).toBeInTheDocument();
     expect(screen.getByTestId("nav-link-admin")).toBeInTheDocument();
+    expect(screen.getByTestId("nav-link-playground")).toBeInTheDocument();
   });
 
   it("marks the current app link with aria-current=page", () => {
@@ -303,7 +304,7 @@ describe("AppNavigation", () => {
     expect(screen.getByTestId("nav-link-store")).toBeInTheDocument();
     expect(screen.getByTestId("nav-link-landing")).toBeInTheDocument();
     expect(screen.getByTestId("nav-link-auth")).toBeInTheDocument();
-    expect(screen.getByTestId("nav-link-playground")).toBeInTheDocument();
+    expect(screen.queryByTestId("nav-link-playground")).not.toBeInTheDocument();
     expect(screen.queryByTestId("nav-link-studio")).not.toBeInTheDocument();
     expect(screen.queryByTestId("nav-link-admin")).not.toBeInTheDocument();
     expect(screen.queryByTestId("nav-link-payments")).not.toBeInTheDocument();

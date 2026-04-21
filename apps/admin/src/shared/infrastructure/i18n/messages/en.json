@@ -32,7 +32,8 @@
     "settings": "Settings",
     "configuration": "Configuration",
     "users": "Users",
-    "userManagement": "User Management"
+    "userManagement": "User Management",
+    "salesReport": "Sales Report"
   },
   "dashboard": {
     "welcome": "Good to see you, operator.",
@@ -198,7 +199,8 @@
       "adminUsers": "User Permissions",
       "checkins": "Check-ins",
       "events": "Events",
-      "sellerAdmins": "Delegate Management"
+      "sellerAdmins": "Delegate Management",
+      "adminReports": "Sales Reports"
     },
     "lastSeen": {
       "justNow": "just now",
@@ -283,6 +285,9 @@
     "users": {
       "export": "Export Users Data"
     },
+    "admin": {
+      "reports": "Sales Reports"
+    },
     "events": {
       "create": "Create Events",
       "read": "View Events",
@@ -352,6 +357,9 @@
     "users": {
       "export": "Export selected users and receipt backups from the users table"
     },
+    "admin": {
+      "reports": "View and export all platform sales data including orders and receipts"
+    },
     "events": {
       "create": "Create new events in the system",
       "read": "View event details and schedules",
@@ -369,6 +377,57 @@
       "update": "Allow user to edit delegate permissions",
       "delete": "Allow user to remove delegates from their products"
     }
+  },
+  "reports": {
+    "title": "Sales Report",
+    "subtitle": "View and export all sales activity across the platform",
+    "filters": {
+      "dateFrom": "From",
+      "dateTo": "To",
+      "status": "Status",
+      "allStatuses": "All Statuses",
+      "seller": "Seller",
+      "allSellers": "All Sellers",
+      "buyer": "Buyer",
+      "allBuyers": "All Buyers",
+      "product": "Product",
+      "allProducts": "All Products",
+      "currency": "Currency",
+      "allCurrencies": "All Currencies",
+      "amountMin": "Min Amount",
+      "amountMax": "Max Amount",
+      "clearFilters": "Clear Filters"
+    },
+    "table": {
+      "orderId": "Order ID",
+      "date": "Date",
+      "buyer": "Buyer",
+      "seller": "Seller",
+      "product": "Product",
+      "status": "Status",
+      "currency": "Currency",
+      "amount": "Amount",
+      "transferNumber": "Transfer #",
+      "receipt": "Receipt",
+      "hasReceipt": "Yes",
+      "noReceipt": "No"
+    },
+    "status": {
+      "pending": "Pending",
+      "awaiting_payment": "Awaiting Payment",
+      "pending_verification": "Pending Verification",
+      "evidence_requested": "Evidence Requested",
+      "approved": "Approved",
+      "rejected": "Rejected",
+      "expired": "Expired"
+    },
+    "noResults": "No orders match the selected filters",
+    "loading": "Loading orders...",
+    "error": "Failed to load sales report",
+    "exportExcel": "Export to Excel",
+    "exporting": "Exporting...",
+    "exportError": "Failed to export. Please try again.",
+    "totalOrders": "{count, plural, one {# order} other {# orders}}"
   },
   "common": {
     "loading": "Loading...",

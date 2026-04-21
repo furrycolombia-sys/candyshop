@@ -1,0 +1,104 @@
+{
+  "agent": "performance",
+  "review_id": "2026-04-21_06-46-58",
+  "outputFile": ".ai-context/reviews/agents/2026-04-21_06-46-58_performance.json",
+  "scope": "apps/ packages/",
+  "issues": [
+    {
+      "id": "PERF-001",
+      "severity": "suggestion",
+      "file": "apps/payments/src/features/reports/presentation/pages/SellerReportsPage.tsx",
+      "line": 39,
+      "title": "renderContent is a plain function defined inside a Client Component",
+      "description": "The `renderContent` function is declared as a regular function inside the component body (not as a component, not memoized). On every render it is recreated. While the cost here is minimal because it just evaluates conditionals and returns JSX, it is a subtle pattern that could grow problematic if the content becomes heavier. Converting it to a memoized callback (`useCallback`) or inlining the conditional directly in the JSX would be marginally better.",
+      "rule": "code-review-standards.md#performance-standards",
+      "fix": "Inline the conditional rendering directly in the JSX return, or convert to a stable helper declared outside the component. For this simple case, inlining is the KISS approach."
+    },
+    {
+      "id": "PERF-002",
+      "severity": "suggestion",
+      "file": "apps/payments/src/features/reports/presentation/components/SellerReportTable.tsx",
+      "line": 15,
+      "title": "SellerReportTable is not wrapped in React.memo",
+      "description": "`SellerReportTable` receives a potentially large `orders` array. Whenever the parent `SellerReportsPage` re-renders (e.g., isExporting state toggle triggers a re-render), `SellerReportTable` will also re-render even though `orders` has not changed. Wrapping it in `React.memo` would skip the reconciliation cost for the whole table when only unrelated state (like `isExporting`) changes.",
+      "rule": "code-review-standards.md#performance-standards",
+      "fix": "Wrap the export with React.memo: `export const SellerReportTable = React.memo(function SellerReportTable({ orders }: SellerReportTableProps) { ... });`"
+    },
+    {
+      "id": "PERF-003",
+      "severity": "suggestion",
+      "file": "apps/payments/src/features/reports/presentation/components/SellerReportTable.tsx",
+      "line": 105,
+      "title": "toLocaleString called on every render for every row",
+      "description": "`order.total.toLocaleString('en-US', { ... })` is called inline for every row on every render. For small datasets this is negligible, but for large reports (hundreds of orders) this adds up. Consider memoizing the formatted value per order or pre-formatting in the hook/domain layer.",
+      "rule": "code-review-standards.md#performance-standards",
+      "fix": "Pre-format the total in the data layer or use a memoized row component. For large datasets, consider a shared `formatCurrency` utility that caches a `Intl.NumberFormat` instance instead of constructing a new one each time."
+    },
+    {
+      "id": "PERF-004",
+      "severity": "suggestion",
+      "file": "apps/payments/src/features/reports/presentation/components/SellerReportFiltersBar.tsx",
+      "line": 26,
+      "title": "hasActiveFilters recalculated on every render via Object.values scan",
+      "description": "`const hasActiveFilters = Object.values(filters).some((v) => v != null)` runs on every render. The `filters` object is derived from URL state (nuqs) and will be a new object reference each render, so this recalculation is cheap but could be wrapped in `useMemo` to make the intent explicit and guard against future complexity.",
+      "rule": "code-review-standards.md#performance-standards",
+      "fix": "Add `useMemo`: `const hasActiveFilters = useMemo(() => Object.values(filters).some((v) => v != null), [filters]);`"
+    },
+    {
+      "id": "PERF-005",
+      "severity": "suggestion",
+      "file": "apps/payments/src/features/reports/presentation/components/SellerReportFiltersBar.tsx",
+      "line": 28,
+      "title": "handleClear is recreated on every render",
+      "description": "`handleClear` is a plain function inside the component body that calls `onFiltersChange`. It is passed as an `onClick` handler. Without `useCallback`, it creates a new function reference on every render. If `SellerReportFiltersBar` is ever wrapped in `React.memo`, this would defeat the memoization.",
+      "rule": "code-review-standards.md#performance-standards",
+      "fix": "Wrap with useCallback: `const handleClear = useCallback(() => { onFiltersChange({ ... }); }, [onFiltersChange]);`"
+    },
+    {
+      "id": "PERF-006",
+      "severity": "suggestion",
+      "file": "apps/payments/src/features/reports/application/utils/exportSellerOrdersToExcel.ts",
+      "line": 52,
+      "title": "new Date() constructed inside buildOrderRow for every order row",
+      "description": "`new Date(order.created_at).toLocaleString()` constructs a Date object per order row during export. For large exports with many orders, this is potentially hundreds of allocations in a tight loop. A minor optimization is to format dates once via a shared utility.",
+      "rule": "code-review-standards.md#performance-standards",
+      "fix": "This is a one-shot export function (not rendered in UI), so the impact is minimal in practice. Consider it a low-priority improvement only if export performance becomes measurable."
+    },
+    {
+      "id": "PERF-007",
+      "severity": "info",
+      "file": "packages/app-components/src/components/AppNavigation.tsx",
+      "line": 88,
+      "title": "AppNavigation is a good candidate for React.memo",
+      "description": "`AppNavigation` is a shared navigation component rendered at the top of every page. Its props (`currentApp`, `urls`, `locales`, `userEmail`, `permissionState`) are typically stable across most renders. Wrapping in `React.memo` would avoid reconciliation on unrelated parent re-renders. However, since it is a server-component-friendly package component and the call sites may use stable references already, this is informational.",
+      "rule": "code-review-standards.md#performance-standards",
+      "fix": "Evaluate if parent components re-render frequently. If yes, add React.memo: `export const AppNavigation = React.memo(function AppNavigation(...) { ... });`"
+    },
+    {
+      "id": "PERF-008",
+      "severity": "info",
+      "file": "packages/app-components/src/components/AppNavigation.tsx",
+      "line": 104,
+      "title": "localizedHref helper recreated on every render",
+      "description": "The `localizedHref` function is defined inside the component body on every render. It is called in a `.map()` loop over `visibleApps`. Wrapping it in `useCallback` would make the reference stable, though since it is not passed as a prop but only used locally, this has no measurable impact on re-renders.",
+      "rule": "code-review-standards.md#performance-standards",
+      "fix": "Informational only. Could be extracted as a pure module-level utility `function localizedHref(baseUrl: string, locale: string): string` to make it stateless and reusable."
+    },
+    {
+      "id": "PERF-009",
+      "severity": "info",
+      "file": "packages/app-components/src/components/AppNavigation.tsx",
+      "line": 126,
+      "title": "className string concatenation in render loop",
+      "description": "Inside the `visibleApps.map()`, a `className` is computed via array join on each iteration. For a short list of apps (7 items max) this is negligible, but using the `cn()` utility from the `ui` package would be both idiomatic and slightly more readable.",
+      "rule": "code-review-standards.md#performance-standards",
+      "fix": "Replace the manual join with `cn(...)` from the `ui` package for consistency with the rest of the codebase."
+    }
+  ],
+  "summary": {
+    "critical": 0,
+    "warning": 0,
+    "suggestion": 5,
+    "info": 3
+  }
+}
