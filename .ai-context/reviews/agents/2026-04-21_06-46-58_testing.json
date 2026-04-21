@@ -1,0 +1,114 @@
+{
+  "agent": "testing",
+  "review_id": "2026-04-21_06-46-58",
+  "outputFile": ".ai-context/reviews/agents/2026-04-21_06-46-58_testing.json",
+  "scope": "apps/ packages/",
+  "issues": [
+    {
+      "id": "TEST-001",
+      "severity": "warning",
+      "file": "apps/payments/src/features/reports/presentation/pages/SellerReportsPage.tsx",
+      "line": 0,
+      "title": "Missing test file for SellerReportsPage",
+      "description": "No SellerReportsPage.test.tsx exists. The entire payments/reports feature has zero test files. The admin app has an equivalent ReportsPage.test.tsx with full coverage (loading, error, empty, export, filter states) that should serve as reference. The component handles three render states (loading, error, and content) plus an async export flow — all of which are untested.",
+      "rule": "testing.md#what-to-test",
+      "fix": "Create apps/payments/src/features/reports/presentation/pages/SellerReportsPage.test.tsx modelled on apps/admin/src/features/reports/presentation/pages/ReportsPage.test.tsx. Cover: renders root test-id, loading state, error state, empty state (export disabled), orders state (export enabled), export button click triggers exportSellerOrdersToExcel, filter change calls setFilters."
+    },
+    {
+      "id": "TEST-002",
+      "severity": "warning",
+      "file": "apps/payments/src/features/reports/application/utils/exportSellerOrdersToExcel.ts",
+      "line": 0,
+      "title": "Missing test file for exportSellerOrdersToExcel",
+      "description": "No exportSellerOrdersToExcel.test.ts exists. This utility contains pure functions (exportSellerOrdersToExcel, buildExportFilename, downloadExcel) that are fully testable without React. The admin counterpart exportOrdersToExcel.test.ts has 10 tests covering XML structure, header rows, per-item rows, XML escaping, empty orders, null fields, and the DOM download flow.",
+      "rule": "testing.md#what-to-test",
+      "fix": "Create apps/payments/src/features/reports/application/utils/exportSellerOrdersToExcel.test.ts modelled on apps/admin/src/features/reports/application/utils/exportOrdersToExcel.test.ts. Cover: valid XML structure, header columns, order data in output, receipt Yes/No, per-item rows, empty-item fallback row, XML escaping, null optional fields, downloadExcel DOM interaction, buildExportFilename format."
+    },
+    {
+      "id": "TEST-003",
+      "severity": "warning",
+      "file": "apps/payments/src/features/reports/presentation/components/SellerReportTable.tsx",
+      "line": 0,
+      "title": "Missing test file for SellerReportTable",
+      "description": "No SellerReportTable.test.tsx exists. The component has branching logic: empty state (noResults text, no table rendered) vs populated state (table rendered, per-order rows, receipt link vs no-receipt span, items list vs empty dash). The admin ReportTable.test.tsx demonstrates the required pattern.",
+      "rule": "testing.md#what-to-test",
+      "fix": "Create apps/payments/src/features/reports/presentation/components/SellerReportTable.test.tsx. Cover: empty state shows noResults text and no table element; populated state renders seller-report-table test-id; receipt link renders when receipt_url present; no-receipt span renders when receipt_url is null; items list shown; empty items show dash placeholder."
+    },
+    {
+      "id": "TEST-004",
+      "severity": "warning",
+      "file": "apps/payments/src/features/reports/presentation/components/SellerReportFiltersBar.tsx",
+      "line": 0,
+      "title": "Missing test file for SellerReportFiltersBar",
+      "description": "No SellerReportFiltersBar.test.tsx exists. Component has conditional rendering (currency select only when currencies.length > 0, clear button only when hasActiveFilters) and filter change callbacks for each input. Admin's ReportFiltersBar.test.tsx covers the equivalent component.",
+      "rule": "testing.md#what-to-test",
+      "fix": "Create apps/payments/src/features/reports/presentation/components/SellerReportFiltersBar.test.tsx. Cover: renders container test-id, date inputs, status select, currency select hidden when empty currencies array, currency select visible when currencies provided, clear button hidden with no active filters, clear button visible with active filter, onChange callbacks invoked for each input, handleClear nullifies all filters."
+    },
+    {
+      "id": "TEST-005",
+      "severity": "warning",
+      "file": "apps/payments/src/features/reports/presentation/components/OrderStatusBadge.tsx",
+      "line": 0,
+      "title": "Missing test file for OrderStatusBadge in payments/reports",
+      "description": "No OrderStatusBadge.test.tsx exists in the payments reports feature. Note: there IS a separate OrderStatusBadge.test.tsx in the orders feature (apps/payments/src/features/orders/presentation/components/OrderStatusBadge.test.tsx) — this is a different component. The payments/reports OrderStatusBadge has slightly different status colors and uses a different tid prefix.",
+      "rule": "testing.md#what-to-test",
+      "fix": "Create apps/payments/src/features/reports/presentation/components/OrderStatusBadge.test.tsx. Cover: renders span with test-id order-status-badge-{status}, renders translated status text, renders for all valid statuses without crashing."
+    },
+    {
+      "id": "TEST-006",
+      "severity": "warning",
+      "file": "apps/payments/src/features/reports/application/hooks/useSellerReports.ts",
+      "line": 0,
+      "title": "Missing test file for useSellerReports hook",
+      "description": "No useSellerReports.test.ts(x) exists. Every other hook in the payments app has a corresponding test file (useMyOrders, useReceivedOrders, usePaymentMethods, etc.). The hook handles success, loading, error states and exposes setFilters — all standard testable behaviors.",
+      "rule": "testing.md#what-to-test",
+      "fix": "Create apps/payments/src/features/reports/application/hooks/useSellerReports.test.tsx modelled on existing hook tests. Cover: returns orders/total on success, empty state on initial load, isError on failure, exposes setFilters, calls fetchSellerReportOrders with current filters."
+    },
+    {
+      "id": "TEST-007",
+      "severity": "warning",
+      "file": "apps/admin/src/features/reports/presentation/components/OrderStatusBadge.test.tsx",
+      "line": 47,
+      "title": "Class-based assertions on Tailwind classes for state in OrderStatusBadge tests",
+      "description": "Tests at lines 47-76 assert on CSS class names (e.g., expect(span.className).toContain('text-success'), 'text-destructive', 'text-muted-foreground', 'text-info', 'inline-flex'). Per e2e-selectors.md and testing.md, tests must NEVER assert on Tailwind classes for state — classes are implementation details that can change without breaking behavior. This is a newly added file in this branch.",
+      "rule": "e2e-selectors.md#forbidden-patterns",
+      "fix": "Remove the class-based assertions (lines 47-76). Replace with data-attribute or ARIA-based assertions if color-state is truly needed, or simply rely on the test-id and translated text assertions which are already present in lines 27-44. Example: instead of asserting className contains 'text-success', assert the badge renders and has the correct test-id — the visual color is a concern for visual regression tests, not unit tests."
+    },
+    {
+      "id": "TEST-008",
+      "severity": "suggestion",
+      "file": "apps/payments/src/features/reports/infrastructure/reportsApi.ts",
+      "line": 0,
+      "title": "Missing test file for reportsApi infrastructure",
+      "description": "No reportsApi.test.ts exists. All other infrastructure API files in the payments app have test counterparts (checkoutQueries.test.ts, receivedOrderQueries.test.ts, paymentMethodQueries.test.ts, etc.). The API module is pure and straightforward to test with MSW handlers.",
+      "rule": "testing.md#unit-testing-vitest",
+      "fix": "Create apps/payments/src/features/reports/infrastructure/reportsApi.test.ts. Cover: successful response returns orders+total, error response sets isError, query params are forwarded correctly."
+    },
+    {
+      "id": "TEST-009",
+      "severity": "info",
+      "file": "packages/app-components/src/components/AppNavigation.test.tsx",
+      "line": 112,
+      "title": "AppNavigation test adequately covers playground visibility",
+      "description": "The existing AppNavigation.test.tsx fully covers the playground visibility rules: playground is hidden while signed out (line 112), hidden for authenticated users without elevated permissions (line 135), visible when user has admin permissions (line 160), and hidden again after sign-out (line 307). The test uses tid()-based selectors and ARIA attributes correctly. No updates needed.",
+      "rule": "testing.md",
+      "fix": "No action required."
+    },
+    {
+      "id": "TEST-010",
+      "severity": "info",
+      "file": "apps/admin/src/features/reports/",
+      "line": 0,
+      "title": "Admin reports feature (this branch) has complete unit test coverage",
+      "description": "All six source files in the admin reports feature that require tests have corresponding test files: ReportsPage.test.tsx, ReportTable.test.tsx, ReportFiltersBar.test.tsx, OrderStatusBadge.test.tsx, exportOrdersToExcel.test.ts, useReportOrders.test.tsx. Edge cases (loading, error, empty state, export trigger, filter change) are all covered. Async operations use findBy* or waitFor correctly. No test.skip found.",
+      "rule": "testing.md",
+      "fix": "No action required (except TEST-007 class assertion issue in OrderStatusBadge.test.tsx)."
+    }
+  ],
+  "summary": {
+    "critical": 0,
+    "warning": 7,
+    "suggestion": 1,
+    "info": 2
+  }
+}

@@ -1,0 +1,104 @@
+{
+  "agent": "security",
+  "review_id": "2026-04-21_06-46-58",
+  "outputFile": ".ai-context/reviews/agents/2026-04-21_06-46-58_security.json",
+  "scope": "apps/ packages/ scripts/",
+  "issues": [
+    {
+      "id": "SEC-001",
+      "severity": "warning",
+      "file": "apps/payments/src/app/api/seller/reports/orders/route.ts",
+      "line": 60,
+      "title": "Unvalidated query parameters injected into PostgREST filters",
+      "description": "The seller reports route accepts `buyerId`, `status`, `currency`, `amountMin`, `amountMax`, `dateFrom`, `dateTo` from `searchParams` and injects them directly into PostgREST query filters without format validation. While `sellerId` is safely scoped to `user.id` (line 117), `buyerId` is not validated as a UUID, and `status`/`currency` accept arbitrary strings. URLSearchParams encoding prevents PostgREST operator injection, but non-UUID `buyerId` values are silently accepted and produce no-match results rather than an error — a potential information disclosure surface if PostgREST behavior changes or if an attacker probes filter behavior. The admin route (`apps/admin/src/app/api/admin/reports/orders/route.ts`) validates dates and amounts but similarly does not validate UUID format for `sellerId`, `buyerId`, or `productId`.",
+      "rule": "code-review-standards.md#security-standards",
+      "fix": "Add UUID format validation for `buyerId`, `sellerId`, and `productId` parameters using the existing `validateUuid` / `UUID_REGEX` utility before constructing the PostgREST filter. Add an allowlist check for `status` and `currency` fields against known valid enum values."
+    },
+    {
+      "id": "SEC-002",
+      "severity": "warning",
+      "file": "apps/payments/src/app/api/checkout/orders/route.ts",
+      "line": 202,
+      "title": "Stock validation compares requested quantity to static max_quantity (not remaining stock)",
+      "description": "The order creation route validates `item.quantity > product.max_quantity`, where `max_quantity` is a static capacity field on the product. It does NOT account for already-sold/reserved units. The actual remaining stock check (`reserve_stock` RPC) is done in `checkoutQueries.ts` via a Supabase RPC which properly decrements the stock atomically. However, the API route in `apps/payments/src/app/api/checkout/orders/route.ts` (which appears to be an older or alternative implementation path) uses only the static `max_quantity` field. This could allow overselling if the API route is used directly instead of the RPC-based path in `checkoutQueries.ts`. The checkout flow must go through the RPC to be safe.",
+      "rule": "checkout-stock-integrity.md",
+      "fix": "Remove or deprecate the static `max_quantity` check in the API route, or supplement it with a check against `supabase.rpc('reserve_stock')` as done in `checkoutQueries.ts`. Add a comment making clear that this route does not atomically reserve stock and should not be used for production checkout."
+    },
+    {
+      "id": "SEC-003",
+      "severity": "warning",
+      "file": "apps/payments/src/shared/infrastructure/receiptStorage.ts",
+      "line": 11,
+      "title": "File type validation for receipt uploads is client-side only",
+      "description": "Receipt file validation (`assertValidReceiptFile`, `validateReceiptFile`) is performed exclusively on the client side before uploading directly to Supabase Storage. There is no server-side API route that validates the MIME type or file size before storing. A malicious user could bypass the client-side check and upload any file type (e.g., HTML, SVG with scripts, executables) directly to the `receipts` bucket using the Supabase client SDK with a valid session token. The stored file URL is then displayed in `ReceivedOrderCard` as an `<img>` or `<a>` — an SVG with embedded JavaScript or a phishing HTML page could be harmful if served from Supabase's CDN.",
+      "rule": "code-review-standards.md#security-standards",
+      "fix": "Add a server-side API route or Supabase Storage policy that validates file MIME type and size. Alternatively, configure Supabase Storage bucket policies to only allow `image/jpeg`, `image/png`, and `image/webp` MIME types. Also consider serving receipts through a signed URL proxy that strips content-type or forces download disposition."
+    },
+    {
+      "id": "SEC-004",
+      "severity": "warning",
+      "file": "apps/studio/next.config.ts",
+      "line": 46,
+      "title": "Content Security Policy uses 'unsafe-inline' and 'unsafe-eval' in script-src across all apps",
+      "description": "All 7 apps (studio, landing, payments, playground, auth, admin, store) configure their CSP with `script-src 'self' 'unsafe-inline' 'unsafe-eval'`. This effectively disables the XSS protection benefit of CSP for scripts. `'unsafe-eval'` allows eval()-based code execution, and `'unsafe-inline'` allows inline event handlers and script tags. Combined, these directives mean any XSS vulnerability would not be mitigated by CSP. The same pattern is repeated in all apps: `apps/auth/next.config.ts`, `apps/admin/next.config.ts`, `apps/store/next.config.ts`, `apps/payments/next.config.ts`, `apps/landing/next.config.ts`, `apps/playground/next.config.ts`.",
+      "rule": "code-review-standards.md#security-standards",
+      "fix": "Replace `'unsafe-inline'` and `'unsafe-eval'` with a nonce-based or hash-based CSP. Next.js supports nonce-based CSP via middleware. `'unsafe-eval'` may be required by some third-party libraries but should be removed where possible. At minimum, document why these directives are necessary."
+    },
+    {
+      "id": "SEC-005",
+      "severity": "suggestion",
+      "file": "scripts/seed-moonfest.mjs",
+      "line": 14,
+      "title": "Hardcoded default seller email and production URL in seed script",
+      "description": "The seed script has `const SELLER_EMAIL = process.env.SELLER_EMAIL || 'furrycolombia@gmail.com'` and a hardcoded `IMG_BASE = 'https://moonfest.furrycolombia.com'` plus a hardcoded console.log pointing to `https://store.furrycolombia.com/store`. This is a portability and data sensitivity concern. The default email means the script could accidentally seed production data for a specific user if `SELLER_EMAIL` is not set. The hardcoded production URL is committed to source control.",
+      "rule": "no-hardcoding.md",
+      "fix": "Remove the default fallback for `SELLER_EMAIL` and require the env var explicitly (fail fast if not set). Move `IMG_BASE` and production URLs to env vars or accept them as CLI arguments. This follows the same pattern already used for `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`."
+    },
+    {
+      "id": "SEC-006",
+      "severity": "info",
+      "file": "packages/shared/src/components/ThemeScript.tsx",
+      "line": 41,
+      "title": "dangerouslySetInnerHTML used with a static, controlled string — safe",
+      "description": "The `ThemeScript` component uses `dangerouslySetInnerHTML={{ __html: themeScript }}` where `themeScript` is a hardcoded JavaScript string constant defined in the same file. The content is entirely developer-controlled, does not include any user input, and does not interpolate external values. This is the standard Next.js pattern for injecting a blocking theme initialization script. No action required.",
+      "rule": "code-review-standards.md#security-standards",
+      "fix": "No fix required. This is a safe and intentional use of dangerouslySetInnerHTML with a static, developer-controlled string."
+    },
+    {
+      "id": "SEC-007",
+      "severity": "info",
+      "file": "apps/auth/src/app/api/auth/refresh/route.ts",
+      "line": 10,
+      "title": "CORS implementation is origin-allowlist-based — correct pattern",
+      "description": "The auth refresh route implements CORS by comparing the `Origin` header against a set of allowed origins built from environment variables (`NEXT_PUBLIC_AUTH_URL`, `NEXT_PUBLIC_STORE_URL`, etc.). Only matching origins get `Access-Control-Allow-Origin` set to the request origin. This is the correct secure pattern. No wildcard origins are used. Credentials are allowed only for known origins.",
+      "rule": "code-review-standards.md#security-standards",
+      "fix": "No fix required. The CORS implementation follows security best practices."
+    },
+    {
+      "id": "SEC-008",
+      "severity": "info",
+      "file": "apps/payments/src/app/api/checkout/payment-methods/route.ts",
+      "line": 171,
+      "title": "Checkout payment methods route correctly gates on permissions and stock",
+      "description": "The route correctly: (1) verifies session via `createServerSupabaseClient().auth.getUser()`, (2) validates all input UUIDs via `UUID_REGEX`, (3) checks that the user has both `orders.create` and `receipts.create` permissions, (4) validates stock server-side and returns `{ methods: [], hasStockIssues: true }` if any item exceeds stock — not exposing payment details. This correctly implements the checkout stock integrity requirement.",
+      "rule": "checkout-stock-integrity.md",
+      "fix": "No fix required. The stock integrity pattern is correctly implemented."
+    },
+    {
+      "id": "SEC-009",
+      "severity": "info",
+      "file": "apps/payments/src/features/checkout/infrastructure/checkoutQueries.ts",
+      "line": 107,
+      "title": "Order creation uses atomic stock reservation via RPC — correct pattern",
+      "description": "The `createOrder` function uses `supabase.rpc('reserve_stock')` for atomic stock reservation with proper rollback (release_stock on failure), and calculates order total server-side from DB prices to prevent price manipulation via cart cookie manipulation. This is the correct, secure pattern.",
+      "rule": "checkout-stock-integrity.md",
+      "fix": "No fix required. The atomic stock reservation and server-side price calculation are correctly implemented."
+    }
+  ],
+  "summary": {
+    "critical": 0,
+    "warning": 4,
+    "suggestion": 1,
+    "info": 4
+  }
+}

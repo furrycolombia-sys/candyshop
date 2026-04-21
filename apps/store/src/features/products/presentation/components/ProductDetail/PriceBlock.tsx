@@ -18,9 +18,6 @@ export function PriceBlock({ product, discountLabel }: PriceBlockProps) {
     >
       <div className="flex items-baseline gap-3 flex-wrap">
         <div className="flex min-w-0 items-baseline gap-1">
-          <span className="shrink-0 font-display text-xs font-bold uppercase tracking-wider text-muted-foreground">
-            {currency}
-          </span>
           <span className="min-w-0 break-all font-display text-3xl font-extrabold sm:text-4xl lg:text-5xl">
             {formatPrice(price, currency)}
           </span>

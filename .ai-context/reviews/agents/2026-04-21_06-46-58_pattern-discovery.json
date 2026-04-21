@@ -1,0 +1,164 @@
+{
+  "agent": "pattern-discovery",
+  "review_id": "2026-04-21_06-46-58",
+  "outputFile": ".ai-context/reviews/agents/2026-04-21_06-46-58_pattern-discovery.json",
+  "scope": "apps/ packages/ scripts/",
+  "issues": [
+    {
+      "id": "PAT-001",
+      "severity": "warning",
+      "file": "apps/payments/src/features/reports/domain/types.ts / apps/admin/src/features/reports/domain/types.ts",
+      "line": 1,
+      "title": "OrderStatus type duplicated across two apps and shared domain",
+      "description": "OrderStatus is defined three times: (1) apps/payments/src/features/reports/domain/types.ts defines it as a literal union, (2) apps/admin/src/features/reports/domain/types.ts defines the same literal union again, and (3) apps/payments/src/shared/domain/types.ts derives it from the Supabase-generated enum (Database[\"public\"][\"Enums\"][\"payment_status\"]) which is the single true source. The two feature-layer copies must be kept in sync manually and currently match only by coincidence. Any future status addition or removal requires three edits.",
+      "rule": "code-review-standards.md#dry",
+      "fix": "Delete the duplicate inline definitions in both feature domain/types.ts files and re-export OrderStatus from the authoritative shared domain file (apps/payments/src/shared/domain/types.ts) or from the api package's Supabase types. Example: `export type { OrderStatus } from '@/shared/domain/types'`."
+    },
+    {
+      "id": "PAT-002",
+      "severity": "warning",
+      "file": "apps/payments/src/features/reports/domain/constants.ts / apps/admin/src/features/reports/domain/constants.ts",
+      "line": 3,
+      "title": "ORDER_STATUS_LIST duplicated across payments and admin report features",
+      "description": "Both feature-level constants files define the identical ORDER_STATUS_LIST array with the same seven statuses. Because the canonical type is already in shared domain, this list should also be a single source of truth. Currently any status added to the enum must be added to three places.",
+      "rule": "code-review-standards.md#dry",
+      "fix": "Extract ORDER_STATUS_LIST to a shared location (e.g. a package-level constant or the shared domain constants file) and import it in both features."
+    },
+    {
+      "id": "PAT-003",
+      "severity": "warning",
+      "file": "apps/payments/src/features/reports/application/utils/exportSellerOrdersToExcel.ts / apps/admin/src/features/reports/application/utils/exportOrdersToExcel.ts",
+      "line": 0,
+      "title": "Excel export implementation duplicated between payments and admin",
+      "description": "Both files contain nearly identical implementations: the same escapeXml(), toCell(), toNumberCell(), buildOrderRow(), and downloadExcel() helpers. The only differences are (1) the admin version adds seller_email/seller_display_name columns, and (2) the seller version adds a Filters sheet and a buildExportFilename() helper. The core XML-building and DOM-download logic is copied verbatim. The downloadExcel() function is byte-for-byte identical.",
+      "rule": "code-review-standards.md#dry",
+      "fix": "Extract the shared primitives (escapeXml, toCell, toNumberCell, downloadExcel, the XML Workbook wrapper) into a shared utility in packages/shared or the app's shared/application/utils/ layer. Each app can then build its own report-specific sheet on top of the shared primitives. This also enables unit-testing the XML helpers once."
+    },
+    {
+      "id": "PAT-004",
+      "severity": "warning",
+      "file": "apps/admin/src/app/api/admin/_shared/adminRest.ts / apps/payments/src/shared/infrastructure/adminRestClient.ts",
+      "line": 0,
+      "title": "Admin REST client infrastructure duplicated across apps",
+      "description": "Both files implement the same pattern: read SUPABASE_URL_INTERNAL / NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY, build admin headers with apikey + Authorization, provide a createRestPath() URL builder, and expose a generic fetch wrapper. The admin version (adminFetch) returns a raw Response while the payments version (adminFetchJson) auto-parses JSON, but the boilerplate is ~80% identical. Additionally both provide validateUuid() with marginally different UUID regexes (one checks variant bits [89ab], the other does not).",
+      "rule": "code-review-standards.md#dry",
+      "fix": "Consolidate into a single shared infrastructure module (e.g. packages/api or a server-only shared package). Expose both adminFetch (raw) and adminFetchJson (parsed) from one file. Unify the UUID regex—prefer the stricter variant-checking version from admin."
+    },
+    {
+      "id": "PAT-005",
+      "severity": "info",
+      "file": "apps/payments/src/shared/presentation/components/PaymentsSidebarNav.tsx / apps/admin/src/shared/presentation/components/AdminSidebar.tsx",
+      "line": 0,
+      "title": "Good pattern: permission-driven navigation using NavSection/NavItem config arrays",
+      "description": "Both sidebars use a consistent, well-documented pattern: (1) define NavItem type with required permissions array and optional mode ('all'|'any'), (2) declare NAV_SECTIONS as a static readonly config array, (3) filter sections/items at render time using matchesPermissions() + isLoading guard, (4) attach aria-current='page' and tid() test IDs to every link. This pattern cleanly separates navigation config from rendering logic and makes it trivial to add or reorder nav items. Worth documenting as a formal convention.",
+      "rule": "code-review-standards.md#pattern-discovery",
+      "fix": "Document this pattern in CLAUDE.md or a .claude/rules/navigation.md rule so future developers adopt it rather than building ad-hoc sidebars."
+    },
+    {
+      "id": "PAT-006",
+      "severity": "suggestion",
+      "file": "packages/app-components/src/components/AppNavigation.tsx",
+      "line": 76,
+      "title": "matchesPermissions() re-implemented locally in app-components instead of using auth/client",
+      "description": "AppNavigation.tsx defines its own matchesPermissions() function (lines 76-86) instead of importing the canonical version from `auth/client` which already exports the exact same function with the same signature. This is a direct DRY violation — the same logic exists in two maintained locations and could drift.",
+      "rule": "code-review-standards.md#dry",
+      "fix": "Replace the local implementation with `import { matchesPermissions } from 'auth/client'`. The package already exports it."
+    },
+    {
+      "id": "PAT-007",
+      "severity": "info",
+      "file": "apps/payments/src/shared/domain/PaymentMethodTypes.ts",
+      "line": 0,
+      "title": "Good pattern: DB-driven payment method form fields (no hardcoded field list)",
+      "description": "Payment method form fields (FormField type) are stored in Supabase as JSONB and driven entirely from the database. Labels and placeholders are bilingual (label_en / label_es / placeholder_en / placeholder_es). The DynamicFormField component renders any field type (text, email, number, textarea, file) from the FormField schema with no hardcoded field list. The seed script demonstrates full data-driven configuration. This is an excellent extensibility pattern.",
+      "rule": "code-review-standards.md#pattern-discovery",
+      "fix": "No fix needed. Document this pattern as the canonical approach for seller-configurable form fields."
+    },
+    {
+      "id": "PAT-008",
+      "severity": "warning",
+      "file": "packages/ui/src/constants/ui-constants.ts + packages/ui/src/constants/uiConstants.ts",
+      "line": 0,
+      "title": "Duplicate constants file: ui-constants.ts and uiConstants.ts are identical",
+      "description": "Two files in packages/ui/src/constants/ contain byte-for-byte identical content: ui-constants.ts and uiConstants.ts. Both export the same UI_CONSTANTS object. The index.ts exports only from uiConstants.ts, but the internal component sparkline.tsx imports from uiConstants.ts and mini-area-chart.tsx imports from ui-constants.ts. The test file ui-constants.test.ts imports from the kebab-case version. This creates confusion about the authoritative source and adds maintenance overhead.",
+      "rule": "code-review-standards.md#dry",
+      "fix": "Delete ui-constants.ts (the kebab-case duplicate). Update mini-area-chart.tsx and ui-constants.test.ts to import from uiConstants.ts (or rename to the kebab-case style per naming convention). Only one file should exist."
+    },
+    {
+      "id": "PAT-009",
+      "severity": "info",
+      "file": "apps/payments / apps/admin / apps/studio",
+      "line": 0,
+      "title": "Good pattern: ProtectedRoute factory (createProtectedRoute from auth/client)",
+      "description": "All apps that require authentication use an identical factory pattern: `export const ProtectedRoute = createProtectedRoute(appUrls.auth)`. The auth logic is centralized in the auth package and each app simply provides its auth redirect URL. The resulting ProtectedRoute files are typically a single line. This is a clean DRY pattern that makes auth concerns easy to locate.",
+      "rule": "code-review-standards.md#pattern-discovery",
+      "fix": "No fix needed. Document as a standard pattern for new apps."
+    },
+    {
+      "id": "PAT-010",
+      "severity": "info",
+      "file": "apps/payments / apps/admin",
+      "line": 0,
+      "title": "Good pattern: reports feature mirrors Clean Architecture consistently",
+      "description": "Both the payments and admin reports features follow the same Clean Architecture structure: domain/types.ts, domain/constants.ts, domain/searchParams.ts (nuqs parsers), infrastructure/reportsApi.ts (fetch layer), application/hooks/use*Reports.ts (data hook), presentation/components/{Table,FiltersBar,StatusBadge}, presentation/pages/*Page.tsx. The searchParams files correctly locate nuqs parsers in the domain layer per URL State conventions.",
+      "rule": "code-review-standards.md#pattern-discovery",
+      "fix": "No fix needed. This is a good template to reference when adding new features."
+    },
+    {
+      "id": "PAT-011",
+      "severity": "warning",
+      "file": "apps/admin/src/features/reports/presentation/pages/ReportsPage.tsx / apps/payments/src/features/reports/presentation/pages/SellerReportsPage.tsx",
+      "line": 0,
+      "title": "Inconsistent `tid` import path: some files use workspace package 'shared', others use absolute app path",
+      "description": "Within the admin app, most components import `tid` from the workspace package `import { tid } from 'shared'`, but the four recently-added reports components import it via the local alias `import { tid } from '@/shared/infrastructure/config/tid'`. Both paths resolve to the same function, but the inconsistency creates confusion about which import style is canonical. The payments app consistently uses `import { tid } from 'shared'`.",
+      "rule": "code-review-standards.md#naming",
+      "fix": "Standardize on `import { tid } from 'shared'` across all admin components. Update the four reports files (ReportsPage.tsx, ReportTable.tsx, ReportFiltersBar.tsx, OrderStatusBadge.tsx) to use the workspace package import."
+    },
+    {
+      "id": "PAT-012",
+      "severity": "warning",
+      "file": "apps/admin/src/app/api/admin/reports/orders/route.ts",
+      "line": 42,
+      "title": "Date range filtering uses different approach between payments and admin reports routes",
+      "description": "The payments reports route (apps/payments/src/app/api/seller/reports/orders/route.ts) builds the date range filter with a simple `created_at_lte` key trick that is not valid PostgREST syntax and may silently be ignored. The admin route uses PostgREST's `and` operator correctly (lines 68-81) and also adds proper ISO date validation. The inconsistency means the seller report date-to filter may not work as expected when both dateFrom and dateTo are specified.",
+      "rule": "code-review-standards.md#bug",
+      "fix": "Review and align the payments route date filter logic to match the correct admin implementation. The `created_at_lte` key approach (payments route line 51) should use PostgREST's `and` parameter instead."
+    },
+    {
+      "id": "PAT-013",
+      "severity": "info",
+      "file": "scripts/seed-moonfest.mjs / scripts/provision-account.mjs",
+      "line": 0,
+      "title": "Seed scripts define duplicate Nequi payment method data structures",
+      "description": "seed-moonfest.mjs defines a detailed NEQUI_PAYMENT_METHOD object (6 form fields, 3 display blocks), while provision-account.mjs defines a leaner Nequi method in upsertNequiMethod() (1 display block, 1 form field). Both scripts can run against the same seller and the last one to run wins, potentially overwriting the richer seed data with the minimal provision data. provision-account.mjs calls seed-moonfest.mjs as a child process and then immediately calls upsertNequiMethod(), meaning the provision script actively overwrites the more detailed seed payment method.",
+      "rule": "code-review-standards.md#dry",
+      "fix": "Unify by having provision-account.mjs re-use the NEQUI_PAYMENT_METHOD definition from seed-moonfest.mjs (import or extract to shared constant), or skip the redundant upsert in provision when seed-moonfest already ran. At minimum, ensure the two definitions stay in sync."
+    },
+    {
+      "id": "PAT-014",
+      "severity": "suggestion",
+      "file": "scripts/seed-moonfest.mjs",
+      "line": 14,
+      "title": "Hardcoded default email in seed script is project-specific",
+      "description": "The seed script has a hardcoded default `SELLER_EMAIL = 'furrycolombia@gmail.com'` and the provision-account script also defaults to the same email. While these are scripts rather than app code, the default email being production data is slightly risky — running without env overrides targets a real account.",
+      "rule": "no-hardcoding.md",
+      "fix": "Make the default empty/undefined and require the env var or CLI flag explicitly. Add a guard that errors clearly if SELLER_EMAIL is not provided."
+    },
+    {
+      "id": "PAT-015",
+      "severity": "info",
+      "file": "apps/payments / apps/admin",
+      "line": 0,
+      "title": "Good pattern: Page/PageContent split with Suspense boundary",
+      "description": "Multiple features in both payments and admin consistently split page components into two files: a Page.tsx wrapper (often server component or Suspense boundary) and a PageContent.tsx that contains the actual UI. This makes Suspense/loading states explicit, keeps route files thin, and allows PageContent to be tested in isolation without Next.js routing concerns. Consistent across: AssignedOrdersPage, ReceivedOrdersPage, CheckoutPage, PaymentMethodsPage, OrdersPage (payments), SettingsPage, DashboardPage, AuditLogPage, UsersPage (admin).",
+      "rule": "code-review-standards.md#pattern-discovery",
+      "fix": "No fix needed. This is a good pattern worth documenting as a convention."
+    }
+  ],
+  "summary": {
+    "critical": 0,
+    "warning": 6,
+    "suggestion": 2,
+    "info": 7
+  }
+}
