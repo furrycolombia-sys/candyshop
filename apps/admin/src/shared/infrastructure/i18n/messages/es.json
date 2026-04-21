@@ -32,7 +32,8 @@
     "settings": "Configuracion",
     "configuration": "Configuracion",
     "users": "Usuarios",
-    "userManagement": "Gestion de Usuarios"
+    "userManagement": "Gestion de Usuarios",
+    "salesReport": "Reporte de Ventas"
   },
   "dashboard": {
     "welcome": "Buen día, operador.",
@@ -200,7 +201,8 @@
       "adminUsers": "Permisos de Usuario",
       "checkins": "Check-ins",
       "events": "Eventos",
-      "sellerAdmins": "Gestion de Delegados"
+      "sellerAdmins": "Gestion de Delegados",
+      "adminReports": "Reportes de Ventas"
     },
     "lastSeen": {
       "justNow": "justo ahora",
@@ -285,6 +287,9 @@
     "users": {
       "export": "Exportar Datos de Usuarios"
     },
+    "admin": {
+      "reports": "Reportes de Ventas"
+    },
     "events": {
       "create": "Crear Eventos",
       "read": "Ver Eventos",
@@ -354,6 +359,9 @@
     "users": {
       "export": "Exportar usuarios seleccionados y respaldos de comprobantes desde la tabla de usuarios"
     },
+    "admin": {
+      "reports": "Ver y exportar todos los datos de ventas de la plataforma incluyendo ordenes y recibos"
+    },
     "events": {
       "create": "Crear nuevos eventos en el sistema",
       "read": "Ver detalles y horarios de eventos",
@@ -371,6 +379,57 @@
       "update": "Permitir al usuario editar permisos de delegados",
       "delete": "Permitir al usuario eliminar delegados de sus productos"
     }
+  },
+  "reports": {
+    "title": "Reporte de Ventas",
+    "subtitle": "Ver y exportar toda la actividad de ventas en la plataforma",
+    "filters": {
+      "dateFrom": "Desde",
+      "dateTo": "Hasta",
+      "status": "Estado",
+      "allStatuses": "Todos los Estados",
+      "seller": "Vendedor",
+      "allSellers": "Todos los Vendedores",
+      "buyer": "Comprador",
+      "allBuyers": "Todos los Compradores",
+      "product": "Producto",
+      "allProducts": "Todos los Productos",
+      "currency": "Moneda",
+      "allCurrencies": "Todas las Monedas",
+      "amountMin": "Monto Mínimo",
+      "amountMax": "Monto Máximo",
+      "clearFilters": "Limpiar Filtros"
+    },
+    "table": {
+      "orderId": "ID Orden",
+      "date": "Fecha",
+      "buyer": "Comprador",
+      "seller": "Vendedor",
+      "product": "Producto",
+      "status": "Estado",
+      "currency": "Moneda",
+      "amount": "Monto",
+      "transferNumber": "N° Transferencia",
+      "receipt": "Recibo",
+      "hasReceipt": "Sí",
+      "noReceipt": "No"
+    },
+    "status": {
+      "pending": "Pendiente",
+      "awaiting_payment": "Esperando Pago",
+      "pending_verification": "Verificacion Pendiente",
+      "evidence_requested": "Evidencia Solicitada",
+      "approved": "Aprobado",
+      "rejected": "Rechazado",
+      "expired": "Expirado"
+    },
+    "noResults": "No hay ordenes que coincidan con los filtros seleccionados",
+    "loading": "Cargando ordenes...",
+    "error": "Error al cargar el reporte de ventas",
+    "exportExcel": "Exportar a Excel",
+    "exporting": "Exportando...",
+    "exportError": "Error al exportar. Por favor intente de nuevo.",
+    "totalOrders": "{count, plural, one {# orden} other {# ordenes}}"
   },
   "common": {
     "loading": "Cargando...",

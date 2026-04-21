@@ -3,7 +3,7 @@
 import { useId } from "react";
 import { AreaChart, Area, Tooltip, ResponsiveContainer } from "recharts";
 
-import { UI_CONSTANTS } from "@ui/constants/ui-constants";
+import { UI_CONSTANTS } from "@ui/constants/uiConstants";
 import { cn } from "@ui/utils/cn";
 
 interface MiniAreaChartDataPoint {

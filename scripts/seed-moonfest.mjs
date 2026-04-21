@@ -65,6 +65,101 @@ async function patch(path, body) {
   return res.json();
 }
 
+async function del(path) {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
+    method: "DELETE",
+    headers,
+  });
+  if (!res.ok) throw new Error(`Delete ${path}: ${await res.text()}`);
+}
+
+// ─── Payment Method ──────────────────────────────────────────────────
+
+const NEQUI_PAYMENT_METHOD = {
+  name_en: "Nequi",
+  name_es: "Nequi",
+  is_active: true,
+  sort_order: 0,
+  display_blocks: [
+    {
+      id: "nequi-number",
+      type: "text",
+      content_en: "Send the payment to Nequi number: **3001234567**",
+      content_es: "Envia el pago al numero Nequi: **3001234567**",
+    },
+    {
+      id: "nequi-amount",
+      type: "text",
+      content_en: "Amount: **$300,000 COP** per ticket.",
+      content_es: "Monto: **$300,000 COP** por entrada.",
+    },
+    {
+      id: "nequi-instructions",
+      type: "text",
+      content_en:
+        "After sending the payment, fill in the fields below and attach a screenshot of the transaction.",
+      content_es:
+        "Despues de enviar el pago, completa los campos a continuacion y adjunta una captura de pantalla de la transaccion.",
+    },
+  ],
+  form_fields: [
+    {
+      id: "transaction_photo",
+      type: "file",
+      label_en: "Transaction screenshot",
+      label_es: "Captura de pantalla de la transaccion",
+      placeholder_en: "Upload a photo or screenshot of the Nequi transfer",
+      placeholder_es: "Sube una foto o captura del comprobante de Nequi",
+      required: true,
+    },
+    {
+      id: "cedula",
+      type: "text",
+      label_en: "ID number (Cedula)",
+      label_es: "Numero de cedula",
+      placeholder_en: "e.g. 1234567890",
+      placeholder_es: "Ej. 1234567890",
+      required: true,
+    },
+    {
+      id: "email",
+      type: "email",
+      label_en: "Email",
+      label_es: "Correo electronico",
+      placeholder_en: "your@email.com",
+      placeholder_es: "tu@correo.com",
+      required: true,
+    },
+    {
+      id: "tracking",
+      type: "text",
+      label_en: "Booking / tracking reference",
+      label_es: "Datos de tracking / reserva",
+      placeholder_en: "Booking code or tracking number",
+      placeholder_es: "Codigo de reserva o numero de tracking",
+      required: false,
+    },
+    {
+      id: "display_name",
+      type: "text",
+      label_en: "Your name (alias or real) — how you'd like to be identified",
+      label_es: "Tu nombre (alias o real) — como te gustaria ser identificado",
+      placeholder_en: "e.g. Kira or Juan Perez",
+      placeholder_es: "Ej. Kira o Juan Perez",
+      required: true,
+    },
+    {
+      id: "sender_account_name",
+      type: "text",
+      label_en: "Name of the Nequi account sending the payment",
+      label_es: "Nombre de la cuenta Nequi que envia el dinero",
+      placeholder_en: "Full name of the account owner",
+      placeholder_es: "Nombre completo del dueno de la cuenta",
+      required: true,
+    },
+  ],
+};
+
 // ─── Data ────────────────────────────────────────────────────────────
 
 const EVENT = {
@@ -101,6 +196,7 @@ const IMAGES = [
     alt_es: "Fursuit Chia en Moonfest",
     sort_order: 3,
     is_cover: false,
+    fit: "contain",
   },
   {
     url: `${IMG_BASE}/moka.webp`,
@@ -108,6 +204,7 @@ const IMAGES = [
     alt_es: "Fursuit Moka en Moonfest",
     sort_order: 4,
     is_cover: false,
+    fit: "contain",
   },
 ];
 
@@ -428,18 +525,31 @@ async function run() {
   }
 
   // 4. Entitlements (delete + recreate for idempotency)
-  await fetch(
-    `${SUPABASE_URL}/rest/v1/product_entitlements?product_id=eq.${productId}`,
-    {
-      method: "DELETE",
-      headers,
-    },
-  );
+  await del(`product_entitlements?product_id=eq.${productId}`);
   const ents = await insert(
     "product_entitlements",
     ENTITLEMENTS.map((e) => ({ ...e, product_id: productId })),
   );
   console.log("Entitlements:", ents.length);
+
+  // 5. Nequi payment method (upsert by seller + name)
+  const existingMethod = await query(
+    `seller_payment_methods?seller_id=eq.${sellerId}&name_en=eq.Nequi&select=id`,
+  );
+  if (existingMethod.length > 0) {
+    const methodId = existingMethod[0].id;
+    await patch(
+      `seller_payment_methods?id=eq.${methodId}`,
+      NEQUI_PAYMENT_METHOD,
+    );
+    console.log("Nequi payment method updated:", methodId);
+  } else {
+    const method = await insert("seller_payment_methods", {
+      ...NEQUI_PAYMENT_METHOD,
+      seller_id: sellerId,
+    });
+    console.log("Nequi payment method created:", method[0].id);
+  }
 
   console.log("\nDone! Product live at https://store.furrycolombia.com/store");
 }
