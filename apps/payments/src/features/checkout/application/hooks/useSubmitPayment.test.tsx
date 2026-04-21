@@ -13,6 +13,10 @@ vi.mock("@/features/checkout/infrastructure/checkoutQueries", () => ({
   submitReceipt: vi.fn(),
 }));
 
+vi.mock("@/shared/infrastructure/receiptStorage", () => ({
+  uploadReceipt: vi.fn(),
+}));
+
 import { useSubmitPayment } from "./useSubmitPayment";
 
 import {
@@ -36,6 +40,8 @@ const baseParams = {
   items: [],
   checkoutSessionId: "sess-1",
   buyerInfo: {},
+  receiptFile: null,
+  transferNumber: null,
 };
 
 describe("useSubmitPayment", () => {

@@ -27,7 +27,9 @@ export async function fetchSellerPaymentMethods(
 ): Promise<SellerPaymentMethodWithType[]> {
   const { data, error } = await supabase
     .from("seller_payment_methods" as never)
-    .select("id, name_en, name_es, display_blocks, form_fields, is_active")
+    .select(
+      "id, name_en, name_es, display_blocks, form_fields, is_active, requires_receipt, requires_transfer_number",
+    )
     .eq("seller_id" as never, sellerId)
     .eq("is_active" as never, true)
     .order("sort_order" as never);
@@ -44,6 +46,8 @@ export async function fetchSellerPaymentMethods(
         : [],
       form_fields: Array.isArray(row.form_fields) ? row.form_fields : [],
       is_active: row.is_active,
+      requires_receipt: row.requires_receipt ?? false,
+      requires_transfer_number: row.requires_transfer_number ?? false,
     }),
   );
 }

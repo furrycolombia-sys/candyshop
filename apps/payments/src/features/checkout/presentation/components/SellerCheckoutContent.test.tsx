@@ -55,6 +55,10 @@ vi.mock("./DisplayBlockRenderer", () => ({
   ),
 }));
 
+vi.mock("./ReceiptUpload", () => ({
+  ReceiptUpload: () => <div data-testid="receipt-upload">Upload</div>,
+}));
+
 vi.mock("./DynamicFormField", () => ({
   DynamicFormField: ({
     field,
@@ -93,6 +97,8 @@ const mockMethodWithFields: SellerPaymentMethodWithType = {
     { id: "f1", type: "text", label_en: "Full Name", required: true },
   ],
   is_active: true,
+  requires_receipt: false,
+  requires_transfer_number: false,
 };
 
 const mockMethodWithBlocks: SellerPaymentMethodWithType = {
@@ -104,6 +110,8 @@ const mockMethodWithBlocks: SellerPaymentMethodWithType = {
   ],
   form_fields: [],
   is_active: true,
+  requires_receipt: false,
+  requires_transfer_number: false,
 };
 
 describe("SellerCheckoutContent", () => {
@@ -129,9 +137,12 @@ describe("SellerCheckoutContent", () => {
     },
     buyerForm: {
       buyerSubmission: {},
+      receiptFile: null,
+      transferNumber: "",
       validationError: null,
       onBuyerSubmissionChange: vi.fn(),
-      onFileSelected: vi.fn(),
+      onReceiptChange: vi.fn(),
+      onTransferNumberChange: vi.fn(),
     },
     onSubmit: vi.fn(),
   };

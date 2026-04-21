@@ -79,20 +79,24 @@ const NEQUI_PAYMENT_METHOD = {
   name_en: "Nequi",
   name_es: "Nequi",
   is_active: true,
+  requires_receipt: true,
+  requires_transfer_number: true,
   sort_order: 0,
   display_blocks: [
     {
-      id: "nequi-number",
+      id: "nequi-info",
       type: "text",
-      content_en: "Send the payment to Nequi number: **3108747789**",
-      content_es: "Envia el pago al numero Nequi: **3108747789**",
+      content_en:
+        "Send payment to tag **@NEQUISAN15697**, number **3108747789**, or scan the QR below:",
+      content_es:
+        "Envía el pago al tag **@NEQUISAN15697**, al número **3108747789**, o escanea el QR:",
     },
     {
-      id: "6ffb079e-3b03-4c6d-b6e8-c8aeceb60171",
+      id: "nequi-qr",
       type: "image",
       url: "https://filedn.com/leGgCrrYIXV0YvzNNKbdzBb/3108747789.jpg",
-      alt_en: "Nequi QR 3108747789",
-      alt_es: "Nequi QR 3108747789",
+      alt_en: "Nequi QR code",
+      alt_es: "Código QR Nequi",
     },
     {
       id: "nequi-amount",
@@ -104,21 +108,12 @@ const NEQUI_PAYMENT_METHOD = {
       id: "nequi-instructions",
       type: "text",
       content_en:
-        "After sending the payment, fill in the fields below and attach a screenshot of the transaction.",
+        "After sending, fill in the fields below and upload a screenshot of the transaction.",
       content_es:
-        "Despues de enviar el pago, completa los campos a continuacion y adjunta una captura de pantalla de la transaccion.",
+        "Después de enviar, completa los campos y sube una captura de pantalla del comprobante.",
     },
   ],
   form_fields: [
-    {
-      id: "transaction_photo",
-      type: "file",
-      label_en: "Transaction screenshot",
-      label_es: "Captura de pantalla de la transaccion",
-      placeholder_en: "Upload a photo or screenshot of the Nequi transfer",
-      placeholder_es: "Sube una foto o captura del comprobante de Nequi",
-      required: true,
-    },
     {
       id: "cedula",
       type: "text",

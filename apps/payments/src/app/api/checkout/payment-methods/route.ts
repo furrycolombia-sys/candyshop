@@ -22,6 +22,8 @@ type PaymentMethodRow = {
   display_blocks: unknown;
   form_fields: unknown;
   is_active: boolean;
+  requires_receipt: boolean;
+  requires_transfer_number: boolean;
 };
 
 type ProductStockRow = {
@@ -92,6 +94,8 @@ function mapPaymentMethod(row: PaymentMethodRow): SellerPaymentMethodWithType {
       ? (row.form_fields as SellerPaymentMethodWithType["form_fields"])
       : [],
     is_active: row.is_active,
+    requires_receipt: row.requires_receipt,
+    requires_transfer_number: row.requires_transfer_number,
   };
 }
 
@@ -132,7 +136,8 @@ async function fetchPaymentMethodsBySeller(sellerId: string) {
       seller_id: `eq.${sellerId}`,
       is_active: "eq.true",
       order: "sort_order.asc",
-      select: "id,name_en,name_es,display_blocks,form_fields,is_active",
+      select:
+        "id,name_en,name_es,display_blocks,form_fields,is_active,requires_receipt,requires_transfer_number",
     }),
   );
 }

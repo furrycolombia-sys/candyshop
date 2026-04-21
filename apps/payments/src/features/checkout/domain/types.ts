@@ -41,6 +41,8 @@ export interface SellerPaymentMethodWithType {
   display_blocks: DisplayBlock[];
   form_fields: FormField[];
   is_active: boolean;
+  requires_receipt: boolean;
+  requires_transfer_number: boolean;
 }
 
 /** @deprecated Use SellerPaymentMethodWithType (new flat shape) */
