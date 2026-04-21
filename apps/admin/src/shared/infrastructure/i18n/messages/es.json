@@ -324,7 +324,9 @@
     "orders": {
       "create": "Realizar nuevas ordenes e iniciar el pago",
       "read": "Ver historial de ordenes y estado",
-      "update": "Aprobar, rechazar o solicitar evidencia en ordenes"
+      "update": "Aprobar, rechazar o solicitar evidencia en ordenes",
+      "approve": "Aprobar ordenes despues de revisar el comprobante de pago",
+      "request_proof": "Solicitar comprobante de pago al comprador antes de aprobar"
     },
     "receipts": {
       "create": "Subir comprobantes de pago como prueba",

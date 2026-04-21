@@ -322,7 +322,9 @@
     "orders": {
       "create": "Place new orders and initiate checkout",
       "read": "View order history and status",
-      "update": "Approve, reject, or request evidence on orders"
+      "update": "Approve, reject, or request evidence on orders",
+      "approve": "Approve orders after reviewing payment evidence",
+      "request_proof": "Request payment proof from buyers before approving"
     },
     "receipts": {
       "create": "Upload payment receipts as proof of payment",
