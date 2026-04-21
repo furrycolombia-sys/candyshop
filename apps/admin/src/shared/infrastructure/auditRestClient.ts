@@ -8,11 +8,14 @@ const JSON_CONTENT_TYPE = "application/json";
 /** Get the Supabase REST base URL and anon key from environment */
 export function getSupabaseConfig() {
   const url = supabaseUrl;
-  // Prefer server-only key; fall back to the public anon key (safe, designed to be public)
-  const key =
-    process.env.SUPABASE_ANON_KEY ??
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ??
-    "";
+  const serverKey = process.env.SUPABASE_ANON_KEY;
+  if (!serverKey) {
+    // SUPABASE_ANON_KEY missing — falling back to NEXT_PUBLIC_ key. Verify server env config.
+    console.warn(
+      "[auditRestClient] SUPABASE_ANON_KEY not set; falling back to NEXT_PUBLIC_SUPABASE_ANON_KEY. Check server environment configuration.",
+    );
+  }
+  const key = serverKey ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "";
   return { url, key };
 }
 

@@ -1,6 +1,8 @@
 import { SECTION_TYPES } from "shared/types";
 import { z } from "zod";
 
+import { CURRENCY_CODE_LENGTH } from "./constants";
+
 /** Translator function for validation messages */
 type ValidationT = (key: string) => string;
 
@@ -105,16 +107,9 @@ export function createProductFormSchema(t: ValidationT) {
       "digital",
       "deals",
     ]),
-    price_cop: z.coerce.number().int().positive(t("positiveNumber")),
-    price_usd: z.coerce.number().int().positive().optional().or(z.literal("")),
-    compare_at_price_cop: z.coerce
-      .number()
-      .int()
-      .nonnegative()
-      .nullable()
-      .optional()
-      .default(null),
-    compare_at_price_usd: z.coerce
+    price: z.coerce.number().int().positive(t("positiveNumber")),
+    currency: z.string().min(CURRENCY_CODE_LENGTH).max(CURRENCY_CODE_LENGTH),
+    compare_at_price: z.coerce
       .number()
       .int()
       .nonnegative()

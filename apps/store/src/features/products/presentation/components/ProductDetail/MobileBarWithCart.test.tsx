@@ -12,8 +12,7 @@ vi.mock("next-intl", () => ({
 
 vi.mock("shared", () => ({
   tid: (id: string) => ({ "data-testid": id }),
-  i18nPrice: () => "$25",
-  i18nCurrencyCode: () => "USD",
+  formatPrice: (amount: number, currency: string) => `${currency} ${amount}`,
 }));
 
 vi.mock("@/features/cart/application/hooks/useAddToCart", () => ({
@@ -50,10 +49,9 @@ function makeProduct(overrides: Partial<Product> = {}): Product {
     long_description_es: "",
     type: "merch",
     category: "merch",
-    price_cop: 100_000,
-    price_usd: 25,
-    compare_at_price_cop: null,
-    compare_at_price_usd: null,
+    price: 25,
+    currency: "USD",
+    compare_at_price: null,
     max_quantity: null,
     is_active: true,
     featured: false,

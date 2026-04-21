@@ -1,0 +1,253 @@
+{
+  "agent": "testing",
+  "timestamp": "2026-04-20T23:21:50",
+  "scope": "apps/",
+  "summary": {
+    "filesAnalyzed": 581,
+    "testFilesFound": 256,
+    "issuesFound": 10,
+    "critical": 0,
+    "warning": 6,
+    "suggestion": 3,
+    "info": 1,
+    "coverage": {
+      "components": {
+        "total": 151,
+        "tested": 103,
+        "percentage": 68,
+        "note": "Many untested components are shared AppTopNavigation/AccessDeniedState/ProtectedRoute boilerplate repeated across apps"
+      },
+      "hooks": {
+        "total": 55,
+        "tested": 42,
+        "percentage": 76,
+        "note": "useSupabaseAuth untested in multiple apps (auth provider wrapper, low risk). Critical payment hooks well covered."
+      },
+      "utils": {
+        "total": 8,
+        "tested": 8,
+        "percentage": 100
+      }
+    }
+  },
+  "issues": [
+    {
+      "id": "TEST-001",
+      "severity": "warning",
+      "category": "Missing Coverage",
+      "title": "assigned-orders feature has zero test coverage",
+      "description": "The newly added assigned-orders feature (GH-119) has no tests at all. It contains: useAssignedOrders hook, AssignedOrdersPage, and AssignedOrdersPageContent — none of which have test files.",
+      "files": [
+        "apps/payments/src/features/assigned-orders/application/hooks/useAssignedOrders.ts",
+        "apps/payments/src/features/assigned-orders/presentation/pages/AssignedOrdersPage.tsx",
+        "apps/payments/src/features/assigned-orders/presentation/pages/AssignedOrdersPageContent.tsx"
+      ],
+      "fix": "Add useAssignedOrders.test.tsx with loading/success/error states. Add AssignedOrdersPage.test.tsx covering delegate access and order display."
+    },
+    {
+      "id": "TEST-002",
+      "severity": "warning",
+      "category": "Missing Coverage",
+      "title": "Checkout flow components missing tests — security-sensitive path",
+      "description": "Several checkout presentation components that handle payment data display have no tests: BuyerField, DynamicFormField, DisplayBlockRenderer, ImageBlock, DisplayBlocksSection, FormFieldsSection. These are rendered in the checkout flow where incorrect behaviour could mislead users about payment information.",
+      "files": [
+        "apps/payments/src/features/checkout/presentation/components/BuyerField.tsx",
+        "apps/payments/src/features/checkout/presentation/components/DynamicFormField.tsx",
+        "apps/payments/src/features/checkout/presentation/components/DisplayBlockRenderer.tsx",
+        "apps/payments/src/features/checkout/presentation/components/ImageBlock.tsx",
+        "apps/payments/src/features/checkout/presentation/components/DisplayBlocksSection.tsx",
+        "apps/payments/src/features/checkout/presentation/components/FormFieldsSection.tsx"
+      ],
+      "fix": "Add component tests covering rendering with various field types and empty/null data."
+    },
+    {
+      "id": "TEST-003",
+      "severity": "warning",
+      "category": "Missing Coverage",
+      "title": "Payment method editor sub-components missing tests",
+      "description": "BlockEditor, FormSectionEditor, DisplaySectionEditor, VideoBlockEditor, and FieldRow — the building blocks of the seller payment method editor — have no tests. Bugs in these components could produce malformed payment method configurations.",
+      "files": [
+        "apps/payments/src/features/payment-methods/presentation/components/BlockEditor.tsx",
+        "apps/payments/src/features/payment-methods/presentation/components/FormSectionEditor.tsx",
+        "apps/payments/src/features/payment-methods/presentation/components/DisplaySectionEditor.tsx",
+        "apps/payments/src/features/payment-methods/presentation/components/VideoBlockEditor.tsx",
+        "apps/payments/src/features/payment-methods/presentation/components/FieldRow.tsx"
+      ],
+      "fix": "Add tests for each editor sub-component covering add/remove/edit interactions and field validation rendering."
+    },
+    {
+      "id": "TEST-004",
+      "severity": "warning",
+      "category": "Missing Coverage",
+      "title": "admin/users Delegates sub-components not tested",
+      "description": "AsDelegateRow, AsSellerRow, PermissionBadges, RemoveButton, ProductName inside the Delegates folder all lack tests. These components are part of the delegate permission management flow introduced in recent commits.",
+      "files": [
+        "apps/admin/src/features/users/presentation/components/Delegates/AsDelegateRow.tsx",
+        "apps/admin/src/features/users/presentation/components/Delegates/AsSellerRow.tsx",
+        "apps/admin/src/features/users/presentation/components/Delegates/PermissionBadges.tsx",
+        "apps/admin/src/features/users/presentation/components/Delegates/RemoveButton.tsx",
+        "apps/admin/src/features/users/presentation/components/Delegates/ProductName.tsx"
+      ],
+      "fix": "Add unit tests for each delegate sub-component covering rendering with various permission states."
+    },
+    {
+      "id": "TEST-005",
+      "severity": "warning",
+      "category": "Missing Coverage",
+      "title": "admin/users batch hooks (useUserPermissionsBatch, useUserReceiptsBatch) have no tests",
+      "description": "These hooks aggregate data across multiple users, making edge cases (empty arrays, partial errors) especially important to test. Neither hook has a test file.",
+      "files": [
+        "apps/admin/src/features/users/application/hooks/useUserPermissionsBatch.ts",
+        "apps/admin/src/features/users/application/hooks/useUserReceiptsBatch.ts"
+      ],
+      "fix": "Add tests covering empty input arrays, single user, multiple users, and error states."
+    },
+    {
+      "id": "TEST-006",
+      "severity": "warning",
+      "category": "Missing Coverage",
+      "title": "ConfirmActionPanel (received-orders) has no tests",
+      "description": "ConfirmActionPanel is an interactive confirmation dialog in the received-orders flow (approve/reject orders). It handles a destructive action path with no test coverage.",
+      "files": [
+        "apps/payments/src/features/received-orders/presentation/components/ConfirmActionPanel.tsx"
+      ],
+      "fix": "Add tests verifying confirm/cancel actions, button state, and callback invocation."
+    },
+    {
+      "id": "TEST-007",
+      "severity": "suggestion",
+      "category": "Duplicate Test Files",
+      "title": "Duplicated test files across studio InlineEditor and inline-editor directories",
+      "description": "The studio app has both InlineEditor/ (PascalCase) and inline-editor/ (kebab-case) component directories, each with a complete set of 22 test files. These are likely duplicated during a rename/refactor and are running the same tests twice, inflating test count and CI time.",
+      "files": [
+        "apps/studio/src/features/products/presentation/components/InlineEditor/ (22 test files)",
+        "apps/studio/src/features/products/presentation/components/inline-editor/ (22 test files)"
+      ],
+      "fix": "Determine the canonical directory name, remove the other directory and its duplicate tests."
+    },
+    {
+      "id": "TEST-008",
+      "severity": "suggestion",
+      "category": "Duplicate Test Files",
+      "title": "Duplicated hook test files in studio/products/application vs application/hooks",
+      "description": "Tests for useAutoResize, useLangToggle, useProductForm, useProductMutations, useProducts appear in both apps/studio/src/features/products/application/ and apps/studio/src/features/products/application/hooks/. This doubles test runs for the same code.",
+      "files": [
+        "apps/studio/src/features/products/application/useAutoResize.test.ts",
+        "apps/studio/src/features/products/application/hooks/useAutoResize.test.ts",
+        "apps/studio/src/features/products/application/useLangToggle.test.ts",
+        "apps/studio/src/features/products/application/hooks/useLangToggle.test.ts",
+        "apps/studio/src/features/products/application/useProductForm.test.tsx",
+        "apps/studio/src/features/products/application/hooks/useProductForm.test.tsx",
+        "apps/studio/src/features/products/application/useProductMutations.test.tsx",
+        "apps/studio/src/features/products/application/hooks/useProductMutations.test.tsx",
+        "apps/studio/src/features/products/application/useProducts.test.tsx",
+        "apps/studio/src/features/products/application/hooks/useProducts.test.tsx"
+      ],
+      "fix": "Remove the files in apps/studio/src/features/products/application/ (non-hooks folder) — the canonical location per Clean Architecture is application/hooks/."
+    },
+    {
+      "id": "TEST-009",
+      "severity": "suggestion",
+      "category": "Missing Coverage",
+      "title": "landing app has minimal test coverage — only HomeSections tested",
+      "description": "The landing app has 6 presentation components (HeroSection, FeaturesSection, CtaSection, RolesSection, AppTopNavigation, HomeSections) and only HomeSections has a test. The LandingPage itself also has no test.",
+      "files": [
+        "apps/landing/src/features/home/presentation/components/CtaSection.tsx",
+        "apps/landing/src/features/home/presentation/components/RolesSection.tsx",
+        "apps/landing/src/features/home/presentation/components/HeroSection.tsx",
+        "apps/landing/src/features/home/presentation/components/FeaturesSection.tsx",
+        "apps/landing/src/features/home/presentation/pages/LandingPage.tsx"
+      ],
+      "fix": "Add basic rendering tests for each landing page section. Priority: HeroSection (main CTA), CtaSection."
+    },
+    {
+      "id": "TEST-010",
+      "severity": "info",
+      "category": "Pattern",
+      "title": "useSupabaseAuth intentionally untested across all apps",
+      "description": "Every app has its own useSupabaseAuth hook (admin, auth, store, studio, payments, playground) with no tests. This appears intentional — it wraps Supabase's auth client which is an external dependency. The pattern is consistent and acceptable.",
+      "files": [],
+      "fix": "No action required. Consider adding a brief comment in each file noting why tests are omitted."
+    }
+  ],
+  "missingTests": [
+    {
+      "feature": "assigned-orders (payments)",
+      "files": [
+        "useAssignedOrders.ts",
+        "AssignedOrdersPage.tsx",
+        "AssignedOrdersPageContent.tsx"
+      ],
+      "priority": "high"
+    },
+    {
+      "feature": "checkout components (payments)",
+      "files": [
+        "BuyerField.tsx",
+        "DynamicFormField.tsx",
+        "DisplayBlockRenderer.tsx",
+        "ImageBlock.tsx",
+        "DisplayBlocksSection.tsx",
+        "FormFieldsSection.tsx",
+        "SellerCheckoutCard.tsx",
+        "SellerCheckoutContent.tsx"
+      ],
+      "priority": "high"
+    },
+    {
+      "feature": "payment-method editor sub-components (payments)",
+      "files": [
+        "BlockEditor.tsx",
+        "FormSectionEditor.tsx",
+        "DisplaySectionEditor.tsx",
+        "VideoBlockEditor.tsx",
+        "FieldRow.tsx"
+      ],
+      "priority": "medium"
+    },
+    {
+      "feature": "admin delegates sub-components",
+      "files": [
+        "AsDelegateRow.tsx",
+        "AsSellerRow.tsx",
+        "PermissionBadges.tsx",
+        "RemoveButton.tsx",
+        "ProductName.tsx"
+      ],
+      "priority": "medium"
+    },
+    {
+      "feature": "admin batch hooks",
+      "files": ["useUserPermissionsBatch.ts", "useUserReceiptsBatch.ts"],
+      "priority": "medium"
+    },
+    {
+      "feature": "landing sections",
+      "files": [
+        "CtaSection.tsx",
+        "RolesSection.tsx",
+        "HeroSection.tsx",
+        "FeaturesSection.tsx"
+      ],
+      "priority": "low"
+    }
+  ],
+  "patterns": [
+    {
+      "name": "Strong test coverage pattern",
+      "description": "The codebase shows a mature testing culture: all utils (100%), most hooks (76%), and most components in core features are tested. The admin, payments payment-methods, store product-detail, and studio seller-admins features are especially well covered."
+    },
+    {
+      "name": "Duplicate directories need cleanup",
+      "description": "Both the InlineEditor/inline-editor component duplication and the application/application/hooks test duplication in studio suggest an in-progress rename that was not fully completed."
+    },
+    {
+      "name": "Security-critical path (checkout/payment-methods API route) is well tested",
+      "description": "The POST /api/checkout/payment-methods route has 220 lines of tests covering stock validation, permission rejection, and payment method suppression — directly aligning with the Checkout Stock Integrity rule."
+    },
+    {
+      "name": "useSubmitPayment test is behavior-focused",
+      "description": "Spot-checked useSubmitPayment.test.tsx: tests are behavior-oriented (testing createOrder/submitReceipt calls), use proper mocking, and cover the main flow. Good example of test quality."
+    }
+  ]
+}

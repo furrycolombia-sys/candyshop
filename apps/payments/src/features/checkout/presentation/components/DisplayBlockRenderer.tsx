@@ -13,7 +13,7 @@ import type {
   TextBlock,
   UrlBlock,
   VideoBlock,
-} from "@/shared/domain/paymentMethodTypes";
+} from "@/shared/domain/PaymentMethodTypes";
 
 interface DisplayBlockRendererProps {
   block: DisplayBlock;

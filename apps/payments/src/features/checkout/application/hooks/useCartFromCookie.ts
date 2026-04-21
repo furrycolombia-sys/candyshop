@@ -111,10 +111,11 @@ export function useCartFromCookie() {
       sellerId,
       sellerName: sellerNames?.[sellerId] ?? FALLBACK_SELLER_NAME,
       items: sellerItems,
-      subtotalCop: sellerItems.reduce(
-        (sum, item) => sum + item.price_cop * item.quantity,
+      subtotal: sellerItems.reduce(
+        (sum, item) => sum + item.price * item.quantity,
         0,
       ),
+      currency: sellerItems[0]?.currency ?? "USD",
     }));
   }, [items, sellerNames]);
 

@@ -25,6 +25,11 @@ export function CartDrawer() {
   const { items, itemCount, removeItem, updateQuantity, clearCart } = useCart();
   const flyCtx = useFlyToCartContext();
 
+  const translators = useMemo(
+    () => ({ t, tProducts, tTypes, tCategories }),
+    [t, tProducts, tTypes, tCategories],
+  );
+
   // Group items by seller
   const sellerGroups = useMemo(() => groupCartBySeller(items), [items]);
   const sellerIds = useMemo(
@@ -47,7 +52,6 @@ export function CartDrawer() {
       ? t("itemCountBadge", { count: BADGE_OVERFLOW_THRESHOLD })
       : String(itemCount);
 
-  /** Format a raw currency amount using the shared i18nPrice utility */
   return (
     <Sheet>
       <SheetTrigger asChild>
@@ -140,7 +144,7 @@ export function CartDrawer() {
                           key={item.id}
                           item={item}
                           locale={locale}
-                          translators={{ t, tProducts, tTypes, tCategories }}
+                          translators={translators}
                           removeItem={removeItem}
                           updateQuantity={updateQuantity}
                         />

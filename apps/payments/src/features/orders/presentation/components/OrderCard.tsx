@@ -16,7 +16,7 @@ import { ExpirationLabel } from "@/features/orders/presentation/components/Expir
 import { OrderItemsList } from "@/features/orders/presentation/components/OrderItemsList";
 import { OrderStatusBadge } from "@/features/orders/presentation/components/OrderStatusBadge";
 import { StatusContent } from "@/features/orders/presentation/components/StatusContent";
-import { formatCop } from "@/shared/application/utils/formatCop";
+import { formatPrice } from "@/shared/application/utils/formatPrice";
 
 const TERMINAL_STATUSES = new Set(["approved", "rejected", "expired"]);
 
@@ -73,7 +73,7 @@ export function OrderCard({ order }: OrderCardProps) {
           {t("total")}
         </span>
         <span className="font-display text-lg font-extrabold">
-          {formatCop(order.total_cop)}
+          {formatPrice(order.total, order.currency)}
         </span>
       </div>
 

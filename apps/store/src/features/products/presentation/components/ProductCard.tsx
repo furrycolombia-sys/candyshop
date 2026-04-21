@@ -2,7 +2,7 @@
 
 import { ShoppingCart } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
-import { i18nCurrencyCode, i18nField, i18nPrice, slugify, tid } from "shared";
+import { formatPrice, i18nField, slugify, tid } from "shared";
 import { cn } from "ui";
 
 import { ProductBadges } from "./ProductBadges";
@@ -140,11 +140,8 @@ export function ProductCard({
               )}
               {...tid("product-card-price")}
             >
-              <span className="shrink-0 text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                {i18nCurrencyCode(product, locale)}
-              </span>
               <span className="min-w-0 break-all">
-                {i18nPrice(product, locale)}
+                {formatPrice(product.price, product.currency)}
               </span>
             </span>
 

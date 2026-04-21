@@ -18,8 +18,7 @@ vi.mock("next-intl", () => ({
 }));
 vi.mock("shared", () => ({
   tid: (id: string) => ({ "data-testid": id }),
-  i18nPrice: (product: Record<string, unknown>) =>
-    `$${product.price_usd ?? product.price_cop}`,
+  formatPrice: (amount: number, currency: string) => `${currency} ${amount}`,
   useSupabase: () => ({}),
 }));
 vi.mock("ui", () => ({

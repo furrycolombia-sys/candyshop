@@ -1,19 +1,21 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { tid } from "shared";
+import { formatPrice, tid } from "shared";
 
 import type { CartItem } from "@/features/checkout/domain/types";
 
 interface CheckoutItemsSummaryProps {
   items: CartItem[];
-  subtotalCop: number;
+  subtotal: number;
+  currency: string;
   getItemName: (item: CartItem) => string;
 }
 
 export function CheckoutItemsSummary({
   items,
-  subtotalCop,
+  subtotal,
+  currency,
   getItemName,
 }: CheckoutItemsSummaryProps) {
   const t = useTranslations("checkout");
@@ -43,7 +45,7 @@ export function CheckoutItemsSummary({
               </span>
             </div>
             <span className="shrink-0 pt-0.5 text-right font-bold tabular-nums">
-              ${(item.price_cop * item.quantity).toLocaleString()}
+              {formatPrice(item.price * item.quantity, item.currency)}
             </span>
           </li>
         ))}
@@ -56,7 +58,7 @@ export function CheckoutItemsSummary({
           className="text-right font-display text-base font-extrabold tabular-nums sm:text-lg"
           {...tid("checkout-subtotal")}
         >
-          ${subtotalCop.toLocaleString()} COP
+          {formatPrice(subtotal, currency)}
         </span>
       </div>
     </div>
