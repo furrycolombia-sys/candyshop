@@ -391,13 +391,15 @@ test.describe.serial("Full purchase flow: two sellers, one buyer", () => {
     });
     await snap(page, "checkout-two-sellers-loaded");
 
-    // Count only the outer card containers (not toggle buttons or status divs)
-    const sellerCards = page.getByTestId(/^seller-checkout-[^t]/);
+    // Count only the outer card containers (UUID-prefixed, excludes toggle- and submitted-)
+    const sellerCards = page.getByTestId(/^seller-checkout-[0-9a-f]/);
     await expect(sellerCards).toHaveCount(2, { timeout: ELEMENT_TIMEOUT_MS });
     await snap(page, "checkout-two-cards");
 
-    // ── Fill and submit Seller A's payment ─────────────────────
-    const cardASelect = page.getByTestId("payment-method-select").nth(0);
+    // ── Fill and submit first seller's payment ─────────────────
+    // Scope all selectors to the first card to avoid cross-card pollution
+    const firstCard = sellerCards.nth(0);
+    const cardASelect = firstCard.getByTestId("payment-method-select");
     await expect
       .poll(
         async () =>
@@ -409,14 +411,14 @@ test.describe.serial("Full purchase flow: two sellers, one buyer", () => {
     await page.waitForTimeout(MUTATION_WAIT_MS);
     await snap(page, "checkout-sellerA-method-selected");
 
-    await expect(page.getByTestId(/^display-block-/).first()).toBeVisible({
+    await expect(firstCard.getByTestId(/^display-block-/).first()).toBeVisible({
       timeout: ELEMENT_TIMEOUT_MS,
     });
-    await expect(page.getByTestId(/^dynamic-field-/).first()).toBeVisible({
+    await expect(firstCard.getByTestId(/^dynamic-field-/).first()).toBeVisible({
       timeout: ELEMENT_TIMEOUT_MS,
     });
 
-    await page
+    await firstCard
       .getByTestId(/^dynamic-field-/)
       .first()
       .locator("input, textarea")
@@ -424,14 +426,14 @@ test.describe.serial("Full purchase flow: two sellers, one buyer", () => {
       .fill("NEQUI-A-001");
     await snap(page, "checkout-sellerA-field-filled");
 
-    const submitBtnA = page.getByTestId(/^submit-payment-/).first();
+    const submitBtnA = firstCard.getByTestId(/^submit-payment-/);
     await expect(submitBtnA).toBeEnabled({ timeout: ELEMENT_TIMEOUT_MS });
     await submitBtnA.click();
     await snap(page, "checkout-sellerA-submitted");
 
-    // ── Fill and submit Seller B's payment ─────────────────────
-    // After Seller A submits, their card no longer has a select — Seller B's is now first
-    const cardBSelect = page.getByTestId("payment-method-select").first();
+    // ── Fill and submit second seller's payment ─────────────────
+    const secondCard = sellerCards.nth(1);
+    const cardBSelect = secondCard.getByTestId("payment-method-select");
     await expect
       .poll(
         async () =>
@@ -443,11 +445,11 @@ test.describe.serial("Full purchase flow: two sellers, one buyer", () => {
     await page.waitForTimeout(MUTATION_WAIT_MS);
     await snap(page, "checkout-sellerB-method-selected");
 
-    await expect(page.getByTestId(/^dynamic-field-/).first()).toBeVisible({
-      timeout: ELEMENT_TIMEOUT_MS,
-    });
+    await expect(secondCard.getByTestId(/^dynamic-field-/).first()).toBeVisible(
+      { timeout: ELEMENT_TIMEOUT_MS },
+    );
 
-    await page
+    await secondCard
       .getByTestId(/^dynamic-field-/)
       .first()
       .locator("input, textarea")
@@ -455,7 +457,7 @@ test.describe.serial("Full purchase flow: two sellers, one buyer", () => {
       .fill("BANCO-B-002");
     await snap(page, "checkout-sellerB-field-filled");
 
-    const submitBtnB = page.getByTestId(/^submit-payment-/).first();
+    const submitBtnB = secondCard.getByTestId(/^submit-payment-/);
     await expect(submitBtnB).toBeEnabled({ timeout: ELEMENT_TIMEOUT_MS });
     await submitBtnB.click();
     await snap(page, "checkout-sellerB-submitted");
