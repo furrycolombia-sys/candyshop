@@ -17,13 +17,23 @@ function toQueryString(filters: SellerReportFilters): string {
   return params.toString();
 }
 
+// In standalone/production mode the app is served under /payments basePath.
+// fetch() doesn't auto-prepend basePath, so we derive it from the current URL.
+function getBasePath(): string {
+  return globalThis.window !== undefined &&
+    globalThis.window.location.pathname.startsWith("/payments")
+    ? "/payments"
+    : "";
+}
+
 export async function fetchSellerReportOrders(
   filters: SellerReportFilters,
 ): Promise<SellerReportOrdersResponse> {
+  const basePath = getBasePath();
   const qs = toQueryString(filters);
   const url = qs
-    ? `/api/seller/reports/orders?${qs}`
-    : "/api/seller/reports/orders";
+    ? `${basePath}/api/seller/reports/orders?${qs}`
+    : `${basePath}/api/seller/reports/orders`;
   const response = await fetch(url);
   if (!response.ok) {
     throw new Error("Failed to fetch seller report orders");
