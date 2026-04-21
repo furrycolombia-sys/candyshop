@@ -58,7 +58,8 @@ describe("insertProduct", () => {
       name_es: "Nuevo",
       type: "merch",
       category: "merch",
-      price_cop: 10_000,
+      price: 10_000,
+      currency: "COP",
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any);
 

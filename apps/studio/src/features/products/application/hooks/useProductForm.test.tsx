@@ -54,8 +54,8 @@ const mockProduct = {
   long_description_es: "long desc es",
   type: "merch" as const,
   category: "merch" as const,
-  price_cop: 50_000,
-  price_usd: 12,
+  price: 50_000,
+  currency: "COP",
   tags: ["tag1", "tag2"],
   featured: true,
   is_active: true,
@@ -72,8 +72,7 @@ const mockProduct = {
     },
   ],
   max_quantity: 10,
-  compare_at_price_cop: 60_000,
-  compare_at_price_usd: 15,
+  compare_at_price: 60_000,
   refundable: true,
   slug: "test-product",
   sort_order: 1,
@@ -91,13 +90,12 @@ describe("productToFormValues", () => {
     expect(result.name_es).toBe("Producto de Prueba");
     expect(result.type).toBe("merch");
     expect(result.category).toBe("merch");
-    expect(result.price_cop).toBe(50_000);
-    expect(result.price_usd).toBe(12);
+    expect(result.price).toBe(50_000);
+    expect(result.currency).toBe("COP");
     expect(result.featured).toBe(true);
     expect(result.is_active).toBe(true);
     expect(result.max_quantity).toBe(10);
-    expect(result.compare_at_price_cop).toBe(60_000);
-    expect(result.compare_at_price_usd).toBe(15);
+    expect(result.compare_at_price).toBe(60_000);
     expect(result.refundable).toBe(true);
   });
 
@@ -143,26 +141,17 @@ describe("productToFormValues", () => {
     expect(result.tags).toBe("");
   });
 
-  it("handles falsy price_usd", () => {
-    const product = { ...mockProduct, price_usd: 0 };
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const result = productToFormValues(product as any);
-    expect(result.price_usd).toBe("");
-  });
-
   it("handles null nullable fields with defaults", () => {
     const product = {
       ...mockProduct,
       max_quantity: null,
-      compare_at_price_cop: null,
-      compare_at_price_usd: null,
+      compare_at_price: null,
       refundable: null,
     };
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const result = productToFormValues(product as any);
     expect(result.max_quantity).toBeNull();
-    expect(result.compare_at_price_cop).toBeNull();
-    expect(result.compare_at_price_usd).toBeNull();
+    expect(result.compare_at_price).toBeNull();
     expect(result.refundable).toBeNull();
   });
 });
@@ -183,10 +172,9 @@ describe("useProductById", () => {
       long_description_es: "",
       type: "merch" as const,
       category: "merch" as const,
-      price_cop: 10_000,
-      price_usd: 0,
-      compare_at_price_cop: null,
-      compare_at_price_usd: null,
+      price: 10_000,
+      currency: "COP",
+      compare_at_price: null,
       max_quantity: null,
       is_active: true,
       featured: false,
@@ -245,17 +233,15 @@ describe("useInsertProduct", () => {
         long_description_es: "",
         type: "merch",
         category: "merch",
-        price_cop: 10_000,
-        price_usd: "",
+        price: 10_000,
+        currency: "COP",
         tags: "",
         featured: false,
         is_active: true,
         images: [],
         sections: [],
         max_quantity: null,
-        compare_at_price_cop: null,
-        compare_at_price_usd: null,
-        // discount_percent is not in ProductFormValues
+        compare_at_price: null,
         refundable: null,
       }),
     );
@@ -287,17 +273,15 @@ describe("useUpdateProduct", () => {
         long_description_es: "",
         type: "merch",
         category: "merch",
-        price_cop: 20_000,
-        price_usd: "",
+        price: 20_000,
+        currency: "COP",
         tags: "",
         featured: false,
         is_active: true,
         images: [],
         sections: [],
         max_quantity: null,
-        compare_at_price_cop: null,
-        compare_at_price_usd: null,
-        // discount_percent is not in ProductFormValues
+        compare_at_price: null,
         refundable: null,
       }),
     );

@@ -95,7 +95,7 @@ test.describe.serial("Studio UX Improvements", () => {
     await nameField.fill("E2E Studio UX Product");
 
     // Fill price
-    const priceField = page.getByTestId("inline-price-cop");
+    const priceField = page.getByTestId("inline-price");
     await priceField.click();
     await priceField.fill("15000");
     await snap(page, "product-name-price-filled");
@@ -183,7 +183,6 @@ test.describe.serial("Studio UX Improvements", () => {
     await snap(page, "cover-set-on-second-image");
 
     // Verify the star on the second thumbnail is filled (yellow)
-    const starIcon = coverBtn1.locator("svg");
     await expect(coverBtn1).toHaveAttribute("data-cover", "true");
     await snap(page, "cover-star-verified");
 

@@ -1,13 +1,7 @@
 "use client";
 
 import { Minus, Plus, X } from "lucide-react";
-import {
-  getCoverImageUrl,
-  i18nCurrencyCode,
-  i18nField,
-  i18nPrice,
-  tid,
-} from "shared";
+import { formatPrice, getCoverImageUrl, i18nField, tid } from "shared";
 
 import type { CartItem } from "@/features/cart/domain/types";
 import {
@@ -43,7 +37,7 @@ export function CartItemRow({
   const itemColor = getCategoryColor(item.category ?? "");
   const itemTheme = getCategoryTheme(item.category ?? "merch");
   const name = i18nField(item, "name", locale);
-  const lineTotal = item.price_usd * item.quantity;
+  const lineTotal = item.price * item.quantity;
   const hasReachedStockLimit =
     item.max_quantity !== null && item.quantity >= item.max_quantity;
 
@@ -159,22 +153,9 @@ export function CartItemRow({
             {...tid("cart-item-price")}
           >
             <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-              {i18nCurrencyCode(
-                {
-                  price_usd: lineTotal,
-                  price_cop: item.price_cop * item.quantity,
-                },
-                locale,
-              )}
+              {item.currency}
             </span>
-            {i18nPrice(
-              {
-                ...item,
-                price_usd: lineTotal,
-                price_cop: item.price_cop * item.quantity,
-              },
-              locale,
-            )}
+            {formatPrice(lineTotal, item.currency)}
           </span>
         </div>
       </div>

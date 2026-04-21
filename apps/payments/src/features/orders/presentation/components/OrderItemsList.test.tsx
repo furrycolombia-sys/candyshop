@@ -13,8 +13,9 @@ vi.mock("shared", async (importOriginal) => {
   };
 });
 
-vi.mock("@/shared/application/utils/formatCop", () => ({
-  formatCop: (amount: number) => `$${amount.toLocaleString()} COP`,
+vi.mock("@/shared/application/utils/formatPrice", () => ({
+  formatPrice: (amount: number, currency: string) =>
+    `$${amount.toLocaleString()} ${currency}`,
 }));
 
 import { OrderItemsList } from "./OrderItemsList";
@@ -26,14 +27,16 @@ const mockItems: OrderItem[] = [
     id: "oi1",
     product_id: "p1",
     quantity: 2,
-    unit_price_cop: 5000,
+    unit_price: 5000,
+    currency: "COP",
     metadata: { name_en: "Widget", name_es: "Widget ES" },
   },
   {
     id: "oi2",
     product_id: "p2",
     quantity: 1,
-    unit_price_cop: 3000,
+    unit_price: 3000,
+    currency: "COP",
     metadata: { name_en: "Gadget" },
   },
 ];
@@ -65,7 +68,8 @@ describe("OrderItemsList", () => {
         id: "oi3",
         product_id: "prod-xyz",
         quantity: 1,
-        unit_price_cop: 1000,
+        unit_price: 1000,
+        currency: "COP",
         metadata: {},
       },
     ];

@@ -1,0 +1,133 @@
+{
+  "agent": "tailwind",
+  "timestamp": "2026-04-20T23:21:50",
+  "scope": "apps/",
+  "summary": {
+    "filesAnalyzed": 18,
+    "issuesFound": 6,
+    "critical": 0,
+    "warning": 3,
+    "suggestion": 3,
+    "info": 0
+  },
+  "issues": [
+    {
+      "id": "STYLE-001",
+      "severity": "warning",
+      "category": "inline-styles",
+      "title": "Inline styles used for dynamic category theme colors (theme-driven, not hardcoded)",
+      "description": "Multiple components use style={{ backgroundColor: theme.bg, color: theme.foreground }} etc. These colors are dynamically computed by getCategoryTheme() which builds CSS var() strings from CATEGORY_THEMES. While the values ARE CSS variables (e.g. var(--pink)), they're passed via inline style because they're selected at runtime based on product.category. This is a justified exception — Tailwind cannot generate dynamic class names from runtime values — but the pattern is widespread and worth noting.",
+      "files": [
+        "apps/store/src/features/products/presentation/components/ProductCardImage.tsx:46,65",
+        "apps/store/src/features/products/presentation/components/ProductBadges.tsx:26",
+        "apps/store/src/features/products/presentation/components/ProductDetail/HeroSection.tsx:40,54,76,171",
+        "apps/store/src/features/products/presentation/components/ProductDetail/MobileBar.tsx:56",
+        "apps/store/src/features/products/presentation/components/ProductDetail/ImageGallery.tsx:74,140,187",
+        "apps/store/src/features/products/presentation/components/ProductDetail/GalleryOverlays.tsx:55",
+        "apps/store/src/features/products/presentation/components/ProductDetail/Sections/GallerySection.tsx:26,52",
+        "apps/store/src/features/products/presentation/components/ProductDetail/Sections/TwoColumnSection.tsx:41,51",
+        "apps/store/src/features/products/presentation/components/ProductDetail/Sections/CardsSection.tsx:53,58",
+        "apps/store/src/features/products/presentation/components/ProductDetail/Sections/AccordionItem.tsx:46",
+        "apps/store/src/features/cart/presentation/components/CartItemRow.tsx:52,87",
+        "apps/studio/src/features/products/presentation/components/InlineEditor/InlineHero.tsx:69,80,114",
+        "apps/studio/src/features/products/presentation/components/InlineEditor/SectionItemsTwoColumn.tsx:63,155",
+        "apps/studio/src/features/products/presentation/components/InlineEditor/SectionItemsCards.tsx:73",
+        "apps/studio/src/features/products/presentation/components/InlineEditor/SectionItemsGallery.tsx:76",
+        "apps/studio/src/features/products/presentation/components/InlineEditor/InlineImageCarousel.tsx:253,266",
+        "apps/landing/src/features/home/presentation/components/FeaturesSection.tsx:109",
+        "apps/landing/src/features/home/presentation/components/RolesSection.tsx:61,80"
+      ],
+      "rule": "Tailwind CSS — avoid inline styles; prefer utility classes",
+      "context": "All usages pass CSS var() strings (e.g. var(--pink), var(--mint)) resolved via getCategoryTheme() / CATEGORY_THEMES in packages/shared/src/utils/categoryConstants.ts. These are dynamic at runtime based on product.category and cannot use static Tailwind classes. This is an accepted pattern. No fix required.",
+      "fix": "No fix needed. The values are CSS variables already — this is the correct approach for runtime-dynamic theme colors not known at build time."
+    },
+    {
+      "id": "STYLE-002",
+      "severity": "suggestion",
+      "category": "tailwind-class-constants",
+      "title": "Tailwind class string extracted to a JS constant (anti-pattern)",
+      "description": "EMPTY_STATE_CLASS constant holds a Tailwind class string and is used as className={EMPTY_STATE_CLASS}. Per project rules, Tailwind utility classes must remain inline.",
+      "files": [
+        "apps/studio/src/features/seller-admins/presentation/components/DelegateList.tsx:12,30"
+      ],
+      "rule": "DRY Principle / Tailwind CSS — never extract Tailwind classes to JS constants",
+      "fix": "Inline the class string directly: className=\"py-8 text-center text-muted-foreground\". Remove the EMPTY_STATE_CLASS constant."
+    },
+    {
+      "id": "STYLE-003",
+      "severity": "suggestion",
+      "category": "tailwind-class-constants",
+      "title": "Tailwind class string extracted to a JS constant (anti-pattern)",
+      "description": "NO_ACTIVITY_CLASS constant holds a multi-line Tailwind class string used in two places as className={NO_ACTIVITY_CLASS}. Per project rules, Tailwind utility classes must remain inline, not extracted to constants.",
+      "files": [
+        "apps/admin/src/features/dashboard/presentation/pages/DashboardPageContent.tsx:13-14,57,84"
+      ],
+      "rule": "DRY Principle / Tailwind CSS — never extract Tailwind classes to JS constants",
+      "fix": "Inline the class string at both usage sites: className=\"px-5 py-6 text-center font-mono text-xs text-muted-foreground\". Remove the NO_ACTIVITY_CLASS constant. If the duplication is a concern, extract the <div> into a small NoActivity sub-component instead."
+    },
+    {
+      "id": "STYLE-004",
+      "severity": "suggestion",
+      "category": "tailwind-class-constants",
+      "title": "Single Tailwind utility class extracted to a JS constant (anti-pattern)",
+      "description": "COLLAPSED_WIDTH_CLASS = \"w-sidebar-collapsed\" is a single Tailwind utility class stored as a constant and used in a cn() call. Per project rules, Tailwind classes must remain inline.",
+      "files": [
+        "apps/payments/src/shared/presentation/components/PaymentsSidebar.tsx:13,27"
+      ],
+      "rule": "Tailwind CSS — never extract Tailwind classes to JS constants",
+      "fix": "Inline directly: isCollapsed ? \"w-sidebar-collapsed\" : \"w-60\". Remove the COLLAPSED_WIDTH_CLASS constant."
+    },
+    {
+      "id": "STYLE-005",
+      "severity": "warning",
+      "category": "arbitrary-values",
+      "title": "Multiple arbitrary font-size values for display heading in FeaturesSection",
+      "description": "The category heading in FeaturesSection uses three arbitrary font-size values: text-[1.55rem], sm:text-[1.8rem], lg:text-[2rem], plus an arbitrary leading: leading-[0.94]. These values are not from the Tailwind theme and are repeated only once, but they indicate missing theme tokens for display typography at these sizes.",
+      "files": [
+        "apps/landing/src/features/home/presentation/components/FeaturesSection.tsx:134"
+      ],
+      "rule": "Tailwind CSS — minimize arbitrary values; prefer design system tokens",
+      "fix": "Consider defining a semantic typography class (e.g. text-category-title) in globals.css under @layer utilities, using the OKLCH/responsive sizes. This would align with the Single Source of Truth principle for typography."
+    },
+    {
+      "id": "STYLE-006",
+      "severity": "warning",
+      "category": "inline-styles",
+      "title": "Inline style for FeaturedRibbon canvas size uses a runtime-computed pixel value",
+      "description": "FeaturedRibbon renders a <canvas> with style={{ width: s, height: s }} where s is a numeric pixel size computed from CONFIG. This is a canvas element that requires explicit pixel dimensions — Tailwind classes cannot accept runtime-computed numeric values here. This is a justified exception.",
+      "files": [
+        "apps/store/src/features/products/presentation/components/FeaturedRibbon.tsx:231"
+      ],
+      "rule": "Tailwind CSS — avoid inline styles",
+      "context": "Canvas elements need numeric pixel dimensions for correct rendering. This is a valid exception. No fix required.",
+      "fix": "No fix needed. Canvas dimensions must be numeric and are legitimately runtime-computed."
+    }
+  ],
+  "patterns": [
+    {
+      "pattern": "Dynamic category theming via CSS variables",
+      "description": "The codebase uses a well-structured pattern: CATEGORY_THEMES in packages/shared generates CSS var() strings for each product category. Components receive theme objects and apply colors via inline styles. This is the correct approach for runtime-dynamic theming when Tailwind JIT cannot generate classes dynamically.",
+      "verdict": "Good pattern — no change needed."
+    },
+    {
+      "pattern": "Semantic color usage is consistent",
+      "description": "No hardcoded hex colors (#xxx) or direct Tailwind palette colors (text-red-500, bg-blue-500, etc.) were found anywhere in apps/**/*.tsx. All colors use semantic tokens (text-foreground, bg-muted, bg-success, text-destructive, etc.) or CSS variables via the category theme system.",
+      "verdict": "Excellent — fully compliant."
+    },
+    {
+      "pattern": "cn() utility used consistently for conditional classes",
+      "description": "All conditional class merging uses cn() from 'ui'. No template literal className={`...`} patterns were found.",
+      "verdict": "Fully compliant."
+    },
+    {
+      "pattern": "No !important usage found",
+      "description": "No Tailwind ! prefix (important modifier) was found in any .tsx file.",
+      "verdict": "Fully compliant."
+    },
+    {
+      "pattern": "Tailwind class constants (anti-pattern found in 3 files)",
+      "description": "Three instances of Tailwind class strings stored as JS constants: EMPTY_STATE_CLASS, NO_ACTIVITY_CLASS, COLLAPSED_WIDTH_CLASS. Per project rules these should be inlined.",
+      "verdict": "Minor violations — see STYLE-002, STYLE-003, STYLE-004."
+    }
+  ]
+}

@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 import { useCallback, useState } from "react";
-import { formatCop, getCoverImageUrl, i18nField, tid } from "shared";
+import { formatPrice, getCoverImageUrl, i18nField, tid } from "shared";
 import type { ProductCategory, ProductType } from "shared/types";
 import { Badge, Button, cn } from "ui";
 
@@ -215,7 +215,7 @@ export function ProductTableRow({
 
       <td className="px-4 py-3 text-right">
         <span className="text-table-cell font-bold tabular-nums">
-          {formatCop(product.price_cop)}
+          {formatPrice(product.price, product.currency)}
         </span>
       </td>
 

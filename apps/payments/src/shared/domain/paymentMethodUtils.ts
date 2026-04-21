@@ -1,4 +1,4 @@
-import type { BuyerSubmission, FormField } from "./paymentMethodTypes";
+import type { BuyerSubmission, FormField } from "./PaymentMethodTypes";
 
 // eslint-disable-next-line @typescript-eslint/no-magic-numbers -- 10 MB in bytes
 const MAX_FILE_BYTES = 10 * 1024 * 1024; // 10 MB

@@ -1,0 +1,122 @@
+{
+  "agent": "solid",
+  "timestamp": "2026-04-20T23:21:50",
+  "scope": "apps/",
+  "summary": {
+    "filesAnalyzed": 28,
+    "issuesFound": 6,
+    "critical": 0,
+    "warning": 4,
+    "suggestion": 2,
+    "info": 0
+  },
+  "issues": [
+    {
+      "id": "SOLID-001",
+      "principle": "D - Dependency Inversion",
+      "severity": "warning",
+      "file": "apps/admin/src/features/users/application/hooks/useUserPermissions.ts",
+      "line": 12,
+      "description": "Application-layer hook calls `fetch()` directly instead of delegating to an infrastructure abstraction. The application layer depends on a concrete HTTP implementation rather than an interface.",
+      "rule": "Application layer should depend on abstractions (repository/service interfaces), not concrete HTTP calls.",
+      "fix": "Extract the raw `fetch` calls from these hooks into dedicated infrastructure functions (e.g., `userPermissionsApi.ts` in `infrastructure/api/`). The hooks should call those infrastructure functions, not `fetch()` directly. Consistent with how `checkoutPaymentMethods.ts` already does it in the payments app.",
+      "affectedFiles": [
+        "apps/admin/src/features/users/application/hooks/useUserPermissions.ts",
+        "apps/admin/src/features/users/application/hooks/useTogglePermission.ts",
+        "apps/admin/src/features/users/application/hooks/useApplyTemplate.ts",
+        "apps/admin/src/features/users/application/hooks/useUserDelegates.ts"
+      ]
+    },
+    {
+      "id": "SOLID-002",
+      "principle": "S - Single Responsibility",
+      "severity": "warning",
+      "file": "apps/payments/src/features/checkout/presentation/components/SellerCheckoutCard.tsx",
+      "line": 1,
+      "description": "This component has multiple responsibilities: (1) managing accordion expand/collapse UI state, (2) orchestrating payment method selection, (3) managing buyer form state, (4) performing form validation (iterating required fields, building error messages), and (5) calling the submit callback. The validation logic in `handleSubmit` (lines 87-97) is business logic that belongs in the application layer.",
+      "rule": "Each component should have one reason to change. Business validation logic should live in application hooks, not presentation components.",
+      "fix": "Extract the form validation logic (`for (const field of formFields) { ... }`) into a dedicated hook or utility in the application layer. The component should only coordinate UI state and delegate to application-layer logic."
+    },
+    {
+      "id": "SOLID-003",
+      "principle": "I - Interface Segregation",
+      "severity": "warning",
+      "file": "apps/admin/src/features/users/presentation/components/UserTable.tsx",
+      "line": 17,
+      "description": "The `UserTableProps` interface has 15 props, including selection management (selectedUsers, onSelectUsersChange), filtering (filterInput, onFilterInputChange, roleFilter, onRoleFilterChange, itemFilter, onItemFilterChange), pagination (page, onPageChange), data (users, total, isLoading), and export concerns (canExport, onExportExcel). Consumers must provide all of these even if they do not need some sub-features.",
+      "rule": "Interfaces should not force clients to depend on methods/props they do not use.",
+      "fix": "Consider grouping related props into sub-objects (e.g., `filterState`, `selectionState`, `paginationState`) similar to how `SellerCheckoutContent` uses `submission`, `methodSelection`, and `buyerForm` objects. This reduces the flat surface area and makes partial usage cleaner."
+    },
+    {
+      "id": "SOLID-004",
+      "principle": "S - Single Responsibility / O - Open/Closed",
+      "severity": "warning",
+      "file": "apps/studio/src/features/products/presentation/components/InlineEditor/SectionCard.tsx",
+      "line": 104,
+      "description": "The `renderItems()` inline function is a switch-based dispatcher that maps section types to components. Every time a new section type is added (e.g., `list`, `timeline`), this switch must be modified, violating Open/Closed. It also means `SectionCard` must know about all possible section-item component types.",
+      "rule": "Components should be open for extension, closed for modification. The same pattern in the store's `SectionRenderer` is a standalone component with a clear single purpose; inside `SectionCard` it is embedded and entangles two responsibilities.",
+      "fix": "Extract the `renderItems` switch into a separate `SectionItemsRenderer` component (similar to the store's `SectionRenderer`). `SectionCard` would then import and use it, instead of owning the dispatch logic.",
+      "note": "The equivalent `SectionRenderer` in apps/store/src/features/products/presentation/components/ProductDetail/Sections/SectionRenderer.tsx is well-structured as a standalone pure dispatcher - that pattern should be replicated here."
+    },
+    {
+      "id": "SOLID-005",
+      "principle": "S - Single Responsibility",
+      "severity": "suggestion",
+      "file": "apps/studio/src/features/products/presentation/components/InlineEditor/EditorToolbar.tsx",
+      "line": 1,
+      "description": "EditorToolbar manages product type selection, category selection, featured toggle, refundable selection, active toggle, template picking, and form save/reset — all in one component. While it is visually a single toolbar, it owns the rendering logic and event wiring for at least 7 distinct controls that could each evolve independently.",
+      "rule": "Single Responsibility: one component, one reason to change.",
+      "fix": "This is a low-priority suggestion given KISS tradeoffs. If the toolbar grows further, consider extracting grouped control sections (e.g., `ProductTypeSelector`, `ProductStatusControls`) as sub-components. For now the current structure is acceptable.",
+      "kissCaveat": "KISS favored over DRY/SRP here — the current inline approach is clear and the toolbar is a single visual unit."
+    },
+    {
+      "id": "SOLID-006",
+      "principle": "S - Single Responsibility (structural duplication)",
+      "severity": "suggestion",
+      "file": "apps/studio/src/features/products/presentation/components/",
+      "line": null,
+      "description": "Two directories exist side-by-side: `InlineEditor/` (PascalCase) and `inline-editor/` (kebab-case), containing near-identical files. Similarly in apps/store: `ProductDetail/` and `product-detail/` coexist. These appear to be case-rename artifacts from a git rename operation on a case-insensitive filesystem. Both directories are actively used by different importers, creating duplicate maintenance surface.",
+      "rule": "Single source of truth: the same module should not exist in two places.",
+      "fix": "Consolidate to one canonical casing per the naming convention (kebab-case for folders per CLAUDE.md). Migrate all imports to the canonical path and delete the duplicate directory. Requires verifying which directory is the 'live' one and that no runtime differences exist between the two.",
+      "affectedFiles": [
+        "apps/studio/src/features/products/presentation/components/InlineEditor/ (15+ files)",
+        "apps/studio/src/features/products/presentation/components/inline-editor/ (15+ files)",
+        "apps/store/src/features/products/presentation/components/ProductDetail/ (10+ files)",
+        "apps/store/src/features/products/presentation/components/product-detail/ (10+ files)"
+      ]
+    }
+  ],
+  "patterns": [
+    {
+      "pattern": "Switch-based type dispatchers",
+      "assessment": "Generally well-applied. Pure dispatcher components like `SectionRenderer`, `ReceivedStatusBadge`, `DisplayBlockRenderer` follow the correct pattern — a switch in a small, single-purpose function or component. The only concern is when a switch is embedded inside a larger component (SOLID-004).",
+      "locations": [
+        "apps/store/src/features/products/presentation/components/ProductDetail/Sections/SectionRenderer.tsx (good)",
+        "apps/payments/src/features/received-orders/presentation/components/ReceivedStatusBadge.tsx (good)",
+        "apps/payments/src/features/orders/presentation/components/StatusContent.tsx (good)",
+        "apps/payments/src/features/checkout/presentation/components/DisplayBlockRenderer.tsx (good)",
+        "apps/admin/src/shared/presentation/utils/getActionClass.ts (good)",
+        "apps/admin/src/features/dashboard/presentation/components/StatusRow.tsx (good)"
+      ]
+    },
+    {
+      "pattern": "Props grouping pattern (Interface Segregation)",
+      "assessment": "SellerCheckoutContent uses grouped sub-interfaces (submission, methodSelection, buyerForm) — an excellent ISP pattern that should be replicated in UserTable and similar large-interface components.",
+      "exemplar": "apps/payments/src/features/checkout/presentation/components/SellerCheckoutContent.tsx"
+    },
+    {
+      "pattern": "Infrastructure abstraction in payments vs. admin",
+      "assessment": "The payments app correctly separates fetch logic into infrastructure functions (checkoutPaymentMethods.ts, adminRestClient.ts). The admin app's users hooks bypass this pattern by calling fetch() directly in the application layer.",
+      "inconsistency": true
+    },
+    {
+      "pattern": "Container/Presenter separation",
+      "assessment": "Well applied throughout. Pages and *Card components handle data orchestration; *Content components receive pre-composed state objects. ProductDetailPage, SellerCheckoutCard/SellerCheckoutContent are good examples.",
+      "locations": [
+        "apps/payments/src/features/checkout/presentation/components/SellerCheckoutCard.tsx (container)",
+        "apps/payments/src/features/checkout/presentation/components/SellerCheckoutContent.tsx (presenter)",
+        "apps/store/src/features/products/presentation/pages/ProductDetailPage.tsx (clean page wrapper)"
+      ]
+    }
+  ]
+}

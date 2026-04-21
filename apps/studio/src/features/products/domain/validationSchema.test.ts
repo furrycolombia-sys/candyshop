@@ -45,7 +45,8 @@ describe("createProductFormSchema", () => {
       name_en: "Test Product",
       type: "merch",
       category: "merch",
-      price_cop: 10_000,
+      price: 10_000,
+      currency: "COP",
     });
     expect(result.success).toBe(true);
   });
@@ -55,27 +56,30 @@ describe("createProductFormSchema", () => {
       name_en: "",
       type: "merch",
       category: "merch",
-      price_cop: 10_000,
+      price: 10_000,
+      currency: "COP",
     });
     expect(result.success).toBe(false);
   });
 
-  it("rejects zero price_cop", () => {
+  it("rejects zero price", () => {
     const result = schema.safeParse({
       name_en: "Test",
       type: "merch",
       category: "merch",
-      price_cop: 0,
+      price: 0,
+      currency: "COP",
     });
     expect(result.success).toBe(false);
   });
 
-  it("rejects negative price_cop", () => {
+  it("rejects negative price", () => {
     const result = schema.safeParse({
       name_en: "Test",
       type: "merch",
       category: "merch",
-      price_cop: -100,
+      price: -100,
+      currency: "COP",
     });
     expect(result.success).toBe(false);
   });
@@ -85,7 +89,8 @@ describe("createProductFormSchema", () => {
       name_en: "Test",
       type: "invalid",
       category: "merch",
-      price_cop: 10_000,
+      price: 10_000,
+      currency: "COP",
     });
     expect(result.success).toBe(false);
   });
@@ -95,7 +100,8 @@ describe("createProductFormSchema", () => {
       name_en: "Test",
       type: "merch",
       category: "invalid",
-      price_cop: 10_000,
+      price: 10_000,
+      currency: "COP",
     });
     expect(result.success).toBe(false);
   });
@@ -106,7 +112,8 @@ describe("createProductFormSchema", () => {
         name_en: "Test",
         type,
         category: "merch",
-        price_cop: 1000,
+        price: 1000,
+        currency: "USD",
       });
       expect(result.success).toBe(true);
     }
@@ -125,7 +132,8 @@ describe("createProductFormSchema", () => {
         name_en: "Test",
         type: "merch",
         category,
-        price_cop: 1000,
+        price: 1000,
+        currency: "USD",
       });
       expect(result.success).toBe(true);
     }
@@ -136,7 +144,8 @@ describe("createProductFormSchema", () => {
       name_en: "Test",
       type: "merch",
       category: "merch",
-      price_cop: 1000,
+      price: 1000,
+      currency: "USD",
     });
     expect(result.success).toBe(true);
     if (result.success) {

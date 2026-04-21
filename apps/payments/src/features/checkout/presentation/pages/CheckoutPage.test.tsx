@@ -111,13 +111,15 @@ describe("CheckoutPage", () => {
         sellerId: "s1",
         sellerName: "Seller 1",
         items: [],
-        subtotalCop: 10_000,
+        subtotal: 10_000,
+        currency: "COP",
       },
       {
         sellerId: "s2",
         sellerName: "Seller 2",
         items: [],
-        subtotalCop: 5000,
+        subtotal: 5000,
+        currency: "COP",
       },
     ];
 
@@ -140,7 +142,8 @@ describe("CheckoutPage", () => {
         sellerId: "s1",
         sellerName: "Seller 1",
         items: [],
-        subtotalCop: 10_000,
+        subtotal: 10_000,
+        currency: "COP",
       },
     ];
 

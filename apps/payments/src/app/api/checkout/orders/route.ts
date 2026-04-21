@@ -2,7 +2,7 @@
 import { createServerSupabaseClient } from "api/supabase/server";
 import { NextResponse } from "next/server";
 
-import type { FormField } from "@/shared/domain/paymentMethodTypes";
+import type { FormField } from "@/shared/domain/PaymentMethodTypes";
 import { validateBuyerSubmission } from "@/shared/domain/paymentMethodUtils";
 import {
   adminFetchJson,
@@ -25,7 +25,8 @@ async function fetchPaymentMethod(
 
 type ProductRow = {
   id: string;
-  price_cop: number;
+  price: number;
+  currency: string;
   max_quantity: number;
   is_active: boolean;
   seller_id: string;
@@ -37,7 +38,7 @@ async function fetchProductData(
   if (productIds.length === 0) return new Map();
   const idList = productIds.map((id) => encodeURIComponent(id)).join(",");
   const rows = await adminFetchJson<ProductRow[]>(
-    `products?id=in.(${idList})&select=id,price_cop,max_quantity,is_active,seller_id`,
+    `products?id=in.(${idList})&select=id,price,currency,max_quantity,is_active,seller_id`,
   );
   return new Map(rows.map((r) => [r.id, r]));
 }
@@ -48,7 +49,8 @@ async function insertOrder(params: {
   userId: string;
   sellerId: string;
   paymentMethodId: string;
-  totalCop: number;
+  total: number;
+  currency: string;
   buyerInfo: Record<string, string>;
 }): Promise<string> {
   const rows = await adminFetchJson<OrderRow[]>("orders", {
@@ -58,7 +60,8 @@ async function insertOrder(params: {
       user_id: params.userId,
       seller_id: params.sellerId,
       payment_method_id: params.paymentMethodId,
-      total_cop: params.totalCop,
+      total: params.total,
+      currency: params.currency,
       payment_status: "pending_verification",
       buyer_info: params.buyerInfo,
     }),
@@ -81,7 +84,8 @@ async function insertOrderItems(
       order_id: orderId,
       product_id: item.id,
       quantity: item.quantity,
-      unit_price_cop: product.price_cop,
+      unit_price: product.price,
+      currency: product.currency,
     };
   });
 
@@ -164,7 +168,7 @@ function parseAndValidatePayload(body: {
 }
 
 type CartValidationResult =
-  | { ok: true; totalCop: number }
+  | { ok: true; total: number; currency: string }
   | { ok: false; error: string; status: number };
 
 function validateCartItems(
@@ -172,7 +176,8 @@ function validateCartItems(
   productMap: Map<string, ProductRow>,
   sellerId: string,
 ): CartValidationResult {
-  let totalCop = 0;
+  let total = 0;
+  let currency = "";
   for (const item of cartItems) {
     const product = productMap.get(item.id);
     if (!product) {
@@ -201,9 +206,18 @@ function validateCartItems(
         status: 422,
       };
     }
-    totalCop += product.price_cop * item.quantity;
+    if (currency === "") {
+      currency = product.currency;
+    } else if (currency !== product.currency) {
+      return {
+        ok: false,
+        error: "All products in a cart must share the same currency",
+        status: 422,
+      };
+    }
+    total += product.price * item.quantity;
   }
-  return { ok: true, totalCop };
+  return { ok: true, total, currency };
 }
 
 export async function POST(request: Request) {
@@ -264,7 +278,8 @@ export async function POST(request: Request) {
       userId: user.id,
       sellerId: method.seller_id,
       paymentMethodId,
-      totalCop: cartValidation.totalCop,
+      total: cartValidation.total,
+      currency: cartValidation.currency,
       buyerInfo: submission,
     });
 

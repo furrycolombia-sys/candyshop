@@ -40,7 +40,8 @@ interface BuyerFormState {
 export interface SellerCheckoutContentProps {
   sellerId: string;
   items: CartItem[];
-  subtotalCop: number;
+  subtotal: number;
+  currency: string;
   getItemName: (item: CartItem) => string;
   submission: SubmissionState;
   methodSelection: MethodSelectionState;
@@ -51,7 +52,8 @@ export interface SellerCheckoutContentProps {
 export function SellerCheckoutContent({
   sellerId,
   items,
-  subtotalCop,
+  subtotal,
+  currency,
   getItemName,
   submission,
   methodSelection,
@@ -94,7 +96,8 @@ export function SellerCheckoutContent({
       {/* Items summary */}
       <CheckoutItemsSummary
         items={items}
-        subtotalCop={subtotalCop}
+        subtotal={subtotal}
+        currency={currency}
         getItemName={getItemName}
       />
 

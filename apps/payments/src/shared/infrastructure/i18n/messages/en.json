@@ -62,7 +62,7 @@
     "outOfStock": "Some items are no longer available",
     "stockError": "Could not reserve stock for some items",
     "items": "{count} {count, plural, one {item} other {items}}",
-    "subtotal": "Subtotal",
+    "subtotal": "Total",
     "total": "Total",
     "allSubmitted": "All payments submitted!",
     "goToOrders": "View My Orders",

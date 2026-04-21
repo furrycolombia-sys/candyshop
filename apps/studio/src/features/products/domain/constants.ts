@@ -78,6 +78,9 @@ export const SECTION_DROPPABLE_ID = "sections";
 /** Droppable ID prefix for section items (used by DnD) */
 export const ITEM_DROPPABLE_PREFIX = "section-items-";
 
+/** ISO 4217 currency code length (e.g. "USD", "COP") */
+export const CURRENCY_CODE_LENGTH = 3;
+
 /** Supported editor languages */
 export type Lang = "en" | "es";
 
@@ -93,10 +96,9 @@ export const PRODUCT_FORM_DEFAULTS: ProductFormValues = {
   long_description_es: "",
   type: "merch",
   category: "merch",
-  price_cop: 0,
-  price_usd: "",
-  compare_at_price_cop: null,
-  compare_at_price_usd: null,
+  price: 0,
+  currency: "USD",
+  compare_at_price: null,
   tags: "",
   featured: false,
   is_active: true,

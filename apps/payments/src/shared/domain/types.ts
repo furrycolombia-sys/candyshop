@@ -11,7 +11,8 @@ export interface OrderRow {
   user_id: string;
   seller_id: string | null;
   payment_status: string;
-  total_cop: number;
+  total: number;
+  currency: string;
   transfer_number: string | null;
   receipt_url: string | null;
   seller_note: string | null;
@@ -23,7 +24,8 @@ export interface OrderRow {
     id: string;
     product_id: string;
     quantity: number;
-    unit_price_cop: number;
+    unit_price: number;
+    currency: string;
     metadata: Record<string, unknown>;
   }>;
 }
@@ -33,6 +35,7 @@ export interface OrderItem {
   id: string;
   product_id: string;
   quantity: number;
-  unit_price_cop: number;
+  unit_price: number;
+  currency: string;
   metadata: Record<string, unknown>;
 }

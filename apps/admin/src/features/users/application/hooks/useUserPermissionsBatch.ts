@@ -8,12 +8,16 @@ export function useUserPermissionsBatch() {
   const fetchPermissions = async (
     users: UserProfileSummary[],
   ): Promise<Record<string, string[]>> => {
-    const entries = await Promise.all(
-      users.map(async (user) => [
-        user.id,
-        await getUserPermissionKeys(supabase, user.id),
-      ]),
+    const results = await Promise.allSettled(
+      users.map((user) => getUserPermissionKeys(supabase, user.id)),
     );
+    const entries = users.map((user, index) => {
+      const result = results[index];
+      return [
+        user.id,
+        result?.status === "fulfilled" ? result.value : [],
+      ] as const;
+    });
     return Object.fromEntries(entries);
   };
 

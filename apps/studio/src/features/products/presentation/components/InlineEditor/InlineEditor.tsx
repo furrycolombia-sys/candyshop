@@ -1,6 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import dynamic from "next/dynamic";
 import { useTranslations } from "next-intl";
 import { useMemo } from "react";
 import { useForm, useWatch } from "react-hook-form";
@@ -9,9 +10,14 @@ import { tid } from "shared";
 import { EditorToolbar } from "./EditorToolbar";
 import { FormErrorBanner } from "./FormErrorBanner";
 import { InlineHero } from "./InlineHero";
-import { InlineSections } from "./InlineSections";
 import { InlineTextField } from "./InlineTextField";
 import { MutationErrorBanner } from "./MutationErrorBanner";
+
+// Lazy-load the drag-and-drop sections to defer the @hello-pangea/dnd bundle
+const InlineSections = dynamic(
+  () => import("./InlineSections").then((m) => ({ default: m.InlineSections })),
+  { ssr: false },
+);
 
 import { PRODUCT_FORM_DEFAULTS } from "@/features/products/domain/constants";
 import {
