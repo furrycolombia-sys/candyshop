@@ -35,11 +35,6 @@ vi.mock("@/features/reports/application/hooks/useReportOrders", () => ({
   })),
 }));
 
-vi.mock("@/features/reports/application/utils/exportOrdersToExcel", () => ({
-  exportOrdersToExcel: vi.fn(() => "<Workbook/>"),
-  downloadExcel: vi.fn(),
-}));
-
 vi.mock("@/features/reports/presentation/components/ReportFiltersBar", () => ({
   ReportFiltersBar: ({
     onFiltersChange,
@@ -65,7 +60,6 @@ vi.mock("@/features/reports/presentation/components/ReportTable", () => ({
 import { ReportsPage } from "./ReportsPage";
 
 import { useReportOrders } from "@/features/reports/application/hooks/useReportOrders";
-import { exportOrdersToExcel } from "@/features/reports/application/utils/exportOrdersToExcel";
 
 describe("ReportsPage", () => {
   beforeEach(() => vi.clearAllMocks());
@@ -233,7 +227,18 @@ describe("ReportsPage", () => {
     expect(screen.getByTestId("report-table-mock")).toBeInTheDocument();
   });
 
-  it("calls exportOrdersToExcel and downloadExcel when export button is clicked", async () => {
+  it("calls the export endpoint when export button is clicked", async () => {
+    const mockBlob = new Blob(["xlsx-data"], {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
+    const mockFetch = vi.fn().mockResolvedValue({
+      ok: true,
+      blob: () => Promise.resolve(mockBlob),
+    });
+    vi.stubGlobal("fetch", mockFetch);
+    globalThis.URL.createObjectURL = vi.fn().mockReturnValue("blob:mock");
+    globalThis.URL.revokeObjectURL = vi.fn();
+
     vi.mocked(useReportOrders).mockReturnValue({
       orders: [
         {
@@ -271,8 +276,11 @@ describe("ReportsPage", () => {
     });
     render(<ReportsPage />);
     fireEvent.click(screen.getByTestId("reports-export-button"));
-    // Export is async — just verify it was initiated
-    expect(exportOrdersToExcel).toHaveBeenCalled();
+    await screen.findByTestId("reports-export-button");
+    expect(mockFetch).toHaveBeenCalledWith(
+      expect.stringContaining("/api/admin/reports/export"),
+    );
+    vi.unstubAllGlobals();
   });
 
   it("calls setFilters when filters bar triggers change", () => {
