@@ -9,6 +9,7 @@ import { useReportOrders } from "@/features/reports/application/hooks/useReportO
 import type { ReportFilters } from "@/features/reports/domain/types";
 import { ReportFiltersBar } from "@/features/reports/presentation/components/ReportFiltersBar";
 import { ReportTable } from "@/features/reports/presentation/components/ReportTable";
+import { getApiBasePath } from "@/shared/application/utils/getApiBasePath";
 
 export function ReportsPage() {
   const t = useTranslations("reports");
@@ -52,7 +53,7 @@ export function ReportsPage() {
         params.set("amountMax", String(filters.amountMax));
 
       const response = await fetch(
-        `/api/admin/reports/export?${params.toString()}`,
+        `${getApiBasePath()}/api/admin/reports/export?${params.toString()}`,
       );
       if (!response.ok) throw new Error("Export failed");
 
