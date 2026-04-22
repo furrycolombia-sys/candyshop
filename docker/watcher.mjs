@@ -40,6 +40,10 @@ const TELEGRAM_TOKEN  = process.env.TELEGRAM_BOT_TOKEN  ?? "";
 const TELEGRAM_CHAT   = process.env.TELEGRAM_CHAT_ID    ?? "";
 const TELEGRAM_THREAD = process.env.TELEGRAM_THREAD_ID  ?? "";
 
+// Consecutive tunnel-detection failures required before alerting (avoids
+// false positives when pgrep can't see a Docker/systemd-managed process on first check)
+let tunnelFailStreak = 0;
+
 // Internal ports — watcher talks directly to each Node.js process,
 // bypassing nginx so we catch per-app failures accurately.
 const APPS = [
@@ -145,15 +149,25 @@ function readDiskUsedPct() {
 }
 
 function isTunnelRunning() {
+  // Method 1: exact process name (native install)
   try {
-    const result = spawnSync("pgrep", ["-x", "cloudflared"], {
-      encoding: "utf8",
-      timeout: 3_000,
-    });
-    return result.status === 0;
-  } catch {
-    return null; // unknown
-  }
+    const r = spawnSync("pgrep", ["-x", "cloudflared"], { encoding: "utf8", timeout: 3_000 });
+    if (r.status === 0) return true;
+  } catch { /* ignore */ }
+
+  // Method 2: full command-line match (handles systemd ExecStart paths, wrappers)
+  try {
+    const r = spawnSync("pgrep", ["-f", "cloudflared tunnel"], { encoding: "utf8", timeout: 3_000 });
+    if (r.status === 0) return true;
+  } catch { /* ignore */ }
+
+  // Method 3: systemd service
+  try {
+    const r = spawnSync("systemctl", ["is-active", "--quiet", "cloudflared"], { encoding: "utf8", timeout: 3_000 });
+    if (r.status === 0) return true;
+  } catch { /* ignore */ }
+
+  return false;
 }
 
 async function checkSystem() {
@@ -210,21 +224,31 @@ async function checkSystem() {
   const tunnelUp = isTunnelRunning();
   if (tunnelUp !== null) {
     const prev = sysState.tunnel;
-    const next = tunnelUp ? "ok" : "critical";
 
-    if (next === "critical") {
-      const msg = `🔴 <b>Cloudflare tunnel is DOWN</b>\n<code>cloudflared</code> process not found — SSH access and public routing may be unavailable`;
-      await maybeAlert("tunnel", prev !== "critical", msg);
-      console.error("[watcher] Cloudflare tunnel: DOWN");
-    } else if (prev === "critical") {
-      await sendTelegram(`✅ <b>Cloudflare tunnel recovered</b>\n<code>cloudflared</code> is running again`);
-      console.log("[watcher] Cloudflare tunnel: recovered");
-    } else if (prev === "unknown") {
-      console.log("[watcher] Cloudflare tunnel: ok");
+    if (!tunnelUp) {
+      tunnelFailStreak++;
+      // Require 2 consecutive failures before marking as critical / alerting.
+      // This prevents false positives on the first check after a watcher restart
+      // when pgrep transiently can't see the process.
+      if (tunnelFailStreak >= 2) {
+        sysState.tunnel = "critical";
+        const msg = `🔴 <b>Cloudflare tunnel is DOWN</b>\n<code>cloudflared</code> process not found — SSH access and public routing may be unavailable`;
+        await maybeAlert("tunnel", prev !== "critical", msg);
+        console.error("[watcher] Cloudflare tunnel: DOWN");
+      } else {
+        console.warn(`[watcher] Cloudflare tunnel: detection failed (${tunnelFailStreak}/2 — not alerting yet)`);
+      }
     } else {
-      console.log("[watcher] Cloudflare tunnel: ok");
+      const wasDown = prev === "critical";
+      tunnelFailStreak = 0;
+      sysState.tunnel = "ok";
+      if (wasDown) {
+        await sendTelegram(`✅ <b>Cloudflare tunnel recovered</b>\n<code>cloudflared</code> is running again`);
+        console.log("[watcher] Cloudflare tunnel: recovered");
+      } else {
+        console.log("[watcher] Cloudflare tunnel: ok");
+      }
     }
-    sysState.tunnel = next;
   }
 }
 
