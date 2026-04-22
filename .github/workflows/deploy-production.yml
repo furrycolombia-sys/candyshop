@@ -9,6 +9,8 @@ on:
       - "packages/**"
       - "package.json"
       - "pnpm-lock.yaml"
+      - "docker/**"
+      - "scripts/**"
   workflow_dispatch:
 
 concurrency:
