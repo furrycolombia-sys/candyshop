@@ -2,18 +2,35 @@
 
 import { Package } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useCallback } from "react";
+import { useQueryStates } from "nuqs";
+import { useCallback, useMemo } from "react";
 import { tid } from "shared";
+import { cn } from "ui";
 
 import { useAssignedOrders } from "@/features/assigned-orders/application/hooks/useAssignedOrders";
+import { ASSIGNED_FILTER_STATUSES } from "@/features/assigned-orders/domain/constants";
+import { assignedOrdersSearchParams } from "@/features/assigned-orders/domain/searchParams";
 import { useOrderActions } from "@/features/received-orders/application/hooks/useOrderActions";
+import { canActOnOrder } from "@/features/received-orders/domain/types";
 import type { SellerAction } from "@/features/received-orders/domain/types";
 import { ReceivedOrderCard } from "@/features/received-orders/presentation/components/ReceivedOrderCard";
 
 export function AssignedOrdersPageContent() {
   const t = useTranslations("assignedOrders");
-  const { data: orders, isLoading } = useAssignedOrders();
+
+  const [params, setParams] = useQueryStates(assignedOrdersSearchParams);
+  const activeFilter = params.filter;
+
+  const { data: allOrders, isLoading } = useAssignedOrders();
   const { mutate: executeAction, isPending } = useOrderActions();
+
+  const orders = useMemo(() => {
+    if (!allOrders) return allOrders;
+    if (activeFilter === "all") return allOrders;
+    if (activeFilter === "actionable")
+      return allOrders.filter((o) => canActOnOrder(o.payment_status));
+    return allOrders.filter((o) => o.payment_status === activeFilter);
+  }, [allOrders, activeFilter]);
 
   const handleAction = useCallback(
     (orderId: string, action: SellerAction, note?: string) => {
@@ -36,6 +53,28 @@ export function AssignedOrdersPageContent() {
             {t("title")}
           </h1>
         </header>
+
+        <div
+          className="flex flex-wrap items-center gap-2"
+          {...tid("assigned-orders-filters")}
+        >
+          {ASSIGNED_FILTER_STATUSES.map((status) => (
+            <button
+              key={status}
+              type="button"
+              onClick={() => setParams({ filter: status }, { history: "push" })}
+              className={cn(
+                "rounded-lg border-strong border-foreground px-3 py-1 font-display text-xs font-bold uppercase tracking-wider transition-colors",
+                activeFilter === status
+                  ? "bg-foreground text-background"
+                  : "bg-background text-foreground hover:bg-muted",
+              )}
+              {...tid(`assigned-filter-${status}`)}
+            >
+              {t(`filters.${status}`)}
+            </button>
+          ))}
+        </div>
 
         {isLoading && (
           <div className="flex items-center justify-center py-16">

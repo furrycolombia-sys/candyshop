@@ -128,7 +128,16 @@
   "assignedOrders": {
     "title": "Assigned Items",
     "noOrders": "No assigned orders",
-    "noOrdersHint": "When a seller assigns you to one of their products, pending orders will appear here"
+    "noOrdersHint": "When a seller assigns you to one of their products, pending orders will appear here",
+    "filters": {
+      "actionable": "To do",
+      "all": "All",
+      "pending_verification": "Pending",
+      "evidence_requested": "Evidence",
+      "approved": "Approved",
+      "rejected": "Rejected",
+      "expired": "Expired"
+    }
   },
   "receivedOrders": {
     "title": "Received Orders",
