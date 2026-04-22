@@ -45,9 +45,11 @@ export async function auditRestQuery(
       apikey: key,
       Authorization: `Bearer ${token}`,
       // logged_actions_with_user is exposed in the public schema via a proxy view
-      // (migration 20260421100000_expose_audit_view_in_public.sql). PostgREST's
-      // audit schema is not exposed, so Accept-Profile: audit would cause 406.
+      // (migration 20260421050000_expose_audit_view_in_public.sql). PostgREST's
+      // audit schema is not exposed, so specifying Accept-Profile: public ensures
+      // PostgREST resolves the view in the correct schema and avoids 406 errors.
       Accept: JSON_CONTENT_TYPE,
+      "Accept-Profile": "public",
     },
   });
 
