@@ -6,6 +6,44 @@ set -euo pipefail
 # Runs ON the server via SSH from GitHub Actions
 # =============================================================================
 
+# ─── Cloudflare Access SSH disconnect guard ───────────────────────────────────
+# Building 7 Next.js apps takes 3-4 minutes. The Cloudflare Access WebSocket
+# proxy drops idle TCP connections before the build finishes, causing
+# "client_loop: send disconnect: Broken pipe" in CI.
+#
+# Fix: on first invocation, re-launch ourselves detached from the SSH session
+# via nohup, then tail the log back through the same connection so CI output
+# keeps flowing. Even if SSH drops after this, the build continues on-server.
+# ─────────────────────────────────────────────────────────────────────────────
+if [ -z "${DEPLOY_DETACHED:-}" ]; then
+  DEPLOY_LOG=/tmp/deploy-candyshop.log
+  DEPLOY_DONE=/tmp/deploy-candyshop.done
+  rm -f "$DEPLOY_LOG" "$DEPLOY_DONE"
+
+  DEPLOY_DETACHED=1 nohup bash "$0" "$@" >"$DEPLOY_LOG" 2>&1 &
+  BG_PID=$!
+
+  # Stream log back — keeps the SSH/WebSocket alive AND surfaces build output.
+  # GNU tail exits automatically when the watched PID exits (Linux coreutils).
+  if tail -f "$DEPLOY_LOG" --pid="$BG_PID" 2>/dev/null; then
+    :
+  else
+    # Fallback for non-GNU tail: background-tail + manual wait
+    tail -f "$DEPLOY_LOG" &
+    TAIL_PID=$!
+    while kill -0 "$BG_PID" 2>/dev/null; do sleep 5; done
+    sleep 2
+    kill "$TAIL_PID" 2>/dev/null || true
+  fi
+
+  DEPLOY_EXIT=$(cat "$DEPLOY_DONE" 2>/dev/null || echo 1)
+  exit "$DEPLOY_EXIT"
+fi
+
+# Write exit code on completion so the wrapper above can relay it
+_write_done() { echo $? >/tmp/deploy-candyshop.done; }
+trap _write_done EXIT
+
 DEPLOY_DIR="/home/furrycolombia/candyshop"
 REPO_URL="${REPO_URL:-}"
 BRANCH="${BRANCH:-main}"
