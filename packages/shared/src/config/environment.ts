@@ -24,6 +24,7 @@ type RuntimeEnv = {
   buildHash: string;
   landingUrl: string;
   authHostUrl: string;
+  tallyFormId: string;
 };
 
 function readRuntimeEnv() {
@@ -40,6 +41,7 @@ function readRuntimeEnv() {
     buildHash: process.env.NEXT_PUBLIC_BUILD_HASH ?? "dev",
     landingUrl: DEFAULT_LANDING_URL,
     authHostUrl: DEFAULT_AUTH_HOST_URL,
+    tallyFormId: process.env.NEXT_PUBLIC_TALLY_FORM_ID ?? "",
   } as RuntimeEnv;
 }
 

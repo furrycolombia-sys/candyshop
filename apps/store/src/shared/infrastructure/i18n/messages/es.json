@@ -36,7 +36,8 @@
     },
     "language": {
       "select": "Seleccionar idioma"
-    }
+    },
+    "feedback": "Comentarios"
   },
   "products": {
     "title": "Productos",

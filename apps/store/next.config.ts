@@ -43,7 +43,7 @@ const securityHeaders = [
   },
   {
     key: "Content-Security-Policy",
-    value: `default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src ${cspConnectSrc} https://cloudflareinsights.com; frame-ancestors 'none'; object-src 'none';`,
+    value: `default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://static.cloudflareinsights.com https://tally.so; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src ${cspConnectSrc} https://cloudflareinsights.com https://*.tally.so; frame-src https://tally.so; frame-ancestors 'none'; object-src 'none';`,
   },
 ];
 

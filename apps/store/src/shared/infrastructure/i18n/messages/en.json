@@ -36,7 +36,8 @@
     },
     "language": {
       "select": "Select language"
-    }
+    },
+    "feedback": "Feedback"
   },
   "products": {
     "title": "Products",
