@@ -40,9 +40,56 @@ if [ -z "${DEPLOY_DETACHED:-}" ]; then
   exit "$DEPLOY_EXIT"
 fi
 
-# Write exit code on completion so the wrapper above can relay it
-_write_done() { echo $? >/tmp/deploy-candyshop.done; }
-trap _write_done EXIT
+# ─── Telegram deploy notifications ───────────────────────────────────────────
+# Extract Telegram vars early from the env file so we can notify before the full
+# env is sourced (which happens later, just before the build step).
+_tg_env="${ENV_FILE:-/tmp/.candyshop-build.env}"
+if [ -f "$_tg_env" ]; then
+  TELEGRAM_BOT_TOKEN="${TELEGRAM_BOT_TOKEN:-$(grep '^TELEGRAM_BOT_TOKEN=' "$_tg_env" | cut -d= -f2- 2>/dev/null || true)}"
+  TELEGRAM_CHAT_ID="${TELEGRAM_CHAT_ID:-$(grep '^TELEGRAM_CHAT_ID=' "$_tg_env" | cut -d= -f2- 2>/dev/null || true)}"
+  TELEGRAM_THREAD_ID="${TELEGRAM_THREAD_ID:-$(grep '^TELEGRAM_THREAD_ID=' "$_tg_env" | cut -d= -f2- 2>/dev/null || true)}"
+fi
+
+notify_telegram() {
+  [ -n "${TELEGRAM_BOT_TOKEN:-}" ] || return 0
+  [ -n "${TELEGRAM_CHAT_ID:-}" ] || return 0
+  command -v python3 >/dev/null 2>&1 || return 0
+  local payload
+  payload=$(python3 -c "
+import json, sys
+d = {'chat_id': sys.argv[1], 'text': sys.argv[2], 'parse_mode': 'HTML'}
+if sys.argv[3]:
+    d['message_thread_id'] = int(sys.argv[3])
+print(json.dumps(d))" "$TELEGRAM_CHAT_ID" "$1" "${TELEGRAM_THREAD_ID:-}") || return 0
+  curl -sf --max-time 10 -X POST \
+    "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+    -H 'Content-Type: application/json' \
+    -d "$payload" >/dev/null 2>&1 || true
+}
+
+# Write exit code + send deploy result notification
+DEPLOY_START=$(date +%s)
+_on_exit() {
+  local code=$?
+  echo $code >/tmp/deploy-candyshop.done
+  local elapsed=$(( $(date +%s) - DEPLOY_START ))
+  local dur
+  if [ "$elapsed" -ge 60 ]; then
+    dur="$(( elapsed / 60 ))m $(( elapsed % 60 ))s"
+  else
+    dur="${elapsed}s"
+  fi
+  local commit="${DEPLOY_COMMIT:-unknown}"
+  if [ "$code" -eq 0 ]; then
+    notify_telegram "$(printf '✅ <b>Deploy complete</b>\nBranch: <code>%s</code>\nCommit: <code>%s</code>\nDuration: %s' \
+      "$BRANCH" "$commit" "$dur")"
+  else
+    notify_telegram "$(printf '❌ <b>Deploy FAILED</b> (exit %s)\nBranch: <code>%s</code>\nCommit: <code>%s</code>\nDuration: %s' \
+      "$code" "$BRANCH" "$commit" "$dur")"
+  fi
+}
+trap _on_exit EXIT
+# ─────────────────────────────────────────────────────────────────────────────
 
 DEPLOY_DIR="/home/furrycolombia/candyshop"
 REPO_URL="${REPO_URL:-}"
@@ -64,6 +111,7 @@ export NVM_DIR="$HOME/.nvm"
 nvm use 22 --silent || err "Node 22 not available via nvm"
 
 log "Node $(node --version) | pnpm $(pnpm --version) | PM2 $(pm2 --version)"
+notify_telegram "$(printf '🚀 <b>Deploy started</b>\nBranch: <code>%s</code>' "$BRANCH")"
 
 # =============================================================================
 # Clone or pull
@@ -81,7 +129,8 @@ else
 fi
 
 cd "$DEPLOY_DIR"
-log "Checked out $(git log --oneline -1)"
+DEPLOY_COMMIT=$(git log --format="%h %s" -1 2>/dev/null || true)
+log "Checked out $DEPLOY_COMMIT"
 
 # =============================================================================
 # Install dependencies
@@ -167,6 +216,12 @@ for APP_ENTRY in "${APPS[@]}"; do
   PORT=$APP_PORT HOSTNAME=0.0.0.0 pm2 start "$SERVER_JS" \
     --name "$PM2_NAME"
 done
+
+log "Starting health watcher..."
+pm2 delete candyshop-watcher 2>/dev/null || true
+pm2 start "$DEPLOY_DIR/docker/watcher.mjs" \
+  --name candyshop-watcher \
+  --env "TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN:-},TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID:-},TELEGRAM_THREAD_ID=${TELEGRAM_THREAD_ID:-}"
 
 # Save PM2 process list for auto-restart on reboot
 pm2 save
