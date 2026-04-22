@@ -24,7 +24,7 @@ const ISO_DATE_LENGTH = 10;
 const ORDERS_SELECT =
   "id,created_at,payment_status,total,currency,transfer_number,receipt_url,user_id,seller_id,buyer_info";
 const ITEMS_SELECT =
-  "id,order_id,product_id,quantity,unit_price,currency,products(name)";
+  "id,order_id,product_id,quantity,unit_price,currency,products(name_en)";
 
 const ISO_DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/;
 

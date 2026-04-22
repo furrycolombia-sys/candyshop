@@ -302,6 +302,7 @@ If any fail, keep in app's `shared/` folder instead.
 - [Full Review](.claude/skills/full-review/SKILL.md) - `/full-review`
 - [Verify Code](.claude/skills/verify-code/SKILL.md) - `/verify-code`
 - [Review Branch](.claude/skills/review-branch/SKILL.md) - `/review-branch`
+- [E2E Eval](.claude/skills/e2e-eval/SKILL.md) - `/e2e-eval [env] [options]`
 
 See all skills in `.claude/skills/` folder.
 
