@@ -73,7 +73,7 @@ RUN pnpm --filter store run build && \
 # ── Stage 3: runner ───────────────────────────────────────────────────────────
 FROM node:22-alpine AS runner
 
-RUN apk add --no-cache nginx supervisor && \
+RUN apk add --no-cache nginx supervisor netcat-openbsd && \
     addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 nextjs && \
     mkdir -p /var/log/nginx /var/log/supervisor /var/run/nginx /run/nginx
