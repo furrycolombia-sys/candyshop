@@ -252,7 +252,9 @@
     "orders": {
       "create": "Hacer Pedidos",
       "read": "Ver Pedidos",
-      "update": "Gestionar Pedidos"
+      "update": "Gestionar Pedidos",
+      "approve": "Aprobar Pedidos",
+      "request_proof": "Solicitar Comprobante"
     },
     "receipts": {
       "create": "Subir Recibos",
