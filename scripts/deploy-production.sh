@@ -356,12 +356,20 @@ notify_telegram "$(printf '🏥 <b>All %d apps healthy</b>' "${#APPS[@]}")"
 # 3 hits is enough for V8 to promote the hot functions out of interpreter mode.
 log "Warming up V8 JIT (3 passes × key routes)..."
 _STEP_START=$(date +%s)
+_WARM_FAIL_LOG=$(mktemp)
 
 warm_url() {
   local url="$1"
+  local ok=0
   for _ in 1 2 3; do
-    curl -sf --max-time 30 "$url" > /dev/null 2>&1 || true
+    if curl -sf --max-time 30 "$url" > /dev/null 2>&1; then
+      ok=1
+      break
+    fi
   done
+  if [ "$ok" -eq 0 ]; then
+    echo "$url" >> "$_WARM_FAIL_LOG"
+  fi
 }
 
 warm_url "http://localhost:5004/"         &  # landing root
@@ -386,7 +394,18 @@ warm_url "http://localhost:5006/studio"    &  # studio
 warm_url "http://localhost:5006/studio/en" &
 
 wait
-log "Warm-up complete — all routes pre-compiled."
-notify_telegram "$(printf '🔥 <b>JIT warm-up complete</b> (%s)\nAll routes pre-compiled.' "$(_dur $_STEP_START)")"
+_warm_dur=$(_dur $_STEP_START)
+_failed_urls=$(cat "$_WARM_FAIL_LOG" 2>/dev/null || true)
+rm -f "$_WARM_FAIL_LOG"
+
+if [ -n "$_failed_urls" ]; then
+  _fail_count=$(echo "$_failed_urls" | wc -l | tr -d ' ')
+  _fail_list=$(echo "$_failed_urls" | sed 's|http://localhost:[0-9]*/||' | tr '\n' ' ' | sed 's/ $//')
+  notify_telegram "$(printf '⚠️ <b>JIT warm-up incomplete</b> (%s)\n%s route(s) failed after 3 attempts:\n<code>%s</code>\nFirst visit to these routes may be slow.' "$_warm_dur" "$_fail_count" "$_fail_list")"
+  warn "Warm-up incomplete — $_fail_count route(s) unreachable: $_fail_list"
+else
+  log "Warm-up complete — all routes pre-compiled."
+  notify_telegram "$(printf '🔥 <b>JIT warm-up complete</b> (%s)\nAll routes pre-compiled.' "$_warm_dur")"
+fi
 
 log "Deployment complete!"
