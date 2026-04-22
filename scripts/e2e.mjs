@@ -28,7 +28,7 @@ if (args.includes("--help")) {
 Usage: node scripts/e2e.mjs [--env <name>] [--app <app>] [--headed] [--ui] [-- <playwright args>]
 
   --env <name>   dev | staging  (default: dev)
-  --app <app>    auth | store   (default: auth)
+  --app <app>    auth | store | admin   (default: auth)
   --headed       Headed browser
   --ui           Playwright UI mode
   --             Everything after -- is forwarded to Playwright as-is
@@ -58,8 +58,8 @@ if (!["dev", "staging"].includes(targetEnv)) {
   console.error("ERROR: --env must be dev or staging");
   process.exit(1);
 }
-if (!["auth", "store"].includes(targetApp)) {
-  console.error("ERROR: --app must be auth or store");
+if (!["auth", "store", "admin"].includes(targetApp)) {
+  console.error("ERROR: --app must be auth, store, or admin");
   process.exit(1);
 }
 
@@ -214,7 +214,7 @@ function portForApp(app) {
   } catch {
     /* fall through */
   }
-  return { auth: 5000, store: 5001 }[app] ?? 5000;
+  return { auth: 5000, store: 5001, admin: 5002 }[app] ?? 5000;
 }
 
 async function checkPort(port) {
