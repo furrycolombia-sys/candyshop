@@ -131,7 +131,7 @@ export function FeaturesSection() {
                     </span>
                   </div>
                   <div className="mt-auto pr-10">
-                    <p className="max-w-full text-pretty font-display text-[1.55rem] leading-[0.94] font-extrabold uppercase sm:text-[1.8rem] lg:text-[2rem]">
+                    <p className="max-w-full wrap-break-word text-pretty font-display text-[1.2rem] leading-[1.1] font-extrabold uppercase sm:text-[1.4rem] lg:text-[1.6rem]">
                       {t(key)}
                     </p>
                     <div

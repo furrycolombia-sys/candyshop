@@ -128,7 +128,16 @@
   "assignedOrders": {
     "title": "Items Asignados",
     "noOrders": "Sin ordenes asignadas",
-    "noOrdersHint": "Cuando un vendedor te asigne a uno de sus productos, las ordenes pendientes apareceran aqui"
+    "noOrdersHint": "Cuando un vendedor te asigne a uno de sus productos, las ordenes pendientes apareceran aqui",
+    "filters": {
+      "actionable": "Por hacer",
+      "all": "Todas",
+      "pending_verification": "Pendiente",
+      "evidence_requested": "Evidencia",
+      "approved": "Aprobadas",
+      "rejected": "Rechazadas",
+      "expired": "Expiradas"
+    }
   },
   "receivedOrders": {
     "title": "Ordenes Recibidas",
