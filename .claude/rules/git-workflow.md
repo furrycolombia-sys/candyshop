@@ -20,7 +20,7 @@ develop (integration)
   ↑ PR
 feat/GH-XXX_Title
 chore/GH-XXX_Title
-release/GH-XXX_vX.Y.Z
+release/GH-XXX_vYYYY.MM.DD.N
 fix/GH-XXX_Title (hotfixes go directly to main)
 ```
 
@@ -143,7 +143,7 @@ All other branches must target 'develop'.
 | `chore`    | Maintenance                 | `chore/GH-88_Update-Dependencies` |
 | `docs`     | Documentation               | `docs/GH-92_API-Documentation`    |
 | `refactor` | Code refactoring            | `refactor/GH-55_Cleanup-Auth`     |
-| `release`  | Release preparation         | `release/GH-100_v1.2.0`           |
+| `release`  | Release preparation         | `release/GH-100_v2026.04.22.1`    |
 
 ### Naming Rules
 
@@ -158,7 +158,7 @@ All other branches must target 'develop'.
 feat/GH-42_User-Authentication
 fix/GH-15_Fix-Login-Redirect
 chore/GH-88_Update-Dependencies
-release/GH-100_v1.2.0
+release/GH-100_v2026.04.22.1
 ```
 
 ---
@@ -224,6 +224,8 @@ Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>
 | `style`    | Formatting (no code change) |
 | `test`     | Adding tests                |
 | `chore`    | Maintenance tasks           |
+| `perf`     | Performance improvement     |
+| `revert`   | Revert a previous commit    |
 
 ### Examples
 
@@ -290,11 +292,21 @@ Use the `/merge-pr` command to merge PRs with the correct strategy:
 
 ## Release Workflow
 
-1. Create release branch: `release/GH-XXX_vX.Y.Z`
-2. Update version numbers
-3. Create PR to `main`
-4. After merge, tag the release
-5. Merge `main` back to `develop`
+Release versions use a date-based format: `vYYYY.MM.DD.N` where `N` is a sequential counter starting at 1 per day.
+
+1. Create release branch: `release/GH-XXX_vYYYY.MM.DD.N`
+2. Create PR to `main` with title: `chore(release): vYYYY.MM.DD.N [GH-XXX]`
+3. After CI passes and PR is merged, tag the release
+4. Merge `main` back to `develop`
+
+> **Critical:** Release PR titles MUST use `chore(release):` — NOT `release:`. The PR Title CI check only accepts valid conventional commit types: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `chore`, `revert`. The word `release` alone is **not** a valid type.
+
+**Example:**
+
+```
+Branch: release/GH-152_v2026.04.22.1
+PR title: chore(release): v2026.04.22.1 [GH-152]
+```
 
 ---
 
