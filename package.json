@@ -1,6 +1,6 @@
 {
   "name": "candyshop",
-  "version": "0.2.0",
+  "version": "2026.04.22.1",
   "private": true,
   "scripts": {
     "dev": "node scripts/start.mjs",

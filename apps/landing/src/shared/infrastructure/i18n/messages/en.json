@@ -32,7 +32,8 @@
         "label": "For creators",
         "title": "Your art deserves a real home.",
         "description": "Sell commissions, manage your queue, ship merch, and grow your audience — without platform fees eating your work.",
-        "cta": "Start selling"
+        "cta": "Start selling",
+        "comingSoon": "Coming soon"
       },
       "fans": {
         "label": "For collectors",

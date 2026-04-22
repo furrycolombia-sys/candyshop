@@ -7,34 +7,9 @@ import { tid } from "shared";
 
 import { appUrls } from "@/shared/infrastructure/config";
 
-interface RoleCard {
-  key: string;
-  cardBg: string;
-  cardText: string;
-  btnBg: string;
-  btnText: string;
-}
-
 const DEFAULT_CANDY_TEXT = "var(--candy-text)";
 const LEMON_CANDY_TEXT = "var(--candy-text-on-lemon)";
 const PINK_BG = "var(--pink)";
-
-const ROLES: RoleCard[] = [
-  {
-    key: "artists",
-    cardBg: PINK_BG,
-    cardText: DEFAULT_CANDY_TEXT,
-    btnBg: "var(--lemon)",
-    btnText: LEMON_CANDY_TEXT,
-  },
-  {
-    key: "fans",
-    cardBg: "var(--mint)",
-    cardText: DEFAULT_CANDY_TEXT,
-    btnBg: PINK_BG,
-    btnText: DEFAULT_CANDY_TEXT,
-  },
-];
 
 export function RolesSection() {
   const t = useTranslations("landing.split");
@@ -51,48 +26,78 @@ export function RolesSection() {
       </h2>
       <div className="mx-auto max-w-6xl px-6 lg:px-8">
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
-          {ROLES.map(({ key, cardBg, cardText, btnBg, btnText }) => (
-            /* Static card container — no cursor-pointer, no hover translate */
-            <div
-              key={key}
-              role="group"
-              aria-labelledby={`${key}-heading`}
-              className="shadow-brutal-lg flex flex-col border-strong border-foreground p-8 lg:p-10"
-              style={{ backgroundColor: cardBg, color: cardText }}
-              {...tid(`role-${key}`)}
+          {/* Artists card */}
+          <div
+            role="group"
+            aria-labelledby="artists-heading"
+            className="shadow-brutal-lg flex flex-col border-strong border-foreground p-8 lg:p-10"
+            style={{ backgroundColor: PINK_BG, color: DEFAULT_CANDY_TEXT }}
+            {...tid("role-artists")}
+          >
+            <p className="mb-3 text-xs font-bold uppercase tracking-section">
+              {t("artists.label")}
+            </p>
+            <h3
+              id="artists-heading"
+              className="mb-4 font-display text-3xl/tight font-extrabold uppercase lg:text-4xl"
             >
-              <p className="mb-3 text-xs font-bold uppercase tracking-section">
-                {t(`${key}.label`)}
-              </p>
-              <h3
-                id={`${key}-heading`}
-                className="mb-4 font-display text-3xl/tight font-extrabold uppercase lg:text-4xl"
-              >
-                {t(`${key}.title`)}
-              </h3>
-              <p className="mb-8 text-base/relaxed opacity-90">
-                {t(`${key}.description`)}
-              </p>
-              {/* The only interactive element — explicitly a button */}
-              <Link
-                href={appUrls.store}
-                className="button-brutal button-press-sm shadow-brutal-sm mt-auto inline-flex self-start px-6 py-3 text-sm font-extrabold"
-                style={{
-                  backgroundColor: btnBg,
-                  color: btnText,
-                  borderColor: cardText,
-                  outlineColor: cardText,
-                }}
-              >
-                {t(`${key}.cta`)}
-                <ArrowRight
-                  aria-hidden="true"
-                  className="size-4"
-                  strokeWidth={2.5}
-                />
-              </Link>
-            </div>
-          ))}
+              {t("artists.title")}
+            </h3>
+            <p className="mb-8 text-base/relaxed opacity-90">
+              {t("artists.description")}
+            </p>
+            <span
+              className="shadow-brutal-sm mt-auto inline-flex self-start border-strong border-foreground px-6 py-3 text-sm font-extrabold uppercase tracking-wider opacity-70"
+              style={{
+                backgroundColor: "var(--lemon)",
+                color: LEMON_CANDY_TEXT,
+              }}
+            >
+              {t("artists.comingSoon")}
+            </span>
+          </div>
+
+          {/* Fans card */}
+          <div
+            role="group"
+            aria-labelledby="fans-heading"
+            className="shadow-brutal-lg flex flex-col border-strong border-foreground p-8 lg:p-10"
+            style={{
+              backgroundColor: "var(--mint)",
+              color: DEFAULT_CANDY_TEXT,
+            }}
+            {...tid("role-fans")}
+          >
+            <p className="mb-3 text-xs font-bold uppercase tracking-section">
+              {t("fans.label")}
+            </p>
+            <h3
+              id="fans-heading"
+              className="mb-4 font-display text-3xl/tight font-extrabold uppercase lg:text-4xl"
+            >
+              {t("fans.title")}
+            </h3>
+            <p className="mb-8 text-base/relaxed opacity-90">
+              {t("fans.description")}
+            </p>
+            <Link
+              href={appUrls.store}
+              className="button-brutal button-press-sm shadow-brutal-sm mt-auto inline-flex self-start px-6 py-3 text-sm font-extrabold"
+              style={{
+                backgroundColor: PINK_BG,
+                color: DEFAULT_CANDY_TEXT,
+                borderColor: DEFAULT_CANDY_TEXT,
+                outlineColor: DEFAULT_CANDY_TEXT,
+              }}
+            >
+              {t("fans.cta")}
+              <ArrowRight
+                aria-hidden="true"
+                className="size-4"
+                strokeWidth={2.5}
+              />
+            </Link>
+          </div>
         </div>
       </div>
     </section>
