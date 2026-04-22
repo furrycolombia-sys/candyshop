@@ -67,24 +67,29 @@ print(json.dumps(d))" "$TELEGRAM_CHAT_ID" "$1" "${TELEGRAM_THREAD_ID:-}") || ret
     -d "$payload" >/dev/null 2>&1 || true
 }
 
+# Returns human-readable duration from a start timestamp: "2m 14s" or "38s"
+_dur() {
+  local secs=$(( $(date +%s) - $1 ))
+  if [ "$secs" -ge 60 ]; then
+    printf '%dm %ds' $(( secs / 60 )) $(( secs % 60 ))
+  else
+    printf '%ds' "$secs"
+  fi
+}
+
 # Write exit code + send deploy result notification
 DEPLOY_START=$(date +%s)
 _on_exit() {
   local code=$?
   echo $code >/tmp/deploy-candyshop.done
-  local elapsed=$(( $(date +%s) - DEPLOY_START ))
   local dur
-  if [ "$elapsed" -ge 60 ]; then
-    dur="$(( elapsed / 60 ))m $(( elapsed % 60 ))s"
-  else
-    dur="${elapsed}s"
-  fi
+  dur="$(_dur $DEPLOY_START)"
   local commit="${DEPLOY_COMMIT:-unknown}"
   if [ "$code" -eq 0 ]; then
-    notify_telegram "$(printf '✅ <b>Deploy complete</b>\nBranch: <code>%s</code>\nCommit: <code>%s</code>\nDuration: %s' \
+    notify_telegram "$(printf '✅ <b>Deploy complete</b>\nBranch: <code>%s</code>\nCommit: <code>%s</code>\nTotal: %s' \
       "$BRANCH" "$commit" "$dur")"
   else
-    notify_telegram "$(printf '❌ <b>Deploy FAILED</b> (exit %s)\nBranch: <code>%s</code>\nCommit: <code>%s</code>\nDuration: %s' \
+    notify_telegram "$(printf '❌ <b>Deploy FAILED</b> (exit %s)\nBranch: <code>%s</code>\nCommit: <code>%s</code>\nTotal: %s' \
       "$code" "$BRANCH" "$commit" "$dur")"
   fi
 }
@@ -116,6 +121,7 @@ notify_telegram "$(printf '🚀 <b>Deploy started</b>\nBranch: <code>%s</code>' 
 # =============================================================================
 # Clone or pull
 # =============================================================================
+_STEP_START=$(date +%s)
 if [ ! -d "$DEPLOY_DIR/.git" ]; then
   log "First deploy — cloning repository..."
   git clone --branch "$BRANCH" --depth 1 "$REPO_URL" "$DEPLOY_DIR"
@@ -131,12 +137,15 @@ fi
 cd "$DEPLOY_DIR"
 DEPLOY_COMMIT=$(git log --format="%h %s" -1 2>/dev/null || true)
 log "Checked out $DEPLOY_COMMIT"
+notify_telegram "$(printf '📥 <b>Code pulled</b> (%s)\nCommit: <code>%s</code>' "$(_dur $_STEP_START)" "$DEPLOY_COMMIT")"
 
 # =============================================================================
 # Install dependencies
 # =============================================================================
+_STEP_START=$(date +%s)
 log "Installing dependencies..."
 pnpm install --frozen-lockfile --prod=false
+notify_telegram "$(printf '📦 <b>Dependencies installed</b> (%s)' "$(_dur $_STEP_START)")"
 
 # =============================================================================
 # Load build env vars (written by CI, deleted after deploy)
@@ -158,6 +167,7 @@ fi
 # =============================================================================
 # Build all apps (standalone mode for path-based routing)
 # =============================================================================
+_STEP_START=$(date +%s)
 log "Building all applications in standalone mode..."
 export STANDALONE=true
 
@@ -166,15 +176,18 @@ export STANDALONE=true
 # lacks the .next/standalone directory.
 rm -rf "$DEPLOY_DIR/.turbo"
 
+notify_telegram "$(printf '🔨 <b>Building all apps…</b>\n<i>Takes ~3–4 min</i>')"
 pnpm run build
 
 # Clean up env file (secrets should not persist on disk)
 rm -f "$ENV_FILE" "$DEPLOY_DIR/.env"
+notify_telegram "$(printf '✅ <b>Build complete</b> (%s)' "$(_dur $_STEP_START)")"
 
 # =============================================================================
 # Start/restart apps with PM2
 # =============================================================================
 log "Starting applications with PM2..."
+_STEP_START=$(date +%s)
 
 APPS=(
   "auth:5000"
@@ -228,6 +241,7 @@ pm2 save
 
 log "All applications started!"
 pm2 list
+notify_telegram "$(printf '🔄 <b>%d apps restarted with PM2</b> (%s)' "${#APPS[@]}" "$(_dur $_STEP_START)")"
 
 # =============================================================================
 # Deploy Nginx config
@@ -314,12 +328,14 @@ sleep 10
 
 # --- phase 1: liveness check ---
 FAILED=0
+HEALTHY=0
 for APP_ENTRY in "${APPS[@]}"; do
   APP_NAME="${APP_ENTRY%%:*}"
   APP_PORT="${APP_ENTRY##*:}"
 
   if curl -sf --max-time 15 "http://localhost:${APP_PORT}" > /dev/null 2>&1; then
     log "  ✓ $APP_NAME (port $APP_PORT) — accepting connections"
+    HEALTHY=$(( HEALTHY + 1 ))
   else
     warn "  ✗ $APP_NAME (port $APP_PORT) — not responding (check: pm2 logs $APP_NAME)"
     FAILED=$((FAILED + 1))
@@ -327,15 +343,19 @@ for APP_ENTRY in "${APPS[@]}"; do
 done
 
 if [ "$FAILED" -gt 0 ]; then
+  notify_telegram "$(printf '⚠️ <b>Health check: %d/%d apps not responding</b>\nDeploy complete with warnings.\n<i>Check: pm2 logs</i>' "$FAILED" "${#APPS[@]}")"
   warn "$FAILED app(s) not responding. Skipping warm-up."
   log "Deployment complete (with warnings)."
   exit 0
 fi
 
+notify_telegram "$(printf '🏥 <b>All %d apps healthy</b>' "${#APPS[@]}")"
+
 # --- phase 2: JIT warm-up ---
 # Hit each app's root + both locale routes 3 times in parallel.
 # 3 hits is enough for V8 to promote the hot functions out of interpreter mode.
 log "Warming up V8 JIT (3 passes × key routes)..."
+_STEP_START=$(date +%s)
 
 warm_url() {
   local url="$1"
@@ -367,5 +387,6 @@ warm_url "http://localhost:5006/studio/en" &
 
 wait
 log "Warm-up complete — all routes pre-compiled."
+notify_telegram "$(printf '🔥 <b>JIT warm-up complete</b> (%s)\nAll routes pre-compiled.' "$(_dur $_STEP_START)")"
 
 log "Deployment complete!"
