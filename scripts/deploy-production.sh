@@ -50,7 +50,8 @@ if [ -f "$_tg_env" ]; then
   TELEGRAM_THREAD_ID="${TELEGRAM_THREAD_ID:-$(grep '^TELEGRAM_THREAD_ID=' "$_tg_env" | cut -d= -f2- 2>/dev/null || true)}"
 fi
 
-notify_telegram() {
+_telegram_send() {
+  local thread_id="$1" text="$2"
   [ -n "${TELEGRAM_BOT_TOKEN:-}" ] || return 0
   [ -n "${TELEGRAM_CHAT_ID:-}" ] || return 0
   command -v python3 >/dev/null 2>&1 || return 0
@@ -60,11 +61,21 @@ import json, sys
 d = {'chat_id': sys.argv[1], 'text': sys.argv[2], 'parse_mode': 'HTML'}
 if sys.argv[3]:
     d['message_thread_id'] = int(sys.argv[3])
-print(json.dumps(d))" "$TELEGRAM_CHAT_ID" "$1" "${TELEGRAM_THREAD_ID:-}") || return 0
+print(json.dumps(d))" "$TELEGRAM_CHAT_ID" "$text" "$thread_id") || return 0
   curl -sf --max-time 10 -X POST \
     "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
     -H 'Content-Type: application/json' \
     -d "$payload" >/dev/null 2>&1 || true
+}
+
+# Regular channel — deploy steps, recoveries
+notify_telegram() {
+  _telegram_send "${TELEGRAM_THREAD_ID:-}" "$1"
+}
+
+# Critical channel — failures, health warnings, warm-up errors
+notify_telegram_critical() {
+  _telegram_send "${TELEGRAM_CRITICAL_THREAD_ID:-${TELEGRAM_THREAD_ID:-}}" "$1"
 }
 
 # Returns human-readable duration from a start timestamp: "2m 14s" or "38s"
@@ -89,7 +100,7 @@ _on_exit() {
     notify_telegram "$(printf '✅ <b>Deploy complete</b>\nBranch: <code>%s</code>\nCommit: <code>%s</code>\nTotal: %s' \
       "$BRANCH" "$commit" "$dur")"
   else
-    notify_telegram "$(printf '❌ <b>Deploy FAILED</b> (exit %s)\nBranch: <code>%s</code>\nCommit: <code>%s</code>\nTotal: %s' \
+    notify_telegram_critical "$(printf '❌ <b>Deploy FAILED</b> (exit %s)\nBranch: <code>%s</code>\nCommit: <code>%s</code>\nTotal: %s' \
       "$code" "$BRANCH" "$commit" "$dur")"
   fi
 }
@@ -343,7 +354,7 @@ for APP_ENTRY in "${APPS[@]}"; do
 done
 
 if [ "$FAILED" -gt 0 ]; then
-  notify_telegram "$(printf '⚠️ <b>Health check: %d/%d apps not responding</b>\nDeploy complete with warnings.\n<i>Check: pm2 logs</i>' "$FAILED" "${#APPS[@]}")"
+  notify_telegram_critical "$(printf '⚠️ <b>Health check: %d/%d apps not responding</b>\nDeploy complete with warnings.\n<i>Check: pm2 logs</i>' "$FAILED" "${#APPS[@]}")"
   warn "$FAILED app(s) not responding. Skipping warm-up."
   log "Deployment complete (with warnings)."
   exit 0
@@ -401,7 +412,7 @@ rm -f "$_WARM_FAIL_LOG"
 if [ -n "$_failed_urls" ]; then
   _fail_count=$(echo "$_failed_urls" | wc -l | tr -d ' ')
   _fail_list=$(echo "$_failed_urls" | sed 's|http://localhost:[0-9]*/||' | tr '\n' ' ' | sed 's/ $//')
-  notify_telegram "$(printf '⚠️ <b>JIT warm-up incomplete</b> (%s)\n%s route(s) failed after 3 attempts:\n<code>%s</code>\nFirst visit to these routes may be slow.' "$_warm_dur" "$_fail_count" "$_fail_list")"
+  notify_telegram_critical "$(printf '⚠️ <b>JIT warm-up incomplete</b> (%s)\n%s route(s) failed after 3 attempts:\n<code>%s</code>\nFirst visit to these routes may be slow.' "$_warm_dur" "$_fail_count" "$_fail_list")"
   warn "Warm-up incomplete — $_fail_count route(s) unreachable: $_fail_list"
 else
   log "Warm-up complete — all routes pre-compiled."

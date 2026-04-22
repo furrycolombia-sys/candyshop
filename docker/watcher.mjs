@@ -36,9 +36,10 @@ const RAM_WARN_MB     = 400;
 const DISK_CRITICAL_PCT = 90;
 const DISK_WARN_PCT     = 80;
 
-const TELEGRAM_TOKEN  = process.env.TELEGRAM_BOT_TOKEN  ?? "";
-const TELEGRAM_CHAT   = process.env.TELEGRAM_CHAT_ID    ?? "";
-const TELEGRAM_THREAD = process.env.TELEGRAM_THREAD_ID  ?? "";
+const TELEGRAM_TOKEN           = process.env.TELEGRAM_BOT_TOKEN          ?? "";
+const TELEGRAM_CHAT            = process.env.TELEGRAM_CHAT_ID             ?? "";
+const TELEGRAM_THREAD          = process.env.TELEGRAM_THREAD_ID           ?? "";
+const TELEGRAM_CRITICAL_THREAD = process.env.TELEGRAM_CRITICAL_THREAD_ID ?? TELEGRAM_THREAD;
 
 // Consecutive tunnel-detection failures required before alerting (avoids
 // false positives when pgrep can't see a Docker/systemd-managed process on first check)
@@ -69,7 +70,7 @@ const lastAlerted = new Map();
 
 // ── Telegram ──────────────────────────────────────────────────────────────────
 
-async function sendTelegram(text) {
+async function sendTelegramTo(text, threadId) {
   if (!TELEGRAM_TOKEN || !TELEGRAM_CHAT) return;
   try {
     const res = await fetch(
@@ -81,7 +82,7 @@ async function sendTelegram(text) {
           chat_id: TELEGRAM_CHAT,
           text,
           parse_mode: "HTML",
-          ...(TELEGRAM_THREAD ? { message_thread_id: Number(TELEGRAM_THREAD) } : {}),
+          ...(threadId ? { message_thread_id: Number(threadId) } : {}),
         }),
         signal: AbortSignal.timeout(10_000),
       },
@@ -95,6 +96,16 @@ async function sendTelegram(text) {
   }
 }
 
+// Regular channel — deploy steps, recoveries, info
+async function sendTelegram(text) {
+  return sendTelegramTo(text, TELEGRAM_THREAD || null);
+}
+
+// Critical channel — DOWN alerts, resource warnings, failures
+async function sendTelegramCritical(text) {
+  return sendTelegramTo(text, TELEGRAM_CRITICAL_THREAD || TELEGRAM_THREAD || null);
+}
+
 /**
  * Alert on transition OR repeat a persistent alert after the cooldown window.
  * @param {string} key    — unique identifier for the alert category
@@ -105,14 +116,14 @@ async function maybeAlert(key, isNew, text) {
   const now = Date.now();
   if (isNew) {
     lastAlerted.set(key, now);
-    await sendTelegram(text);
+    await sendTelegramCritical(text);
     return;
   }
   // Persistent problem — re-alert only after cooldown
   const last = lastAlerted.get(key) ?? 0;
   if (now - last >= REPEAT_ALERT_MS) {
     lastAlerted.set(key, now);
-    await sendTelegram(text);
+    await sendTelegramCritical(text);
   }
 }
 
@@ -275,7 +286,7 @@ async function ping(app) {
 
     if (prev === "up") {
       console.error(`[watcher] ${app.name}: ✗ DOWN — ${err.message}`);
-      await sendTelegram(
+      await sendTelegramCritical(
         `🔴 <b>${app.name}</b> is not responding\n<code>${err.message}</code>`,
       );
     } else if (prev === "unknown") {
