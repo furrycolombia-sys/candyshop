@@ -20,6 +20,8 @@ export interface ReceivedOrder {
   items: OrderItem[];
   /** Non-null when the order belongs to a seller who delegated to the current user */
   seller_name: string | null;
+  /** Set on delegated orders — true if the delegate holds management permissions */
+  can_manage?: boolean;
 }
 
 export type SellerAction = "approved" | "rejected" | "evidence_requested";

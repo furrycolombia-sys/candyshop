@@ -36,17 +36,12 @@ const ORDER_SELECT = `
   )
 `;
 
-/** Statuses that delegates can act on */
-const ACTIONABLE_STATUSES = [
-  "pending_verification",
-  "evidence_requested",
-] as const;
-
 async function mapRowToOrder(
   supabase: SupabaseClient,
   row: OrderRow,
   buyerMap: Record<string, string>,
   sellerName: string | null,
+  canManage?: boolean,
 ): Promise<ReceivedOrder> {
   return {
     id: row.id,
@@ -68,62 +63,48 @@ async function mapRowToOrder(
     buyer_name: buyerMap[row.user_id] ?? FALLBACK_BUYER_NAME,
     items: row.order_items as OrderItem[],
     seller_name: sellerName,
+    can_manage: canManage,
   };
 }
 
-/** Check whether a filter value targets an actionable status. */
-function isActionableFilter(
-  filter?: string,
-): filter is (typeof ACTIONABLE_STATUSES)[number] {
-  return (
-    !!filter &&
-    filter !== "all" &&
-    ACTIONABLE_STATUSES.includes(filter as (typeof ACTIONABLE_STATUSES)[number])
-  );
-}
-
 /**
- * Fetch actionable orders from sellers who delegated to `userId`,
- * together with a map of seller display names.
+ * Fetch all orders from sellers who delegated to `userId`, together with
+ * seller display names and per-seller management permissions.
  */
 async function fetchDelegatedOrderRows(
   supabase: SupabaseClient,
   userId: string,
-  filter?: string,
-): Promise<{ rows: OrderRow[]; sellerNameMap: Record<string, string> }> {
+): Promise<{
+  rows: OrderRow[];
+  sellerNameMap: Record<string, string>;
+  sellerPermissionsMap: Record<string, string[]>;
+}> {
   const { data: delegations, error: delegationsError } = await supabase
     .from("seller_admins")
-    .select("seller_id")
+    .select("seller_id, permissions")
     .eq("admin_user_id", userId);
 
   if (delegationsError) throw delegationsError;
 
-  const delegatedSellerIds = (delegations ?? []).map((d) => d.seller_id);
+  const delegationRows = delegations ?? [];
 
-  if (delegatedSellerIds.length === 0) {
-    return { rows: [], sellerNameMap: {} };
+  if (delegationRows.length === 0) {
+    return { rows: [], sellerNameMap: {}, sellerPermissionsMap: {} };
   }
 
-  // Non-actionable filter → no delegated orders can match
-  if (filter && filter !== "all" && !isActionableFilter(filter)) {
-    return { rows: [], sellerNameMap: {} };
+  const delegatedSellerIds = delegationRows.map((d) => d.seller_id);
+
+  const sellerPermissionsMap: Record<string, string[]> = {};
+  for (const d of delegationRows) {
+    sellerPermissionsMap[d.seller_id] = (d.permissions as string[]) ?? [];
   }
 
-  let delegatedQuery = supabase
+  const { data, error } = await supabase
     .from("orders")
     .select(ORDER_SELECT)
     .in("seller_id", delegatedSellerIds)
-    .in("payment_status", [...ACTIONABLE_STATUSES])
     .order("created_at", { ascending: false });
 
-  if (isActionableFilter(filter)) {
-    delegatedQuery = delegatedQuery.eq(
-      "payment_status",
-      filter as "pending_verification" | "evidence_requested",
-    );
-  }
-
-  const { data, error } = await delegatedQuery;
   if (error) throw error;
 
   const rows = (data ?? []) as OrderRow[];
@@ -133,11 +114,13 @@ async function fetchDelegatedOrderRows(
       ? await fetchUserDisplayNames(supabase, delegatedSellerIds, "Seller")
       : {};
 
-  return { rows, sellerNameMap };
+  return { rows, sellerNameMap, sellerPermissionsMap };
 }
 
 /**
- * Fetch only the actionable orders delegated to the current user via seller_admins.
+ * Fetch all orders delegated to the current user via seller_admins.
+ * Each order carries `can_manage` based on the delegate's permissions for
+ * that seller (requires orders.approve or orders.request_proof).
  */
 export async function fetchAssignedOrders(
   supabase: SupabaseClient,
@@ -147,10 +130,8 @@ export async function fetchAssignedOrders(
   } = await supabase.auth.getUser();
   if (!user) return [];
 
-  const { rows, sellerNameMap } = await fetchDelegatedOrderRows(
-    supabase,
-    user.id,
-  );
+  const { rows, sellerNameMap, sellerPermissionsMap } =
+    await fetchDelegatedOrderRows(supabase, user.id);
 
   if (rows.length === 0) return [];
 
@@ -162,14 +143,19 @@ export async function fetchAssignedOrders(
   );
 
   return Promise.all(
-    rows.map((row) =>
-      mapRowToOrder(
+    rows.map((row) => {
+      const permissions = sellerPermissionsMap[row.seller_id ?? ""] ?? [];
+      const canManage =
+        permissions.includes("orders.approve") ||
+        permissions.includes("orders.request_proof");
+      return mapRowToOrder(
         supabase,
         row,
         buyerMap,
         sellerNameMap[row.seller_id ?? ""] ?? "Seller",
-      ),
-    ),
+        canManage,
+      );
+    }),
   );
 }
 

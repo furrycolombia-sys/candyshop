@@ -21,6 +21,7 @@ interface ActionButtonsProps {
   status: OrderStatus;
   onAction: (action: SellerAction, note?: string) => void;
   isPending: boolean;
+  canManage?: boolean;
 }
 
 type ActionMode = "approve" | "reject" | "evidence" | null;
@@ -30,6 +31,7 @@ export function ActionButtons({
   status,
   onAction,
   isPending,
+  canManage = true,
 }: ActionButtonsProps) {
   const t = useTranslations("receivedOrders");
   const [mode, setMode] = useState<ActionMode>(null);
@@ -55,7 +57,7 @@ export function ActionButtons({
     [mode, onAction],
   );
 
-  if (!canApprove && !canReject) return null;
+  if (!canManage || (!canApprove && !canReject)) return null;
 
   // Approve — inline confirmation with checkbox
   if (mode === "approve") {

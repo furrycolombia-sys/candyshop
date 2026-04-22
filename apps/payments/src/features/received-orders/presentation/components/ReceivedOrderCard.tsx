@@ -204,6 +204,7 @@ export function ReceivedOrderCard({
           status={order.payment_status}
           onAction={handleAction}
           isPending={isPending}
+          canManage={order.can_manage ?? true}
         />
       </div>
     </div>
