@@ -57,13 +57,23 @@ test.describe.serial("Reports page", () => {
 
     // Create a minimal product so order_items FK resolves
     const product = await adminInsert("products", {
-      name: "E2E Report Product",
-      description: "Created for reports E2E test",
+      seller_id: adminUser.userId,
+      slug: `e2e-report-product-${Date.now()}`,
+      name_en: "E2E Report Product",
+      name_es: "Producto E2E Reporte",
+      description_en: "Created for reports E2E test",
+      description_es: "Creado para prueba E2E de reportes",
+      type: "merch",
+      category: "merch",
       price: 25000,
       currency: "COP",
-      stock: 10,
       max_quantity: 5,
-      owner_id: adminUser.userId,
+      is_active: true,
+      images: [],
+      sections: [],
+      tags: [],
+      sort_order: 0,
+      featured: false,
     });
     productId = product.id as string;
 
@@ -315,7 +325,7 @@ test.describe.serial("Reports page", () => {
     await exportButton.click();
     const download = await downloadPromise;
 
-    expect(download.suggestedFilename()).toMatch(/sales-report-.*\.xls$/i);
+    expect(download.suggestedFilename()).toMatch(/sales-report-.*\.xlsx$/i);
   });
 
   // ─── Access control ───────────────────────────────────────────────

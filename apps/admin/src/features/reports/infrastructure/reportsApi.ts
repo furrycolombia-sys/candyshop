@@ -2,6 +2,7 @@ import type {
   ReportFilters,
   ReportOrdersResponse,
 } from "@/features/reports/domain/types";
+import { getApiBasePath } from "@/shared/application/utils/getApiBasePath";
 
 function toQueryString(filters: ReportFilters): string {
   const params = new URLSearchParams();
@@ -23,9 +24,10 @@ export async function fetchReportOrders(
   filters: ReportFilters,
 ): Promise<ReportOrdersResponse> {
   const qs = toQueryString(filters);
+  const basePath = getApiBasePath();
   const url = qs
-    ? `/api/admin/reports/orders?${qs}`
-    : "/api/admin/reports/orders";
+    ? `${basePath}/api/admin/reports/orders?${qs}`
+    : `${basePath}/api/admin/reports/orders`;
   const response = await fetch(url);
   if (!response.ok) {
     throw new Error("Failed to fetch report orders");
