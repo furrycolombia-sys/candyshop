@@ -250,7 +250,9 @@
     "orders": {
       "create": "Place Orders",
       "read": "View Orders",
-      "update": "Manage Orders"
+      "update": "Manage Orders",
+      "approve": "Approve Orders",
+      "request_proof": "Request Payment Proof"
     },
     "receipts": {
       "create": "Upload Receipts",
