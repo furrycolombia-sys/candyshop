@@ -73,7 +73,80 @@ async function del(path) {
   if (!res.ok) throw new Error(`Delete ${path}: ${await res.text()}`);
 }
 
-// ─── Payment Method ──────────────────────────────────────────────────
+// ─── Payment Methods ─────────────────────────────────────────────────
+
+const CONSPACE_PAYMENT_METHOD = {
+  name_en: "Conspace (International)",
+  name_es: "Conspace (Internacional)",
+  is_active: true,
+  requires_receipt: true,
+  requires_transfer_number: true,
+  sort_order: 1,
+  display_blocks: [
+    {
+      id: "conspace-info",
+      type: "text",
+      content_en:
+        "For attendees **outside Colombia** who don't have a local bank account. Complete your payment securely through Conspace:",
+      content_es:
+        "Para asistentes **fuera de Colombia** que no tienen cuenta bancaria local. Completa tu pago de forma segura a traves de Conspace:",
+    },
+    {
+      id: "conspace-logo",
+      type: "image",
+      url: "https://filedn.com/leGgCrrYIXV0YvzNNKbdzBb/conspace.png",
+      alt_en: "Conspace payment platform",
+      alt_es: "Plataforma de pago Conspace",
+      href: "https://conspace.app/events/moonfest",
+      target: "_blank",
+      rel: "noopener noreferrer",
+    },
+    {
+      id: "conspace-link",
+      type: "link",
+      url: "https://conspace.app/events/moonfest",
+      label_en: "Pay via Conspace",
+      label_es: "Pagar via Conspace",
+    },
+    {
+      id: "conspace-instructions",
+      type: "text",
+      content_en:
+        "After completing your payment on Conspace, upload your payment receipt and fill in your details below so we can confirm your registration.",
+      content_es:
+        "Despues de completar tu pago en Conspace, sube tu comprobante de pago y completa tus datos para que podamos confirmar tu registro.",
+    },
+  ],
+  form_fields: [
+    {
+      id: "email",
+      type: "email",
+      label_en: "Email",
+      label_es: "Correo electronico",
+      placeholder_en: "your@email.com",
+      placeholder_es: "tu@correo.com",
+      required: true,
+    },
+    {
+      id: "display_name",
+      type: "text",
+      label_en: "Your name (alias or real) — how you'd like to be identified",
+      label_es: "Tu nombre (alias o real) — como te gustaria ser identificado",
+      placeholder_en: "e.g. Kira or Juan Perez",
+      placeholder_es: "Ej. Kira o Juan Perez",
+      required: true,
+    },
+    {
+      id: "tracking",
+      type: "text",
+      label_en: "Conspace order ID or confirmation number",
+      label_es: "ID de orden Conspace o numero de confirmacion",
+      placeholder_en: "e.g. CS-123456",
+      placeholder_es: "Ej. CS-123456",
+      required: true,
+    },
+  ],
+};
 
 const NEQUI_PAYMENT_METHOD = {
   name_en: "Nequi",
@@ -551,6 +624,25 @@ async function run() {
       seller_id: sellerId,
     });
     console.log("Nequi payment method created:", method[0].id);
+  }
+
+  // 6. Conspace payment method (upsert by seller + name)
+  const existingConspace = await query(
+    `seller_payment_methods?seller_id=eq.${sellerId}&name_en=eq.Conspace%20(International)&select=id`,
+  );
+  if (existingConspace.length > 0) {
+    const methodId = existingConspace[0].id;
+    await patch(
+      `seller_payment_methods?id=eq.${methodId}`,
+      CONSPACE_PAYMENT_METHOD,
+    );
+    console.log("Conspace payment method updated:", methodId);
+  } else {
+    const method = await insert("seller_payment_methods", {
+      ...CONSPACE_PAYMENT_METHOD,
+      seller_id: sellerId,
+    });
+    console.log("Conspace payment method created:", method[0].id);
   }
 
   console.log("\nDone! Product live at https://store.furrycolombia.com/store");
