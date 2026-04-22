@@ -33,7 +33,7 @@ export interface OrderItemRow {
   quantity: number;
   unit_price: number;
   currency: string;
-  products: { name: string } | null;
+  products: { name_en: string } | null;
 }
 
 export interface OrderRow {
@@ -199,7 +199,7 @@ async function addOrderRows(
     orderItems.length === 0
       ? [{ name: "", qty: 0, price: 0, currency: order.currency }]
       : orderItems.map((item) => ({
-          name: item.products?.name ?? "",
+          name: item.products?.name_en ?? "",
           qty: item.quantity,
           price: item.unit_price,
           currency: item.currency,

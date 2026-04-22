@@ -122,6 +122,63 @@ async function revokePermission(userId: string, permissionKey: string) {
   await revokePermissions(userId, [resourcePermissionId]);
 }
 
+async function findResourcePermissionIdsBatch(
+  permissionKeys: string[],
+): Promise<Map<string, string>> {
+  if (permissionKeys.length === 0) return new Map();
+
+  const permissionsResponse = await adminFetch(
+    createRestPath("permissions", {
+      key: `in.(${permissionKeys.join(",")})`,
+      select: "id,key",
+    }),
+  );
+  const permissionsRows = (await permissionsResponse.json()) as Array<{
+    id: string;
+    key: string;
+  }>;
+
+  const permissionIdsByKey = new Map(permissionsRows.map((r) => [r.key, r.id]));
+  for (const key of permissionKeys) {
+    if (!permissionIdsByKey.has(key)) {
+      throw new Error(`Unknown permission key: ${key}`);
+    }
+  }
+
+  const permissionIds = permissionsRows.map((r) => r.id);
+
+  const resourceResponse = await adminFetch(
+    createRestPath("resource_permissions", {
+      permission_id: `in.(${permissionIds.join(",")})`,
+      select: "id,resource_id,permission_id",
+    }),
+  );
+  const resourceRows = (await resourceResponse.json()) as Array<{
+    id: string;
+    resource_id: string | null;
+    permission_id: string;
+  }>;
+
+  const resourceByPermissionId = new Map<string, string>();
+  for (const row of resourceRows) {
+    const existing = resourceByPermissionId.get(row.permission_id);
+    if (!existing || row.resource_id === null) {
+      resourceByPermissionId.set(row.permission_id, row.id);
+    }
+  }
+
+  const result = new Map<string, string>();
+  for (const [key, permissionId] of permissionIdsByKey) {
+    const resourcePermissionId = resourceByPermissionId.get(permissionId);
+    if (!resourcePermissionId) {
+      throw new Error(`No resource permission found for key: ${key}`);
+    }
+    result.set(key, resourcePermissionId);
+  }
+
+  return result;
+}
+
 async function replacePermissions(
   userId: string,
   permissionKeys: string[],
@@ -129,9 +186,9 @@ async function replacePermissions(
 ) {
   const validatedUserId = validateUuid(userId);
   const desiredKeys = [...new Set(permissionKeys)];
-  const [currentPermissions, desiredResourcePermissionIds] = await Promise.all([
+  const [currentPermissions, desiredResourcePermissionMap] = await Promise.all([
     fetchGrantedPermissions(validatedUserId),
-    Promise.all(desiredKeys.map((key) => findResourcePermissionId(key))),
+    findResourcePermissionIdsBatch(desiredKeys),
   ]);
 
   const currentByKey = new Map(
@@ -140,16 +197,13 @@ async function replacePermissions(
       permission.resourcePermissionId,
     ]),
   );
-  const desiredByKey = new Map(
-    desiredKeys.map((key, index) => [key, desiredResourcePermissionIds[index]]),
-  );
 
   const resourcePermissionIdsToGrant = desiredKeys
     .filter((key) => !currentByKey.has(key))
-    .map((key) => desiredByKey.get(key))
+    .map((key) => desiredResourcePermissionMap.get(key))
     .filter(Boolean) as string[];
   const resourcePermissionIdsToRevoke = currentPermissions
-    .filter((permission) => !desiredByKey.has(permission.key))
+    .filter((permission) => !desiredResourcePermissionMap.has(permission.key))
     .map((permission) => permission.resourcePermissionId);
 
   await Promise.all([

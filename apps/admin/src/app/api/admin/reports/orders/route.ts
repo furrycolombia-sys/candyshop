@@ -15,7 +15,7 @@ const ISO_DATE_LENGTH = 10;
 const ORDERS_SELECT =
   "id,created_at,payment_status,total,currency,transfer_number,receipt_url,user_id,seller_id";
 const ITEMS_SELECT =
-  "id,order_id,product_id,quantity,unit_price,currency,products(name)";
+  "id,order_id,product_id,quantity,unit_price,currency,products(name_en)";
 
 interface OrderItemRow {
   id: string;
@@ -24,7 +24,7 @@ interface OrderItemRow {
   quantity: number;
   unit_price: number;
   currency: string;
-  products: { name: string } | null;
+  products: { name_en: string } | null;
 }
 
 interface OrderRow {
@@ -230,7 +230,7 @@ export async function GET(request: Request) {
         items: (itemsByOrder.get(order.id) ?? []).map((item) => ({
           id: item.id,
           product_id: item.product_id,
-          product_name: item.products?.name ?? "",
+          product_name: item.products?.name_en ?? "",
           quantity: item.quantity,
           unit_price: item.unit_price,
           currency: item.currency,
