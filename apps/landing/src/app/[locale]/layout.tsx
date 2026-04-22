@@ -1,3 +1,4 @@
+import { TallyFeedbackButton } from "@monorepo/app-components";
 import { getServerUserEmail } from "api/supabase/server";
 import type { Metadata } from "next";
 import { NextIntlClientProvider } from "next-intl";
@@ -56,6 +57,7 @@ export default async function LocaleLayout({
             userEmail={userEmail}
           />
           {children}
+          <TallyFeedbackButton />
         </Providers>
       </NextIntlClientProvider>
     </ThemeProvider>

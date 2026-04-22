@@ -27,6 +27,7 @@
     },
     "language": {
       "select": "Select language"
-    }
+    },
+    "feedback": "Feedback"
   }
 }
