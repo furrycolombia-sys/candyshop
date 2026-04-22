@@ -125,6 +125,9 @@ jobs:
           NEXT_PUBLIC_PAYMENTS_URL=https://store.furrycolombia.com/payments
           NEXT_PUBLIC_PLAYGROUND_URL=https://store.furrycolombia.com/playground
           NEXT_PUBLIC_STUDIO_URL=https://store.furrycolombia.com/studio
+          TELEGRAM_BOT_TOKEN=${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID=${{ secrets.TELEGRAM_CHAT_ID }}
+          TELEGRAM_THREAD_ID=${{ secrets.TELEGRAM_THREAD_ID }}
           ENVEOF'
 
       - name: Copy deploy script to server

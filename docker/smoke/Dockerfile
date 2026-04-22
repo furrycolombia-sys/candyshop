@@ -111,6 +111,9 @@ COPY --from=builder /app/apps/studio/public             /app/studio/apps/studio/
 COPY docker/prod/nginx.conf /etc/nginx/nginx.conf
 COPY docker/prod/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
+# Copy the in-container health watcher
+COPY docker/watcher.mjs /app/watcher.mjs
+
 EXPOSE 80
 
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
