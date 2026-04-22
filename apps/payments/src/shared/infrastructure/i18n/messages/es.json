@@ -127,7 +127,6 @@
   },
   "assignedOrders": {
     "title": "Items Asignados",
-    "subtitle": "Ordenes de items que te han asignado los vendedores",
     "noOrders": "Sin ordenes asignadas",
     "noOrdersHint": "Cuando un vendedor te asigne a uno de sus productos, las ordenes pendientes apareceran aqui"
   },
