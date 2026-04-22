@@ -146,13 +146,13 @@ cat > "$NGINX_CONF" << 'NGINX_EOF'
 # Candyshop production reverse proxy
 # Included by Hestia's nginx config for store.furrycolombia.com
 
-upstream cs_auth    { server 127.0.0.1:5000; }
-upstream cs_store   { server 127.0.0.1:5001; }
-upstream cs_admin   { server 127.0.0.1:5002; }
-upstream cs_play    { server 127.0.0.1:5003; }
-upstream cs_landing { server 127.0.0.1:5004; }
-upstream cs_pay     { server 127.0.0.1:5005; }
-upstream cs_studio  { server 127.0.0.1:5006; }
+upstream cs_auth    { server 127.0.0.1:5000; keepalive 16; }
+upstream cs_store   { server 127.0.0.1:5001; keepalive 16; }
+upstream cs_admin   { server 127.0.0.1:5002; keepalive 16; }
+upstream cs_play    { server 127.0.0.1:5003; keepalive 16; }
+upstream cs_landing { server 127.0.0.1:5004; keepalive 16; }
+upstream cs_pay     { server 127.0.0.1:5005; keepalive 16; }
+upstream cs_studio  { server 127.0.0.1:5006; keepalive 16; }
 
 map $http_upgrade $allowed_upgrade {
     default "";
@@ -211,29 +211,68 @@ log "Nginx config written to $NGINX_CONF"
 log "NOTE: Hestia domain config for store.furrycolombia.com must proxy to port 9090"
 
 # =============================================================================
-# Health check
+# Health check + warm-up
+# After PM2 starts, V8 is cold — the first real user request would pay a
+# compilation penalty on every route. We hit each app's key localized pages
+# 3 times so V8 JIT-compiles the hot paths before real traffic arrives.
 # =============================================================================
-log "Running health checks..."
-sleep 5
+log "Waiting for all apps to accept connections..."
+sleep 10
 
+# --- phase 1: liveness check ---
 FAILED=0
 for APP_ENTRY in "${APPS[@]}"; do
   APP_NAME="${APP_ENTRY%%:*}"
   APP_PORT="${APP_ENTRY##*:}"
 
-  if curl -sf "http://localhost:${APP_PORT}" > /dev/null 2>&1; then
-    log "  ✓ $APP_NAME (port $APP_PORT) — healthy"
+  if curl -sf --max-time 15 "http://localhost:${APP_PORT}" > /dev/null 2>&1; then
+    log "  ✓ $APP_NAME (port $APP_PORT) — accepting connections"
   else
-    warn "  ✗ $APP_NAME (port $APP_PORT) — not responding yet"
+    warn "  ✗ $APP_NAME (port $APP_PORT) — not responding (check: pm2 logs $APP_NAME)"
     FAILED=$((FAILED + 1))
   fi
 done
 
 if [ "$FAILED" -gt 0 ]; then
-  warn "$FAILED app(s) not responding yet. They may still be starting up."
-  warn "Check with: pm2 logs"
-else
-  log "All apps healthy!"
+  warn "$FAILED app(s) not responding. Skipping warm-up."
+  log "Deployment complete (with warnings)."
+  exit 0
 fi
+
+# --- phase 2: JIT warm-up ---
+# Hit each app's root + both locale routes 3 times in parallel.
+# 3 hits is enough for V8 to promote the hot functions out of interpreter mode.
+log "Warming up V8 JIT (3 passes × key routes)..."
+
+warm_url() {
+  local url="$1"
+  for _ in 1 2 3; do
+    curl -sf --max-time 30 "$url" > /dev/null 2>&1 || true
+  done
+}
+
+warm_url "http://localhost:5004/"         &  # landing root
+warm_url "http://localhost:5004/en"       &
+warm_url "http://localhost:5004/es"       &
+
+warm_url "http://localhost:5001/store"    &  # store
+warm_url "http://localhost:5001/store/en" &
+warm_url "http://localhost:5001/store/es" &
+
+warm_url "http://localhost:5005/payments"    &  # payments
+warm_url "http://localhost:5005/payments/en" &
+warm_url "http://localhost:5005/payments/es" &
+
+warm_url "http://localhost:5000/auth"    &  # auth
+warm_url "http://localhost:5000/auth/en" &
+
+warm_url "http://localhost:5002/admin"    &  # admin
+warm_url "http://localhost:5002/admin/en" &
+
+warm_url "http://localhost:5006/studio"    &  # studio
+warm_url "http://localhost:5006/studio/en" &
+
+wait
+log "Warm-up complete — all routes pre-compiled."
 
 log "Deployment complete!"
