@@ -62,14 +62,14 @@ describe("HomeSections", () => {
     expect(screen.getByTestId("category-digital")).toBeInTheDocument();
   });
 
-  it("renders both role cards with store links", () => {
+  it("renders both role cards — artists has coming-soon badge, fans has store link", () => {
     render(<RolesSection />);
 
     expect(screen.getByTestId("roles-section")).toBeInTheDocument();
     expect(screen.getByTestId("role-artists")).toBeInTheDocument();
     expect(screen.getByTestId("role-fans")).toBeInTheDocument();
-    expect(screen.getAllByRole("link")).toHaveLength(2);
+    // Artists card is "coming soon" — no link, only the fans card links to the store
+    expect(screen.getAllByRole("link")).toHaveLength(1);
     expect(screen.getAllByRole("link")[0]).toHaveAttribute("href", "/store");
-    expect(screen.getAllByRole("link")[1]).toHaveAttribute("href", "/store");
   });
 });
