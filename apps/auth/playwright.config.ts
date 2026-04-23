@@ -20,16 +20,11 @@ const { getE2EExtraHTTPHeaders } = require(
 
 const appUrls = resolveE2EAppUrls();
 const extraHTTPHeaders = getE2EExtraHTTPHeaders();
-const isSingleOriginPathRouting =
-  new URL(appUrls.auth).origin === new URL(appUrls.store).origin;
-const stagingPathRoutingIgnores =
-  process.env.TARGET_ENV === "staging" && isSingleOriginPathRouting
-    ? [
-        "**/checkout-stock-integrity.spec.ts",
-        "**/delegated-admin-flow.spec.ts",
-        "**/full-purchase-flow.spec.ts",
-      ]
-    : [];
+// Staging uses Docker + nginx which serves all apps from the same origin
+// (e.g. store.ffxivbe.org/auth, store.ffxivbe.org/store, etc.).
+// This is expected single-origin path routing — all specs run in staging.
+// OAuth specs (google-login, discord-login) have their own test.skip() and
+// never appear here.
 
 /**
  * Playwright config for E2E tests.
@@ -43,7 +38,6 @@ const stagingPathRoutingIgnores =
  */
 export default defineConfig({
   testDir: "./e2e",
-  testIgnore: stagingPathRoutingIgnores,
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,

@@ -12,9 +12,6 @@ import {
   type TestUser,
 } from "./helpers/session";
 
-const isSingleOriginPathRouting =
-  new URL(APP_URLS.AUTH).origin === new URL(APP_URLS.PAYMENTS).origin;
-
 test.describe.serial("Checkout stock integrity", () => {
   let seller: TestUser;
   let buyer: TestUser;
@@ -78,11 +75,6 @@ test.describe.serial("Checkout stock integrity", () => {
     context,
     page,
   }) => {
-    test.fixme(
-      isSingleOriginPathRouting,
-      "Checkout E2E fixture flow is blocked by single-origin path-routed permission guards in staging.",
-    );
-
     await injectSession(context, buyer);
 
     const sharedDomain = buildSharedCookieDomain(APP_URLS.PAYMENTS);
