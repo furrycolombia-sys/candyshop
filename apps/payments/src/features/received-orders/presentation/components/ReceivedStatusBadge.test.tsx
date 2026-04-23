@@ -38,10 +38,9 @@ describe("ReceivedStatusBadge", () => {
     }
   });
 
-  it("uses expired config for unknown status", () => {
-    // Cast to force unknown status
-    render(<ReceivedStatusBadge status={"unknown_status" as "approved"} />);
-    // Should not crash
+  it("renders expired status without crashing", () => {
+    render(<ReceivedStatusBadge status="expired" />);
     expect(screen.getByTestId("order-status-badge")).toBeInTheDocument();
+    expect(screen.getByText("expired")).toBeInTheDocument();
   });
 });

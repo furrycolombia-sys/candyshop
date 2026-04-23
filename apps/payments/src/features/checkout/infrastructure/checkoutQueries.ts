@@ -58,6 +58,9 @@ interface CreateOrderParams {
   paymentMethodId: string;
   items: CartItem[];
   checkoutSessionId: string;
+  transferNumber: string | null;
+  receiptUrl: string | null;
+  buyerInfo: Record<string, string>;
 }
 
 export async function fetchCheckoutProductsByIds(
@@ -113,8 +116,16 @@ export async function createOrder(
   supabase: SupabaseClient,
   params: CreateOrderParams,
 ): Promise<string> {
-  const { userId, sellerId, paymentMethodId, items, checkoutSessionId } =
-    params;
+  const {
+    userId,
+    sellerId,
+    paymentMethodId,
+    items,
+    checkoutSessionId,
+    transferNumber,
+    receiptUrl,
+    buyerInfo,
+  } = params;
 
   // Fetch current prices from DB to prevent price manipulation via cart cookie
   const { data: productPrices, error: pricesError } = await supabase
@@ -174,7 +185,7 @@ export async function createOrder(
         MS_PER_SECOND,
   ).toISOString();
 
-  // Insert order with server-calculated total
+  // Insert order directly as pending_verification — only created once the buyer has submitted payment
   const { data: order, error: orderError } = await supabase
     .from("orders")
     .insert({
@@ -183,9 +194,12 @@ export async function createOrder(
       payment_method_id: paymentMethodId,
       total: serverTotal,
       currency: orderCurrency,
-      payment_status: "awaiting_payment",
+      payment_status: "pending_verification",
       checkout_session_id: checkoutSessionId,
       expires_at: expiresAt,
+      transfer_number: transferNumber,
+      receipt_url: receiptUrl,
+      buyer_info: Object.keys(buyerInfo).length > 0 ? buyerInfo : null,
     })
     .select("id")
     .single();
@@ -196,8 +210,6 @@ export async function createOrder(
     throw orderError ?? new Error("Failed to create order");
   }
 
-  const orderId = order.id;
-
   // Build order items using DB prices
   const orderItems = items.map((item) => {
     const dbProduct = priceMap.get(item.id) ?? {
@@ -205,7 +217,7 @@ export async function createOrder(
       currency: "USD" as CurrencyCode,
     };
     return {
-      order_id: orderId,
+      order_id: order.id,
       product_id: item.id,
       quantity: item.quantity,
       unit_price: dbProduct.price,
@@ -220,30 +232,7 @@ export async function createOrder(
 
   if (itemsError) throw itemsError;
 
-  return orderId;
-}
-
-/**
- * Update an order with receipt information and set status to pending_verification.
- */
-export async function submitReceipt(
-  supabase: SupabaseClient,
-  orderId: string,
-  transferNumber: string | null,
-  receiptUrl: string | null,
-  buyerInfo: Record<string, string> = {},
-): Promise<void> {
-  const { error } = await supabase
-    .from("orders")
-    .update({
-      transfer_number: transferNumber,
-      receipt_url: receiptUrl,
-      buyer_info: Object.keys(buyerInfo).length > 0 ? buyerInfo : null,
-      payment_status: "pending_verification",
-    })
-    .eq("id", orderId);
-
-  if (error) throw error;
+  return order.id;
 }
 
 /**
