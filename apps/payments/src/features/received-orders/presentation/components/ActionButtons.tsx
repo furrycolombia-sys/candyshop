@@ -12,13 +12,13 @@ import { SellerNoteInput } from "./SellerNoteInput";
 import {
   canActOnOrder,
   canRequestEvidence,
-  type OrderStatus,
+  type ReceivedOrderStatus,
   type SellerAction,
 } from "@/features/received-orders/domain/types";
 
 interface ActionButtonsProps {
   orderId: string;
-  status: OrderStatus;
+  status: ReceivedOrderStatus;
   onAction: (action: SellerAction, note?: string) => void;
   isPending: boolean;
   canManage?: boolean;
