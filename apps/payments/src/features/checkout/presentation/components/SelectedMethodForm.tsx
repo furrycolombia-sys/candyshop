@@ -7,6 +7,7 @@ import { FormFieldsSection } from "./FormFieldsSection";
 import { ReceiptUpload } from "./ReceiptUpload";
 
 import type { SellerPaymentMethodWithType } from "@/features/checkout/domain/types";
+import { tid } from "@/shared/infrastructure/config/tid";
 
 interface SelectedMethodFormProps {
   method: SellerPaymentMethodWithType;
@@ -62,6 +63,7 @@ export function SelectedMethodForm({
           placeholder={t("transferNumberHint")}
           disabled={isDisabled}
           className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-foreground"
+          {...tid("transfer-number-input")}
         />
       </div>
 
