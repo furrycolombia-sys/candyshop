@@ -1,13 +1,11 @@
 "use client";
 
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSupabase } from "shared";
 
 import type { CartItem } from "@/features/checkout/domain/types";
-import {
-  createOrder,
-  submitReceipt,
-} from "@/features/checkout/infrastructure/checkoutQueries";
+import { createOrder } from "@/features/checkout/infrastructure/checkoutQueries";
+import { MY_ORDERS_QUERY_KEY } from "@/features/orders/domain/constants";
 import { uploadReceipt } from "@/shared/infrastructure/receiptStorage";
 
 interface SubmitPaymentParams {
@@ -23,12 +21,14 @@ interface SubmitPaymentParams {
 
 /**
  * Mutation that:
- * 1. Creates the order (reserves stock)
- * 2. Submits buyer info and moves to pending_verification
+ * 1. Generates an order ID client-side
+ * 2. Uploads the receipt file (if any) using that ID
+ * 3. Creates the order directly as pending_verification — no awaiting_payment row ever hits the DB
  * Returns the order ID.
  */
 export function useSubmitPayment() {
   const supabase = useSupabase();
+  const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (params: SubmitPaymentParams): Promise<string> => {
@@ -43,31 +43,31 @@ export function useSubmitPayment() {
         transferNumber,
       } = params;
 
-      // 1. Create order and reserve stock
-      const orderId = await createOrder(supabase, {
+      // 1. Upload receipt using the checkout session ID as the storage path prefix —
+      //    lets the DB generate the order ID rather than pre-generating client-side
+      let receiptUrl: string | null = null;
+      if (receiptFile) {
+        receiptUrl = await uploadReceipt(
+          supabase,
+          receiptFile,
+          checkoutSessionId,
+        );
+      }
+
+      // 2. Create order with all payment info in a single insert; DB generates the order ID
+      return createOrder(supabase, {
         userId,
         sellerId,
         paymentMethodId,
         items,
         checkoutSessionId,
-      });
-
-      // 2. Upload receipt file if provided
-      let receiptPath: string | null = null;
-      if (receiptFile) {
-        receiptPath = await uploadReceipt(supabase, receiptFile, orderId);
-      }
-
-      // 3. Submit buyer info and move to pending_verification
-      await submitReceipt(
-        supabase,
-        orderId,
         transferNumber,
-        receiptPath,
+        receiptUrl,
         buyerInfo,
-      );
-
-      return orderId;
+      });
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: [MY_ORDERS_QUERY_KEY] });
     },
   });
 }

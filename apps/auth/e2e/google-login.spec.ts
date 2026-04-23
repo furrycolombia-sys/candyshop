@@ -136,13 +136,12 @@ async function expectAuthenticatedAcrossApps(
 }
 
 test("Google OAuth login flow", async ({ page }) => {
-  // This test requires a pre-seeded Chrome profile with an active Google session.
-  // It does not work on macOS with Playwright's bundled browsers due to Google's
-  // automation detection. Run manually on a Linux CI environment with a real Chrome
-  // profile that has an active Google session.
+  // Requires a pre-seeded Chrome profile with an active Google session AND
+  // Google's cooperation (they actively block Playwright automation). Run
+  // manually only — never in CI or staging.
   test.skip(
-    process.platform === "darwin",
-    "Google OAuth automation is not supported on macOS — Google blocks Playwright browsers. Run on Linux CI with a pre-seeded Chrome profile.",
+    true,
+    "Google OAuth requires live credentials and manual execution — not suitable for automated runs",
   );
 
   const googleEmail = process.env.GOOGLE_TEST_EMAIL;

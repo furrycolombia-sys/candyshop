@@ -1,4 +1,3 @@
-/* eslint-disable react/display-name */
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { renderHook, act } from "@testing-library/react";
 import type { ReactNode } from "react";
@@ -10,7 +9,6 @@ vi.mock("api/supabase", () => ({
 
 vi.mock("@/features/checkout/infrastructure/checkoutQueries", () => ({
   createOrder: vi.fn(),
-  submitReceipt: vi.fn(),
 }));
 
 vi.mock("@/shared/infrastructure/receiptStorage", () => ({
@@ -19,18 +17,19 @@ vi.mock("@/shared/infrastructure/receiptStorage", () => ({
 
 import { useSubmitPayment } from "./useSubmitPayment";
 
-import {
-  createOrder,
-  submitReceipt,
-} from "@/features/checkout/infrastructure/checkoutQueries";
+import { createOrder } from "@/features/checkout/infrastructure/checkoutQueries";
+import { MY_ORDERS_QUERY_KEY } from "@/features/orders/domain/constants";
 
 function createWrapper() {
   const qc = new QueryClient({
     defaultOptions: { mutations: { retry: false } },
   });
-  return ({ children }: { children: ReactNode }) => (
-    <QueryClientProvider client={qc}>{children}</QueryClientProvider>
-  );
+  return {
+    wrapper: ({ children }: { children: ReactNode }) => (
+      <QueryClientProvider client={qc}>{children}</QueryClientProvider>
+    ),
+    queryClient: qc,
+  };
 }
 
 const baseParams = {
@@ -47,57 +46,67 @@ const baseParams = {
 describe("useSubmitPayment", () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it("creates order and submits receipt without buyer info", async () => {
+  it("creates order with all params and returns its id", async () => {
     vi.mocked(createOrder).mockResolvedValue("order-1");
-    vi.mocked(submitReceipt).mockResolvedValue();
 
-    const { result } = renderHook(() => useSubmitPayment(), {
-      wrapper: createWrapper(),
-    });
+    const { wrapper } = createWrapper();
+    const { result } = renderHook(() => useSubmitPayment(), { wrapper });
 
     const orderId = await act(() => result.current.mutateAsync(baseParams));
 
     expect(orderId).toBe("order-1");
-    expect(createOrder).toHaveBeenCalled();
-    expect(submitReceipt).toHaveBeenCalledWith(
+    expect(createOrder).toHaveBeenCalledWith(
       expect.anything(),
-      "order-1",
-      null,
-      null,
-      {},
+      expect.objectContaining({
+        userId: "u1",
+        sellerId: "s1",
+        paymentMethodId: "pm1",
+        checkoutSessionId: "sess-1",
+        transferNumber: null,
+        receiptUrl: null,
+        buyerInfo: {},
+      }),
     );
   });
 
-  it("passes buyer info to submitReceipt", async () => {
+  it("passes buyer info to createOrder", async () => {
     vi.mocked(createOrder).mockResolvedValue("order-2");
-    vi.mocked(submitReceipt).mockResolvedValue();
 
     const buyerInfo = { "field-1": "John Doe", "field-2": "john@example.com" };
 
-    const { result } = renderHook(() => useSubmitPayment(), {
-      wrapper: createWrapper(),
-    });
+    const { wrapper } = createWrapper();
+    const { result } = renderHook(() => useSubmitPayment(), { wrapper });
 
     await act(() => result.current.mutateAsync({ ...baseParams, buyerInfo }));
 
-    expect(submitReceipt).toHaveBeenCalledWith(
+    expect(createOrder).toHaveBeenCalledWith(
       expect.anything(),
-      "order-2",
-      null,
-      null,
-      buyerInfo,
+      expect.objectContaining({ buyerInfo }),
     );
   });
 
   it("returns the order id on success", async () => {
     vi.mocked(createOrder).mockResolvedValue("order-3");
-    vi.mocked(submitReceipt).mockResolvedValue();
 
-    const { result } = renderHook(() => useSubmitPayment(), {
-      wrapper: createWrapper(),
-    });
+    const { wrapper } = createWrapper();
+    const { result } = renderHook(() => useSubmitPayment(), { wrapper });
 
     const orderId = await act(() => result.current.mutateAsync(baseParams));
     expect(orderId).toBe("order-3");
+  });
+
+  it("invalidates my-orders query on success", async () => {
+    vi.mocked(createOrder).mockResolvedValue("order-4");
+
+    const { wrapper, queryClient } = createWrapper();
+    const invalidate = vi.spyOn(queryClient, "invalidateQueries");
+
+    const { result } = renderHook(() => useSubmitPayment(), { wrapper });
+
+    await act(() => result.current.mutateAsync(baseParams));
+
+    expect(invalidate).toHaveBeenCalledWith({
+      queryKey: [MY_ORDERS_QUERY_KEY],
+    });
   });
 });

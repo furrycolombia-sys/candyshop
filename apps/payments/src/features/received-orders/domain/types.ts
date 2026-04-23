@@ -2,11 +2,17 @@ export type { OrderItem, OrderStatus } from "@/shared/domain/types";
 
 import type { OrderItem, OrderStatus } from "@/shared/domain/types";
 
+/** Statuses a received order can actually have — excludes legacy and pre-payment statuses */
+export type ReceivedOrderStatus = Exclude<
+  OrderStatus,
+  "awaiting_payment" | "pending" | "paid"
+>;
+
 export interface ReceivedOrder {
   id: string;
   user_id: string;
   seller_id: string | null;
-  payment_status: OrderStatus;
+  payment_status: ReceivedOrderStatus;
   total: number;
   currency: string;
   transfer_number: string | null;
@@ -27,11 +33,11 @@ export interface ReceivedOrder {
 export type SellerAction = "approved" | "rejected" | "evidence_requested";
 
 /** Whether the seller can approve or reject an order in this status */
-export function canActOnOrder(status: OrderStatus): boolean {
+export function canActOnOrder(status: ReceivedOrderStatus): boolean {
   return status === "pending_verification" || status === "evidence_requested";
 }
 
 /** Whether the seller can request additional evidence */
-export function canRequestEvidence(status: OrderStatus): boolean {
+export function canRequestEvidence(status: ReceivedOrderStatus): boolean {
   return status === "pending_verification";
 }

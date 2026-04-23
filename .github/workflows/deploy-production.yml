@@ -13,6 +13,9 @@ on:
       - "scripts/**"
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 concurrency:
   group: deploy-production
   cancel-in-progress: false
@@ -183,3 +186,70 @@ jobs:
           ssh ${{ secrets.PROD_SERVER_HOST }} \
             'rm -f /tmp/.candyshop-build.env /tmp/deploy-production.sh' 2>/dev/null || true
           rm -f ~/.ssh/deploy_key
+
+  # ============================================
+  # Alert Telegram when any deploy job fails
+  # (ci-gate failures are silent otherwise)
+  # ============================================
+  notify-failure:
+    name: Notify Deploy Failure
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    needs: [ci-gate, deploy]
+    # always() lets this job run even when upstream jobs are skipped due to failure;
+    # the explicit result checks ensure we only fire on actual failures, not cancellations.
+    if: ${{ always() && (needs.ci-gate.result == 'failure' || needs.deploy.result == 'failure') }}
+    steps:
+      - name: Send Telegram alert
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          TELEGRAM_CRITICAL_THREAD_ID: ${{ secrets.TELEGRAM_CRITICAL_THREAD_ID }}
+          RUN_URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          COMMIT_SHA: ${{ github.sha }}
+          ACTOR: ${{ github.actor }}
+        run: |
+          python3 - <<'EOF'
+          import html, json, os, urllib.error, urllib.request
+
+          token = os.environ.get("TELEGRAM_BOT_TOKEN", "")
+          chat_id = os.environ.get("TELEGRAM_CHAT_ID", "")
+          if not token or not chat_id:
+              raise SystemExit("Missing required secret: TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID")
+
+          sha = os.environ["COMMIT_SHA"][:7]
+          text = (
+              "🚨 <b>Production Deploy Failed</b>\n\n"
+              f"Commit: <code>{sha}</code>\n"
+              f"Triggered by: {html.escape(os.environ['ACTOR'])}\n\n"
+              f"🔗 {html.escape(os.environ['RUN_URL'])}"
+          )
+
+          payload = {
+              "chat_id": chat_id,
+              "text": text,
+              "parse_mode": "HTML",
+          }
+          thread_id = os.environ.get("TELEGRAM_CRITICAL_THREAD_ID", "").strip()
+          if thread_id:
+              try:
+                  payload["message_thread_id"] = int(thread_id)
+              except ValueError:
+                  print(f"Warning: invalid TELEGRAM_CRITICAL_THREAD_ID={thread_id!r}, sending without thread")
+
+          data = json.dumps(payload).encode()
+          req = urllib.request.Request(
+              f"https://api.telegram.org/bot{token}/sendMessage",
+              data=data,
+              headers={"Content-Type": "application/json"},
+          )
+          try:
+              with urllib.request.urlopen(req, timeout=10) as resp:
+                  print(f"Alert sent: {resp.read().decode('utf-8', errors='replace')}")
+          except urllib.error.HTTPError as e:
+              print(f"Telegram API error {e.code}: {e.read().decode('utf-8', errors='replace')}")
+              raise
+          except urllib.error.URLError as e:
+              print(f"Network error reaching Telegram: {e.reason}")
+              raise
+          EOF
