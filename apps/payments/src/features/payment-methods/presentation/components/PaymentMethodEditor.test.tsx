@@ -83,17 +83,12 @@ const mockMethod: SellerPaymentMethod = {
 };
 
 describe("PaymentMethodEditor", () => {
-  const defaultProps = {
-    method: mockMethod,
-    onClose: vi.fn(),
-  };
-
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
   it("renders name_en input with initial value", () => {
-    render(<PaymentMethodEditor {...defaultProps} />, {
+    render(<PaymentMethodEditor method={mockMethod} />, {
       wrapper: createWrapper(),
     });
     const input = screen.getByTestId(
@@ -103,7 +98,7 @@ describe("PaymentMethodEditor", () => {
   });
 
   it("renders name_es input with initial value", () => {
-    render(<PaymentMethodEditor {...defaultProps} />, {
+    render(<PaymentMethodEditor method={mockMethod} />, {
       wrapper: createWrapper(),
     });
     const input = screen.getByTestId(
@@ -113,21 +108,21 @@ describe("PaymentMethodEditor", () => {
   });
 
   it("renders display section editor", () => {
-    render(<PaymentMethodEditor {...defaultProps} />, {
+    render(<PaymentMethodEditor method={mockMethod} />, {
       wrapper: createWrapper(),
     });
     expect(screen.getByTestId("display-section-editor")).toBeInTheDocument();
   });
 
   it("renders form section editor", () => {
-    render(<PaymentMethodEditor {...defaultProps} />, {
+    render(<PaymentMethodEditor method={mockMethod} />, {
       wrapper: createWrapper(),
     });
     expect(screen.getByTestId("form-section-editor")).toBeInTheDocument();
   });
 
   it("shows validation error when name_en is cleared", () => {
-    render(<PaymentMethodEditor {...defaultProps} />, {
+    render(<PaymentMethodEditor method={mockMethod} />, {
       wrapper: createWrapper(),
     });
     const input = screen.getByTestId("payment-method-name-en");
@@ -135,13 +130,47 @@ describe("PaymentMethodEditor", () => {
     expect(screen.getByText("nameRequired")).toBeInTheDocument();
   });
 
-  it("renders both name inputs and section editors", () => {
-    render(<PaymentMethodEditor {...defaultProps} />, {
+  it("save button is disabled when nothing has changed", () => {
+    render(<PaymentMethodEditor method={mockMethod} />, {
       wrapper: createWrapper(),
     });
-    expect(screen.getByTestId("payment-method-name-en")).toBeInTheDocument();
-    expect(screen.getByTestId("payment-method-name-es")).toBeInTheDocument();
-    expect(screen.getByTestId("display-section-editor")).toBeInTheDocument();
-    expect(screen.getByTestId("form-section-editor")).toBeInTheDocument();
+    const saveBtn = screen.getByTestId("payment-method-save");
+    expect(saveBtn).toBeDisabled();
+  });
+
+  it("save button becomes enabled after a field changes", () => {
+    render(<PaymentMethodEditor method={mockMethod} />, {
+      wrapper: createWrapper(),
+    });
+    const input = screen.getByTestId("payment-method-name-en");
+    fireEvent.change(input, { target: { value: "Updated Name" } });
+    expect(screen.getByTestId("payment-method-save")).not.toBeDisabled();
+  });
+
+  it("save button is disabled when name_en is empty even if dirty", () => {
+    render(<PaymentMethodEditor method={mockMethod} />, {
+      wrapper: createWrapper(),
+    });
+    const input = screen.getByTestId("payment-method-name-en");
+    fireEvent.change(input, { target: { value: "" } });
+    expect(screen.getByTestId("payment-method-save")).toBeDisabled();
+  });
+
+  it("clicking save calls updatePaymentMethod with all current fields", () => {
+    render(<PaymentMethodEditor method={mockMethod} />, {
+      wrapper: createWrapper(),
+    });
+    const input = screen.getByTestId("payment-method-name-en");
+    fireEvent.change(input, { target: { value: "New Name" } });
+
+    fireEvent.click(screen.getByTestId("payment-method-save"));
+
+    expect(mockUpdateMutate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: "pm-1",
+        patch: expect.objectContaining({ name_en: "New Name" }),
+      }),
+      expect.any(Object),
+    );
   });
 });

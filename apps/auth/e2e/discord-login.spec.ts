@@ -17,12 +17,11 @@ const AUTH_HOST_PATTERN = new RegExp(
 );
 
 test("Discord OAuth login flow", async () => {
-  const discordEmail = process.env.DISCORD_TEST_EMAIL;
-  const discordPassword = process.env.DISCORD_TEST_PASSWORD;
-
+  // Requires a pre-seeded Chrome profile with an active Discord session.
+  // Run manually only — never in CI or staging.
   test.skip(
-    !discordEmail || !discordPassword,
-    "DISCORD_TEST_EMAIL and DISCORD_TEST_PASSWORD required",
+    true,
+    "Discord OAuth requires live credentials and manual execution — not suitable for automated runs",
   );
 
   test.setTimeout(120_000);

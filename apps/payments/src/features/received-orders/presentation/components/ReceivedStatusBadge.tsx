@@ -11,7 +11,7 @@ import { useTranslations } from "next-intl";
 import { tid } from "shared";
 import { cn } from "ui";
 
-import type { OrderStatus } from "@/features/received-orders/domain/types";
+import type { ReceivedOrderStatus } from "@/features/received-orders/domain/types";
 
 function getWarningConfig(icon: typeof Clock) {
   return {
@@ -20,7 +20,7 @@ function getWarningConfig(icon: typeof Clock) {
   };
 }
 
-function getStatusConfig(status: OrderStatus): {
+function getStatusConfig(status: ReceivedOrderStatus): {
   icon: typeof Clock;
   className: string;
 } {
@@ -43,16 +43,24 @@ function getStatusConfig(status: OrderStatus): {
         className: "border-destructive bg-destructive/10 text-destructive",
       };
     }
-    default: {
+    case "expired": {
       return {
         icon: ShieldAlert,
         className: "border-muted-foreground bg-muted text-muted-foreground",
       };
     }
+    default: {
+      const _exhaustive: never = status;
+      throw new Error(`Unhandled status: ${_exhaustive}`);
+    }
   }
 }
 
-export function ReceivedStatusBadge({ status }: { status: OrderStatus }) {
+export function ReceivedStatusBadge({
+  status,
+}: {
+  status: ReceivedOrderStatus;
+}) {
   const t = useTranslations("receivedOrders.filters");
   const config = getStatusConfig(status);
   const Icon = config.icon;
@@ -66,13 +74,7 @@ export function ReceivedStatusBadge({ status }: { status: OrderStatus }) {
       {...tid("order-status-badge")}
     >
       <Icon className="size-3.5" />
-      {t(
-        status as
-          | "approved"
-          | "rejected"
-          | "pending_verification"
-          | "evidence_requested",
-      )}
+      {t(status)}
     </span>
   );
 }

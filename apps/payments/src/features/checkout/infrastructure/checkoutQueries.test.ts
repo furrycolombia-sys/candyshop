@@ -4,7 +4,6 @@ import {
   createOrder,
   fetchSellerPaymentMethods,
   fetchSellerProfiles,
-  submitReceipt,
 } from "./checkoutQueries";
 
 import type { CartItem } from "@/features/checkout/domain/types";
@@ -119,46 +118,6 @@ describe("fetchSellerPaymentMethods", () => {
 });
 
 // ---------------------------------------------------------------------------
-// submitReceipt
-// ---------------------------------------------------------------------------
-
-describe("submitReceipt", () => {
-  let supabase: ReturnType<typeof createMockSupabase>;
-
-  beforeEach(() => {
-    supabase = createMockSupabase();
-  });
-
-  it("updates order with receipt info", async () => {
-    supabase._chain.eq.mockResolvedValue({ error: null });
-
-    await submitReceipt(
-      supabase as unknown as Parameters<typeof submitReceipt>[0],
-      "order-1",
-      "TX-123",
-      "path/to/receipt.png",
-    );
-
-    expect(supabase.from).toHaveBeenCalledWith("orders");
-  });
-
-  it("throws on error", async () => {
-    supabase._chain.eq.mockResolvedValue({
-      error: new Error("Update failed"),
-    });
-
-    await expect(
-      submitReceipt(
-        supabase as unknown as Parameters<typeof submitReceipt>[0],
-        "order-1",
-        "TX-123",
-        null,
-      ),
-    ).rejects.toThrow("Update failed");
-  });
-});
-
-// ---------------------------------------------------------------------------
 // fetchSellerProfiles
 // ---------------------------------------------------------------------------
 
@@ -234,45 +193,53 @@ describe("createOrder", () => {
     },
   ];
 
+  const baseParams = {
+    userId: "user-1",
+    sellerId: "seller-1",
+    paymentMethodId: "pm-1",
+    checkoutSessionId: "session-1",
+    transferNumber: null,
+    receiptUrl: null,
+    buyerInfo: {},
+  };
+
   beforeEach(() => {
     supabase = createMockSupabase();
   });
 
   it("reserves stock, inserts order and items, returns order id", async () => {
-    // products price fetch returns price data
-    supabase._chain.in.mockResolvedValueOnce({
-      data: [{ id: "prod-1", price: 5000, currency: "COP" }],
-      error: null,
-    });
+    const productChain = {
+      select: vi.fn().mockReturnThis(),
+      in: vi.fn().mockResolvedValue({
+        data: [{ id: "prod-1", price: 5000, currency: "COP" }],
+        error: null,
+      }),
+    };
 
-    // reserve_stock succeeds
-    supabase.rpc.mockResolvedValue({ data: true, error: null });
+    const ordersChain = {
+      insert: vi.fn().mockReturnThis(),
+      select: vi.fn().mockReturnThis(),
+      single: vi
+        .fn()
+        .mockResolvedValue({ data: { id: "order-new" }, error: null }),
+    };
 
-    // insert order returns id
-    supabase._chain.single.mockResolvedValue({
-      data: { id: "order-new" },
-      error: null,
-    });
-
-    // insert order_items succeeds (second call to from().insert())
-    // We need to handle the second from() call for order_items
     const orderItemsChain = {
       insert: vi.fn().mockResolvedValue({ error: null }),
     };
+
     supabase.from.mockImplementation((table: string) => {
+      if (table === "products") return productChain as never;
+      if (table === "orders") return ordersChain as never;
       if (table === "order_items") return orderItemsChain as never;
       return supabase._chain as never;
     });
 
+    supabase.rpc.mockResolvedValue({ data: true, error: null });
+
     const result = await createOrder(
       supabase as unknown as Parameters<typeof createOrder>[0],
-      {
-        userId: "user-1",
-        sellerId: "seller-1",
-        paymentMethodId: "pm-1",
-        items: mockItems,
-        checkoutSessionId: "session-1",
-      },
+      { ...baseParams, items: mockItems },
     );
 
     expect(result).toBe("order-new");
@@ -280,16 +247,27 @@ describe("createOrder", () => {
       p_product_id: "prod-1",
       p_quantity: 2,
     });
+    expect(ordersChain.insert).toHaveBeenCalledWith(
+      expect.objectContaining({ payment_status: "pending_verification" }),
+    );
+    expect(result).toBe("order-new");
   });
 
   it("releases stock and throws on reserve_stock failure", async () => {
-    // products price fetch returns price data for both items
-    supabase._chain.in.mockResolvedValueOnce({
-      data: [
-        { id: "prod-1", price: 5000, currency: "COP" },
-        { id: "prod-2", price: 3000, currency: "COP" },
-      ],
-      error: null,
+    const productChain = {
+      select: vi.fn().mockReturnThis(),
+      in: vi.fn().mockResolvedValue({
+        data: [
+          { id: "prod-1", price: 5000, currency: "COP" },
+          { id: "prod-2", price: 3000, currency: "COP" },
+        ],
+        error: null,
+      }),
+    };
+
+    supabase.from.mockImplementation((table: string) => {
+      if (table === "products") return productChain as never;
+      return supabase._chain as never;
     });
 
     // First rpc call succeeds, second fails (simulating two items)
@@ -314,11 +292,8 @@ describe("createOrder", () => {
 
     await expect(
       createOrder(supabase as unknown as Parameters<typeof createOrder>[0], {
-        userId: "user-1",
-        sellerId: "seller-1",
-        paymentMethodId: "pm-1",
+        ...baseParams,
         items: twoItems,
-        checkoutSessionId: "session-1",
       }),
     ).rejects.toThrow("stock_error");
 
