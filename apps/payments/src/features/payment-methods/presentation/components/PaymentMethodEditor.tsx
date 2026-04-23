@@ -8,7 +8,7 @@ import { tid } from "shared";
 import { DisplaySectionEditor } from "./DisplaySectionEditor";
 import { FormSectionEditor } from "./FormSectionEditor";
 
-import { useAutoSavePaymentMethod } from "@/features/payment-methods/application/hooks/useAutoSavePaymentMethod";
+import { useSavePaymentMethod } from "@/features/payment-methods/application/hooks/useSavePaymentMethod";
 import type {
   DisplayBlock,
   FormField,
@@ -36,10 +36,12 @@ export function PaymentMethodEditor({ method }: PaymentMethodEditorProps) {
   const [requiresTransferNumber, setRequiresTransferNumber] = useState(
     method.requires_transfer_number,
   );
+
   const nameEnError = nameEn.trim() ? null : t("nameRequired");
 
-  const { saveStatus } = useAutoSavePaymentMethod({
+  const { isDirty, isPending, savedRecently, save } = useSavePaymentMethod({
     paymentMethodId: method.id,
+    initial: method,
     nameEn,
     nameEs,
     displayBlocks,
@@ -48,18 +50,10 @@ export function PaymentMethodEditor({ method }: PaymentMethodEditorProps) {
     requiresTransferNumber,
   });
 
+  const canSave = isDirty && !nameEnError && !isPending;
+
   return (
     <div className="flex flex-col gap-6 pt-4">
-      {/* Save status indicator */}
-      <div className="flex items-center gap-2">
-        {saveStatus === "saving" && (
-          <span className="size-2 animate-pulse rounded-full bg-warning" />
-        )}
-        {saveStatus === "saved" && (
-          <span className="size-2 rounded-full bg-success" />
-        )}
-      </div>
-
       {/* Name fields — 2-column grid on wider screens */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div className="flex flex-col gap-1.5">
@@ -150,6 +144,25 @@ export function PaymentMethodEditor({ method }: PaymentMethodEditorProps) {
 
       {/* Form Section */}
       <FormSectionEditor fields={formFields} onChange={setFormFields} />
+
+      {/* Save button */}
+      <div className="flex items-center gap-3 border-t border-foreground pt-4">
+        <button
+          type="button"
+          onClick={save}
+          disabled={!canSave}
+          className="border-strong border-foreground bg-foreground px-4 py-2 text-sm font-bold text-background shadow-brutal-sm transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none disabled:cursor-not-allowed disabled:opacity-40"
+          {...tid("payment-method-save")}
+        >
+          {isPending ? t("saving") : t("save")}
+        </button>
+        {savedRecently && !isDirty && (
+          <span className="flex items-center gap-1.5 text-sm text-success">
+            <span className="size-2 rounded-full bg-success" />
+            {t("saved")}
+          </span>
+        )}
+      </div>
     </div>
   );
 }

@@ -24,9 +24,6 @@ import { createSnapHelper } from "./helpers/snap";
 const { snap, resetCounter } = createSnapHelper(
   path.resolve(__dirname, "screenshots-delegated"),
 );
-const isSingleOriginPathRouting =
-  new URL(APP_URLS.AUTH).origin === new URL(APP_URLS.STUDIO).origin;
-
 /**
  * Delegated admin purchase flow E2E — seller, buyer, delegate.
  *
@@ -43,11 +40,6 @@ const isSingleOriginPathRouting =
  * Requires: supabase start + pnpm dev (all apps)
  */
 test.describe.serial("Delegated admin purchase flow", () => {
-  test.fixme(
-    isSingleOriginPathRouting,
-    "Delegated flow is blocked by single-origin path-routed access guards in staging.",
-  );
-
   let seller: TestUser;
   let buyer: TestUser;
   let delegate: TestUser;
@@ -164,7 +156,6 @@ test.describe.serial("Delegated admin purchase flow", () => {
     await nameInput.waitFor({ state: "visible", timeout: ELEMENT_TIMEOUT_MS });
     await nameInput.clear();
     await nameInput.fill(methodName);
-    await page.waitForTimeout(MUTATION_WAIT_MS);
 
     // Add text display block with payment instructions
     await page.getByTestId("add-block-type-text").click();
@@ -173,7 +164,6 @@ test.describe.serial("Delegated admin purchase flow", () => {
       .locator("textarea")
       .first();
     await textarea.fill(instructions);
-    await page.waitForTimeout(MUTATION_WAIT_MS);
 
     // Add a required form field
     await page.getByTestId("add-field-type-text").click();
@@ -182,8 +172,12 @@ test.describe.serial("Delegated admin purchase flow", () => {
       .locator("input[placeholder]")
       .first();
     await labelInput.fill(fieldLabel);
-    await page.waitForTimeout(MUTATION_WAIT_MS);
+
     await snap(page, `${snapPrefix}-method-configured`);
+
+    // Save the payment method and wait for the mutation to complete
+    await page.getByTestId("payment-method-save").click();
+    await page.waitForTimeout(MUTATION_WAIT_MS);
 
     await expect(page.getByTestId("payment-methods-page")).toBeVisible({
       timeout: ELEMENT_TIMEOUT_MS,

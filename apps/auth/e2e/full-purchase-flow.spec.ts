@@ -130,7 +130,6 @@ test.describe.serial("Full purchase flow: two sellers, one buyer", () => {
     await nameInput.waitFor({ state: "visible", timeout: ELEMENT_TIMEOUT_MS });
     await nameInput.clear();
     await nameInput.fill(methodName);
-    await page.waitForTimeout(MUTATION_WAIT_MS);
 
     // Add text display block with payment instructions
     await page.getByTestId("add-block-type-text").click();
@@ -139,7 +138,6 @@ test.describe.serial("Full purchase flow: two sellers, one buyer", () => {
       .locator("textarea")
       .first();
     await textarea.fill(instructions);
-    await page.waitForTimeout(MUTATION_WAIT_MS);
 
     // Add a required form field (click the Text type button directly)
     await page.getByTestId("add-field-type-text").click();
@@ -148,10 +146,13 @@ test.describe.serial("Full purchase flow: two sellers, one buyer", () => {
       .locator("input[placeholder]")
       .first();
     await labelInput.fill(fieldLabel);
-    await page.waitForTimeout(MUTATION_WAIT_MS);
+
     await snap(page, `${snapPrefix}-method-configured`);
 
-    // No navigation needed — builder is inline on the list page
+    // Save the payment method and wait for the mutation to complete
+    await page.getByTestId("payment-method-save").click();
+    await page.waitForTimeout(MUTATION_WAIT_MS);
+
     await expect(page.getByTestId("payment-methods-page")).toBeVisible({
       timeout: ELEMENT_TIMEOUT_MS,
     });
@@ -248,7 +249,6 @@ test.describe.serial("Full purchase flow: two sellers, one buyer", () => {
 
     // Add a second display block (image) so we have two items to reorder
     await page.getByTestId("add-block-type-image").click();
-    await page.waitForTimeout(MUTATION_WAIT_MS);
 
     // Verify we now have 2 display blocks
     const blocks = page.getByTestId(/^display-block-[0-9a-f]/);
@@ -276,7 +276,6 @@ test.describe.serial("Full purchase flow: two sellers, one buyer", () => {
 
     // Now test form field drag-and-drop: add a second field
     await page.getByTestId("add-field-type-email").click();
-    await page.waitForTimeout(MUTATION_WAIT_MS);
 
     const fields = page.getByTestId(/^form-field-[0-9a-f]/);
     await expect(fields).toHaveCount(2, { timeout: ELEMENT_TIMEOUT_MS });
@@ -298,19 +297,24 @@ test.describe.serial("Full purchase flow: two sellers, one buyer", () => {
     expect(firstFieldAfter).toBe(secondFieldTid);
     await snap(page, "sellerA-fields-reordered");
 
-    // Clean up: remove the extra blocks/fields we added
+    // Clean up: remove the extra blocks/fields we added (not saved — server state
+    // stays from Phase 2a; this just restores local UI before leaving the page)
     // Remove the image block (now first after reorder)
     await page
       .getByTestId(/^display-block-remove-/)
       .first()
       .click();
-    await page.waitForTimeout(MUTATION_WAIT_MS);
+    await expect(page.getByTestId(/^display-block-[0-9a-f]/)).toHaveCount(1, {
+      timeout: ELEMENT_TIMEOUT_MS,
+    });
     // Remove the email field (now first after reorder)
     await page
       .getByTestId(/^form-field-remove-/)
       .first()
       .click();
-    await page.waitForTimeout(MUTATION_WAIT_MS);
+    await expect(page.getByTestId(/^form-field-[0-9a-f]/)).toHaveCount(1, {
+      timeout: ELEMENT_TIMEOUT_MS,
+    });
   });
 
   // ─── Phase 3: Buyer adds both products and checks out ────────
