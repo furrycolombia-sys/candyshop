@@ -37,6 +37,7 @@ const ORDER_SELECT = `
 `;
 
 async function mapRowToOrder(
+  supabase: SupabaseClient,
   row: OrderRow,
   buyerMap: Record<string, string>,
   sellerName: string | null,
@@ -50,7 +51,7 @@ async function mapRowToOrder(
     total: row.total,
     currency: row.currency,
     transfer_number: row.transfer_number,
-    receipt_url: await getReceiptUrl(row.receipt_url),
+    receipt_url: await getReceiptUrl(supabase, row.receipt_url),
     seller_note: row.seller_note,
     buyer_info:
       typeof row.buyer_info === "object" && !Array.isArray(row.buyer_info)
@@ -148,6 +149,7 @@ export async function fetchAssignedOrders(
         permissions.includes("orders.approve") ||
         permissions.includes("orders.request_proof");
       return mapRowToOrder(
+        supabase,
         row,
         buyerMap,
         sellerNameMap[row.seller_id ?? ""] ?? "Seller",
@@ -200,7 +202,9 @@ export async function fetchReceivedOrders(
     FALLBACK_BUYER_NAME,
   );
 
-  return Promise.all(rows.map((row) => mapRowToOrder(row, buyerMap, null)));
+  return Promise.all(
+    rows.map((row) => mapRowToOrder(supabase, row, buyerMap, null)),
+  );
 }
 
 /** Call the update_order_status RPC for seller actions. */
