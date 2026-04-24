@@ -1,18 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { uploadReceiptMock } = vi.hoisted(() => ({
-  uploadReceiptMock: vi.fn(
-    async (_supabase: unknown, file: File, orderId: string) =>
-      `${orderId}/${file.name}`,
-  ),
-}));
-
 vi.mock("@/shared/infrastructure/receiptStorage", () => ({
   getReceiptUrl: vi.fn(
     async (_supabase: unknown, storagePath: string | null) =>
       storagePath ? `https://example.com/${storagePath}` : null,
   ),
-  uploadReceipt: uploadReceiptMock,
 }));
 
 import { fetchMyOrders, resubmitEvidence } from "./orderQueries";
@@ -140,10 +132,9 @@ describe("resubmitEvidence", () => {
 
   beforeEach(() => {
     supabase = createMockSupabase();
-    uploadReceiptMock.mockClear();
   });
 
-  it("updates order without receipt upload when no file provided", async () => {
+  it("updates order without a receipt url", async () => {
     supabase._chain.eq
       .mockReturnValueOnce(supabase._chain)
       .mockResolvedValueOnce({ error: null });
@@ -156,25 +147,24 @@ describe("resubmitEvidence", () => {
     );
 
     expect(supabase.from).toHaveBeenCalledWith("orders");
-    expect(uploadReceiptMock).not.toHaveBeenCalled();
   });
 
-  it("uploads receipt then updates order when file is provided", async () => {
+  it("updates order with a pre-computed receipt url", async () => {
     supabase._chain.eq
       .mockReturnValueOnce(supabase._chain)
       .mockResolvedValueOnce({ error: null });
-
-    const file = new File(["data"], "receipt.jpg", { type: "image/jpeg" });
 
     await resubmitEvidence(
       supabase as unknown as Parameters<typeof resubmitEvidence>[0],
       "order-1",
       "TX-999",
-      file,
+      "sess-abc/uuid-receipt.jpg",
     );
 
-    expect(uploadReceiptMock).toHaveBeenCalledWith(supabase, file, "order-1");
     expect(supabase.from).toHaveBeenCalledWith("orders");
+    expect(supabase._chain.update).toHaveBeenCalledWith(
+      expect.objectContaining({ receipt_url: "sess-abc/uuid-receipt.jpg" }),
+    );
   });
 
   it("throws on order update error", async () => {

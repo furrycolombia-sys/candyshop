@@ -6,7 +6,7 @@ import { useSupabase } from "shared";
 import type { CartItem } from "@/features/checkout/domain/types";
 import { createOrder } from "@/features/checkout/infrastructure/checkoutQueries";
 import { MY_ORDERS_QUERY_KEY } from "@/features/orders/domain/constants";
-import { uploadReceipt } from "@/shared/infrastructure/receiptStorage";
+import { uploadCheckoutReceipt } from "@/shared/infrastructure/receiptActions";
 
 interface SubmitPaymentParams {
   userId: string;
@@ -47,10 +47,9 @@ export function useSubmitPayment() {
       //    lets the DB generate the order ID rather than pre-generating client-side
       let receiptUrl: string | null = null;
       if (receiptFile) {
-        receiptUrl = await uploadReceipt(
-          supabase,
-          receiptFile,
+        receiptUrl = await uploadCheckoutReceipt(
           checkoutSessionId,
+          receiptFile,
         );
       }
 

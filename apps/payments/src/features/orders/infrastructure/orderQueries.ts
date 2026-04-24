@@ -3,10 +3,7 @@ import type { OrderWithItems } from "@/features/orders/domain/types";
 import { FALLBACK_SELLER_NAME } from "@/shared/domain/constants";
 import type { OrderRow, SupabaseClient } from "@/shared/domain/types";
 import { fetchUserDisplayNames } from "@/shared/infrastructure/fetchUserDisplayNames";
-import {
-  getReceiptUrl,
-  uploadReceipt,
-} from "@/shared/infrastructure/receiptStorage";
+import { getReceiptUrl } from "@/shared/infrastructure/receiptStorage";
 
 interface BuyerOrderRow extends OrderRow {
   payment_method_id: string | null;
@@ -89,14 +86,8 @@ export async function resubmitEvidence(
   supabase: SupabaseClient,
   orderId: string,
   transferNumber: string,
-  receiptFile: File | null,
+  receiptUrl: string | null,
 ): Promise<void> {
-  let receiptUrl: string | null = null;
-
-  if (receiptFile) {
-    receiptUrl = await uploadReceipt(supabase, receiptFile, orderId);
-  }
-
   const { error } = await supabase
     .from("orders")
     .update({
