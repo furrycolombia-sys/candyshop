@@ -104,21 +104,39 @@ if (supabaseMode === "docker") {
 
 // 3. Start the app
 if (appsMode === "docker") {
-  console.log(`\n▶ docker:build --env ${targetEnv} --up`);
-  const result = spawnSync(
-    "pnpm",
-    ["docker:build", "--env", targetEnv, "--up"],
-    {
-      cwd: rootDir,
-      stdio: "inherit",
-      env: process.env,
-      shell: true,
-    },
-  );
-  if (result.status !== 0) process.exit(result.status ?? 1);
+  const port = Number.parseInt(process.env.HOST_PORT ?? "5050", 10);
+  const alreadyUp = await checkPort(port);
 
-  const port = Number.parseInt(process.env.HOST_PORT ?? "", 10);
-  if (!Number.isNaN(port) && port > 0) {
+  if (alreadyUp) {
+    console.log(`✓ App already running on :${port}\n`);
+  } else {
+    const imageName = process.env.SITE_PROD_IMAGE_NAME ?? "candyshop-ci";
+    const imageExists =
+      spawnSync("docker", ["image", "inspect", imageName], {
+        cwd: rootDir,
+        stdio: "pipe",
+        env: process.env,
+      }).status === 0;
+
+    if (imageExists) {
+      // Image already available locally (e.g. pulled by CI) — skip the build.
+      console.log(`\n▶ docker compose up (image ${imageName} already available)`);
+      const result = spawnSync(
+        "docker",
+        ["compose", "-f", "docker/compose.yml", "up", "-d", "--remove-orphans"],
+        { cwd: rootDir, stdio: "inherit", env: process.env },
+      );
+      if (result.status !== 0) process.exit(result.status ?? 1);
+    } else {
+      console.log(`\n▶ docker:build --env ${targetEnv} --up`);
+      const result = spawnSync(
+        "pnpm",
+        ["docker:build", "--env", targetEnv, "--up"],
+        { cwd: rootDir, stdio: "inherit", env: process.env, shell: true },
+      );
+      if (result.status !== 0) process.exit(result.status ?? 1);
+    }
+
     console.log(`\n   Waiting for app on :${port}...`);
     await waitForPort(port, 120_000);
     console.log("✓ App ready\n");

@@ -286,137 +286,60 @@ jobs:
           retention-days: 7
 
   # ============================================
-  # Build
+  # Docker Build — single image for E2E
   # ============================================
-  build:
-    name: Build
+  docker-build:
+    name: Docker Build
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 30
     needs: changes
     if: needs.changes.outputs.docs-only == 'false'
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      image: ${{ steps.image.outputs.name }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: "pnpm"
-
-      - name: Install dependencies
+      - name: Set image name
+        id: image
         run: |
-          pnpm install --frozen-lockfile || {
-            echo "Frozen lockfile install failed, retrying without frozen lockfile"
-            pnpm install --no-frozen-lockfile
-          }
+          echo "name=ghcr.io/$(echo '${{ github.repository }}' | tr '[:upper:]' '[:lower:]'):${{ github.sha }}" >> $GITHUB_OUTPUT
 
-      - name: Load CI environment
-        run: |
-          grep -v '^\s*#' .env.ci | grep -v '^\s*$' | grep -v '\$secret:' | while IFS= read -r line; do
-            echo "$line" >> "$GITHUB_ENV"
-          done
-
-      - name: Restore Next.js build cache
-        uses: actions/cache@v4
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
         with:
-          path: apps/*/.next/cache
-          key: ${{ runner.os }}-nextjs-${{ hashFiles('pnpm-lock.yaml') }}-${{ hashFiles('apps/**/*.ts', 'apps/**/*.tsx') }}
-          restore-keys: |
-            ${{ runner.os }}-nextjs-${{ hashFiles('pnpm-lock.yaml') }}-
-            ${{ runner.os }}-nextjs-
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build applications (scoped)
-        run: |
-          set -euo pipefail
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
-          SELECT_OUTPUT=$(bash scripts/select-workspaces.sh \
-            "${{ needs.changes.outputs.store }}" \
-            "${{ needs.changes.outputs.landing }}" \
-            "${{ needs.changes.outputs.payments }}" \
-            "${{ needs.changes.outputs.admin }}" \
-            "${{ needs.changes.outputs.auth }}" \
-            "${{ needs.changes.outputs.playground }}" \
-            "${{ needs.changes.outputs.packages }}" \
-            "${{ needs.changes.outputs.tooling }}" \
-            "${{ needs.changes.outputs.studio }}")
-
-          RUN_ALL=$(echo "$SELECT_OUTPUT" | grep '^RUN_ALL=' | cut -d= -f2-)
-          APPS=$(echo "$SELECT_OUTPUT" | grep '^APPS=' | cut -d= -f2-)
-
-          if [ "$RUN_ALL" = "true" ]; then
-            echo "Running full build because packages/tooling changed."
-            pnpm run build
-            exit 0
-          fi
-
-          [ -z "$APPS" ] && echo "No workspace apps selected for build." && exit 0
-          for APP in $APPS; do
-            pnpm --filter "$APP" build
-          done
-        env:
-          CI: "true"
-          NEXT_PUBLIC_API_BASE_URL: /api
-          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.DEV_SUPABASE_URL }}
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.DEV_SUPABASE_ANON_KEY }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.DEV_SUPABASE_SERVICE_ROLE_KEY }}
-          SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID: ${{ secrets.SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID }}
-          SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET: ${{ secrets.SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET }}
-          SUPABASE_AUTH_EXTERNAL_DISCORD_CLIENT_ID: ${{ secrets.SUPABASE_AUTH_EXTERNAL_DISCORD_CLIENT_ID }}
-          SUPABASE_AUTH_EXTERNAL_DISCORD_SECRET: ${{ secrets.SUPABASE_AUTH_EXTERNAL_DISCORD_SECRET }}
-
-      - name: Upload store build artifacts
-        uses: actions/upload-artifact@v4
-        if: needs.changes.outputs.store == 'true' || needs.changes.outputs.packages == 'true' || needs.changes.outputs.tooling == 'true'
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v6
         with:
-          name: build-store
-          path: apps/store/.next/
-          retention-days: 1
-          if-no-files-found: error
-          include-hidden-files: true
-
-      - name: Upload admin build artifacts
-        uses: actions/upload-artifact@v4
-        if: needs.changes.outputs.admin == 'true' || needs.changes.outputs.packages == 'true' || needs.changes.outputs.tooling == 'true'
-        with:
-          name: build-admin
-          path: apps/admin/.next/
-          retention-days: 1
-          if-no-files-found: error
-          include-hidden-files: true
-
-      - name: Upload auth build artifacts
-        uses: actions/upload-artifact@v4
-        if: needs.changes.outputs.auth == 'true' || needs.changes.outputs.packages == 'true' || needs.changes.outputs.tooling == 'true'
-        with:
-          name: build-auth
-          path: apps/auth/.next/
-          retention-days: 1
-          if-no-files-found: error
-          include-hidden-files: true
-
-      - name: Upload landing build artifacts
-        uses: actions/upload-artifact@v4
-        if: needs.changes.outputs.landing == 'true' || needs.changes.outputs.packages == 'true' || needs.changes.outputs.tooling == 'true'
-        with:
-          name: build-landing
-          path: apps/landing/.next/
-          retention-days: 1
-          if-no-files-found: error
-          include-hidden-files: true
-
-      - name: Upload payments build artifacts
-        uses: actions/upload-artifact@v4
-        if: needs.changes.outputs.payments == 'true' || needs.changes.outputs.packages == 'true' || needs.changes.outputs.tooling == 'true'
-        with:
-          name: build-payments
-          path: apps/payments/.next/
-          retention-days: 1
-          if-no-files-found: error
-          include-hidden-files: true
+          context: .
+          file: docker/smoke/Dockerfile
+          push: true
+          tags: ${{ steps.image.outputs.name }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            NEXT_PUBLIC_SUPABASE_URL=http://localhost:54321
+            NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.STAGING_SUPABASE_ANON_KEY }}
+            NEXT_PUBLIC_AUTH_URL=http://localhost:5050/auth
+            NEXT_PUBLIC_AUTH_HOST_URL=http://localhost:5050/auth
+            NEXT_PUBLIC_STORE_URL=http://localhost:5050/store
+            NEXT_PUBLIC_ADMIN_URL=http://localhost:5050/admin
+            NEXT_PUBLIC_PLAYGROUND_URL=http://localhost:5050/playground
+            NEXT_PUBLIC_LANDING_URL=http://localhost:5050
+            NEXT_PUBLIC_PAYMENTS_URL=http://localhost:5050/payments
+            NEXT_PUBLIC_STUDIO_URL=http://localhost:5050/studio
+            NEXT_PUBLIC_BUILD_HASH=ci
+            NEXT_PUBLIC_ENABLE_TEST_IDS=true
 
   # ============================================
   # E2E Tests (Playwright)
@@ -425,8 +348,10 @@ jobs:
     name: E2E Tests
     runs-on: ubuntu-latest
     timeout-minutes: 60
-    # No longer depends on `build` — Docker builds its own image from source.
-    needs: changes
+    needs: [changes, docker-build]
+    permissions:
+      contents: read
+      packages: read
     defaults:
       run:
         shell: bash
@@ -449,6 +374,18 @@ jobs:
             echo "Frozen lockfile install failed, retrying without frozen lockfile"
             pnpm install --no-frozen-lockfile
           }
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Pull and tag pre-built app image
+        run: |
+          docker pull ${{ needs.docker-build.outputs.image }}
+          docker tag ${{ needs.docker-build.outputs.image }} candyshop-ci
 
       - name: Get Playwright version
         id: playwright-version
