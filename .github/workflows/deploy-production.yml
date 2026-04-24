@@ -32,6 +32,8 @@ jobs:
     name: Build (Standalone Production)
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    outputs:
+      app_version: ${{ steps.app_version.outputs.value }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -57,6 +59,16 @@ jobs:
             ${{ runner.os }}-nextjs-prod-${{ hashFiles('pnpm-lock.yaml') }}-
             ${{ runner.os }}-nextjs-prod-
 
+      - name: Compute app version
+        id: app_version
+        run: |
+          VERSION=$(git log -1 --pretty=%s | grep -oP 'v\d{4}\.\d{2}\.\d{2}\.\d+' || true)
+          if [ -z "$VERSION" ]; then
+            VERSION="${GITHUB_SHA:0:7}"
+          fi
+          echo "value=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "App version: $VERSION"
+
       - name: Build all apps (standalone, production)
         run: pnpm run build
         env:
@@ -73,6 +85,7 @@ jobs:
           SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET: ${{ secrets.SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET }}
           SUPABASE_AUTH_EXTERNAL_DISCORD_CLIENT_ID: ${{ secrets.SUPABASE_AUTH_EXTERNAL_DISCORD_CLIENT_ID }}
           SUPABASE_AUTH_EXTERNAL_DISCORD_SECRET: ${{ secrets.SUPABASE_AUTH_EXTERNAL_DISCORD_SECRET }}
+          NEXT_PUBLIC_APP_VERSION: ${{ steps.app_version.outputs.value }}
 
       - name: Upload store build artifacts
         uses: actions/upload-artifact@v4
