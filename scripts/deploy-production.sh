@@ -150,49 +150,28 @@ DEPLOY_COMMIT=$(git log --format="%h %s" -1 2>/dev/null || true)
 log "Checked out $DEPLOY_COMMIT"
 notify_telegram "$(printf '📥 <b>Code pulled</b> (%s)\nCommit: <code>%s</code>' "$(_dur $_STEP_START)" "$DEPLOY_COMMIT")"
 
-# =============================================================================
-# Install dependencies
-# =============================================================================
-_STEP_START=$(date +%s)
-log "Installing dependencies..."
-pnpm install --frozen-lockfile --prod=false
-notify_telegram "$(printf '📦 <b>Dependencies installed</b> (%s)' "$(_dur $_STEP_START)")"
+# Remove .secrets — builds now happen in CI, not on this server.
+# The file is gitignored so git clean -fd doesn't touch it; delete explicitly
+# so it doesn't linger on disk and expand the attack surface.
+rm -f "$DEPLOY_DIR/.secrets"
 
 # =============================================================================
-# Load build env vars (written by CI, deleted after deploy)
+# Load runtime env vars (written by CI, deleted after deploy)
+# Build artifacts are pre-built in CI and rsync'd to this server before this
+# script runs — NEXT_PUBLIC_* vars are already baked into the JS bundles.
+# We source the env file here so PM2 processes inherit runtime-only secrets
+# (SUPABASE_SERVICE_ROLE_KEY, Telegram tokens, etc.).
 # =============================================================================
 ENV_FILE="${ENV_FILE:-/tmp/.candyshop-build.env}"
 if [ -f "$ENV_FILE" ]; then
-  log "Loading build env from $ENV_FILE"
-  cp "$ENV_FILE" "$DEPLOY_DIR/.env"
-  # Source env vars into the current shell so child processes (pnpm build) inherit them.
-  # This is required for load-env.mjs to detect CI=true and resolve $secret: references.
+  log "Loading runtime env from $ENV_FILE"
   set -o allexport
   # shellcheck source=/dev/null
   source "$ENV_FILE"
   set +o allexport
 else
-  warn "No env file found at $ENV_FILE — building with defaults"
+  warn "No env file found at $ENV_FILE — PM2 processes may lack runtime secrets"
 fi
-
-# =============================================================================
-# Build all apps (standalone mode for path-based routing)
-# =============================================================================
-_STEP_START=$(date +%s)
-log "Building all applications in standalone mode..."
-export STANDALONE=true
-
-# Clear the local Turborepo cache to ensure a fresh standalone build.
-# Without this, a prior non-standalone cache hit would restore output that
-# lacks the .next/standalone directory.
-rm -rf "$DEPLOY_DIR/.turbo"
-
-notify_telegram "$(printf '🔨 <b>Building all apps…</b>\n<i>Takes ~3–4 min</i>')"
-pnpm run build
-
-# Clean up env file (secrets should not persist on disk)
-rm -f "$ENV_FILE" "$DEPLOY_DIR/.env"
-notify_telegram "$(printf '✅ <b>Build complete</b> (%s)' "$(_dur $_STEP_START)")"
 
 # =============================================================================
 # Start/restart apps with PM2
@@ -253,6 +232,9 @@ pm2 save
 log "All applications started!"
 pm2 list
 notify_telegram "$(printf '🔄 <b>%d apps restarted with PM2</b> (%s)' "${#APPS[@]}" "$(_dur $_STEP_START)")"
+
+# Clean up env file — secrets must not persist on disk
+rm -f "$ENV_FILE"
 
 # =============================================================================
 # Deploy Nginx config
