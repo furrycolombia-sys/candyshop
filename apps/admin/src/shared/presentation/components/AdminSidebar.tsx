@@ -212,7 +212,7 @@ export function AdminSidebar() {
               </span>
             </div>
             <span className="px-4 font-mono text-ui-xs text-muted-foreground/40">
-              {t("version")}
+              {process.env.NEXT_PUBLIC_APP_VERSION ?? t("version")}
             </span>
           </div>
         )}
