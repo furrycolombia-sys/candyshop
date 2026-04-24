@@ -100,6 +100,12 @@ test.describe("Language persistence across apps", () => {
     // Switch to ES
     await page.getByTestId("locale-switch-es").click();
     await page.waitForURL(/\/es/);
+    // Wait for the locale switcher to reflect the new locale — confirms the
+    // React navigation cycle (including setCookie) has fully completed.
+    await expect(page.getByTestId("locale-switch-es")).toHaveAttribute(
+      "aria-checked",
+      "true",
+    );
 
     // NEXT_LOCALE cookie set
     const cookies = await page.context().cookies();
