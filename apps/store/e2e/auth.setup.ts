@@ -104,6 +104,11 @@ setup("authenticate", async ({ context, page }) => {
   await page.goto(`${STORE_URL}/en`);
   await context.storageState({ path: AUTH_FILE });
 
-  // Cleanup: delete the test user after saving session
-  await supabaseAdmin.auth.admin.deleteUser(user.user!.id).catch(() => {});
+  // NOTE: Do NOT delete the test user here.
+  // The Supabase browser client calls getUser() (a real network request) to
+  // validate the session on every page load. If the user is deleted before
+  // tests run, getUser() fails → session is cleared → ProtectedRoute redirects
+  // to login, breaking all authenticated tests.
+  // The user is safe to leave: in CI, the Docker Supabase instance is destroyed
+  // after the job. Locally, run `pnpm supabase:reset` to clean up.
 });

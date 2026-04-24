@@ -29,7 +29,7 @@ export async function uploadReceipt(
  * Generate a signed receipt URL using the caller's Supabase session.
  * Access is controlled by the receipts_read storage policy, which grants
  * access to both sellers (receipts.read permission) and their delegates
- * (via is_order_delegate RLS function).
+ * (via is_receipt_delegate RLS function).
  */
 export async function getReceiptUrl(
   supabase: SupabaseClient,

@@ -187,15 +187,17 @@ export function ReceivedOrderCard({
         </div>
       )}
 
-      {/* Expiration warning — only relevant while the order is still pending */}
-      {expiresAt && isExpiringSoon && order.payment_status === "pending" && (
-        <div className="flex items-center gap-2 border-b-2 border-dashed border-warning/30 bg-warning/5 px-4 py-2">
-          <Clock className="size-4 text-warning" />
-          <span className="font-display text-xs font-bold text-warning">
-            {expiresAt.toLocaleString()}
-          </span>
-        </div>
-      )}
+      {/* Expiration warning — only relevant while awaiting seller verification */}
+      {expiresAt &&
+        isExpiringSoon &&
+        order.payment_status === "pending_verification" && (
+          <div className="flex items-center gap-2 border-b-2 border-dashed border-warning/30 bg-warning/5 px-4 py-2">
+            <Clock className="size-4 text-warning" />
+            <span className="font-display text-xs font-bold text-warning">
+              {expiresAt.toLocaleString()}
+            </span>
+          </div>
+        )}
 
       {/* Actions */}
       <div className="p-4">
