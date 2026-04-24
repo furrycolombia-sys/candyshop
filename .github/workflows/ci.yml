@@ -469,10 +469,6 @@ jobs:
         if: steps.playwright-cache.outputs.cache-hit == 'true'
         run: pnpm --filter store exec playwright install-deps chromium
 
-      - name: Start Supabase
-        run: pnpm supabase start
-        timeout-minutes: 5
-
       - name: Download store build artifacts
         uses: actions/download-artifact@v4
         if: needs.changes.outputs.store == 'true' || needs.changes.outputs.packages == 'true' || needs.changes.outputs.tooling == 'true'
@@ -508,7 +504,56 @@ jobs:
           name: build-payments
           path: apps/payments/.next/
 
+      - name: Start app servers
+        env:
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.DEV_SUPABASE_SERVICE_ROLE_KEY }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.DEV_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.DEV_SUPABASE_ANON_KEY }}
+          NEXT_PUBLIC_ENABLE_TEST_IDS: "true"
+        run: |
+          start_if_built() {
+            local app="$1" dir="$2"
+            if [ -d "apps/${dir}/.next/server" ]; then
+              echo "Starting ${app}..."
+              pnpm --filter "${app}" start > /tmp/log-${app}.log 2>&1 &
+            fi
+          }
+          start_if_built store    store
+          start_if_built admin    admin
+          start_if_built landing  landing
+          start_if_built payments payments
+          start_if_built auth-app auth
+          echo "App servers started in background."
+
+      - name: Wait for app servers to be ready
+        run: |
+          wait_for() {
+            local url="$1" name="$2"
+            echo -n "Waiting for ${name} at ${url}..."
+            for i in $(seq 1 30); do
+              # -s silent, -o discard body, no -f so any HTTP response (incl. redirects) counts as "up"
+              curl -s -o /dev/null "${url}" 2>/dev/null && echo " ready." && return 0
+              sleep 2
+            done
+            echo " TIMED OUT"
+            cat "/tmp/log-${name}.log" 2>/dev/null || true
+            exit 1
+          }
+          [ -d "apps/store/.next/server" ]    && wait_for "http://localhost:5001" store
+          [ -d "apps/admin/.next/server" ]    && wait_for "http://localhost:5002" admin
+          [ -d "apps/landing/.next/server" ]  && wait_for "http://localhost:5004" landing
+          [ -d "apps/payments/.next/server" ] && wait_for "http://localhost:5005" payments
+          [ -d "apps/auth/.next/server" ]     && wait_for "http://localhost:5000" auth-app
+          echo "All servers ready."
+
       - name: Run E2E tests (scoped)
+        env:
+          TARGET_ENV: dev
+          DEV_SUPABASE_URL: ${{ secrets.DEV_SUPABASE_URL }}
+          DEV_SUPABASE_ANON_KEY: ${{ secrets.DEV_SUPABASE_ANON_KEY }}
+          DEV_SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.DEV_SUPABASE_SERVICE_ROLE_KEY }}
+          GOOGLE_TEST_EMAIL: ${{ secrets.GOOGLE_TEST_EMAIL }}
+          GOOGLE_TEST_PASSWORD: ${{ secrets.GOOGLE_TEST_PASSWORD }}
         run: |
           set -euo pipefail
 
