@@ -25,7 +25,6 @@ jobs:
     timeout-minutes: 5
     outputs:
       code: ${{ steps.filter.outputs.code }}
-      deploy: ${{ steps.filter.outputs.deploy }}
       store: ${{ steps.filter.outputs.store }}
       studio: ${{ steps.filter.outputs.studio }}
       admin: ${{ steps.filter.outputs.admin }}
@@ -75,10 +74,6 @@ jobs:
               - 'tsconfig*.json'
               - 'eslint.config.*'
               - 'prettier.config.*'
-            deploy:
-              - 'docker/**'
-              - '.dockerignore'
-
       - name: Check if docs-only
         id: check
         run: |
@@ -319,6 +314,12 @@ jobs:
             pnpm install --no-frozen-lockfile
           }
 
+      - name: Load CI environment
+        run: |
+          grep -v '^\s*#' .env.ci | grep -v '^\s*$' | grep -v '\$secret:' | while IFS= read -r line; do
+            echo "$line" >> "$GITHUB_ENV"
+          done
+
       - name: Restore Next.js build cache
         uses: actions/cache@v4
         with:
@@ -358,9 +359,7 @@ jobs:
           done
         env:
           CI: "true"
-          TARGET_ENV: dev
           NEXT_PUBLIC_API_BASE_URL: /api
-          NEXT_PUBLIC_ENABLE_TEST_IDS: "true"
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.DEV_SUPABASE_URL }}
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.DEV_SUPABASE_ANON_KEY }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.DEV_SUPABASE_SERVICE_ROLE_KEY }}
@@ -450,6 +449,12 @@ jobs:
             pnpm install --no-frozen-lockfile
           }
 
+      - name: Load CI environment
+        run: |
+          grep -v '^\s*#' .env.ci | grep -v '^\s*$' | grep -v '\$secret:' | while IFS= read -r line; do
+            echo "$line" >> "$GITHUB_ENV"
+          done
+
       - name: Get Playwright version
         id: playwright-version
         run: echo "version=$(pnpm --filter store list @playwright/test --json | jq -r '.[0].devDependencies["@playwright/test"].version')" >> $GITHUB_OUTPUT
@@ -509,7 +514,6 @@ jobs:
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.DEV_SUPABASE_SERVICE_ROLE_KEY }}
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.DEV_SUPABASE_URL }}
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.DEV_SUPABASE_ANON_KEY }}
-          NEXT_PUBLIC_ENABLE_TEST_IDS: "true"
         run: |
           start_if_built() {
             local app="$1" dir="$2"
@@ -548,7 +552,6 @@ jobs:
 
       - name: Run E2E tests (scoped)
         env:
-          TARGET_ENV: dev
           DEV_SUPABASE_URL: ${{ secrets.DEV_SUPABASE_URL }}
           DEV_SUPABASE_ANON_KEY: ${{ secrets.DEV_SUPABASE_ANON_KEY }}
           DEV_SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.DEV_SUPABASE_SERVICE_ROLE_KEY }}
@@ -572,10 +575,6 @@ jobs:
           [ -z "$APPS" ] && echo "No workspace apps selected for E2E tests." && exit 0
           for APP in $APPS; do
             echo "Running E2E for ${APP}"
-            if [ "$APP" = "auth-app" ]; then
-              echo "Skipping auth-app CI E2E (covered by Docker smoke tests)"
-              continue
-            fi
             pnpm --filter "${APP}" test:e2e
           done
 
@@ -658,70 +657,3 @@ jobs:
           name: bundle-analysis
           path: apps/store/.next/analyze/
           retention-days: 7
-
-  # ============================================
-  # Docker Smoke Tests (only when deploy files change)
-  # ============================================
-  docker-smoke-tests:
-    name: Docker Smoke Tests
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    needs: changes
-    if: needs.changes.outputs.docs-only == 'false' && needs.changes.outputs.deploy == 'true'
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: "pnpm"
-
-      - name: Install dependencies
-        run: |
-          pnpm install --frozen-lockfile || {
-            echo "Frozen lockfile install failed, retrying without frozen lockfile"
-            pnpm install --no-frozen-lockfile
-          }
-
-      - name: Get Playwright version
-        id: playwright-version
-        run: echo "version=$(pnpm --filter store list @playwright/test --json | jq -r '.[0].devDependencies[\"@playwright/test\"].version')" >> $GITHUB_OUTPUT
-
-      - name: Cache Playwright browsers
-        uses: actions/cache@v4
-        id: playwright-cache
-        with:
-          path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ steps.playwright-version.outputs.version }}
-
-      - name: Install Playwright browsers
-        if: steps.playwright-cache.outputs.cache-hit != 'true'
-        run: pnpm --filter store exec playwright install --with-deps
-
-      - name: Install Playwright dependencies (if cached)
-        if: steps.playwright-cache.outputs.cache-hit == 'true'
-        run: pnpm --filter store exec playwright install-deps
-
-      - name: Docker health check (pre-push style)
-        run: bash scripts/docker-health-check.sh
-        env:
-          CI: "true"
-          TARGET_ENV: dev
-          NEXT_PUBLIC_ENABLE_TEST_IDS: "true"
-          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.DEV_SUPABASE_URL }}
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.DEV_SUPABASE_ANON_KEY }}
-          NEXT_PUBLIC_AUTH_URL: "http://localhost:5000"
-          NEXT_PUBLIC_AUTH_HOST_URL: "http://localhost:5000"
-          NEXT_PUBLIC_STORE_URL: "http://localhost:5001"
-          NEXT_PUBLIC_ADMIN_URL: "http://localhost:5002"
-          NEXT_PUBLIC_PLAYGROUND_URL: "http://localhost:5003"
-          NEXT_PUBLIC_LANDING_URL: "http://localhost:5004"
-          NEXT_PUBLIC_PAYMENTS_URL: "http://localhost:5005"
-          NEXT_PUBLIC_STUDIO_URL: "http://localhost:5006"
-          NEXT_PUBLIC_BUILD_HASH: "ci"
-          APP_PUBLIC_ORIGIN: "http://localhost:8088"

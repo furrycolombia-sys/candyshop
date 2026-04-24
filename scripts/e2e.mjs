@@ -2,12 +2,14 @@
 /**
  * E2E test runner.
  *
- * dev     — starts supabase + pnpm dev, waits for apps, runs Playwright.
- *           If apps are already running, skips starting them.
- * staging — runs docker-build.mjs --up --tunnel, waits, runs Playwright.
+ * Topology is driven by env variables, not by the env name:
+ *   APPS_MODE=local    → pnpm dev (starts dev servers)
+ *   APPS_MODE=docker   → docker:build --up
+ *   SUPABASE_MODE=docker              → supabase:docker start
+ *   CLOUDFLARE_TUNNEL_APP_ENABLED=true → tunnel start/stop
  *
  * Usage:
- *   node scripts/e2e.mjs [--env <dev|staging>] [--app <auth|store>] [--headed] [--ui] [--help]
+ *   node scripts/e2e.mjs [--env <name>] [--app <auth|store|admin>] [--headed] [--ui] [--help]
  */
 
 import { spawn, spawnSync } from "node:child_process";
@@ -27,7 +29,7 @@ if (args.includes("--help")) {
   console.log(`
 Usage: node scripts/e2e.mjs [--env <name>] [--app <app>] [--headed] [--ui] [-- <playwright args>]
 
-  --env <name>   dev | staging  (default: dev)
+  --env <name>   Environment to load from .env.<name> (default: dev)
   --app <app>    auth | store | admin   (default: auth)
   --headed       Headed browser
   --ui           Playwright UI mode
@@ -54,10 +56,6 @@ const ui = args.includes("--ui");
 const separatorIdx = args.indexOf("--");
 const passthroughArgs = separatorIdx !== -1 ? args.slice(separatorIdx + 1) : [];
 
-if (!["dev", "staging"].includes(targetEnv)) {
-  console.error("ERROR: --env must be dev or staging");
-  process.exit(1);
-}
 if (!["auth", "store", "admin"].includes(targetApp)) {
   console.error("ERROR: --app must be auth, store, or admin");
   process.exit(1);
@@ -67,28 +65,66 @@ loadEnv(targetEnv);
 
 console.log(`\n🧪 e2e  env=${targetEnv}  app=${targetApp}\n`);
 
-// ── Dev ───────────────────────────────────────────────────────────────────────
+// ── Infrastructure ────────────────────────────────────────────────────────────
+
+const appsMode = process.env.APPS_MODE ?? "local";
+const supabaseMode = process.env.SUPABASE_MODE ?? "cloud";
+const tunnelEnabled = process.env.CLOUDFLARE_TUNNEL_APP_ENABLED === "true";
 
 let devProc = null;
 
-if (targetEnv === "dev") {
-  // 1. Start Supabase only when using local Docker (SUPABASE_PORT is a valid number)
-  const supabasePort = Number.parseInt(process.env.SUPABASE_PORT ?? "", 10);
-  const useLocalSupabase = !Number.isNaN(supabasePort) && supabasePort > 0;
+// 1. Stop any running tunnel before touching infrastructure
+if (tunnelEnabled) {
+  console.log(`▶ tunnel:stop --env ${targetEnv}`);
+  spawnSync("pnpm", ["tunnel:stop", "--env", targetEnv], {
+    cwd: rootDir,
+    stdio: "inherit",
+    env: process.env,
+    shell: true,
+  });
+}
 
-  if (useLocalSupabase) {
-    console.log("▶ supabase:docker start --env dev");
-    spawnSync("pnpm", ["supabase:docker", "start", "--env", "dev"], {
+// 2. Start Supabase if using local Docker
+if (supabaseMode === "docker") {
+  console.log(`▶ supabase:docker start --env ${targetEnv}`);
+  const result = spawnSync(
+    "pnpm",
+    ["supabase:docker", "start", "--env", targetEnv],
+    {
       cwd: rootDir,
       stdio: "inherit",
       env: process.env,
       shell: true,
-    });
-  } else {
-    console.log("✓ Using Supabase Cloud — skipping local Supabase start\n");
-  }
+    },
+  );
+  if (result.status !== 0) process.exit(result.status ?? 1);
+} else {
+  console.log("✓ Using Supabase Cloud — skipping local Supabase start\n");
+}
 
-  // 2. Start dev servers if not already up
+// 3. Start the app
+if (appsMode === "docker") {
+  console.log(`\n▶ docker:build --env ${targetEnv} --up`);
+  const result = spawnSync(
+    "pnpm",
+    ["docker:build", "--env", targetEnv, "--up"],
+    {
+      cwd: rootDir,
+      stdio: "inherit",
+      env: process.env,
+      shell: true,
+    },
+  );
+  if (result.status !== 0) process.exit(result.status ?? 1);
+
+  const port = Number.parseInt(process.env.HOST_PORT ?? "", 10);
+  if (!Number.isNaN(port) && port > 0) {
+    console.log(`\n   Waiting for app on :${port}...`);
+    await waitForPort(port, 120_000);
+    console.log("✓ App ready\n");
+  }
+} else {
+  // local mode — start dev servers if not already up
   const port = portForApp(targetApp);
   const alreadyUp = await checkPort(port);
 
@@ -108,61 +144,16 @@ if (targetEnv === "dev") {
   }
 }
 
-// ── Staging ───────────────────────────────────────────────────────────────────
-
-if (targetEnv === "staging") {
-  // 0. Stop any existing tunnel first
-  console.log("▶ tunnel:stop --env staging");
-  spawnSync("pnpm", ["tunnel:stop", "--env", "staging"], {
+// 4. Launch tunnel if enabled
+if (tunnelEnabled) {
+  console.log(`\n▶ tunnel --env ${targetEnv}`);
+  const result = spawnSync("pnpm", ["tunnel", "--env", targetEnv], {
     cwd: rootDir,
     stdio: "inherit",
     env: process.env,
     shell: true,
   });
-
-  // 1. Start Supabase Docker stack for staging
-  console.log("▶ supabase:docker start --env staging");
-  const supaResult = spawnSync(
-    "pnpm",
-    ["supabase:docker", "start", "--env", "staging"],
-    {
-      cwd: rootDir,
-      stdio: "inherit",
-      env: process.env,
-      shell: true,
-    },
-  );
-  if (supaResult.status !== 0) process.exit(supaResult.status ?? 1);
-
-  // 2. Build + start app container
-  console.log("\n▶ docker:build --env staging --up");
-  const buildResult = spawnSync(
-    "pnpm",
-    ["docker:build", "--env", "staging", "--up"],
-    {
-      cwd: rootDir,
-      stdio: "inherit",
-      env: process.env,
-      shell: true,
-    },
-  );
-  if (buildResult.status !== 0) process.exit(buildResult.status ?? 1);
-
-  // 3. Launch Cloudflare tunnel
-  console.log("\n▶ tunnel --env staging");
-  const tunnelResult = spawnSync("pnpm", ["tunnel", "--env", "staging"], {
-    cwd: rootDir,
-    stdio: "inherit",
-    env: process.env,
-    shell: true,
-  });
-  if (tunnelResult.status !== 0) process.exit(tunnelResult.status ?? 1);
-
-  // Wait for the local container port to be ready
-  const port = Number.parseInt(process.env.HOST_PORT ?? "", 10) || 7542;
-  console.log(`\n   Waiting for staging app on :${port}...`);
-  await waitForPort(port, 120_000);
-  console.log("✓ Staging app ready\n");
+  if (result.status !== 0) process.exit(result.status ?? 1);
 }
 
 // ── Playwright ────────────────────────────────────────────────────────────────
