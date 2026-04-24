@@ -18,7 +18,7 @@ jobs:
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-          TELEGRAM_CRITICAL_THREAD_ID: ${{ secrets.TELEGRAM_CRITICAL_THREAD_ID }}
+          TELEGRAM_THREAD_ID: ${{ secrets.TELEGRAM_REVIEWS_THREAD_ID }}
           ISSUE_NUMBER: ${{ github.event.issue.number }}
           ISSUE_TITLE: ${{ github.event.issue.title }}
           ISSUE_URL: ${{ github.event.issue.html_url }}
@@ -44,12 +44,12 @@ jobs:
               "text": text,
               "parse_mode": "HTML",
           }
-          thread_id = os.environ.get("TELEGRAM_CRITICAL_THREAD_ID", "").strip()
+          thread_id = os.environ.get("TELEGRAM_THREAD_ID", "").strip()
           if thread_id:
               try:
                   payload["message_thread_id"] = int(thread_id)
               except ValueError:
-                  print(f"Warning: invalid TELEGRAM_CRITICAL_THREAD_ID={thread_id!r}, sending without thread")
+                  print(f"Warning: invalid TELEGRAM_THREAD_ID={thread_id!r}, sending without thread")
 
           data = json.dumps(payload).encode()
           req = urllib.request.Request(
