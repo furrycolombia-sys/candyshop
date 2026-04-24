@@ -193,7 +193,9 @@ const pw = spawn("pnpm", pwArgs, {
 
 pw.on("exit", (code) => {
   if (devProc) devProc.kill("SIGTERM");
-  process.exit(code ?? 0);
+  // code is null when Playwright is killed by a signal (OOM, timeout, etc.).
+  // null ?? 0 would exit cleanly and mask the failure; use 1 instead.
+  process.exit(code ?? 1);
 });
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
