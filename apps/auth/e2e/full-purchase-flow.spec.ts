@@ -36,11 +36,11 @@ const { snap, resetCounter } = createSnapHelper(
  * 2b. Seller B configures a payment method in Payments
  * 3.  Buyer adds both products to cart and checks out
  *     → sees two separate seller checkout cards
- *     → fills each seller's form independently
+ *     → fills each seller's form independently (transfer number + receipt upload)
  *     → submits both payments
  * 4.  Buyer verifies both orders are "Pending Verification"
- * 5a. Seller A approves their order
- * 5b. Seller B approves their order
+ * 5a. Seller A sees receipt and approves their order
+ * 5b. Seller B sees receipt and approves their order
  * 6.  Buyer sees both orders "Approved"
  *
  * Requires: supabase start + pnpm dev (all apps)
@@ -54,6 +54,7 @@ test.describe.serial("Full purchase flow: two sellers, one buyer", () => {
   const runId = Date.now();
   const PRODUCT_ALPHA = `E2E Product Alpha ${runId}`;
   const PRODUCT_BETA = `E2E Product Beta ${runId}`;
+  const RECEIPT_FIXTURE = path.resolve(__dirname, "fixtures/test-receipt.png");
 
   test.beforeAll(async () => {
     resetCounter();
@@ -146,6 +147,27 @@ test.describe.serial("Full purchase flow: two sellers, one buyer", () => {
       .locator("input[placeholder]")
       .first();
     await labelInput.fill(fieldLabel);
+
+    // Require receipt upload and transfer number on all payment methods
+    const requiresReceiptCheckbox = page.getByTestId(
+      "payment-method-requires-receipt",
+    );
+    await requiresReceiptCheckbox.waitFor({
+      state: "visible",
+      timeout: ELEMENT_TIMEOUT_MS,
+    });
+    if (!(await requiresReceiptCheckbox.isChecked())) {
+      await requiresReceiptCheckbox.click();
+    }
+    await expect(requiresReceiptCheckbox).toBeChecked();
+
+    const requiresTransferCheckbox = page.getByTestId(
+      "payment-method-requires-transfer-number",
+    );
+    if (!(await requiresTransferCheckbox.isChecked())) {
+      await requiresTransferCheckbox.click();
+    }
+    await expect(requiresTransferCheckbox).toBeChecked();
 
     await snap(page, `${snapPrefix}-method-configured`);
 
@@ -430,6 +452,20 @@ test.describe.serial("Full purchase flow: two sellers, one buyer", () => {
       .fill("NEQUI-A-001");
     await snap(page, "checkout-sellerA-field-filled");
 
+    const transferInputA = firstCard.getByTestId("transfer-number-input");
+    await expect(transferInputA).toBeVisible({ timeout: ELEMENT_TIMEOUT_MS });
+    await transferInputA.fill("NEQUI-TXN-A-001");
+
+    const fileInputA = firstCard.getByTestId("receipt-file-input");
+    await fileInputA.setInputFiles(RECEIPT_FIXTURE);
+    await page.waitForTimeout(MUTATION_WAIT_MS);
+
+    const receiptPreviewA = firstCard.getByTestId("receipt-preview");
+    await expect(receiptPreviewA).toBeVisible({
+      timeout: LONG_OPERATION_TIMEOUT_MS,
+    });
+    await snap(page, "checkout-sellerA-receipt-uploaded");
+
     const submitBtnA = firstCard.getByTestId(/^submit-payment-/);
     await expect(submitBtnA).toBeEnabled({ timeout: ELEMENT_TIMEOUT_MS });
     await submitBtnA.click();
@@ -460,6 +496,20 @@ test.describe.serial("Full purchase flow: two sellers, one buyer", () => {
       .first()
       .fill("BANCO-B-002");
     await snap(page, "checkout-sellerB-field-filled");
+
+    const transferInputB = secondCard.getByTestId("transfer-number-input");
+    await expect(transferInputB).toBeVisible({ timeout: ELEMENT_TIMEOUT_MS });
+    await transferInputB.fill("BANCO-TXN-B-002");
+
+    const fileInputB = secondCard.getByTestId("receipt-file-input");
+    await fileInputB.setInputFiles(RECEIPT_FIXTURE);
+    await page.waitForTimeout(MUTATION_WAIT_MS);
+
+    const receiptPreviewB = secondCard.getByTestId("receipt-preview");
+    await expect(receiptPreviewB).toBeVisible({
+      timeout: LONG_OPERATION_TIMEOUT_MS,
+    });
+    await snap(page, "checkout-sellerB-receipt-uploaded");
 
     const submitBtnB = secondCard.getByTestId(/^submit-payment-/);
     await expect(submitBtnB).toBeEnabled({ timeout: ELEMENT_TIMEOUT_MS });
@@ -502,6 +552,21 @@ test.describe.serial("Full purchase flow: two sellers, one buyer", () => {
     await expect(approveBtn).toBeVisible({ timeout: ELEMENT_TIMEOUT_MS });
     await snap(page, "sellerA-order-received");
 
+    // Verify buyer's receipt data is visible to seller A
+    const receiptViewerA = page.getByTestId("receipt-viewer").first();
+    await expect(receiptViewerA).toBeVisible({ timeout: ELEMENT_TIMEOUT_MS });
+
+    const receiptTransferA = page
+      .getByTestId("receipt-transfer-number")
+      .first();
+    await expect(receiptTransferA).toBeVisible({ timeout: ELEMENT_TIMEOUT_MS });
+    await expect(receiptTransferA).not.toBeEmpty();
+
+    const receiptLinkA = page.getByTestId("receipt-view-link").first();
+    await expect(receiptLinkA).toBeVisible({ timeout: ELEMENT_TIMEOUT_MS });
+    await expect(page.getByTestId("receipt-none").first()).not.toBeVisible();
+    await snap(page, "sellerA-receipt-visible");
+
     await approveBtn.click();
     await expect(page.getByTestId("confirm-action-panel")).toBeVisible();
     await page.getByTestId("confirm-checkbox").check();
@@ -527,6 +592,21 @@ test.describe.serial("Full purchase flow: two sellers, one buyer", () => {
     const approveBtn = page.getByTestId(/^order-approve-/).first();
     await expect(approveBtn).toBeVisible({ timeout: ELEMENT_TIMEOUT_MS });
     await snap(page, "sellerB-order-received");
+
+    // Verify buyer's receipt data is visible to seller B
+    const receiptViewerB = page.getByTestId("receipt-viewer").first();
+    await expect(receiptViewerB).toBeVisible({ timeout: ELEMENT_TIMEOUT_MS });
+
+    const receiptTransferB = page
+      .getByTestId("receipt-transfer-number")
+      .first();
+    await expect(receiptTransferB).toBeVisible({ timeout: ELEMENT_TIMEOUT_MS });
+    await expect(receiptTransferB).not.toBeEmpty();
+
+    const receiptLinkB = page.getByTestId("receipt-view-link").first();
+    await expect(receiptLinkB).toBeVisible({ timeout: ELEMENT_TIMEOUT_MS });
+    await expect(page.getByTestId("receipt-none").first()).not.toBeVisible();
+    await snap(page, "sellerB-receipt-visible");
 
     await approveBtn.click();
     await expect(page.getByTestId("confirm-action-panel")).toBeVisible();
