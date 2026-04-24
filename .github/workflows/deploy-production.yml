@@ -111,6 +111,17 @@ jobs:
             ServerAliveCountMax 20
           EOF
 
+      - name: Compute app version
+        id: app_version
+        run: |
+          # Extract release version from merge commit message (e.g. "Merge pull request #N from owner/release/v2026.04.24.1")
+          VERSION=$(git log -1 --pretty=%s | grep -oP 'v\d{4}\.\d{2}\.\d{2}\.\d+' || true)
+          if [ -z "$VERSION" ]; then
+            VERSION="${GITHUB_SHA:0:7}"
+          fi
+          echo "value=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "App version: $VERSION"
+
       - name: Write ephemeral env file on server
         run: |
           ssh ${{ secrets.PROD_SERVER_HOST }} \
@@ -134,6 +145,8 @@ jobs:
           TELEGRAM_CHAT_ID=${{ secrets.TELEGRAM_CHAT_ID }}
           TELEGRAM_THREAD_ID=${{ secrets.TELEGRAM_THREAD_ID }}
           TELEGRAM_CRITICAL_THREAD_ID=${{ secrets.TELEGRAM_CRITICAL_THREAD_ID }}
+          NEXT_PUBLIC_APP_VERSION=${{ steps.app_version.outputs.value }}
+          NEXT_PUBLIC_TALLY_FORM_ID=${{ secrets.TALLY_FORM_ID }}
           ENVEOF'
 
       - name: Copy deploy script to server

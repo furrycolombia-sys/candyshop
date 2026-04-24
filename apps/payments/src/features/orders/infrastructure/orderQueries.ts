@@ -50,7 +50,7 @@ export async function fetchMyOrders(
     .filter((p): p is string => p !== null && p !== undefined);
 
   const signedUrls = await Promise.all(
-    receiptPaths.map((path) => getReceiptUrl(path)),
+    receiptPaths.map((path) => getReceiptUrl(supabase, path)),
   );
 
   const urlByPath: Record<string, string | null> = Object.fromEntries(
