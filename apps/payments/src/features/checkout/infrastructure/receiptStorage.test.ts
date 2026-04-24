@@ -1,22 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { signReceiptUrlMock } = vi.hoisted(() => ({
-  signReceiptUrlMock: vi.fn(async (path: string) =>
-    path ? `https://example.com/signed/${path}` : null,
-  ),
-}));
-
-vi.mock("@/shared/infrastructure/receiptSignAction", () => ({
-  signReceiptUrl: signReceiptUrlMock,
-}));
-
 import { deleteReceipt, getReceiptUrl, uploadReceipt } from "./receiptStorage";
 
 const mockUpload = vi.fn();
 const mockRemove = vi.fn();
+const mockCreateSignedUrl = vi.fn();
 const mockStorageFrom = vi.fn(() => ({
   upload: mockUpload,
   remove: mockRemove,
+  createSignedUrl: mockCreateSignedUrl,
 }));
 
 const mockSupabase = {
@@ -100,29 +92,38 @@ describe("deleteReceipt", () => {
 
 describe("getReceiptUrl", () => {
   beforeEach(() => {
-    signReceiptUrlMock.mockClear();
+    vi.clearAllMocks();
   });
 
-  it("returns null without calling the server action when no path is given", async () => {
-    await expect(getReceiptUrl(null)).resolves.toBeNull();
-    expect(signReceiptUrlMock).not.toHaveBeenCalled();
+  it("returns null without calling storage when no path is given", async () => {
+    await expect(getReceiptUrl(mockSupabase, null)).resolves.toBeNull();
+    expect(mockStorageFrom).not.toHaveBeenCalled();
   });
 
-  it("delegates to signReceiptUrl and returns the signed url", async () => {
-    const url = await getReceiptUrl("order-123/receipt.png");
-    expect(signReceiptUrlMock).toHaveBeenCalledWith("order-123/receipt.png");
+  it("calls createSignedUrl and returns the signed url", async () => {
+    mockCreateSignedUrl.mockResolvedValue({
+      data: { signedUrl: "https://example.com/signed/order-123/receipt.png" },
+      error: null,
+    });
+
+    const url = await getReceiptUrl(mockSupabase, "order-123/receipt.png");
+
+    expect(mockStorageFrom).toHaveBeenCalledWith("receipts");
+    expect(mockCreateSignedUrl).toHaveBeenCalledWith(
+      "order-123/receipt.png",
+      expect.any(Number),
+    );
     expect(url).toBe("https://example.com/signed/order-123/receipt.png");
   });
 
-  it("propagates null from signReceiptUrl when signing fails", async () => {
-    signReceiptUrlMock.mockResolvedValueOnce(null);
-    await expect(getReceiptUrl("order-123/receipt.png")).resolves.toBeNull();
-  });
+  it("returns null when createSignedUrl returns an error", async () => {
+    mockCreateSignedUrl.mockResolvedValue({
+      data: null,
+      error: new Error("Storage error"),
+    });
 
-  it("returns null when signReceiptUrl throws (e.g. Server Action proxy error)", async () => {
-    signReceiptUrlMock.mockRejectedValueOnce(
-      new Error("Server Action proxy error"),
-    );
-    await expect(getReceiptUrl("order-123/receipt.png")).resolves.toBeNull();
+    await expect(
+      getReceiptUrl(mockSupabase, "order-123/receipt.png"),
+    ).resolves.toBeNull();
   });
 });
