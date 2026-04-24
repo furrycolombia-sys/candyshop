@@ -576,7 +576,7 @@ jobs:
               echo "Skipping auth-app CI E2E (covered by Docker smoke tests)"
               continue
             fi
-            pnpm --filter "${APP}" test:e2e
+            pnpm --filter "${APP}" test:e2e -- --bail=1
           done
 
       - name: Upload store Playwright report
