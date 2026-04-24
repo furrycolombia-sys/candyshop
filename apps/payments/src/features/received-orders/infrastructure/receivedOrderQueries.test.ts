@@ -1,9 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 vi.mock("@/shared/infrastructure/receiptStorage", () => ({
-  getReceiptUrl: vi.fn(
-    async (_supabase: unknown, storagePath: string | null) =>
-      storagePath ? `https://example.com/${storagePath}` : null,
+  getReceiptUrl: vi.fn(async (storagePath: string | null) =>
+    storagePath ? `https://example.com/${storagePath}` : null,
   ),
 }));
 
