@@ -1,14 +1,12 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 import { deleteReceipt, getReceiptUrl, uploadReceipt } from "./receiptStorage";
 
 const mockUpload = vi.fn();
 const mockRemove = vi.fn();
-const mockCreateSignedUrl = vi.fn();
 const mockStorageFrom = vi.fn(() => ({
   upload: mockUpload,
   remove: mockRemove,
-  createSignedUrl: mockCreateSignedUrl,
 }));
 
 const mockSupabase = {
@@ -91,23 +89,59 @@ describe("deleteReceipt", () => {
 });
 
 describe("getReceiptUrl", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.unstubAllEnvs();
   });
 
   it("returns null when no storage path is provided", async () => {
-    await expect(getReceiptUrl(mockSupabase, null)).resolves.toBeNull();
-    expect(mockCreateSignedUrl).not.toHaveBeenCalled();
+    await expect(getReceiptUrl(null)).resolves.toBeNull();
+  });
+
+  it("returns null when service role env vars are not configured", async () => {
+    vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "https://supabase.example.com");
+    vi.stubEnv("SUPABASE_SERVICE_ROLE_KEY", "");
+    await expect(getReceiptUrl("order-123/receipt.png")).resolves.toBeNull();
   });
 
   it("returns a signed url for valid storage paths", async () => {
-    mockCreateSignedUrl.mockResolvedValue({
-      data: { signedUrl: "https://example.com/signed.png" },
-      error: null,
-    });
+    vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "https://supabase.example.com");
+    vi.stubEnv("SUPABASE_SERVICE_ROLE_KEY", "service_key_test");
 
-    await expect(
-      getReceiptUrl(mockSupabase, "order-123/receipt.png"),
-    ).resolves.toBe("https://example.com/signed.png");
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          signedURL:
+            "/storage/v1/object/sign/receipts/order-123/receipt.png?token=abc",
+        }),
+      }),
+    );
+
+    await expect(getReceiptUrl("order-123/receipt.png")).resolves.toBe(
+      "https://supabase.example.com/storage/v1/object/sign/receipts/order-123/receipt.png?token=abc",
+    );
+  });
+
+  it("returns null when the storage API responds with an error", async () => {
+    vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "https://supabase.example.com");
+    vi.stubEnv("SUPABASE_SERVICE_ROLE_KEY", "service_key_test");
+
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: false }));
+
+    await expect(getReceiptUrl("order-123/receipt.png")).resolves.toBeNull();
+  });
+
+  it("returns null when the fetch call throws", async () => {
+    vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "https://supabase.example.com");
+    vi.stubEnv("SUPABASE_SERVICE_ROLE_KEY", "service_key_test");
+
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockRejectedValue(new Error("Network error")),
+    );
+
+    await expect(getReceiptUrl("order-123/receipt.png")).resolves.toBeNull();
   });
 });
