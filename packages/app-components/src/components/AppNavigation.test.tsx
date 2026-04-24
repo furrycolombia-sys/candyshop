@@ -140,7 +140,7 @@ describe("AppNavigation", () => {
 
   it("renders protected app links when the user has module access", () => {
     const permissionState: PermissionState = {
-      grantedKeys: ["products.read", "orders.read", "user_permissions.read"],
+      grantedKeys: ["products.create", "orders.read", "user_permissions.read"],
       isLoading: false,
       isAuthenticated: true,
     };
@@ -278,7 +278,7 @@ describe("AppNavigation", () => {
         urls={defaultUrls}
         locales={defaultLocales}
         permissionState={{
-          grantedKeys: ["products.read"],
+          grantedKeys: ["products.create"],
           isLoading: false,
           isAuthenticated: true,
         }}

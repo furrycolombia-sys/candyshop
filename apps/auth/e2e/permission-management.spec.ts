@@ -259,11 +259,23 @@ test.describe.serial("Permission management", () => {
     await snap(page, "studio-create-hidden");
 
     // Clear cookies and re-inject session to force a completely fresh auth state,
-    // then navigate to the create page to verify access-denied
+    // then navigate to the create page to verify access-denied.
+    //
+    // WHY THE AUTH WARM-UP EXISTS:
+    // Navigating directly to a studio URL after clearCookies() + injectSession()
+    // causes ProtectedRoute to fire globalThis.location.replace() before the
+    // page load event fires — Playwright reports this as net::ERR_ABORTED.
+    // Going through AUTH first lets the Supabase client resolve the injected
+    // session before we hit the studio route (same technique as navigateWithFreshSession).
     await context.clearCookies();
     await injectSession(context, target);
-    await page.goto(`${APP_URLS.STUDIO}/en/products/new`);
-    await page.waitForLoadState("networkidle");
+    await page.goto(`${APP_URLS.AUTH}/en`, { waitUntil: "domcontentloaded" });
+    await expect(page.getByTestId("app-navigation")).toBeVisible({
+      timeout: ELEMENT_TIMEOUT_MS,
+    });
+    await page.goto(`${APP_URLS.STUDIO}/en/products/new`, {
+      waitUntil: "domcontentloaded",
+    });
     await expectVisible(page, "access-denied");
 
     await setPermissions(page, context, admin, target, {

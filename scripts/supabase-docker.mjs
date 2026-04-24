@@ -168,6 +168,12 @@ function generateConfig() {
     template = template.replaceAll(`{{${key}}}`, value);
   }
 
+  // Disable the edge runtime in CI — no edge functions exist in this project,
+  // and the container's health check reliably times out due to ECR rate limiting.
+  const edgeRuntimeEnabled =
+    process.env.SUPABASE_EDGE_RUNTIME_ENABLED ?? (process.env.CI ? "false" : "true");
+  template = template.replaceAll("{{SUPABASE_EDGE_RUNTIME_ENABLED}}", edgeRuntimeEnabled);
+
   writeFileSync(configPath, template, "utf-8");
   console.log(
     `✓ Generated config.toml (Project: ${projectId}, API: ${ports.SUPABASE_API_PORT}, Studio: ${ports.SUPABASE_STUDIO_PORT})`,

@@ -25,7 +25,6 @@ jobs:
     timeout-minutes: 5
     outputs:
       code: ${{ steps.filter.outputs.code }}
-      deploy: ${{ steps.filter.outputs.deploy }}
       store: ${{ steps.filter.outputs.store }}
       studio: ${{ steps.filter.outputs.studio }}
       admin: ${{ steps.filter.outputs.admin }}
@@ -75,10 +74,6 @@ jobs:
               - 'tsconfig*.json'
               - 'eslint.config.*'
               - 'prettier.config.*'
-            deploy:
-              - 'docker/**'
-              - '.dockerignore'
-
       - name: Check if docs-only
         id: check
         run: |
@@ -291,133 +286,60 @@ jobs:
           retention-days: 7
 
   # ============================================
-  # Build
+  # Docker Build — single image for E2E
   # ============================================
-  build:
-    name: Build
+  docker-build:
+    name: Docker Build
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 30
     needs: changes
     if: needs.changes.outputs.docs-only == 'false'
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      image: ${{ steps.image.outputs.name }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: "pnpm"
-
-      - name: Install dependencies
+      - name: Set image name
+        id: image
         run: |
-          pnpm install --frozen-lockfile || {
-            echo "Frozen lockfile install failed, retrying without frozen lockfile"
-            pnpm install --no-frozen-lockfile
-          }
+          echo "name=ghcr.io/$(echo '${{ github.repository }}' | tr '[:upper:]' '[:lower:]'):${{ github.sha }}" >> $GITHUB_OUTPUT
 
-      - name: Restore Next.js build cache
-        uses: actions/cache@v4
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
         with:
-          path: apps/*/.next/cache
-          key: ${{ runner.os }}-nextjs-${{ hashFiles('pnpm-lock.yaml') }}-${{ hashFiles('apps/**/*.ts', 'apps/**/*.tsx') }}
-          restore-keys: |
-            ${{ runner.os }}-nextjs-${{ hashFiles('pnpm-lock.yaml') }}-
-            ${{ runner.os }}-nextjs-
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build applications (scoped)
-        run: |
-          set -euo pipefail
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
-          SELECT_OUTPUT=$(bash scripts/select-workspaces.sh \
-            "${{ needs.changes.outputs.store }}" \
-            "${{ needs.changes.outputs.landing }}" \
-            "${{ needs.changes.outputs.payments }}" \
-            "${{ needs.changes.outputs.admin }}" \
-            "${{ needs.changes.outputs.auth }}" \
-            "${{ needs.changes.outputs.playground }}" \
-            "${{ needs.changes.outputs.packages }}" \
-            "${{ needs.changes.outputs.tooling }}" \
-            "${{ needs.changes.outputs.studio }}")
-
-          RUN_ALL=$(echo "$SELECT_OUTPUT" | grep '^RUN_ALL=' | cut -d= -f2-)
-          APPS=$(echo "$SELECT_OUTPUT" | grep '^APPS=' | cut -d= -f2-)
-
-          if [ "$RUN_ALL" = "true" ]; then
-            echo "Running full build because packages/tooling changed."
-            pnpm run build
-            exit 0
-          fi
-
-          [ -z "$APPS" ] && echo "No workspace apps selected for build." && exit 0
-          for APP in $APPS; do
-            pnpm --filter "$APP" build
-          done
-        env:
-          CI: "true"
-          TARGET_ENV: dev
-          NEXT_PUBLIC_API_BASE_URL: /api
-          NEXT_PUBLIC_ENABLE_TEST_IDS: "true"
-          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.DEV_SUPABASE_URL }}
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.DEV_SUPABASE_ANON_KEY }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.DEV_SUPABASE_SERVICE_ROLE_KEY }}
-          SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID: ${{ secrets.SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID }}
-          SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET: ${{ secrets.SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET }}
-          SUPABASE_AUTH_EXTERNAL_DISCORD_CLIENT_ID: ${{ secrets.SUPABASE_AUTH_EXTERNAL_DISCORD_CLIENT_ID }}
-          SUPABASE_AUTH_EXTERNAL_DISCORD_SECRET: ${{ secrets.SUPABASE_AUTH_EXTERNAL_DISCORD_SECRET }}
-
-      - name: Upload store build artifacts
-        uses: actions/upload-artifact@v4
-        if: needs.changes.outputs.store == 'true' || needs.changes.outputs.packages == 'true' || needs.changes.outputs.tooling == 'true'
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v6
         with:
-          name: build-store
-          path: apps/store/.next/
-          retention-days: 1
-          if-no-files-found: error
-          include-hidden-files: true
-
-      - name: Upload admin build artifacts
-        uses: actions/upload-artifact@v4
-        if: needs.changes.outputs.admin == 'true' || needs.changes.outputs.packages == 'true' || needs.changes.outputs.tooling == 'true'
-        with:
-          name: build-admin
-          path: apps/admin/.next/
-          retention-days: 1
-          if-no-files-found: error
-          include-hidden-files: true
-
-      - name: Upload auth build artifacts
-        uses: actions/upload-artifact@v4
-        if: needs.changes.outputs.auth == 'true' || needs.changes.outputs.packages == 'true' || needs.changes.outputs.tooling == 'true'
-        with:
-          name: build-auth
-          path: apps/auth/.next/
-          retention-days: 1
-          if-no-files-found: error
-          include-hidden-files: true
-
-      - name: Upload landing build artifacts
-        uses: actions/upload-artifact@v4
-        if: needs.changes.outputs.landing == 'true' || needs.changes.outputs.packages == 'true' || needs.changes.outputs.tooling == 'true'
-        with:
-          name: build-landing
-          path: apps/landing/.next/
-          retention-days: 1
-          if-no-files-found: error
-          include-hidden-files: true
-
-      - name: Upload payments build artifacts
-        uses: actions/upload-artifact@v4
-        if: needs.changes.outputs.payments == 'true' || needs.changes.outputs.packages == 'true' || needs.changes.outputs.tooling == 'true'
-        with:
-          name: build-payments
-          path: apps/payments/.next/
-          retention-days: 1
-          if-no-files-found: error
-          include-hidden-files: true
+          context: .
+          file: docker/smoke/Dockerfile
+          push: true
+          tags: ${{ steps.image.outputs.name }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            NEXT_PUBLIC_SUPABASE_URL=http://localhost:54321
+            NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.STAGING_SUPABASE_ANON_KEY }}
+            NEXT_PUBLIC_AUTH_URL=http://localhost:5050/auth
+            NEXT_PUBLIC_AUTH_HOST_URL=http://localhost:5050/auth
+            NEXT_PUBLIC_STORE_URL=http://localhost:5050/store
+            NEXT_PUBLIC_ADMIN_URL=http://localhost:5050/admin
+            NEXT_PUBLIC_PLAYGROUND_URL=http://localhost:5050/playground
+            NEXT_PUBLIC_LANDING_URL=http://localhost:5050
+            NEXT_PUBLIC_PAYMENTS_URL=http://localhost:5050/payments
+            NEXT_PUBLIC_STUDIO_URL=http://localhost:5050/studio
+            NEXT_PUBLIC_BUILD_HASH=ci
+            NEXT_PUBLIC_ENABLE_TEST_IDS=true
 
   # ============================================
   # E2E Tests (Playwright)
@@ -425,8 +347,11 @@ jobs:
   e2e-tests:
     name: E2E Tests
     runs-on: ubuntu-latest
-    timeout-minutes: 45
-    needs: [build, changes]
+    timeout-minutes: 60
+    needs: [changes, docker-build]
+    permissions:
+      contents: read
+      packages: read
     defaults:
       run:
         shell: bash
@@ -450,9 +375,21 @@ jobs:
             pnpm install --no-frozen-lockfile
           }
 
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Pull and tag pre-built app image
+        run: |
+          docker pull ${{ needs.docker-build.outputs.image }}
+          docker tag ${{ needs.docker-build.outputs.image }} candyshop-ci
+
       - name: Get Playwright version
         id: playwright-version
-        run: echo "version=$(pnpm --filter store list @playwright/test --json | jq -r '.[0].devDependencies["@playwright/test"].version')" >> $GITHUB_OUTPUT
+        run: echo "version=$(pnpm --filter auth-app list @playwright/test --json | jq -r '.[0].devDependencies["@playwright/test"].version')" >> $GITHUB_OUTPUT
 
       - name: Cache Playwright browsers
         uses: actions/cache@v4
@@ -463,52 +400,28 @@ jobs:
 
       - name: Install Playwright browsers
         if: steps.playwright-cache.outputs.cache-hit != 'true'
-        run: pnpm --filter store exec playwright install --with-deps chromium
+        run: pnpm --filter auth-app exec playwright install --with-deps chromium
 
       - name: Install Playwright dependencies (if cached)
         if: steps.playwright-cache.outputs.cache-hit == 'true'
-        run: pnpm --filter store exec playwright install-deps chromium
-
-      - name: Start Supabase
-        run: pnpm supabase start
-        timeout-minutes: 5
-
-      - name: Download store build artifacts
-        uses: actions/download-artifact@v4
-        if: needs.changes.outputs.store == 'true' || needs.changes.outputs.packages == 'true' || needs.changes.outputs.tooling == 'true'
-        with:
-          name: build-store
-          path: apps/store/.next/
-
-      - name: Download admin build artifacts
-        uses: actions/download-artifact@v4
-        if: needs.changes.outputs.admin == 'true' || needs.changes.outputs.packages == 'true' || needs.changes.outputs.tooling == 'true'
-        with:
-          name: build-admin
-          path: apps/admin/.next/
-
-      - name: Download auth build artifacts
-        uses: actions/download-artifact@v4
-        if: needs.changes.outputs.auth == 'true' || needs.changes.outputs.packages == 'true' || needs.changes.outputs.tooling == 'true'
-        with:
-          name: build-auth
-          path: apps/auth/.next/
-
-      - name: Download landing build artifacts
-        uses: actions/download-artifact@v4
-        if: needs.changes.outputs.landing == 'true' || needs.changes.outputs.packages == 'true' || needs.changes.outputs.tooling == 'true'
-        with:
-          name: build-landing
-          path: apps/landing/.next/
-
-      - name: Download payments build artifacts
-        uses: actions/download-artifact@v4
-        if: needs.changes.outputs.payments == 'true' || needs.changes.outputs.packages == 'true' || needs.changes.outputs.tooling == 'true'
-        with:
-          name: build-payments
-          path: apps/payments/.next/
+        run: pnpm --filter auth-app exec playwright install-deps chromium
 
       - name: Run E2E tests (scoped)
+        env:
+          # Secret names match the $secret: references in .env.ci exactly.
+          # load-env.mjs sees CI=true and resolves $secret:KEY → process.env[KEY].
+          # Topology (APPS_MODE, SUPABASE_MODE, HOST_PORT, URLs) comes from .env.ci.
+          STAGING_SUPABASE_ANON_KEY: ${{ secrets.STAGING_SUPABASE_ANON_KEY }}
+          STAGING_SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.STAGING_SUPABASE_SERVICE_ROLE_KEY }}
+          STAGING_JWT_SECRET: ${{ secrets.STAGING_JWT_SECRET }}
+          STAGING_POSTGRES_PASSWORD: ${{ secrets.STAGING_POSTGRES_PASSWORD }}
+          SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID: ${{ secrets.SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID }}
+          SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET: ${{ secrets.SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET }}
+          SUPABASE_AUTH_EXTERNAL_DISCORD_CLIENT_ID: ${{ secrets.SUPABASE_AUTH_EXTERNAL_DISCORD_CLIENT_ID }}
+          SUPABASE_AUTH_EXTERNAL_DISCORD_SECRET: ${{ secrets.SUPABASE_AUTH_EXTERNAL_DISCORD_SECRET }}
+          TALLY_FORM_ID: ${{ secrets.TALLY_FORM_ID }}
+          GOOGLE_TEST_EMAIL: ${{ secrets.GOOGLE_TEST_EMAIL }}
+          GOOGLE_TEST_PASSWORD: ${{ secrets.GOOGLE_TEST_PASSWORD }}
         run: |
           set -euo pipefail
 
@@ -525,13 +438,19 @@ jobs:
 
           APPS=$(echo "$SELECT_OUTPUT" | grep '^APPS=' | cut -d= -f2-)
           [ -z "$APPS" ] && echo "No workspace apps selected for E2E tests." && exit 0
+
           for APP in $APPS; do
-            echo "Running E2E for ${APP}"
-            if [ "$APP" = "auth-app" ]; then
-              echo "Skipping auth-app CI E2E (covered by Docker smoke tests)"
-              continue
-            fi
-            pnpm --filter "${APP}" test:e2e
+            # Map pnpm filter name → scripts/e2e.mjs --app value.
+            # e2e.mjs starts Supabase + Docker container and runs Playwright,
+            # all driven by the env vars loaded from .env.ci.
+            case "$APP" in
+              auth-app) E2E_APP="auth"  ;;
+              store)    E2E_APP="store" ;;
+              admin)    E2E_APP="admin" ;;
+              *)        echo "No E2E suite for ${APP}, skipping."; continue ;;
+            esac
+            echo "Running E2E for ${E2E_APP} (env=ci)"
+            node scripts/e2e.mjs --env ci --app "${E2E_APP}"
           done
 
       - name: Upload store Playwright report
@@ -613,70 +532,3 @@ jobs:
           name: bundle-analysis
           path: apps/store/.next/analyze/
           retention-days: 7
-
-  # ============================================
-  # Docker Smoke Tests (only when deploy files change)
-  # ============================================
-  docker-smoke-tests:
-    name: Docker Smoke Tests
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    needs: changes
-    if: needs.changes.outputs.docs-only == 'false' && needs.changes.outputs.deploy == 'true'
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: "pnpm"
-
-      - name: Install dependencies
-        run: |
-          pnpm install --frozen-lockfile || {
-            echo "Frozen lockfile install failed, retrying without frozen lockfile"
-            pnpm install --no-frozen-lockfile
-          }
-
-      - name: Get Playwright version
-        id: playwright-version
-        run: echo "version=$(pnpm --filter store list @playwright/test --json | jq -r '.[0].devDependencies[\"@playwright/test\"].version')" >> $GITHUB_OUTPUT
-
-      - name: Cache Playwright browsers
-        uses: actions/cache@v4
-        id: playwright-cache
-        with:
-          path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ steps.playwright-version.outputs.version }}
-
-      - name: Install Playwright browsers
-        if: steps.playwright-cache.outputs.cache-hit != 'true'
-        run: pnpm --filter store exec playwright install --with-deps
-
-      - name: Install Playwright dependencies (if cached)
-        if: steps.playwright-cache.outputs.cache-hit == 'true'
-        run: pnpm --filter store exec playwright install-deps
-
-      - name: Docker health check (pre-push style)
-        run: bash scripts/docker-health-check.sh
-        env:
-          CI: "true"
-          TARGET_ENV: dev
-          NEXT_PUBLIC_ENABLE_TEST_IDS: "true"
-          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.DEV_SUPABASE_URL }}
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.DEV_SUPABASE_ANON_KEY }}
-          NEXT_PUBLIC_AUTH_URL: "http://localhost:5000"
-          NEXT_PUBLIC_AUTH_HOST_URL: "http://localhost:5000"
-          NEXT_PUBLIC_STORE_URL: "http://localhost:5001"
-          NEXT_PUBLIC_ADMIN_URL: "http://localhost:5002"
-          NEXT_PUBLIC_PLAYGROUND_URL: "http://localhost:5003"
-          NEXT_PUBLIC_LANDING_URL: "http://localhost:5004"
-          NEXT_PUBLIC_PAYMENTS_URL: "http://localhost:5005"
-          NEXT_PUBLIC_STUDIO_URL: "http://localhost:5006"
-          NEXT_PUBLIC_BUILD_HASH: "ci"
-          APP_PUBLIC_ORIGIN: "http://localhost:8088"
