@@ -44,6 +44,7 @@
     "docker:build": "node scripts/docker-build.mjs",
     "docker:teardown": "node scripts/docker-teardown.mjs",
     "supabase:docker": "node scripts/supabase-docker.mjs",
+    "backup:prod": "node scripts/backup-prod.mjs",
     "supabase:start": "docker rm -f supabase_vector_candystore 2>nul & node scripts/supabase-cmd.mjs start",
     "supabase:stop": "node scripts/supabase-cmd.mjs stop",
     "supabase:reset": "node scripts/supabase-cmd.mjs db reset",
