@@ -424,8 +424,9 @@ jobs:
   e2e-tests:
     name: E2E Tests
     runs-on: ubuntu-latest
-    timeout-minutes: 45
-    needs: [build, changes]
+    timeout-minutes: 60
+    # No longer depends on `build` — Docker builds its own image from source.
+    needs: changes
     defaults:
       run:
         shell: bash
@@ -449,15 +450,9 @@ jobs:
             pnpm install --no-frozen-lockfile
           }
 
-      - name: Load CI environment
-        run: |
-          grep -v '^\s*#' .env.ci | grep -v '^\s*$' | grep -v '\$secret:' | while IFS= read -r line; do
-            echo "$line" >> "$GITHUB_ENV"
-          done
-
       - name: Get Playwright version
         id: playwright-version
-        run: echo "version=$(pnpm --filter store list @playwright/test --json | jq -r '.[0].devDependencies["@playwright/test"].version')" >> $GITHUB_OUTPUT
+        run: echo "version=$(pnpm --filter auth-app list @playwright/test --json | jq -r '.[0].devDependencies["@playwright/test"].version')" >> $GITHUB_OUTPUT
 
       - name: Cache Playwright browsers
         uses: actions/cache@v4
@@ -468,93 +463,26 @@ jobs:
 
       - name: Install Playwright browsers
         if: steps.playwright-cache.outputs.cache-hit != 'true'
-        run: pnpm --filter store exec playwright install --with-deps chromium
+        run: pnpm --filter auth-app exec playwright install --with-deps chromium
 
       - name: Install Playwright dependencies (if cached)
         if: steps.playwright-cache.outputs.cache-hit == 'true'
-        run: pnpm --filter store exec playwright install-deps chromium
-
-      - name: Download store build artifacts
-        uses: actions/download-artifact@v4
-        if: needs.changes.outputs.store == 'true' || needs.changes.outputs.packages == 'true' || needs.changes.outputs.tooling == 'true'
-        with:
-          name: build-store
-          path: apps/store/.next/
-
-      - name: Download admin build artifacts
-        uses: actions/download-artifact@v4
-        if: needs.changes.outputs.admin == 'true' || needs.changes.outputs.packages == 'true' || needs.changes.outputs.tooling == 'true'
-        with:
-          name: build-admin
-          path: apps/admin/.next/
-
-      - name: Download auth build artifacts
-        uses: actions/download-artifact@v4
-        if: needs.changes.outputs.auth == 'true' || needs.changes.outputs.packages == 'true' || needs.changes.outputs.tooling == 'true'
-        with:
-          name: build-auth
-          path: apps/auth/.next/
-
-      - name: Download landing build artifacts
-        uses: actions/download-artifact@v4
-        if: needs.changes.outputs.landing == 'true' || needs.changes.outputs.packages == 'true' || needs.changes.outputs.tooling == 'true'
-        with:
-          name: build-landing
-          path: apps/landing/.next/
-
-      - name: Download payments build artifacts
-        uses: actions/download-artifact@v4
-        if: needs.changes.outputs.payments == 'true' || needs.changes.outputs.packages == 'true' || needs.changes.outputs.tooling == 'true'
-        with:
-          name: build-payments
-          path: apps/payments/.next/
-
-      - name: Start app servers
-        env:
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.DEV_SUPABASE_SERVICE_ROLE_KEY }}
-          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.DEV_SUPABASE_URL }}
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.DEV_SUPABASE_ANON_KEY }}
-        run: |
-          start_if_built() {
-            local app="$1" dir="$2"
-            if [ -d "apps/${dir}/.next/server" ]; then
-              echo "Starting ${app}..."
-              pnpm --filter "${app}" start > /tmp/log-${app}.log 2>&1 &
-            fi
-          }
-          start_if_built store    store
-          start_if_built admin    admin
-          start_if_built landing  landing
-          start_if_built payments payments
-          start_if_built auth-app auth
-          echo "App servers started in background."
-
-      - name: Wait for app servers to be ready
-        run: |
-          wait_for() {
-            local url="$1" name="$2"
-            echo -n "Waiting for ${name} at ${url}..."
-            for i in $(seq 1 30); do
-              # -s silent, -o discard body, no -f so any HTTP response (incl. redirects) counts as "up"
-              curl -s -o /dev/null "${url}" 2>/dev/null && echo " ready." && return 0
-              sleep 2
-            done
-            echo " TIMED OUT"
-            cat "/tmp/log-${name}.log" 2>/dev/null || true
-            exit 1
-          }
-          [ -d "apps/store/.next/server" ]    && wait_for "http://localhost:5001" store
-          [ -d "apps/admin/.next/server" ]    && wait_for "http://localhost:5002" admin
-          [ -d "apps/landing/.next/server" ]  && wait_for "http://localhost:5004" landing
-          [ -d "apps/payments/.next/server" ] && wait_for "http://localhost:5005" payments
-          [ -d "apps/auth/.next/server" ]     && wait_for "http://localhost:5000" auth-app
-          echo "All servers ready."
+        run: pnpm --filter auth-app exec playwright install-deps chromium
 
       - name: Run E2E tests (scoped)
         env:
-          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.DEV_SUPABASE_URL }}
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.DEV_SUPABASE_ANON_KEY }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.DEV_SUPABASE_SERVICE_ROLE_KEY }}
+          # Secret names match the $secret: references in .env.ci exactly.
+          # load-env.mjs sees CI=true and resolves $secret:KEY → process.env[KEY].
+          # Topology (APPS_MODE, SUPABASE_MODE, HOST_PORT, URLs) comes from .env.ci.
+          STAGING_SUPABASE_ANON_KEY: ${{ secrets.STAGING_SUPABASE_ANON_KEY }}
+          STAGING_SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.STAGING_SUPABASE_SERVICE_ROLE_KEY }}
+          STAGING_JWT_SECRET: ${{ secrets.STAGING_JWT_SECRET }}
+          STAGING_POSTGRES_PASSWORD: ${{ secrets.STAGING_POSTGRES_PASSWORD }}
+          SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID: ${{ secrets.SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID }}
+          SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET: ${{ secrets.SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET }}
+          SUPABASE_AUTH_EXTERNAL_DISCORD_CLIENT_ID: ${{ secrets.SUPABASE_AUTH_EXTERNAL_DISCORD_CLIENT_ID }}
+          SUPABASE_AUTH_EXTERNAL_DISCORD_SECRET: ${{ secrets.SUPABASE_AUTH_EXTERNAL_DISCORD_SECRET }}
+          TALLY_FORM_ID: ${{ secrets.TALLY_FORM_ID }}
           GOOGLE_TEST_EMAIL: ${{ secrets.GOOGLE_TEST_EMAIL }}
           GOOGLE_TEST_PASSWORD: ${{ secrets.GOOGLE_TEST_PASSWORD }}
         run: |
@@ -573,9 +501,19 @@ jobs:
 
           APPS=$(echo "$SELECT_OUTPUT" | grep '^APPS=' | cut -d= -f2-)
           [ -z "$APPS" ] && echo "No workspace apps selected for E2E tests." && exit 0
+
           for APP in $APPS; do
-            echo "Running E2E for ${APP}"
-            pnpm --filter "${APP}" test:e2e
+            # Map pnpm filter name → scripts/e2e.mjs --app value.
+            # e2e.mjs starts Supabase + Docker container and runs Playwright,
+            # all driven by the env vars loaded from .env.ci.
+            case "$APP" in
+              auth-app) E2E_APP="auth"  ;;
+              store)    E2E_APP="store" ;;
+              admin)    E2E_APP="admin" ;;
+              *)        echo "No E2E suite for ${APP}, skipping."; continue ;;
+            esac
+            echo "Running E2E for ${E2E_APP} (env=ci)"
+            node scripts/e2e.mjs --env ci --app "${E2E_APP}"
           done
 
       - name: Upload store Playwright report
