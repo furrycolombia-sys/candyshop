@@ -319,6 +319,15 @@ jobs:
             pnpm install --no-frozen-lockfile
           }
 
+      - name: Restore Next.js build cache
+        uses: actions/cache@v4
+        with:
+          path: apps/*/.next/cache
+          key: ${{ runner.os }}-nextjs-${{ hashFiles('pnpm-lock.yaml') }}-${{ hashFiles('apps/**/*.ts', 'apps/**/*.tsx') }}
+          restore-keys: |
+            ${{ runner.os }}-nextjs-${{ hashFiles('pnpm-lock.yaml') }}-
+            ${{ runner.os }}-nextjs-
+
       - name: Build applications (scoped)
         run: |
           set -euo pipefail
@@ -441,8 +450,24 @@ jobs:
             pnpm install --no-frozen-lockfile
           }
 
+      - name: Get Playwright version
+        id: playwright-version
+        run: echo "version=$(pnpm --filter store list @playwright/test --json | jq -r '.[0].devDependencies["@playwright/test"].version')" >> $GITHUB_OUTPUT
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ steps.playwright-version.outputs.version }}
+
       - name: Install Playwright browsers
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
         run: pnpm --filter store exec playwright install --with-deps chromium
+
+      - name: Install Playwright dependencies (if cached)
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        run: pnpm --filter store exec playwright install-deps chromium
 
       - name: Start Supabase
         run: pnpm supabase start
@@ -482,54 +507,6 @@ jobs:
         with:
           name: build-payments
           path: apps/payments/.next/
-
-      - name: Rebuild E2E apps locally
-        run: |
-          set -euo pipefail
-
-          SELECT_OUTPUT=$(bash scripts/select-workspaces.sh \
-            "${{ needs.changes.outputs.store }}" \
-            "${{ needs.changes.outputs.landing }}" \
-            "${{ needs.changes.outputs.payments }}" \
-            "${{ needs.changes.outputs.admin }}" \
-            "${{ needs.changes.outputs.auth }}" \
-            "${{ needs.changes.outputs.playground }}" \
-            "${{ needs.changes.outputs.packages }}" \
-            "${{ needs.changes.outputs.tooling }}" \
-            "${{ needs.changes.outputs.studio }}")
-
-          APPS=$(echo "$SELECT_OUTPUT" | grep '^APPS=' | cut -d= -f2-)
-          [ -z "$APPS" ] && echo "No workspace apps selected for E2E rebuild." && exit 0
-
-          BUILD_TARGETS="$APPS"
-          BUILT_APPS=""
-
-          # Store E2E starts the landing app too, so keep both builds in sync.
-          if echo " $APPS " | grep -q " store "; then
-            BUILD_TARGETS="$BUILD_TARGETS landing"
-          fi
-
-          for APP in $BUILD_TARGETS; do
-            case " $BUILT_APPS " in
-              *" $APP "*) continue ;;
-            esac
-
-            echo "Building ${APP} for E2E startup"
-            pnpm --filter "${APP}" build
-            BUILT_APPS="$BUILT_APPS $APP"
-          done
-        env:
-          CI: "true"
-          TARGET_ENV: dev
-          NEXT_PUBLIC_API_BASE_URL: /api
-          NEXT_PUBLIC_ENABLE_TEST_IDS: "true"
-          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.DEV_SUPABASE_URL }}
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.DEV_SUPABASE_ANON_KEY }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.DEV_SUPABASE_SERVICE_ROLE_KEY }}
-          SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID: ${{ secrets.SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID }}
-          SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET: ${{ secrets.SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET }}
-          SUPABASE_AUTH_EXTERNAL_DISCORD_CLIENT_ID: ${{ secrets.SUPABASE_AUTH_EXTERNAL_DISCORD_CLIENT_ID }}
-          SUPABASE_AUTH_EXTERNAL_DISCORD_SECRET: ${{ secrets.SUPABASE_AUTH_EXTERNAL_DISCORD_SECRET }}
 
       - name: Run E2E tests (scoped)
         run: |
