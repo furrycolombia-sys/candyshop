@@ -11,7 +11,7 @@
 -- Fix: add `or o.id = p_uuid` so both path patterns are covered.
 -- =============================================================================
 
-create or replace function public.is_receipt_delegate(p_uuid uuid)
+create or replace function public.is_receipt_delegate(p_session_id uuid)
 returns boolean
 language sql
 security definer
@@ -24,7 +24,7 @@ as $$
     join public.seller_admins sa
       on sa.admin_user_id = auth.uid()
       and sa.seller_id = o.seller_id
-    where o.checkout_session_id = p_uuid
-       or o.id = p_uuid
+    where o.checkout_session_id = p_session_id
+       or o.id = p_session_id
   );
 $$;
