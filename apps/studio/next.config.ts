@@ -1,3 +1,4 @@
+import path from "path";
 import type { NextConfig } from "next";
 import createNextIntlPlugin from "next-intl/plugin";
 
@@ -60,6 +61,7 @@ const nextConfig: NextConfig = {
   ...(isStandalone && {
     output: "standalone" as const,
     basePath: `${basePathPrefix}/studio`,
+    outputFileTracingRoot: path.join(__dirname, "../.."),
   }),
   // lucide-react v1.x ESM dist uses .ts imports in .js files — Turbopack
   // can't resolve those by default. This alias fixes it.

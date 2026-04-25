@@ -253,7 +253,7 @@ pm2 save
 # 3 times so V8 JIT-compiles the hot paths before real traffic arrives.
 # =============================================================================
 log "Waiting for container to be ready..."
-sleep 15
+sleep 60
 
 APPS=(
   "store:/store/health"

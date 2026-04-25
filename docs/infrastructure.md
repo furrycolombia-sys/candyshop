@@ -2,6 +2,8 @@
 
 > Everything needed to reproduce the production environment from scratch — whether migrating servers, recovering from failure, or moving to cloud.
 
+> **Production is down right now?** → [Production Incident Playbook](./production-incident-playbook.md)
+
 ## Architecture Overview
 
 ```
@@ -498,14 +500,25 @@ Production deploys via webhook never include test IDs.
 
 ## Troubleshooting
 
-| Symptom                    | Check                                                      |
-| -------------------------- | ---------------------------------------------------------- |
-| Site down                  | `docker ps` — is the container running?                    |
-| 502 from Cloudflare        | `curl localhost:9090/health` on the server                 |
-| Container crash loop       | `docker logs candyshop-prod --tail 50`                     |
-| Webhook not triggering     | `pm2 logs candyshop-webhook`                               |
-| Tunnel down                | `sudo systemctl status cloudflared`                        |
-| Can't SSH                  | Check cloudflared is running + `ssh.furrycolombia.com` DNS |
-| Build fails                | Check Docker disk space: `df -h` and `docker system prune` |
-| Auth redirect to localhost | Check Supabase Site URL setting in dashboard               |
-| OAuth provider error       | Check provider is enabled in Supabase dashboard            |
+| Symptom                                   | Check                                                                                                   |
+| ----------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| Site down                                 | `docker ps` — is the container running?                                                                 |
+| 502 from Cloudflare                       | `curl localhost:9090/health` on the server                                                              |
+| Container crash loop                      | `docker logs candyshop-prod --tail 50`                                                                  |
+| `Cannot find module 'next'`               | pnpm symlinks stripped by ZIP artifact — check `.npmrc` has `node-linker=hoisted`                       |
+| `docker COPY: not found` (static/public)  | Empty dirs dropped by ZIP — CI must touch placeholder files in `.next/static` and `public/`             |
+| Routes 404 but container is running       | `.dockerignore` may have excluded `.next/` — see [incident playbook](./production-incident-playbook.md) |
+| Tunnel down                               | `sudo systemctl status cloudflared`                                                                     |
+| Can't SSH from outside LAN                | Check cloudflared is running + `ssh.furrycolombia.com` DNS; fallback: `ssh furrycolombia@192.168.2.71`  |
+| Build fails with `open .ignored_auth`     | Windows NTFS pnpm markers — run `find . -name ".ignored_*" -delete` then retry                          |
+| Deploy hangs / `Broken pipe` during build | Cloudflare Access timeout — deploy script handles this via `nohup + poll`; do not change                |
+| Auth redirect to localhost                | Check Supabase Site URL setting in dashboard                                                            |
+| OAuth provider error                      | Check provider is enabled in Supabase dashboard                                                         |
+| Webhook not triggering                    | `pm2 logs candyshop-webhook`                                                                            |
+| Build fails (disk)                        | `df -h` and `docker system prune` on server                                                             |
+
+---
+
+## Related
+
+- [Production Incident Playbook](./production-incident-playbook.md) — Emergency procedures, root cause analysis of April 2026 outage
