@@ -4,6 +4,12 @@ node_modules
 apps/*/node_modules
 packages/*/node_modules
 
+# Re-include standalone runtime deps traced by Next.js build.
+# The .next/standalone/node_modules directory is required for production —
+# .dockerignore would otherwise strip it out during COPY.
+!apps/**/.next/standalone/node_modules
+!apps/**/.next/standalone/node_modules/**
+
 # Build outputs
 # NOTE: **/.next is intentionally NOT excluded — the production Dockerfile
 # copies pre-built .next/standalone and .next/static dirs from the build
