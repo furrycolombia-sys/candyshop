@@ -59,13 +59,13 @@ for (const k of keys) {
 EOF
 )
 
-# ── Windows: clean pnpm .ignored_api files before building ───────────────────
-# pnpm creates node_modules/.ignored_api with restricted NTFS permissions that
-# prevent Docker Desktop's build context sender from enumerating them — even
-# though apps/*/node_modules is excluded in .dockerignore, the sender must stat
-# every file before applying exclusion rules. The files are pnpm-internal
-# markers that pnpm recreates on the next install; deleting them is safe.
-find . -name ".ignored_api" -delete 2>/dev/null || true
+# ── Windows: clean pnpm .ignored_* files before building ─────────────────────
+# pnpm creates node_modules/.ignored_api, .ignored_auth, etc. with restricted
+# NTFS permissions that prevent Docker Desktop's build context sender from
+# enumerating them — even though apps/*/node_modules is excluded in
+# .dockerignore, the sender must stat every file before applying exclusion
+# rules. These files are pnpm-internal markers; deleting them is safe.
+find . -name ".ignored_*" -delete 2>/dev/null || true
 
 echo "Building Docker image: $IMAGE_NAME..."
 # shellcheck disable=SC2086
