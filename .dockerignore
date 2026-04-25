@@ -1,6 +1,8 @@
-# Dependencies
+# Dependencies — use specific paths, NOT **/node_modules.
+# .next/standalone/node_modules contains runtime deps that MUST be in the image.
 node_modules
-**/node_modules
+apps/*/node_modules
+packages/*/node_modules
 
 # Build outputs
 # NOTE: **/.next is intentionally NOT excluded — the production Dockerfile
