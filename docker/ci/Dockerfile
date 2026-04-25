@@ -1,9 +1,9 @@
 # =============================================================================
-# Candyshop — Smoke test image (all apps)
+# Candyshop — CI / local-dev image (all apps, built from source)
 # Builds all 7 apps in standalone mode, runs them behind nginx via supervisord.
-# Exposes port 80 (nginx) for smoke testing all routes.
-# Build: docker build -f docker/smoke/Dockerfile -t candyshop-health-check .
-# Run:   docker run -p 8088:80 candyshop-health-check
+# Exposes port 80 (nginx) for E2E testing all routes.
+# Build: docker build -f docker/ci/Dockerfile -t candyshop-ci .
+# Run:   docker run -p 8088:80 candyshop-ci
 # =============================================================================
 
 # ── Stage 1: install deps ─────────────────────────────────────────────────────
@@ -41,7 +41,7 @@ ARG NEXT_PUBLIC_PLAYGROUND_URL
 ARG NEXT_PUBLIC_LANDING_URL
 ARG NEXT_PUBLIC_PAYMENTS_URL
 ARG NEXT_PUBLIC_STUDIO_URL
-ARG NEXT_PUBLIC_BUILD_HASH=smoke
+ARG NEXT_PUBLIC_BUILD_HASH=ci
 ARG NEXT_PUBLIC_AUTH_HOST_URL
 ARG NEXT_PUBLIC_ENABLE_TEST_IDS
 ARG NEXT_PUBLIC_ENV_DEBUG

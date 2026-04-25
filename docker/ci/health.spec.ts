@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
 
 /**
- * Smoke tests — run against a built Docker container via docker-health-check.sh.
+ * Docker health tests — run against a built CI container via docker-health-check.sh.
  * CONTAINER_URL env var points at the running nginx proxy.
  * Just verifies each app responds with a browser-usable status (2xx or redirect).
  */

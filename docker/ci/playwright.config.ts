@@ -1,12 +1,12 @@
 import { defineConfig, devices } from "@playwright/test";
 
 /**
- * Playwright config for Docker smoke tests.
+ * Playwright config for Docker CI health tests.
  * Runs against an already-running container — no webServer setup needed.
  */
 export default defineConfig({
   testDir: ".",
-  testMatch: "**/smoke.spec.ts",
+  testMatch: "**/health.spec.ts",
   fullyParallel: false,
   retries: 0,
   workers: 1,
