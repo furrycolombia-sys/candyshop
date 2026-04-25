@@ -322,7 +322,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: docker/smoke/Dockerfile
+          file: docker/ci/Dockerfile
           push: true
           tags: ${{ steps.image.outputs.name }}
           cache-from: type=gha
