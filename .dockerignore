@@ -3,7 +3,10 @@ node_modules
 **/node_modules
 
 # Build outputs
-**/.next
+# NOTE: **/.next is intentionally NOT excluded — the production Dockerfile
+# copies pre-built .next/standalone and .next/static dirs from the build
+# context (rsynced by CI). Only the Next.js build cache is excluded.
+**/.next/cache
 **/dist
 **/build
 
