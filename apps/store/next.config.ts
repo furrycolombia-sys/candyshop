@@ -1,3 +1,4 @@
+import path from "path";
 import type { NextConfig } from "next";
 import createNextIntlPlugin from "next-intl/plugin";
 
@@ -60,6 +61,7 @@ const nextConfig: NextConfig = {
   ...(isStandalone && {
     output: "standalone" as const,
     basePath: `${basePathPrefix}/store`,
+    outputFileTracingRoot: path.join(__dirname, "../.."),
   }),
   images: {
     remotePatterns: [
