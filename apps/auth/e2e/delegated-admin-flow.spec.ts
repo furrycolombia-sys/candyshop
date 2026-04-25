@@ -45,6 +45,8 @@ test.describe.serial("Delegated admin purchase flow", () => {
   let delegate: TestUser;
   let productId: string;
 
+  const RECEIPT_FIXTURE = path.resolve(__dirname, "fixtures/test-receipt.png");
+
   test.beforeAll(async () => {
     resetCounter();
     seller = await createTestUser("delegSeller", SELLER_PERMISSIONS);
@@ -173,6 +175,27 @@ test.describe.serial("Delegated admin purchase flow", () => {
       .first();
     await labelInput.fill(fieldLabel);
 
+    // Require receipt upload and transfer number on all payment methods
+    const requiresReceiptCheckbox = page.getByTestId(
+      "payment-method-requires-receipt",
+    );
+    await requiresReceiptCheckbox.waitFor({
+      state: "visible",
+      timeout: ELEMENT_TIMEOUT_MS,
+    });
+    if (!(await requiresReceiptCheckbox.isChecked())) {
+      await requiresReceiptCheckbox.click();
+    }
+    await expect(requiresReceiptCheckbox).toBeChecked();
+
+    const requiresTransferCheckbox = page.getByTestId(
+      "payment-method-requires-transfer-number",
+    );
+    if (!(await requiresTransferCheckbox.isChecked())) {
+      await requiresTransferCheckbox.click();
+    }
+    await expect(requiresTransferCheckbox).toBeChecked();
+
     await snap(page, `${snapPrefix}-method-configured`);
 
     // Save the payment method and wait for the mutation to complete
@@ -279,6 +302,21 @@ test.describe.serial("Delegated admin purchase flow", () => {
       .fill("NEQUI-DELEG-001");
     await snap(page, "buyer-field-filled");
 
+    // Fill transfer number and upload receipt
+    const transferInput = page.getByTestId("transfer-number-input");
+    await expect(transferInput).toBeVisible({ timeout: ELEMENT_TIMEOUT_MS });
+    await transferInput.fill("NEQUI-TXN-DELEG-001");
+
+    const fileInput = page.getByTestId("receipt-file-input");
+    await fileInput.setInputFiles(RECEIPT_FIXTURE);
+    await page.waitForTimeout(MUTATION_WAIT_MS);
+
+    const receiptPreview = page.getByTestId("receipt-preview");
+    await expect(receiptPreview).toBeVisible({
+      timeout: LONG_OPERATION_TIMEOUT_MS,
+    });
+    await snap(page, "buyer-receipt-uploaded");
+
     // Submit payment
     const submitBtn = page.getByTestId(/^submit-payment-/).first();
     await expect(submitBtn).toBeEnabled({ timeout: ELEMENT_TIMEOUT_MS });
@@ -372,6 +410,19 @@ test.describe.serial("Delegated admin purchase flow", () => {
     const orderId = orderTestId!.replace("received-order-", "");
     await snap(page, "delegate-order-found");
 
+    // Verify buyer's receipt data is visible to the delegate
+    const receiptViewer = page.getByTestId("receipt-viewer").first();
+    await expect(receiptViewer).toBeVisible({ timeout: ELEMENT_TIMEOUT_MS });
+
+    const receiptTransfer = page.getByTestId("receipt-transfer-number").first();
+    await expect(receiptTransfer).toBeVisible({ timeout: ELEMENT_TIMEOUT_MS });
+    await expect(receiptTransfer).not.toBeEmpty();
+
+    const receiptLink = page.getByTestId("receipt-view-link").first();
+    await expect(receiptLink).toBeVisible({ timeout: ELEMENT_TIMEOUT_MS });
+    await expect(page.getByTestId("receipt-none").first()).not.toBeVisible();
+    await snap(page, "delegate-receipt-visible");
+
     // Click request evidence button
     await page.getByTestId(`order-evidence-${orderId}`).click();
 
@@ -424,8 +475,15 @@ test.describe.serial("Delegated admin purchase flow", () => {
     const orderId = formTestId!.replace("resubmit-form-", "");
 
     // Fill new transfer number
-    const transferInput = page.getByTestId(`resubmit-transfer-${orderId}`);
-    await transferInput.fill("NEQUI-RESUBMIT-001");
+    const resubmitTransferInput = page.getByTestId(
+      `resubmit-transfer-${orderId}`,
+    );
+    await resubmitTransferInput.fill("NEQUI-RESUBMIT-001");
+
+    // Upload a new receipt
+    const resubmitFileInput = resubmitForm.locator('input[type="file"]');
+    await resubmitFileInput.setInputFiles(RECEIPT_FIXTURE);
+    await page.waitForTimeout(MUTATION_WAIT_MS);
     await snap(page, "buyer-resubmit-filled");
 
     // Submit resubmission
@@ -464,6 +522,21 @@ test.describe.serial("Delegated admin purchase flow", () => {
     const orderTestId = await orderElement.getAttribute("data-testid");
     const orderId = orderTestId!.replace("received-order-", "");
     await snap(page, "delegate-order-resubmitted");
+
+    // Verify buyer's resubmitted receipt is visible to the delegate
+    const receiptViewer7 = page.getByTestId("receipt-viewer").first();
+    await expect(receiptViewer7).toBeVisible({ timeout: ELEMENT_TIMEOUT_MS });
+
+    const receiptTransfer7 = page
+      .getByTestId("receipt-transfer-number")
+      .first();
+    await expect(receiptTransfer7).toBeVisible({ timeout: ELEMENT_TIMEOUT_MS });
+    await expect(receiptTransfer7).not.toBeEmpty();
+
+    const receiptLink7 = page.getByTestId("receipt-view-link").first();
+    await expect(receiptLink7).toBeVisible({ timeout: ELEMENT_TIMEOUT_MS });
+    await expect(page.getByTestId("receipt-none").first()).not.toBeVisible();
+    await snap(page, "delegate-resubmitted-receipt-visible");
 
     // Click approve
     await page.getByTestId(`order-approve-${orderId}`).click();

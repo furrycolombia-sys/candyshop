@@ -180,18 +180,18 @@ log "Starting applications with PM2..."
 _STEP_START=$(date +%s)
 
 APPS=(
-  "auth:5000"
-  "store:5001"
-  "admin:5002"
-  "playground:5003"
-  "landing:5004"
-  "payments:5005"
-  "studio:5006"
+  "auth:5000:/auth/health"
+  "store:5001:/store/health"
+  "admin:5002:/admin/health"
+  "playground:5003:/playground/health"
+  "landing:5004:/health"
+  "payments:5005:/payments/health"
+  "studio:5006:/studio/health"
 )
 
 for APP_ENTRY in "${APPS[@]}"; do
   APP_NAME="${APP_ENTRY%%:*}"
-  APP_PORT="${APP_ENTRY##*:}"
+  _rest="${APP_ENTRY#*:}"; APP_PORT="${_rest%%:*}"
   PM2_NAME="candyshop-${APP_NAME}"
 
   log "Starting $PM2_NAME on port $APP_PORT..."
@@ -324,9 +324,9 @@ FAILED=0
 HEALTHY=0
 for APP_ENTRY in "${APPS[@]}"; do
   APP_NAME="${APP_ENTRY%%:*}"
-  APP_PORT="${APP_ENTRY##*:}"
+  _rest="${APP_ENTRY#*:}"; APP_PORT="${_rest%%:*}"; APP_HEALTH_PATH="${_rest#*:}"
 
-  if curl -sf --max-time 15 "http://localhost:${APP_PORT}" > /dev/null 2>&1; then
+  if curl -sf --max-time 15 "http://localhost:${APP_PORT}${APP_HEALTH_PATH}" > /dev/null 2>&1; then
     log "  ✓ $APP_NAME (port $APP_PORT) — accepting connections"
     HEALTHY=$(( HEALTHY + 1 ))
   else
