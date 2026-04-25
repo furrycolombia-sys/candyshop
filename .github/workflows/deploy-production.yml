@@ -87,6 +87,22 @@ jobs:
           SUPABASE_AUTH_EXTERNAL_DISCORD_SECRET: ${{ secrets.SUPABASE_AUTH_EXTERNAL_DISCORD_SECRET }}
           NEXT_PUBLIC_APP_VERSION: ${{ steps.app_version.outputs.value }}
 
+      - name: Ensure artifact directories are non-empty
+        # actions/upload-artifact@v4 uses ZIP format which silently drops empty
+        # directories. If an app has no static assets, its .next/static dir is
+        # empty after build and won't be included in the artifact. When the
+        # deploy job downloads and rsyncs these artifacts, rsync --delete then
+        # removes the missing dirs from the server, causing "docker COPY: not
+        # found" at build time. A placeholder file ensures the dir survives ZIP
+        # round-trip and rsync.
+        run: |
+          for app in store admin auth landing payments studio playground; do
+            mkdir -p "apps/$app/.next/static"
+            touch "apps/$app/.next/static/.artifact-placeholder"
+            mkdir -p "apps/$app/public"
+            touch "apps/$app/public/.artifact-placeholder"
+          done
+
       - name: Upload store build artifacts
         uses: actions/upload-artifact@v4
         with:
