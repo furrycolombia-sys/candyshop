@@ -1,0 +1,2 @@
+@echo off
+powershell -ExecutionPolicy Bypass -Command "$task = Get-ScheduledTask -TaskName 'dev-tunnel' -ErrorAction SilentlyContinue; if (-not $task) { Write-Host 'Dev tunnel task not found! Run install-dev-tunnel.ps1 first.' -ForegroundColor Red } elseif ($task.State -eq 'Running') { Stop-ScheduledTask -TaskName 'dev-tunnel'; Write-Host 'Dev tunnel stopped!' -ForegroundColor Yellow } else { Start-ScheduledTask -TaskName 'dev-tunnel'; Write-Host 'Dev tunnel started!' -ForegroundColor Green }; Start-Sleep -Seconds 2"
