@@ -4,12 +4,6 @@ node_modules
 apps/*/node_modules
 packages/*/node_modules
 
-# Re-include standalone runtime deps traced by Next.js build.
-# The .next/standalone/node_modules directory is required for production —
-# .dockerignore would otherwise strip it out during COPY.
-!apps/**/.next/standalone/node_modules
-!apps/**/.next/standalone/node_modules/**
-
 # Build outputs
 # NOTE: **/.next is intentionally NOT excluded — the production Dockerfile
 # copies pre-built .next/standalone and .next/static dirs from the build
@@ -17,6 +11,14 @@ packages/*/node_modules
 **/.next/cache
 **/dist
 **/build
+
+# Re-include standalone runtime deps traced by Next.js build.
+# MUST come after **/dist and **/build — last matching rule wins in .dockerignore.
+# node_modules above excludes standalone/node_modules; **/dist then re-excludes
+# next/dist/, react/cjs/, etc. inside it. These final re-includes restore all of
+# standalone/node_modules so the production container can find 'next', 'react', etc.
+!apps/**/.next/standalone/node_modules
+!apps/**/.next/standalone/node_modules/**
 
 # Dev/test artifacts
 **/.turbo

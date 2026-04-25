@@ -15,7 +15,7 @@ REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 SELECT_WORKSPACES="scripts/select-workspaces.sh"
 CI_WORKFLOW=".github/workflows/ci.yml"
 ROOT_PACKAGE_JSON="package.json"
-DOCKERFILE="docker/smoke/Dockerfile"
+DOCKERFILE="docker/ci/Dockerfile"
 NGINX_CONF="docker/prod/nginx.conf"
 
 errors=()
