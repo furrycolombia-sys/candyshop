@@ -134,7 +134,7 @@ console.log(`   tunnel:    ${tunnel}\n`);
 const buildArgs = [
   "build",
   "-f",
-  "docker/smoke/Dockerfile",
+  "docker/ci/Dockerfile",
   "-t",
   imageName,
   ...buildArgFlags,

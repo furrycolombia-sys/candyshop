@@ -79,7 +79,7 @@ function buildDockerArgs({ imageName, buildArgValues, noCache = false }) {
   return [
     "build",
     "-f",
-    "docker/smoke/Dockerfile",
+    "docker/ci/Dockerfile",
     "-t",
     imageName,
     ...buildArgFlags,
@@ -302,10 +302,10 @@ describe("buildDockerArgs — example tests", () => {
     expect(args[args.length - 1]).toBe(".");
   });
 
-  it("uses -f docker/smoke/Dockerfile", () => {
+  it("uses -f docker/ci/Dockerfile", () => {
     const args = buildDockerArgs({ imageName: "img", buildArgValues: {} });
     const fIdx = args.indexOf("-f");
-    expect(args[fIdx + 1]).toBe("docker/smoke/Dockerfile");
+    expect(args[fIdx + 1]).toBe("docker/ci/Dockerfile");
   });
 });
 
