@@ -1,6 +1,8 @@
-# Dependencies
+# Dependencies — use specific paths, NOT **/node_modules.
+# .next/standalone/node_modules contains runtime deps that MUST be in the image.
 node_modules
-**/node_modules
+apps/*/node_modules
+packages/*/node_modules
 
 # Build outputs
 # NOTE: **/.next is intentionally NOT excluded — the production Dockerfile
@@ -9,6 +11,14 @@ node_modules
 **/.next/cache
 **/dist
 **/build
+
+# Re-include standalone runtime deps traced by Next.js build.
+# MUST come after **/dist and **/build — last matching rule wins in .dockerignore.
+# node_modules above excludes standalone/node_modules; **/dist then re-excludes
+# next/dist/, react/cjs/, etc. inside it. These final re-includes restore all of
+# standalone/node_modules so the production container can find 'next', 'react', etc.
+!apps/**/.next/standalone/node_modules
+!apps/**/.next/standalone/node_modules/**
 
 # Dev/test artifacts
 **/.turbo
