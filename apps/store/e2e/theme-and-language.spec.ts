@@ -39,7 +39,6 @@ test.describe("Theme persistence across apps", () => {
     page,
   }) => {
     await page.goto(`${STORE_URL}/en`);
-    await page.waitForLoadState("networkidle");
 
     // Start in light mode
     await expect(page.locator("html")).not.toHaveClass(/dark/);
@@ -58,7 +57,6 @@ test.describe("Theme persistence across apps", () => {
 
     // Navigate to landing
     await page.goto(`${LANDING_URL}/en`);
-    await page.waitForLoadState("networkidle");
 
     // Dark mode persists
     await expect(page.locator("html")).toHaveClass(/dark/);
@@ -66,7 +64,6 @@ test.describe("Theme persistence across apps", () => {
 
   test("light theme persists after toggling back", async ({ page }) => {
     await page.goto(`${STORE_URL}/en`);
-    await page.waitForLoadState("networkidle");
 
     // Go dark
     await page.getByTestId("theme-toggle").click();
@@ -83,7 +80,6 @@ test.describe("Theme persistence across apps", () => {
 
     // Persists on landing
     await page.goto(`${LANDING_URL}/en`);
-    await page.waitForLoadState("networkidle");
     await expect(page.locator("html")).not.toHaveClass(/dark/);
   });
 });
@@ -97,7 +93,6 @@ test.describe("Language persistence across apps", () => {
     page,
   }) => {
     await page.goto(`${STORE_URL}/en`);
-    await page.waitForLoadState("networkidle");
 
     // Nav exists
     await expect(page.getByTestId("app-navigation")).toBeVisible();
@@ -105,6 +100,12 @@ test.describe("Language persistence across apps", () => {
     // Switch to ES
     await page.getByTestId("locale-switch-es").click();
     await page.waitForURL(/\/es/);
+    // Wait for the locale switcher to reflect the new locale — confirms the
+    // React navigation cycle (including setCookie) has fully completed.
+    await expect(page.getByTestId("locale-switch-es")).toHaveAttribute(
+      "aria-checked",
+      "true",
+    );
 
     // NEXT_LOCALE cookie set
     const cookies = await page.context().cookies();
@@ -114,7 +115,6 @@ test.describe("Language persistence across apps", () => {
 
     // Navigate to landing in Spanish
     await page.goto(`${LANDING_URL}/es`);
-    await page.waitForLoadState("networkidle");
 
     // Nav links visible (Spanish locale active)
     await expect(page.getByTestId("nav-link-landing")).toBeVisible();
@@ -123,7 +123,6 @@ test.describe("Language persistence across apps", () => {
 
   test("cross-app nav links include current locale", async ({ page }) => {
     await page.goto(`${STORE_URL}/es`);
-    await page.waitForLoadState("networkidle");
 
     const href = await page
       .getByTestId("nav-link-landing")
@@ -140,7 +139,6 @@ test.describe("Theme + Language combined", () => {
     await clearNonAuthCookies(context);
 
     await page.goto(`${STORE_URL}/en`);
-    await page.waitForLoadState("networkidle");
 
     // Dark theme
     await page.getByTestId("theme-toggle").click();
@@ -152,7 +150,6 @@ test.describe("Theme + Language combined", () => {
 
     // Navigate to landing
     await page.goto(`${LANDING_URL}/es`);
-    await page.waitForLoadState("networkidle");
 
     // Both persist
     await expect(page.locator("html")).toHaveClass(/dark/);
