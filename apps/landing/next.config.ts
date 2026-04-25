@@ -1,3 +1,4 @@
+import path from "path";
 import type { NextConfig } from "next";
 import createNextIntlPlugin from "next-intl/plugin";
 
@@ -64,6 +65,7 @@ const nextConfig: NextConfig = {
   ...(process.env.STANDALONE === "true" && {
     output: "standalone" as const,
     ...(basePathPrefix && { basePath: basePathPrefix }),
+    outputFileTracingRoot: path.join(__dirname, "../.."),
   }),
   transpilePackages: ["api", "ui", "shared", "@monorepo/app-components"],
   async headers() {

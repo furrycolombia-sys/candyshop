@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Docker health check — builds the image, runs it on a random port,
 # waits for /health, then cleans up.
-# Used by: .husky/pre-push (when deploy files change) + CI docker-smoke-tests job.
+# Used by: .husky/pre-push (when deploy files change).
 
 set -euo pipefail
 
@@ -59,11 +59,19 @@ for (const k of keys) {
 EOF
 )
 
+# ── Windows: clean pnpm .ignored_* files before building ─────────────────────
+# pnpm creates node_modules/.ignored_api, .ignored_auth, etc. with restricted
+# NTFS permissions that prevent Docker Desktop's build context sender from
+# enumerating them — even though apps/*/node_modules is excluded in
+# .dockerignore, the sender must stat every file before applying exclusion
+# rules. These files are pnpm-internal markers; deleting them is safe.
+find . -name ".ignored_*" -delete 2>/dev/null || true
+
 echo "Building Docker image: $IMAGE_NAME..."
 # shellcheck disable=SC2086
 docker build \
   -t "$IMAGE_NAME" \
-  -f docker/smoke/Dockerfile \
+  -f docker/ci/Dockerfile \
   $BUILD_ARGS \
   . || { echo "ERROR: Docker build failed."; exit 1; }
 
@@ -95,11 +103,11 @@ until curl -sf "http://localhost:${PORT}/health" > /dev/null 2>&1; do
 done
 echo "Container is healthy."
 
-# ── 5. E2E smoke tests against the container ──────────────────────────────────
-echo "Running E2E smoke tests against container..."
+# ── 5. Docker health tests against the container ─────────────────────────────
+echo "Running Docker health tests against container..."
 CONTAINER_URL="http://localhost:${PORT}" \
-  pnpm --filter store exec playwright test --config="$(pwd)/docker/smoke/playwright.config.ts" || {
-    echo "ERROR: E2E smoke tests failed."
+  pnpm --filter store exec playwright test --config="$(pwd)/docker/ci/playwright.config.ts" || {
+    echo "ERROR: Docker health tests failed."
     docker logs "$CONTAINER_NAME"
     exit 1
   }
