@@ -179,7 +179,7 @@ jobs:
   # Sequential after build:
   e2e-tests: # playwright tests (uses pre-built artifacts via next start)
   # Conditional:
-  docker-smoke-tests: # only when Dockerfile/docker/ changes detected
+  docker-build: # builds docker/ci/Dockerfile image; used by e2e-tests
 ```
 
 ### pr-checks.yml (PR-specific)
