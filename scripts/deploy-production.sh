@@ -3,12 +3,16 @@ set -euo pipefail
 
 # =============================================================================
 # Production Deployment Script for hestia.local
-# Runs ON the server via SSH from GitHub Actions
+# Runs ON the server via SSH from GitHub Actions.
+#
+# CI builds all 7 apps, rsyncs .next/ dirs to this server, then runs this
+# script. This script rebuilds the Docker image from those pre-built artifacts
+# and hot-swaps the running container.
 # =============================================================================
 
 # ─── Cloudflare Access SSH disconnect guard ───────────────────────────────────
-# Building 7 Next.js apps takes 3-4 minutes. The Cloudflare Access WebSocket
-# proxy drops idle TCP connections before the build finishes, causing
+# Rebuilding the Docker image takes 1-2 minutes. The Cloudflare Access WebSocket
+# proxy drops idle TCP connections before it finishes, causing
 # "client_loop: send disconnect: Broken pipe" in CI.
 #
 # Fix: on first invocation, re-launch ourselves detached from the SSH session
@@ -68,12 +72,12 @@ print(json.dumps(d))" "$TELEGRAM_CHAT_ID" "$text" "$thread_id") || return 0
     -d "$payload" >/dev/null 2>&1 || true
 }
 
-# Regular channel — deploy steps, recoveries
+# Regular channel — deploy steps, recoveries, info
 notify_telegram() {
   _telegram_send "${TELEGRAM_THREAD_ID:-}" "$1"
 }
 
-# Critical channel — failures, health warnings, warm-up errors
+# Critical channel — DOWN alerts, resource warnings, failures
 notify_telegram_critical() {
   _telegram_send "${TELEGRAM_CRITICAL_THREAD_ID:-${TELEGRAM_THREAD_ID:-}}" "$1"
 }
@@ -110,6 +114,8 @@ trap _on_exit EXIT
 DEPLOY_DIR="/home/furrycolombia/candyshop"
 REPO_URL="${REPO_URL:-}"
 BRANCH="${BRANCH:-main}"
+CONTAINER_NAME="${SITE_PROD_CONTAINER_NAME:-candyshop-prod}"
+HOST_PORT="${HOST_PORT:-9090}"
 
 # Colors
 RED='\033[0;31m'
@@ -126,7 +132,7 @@ export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && source "$NVM_DIR/nvm.sh"
 nvm use 22 --silent || err "Node 22 not available via nvm"
 
-log "Node $(node --version) | pnpm $(pnpm --version) | PM2 $(pm2 --version)"
+log "Node $(node --version) | PM2 $(pm2 --version)"
 notify_telegram "$(printf '🚀 <b>Deploy started</b>\nBranch: <code>%s</code>' "$BRANCH")"
 
 # =============================================================================
@@ -150,17 +156,14 @@ DEPLOY_COMMIT=$(git log --format="%h %s" -1 2>/dev/null || true)
 log "Checked out $DEPLOY_COMMIT"
 notify_telegram "$(printf '📥 <b>Code pulled</b> (%s)\nCommit: <code>%s</code>' "$(_dur $_STEP_START)" "$DEPLOY_COMMIT")"
 
-# Remove .secrets — builds now happen in CI, not on this server.
-# The file is gitignored so git clean -fd doesn't touch it; delete explicitly
-# so it doesn't linger on disk and expand the attack surface.
+# Remove .secrets — builds happen in CI, not on this server.
 rm -f "$DEPLOY_DIR/.secrets"
 
 # =============================================================================
 # Load runtime env vars (written by CI, deleted after deploy)
-# Build artifacts are pre-built in CI and rsync'd to this server before this
-# script runs — NEXT_PUBLIC_* vars are already baked into the JS bundles.
-# We source the env file here so PM2 processes inherit runtime-only secrets
-# (SUPABASE_SERVICE_ROLE_KEY, Telegram tokens, etc.).
+# Build artifacts are pre-built in CI and rsync'd here before this script runs.
+# We source the env file so the container and watcher inherit runtime-only
+# secrets (SUPABASE_SERVICE_ROLE_KEY, Telegram tokens, etc.).
 # =============================================================================
 ENV_FILE="${ENV_FILE:-/tmp/.candyshop-build.env}"
 if [ -f "$ENV_FILE" ]; then
@@ -170,173 +173,109 @@ if [ -f "$ENV_FILE" ]; then
   source "$ENV_FILE"
   set +o allexport
 else
-  warn "No env file found at $ENV_FILE — PM2 processes may lack runtime secrets"
+  warn "No env file found at $ENV_FILE — container may lack runtime secrets"
 fi
 
 # =============================================================================
-# Start/restart apps with PM2
+# Build Docker image from CI-rsynced pre-built artifacts
+# CI already ran pnpm build; we just wrap the .next/ dirs in a Docker image.
 # =============================================================================
-log "Starting applications with PM2..."
+log "Building Docker image from pre-built artifacts..."
 _STEP_START=$(date +%s)
+IMAGE_TAG="candyshop-prod:$(git rev-parse --short HEAD 2>/dev/null || date +%s)"
 
-APPS=(
-  "auth:5000:/auth/health"
-  "store:5001:/store/health"
-  "admin:5002:/admin/health"
-  "playground:5003:/playground/health"
-  "landing:5004:/health"
-  "payments:5005:/payments/health"
-  "studio:5006:/studio/health"
-)
+docker build \
+  -f "$DEPLOY_DIR/docker/prod/Dockerfile" \
+  -t "$IMAGE_TAG" \
+  "$DEPLOY_DIR" \
+  || err "Docker image build failed"
 
-for APP_ENTRY in "${APPS[@]}"; do
-  APP_NAME="${APP_ENTRY%%:*}"
-  _rest="${APP_ENTRY#*:}"; APP_PORT="${_rest%%:*}"
-  PM2_NAME="candyshop-${APP_NAME}"
+log "Image built: $IMAGE_TAG (took $(_dur $_STEP_START))"
+notify_telegram "$(printf '🐳 <b>Image built</b> (%s)\n<code>%s</code>' "$(_dur $_STEP_START)" "$IMAGE_TAG")"
 
-  log "Starting $PM2_NAME on port $APP_PORT..."
+# =============================================================================
+# Hot-swap the container (traffic resumes within seconds of docker run)
+# =============================================================================
+log "Restarting container '$CONTAINER_NAME'..."
+_STEP_START=$(date +%s)
+docker rm -f "$CONTAINER_NAME" 2>/dev/null || true
+docker run -d \
+  --name "$CONTAINER_NAME" \
+  --restart unless-stopped \
+  -p "${HOST_PORT}:80" \
+  -e "SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY:-}" \
+  -e "TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN:-}" \
+  -e "TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID:-}" \
+  -e "TELEGRAM_THREAD_ID=${TELEGRAM_THREAD_ID:-}" \
+  -e "TELEGRAM_CRITICAL_THREAD_ID=${TELEGRAM_CRITICAL_THREAD_ID:-}" \
+  "$IMAGE_TAG" \
+  || err "Docker container start failed"
 
-  # Stop existing instance if running
-  pm2 delete "$PM2_NAME" 2>/dev/null || true
+log "Container started (took $(_dur $_STEP_START))"
 
-  STANDALONE_DIR="$DEPLOY_DIR/apps/$APP_NAME/.next/standalone"
+# Keep only the 2 most recent candyshop-prod images; prune older ones
+docker images --format '{{.Repository}}:{{.Tag}}' \
+  | grep '^candyshop-prod:' \
+  | sort -r \
+  | tail -n +3 \
+  | xargs -r docker rmi 2>/dev/null || true
 
-  # Locate server.js — Next.js places it at standalone/server.js when
-  # outputFileTracingRoot is the app root, or standalone/apps/<name>/server.js
-  # when outputFileTracingRoot is the monorepo root (auto-detected in monorepos).
-  SERVER_JS=$(find "$STANDALONE_DIR" -name "server.js" -maxdepth 4 2>/dev/null | head -1)
-  if [ -z "$SERVER_JS" ]; then
-    err "Cannot find server.js for $APP_NAME in $STANDALONE_DIR"
-  fi
-  SERVER_DIR=$(dirname "$SERVER_JS")
-  log "server.js found at: $SERVER_JS"
-
-  # Copy static assets into the directory that server.js lives in
-  cp -r "$DEPLOY_DIR/apps/$APP_NAME/.next/static" "$SERVER_DIR/.next/static" 2>/dev/null || true
-  cp -r "$DEPLOY_DIR/apps/$APP_NAME/public" "$SERVER_DIR/public" 2>/dev/null || true
-
-  # Start standalone server.js with PM2
-  PORT=$APP_PORT HOSTNAME=0.0.0.0 pm2 start "$SERVER_JS" \
-    --name "$PM2_NAME"
-done
-
-log "Starting health watcher..."
-pm2 delete candyshop-watcher 2>/dev/null || true
-pm2 start "$DEPLOY_DIR/docker/watcher.mjs" \
-  --name candyshop-watcher \
-  --env "TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN:-},TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID:-},TELEGRAM_THREAD_ID=${TELEGRAM_THREAD_ID:-}"
-
-# Save PM2 process list for auto-restart on reboot
-pm2 save
-
-log "All applications started!"
-pm2 list
-notify_telegram "$(printf '🔄 <b>%d apps restarted with PM2</b> (%s)' "${#APPS[@]}" "$(_dur $_STEP_START)")"
+notify_telegram "$(printf '🔄 <b>Container restarted</b> (%s)' "$(_dur $_STEP_START)")"
 
 # Clean up env file — secrets must not persist on disk
 rm -f "$ENV_FILE"
 
 # =============================================================================
-# Deploy Nginx config
+# Start host-side health watcher
+# WATCHER_NGINX_PORT makes it check apps via Docker nginx (the real traffic path:
+#   Cloudflare → Hestia nginx → Docker nginx → apps)
+# rather than internal ports, so alerts reflect what users actually experience.
 # =============================================================================
-log "Configuring Nginx reverse proxy..."
+log "Starting health watcher..."
+pm2 delete candyshop-watcher 2>/dev/null || true
+WATCHER_NGINX_PORT=$HOST_PORT pm2 start "$DEPLOY_DIR/docker/watcher.mjs" \
+  --name candyshop-watcher
 
-NGINX_CONF="/home/furrycolombia/candyshop-nginx.conf"
-cat > "$NGINX_CONF" << 'NGINX_EOF'
-# Candyshop production reverse proxy
-# Included by Hestia's nginx config for store.furrycolombia.com
-
-upstream cs_auth    { server 127.0.0.1:5000; keepalive 16; }
-upstream cs_store   { server 127.0.0.1:5001; keepalive 16; }
-upstream cs_admin   { server 127.0.0.1:5002; keepalive 16; }
-upstream cs_play    { server 127.0.0.1:5003; keepalive 16; }
-upstream cs_landing { server 127.0.0.1:5004; keepalive 16; }
-upstream cs_pay     { server 127.0.0.1:5005; keepalive 16; }
-upstream cs_studio  { server 127.0.0.1:5006; keepalive 16; }
-
-map $http_upgrade $allowed_upgrade {
-    default "";
-    "websocket" "websocket";
-}
-map $http_upgrade $connection_upgrade {
-    default "";
-    "websocket" "upgrade";
-}
-
-server {
-    listen 9090;
-    server_name _;
-
-    proxy_buffer_size          16k;
-    proxy_buffers              8 16k;
-    proxy_busy_buffers_size    32k;
-    large_client_header_buffers 8 32k;
-
-    gzip on;
-    gzip_vary on;
-    gzip_proxied any;
-    gzip_comp_level 6;
-    gzip_types text/plain text/css text/xml application/json application/javascript application/rss+xml application/atom+xml image/svg+xml;
-
-    location /store   { proxy_pass http://cs_store;   include /home/furrycolombia/candyshop-proxy.inc; }
-    location /admin   { proxy_pass http://cs_admin;   include /home/furrycolombia/candyshop-proxy.inc; }
-    location /auth    { proxy_pass http://cs_auth;    include /home/furrycolombia/candyshop-proxy.inc; }
-    location /payments { proxy_pass http://cs_pay;    include /home/furrycolombia/candyshop-proxy.inc; }
-    location /playground { proxy_pass http://cs_play; include /home/furrycolombia/candyshop-proxy.inc; }
-    location /studio  { proxy_pass http://cs_studio;  include /home/furrycolombia/candyshop-proxy.inc; }
-    location /        { proxy_pass http://cs_landing; include /home/furrycolombia/candyshop-proxy.inc; }
-
-    location = /health {
-        access_log off;
-        return 200 'OK';
-        add_header Content-Type text/plain;
-    }
-}
-NGINX_EOF
-
-# Shared proxy headers snippet
-cat > /home/furrycolombia/candyshop-proxy.inc << 'PROXY_EOF'
-proxy_http_version 1.1;
-proxy_set_header Upgrade $allowed_upgrade;
-proxy_set_header Connection $connection_upgrade;
-proxy_set_header Host $http_host;
-proxy_set_header X-Forwarded-Host $http_host;
-proxy_set_header X-Real-IP $remote_addr;
-proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-proxy_set_header X-Forwarded-Proto $scheme;
-proxy_cache_bypass $http_upgrade;
-PROXY_EOF
-
-log "Nginx config written to $NGINX_CONF"
-log "NOTE: Hestia domain config for store.furrycolombia.com must proxy to port 9090"
+# Persist watcher across reboots
+pm2 save
 
 # =============================================================================
-# Health check + warm-up
+# Health check via Docker nginx
 # After PM2 starts, V8 is cold — the first real user request would pay a
 # compilation penalty on every route. We hit each app's key localized pages
 # 3 times so V8 JIT-compiles the hot paths before real traffic arrives.
 # =============================================================================
-log "Waiting for all apps to accept connections..."
-sleep 10
+log "Waiting for container to be ready..."
+sleep 15
+
+APPS=(
+  "store:/store/health"
+  "auth:/auth/health"
+  "admin:/admin/health"
+  "playground:/playground/health"
+  "landing:/en"
+  "payments:/payments/health"
+  "studio:/studio/health"
+)
 
 # --- phase 1: liveness check ---
 FAILED=0
 HEALTHY=0
 for APP_ENTRY in "${APPS[@]}"; do
   APP_NAME="${APP_ENTRY%%:*}"
-  _rest="${APP_ENTRY#*:}"; APP_PORT="${_rest%%:*}"; APP_HEALTH_PATH="${_rest#*:}"
+  APP_HEALTH_PATH="${APP_ENTRY#*:}"
 
-  if curl -sf --max-time 15 "http://localhost:${APP_PORT}${APP_HEALTH_PATH}" > /dev/null 2>&1; then
-    log "  ✓ $APP_NAME (port $APP_PORT) — accepting connections"
+  if curl -sf --max-time 15 "http://localhost:${HOST_PORT}${APP_HEALTH_PATH}" > /dev/null 2>&1; then
+    log "  ✓ $APP_NAME — healthy"
     HEALTHY=$(( HEALTHY + 1 ))
   else
-    warn "  ✗ $APP_NAME (port $APP_PORT) — not responding (check: pm2 logs $APP_NAME)"
+    warn "  ✗ $APP_NAME — not responding"
     FAILED=$((FAILED + 1))
   fi
 done
 
 if [ "$FAILED" -gt 0 ]; then
-  notify_telegram_critical "$(printf '⚠️ <b>Health check: %d/%d apps not responding</b>\nDeploy complete with warnings.\n<i>Check: pm2 logs</i>' "$FAILED" "${#APPS[@]}")"
+  notify_telegram_critical "$(printf '⚠️ <b>Health check: %d/%d apps not responding</b>\nDeploy complete with warnings.\n<i>Check: docker logs %s</i>' "$FAILED" "${#APPS[@]}" "$CONTAINER_NAME")"
   warn "$FAILED app(s) not responding. Skipping warm-up."
   log "Deployment complete (with warnings)."
   exit 0
@@ -365,35 +304,31 @@ warm_url() {
   fi
 }
 
-warm_url "http://localhost:5004/"         &  # landing root
-warm_url "http://localhost:5004/en"       &
-warm_url "http://localhost:5004/es"       &
-
-warm_url "http://localhost:5001/store"    &  # store
-warm_url "http://localhost:5001/store/en" &
-warm_url "http://localhost:5001/store/es" &
-
-warm_url "http://localhost:5005/payments"    &  # payments
-warm_url "http://localhost:5005/payments/en" &
-warm_url "http://localhost:5005/payments/es" &
-
-warm_url "http://localhost:5000/auth"    &  # auth
-warm_url "http://localhost:5000/auth/en" &
-
-warm_url "http://localhost:5002/admin"    &  # admin
-warm_url "http://localhost:5002/admin/en" &
-
-warm_url "http://localhost:5006/studio"    &  # studio
-warm_url "http://localhost:5006/studio/en" &
-
+BASE="http://localhost:${HOST_PORT}"
+warm_url "${BASE}/"            &
+warm_url "${BASE}/en"          &
+warm_url "${BASE}/es"          &
+warm_url "${BASE}/store"       &
+warm_url "${BASE}/store/en"    &
+warm_url "${BASE}/store/es"    &
+warm_url "${BASE}/payments"    &
+warm_url "${BASE}/payments/en" &
+warm_url "${BASE}/payments/es" &
+warm_url "${BASE}/auth"        &
+warm_url "${BASE}/auth/en"     &
+warm_url "${BASE}/admin"       &
+warm_url "${BASE}/admin/en"    &
+warm_url "${BASE}/studio"      &
+warm_url "${BASE}/studio/en"   &
 wait
+
 _warm_dur=$(_dur $_STEP_START)
 _failed_urls=$(cat "$_WARM_FAIL_LOG" 2>/dev/null || true)
 rm -f "$_WARM_FAIL_LOG"
 
 if [ -n "$_failed_urls" ]; then
   _fail_count=$(echo "$_failed_urls" | wc -l | tr -d ' ')
-  _fail_list=$(echo "$_failed_urls" | sed 's|http://localhost:[0-9]*/||' | tr '\n' ' ' | sed 's/ $//')
+  _fail_list=$(echo "$_failed_urls" | sed "s|${BASE}/||" | tr '\n' ' ' | sed 's/ $//')
   notify_telegram_critical "$(printf '⚠️ <b>JIT warm-up incomplete</b> (%s)\n%s route(s) failed after 3 attempts:\n<code>%s</code>\nFirst visit to these routes may be slow.' "$_warm_dur" "$_fail_count" "$_fail_list")"
   warn "Warm-up incomplete — $_fail_count route(s) unreachable: $_fail_list"
 else
@@ -402,3 +337,4 @@ else
 fi
 
 log "Deployment complete!"
+docker ps --filter "name=${CONTAINER_NAME}" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"

@@ -312,7 +312,7 @@ jobs:
       - name: Verify deployment
         run: |
           ssh ${{ secrets.PROD_SERVER_HOST }} \
-            'pm2 list --no-color 2>/dev/null || true'
+            'docker ps --filter name=candyshop-prod --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" 2>/dev/null || true'
 
       - name: Cleanup
         if: always()

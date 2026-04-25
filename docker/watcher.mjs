@@ -45,17 +45,48 @@ const TELEGRAM_CRITICAL_THREAD = process.env.TELEGRAM_CRITICAL_THREAD_ID ?? TELE
 // false positives when pgrep can't see a Docker/systemd-managed process on first check)
 let tunnelFailStreak = 0;
 
-// Internal ports — watcher talks directly to each Node.js process,
-// bypassing nginx so we catch per-app failures accurately.
+// When WATCHER_NGINX_PORT is set (host PM2 watcher), check via the nginx
+// reverse proxy so alerts reflect the real Cloudflare traffic path:
+//   Cloudflare → Hestia nginx → Docker nginx (9090) → app
+// Without it (Docker-internal watcher), check direct ports so supervisord
+// failures are caught before nginx ever sees them.
+const NGINX_PORT = process.env.WATCHER_NGINX_PORT ?? null;
+
 const APPS = [
-  { name: "store",      url: "http://127.0.0.1:5001/store/health"      },
-  { name: "auth",       url: "http://127.0.0.1:5000/auth/health"       },
-  { name: "admin",      url: "http://127.0.0.1:5002/admin/health"      },
-  { name: "landing",    url: "http://127.0.0.1:5004/health"            },
-  { name: "payments",   url: "http://127.0.0.1:5005/payments/health"   },
-  { name: "studio",     url: "http://127.0.0.1:5006/studio/health"     },
-  { name: "playground", url: "http://127.0.0.1:5003/playground/health" },
-];
+  { name: "store",      directUrl: "http://127.0.0.1:5001/store/health",      nginxPath: "/store/health"      },
+  { name: "auth",       directUrl: "http://127.0.0.1:5000/auth/health",       nginxPath: "/auth/health"       },
+  { name: "admin",      directUrl: "http://127.0.0.1:5002/admin/health",      nginxPath: "/admin/health"      },
+  { name: "landing",    directUrl: "http://127.0.0.1:5004/health",            nginxPath: "/"                  },
+  { name: "payments",   directUrl: "http://127.0.0.1:5005/payments/health",   nginxPath: "/payments/health"   },
+  { name: "studio",     directUrl: "http://127.0.0.1:5006/studio/health",     nginxPath: "/studio/health"     },
+  { name: "playground", directUrl: "http://127.0.0.1:5003/playground/health", nginxPath: "/playground/health" },
+].map(({ name, directUrl, nginxPath }) => ({
+  name,
+  url: NGINX_PORT ? `http://127.0.0.1:${NGINX_PORT}${nginxPath}` : directUrl,
+}));
+
+// Warm-up routes — only used when checking via nginx (the real traffic path).
+// Hitting these every cycle keeps V8 JIT-compiled between deploys so there
+// are no cold-start penalties on real user requests.
+const WARM_ROUTES = NGINX_PORT
+  ? [
+      "/",
+      "/en",
+      "/es",
+      "/store",
+      "/store/en",
+      "/store/es",
+      "/payments",
+      "/payments/en",
+      "/payments/es",
+      "/auth",
+      "/auth/en",
+      "/admin",
+      "/admin/en",
+      "/studio",
+      "/studio/en",
+    ].map((path) => `http://127.0.0.1:${NGINX_PORT}${path}`)
+  : [];
 
 // ── State tracking ────────────────────────────────────────────────────────────
 
@@ -263,15 +294,42 @@ async function checkSystem() {
   }
 }
 
+// ── V8 warm-up ────────────────────────────────────────────────────────────────
+
+async function warmUp() {
+  if (WARM_ROUTES.length === 0) return;
+  const start = Date.now();
+  const results = await Promise.allSettled(
+    WARM_ROUTES.map((url) =>
+      fetch(url, { signal: AbortSignal.timeout(TIMEOUT_MS), redirect: "manual" })
+        .then((res) => { if (res.status >= 400) throw new Error(`HTTP ${res.status}`); }),
+    ),
+  );
+  const failed = results.filter((r) => r.status === "rejected").length;
+  const dur = ((Date.now() - start) / 1000).toFixed(1);
+  if (failed > 0) {
+    console.warn(`[watcher] warm-up: ${failed}/${WARM_ROUTES.length} routes failed in ${dur}s`);
+  } else {
+    console.log(`[watcher] warm-up: all ${WARM_ROUTES.length} routes ok in ${dur}s`);
+  }
+}
+
 // ── Ping one app ──────────────────────────────────────────────────────────────
 
 async function ping(app) {
   const prev = state[app.name];
 
   try {
-    const res = await fetch(app.url, { signal: AbortSignal.timeout(TIMEOUT_MS) });
+    // redirect: 'manual' prevents fetch from following 307s into 404s.
+    // Next.js i18n middleware redirects /store/health → /store/en/health,
+    // which itself returns 404. We only care that the app responds (any
+    // 1xx/2xx/3xx = alive); 4xx/5xx mean the app is broken.
+    const res = await fetch(app.url, {
+      signal: AbortSignal.timeout(TIMEOUT_MS),
+      redirect: "manual",
+    });
 
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    if (res.status >= 400) throw new Error(`HTTP ${res.status}`);
 
     if (prev === "down") {
       console.log(`[watcher] ${app.name}: ✓ recovered`);
@@ -309,6 +367,7 @@ async function tick() {
 
   await Promise.all(APPS.map(ping));
   await checkSystem();
+  await warmUp();
 
   const next = randomInterval();
   console.log(`[watcher] next check in ${Math.round(next / 60_000)} min`);
