@@ -44,6 +44,18 @@ COPY docker/prod/nginx.conf           /etc/nginx/nginx.conf
 COPY docker/prod/supervisord.conf     /etc/supervisor/conf.d/supervisord.conf
 COPY docker/watcher.mjs               /app/watcher.mjs
 
+# pnpm workspace linking creates stub node_modules inside each app directory
+# (package.json only, no dist/) that shadow the complete packages at the
+# standalone root node_modules/. Remove them so Node resolves from root.
+RUN rm -rf \
+    /app/store/apps/store/node_modules \
+    /app/auth/apps/auth/node_modules \
+    /app/admin/apps/admin/node_modules \
+    /app/landing/apps/landing/node_modules \
+    /app/payments/apps/payments/node_modules \
+    /app/playground/apps/playground/node_modules \
+    /app/studio/apps/studio/node_modules
+
 EXPOSE 80
 
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
