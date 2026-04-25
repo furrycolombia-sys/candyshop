@@ -17,7 +17,7 @@
  *   WATCHER_MAX_MS  — maximum interval in ms  (default: 600_000 = 10 min)
  */
 
-import { readFileSync } from "node:fs";
+import { readFileSync, existsSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 
 // ── Configuration ─────────────────────────────────────────────────────────────
@@ -191,6 +191,13 @@ function readDiskUsedPct() {
 }
 
 function isTunnelRunning() {
+  // Inside a Docker container, host processes are not visible via PID namespace
+  // isolation — pgrep and systemctl will never find the host's cloudflared.
+  // Return null to skip the check entirely rather than sending false DOWN alerts.
+  try {
+    if (existsSync("/.dockerenv")) return null;
+  } catch { /* ignore */ }
+
   // Method 1: exact process name (native install)
   try {
     const r = spawnSync("pgrep", ["-x", "cloudflared"], { encoding: "utf8", timeout: 3_000 });
