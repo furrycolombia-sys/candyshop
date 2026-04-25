@@ -184,6 +184,13 @@ log "Building Docker image from pre-built artifacts..."
 _STEP_START=$(date +%s)
 IMAGE_TAG="candyshop-prod:$(git rev-parse --short HEAD 2>/dev/null || date +%s)"
 
+# CI artifacts silently drop empty directories; docker COPY fails on missing paths.
+# Ensure every path the Dockerfile COPYs exists before building.
+for APP in store auth admin landing payments studio playground; do
+  mkdir -p "$DEPLOY_DIR/apps/$APP/.next/static"
+  mkdir -p "$DEPLOY_DIR/apps/$APP/public"
+done
+
 docker build \
   -f "$DEPLOY_DIR/docker/prod/Dockerfile" \
   -t "$IMAGE_TAG" \
