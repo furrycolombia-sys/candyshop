@@ -16,6 +16,7 @@
     "@hello-pangea/dnd": "^18.0.1",
     "@hookform/resolvers": "^5.2.2",
     "@monorepo/app-components": "workspace:*",
+    "@sentry/nextjs": "^10.50.0",
     "@tanstack/react-query": "^5.91.0",
     "@tanstack/react-table": "^8.21.3",
     "api": "workspace:*",

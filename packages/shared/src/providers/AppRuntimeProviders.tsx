@@ -13,6 +13,7 @@ interface AppRuntimeProvidersProps {
   authHostUrl: string;
   children: ReactNode;
   mswProvider: WrapperComponent;
+  onQueryError?: (error: unknown) => void;
   wrapper?: WrapperComponent;
 }
 
@@ -20,6 +21,7 @@ export function AppRuntimeProviders({
   authHostUrl,
   children,
   mswProvider,
+  onQueryError,
   wrapper,
 }: AppRuntimeProvidersProps) {
   const content = wrapper
@@ -36,7 +38,7 @@ export function AppRuntimeProviders({
   return (
     <Suspense>
       <NuqsAdapter>
-        <QueryProvider>
+        <QueryProvider onQueryError={onQueryError}>
           {React.createElement(mswProvider, null, mswChildren)}
         </QueryProvider>
       </NuqsAdapter>
