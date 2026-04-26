@@ -4,10 +4,17 @@
 
 import { RECEIPTS_BUCKET } from "@/shared/domain/constants";
 import {
-  assertValidReceiptFile,
   sanitizeReceiptFilename,
+  validateReceiptFile,
 } from "@/shared/domain/receipt";
 import { adminFetchJson } from "@/shared/infrastructure/adminRestClient";
+
+export type ReceiptUploadResult =
+  | { ok: true; path: string }
+  | {
+      ok: false;
+      code: "receipt_too_large" | "invalid_receipt_type" | "upload_failed";
+    };
 
 // Dynamic key access prevents Turbopack from inlining at build time.
 const _internalUrlKey = "SUPABASE_URL_INTERNAL";
@@ -41,25 +48,47 @@ async function uploadToStorage(storagePath: string, file: File): Promise<void> {
   });
 
   if (!response.ok) {
-    await response.text();
+    const body = await response.text();
+    console.error(
+      `[receiptActions] upload failed status=${String(response.status)} path=${storagePath} body=${body}`,
+    );
     throw new Error(`Receipt upload failed (${String(response.status)})`);
   }
 }
 
 /**
  * Upload a receipt during checkout.
- * Uses checkoutSessionId as the storage path prefix so the
- * `is_receipt_delegate` storage policy can match receipts by session.
+ * Returns a typed result instead of throwing so callers can map error codes
+ * to user-facing messages. (Next.js server action errors are replaced with a
+ * generic message in production, hiding the real cause from users.)
  */
 export async function uploadCheckoutReceipt(
   checkoutSessionId: string,
   file: File,
-): Promise<string> {
-  assertValidReceiptFile(file);
-  const filename = `${crypto.randomUUID()}-${sanitizeReceiptFilename(file)}`;
-  const storagePath = `${checkoutSessionId}/${filename}`;
-  await uploadToStorage(storagePath, file);
-  return storagePath;
+): Promise<ReceiptUploadResult> {
+  const validation = validateReceiptFile(file);
+  if (!validation.isValid) {
+    return {
+      ok: false,
+      code:
+        validation.reason === "too_large"
+          ? "receipt_too_large"
+          : "invalid_receipt_type",
+    };
+  }
+
+  try {
+    const filename = `${crypto.randomUUID()}-${sanitizeReceiptFilename(file)}`;
+    const storagePath = `${checkoutSessionId}/${filename}`;
+    await uploadToStorage(storagePath, file);
+    return { ok: true, path: storagePath };
+  } catch (error) {
+    console.error(
+      "[receiptActions] uploadCheckoutReceipt failed:",
+      error instanceof Error ? error.message : String(error),
+    );
+    return { ok: false, code: "upload_failed" };
+  }
 }
 
 /**
@@ -70,14 +99,17 @@ export async function uploadCheckoutReceipt(
 export async function uploadOrderReceipt(
   orderId: string,
   file: File,
-): Promise<string> {
+): Promise<ReceiptUploadResult> {
   const rows = await adminFetchJson<
     Array<{ checkout_session_id: string | null }>
   >(`orders?id=eq.${encodeURIComponent(orderId)}&select=checkout_session_id`);
 
   const checkoutSessionId = rows[0]?.checkout_session_id;
   if (!checkoutSessionId) {
-    throw new Error("Order not found or missing checkout_session_id");
+    console.error(
+      `[receiptActions] order ${orderId} missing checkout_session_id`,
+    );
+    return { ok: false, code: "upload_failed" };
   }
 
   return uploadCheckoutReceipt(checkoutSessionId, file);
