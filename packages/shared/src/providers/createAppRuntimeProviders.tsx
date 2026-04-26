@@ -8,12 +8,14 @@ import type { WrapperComponent } from "./types";
 interface CreateAppRuntimeProvidersOptions {
   authHostUrl: string;
   mswProvider: WrapperComponent;
+  onQueryError?: (error: unknown) => void;
   wrapper?: WrapperComponent;
 }
 
 export function createAppRuntimeProviders({
   authHostUrl,
   mswProvider,
+  onQueryError,
   wrapper,
 }: CreateAppRuntimeProvidersOptions) {
   return function Providers({ children }: { children: ReactNode }) {
@@ -21,6 +23,7 @@ export function createAppRuntimeProviders({
       <AppRuntimeProviders
         authHostUrl={authHostUrl}
         mswProvider={mswProvider}
+        onQueryError={onQueryError}
         wrapper={wrapper}
       >
         {children}

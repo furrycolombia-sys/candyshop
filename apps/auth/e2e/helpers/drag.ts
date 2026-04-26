@@ -6,7 +6,7 @@ import type { Locator, Page } from "@playwright/test";
  * @hello-pangea/dnd supports keyboard-based reordering:
  * 1. Focus the drag handle
  * 2. Press Space to lift the item
- * 3. Press ArrowUp/ArrowDown to move it
+ * 3. Press ArrowUp/ArrowDown (vertical) or ArrowLeft/ArrowRight (horizontal)
  * 4. Press Space to drop it
  *
  * This is more reliable than mouse simulation in headless browsers
@@ -14,13 +14,14 @@ import type { Locator, Page } from "@playwright/test";
  *
  * @param page - Playwright page
  * @param handle - The drag handle locator (the element with dragHandleProps)
- * @param direction - "up" to move the item up one position, "down" to move it down
+ * @param direction - Direction to move: "up"/"down" for vertical droppables,
+ *                    "left"/"right" for horizontal droppables (e.g. cards section)
  * @param positions - Number of positions to move (default: 1)
  */
 export async function dragAndDrop(
   page: Page,
   handle: Locator,
-  direction: "up" | "down",
+  direction: "up" | "down" | "left" | "right",
   positions = 1,
 ): Promise<void> {
   // Focus the drag handle
@@ -32,9 +33,14 @@ export async function dragAndDrop(
   await page.waitForTimeout(300);
 
   // Press arrow key to move
-  const key = direction === "up" ? "ArrowUp" : "ArrowDown";
+  const keyMap = {
+    up: "ArrowUp",
+    down: "ArrowDown",
+    left: "ArrowLeft",
+    right: "ArrowRight",
+  } as const;
   for (let i = 0; i < positions; i++) {
-    await page.keyboard.press(key);
+    await page.keyboard.press(keyMap[direction]);
     await page.waitForTimeout(200);
   }
 

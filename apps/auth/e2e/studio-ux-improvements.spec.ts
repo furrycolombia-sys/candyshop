@@ -35,7 +35,7 @@ const { snap, resetCounter } = createSnapHelper(
  *
  * Requires: staging stack running (pnpm staging or pnpm test:e2e:build)
  */
-test.describe.serial("Studio UX Improvements", () => {
+test.describe.serial("Studio UX Improvements", { tag: "@ux" }, () => {
   let seller: TestUser;
   let delegate: TestUser;
   let productId: string;
