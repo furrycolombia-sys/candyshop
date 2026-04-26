@@ -1,3 +1,13 @@
 "use client";
 
-export { QueryOnlyProviders as Providers } from "shared/providers";
+import { captureException } from "@sentry/nextjs";
+import type { ReactNode } from "react";
+import { QueryOnlyProviders } from "shared/providers";
+
+export function Providers({ children }: { children: ReactNode }) {
+  return (
+    <QueryOnlyProviders onQueryError={captureException}>
+      {children}
+    </QueryOnlyProviders>
+  );
+}
