@@ -249,95 +249,96 @@ test.describe.serial("Full purchase flow: two sellers, one buyer", () => {
 
   // ─── Phase 2c: Seller A tests drag-and-drop reorder ────────
 
-  test("Phase 2c: seller A verifies drag-and-drop handles on builder", async ({
-    context,
-    page,
-  }) => {
-    await injectSession(context, sellerA);
-    await page.goto(`${APP_URLS.PAYMENTS}/en/payment-methods`);
-    await page.waitForLoadState("networkidle");
+  test(
+    "Phase 2c: seller A verifies drag-and-drop handles on builder",
+    { tag: "@ux" },
+    async ({ context, page }) => {
+      await injectSession(context, sellerA);
+      await page.goto(`${APP_URLS.PAYMENTS}/en/payment-methods`);
+      await page.waitForLoadState("networkidle");
 
-    // Expand the first payment method
-    await page.getByTestId("payment-method-name").first().click();
-    await expect(page.getByTestId("display-section-editor")).toBeVisible({
-      timeout: ELEMENT_TIMEOUT_MS,
-    });
+      // Expand the first payment method
+      await page.getByTestId("payment-method-name").first().click();
+      await expect(page.getByTestId("display-section-editor")).toBeVisible({
+        timeout: ELEMENT_TIMEOUT_MS,
+      });
 
-    // Should already have 1 text block from Phase 2a
-    const blocksBefore = page.getByTestId(/^display-block-[0-9a-f]/);
-    await expect(blocksBefore).toHaveCount(1, {
-      timeout: ELEMENT_TIMEOUT_MS,
-    });
+      // Should already have 1 text block from Phase 2a
+      const blocksBefore = page.getByTestId(/^display-block-[0-9a-f]/);
+      await expect(blocksBefore).toHaveCount(1, {
+        timeout: ELEMENT_TIMEOUT_MS,
+      });
 
-    // Add a second display block (image) so we have two items to reorder
-    await page.getByTestId("add-block-type-image").click();
+      // Add a second display block (image) so we have two items to reorder
+      await page.getByTestId("add-block-type-image").click();
 
-    // Verify we now have 2 display blocks
-    const blocks = page.getByTestId(/^display-block-[0-9a-f]/);
-    await expect(blocks).toHaveCount(2, { timeout: ELEMENT_TIMEOUT_MS });
+      // Verify we now have 2 display blocks
+      const blocks = page.getByTestId(/^display-block-[0-9a-f]/);
+      await expect(blocks).toHaveCount(2, { timeout: ELEMENT_TIMEOUT_MS });
 
-    // Record block order before drag
-    const firstBlockTid = await blocks.nth(0).getAttribute("data-testid");
-    const secondBlockTid = await blocks.nth(1).getAttribute("data-testid");
-    expect(firstBlockTid).not.toBe(secondBlockTid);
+      // Record block order before drag
+      const firstBlockTid = await blocks.nth(0).getAttribute("data-testid");
+      const secondBlockTid = await blocks.nth(1).getAttribute("data-testid");
+      expect(firstBlockTid).not.toBe(secondBlockTid);
 
-    // Verify drag handles are present and have cursor-grab
-    const firstHandle = blocks.nth(0).locator("[aria-label]").first();
-    const secondHandle = blocks.nth(1).locator("[aria-label]").first();
-    await expect(firstHandle).toBeVisible();
-    await expect(secondHandle).toBeVisible();
+      // Verify drag handles are present and have cursor-grab
+      const firstHandle = blocks.nth(0).locator("[aria-label]").first();
+      const secondHandle = blocks.nth(1).locator("[aria-label]").first();
+      await expect(firstHandle).toBeVisible();
+      await expect(secondHandle).toBeVisible();
 
-    // Perform actual drag-and-drop: drag second block above first
-    await dragAndDrop(page, secondHandle, "up");
+      // Perform actual drag-and-drop: drag second block above first
+      await dragAndDrop(page, secondHandle, "up");
 
-    // Verify the order swapped
-    const blocksAfter = page.getByTestId(/^display-block-[0-9a-f]/);
-    const firstAfter = await blocksAfter.nth(0).getAttribute("data-testid");
-    expect(firstAfter).toBe(secondBlockTid);
-    await snap(page, "sellerA-blocks-reordered");
+      // Verify the order swapped
+      const blocksAfter = page.getByTestId(/^display-block-[0-9a-f]/);
+      const firstAfter = await blocksAfter.nth(0).getAttribute("data-testid");
+      expect(firstAfter).toBe(secondBlockTid);
+      await snap(page, "sellerA-blocks-reordered");
 
-    // Now test form field drag-and-drop: add a second field
-    await page.getByTestId("add-field-type-email").click();
+      // Now test form field drag-and-drop: add a second field
+      await page.getByTestId("add-field-type-email").click();
 
-    const fields = page.getByTestId(/^form-field-[0-9a-f]/);
-    await expect(fields).toHaveCount(2, { timeout: ELEMENT_TIMEOUT_MS });
+      const fields = page.getByTestId(/^form-field-[0-9a-f]/);
+      await expect(fields).toHaveCount(2, { timeout: ELEMENT_TIMEOUT_MS });
 
-    // Record field order before drag
-    const firstFieldTid = await fields.nth(0).getAttribute("data-testid");
-    const secondFieldTid = await fields.nth(1).getAttribute("data-testid");
-    expect(firstFieldTid).not.toBe(secondFieldTid);
+      // Record field order before drag
+      const firstFieldTid = await fields.nth(0).getAttribute("data-testid");
+      const secondFieldTid = await fields.nth(1).getAttribute("data-testid");
+      expect(firstFieldTid).not.toBe(secondFieldTid);
 
-    // Drag second field above first
-    const secondFieldHandle = fields.nth(1).locator("[aria-label]").first();
-    await dragAndDrop(page, secondFieldHandle, "up");
+      // Drag second field above first
+      const secondFieldHandle = fields.nth(1).locator("[aria-label]").first();
+      await dragAndDrop(page, secondFieldHandle, "up");
 
-    // Verify field order swapped
-    const fieldsAfter = page.getByTestId(/^form-field-[0-9a-f]/);
-    const firstFieldAfter = await fieldsAfter
-      .nth(0)
-      .getAttribute("data-testid");
-    expect(firstFieldAfter).toBe(secondFieldTid);
-    await snap(page, "sellerA-fields-reordered");
+      // Verify field order swapped
+      const fieldsAfter = page.getByTestId(/^form-field-[0-9a-f]/);
+      const firstFieldAfter = await fieldsAfter
+        .nth(0)
+        .getAttribute("data-testid");
+      expect(firstFieldAfter).toBe(secondFieldTid);
+      await snap(page, "sellerA-fields-reordered");
 
-    // Clean up: remove the extra blocks/fields we added (not saved — server state
-    // stays from Phase 2a; this just restores local UI before leaving the page)
-    // Remove the image block (now first after reorder)
-    await page
-      .getByTestId(/^display-block-remove-/)
-      .first()
-      .click();
-    await expect(page.getByTestId(/^display-block-[0-9a-f]/)).toHaveCount(1, {
-      timeout: ELEMENT_TIMEOUT_MS,
-    });
-    // Remove the email field (now first after reorder)
-    await page
-      .getByTestId(/^form-field-remove-/)
-      .first()
-      .click();
-    await expect(page.getByTestId(/^form-field-[0-9a-f]/)).toHaveCount(1, {
-      timeout: ELEMENT_TIMEOUT_MS,
-    });
-  });
+      // Clean up: remove the extra blocks/fields we added (not saved — server state
+      // stays from Phase 2a; this just restores local UI before leaving the page)
+      // Remove the image block (now first after reorder)
+      await page
+        .getByTestId(/^display-block-remove-/)
+        .first()
+        .click();
+      await expect(page.getByTestId(/^display-block-[0-9a-f]/)).toHaveCount(1, {
+        timeout: ELEMENT_TIMEOUT_MS,
+      });
+      // Remove the email field (now first after reorder)
+      await page
+        .getByTestId(/^form-field-remove-/)
+        .first()
+        .click();
+      await expect(page.getByTestId(/^form-field-[0-9a-f]/)).toHaveCount(1, {
+        timeout: ELEMENT_TIMEOUT_MS,
+      });
+    },
+  );
 
   // ─── Phase 3: Buyer adds both products and checks out ────────
 

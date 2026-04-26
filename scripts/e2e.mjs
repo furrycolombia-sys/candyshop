@@ -9,7 +9,7 @@
  *   CLOUDFLARE_TUNNEL_APP_ENABLED=true → tunnel start/stop
  *
  * Usage:
- *   node scripts/e2e.mjs [--env <name>] [--app <auth|store|admin>] [--headed] [--ui] [--help]
+ *   node scripts/e2e.mjs [--env <name>] [--app <auth|store|admin>] [--headed] [--ui] [--ux-only] [--help]
  */
 
 import { spawn, spawnSync } from "node:child_process";
@@ -27,18 +27,21 @@ const args = process.argv.slice(2);
 
 if (args.includes("--help")) {
   console.log(`
-Usage: node scripts/e2e.mjs [--env <name>] [--app <app>] [--headed] [--ui] [-- <playwright args>]
+Usage: node scripts/e2e.mjs [--env <name>] [--app <app>] [--headed] [--ui] [--ux-only] [-- <playwright args>]
 
   --env <name>   Environment to load from .env.<name> (default: dev)
   --app <app>    auth | store | admin   (default: auth)
   --headed       Headed browser
-  --ui           Playwright UI mode
+  --ui           Playwright UI mode (interactive test runner GUI)
+  --ux-only      Run only UX/interaction tests (tagged @ux). Without this flag,
+                 all tests run including @ux.
   --             Everything after -- is forwarded to Playwright as-is
 
 Examples:
   node scripts/e2e.mjs --env staging -- --grep "turns payments"
   node scripts/e2e.mjs --env staging -- apps/auth/e2e/permission-management.spec.ts:267
   node scripts/e2e.mjs --env dev -- --grep "login" --headed
+  node scripts/e2e.mjs --env dev --ux-only
 `);
   process.exit(0);
 }
@@ -51,6 +54,7 @@ const targetApp = appFlag !== -1 ? args[appFlag + 1] : "auth";
 
 const headed = args.includes("--headed");
 const ui = args.includes("--ui");
+const uxOnly = args.includes("--ux-only");
 
 // Everything after -- is forwarded verbatim to Playwright
 const separatorIdx = args.indexOf("--");
@@ -195,6 +199,11 @@ const pwArgs = [
 ];
 if (headed) pwArgs.push("--headed");
 if (ui) pwArgs.push("--ui");
+// --ux-only narrows the run to only @ux-tagged tests.
+// Without the flag all tests run, including @ux.
+if (uxOnly) {
+  pwArgs.push("--grep", "@ux");
+}
 // Quote args that contain spaces so shell: true doesn't break them into tokens
 if (passthroughArgs.length) {
   pwArgs.push(...passthroughArgs.map((a) => (a.includes(" ") ? `"${a}"` : a)));
