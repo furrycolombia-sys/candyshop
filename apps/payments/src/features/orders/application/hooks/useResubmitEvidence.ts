@@ -23,9 +23,17 @@ export function useResubmitEvidence() {
 
   return useMutation({
     mutationFn: async (params: ResubmitParams) => {
-      const receiptUrl = params.receiptFile
-        ? await uploadOrderReceipt(params.orderId, params.receiptFile)
-        : null;
+      let receiptUrl: string | null = null;
+      if (params.receiptFile) {
+        const uploadResult = await uploadOrderReceipt(
+          params.orderId,
+          params.receiptFile,
+        );
+        if (!uploadResult.ok) {
+          throw new Error(uploadResult.code);
+        }
+        receiptUrl = uploadResult.path;
+      }
       return resubmitEvidence(
         supabase,
         params.orderId,

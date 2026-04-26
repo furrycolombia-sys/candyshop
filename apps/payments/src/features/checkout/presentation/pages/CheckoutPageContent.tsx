@@ -18,6 +18,18 @@ import type { CheckoutSellerStatus } from "@/features/checkout/domain/types";
 import { SellerCheckoutCard } from "@/features/checkout/presentation/components/SellerCheckoutCard";
 import { appUrls } from "@/shared/infrastructure/config";
 
+function extractErrorMessage(error: unknown): string {
+  if (error instanceof Error) return error.message;
+  if (error && typeof error === "object") {
+    const obj = error as Record<string, unknown>;
+    const text = typeof obj.message === "string" ? obj.message : "";
+    const code = typeof obj.code === "string" ? obj.code : "";
+    if (code && text) return `${code}: ${text}`;
+    return text || code || String(error);
+  }
+  return String(error ?? "");
+}
+
 function readCompletedCheckoutFlag(): boolean {
   if (globalThis.window === undefined) return false;
   return (
@@ -94,14 +106,11 @@ export function CheckoutPageContent() {
 
         updateSellerState(sellerId, "submitted", null);
       } catch (error) {
-        const message =
-          error instanceof Error
-            ? error.message
-            : ((error as { message?: string })?.message ?? t("errorOccurred"));
-        updateSellerState(sellerId, "error", message);
+        const message = extractErrorMessage(error);
+        updateSellerState(sellerId, "error", message || "unknown_error");
       }
     },
-    [user, submitPayment, checkoutSessionId, updateSellerState, t],
+    [user, submitPayment, checkoutSessionId, updateSellerState],
   );
 
   const allSubmitted = useMemo(() => {
