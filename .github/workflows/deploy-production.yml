@@ -330,6 +330,17 @@ jobs:
           ssh ${{ secrets.PROD_SERVER_HOST }} \
             'docker ps --filter name=candyshop-prod --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" 2>/dev/null || true'
 
+      - name: Purge Cloudflare cache
+        env:
+          CF_API_TOKEN: ${{ secrets.PROD_CF_API_TOKEN }}
+          CF_ZONE_ID: ${{ secrets.PROD_CF_ZONE_ID }}
+        run: |
+          curl -s -X POST \
+            "https://api.cloudflare.com/client/v4/zones/${CF_ZONE_ID}/purge_cache" \
+            -H "Authorization: Bearer ${CF_API_TOKEN}" \
+            -H "Content-Type: application/json" \
+            --data '{"purge_everything":true}'
+
       - name: Cleanup
         if: always()
         run: |
