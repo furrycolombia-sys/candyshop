@@ -23,7 +23,7 @@ function getStorageBaseUrl(): string {
   const url =
     (globalThis.window === undefined
       ? process.env[_internalUrlKey]
-      : undefined) ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
+      : undefined) || process.env.NEXT_PUBLIC_SUPABASE_URL;
   if (!url) throw new Error("Supabase URL is not configured");
   return url;
 }
