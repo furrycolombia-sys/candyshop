@@ -52,8 +52,26 @@ const isStandalone = process.env.STANDALONE === "true";
 const basePathPrefix = process.env.BASE_PATH_PREFIX || "";
 const allowedDevOrigins = ["payments.ffxivbe.org"];
 
+// Derive production host for server action CSRF allowlist.
+// Next.js compares Origin vs X-Forwarded-Host; Cloudflare→nginx forwarding can
+// produce a mismatch without an explicit allowlist.
+function parseHost(url: string | undefined): string | null {
+  if (!url) return null;
+  try {
+    return new URL(url).host;
+  } catch {
+    return null;
+  }
+}
+const productionHost = parseHost(process.env.NEXT_PUBLIC_PAYMENTS_URL);
+
 const nextConfig: NextConfig = {
   allowedDevOrigins,
+  ...(productionHost && {
+    serverActions: {
+      allowedOrigins: [productionHost],
+    },
+  }),
   // lucide-react v1.x ESM dist uses .ts imports — Turbopack needs explicit extensions
   turbopack: {
     resolveExtensions: [".ts", ".tsx", ".js", ".jsx", ".mjs", ".json"],
