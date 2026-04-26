@@ -39,7 +39,13 @@ interface BuyerFormState {
   onTransferNumberChange: (value: string) => void;
 }
 
-const CHECKOUT_ERROR_KEYS: Record<string, string> = {
+type CheckoutErrorCode =
+  | "stock_error"
+  | "receipt_too_large"
+  | "invalid_receipt_type"
+  | "upload_failed";
+
+const CHECKOUT_ERROR_KEYS: Partial<Record<CheckoutErrorCode, string>> = {
   stock_error: "stockError",
   receipt_too_large: "receiptTooLarge",
   invalid_receipt_type: "invalidReceiptType",
@@ -51,7 +57,7 @@ function resolveCheckoutError(
   t: (key: string) => string,
 ): { message: string; detail: string | null } {
   if (!error) return { message: "", detail: null };
-  const key = CHECKOUT_ERROR_KEYS[error];
+  const key = CHECKOUT_ERROR_KEYS[error as CheckoutErrorCode];
   return key
     ? { message: t(key), detail: null }
     : { message: t("errorOccurred"), detail: error };

@@ -17,7 +17,7 @@
  *   pnpm docker:build --env prod --no-cache --up
  */
 
-import { spawnSync } from "node:child_process";
+import { execSync, spawnSync } from "node:child_process";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { loadEnv } from "./load-env.mjs";
@@ -66,6 +66,12 @@ try {
 } catch (err) {
   console.error(`ERROR: Failed to load .env.${targetEnv}: ${err.message}`);
   process.exit(1);
+}
+
+try {
+  process.env.NEXT_PUBLIC_BUILD_HASH = execSync("git rev-parse --short HEAD", { encoding: "utf8" }).trim();
+} catch {
+  // Not in a git repo or git unavailable — keep env file value
 }
 
 // ── Resolve required values from env ─────────────────────────────────────────

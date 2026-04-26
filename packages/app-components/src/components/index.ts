@@ -11,3 +11,5 @@ export { ErrorState } from "./ErrorState";
 export { EmptyState } from "./EmptyState";
 export { ExportDropdown, type ExportDropdownProps } from "./ExportDropdown";
 export { TallyFeedbackButton } from "./TallyFeedbackButton";
+export { GlobalErrorFallback } from "./GlobalErrorFallback";
+export { RouteErrorFallback } from "./RouteErrorFallback";
