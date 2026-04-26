@@ -16,3 +16,4 @@ export {
   orvalOptions,
   type PartialQueryOptions,
 } from "./api";
+export { sentryBaseOptions } from "./sentry";
