@@ -19,12 +19,17 @@
 import {
   existsSync,
   readFileSync,
+  readdirSync,
   mkdirSync,
   writeFileSync,
   rmSync,
   copyFileSync,
+  statSync,
+  openSync,
+  readSync,
+  closeSync,
 } from "node:fs";
-import { resolve, dirname, join } from "node:path";
+import { resolve, dirname, join, basename, extname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { execSync } from "node:child_process";
 
@@ -173,6 +178,135 @@ async function uploadObject(serviceKey, storagePath, filePath) {
   }
 }
 
+// ─── Image compression ────────────────────────────────────────────────────────
+
+const IMAGE_EXTS = new Set([".jpg", ".jpeg", ".png", ".gif", ".tiff", ".tif", ".bmp"]);
+
+function* walkDir(dir) {
+  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    const full = join(dir, entry.name);
+    if (entry.isDirectory()) yield* walkDir(full);
+    else yield full;
+  }
+}
+
+async function compressImagesToWebP(storageDir) {
+  let sharp;
+  try {
+    sharp = (await import("sharp")).default;
+  } catch {
+    console.log("  ⚠️  sharp not installed — skipping image compression (run: pnpm install)");
+    return;
+  }
+
+  const imageFiles = [...walkDir(storageDir)].filter(
+    (f) => IMAGE_EXTS.has(extname(f).toLowerCase()),
+  );
+
+  if (imageFiles.length === 0) {
+    console.log("  No images found");
+    return;
+  }
+
+  console.log(`  Compressing ${imageFiles.length} image(s) to WebP (quality 85)...`);
+  let compressed = 0;
+  let skipped = 0;
+  let savedBytes = 0;
+
+  for (let i = 0; i < imageFiles.length; i++) {
+    const filePath = imageFiles[i];
+    const originalSize = statSync(filePath).size;
+    process.stdout.write(`\r  [${i + 1}/${imageFiles.length}] ${basename(filePath).slice(0, 50)}...`);
+    try {
+      const input = readFileSync(filePath);
+      const buf = await sharp(input).webp({ quality: 85 }).toBuffer();
+      if (buf.length < originalSize) {
+        writeFileSync(filePath, buf);
+        savedBytes += originalSize - buf.length;
+        compressed++;
+      } else {
+        skipped++;
+      }
+    } catch (err) {
+      console.error(`\n  ❌ ${basename(filePath)}: ${err.message}`);
+      skipped++;
+    }
+  }
+
+  const savedMB = (savedBytes / 1024 / 1024).toFixed(1);
+  console.log(`\r  ✅ ${compressed} compressed (saved ${savedMB} MB), ${skipped} skipped          `);
+}
+
+// ─── Telegram upload ──────────────────────────────────────────────────────────
+
+const CHUNK_SIZE = 49 * 1024 * 1024; // 49 MB — stays under Telegram's 50 MB limit
+
+function splitZip(zipPath, chunkSize) {
+  const { size } = statSync(zipPath);
+  if (size <= chunkSize) return [{ path: zipPath, isTemp: false }];
+
+  const totalParts = Math.ceil(size / chunkSize);
+  const base = zipPath.replace(/\.zip$/, "");
+  const parts = [];
+  const fd = openSync(zipPath, "r");
+
+  for (let i = 0; i < totalParts; i++) {
+    const offset = i * chunkSize;
+    const partSize = Math.min(chunkSize, size - offset);
+    const buf = Buffer.allocUnsafe(partSize);
+    readSync(fd, buf, 0, partSize, offset);
+    const partPath = `${base}.part${i + 1}of${totalParts}`;
+    writeFileSync(partPath, buf);
+    parts.push({ path: partPath, isTemp: true });
+  }
+
+  closeSync(fd);
+  return parts;
+}
+
+async function sendTelegramDocument(botToken, chatId, threadId, filePath, caption) {
+  const bytes = readFileSync(filePath);
+  const form = new FormData();
+  form.append("chat_id", chatId);
+  form.append("message_thread_id", String(threadId));
+  form.append("document", new Blob([bytes]), basename(filePath));
+  if (caption) form.append("caption", caption);
+
+  const res = await fetch(`https://api.telegram.org/bot${botToken}/sendDocument`, {
+    method: "POST",
+    body: form,
+  });
+  if (!res.ok) throw new Error(`Telegram (${res.status}): ${await res.text()}`);
+}
+
+async function uploadToTelegram(tg, zipPath, manifest) {
+  console.log("\n── Telegram upload ───────────────────────────");
+
+  const parts = splitZip(zipPath, CHUNK_SIZE);
+  const isSplit = parts.length > 1;
+  if (isSplit) console.log(`  Split into ${parts.length} parts (≤49 MB each)`);
+
+  const totalRows = Object.values(manifest.tables)
+    .filter((v) => typeof v === "number")
+    .reduce((a, b) => a + b, 0);
+
+  for (let i = 0; i < parts.length; i++) {
+    const { path: partPath, isTemp } = parts[i];
+    const caption =
+      i === 0
+        ? `🗄️ Prod backup ${manifest.timestamp}\nTables: ${Object.keys(manifest.tables).length} | Rows: ${totalRows} | Files: ${manifest.storage.files.length}${isSplit ? `\nPart 1/${parts.length}` : ""}`
+        : `Part ${i + 1}/${parts.length}`;
+
+    process.stdout.write(`  [${i + 1}/${parts.length}] Uploading ${basename(partPath)}...`);
+    await sendTelegramDocument(tg.botToken, tg.chatId, tg.threadId, partPath, caption);
+    console.log(" ✅");
+
+    if (isTemp) rmSync(partPath);
+  }
+
+  console.log(`  ✅ ${parts.length} file(s) uploaded to Telegram thread #${tg.threadId}`);
+}
+
 // ─── Database export ──────────────────────────────────────────────────────────
 
 async function exportTable(pat, table) {
@@ -290,6 +424,10 @@ async function backup(pat, serviceKey) {
   }
   if (objects.length > 0) console.log(`\r  ✅ ${objects.length} files downloaded            `);
 
+  // ── Compress images to WebP ──
+  console.log("\n── Image compression ─────────────────────────");
+  await compressImagesToWebP(storageDir);
+
   // ── Manifest ──
   writeFileSync(resolve(outDir, "manifest.json"), JSON.stringify(manifest, null, 2));
 
@@ -309,6 +447,18 @@ async function backup(pat, serviceKey) {
   rmSync(outDir, { recursive: true, force: true });
   console.log(` done`);
 
+  // ── Upload to Telegram ──
+  const { TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, TELEGRAM_BACKUPS_THREAD_ID } = secrets;
+  if (TELEGRAM_BOT_TOKEN && TELEGRAM_CHAT_ID && TELEGRAM_BACKUPS_THREAD_ID) {
+    await uploadToTelegram(
+      { botToken: TELEGRAM_BOT_TOKEN, chatId: TELEGRAM_CHAT_ID, threadId: TELEGRAM_BACKUPS_THREAD_ID },
+      zipPath,
+      manifest,
+    );
+  } else {
+    console.log("\n  ℹ️  Telegram credentials not configured — skipping upload");
+  }
+
   // ── Move to archive drive if available ──
   const archiveDir = "P:\\FurryColombia\\CandyShop";
   let finalPath = zipPath;
@@ -319,7 +469,7 @@ async function backup(pat, serviceKey) {
     finalPath = dest;
     console.log(`  Moved to ${dest}`);
   } else {
-    console.log(`  P:\\FurryColombia\\CandyShop not found — zip kept locally`);
+    console.log(`  P:\\FurryColombia\\CandyShop not found — zip kept locally at ${zipPath}`);
   }
 
   console.log(`\n✅ Backup complete: ${finalPath}`);

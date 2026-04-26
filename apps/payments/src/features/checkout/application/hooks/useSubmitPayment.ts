@@ -47,10 +47,14 @@ export function useSubmitPayment() {
       //    lets the DB generate the order ID rather than pre-generating client-side
       let receiptUrl: string | null = null;
       if (receiptFile) {
-        receiptUrl = await uploadCheckoutReceipt(
+        const uploadResult = await uploadCheckoutReceipt(
           checkoutSessionId,
           receiptFile,
         );
+        if (!uploadResult.ok) {
+          throw new Error(uploadResult.code);
+        }
+        receiptUrl = uploadResult.path;
       }
 
       // 2. Create order with all payment info in a single insert; DB generates the order ID

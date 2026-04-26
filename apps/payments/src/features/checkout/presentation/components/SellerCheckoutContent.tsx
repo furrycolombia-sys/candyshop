@@ -39,6 +39,24 @@ interface BuyerFormState {
   onTransferNumberChange: (value: string) => void;
 }
 
+const CHECKOUT_ERROR_KEYS: Record<string, string> = {
+  stock_error: "stockError",
+  receipt_too_large: "receiptTooLarge",
+  invalid_receipt_type: "invalidReceiptType",
+  upload_failed: "uploadFailed",
+};
+
+function resolveCheckoutError(
+  error: string | null,
+  t: (key: string) => string,
+): { message: string; detail: string | null } {
+  if (!error) return { message: "", detail: null };
+  const key = CHECKOUT_ERROR_KEYS[error];
+  return key
+    ? { message: t(key), detail: null }
+    : { message: t("errorOccurred"), detail: error };
+}
+
 export interface SellerCheckoutContentProps {
   sellerId: string;
   items: CartItem[];
@@ -85,7 +103,11 @@ export function SellerCheckoutContent({
 
   const showForm = !isSubmitted && !isLoadingMethods && !hasStockIssues;
   const showLoading = !isSubmitted && isLoadingMethods;
-  const errorMessage = error === "stock_error" ? t("stockError") : error;
+
+  const { message: errorMessage, detail: errorDetail } = resolveCheckoutError(
+    error,
+    t,
+  );
 
   const submitLabel = isSubmitting ? (
     <span className="flex items-center justify-center gap-2">
@@ -122,7 +144,10 @@ export function SellerCheckoutContent({
           className="border-2 border-destructive/30 bg-destructive/10 p-3 text-sm font-medium text-destructive"
           {...tid(`seller-checkout-error-${sellerId}`)}
         >
-          {errorMessage}
+          <p>{errorMessage}</p>
+          {errorDetail && (
+            <p className="mt-1 font-mono text-xs opacity-70">{errorDetail}</p>
+          )}
         </div>
       )}
 
