@@ -109,7 +109,8 @@
   },
   "pnpm": {
     "overrides": {
-      "vite": ">=7.3.2"
+      "vite": ">=7.3.2",
+      "uuid": ">=14.0.0"
     },
     "onlyBuiltDependencies": [
       "@parcel/watcher",
