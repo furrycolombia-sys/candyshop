@@ -8,6 +8,9 @@ on:
         required: true
         default: "staging"
 
+permissions:
+  contents: read
+
 env:
   # TODO: Configure deployment registry and resource names
   CONTAINER_REGISTRY: ""
