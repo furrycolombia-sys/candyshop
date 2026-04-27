@@ -36,13 +36,13 @@ jobs:
       app_version: ${{ steps.app_version.outputs.value }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: "pnpm"
@@ -51,7 +51,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Restore Next.js build cache
-        uses: actions/cache@v4
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         with:
           path: apps/*/.next/cache
           key: ${{ runner.os }}-nextjs-prod-${{ hashFiles('pnpm-lock.yaml') }}-${{ hashFiles('apps/**/*.ts', 'apps/**/*.tsx') }}
@@ -104,7 +104,7 @@ jobs:
           done
 
       - name: Upload store build artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: build-store
           path: apps/store/.next/
@@ -113,7 +113,7 @@ jobs:
           include-hidden-files: true
 
       - name: Upload admin build artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: build-admin
           path: apps/admin/.next/
@@ -122,7 +122,7 @@ jobs:
           include-hidden-files: true
 
       - name: Upload auth build artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: build-auth
           path: apps/auth/.next/
@@ -131,7 +131,7 @@ jobs:
           include-hidden-files: true
 
       - name: Upload landing build artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: build-landing
           path: apps/landing/.next/
@@ -140,7 +140,7 @@ jobs:
           include-hidden-files: true
 
       - name: Upload payments build artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: build-payments
           path: apps/payments/.next/
@@ -149,7 +149,7 @@ jobs:
           include-hidden-files: true
 
       - name: Upload studio build artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: build-studio
           path: apps/studio/.next/
@@ -158,7 +158,7 @@ jobs:
           include-hidden-files: true
 
       - name: Upload playground build artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: build-playground
           path: apps/playground/.next/
@@ -179,7 +179,7 @@ jobs:
       SSH_OPTS: "-o StrictHostKeyChecking=no -o ProxyCommand='cloudflared access ssh --hostname %h'"
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
 
       - name: Install cloudflared
         run: |
@@ -233,43 +233,43 @@ jobs:
           } | ssh ${{ secrets.PROD_SERVER_HOST }} 'cat > /tmp/.candyshop-build.env'
 
       - name: Download build artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
           name: build-store
           path: apps/store/.next/
 
       - name: Download admin build artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
           name: build-admin
           path: apps/admin/.next/
 
       - name: Download auth build artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
           name: build-auth
           path: apps/auth/.next/
 
       - name: Download landing build artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
           name: build-landing
           path: apps/landing/.next/
 
       - name: Download payments build artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
           name: build-payments
           path: apps/payments/.next/
 
       - name: Download studio build artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
           name: build-studio
           path: apps/studio/.next/
 
       - name: Download playground build artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
           name: build-playground
           path: apps/playground/.next/

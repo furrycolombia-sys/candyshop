@@ -1,5 +1,15 @@
 import { render, screen } from "@testing-library/react";
+import React from "react";
 import { describe, it, expect, vi } from "vitest";
+
+// next/dynamic uses loadable.shared-runtime.js which calls React.useContext via a
+// separate require("react") copy that resolves to null in Vitest jsdom. Replace
+// it with React.lazy so the component renders through the normal React path.
+vi.mock("next/dynamic", () => ({
+  default: (
+    fn: () => Promise<{ default: React.ComponentType } | React.ComponentType>,
+  ) => React.lazy(fn as () => Promise<{ default: React.ComponentType }>),
+}));
 
 vi.mock("next-intl", () => ({
   useTranslations: () => (key: string) => key,
@@ -67,6 +77,13 @@ vi.mock("./InlineTextField", () => ({
 
 import { InlineEditor } from "./InlineEditor";
 
+async function renderEditor(ui: React.ReactElement) {
+  render(<React.Suspense fallback={null}>{ui}</React.Suspense>);
+  // Wait for the React.lazy-loaded InlineSections to appear, which confirms the
+  // full component tree has resolved before any assertion runs.
+  await screen.findByTestId("inline-sections");
+}
+
 describe("InlineEditor", () => {
   const defaultProps = {
     onSubmit: vi.fn(),
@@ -74,47 +91,47 @@ describe("InlineEditor", () => {
     isEdit: false,
   };
 
-  it("renders the form", () => {
-    render(<InlineEditor {...defaultProps} />);
+  it("renders the form", async () => {
+    await renderEditor(<InlineEditor {...defaultProps} />);
     expect(screen.getByTestId("inline-editor")).toBeInTheDocument();
   });
 
-  it("renders the toolbar", () => {
-    render(<InlineEditor {...defaultProps} />);
+  it("renders the toolbar", async () => {
+    await renderEditor(<InlineEditor {...defaultProps} />);
     expect(screen.getByTestId("editor-toolbar")).toBeInTheDocument();
   });
 
-  it("renders the form error banner", () => {
-    render(<InlineEditor {...defaultProps} />);
+  it("renders the form error banner", async () => {
+    await renderEditor(<InlineEditor {...defaultProps} />);
     expect(screen.getByTestId("form-error-banner")).toBeInTheDocument();
   });
 
-  it("renders the hero section", () => {
-    render(<InlineEditor {...defaultProps} />);
+  it("renders the hero section", async () => {
+    await renderEditor(<InlineEditor {...defaultProps} />);
     expect(screen.getByTestId("inline-hero")).toBeInTheDocument();
   });
 
-  it("renders the sections component", () => {
-    render(<InlineEditor {...defaultProps} />);
+  it("renders the sections component", async () => {
+    await renderEditor(<InlineEditor {...defaultProps} />);
     expect(screen.getByTestId("inline-sections")).toBeInTheDocument();
   });
 
-  it("renders long description text field", () => {
-    render(<InlineEditor {...defaultProps} />);
+  it("renders long description text field", async () => {
+    await renderEditor(<InlineEditor {...defaultProps} />);
     expect(
       screen.getByTestId("inline-text-long_description_en"),
     ).toBeInTheDocument();
   });
 
-  it("does not show mutation error banner when no error", () => {
-    render(<InlineEditor {...defaultProps} />);
+  it("does not show mutation error banner when no error", async () => {
+    await renderEditor(<InlineEditor {...defaultProps} />);
     expect(
       screen.queryByTestId("mutation-error-banner"),
     ).not.toBeInTheDocument();
   });
 
-  it("shows mutation error banner when error is provided", () => {
-    render(
+  it("shows mutation error banner when error is provided", async () => {
+    await renderEditor(
       <InlineEditor
         {...defaultProps}
         mutationError={new Error("Server error")}
@@ -125,24 +142,24 @@ describe("InlineEditor", () => {
     );
   });
 
-  it("passes isEdit to the toolbar", () => {
-    render(<InlineEditor {...defaultProps} isEdit={true} />);
+  it("passes isEdit to the toolbar", async () => {
+    await renderEditor(<InlineEditor {...defaultProps} isEdit={true} />);
     expect(screen.getByTestId("editor-toolbar")).toHaveAttribute(
       "data-edit",
       "true",
     );
   });
 
-  it("passes isSaving to the toolbar", () => {
-    render(<InlineEditor {...defaultProps} isSubmitting={true} />);
+  it("passes isSaving to the toolbar", async () => {
+    await renderEditor(<InlineEditor {...defaultProps} isSubmitting={true} />);
     expect(screen.getByTestId("editor-toolbar")).toHaveAttribute(
       "data-saving",
       "true",
     );
   });
 
-  it("renders as a form element", () => {
-    render(<InlineEditor {...defaultProps} />);
+  it("renders as a form element", async () => {
+    await renderEditor(<InlineEditor {...defaultProps} />);
     const form = screen.getByTestId("inline-editor");
     expect(form.tagName).toBe("FORM");
   });
