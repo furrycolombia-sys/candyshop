@@ -168,6 +168,21 @@ async function expectHidden(page: Page, testId: string): Promise<void> {
   });
 }
 
+// Retry once on net::ERR_ABORTED — the Cloudflare tunnel occasionally blips
+// under load, aborting the first navigation. A single retry distinguishes a
+// transient tunnel hiccup from a real failure.
+async function gotoWithRetry(
+  page: Page,
+  url: string,
+  options?: Parameters<Page["goto"]>[1],
+): Promise<void> {
+  try {
+    await page.goto(url, options);
+  } catch {
+    await page.goto(url, options);
+  }
+}
+
 // Navigate to a payments URL with a fully fresh auth session.
 //
 // WHY THE EXTRA WAIT EXISTS:
@@ -197,7 +212,9 @@ async function navigateWithFreshSession(
 ): Promise<void> {
   await context.clearCookies();
   await injectSession(context, user);
-  await page.goto(`${APP_URLS.AUTH}/en`, { waitUntil: "domcontentloaded" });
+  await gotoWithRetry(page, `${APP_URLS.AUTH}/en`, {
+    waitUntil: "domcontentloaded",
+  });
   await expect(page.getByTestId("app-navigation")).toBeVisible({
     timeout: ELEMENT_TIMEOUT_MS,
   });
@@ -269,7 +286,9 @@ test.describe.serial("Permission management", () => {
     // session before we hit the studio route (same technique as navigateWithFreshSession).
     await context.clearCookies();
     await injectSession(context, target);
-    await page.goto(`${APP_URLS.AUTH}/en`, { waitUntil: "domcontentloaded" });
+    await gotoWithRetry(page, `${APP_URLS.AUTH}/en`, {
+      waitUntil: "domcontentloaded",
+    });
     await expect(page.getByTestId("app-navigation")).toBeVisible({
       timeout: ELEMENT_TIMEOUT_MS,
     });

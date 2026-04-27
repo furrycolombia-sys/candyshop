@@ -20,24 +20,26 @@ jobs:
     timeout-minutes: 5
     steps:
       - name: Checkout base branch
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
           ref: ${{ github.event.pull_request.base.ref }}
           fetch-depth: 0
 
       - name: Fetch PR branch (metadata only)
+        env:
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
-          git fetch origin ${{ github.event.pull_request.head.sha }} --depth=1
+          git fetch origin "$HEAD_SHA" --depth=1
 
       - name: Check branch freshness
         id: freshness
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
-          BASE_SHA=${{ github.event.pull_request.base.sha }}
-          HEAD_SHA=${{ github.event.pull_request.head.sha }}
-
           # Find merge base
           git fetch --deepen=500
-          MERGE_BASE=$(git merge-base $BASE_SHA $HEAD_SHA 2>/dev/null || echo "")
+          MERGE_BASE=$(git merge-base "$BASE_SHA" "$HEAD_SHA" 2>/dev/null || echo "")
 
           if [ -z "$MERGE_BASE" ]; then
             git fetch --unshallow || true
@@ -60,10 +62,11 @@ jobs:
 
       - name: Check config drift
         id: drift
+        env:
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
         run: |
-          BASE_REF=${{ github.event.pull_request.base.ref }}
-          HEAD_SHA=${{ github.event.pull_request.head.sha }}
-
           # Critical config files that MUST stay in sync
           CONFIG_FILES=(
             "eslint.config.mjs"
@@ -82,7 +85,7 @@ jobs:
           DRIFT_COUNT=0
 
           # Get files the PR explicitly changed
-          MERGE_BASE=$(git merge-base ${{ github.event.pull_request.base.sha }} $HEAD_SHA)
+          MERGE_BASE=$(git merge-base "$BASE_SHA" "$HEAD_SHA")
           PR_CHANGED=$(git diff --name-only $MERGE_BASE $HEAD_SHA 2>/dev/null || echo "")
 
           for FILE in "${CONFIG_FILES[@]}"; do
@@ -132,19 +135,27 @@ jobs:
           fi
 
       - name: Post summary comment
-        uses: actions/github-script@v8
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
+        env:
+          FRESHNESS_STATUS: ${{ steps.freshness.outputs.status }}
+          FRESHNESS_MESSAGE: ${{ steps.freshness.outputs.message }}
+          FRESHNESS_BEHIND: ${{ steps.freshness.outputs.commits_behind }}
+          DRIFT_STATUS: ${{ steps.drift.outputs.status }}
+          DRIFT_MESSAGE: ${{ steps.drift.outputs.message }}
+          DRIFT_COUNT: ${{ steps.drift.outputs.drift_count }}
         with:
           script: |
             const freshness = {
-              status: '${{ steps.freshness.outputs.status }}',
-              message: `${{ steps.freshness.outputs.message }}`,
-              behind: '${{ steps.freshness.outputs.commits_behind }}'
+              status: process.env.FRESHNESS_STATUS,
+              message: process.env.FRESHNESS_MESSAGE,
+              behind: process.env.FRESHNESS_BEHIND,
             };
             const drift = {
-              status: '${{ steps.drift.outputs.status }}',
-              message: `${{ steps.drift.outputs.message }}`,
-              count: '${{ steps.drift.outputs.drift_count }}'
+              status: process.env.DRIFT_STATUS,
+              message: process.env.DRIFT_MESSAGE,
+              count: process.env.DRIFT_COUNT,
             };
+            const baseRef = context.payload.pull_request.base.ref;
 
             const icon = (s) => s === 'pass' ? ':white_check_mark:' : s === 'warn' ? ':warning:' : ':x:';
             const overall = (freshness.status === 'fail' || drift.status === 'fail') ? 'FAIL' :
@@ -165,8 +176,8 @@ jobs:
               body.push('');
               body.push('Update your branch before merging:');
               body.push('```bash');
-              body.push('git fetch origin ${{ github.event.pull_request.base.ref }}');
-              body.push('git merge origin/${{ github.event.pull_request.base.ref }}');
+              body.push(`git fetch origin ${baseRef}`);
+              body.push(`git merge origin/${baseRef}`);
               body.push('git push');
               body.push('```');
               body.push('Or use: `/sync-with-develop`');
@@ -199,12 +210,16 @@ jobs:
 
       - name: Fail if stale
         if: steps.freshness.outputs.status == 'fail' || steps.drift.outputs.status == 'fail'
+        env:
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+          FRESHNESS_MSG: ${{ steps.freshness.outputs.message }}
+          DRIFT_MSG: ${{ steps.drift.outputs.message }}
         run: |
           echo "::error::PR branch is stale. Update your branch before merging."
           echo ""
-          echo "Freshness: ${{ steps.freshness.outputs.message }}"
-          echo "Config drift: ${{ steps.drift.outputs.message }}"
+          echo "Freshness: $FRESHNESS_MSG"
+          echo "Config drift: $DRIFT_MSG"
           echo ""
-          echo "Run: git merge origin/${{ github.event.pull_request.base.ref }}"
+          echo "Run: git merge origin/$BASE_REF"
           exit 1
 
