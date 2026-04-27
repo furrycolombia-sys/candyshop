@@ -11,7 +11,7 @@ FROM node:22-alpine AS deps
 RUN corepack enable && corepack prepare pnpm@latest --activate
 WORKDIR /app
 
-COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
+COPY package.json pnpm-workspace.yaml pnpm-lock.yaml .npmrc ./
 COPY apps/store/package.json ./apps/store/
 COPY apps/auth/package.json ./apps/auth/
 COPY apps/admin/package.json ./apps/admin/
