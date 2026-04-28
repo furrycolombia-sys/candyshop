@@ -7,6 +7,9 @@ const DEFAULT_RECEIPT_EXTENSION = ".bin";
 const FALLBACK_RECEIPT_NAME = "receipt";
 const MAX_RECEIPT_FILENAME_LENGTH = 64;
 
+// Only alphanumeric characters and hyphens — no slashes, dots, or other path chars.
+const SAFE_STORAGE_SEGMENT = /^[a-zA-Z0-9_-]+$/;
+
 const RECEIPT_EXTENSION_BY_MIME = {
   "image/jpeg": ".jpg",
   "image/png": ".png",
@@ -102,7 +105,19 @@ export function sanitizeReceiptFilename(file: File): string {
   return `${normalizedBase || FALLBACK_RECEIPT_NAME}${extension}`;
 }
 
+export function assertSafeStoragePath(storagePath: string): void {
+  const segments = storagePath.split("/");
+  for (const segment of segments) {
+    if (segment === ".." || segment === ".") {
+      throw new Error("Invalid storage path: path traversal detected");
+    }
+  }
+}
+
 export function buildReceiptStoragePath(orderId: string, file: File): string {
+  if (!SAFE_STORAGE_SEGMENT.test(orderId)) {
+    throw new Error("Invalid orderId: contains unsafe characters");
+  }
   return `${orderId}/${sanitizeReceiptFilename(file)}`;
 }
 
