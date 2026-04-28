@@ -16,6 +16,7 @@ export async function uploadReceipt(
 ): Promise<string> {
   assertValidReceiptFile(file);
   const storagePath = buildReceiptStoragePath(orderId, file);
+  assertSafeStoragePath(storagePath);
 
   const { error } = await supabase.storage
     .from(RECEIPTS_BUCKET)

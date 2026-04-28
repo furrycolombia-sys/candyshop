@@ -5,13 +5,14 @@ on:
     branches: [main]
     types: [closed]
 
-permissions:
-  contents: write
+permissions: {}
 
 jobs:
   release:
     name: Create Release
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     if: github.event.pull_request.merged == true && startsWith(github.event.pull_request.head.ref, 'release/')
     timeout-minutes: 5
     steps:
