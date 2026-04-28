@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  assertSafeStoragePath,
   assertValidReceiptFile,
   buildReceiptStoragePath,
   getSafeReceiptHref,
@@ -48,6 +49,38 @@ describe("receipt helpers", () => {
     expect(sanitizeReceiptFilename(file)).toBe("my-receipt-1.jpg");
     expect(buildReceiptStoragePath("order-123", file)).toBe(
       "order-123/my-receipt-1.jpg",
+    );
+  });
+
+  it("rejects traversal in orderId when building storage path", () => {
+    const file = new File(["ok"], "receipt.png", { type: "image/png" });
+
+    expect(() => buildReceiptStoragePath("../../other-bucket", file)).toThrow(
+      "Invalid orderId",
+    );
+    expect(() => buildReceiptStoragePath("order/123", file)).toThrow(
+      "Invalid orderId",
+    );
+  });
+
+  it("accepts valid order IDs when building storage path", () => {
+    const file = new File(["ok"], "receipt.png", { type: "image/png" });
+
+    expect(buildReceiptStoragePath("order-abc-123", file)).toBe(
+      "order-abc-123/receipt.png",
+    );
+  });
+
+  it("assertSafeStoragePath allows normal paths", () => {
+    expect(() => assertSafeStoragePath("order-123/receipt.png")).not.toThrow();
+  });
+
+  it("assertSafeStoragePath rejects path traversal", () => {
+    expect(() =>
+      assertSafeStoragePath("order-123/../../other/file.png"),
+    ).toThrow("path traversal");
+    expect(() => assertSafeStoragePath("../secret.txt")).toThrow(
+      "path traversal",
     );
   });
 

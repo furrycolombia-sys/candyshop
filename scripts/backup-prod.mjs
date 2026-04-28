@@ -327,10 +327,30 @@ async function exportTable(pat, table) {
 
 // ─── Database restore ─────────────────────────────────────────────────────────
 
+const SAFE_IDENTIFIER = /^[a-zA-Z_][a-zA-Z0-9_]*$/;
+
+function assertSafeIdentifier(name) {
+  if (!SAFE_IDENTIFIER.test(name)) {
+    throw new Error(`Unsafe SQL identifier in backup data: "${name}"`);
+  }
+}
+
+function assertPathInside(baseDir, filePath) {
+  const normalizedBase = resolve(baseDir);
+  const normalizedFile = resolve(filePath);
+  if (
+    !normalizedFile.startsWith(normalizedBase + "/") &&
+    !normalizedFile.startsWith(normalizedBase + "\\")
+  ) {
+    throw new Error(`Path traversal detected: path is outside "${baseDir}"`);
+  }
+}
+
 function formatValue(v) {
   if (v === null || v === undefined) return "NULL";
   if (typeof v === "number" || typeof v === "boolean") return String(v);
-  return `'${String(v).replace(/'/g, "''")}'`;
+  // Escape single quotes (standard SQL) and backslashes (PostgreSQL dollar-quote safe)
+  return `'${String(v).replace(/\\/g, "\\\\").replace(/'/g, "''")}'`;
 }
 
 async function restoreTable(pat, table, rows) {
@@ -338,8 +358,10 @@ async function restoreTable(pat, table, rows) {
     console.log(`  ${table}: empty, skipping`);
     return;
   }
+  assertSafeIdentifier(table);
   await query(pat, `TRUNCATE "${table}" RESTART IDENTITY CASCADE`);
   const cols = Object.keys(rows[0]);
+  cols.forEach(assertSafeIdentifier);
   const quoted = cols.map((c) => `"${c}"`).join(", ");
   for (let i = 0; i < rows.length; i += 200) {
     const batch = rows.slice(i, i + 200);
@@ -389,6 +411,7 @@ async function backup(pat, serviceKey) {
   for (const table of tables) {
     process.stdout.write(`  ${table}: exporting...`);
     try {
+      assertSafeIdentifier(table);
       const rows = await exportTable(pat, table);
       writeFileSync(
         resolve(outDir, `${table}.json`),
@@ -411,6 +434,7 @@ async function backup(pat, serviceKey) {
   for (let i = 0; i < objects.length; i++) {
     const obj = objects[i];
     const destPath = join(storageDir, obj.path);
+    assertPathInside(storageDir, destPath);
     process.stdout.write(
       `\r  [${i + 1}/${objects.length}] ${obj.path.slice(0, 60)}...`,
     );
@@ -507,6 +531,7 @@ async function restore(pat, serviceKey, backupPath) {
   // Restore DB
   console.log("── Restoring database ────────────────────────");
   for (const table of Object.keys(manifest.tables)) {
+    assertSafeIdentifier(table);
     const file = resolve(backupDir, `${table}.json`);
     if (!existsSync(file)) { console.log(`  ⚠️  ${table}: missing, skipping`); continue; }
     const { rows } = JSON.parse(readFileSync(file, "utf-8"));
@@ -519,6 +544,7 @@ async function restore(pat, serviceKey, backupPath) {
   for (let i = 0; i < files.length; i++) {
     const { path: storagePath } = files[i];
     const localPath = join(backupDir, "storage", storagePath);
+    assertPathInside(join(backupDir, "storage"), localPath);
     process.stdout.write(`\r  [${i + 1}/${files.length}] ${storagePath.slice(0, 60)}...`);
     if (!existsSync(localPath)) {
       console.log(`\n  ⚠️  ${storagePath}: local file missing, skipping`);

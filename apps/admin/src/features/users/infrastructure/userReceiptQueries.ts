@@ -52,6 +52,9 @@ export async function fetchUserReceipts(
       .filter((row) => !!row.receipt_url)
       .map(async (row) => {
         const storagePath = row.receipt_url as string;
+        if (storagePath.split("/").some((seg) => seg === ".." || seg === ".")) {
+          return null;
+        }
         const { data, error } = await supabase.storage
           .from("receipts")
           .download(storagePath);
