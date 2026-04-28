@@ -51,8 +51,15 @@ function resolveSecrets(vars, secrets) {
   return vars;
 }
 
+const ALLOWED_ENVS = ["dev", "staging", "e2e", "prod", "production", "test", "ci"];
+
 export function loadEnv(targetEnv) {
   const env = targetEnv || process.env.TARGET_ENV || "dev";
+  if (!ALLOWED_ENVS.includes(env)) {
+    throw new Error(
+      `Invalid environment name: "${env}". Allowed values: ${ALLOWED_ENVS.join(", ")}`,
+    );
+  }
   const envFile = resolve(rootDir, `.env.${env}`);
 
   if (!existsSync(envFile)) {

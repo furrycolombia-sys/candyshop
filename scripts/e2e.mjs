@@ -145,7 +145,7 @@ if (appsMode === "docker") {
     }
 
     console.log(`\n   Waiting for app on :${port}...`);
-    await waitForPort(port, 120_000);
+    await waitForHttp(`http://127.0.0.1:${port}/`, 120_000);
     console.log("✓ App ready\n");
   }
 } else {
@@ -265,5 +265,33 @@ async function waitForPort(port, timeoutMs) {
     await new Promise((r) => setTimeout(r, 1000));
   }
   console.error(`ERROR: port ${port} not ready after ${timeoutMs}ms`);
+  process.exit(1);
+}
+
+// HTTP-level readiness check — used for Docker mode where the port mapping layer
+// accepts TCP connections before nginx inside the container is actually serving.
+async function checkHttp(url) {
+  const { request } = await import("node:http");
+  return new Promise((res) => {
+    const req = request(url, { timeout: 3000 }, (resp) => {
+      resp.resume();
+      res(true);
+    });
+    req.once("error", () => res(false));
+    req.once("timeout", () => {
+      req.destroy();
+      res(false);
+    });
+    req.end();
+  });
+}
+
+async function waitForHttp(url, timeoutMs) {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    if (await checkHttp(url)) return;
+    await new Promise((r) => setTimeout(r, 1000));
+  }
+  console.error(`ERROR: ${url} not ready after ${timeoutMs}ms`);
   process.exit(1);
 }

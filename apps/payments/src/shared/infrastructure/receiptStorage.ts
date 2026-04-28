@@ -3,6 +3,7 @@ import {
   RECEIPT_URL_TTL_SECONDS,
 } from "@/shared/domain/constants";
 import {
+  assertSafeStoragePath,
   assertValidReceiptFile,
   buildReceiptStoragePath,
 } from "@/shared/domain/receipt";
@@ -36,6 +37,7 @@ export async function getReceiptUrl(
   storagePath: string | null,
 ): Promise<string | null> {
   if (!storagePath) return null;
+  assertSafeStoragePath(storagePath);
 
   const { data, error } = await supabase.storage
     .from(RECEIPTS_BUCKET)
@@ -49,6 +51,7 @@ export async function deleteReceipt(
   supabase: SupabaseClient,
   storagePath: string,
 ): Promise<void> {
+  assertSafeStoragePath(storagePath);
   const { error } = await supabase.storage
     .from(RECEIPTS_BUCKET)
     .remove([storagePath]);
