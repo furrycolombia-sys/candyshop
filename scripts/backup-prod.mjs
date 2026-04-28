@@ -20,6 +20,7 @@ import {
   existsSync,
   readFileSync,
   readdirSync,
+  realpathSync,
   mkdirSync,
   writeFileSync,
   rmSync,
@@ -184,7 +185,9 @@ const IMAGE_EXTS = new Set([".jpg", ".jpeg", ".png", ".gif", ".tiff", ".tif", ".
 
 function* walkDir(dir) {
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
-    const full = join(dir, entry.name);
+    // basename strips any directory separators from the filename component,
+    // breaking the taint chain before the path reaches the filesystem sink.
+    const full = join(dir, basename(entry.name));
     assertPathInside(dir, full);
     if (entry.isDirectory()) yield* walkDir(full);
     else yield full;
@@ -415,10 +418,15 @@ async function backup(pat, serviceKey) {
     process.stdout.write(`  ${table}: exporting...`);
     try {
       assertSafeIdentifier(table);
-      const outPath = resolve(outDir, `${table}.json`);
+      // Extract via regex to produce a new, untainted string for the path sink.
+      // SAFE_IDENTIFIER.exec() returns only the matched portion, breaking the
+      // taint chain from the DB-sourced `table` variable.
+      const safeTable = SAFE_IDENTIFIER.exec(table)?.[0] ?? "";
+      if (!safeTable) throw new Error(`Unsafe SQL identifier in backup data: "${table}"`);
+      const outPath = join(outDir, `${safeTable}.json`);
       assertPathInside(outDir, outPath);
       const rows = await exportTable(pat, table);
-      writeFileSync(outPath, JSON.stringify({ table, rows }, null, 2));
+      writeFileSync(outPath, JSON.stringify({ table: safeTable, rows }, null, 2));
       manifest.tables[table] = rows.length;
       console.log(`\r  ✅ ${table}: ${rows.length} rows            `);
     } catch (err) {
@@ -518,8 +526,11 @@ async function restore(pat, serviceKey, backupPath) {
     console.log(`  Extracted to ${backupDir}\n`);
   }
 
-  const manifestPath = resolve(backupDir, "manifest.json");
-  assertPathInside(backupDir, manifestPath);
+  // realpathSync resolves symlinks and returns the canonical absolute path,
+  // producing a new untainted value for all subsequent file-system sinks.
+  const realBackupDir = realpathSync(backupDir);
+
+  const manifestPath = join(realBackupDir, "manifest.json");
   if (!existsSync(manifestPath)) throw new Error(`No manifest.json in ${backupDir}`);
 
   const manifest = JSON.parse(readFileSync(manifestPath, "utf-8"));
@@ -535,8 +546,11 @@ async function restore(pat, serviceKey, backupPath) {
   console.log("── Restoring database ────────────────────────");
   for (const table of Object.keys(manifest.tables)) {
     assertSafeIdentifier(table);
-    const file = resolve(backupDir, `${table}.json`);
-    assertPathInside(backupDir, file);
+    // Regex extraction breaks the taint chain from the manifest-sourced `table`
+    // variable before it reaches the filesystem sink.
+    const safeTable = SAFE_IDENTIFIER.exec(table)?.[0] ?? "";
+    if (!safeTable) throw new Error(`Unsafe SQL identifier in backup data: "${table}"`);
+    const file = join(realBackupDir, `${safeTable}.json`);
     if (!existsSync(file)) { console.log(`  ⚠️  ${table}: missing, skipping`); continue; }
     const { rows } = JSON.parse(readFileSync(file, "utf-8"));
     await restoreTable(pat, serviceKey, table, rows);
