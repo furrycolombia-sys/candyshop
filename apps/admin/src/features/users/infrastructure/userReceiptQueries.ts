@@ -30,6 +30,10 @@ function toBase64(buffer: ArrayBuffer): Promise<string> {
   });
 }
 
+// Whitelist for receipt storage paths: exactly one slash, both segments alphanumeric+hyphen+underscore,
+// second segment has a known image extension.
+const SAFE_RECEIPT_PATH = /^[a-zA-Z0-9_-]+\/[a-zA-Z0-9_-]+\.(jpg|png|webp)$/;
+
 function filenameFromPath(storagePath: string): string {
   const parts = storagePath.split("/");
   return parts.at(-1) || storagePath;
@@ -52,7 +56,7 @@ export async function fetchUserReceipts(
       .filter((row) => !!row.receipt_url)
       .map(async (row) => {
         const storagePath = row.receipt_url as string;
-        if (storagePath.split("/").some((seg) => seg === ".." || seg === ".")) {
+        if (!SAFE_RECEIPT_PATH.test(storagePath)) {
           return null;
         }
         const { data, error } = await supabase.storage

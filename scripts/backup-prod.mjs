@@ -185,6 +185,7 @@ const IMAGE_EXTS = new Set([".jpg", ".jpeg", ".png", ".gif", ".tiff", ".tif", ".
 function* walkDir(dir) {
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
     const full = join(dir, entry.name);
+    assertPathInside(dir, full);
     if (entry.isDirectory()) yield* walkDir(full);
     else yield full;
   }
@@ -346,29 +347,31 @@ function assertPathInside(baseDir, filePath) {
   }
 }
 
-function formatValue(v) {
-  if (v === null || v === undefined) return "NULL";
-  if (typeof v === "number" || typeof v === "boolean") return String(v);
-  // Escape single quotes (standard SQL) and backslashes (PostgreSQL dollar-quote safe)
-  return `'${String(v).replace(/\\/g, "\\\\").replace(/'/g, "''")}'`;
-}
-
-async function restoreTable(pat, table, rows) {
+async function restoreTable(pat, serviceKey, table, rows) {
   if (rows.length === 0) {
     console.log(`  ${table}: empty, skipping`);
     return;
   }
   assertSafeIdentifier(table);
+  // DDL via Management API (no user data in query)
   await query(pat, `TRUNCATE "${table}" RESTART IDENTITY CASCADE`);
-  const cols = Object.keys(rows[0]);
-  cols.forEach(assertSafeIdentifier);
-  const quoted = cols.map((c) => `"${c}"`).join(", ");
+  // Inserts via PostgREST — data sent as JSON, no SQL string construction
   for (let i = 0; i < rows.length; i += 200) {
     const batch = rows.slice(i, i + 200);
-    const values = batch
-      .map((row) => `(${cols.map((c) => formatValue(row[c])).join(", ")})`)
-      .join(",\n");
-    await query(pat, `INSERT INTO "${table}" (${quoted}) VALUES ${values}`);
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${serviceKey}`,
+        apikey: serviceKey,
+        "Content-Type": "application/json",
+        Prefer: "return=minimal",
+      },
+      body: JSON.stringify(batch),
+    });
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(`Insert into ${table} failed (${res.status}): ${text}`);
+    }
     process.stdout.write(
       `\r  ${table}: ${Math.min(i + 200, rows.length)}/${rows.length} rows restored...`,
     );
@@ -412,11 +415,10 @@ async function backup(pat, serviceKey) {
     process.stdout.write(`  ${table}: exporting...`);
     try {
       assertSafeIdentifier(table);
+      const outPath = resolve(outDir, `${table}.json`);
+      assertPathInside(outDir, outPath);
       const rows = await exportTable(pat, table);
-      writeFileSync(
-        resolve(outDir, `${table}.json`),
-        JSON.stringify({ table, rows }, null, 2),
-      );
+      writeFileSync(outPath, JSON.stringify({ table, rows }, null, 2));
       manifest.tables[table] = rows.length;
       console.log(`\r  ✅ ${table}: ${rows.length} rows            `);
     } catch (err) {
@@ -517,6 +519,7 @@ async function restore(pat, serviceKey, backupPath) {
   }
 
   const manifestPath = resolve(backupDir, "manifest.json");
+  assertPathInside(backupDir, manifestPath);
   if (!existsSync(manifestPath)) throw new Error(`No manifest.json in ${backupDir}`);
 
   const manifest = JSON.parse(readFileSync(manifestPath, "utf-8"));
@@ -533,9 +536,10 @@ async function restore(pat, serviceKey, backupPath) {
   for (const table of Object.keys(manifest.tables)) {
     assertSafeIdentifier(table);
     const file = resolve(backupDir, `${table}.json`);
+    assertPathInside(backupDir, file);
     if (!existsSync(file)) { console.log(`  ⚠️  ${table}: missing, skipping`); continue; }
     const { rows } = JSON.parse(readFileSync(file, "utf-8"));
-    await restoreTable(pat, table, rows);
+    await restoreTable(pat, serviceKey, table, rows);
   }
 
   // Restore storage

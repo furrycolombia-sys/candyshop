@@ -10,6 +10,10 @@ const MAX_RECEIPT_FILENAME_LENGTH = 64;
 // Only alphanumeric characters and hyphens — no slashes, dots, or other path chars.
 const SAFE_STORAGE_SEGMENT = /^[a-zA-Z0-9_-]+$/;
 
+// Whitelist for full storage paths: exactly one slash, both segments alphanumeric+hyphen+underscore,
+// second segment has a known image extension.
+const SAFE_RECEIPT_PATH = /^[a-zA-Z0-9_-]+\/[a-zA-Z0-9_-]+\.(jpg|png|webp)$/;
+
 const RECEIPT_EXTENSION_BY_MIME = {
   "image/jpeg": ".jpg",
   "image/png": ".png",
@@ -106,11 +110,8 @@ export function sanitizeReceiptFilename(file: File): string {
 }
 
 export function assertSafeStoragePath(storagePath: string): void {
-  const segments = storagePath.split("/");
-  for (const segment of segments) {
-    if (segment === ".." || segment === ".") {
-      throw new Error("Invalid storage path: path traversal detected");
-    }
+  if (!SAFE_RECEIPT_PATH.test(storagePath)) {
+    throw new Error("Invalid storage path: path traversal detected");
   }
 }
 
