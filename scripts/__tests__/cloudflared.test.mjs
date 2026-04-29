@@ -152,7 +152,7 @@ describe("discoverTunnels", () => {
   it("discovers a single tunnel name", () => {
     const env = {
       CLOUDFLARE_TUNNEL_APP_ENABLED: "true",
-      CLOUDFLARE_TUNNEL_APP_TOKEN: "tok",
+      CLOUDFLARE_TUNNEL_APP_TOKEN: "cf-test-fixture",
     };
     expect(discoverTunnels(env)).toContain("APP");
   });
@@ -192,7 +192,7 @@ describe("runLauncher — example paths", () => {
     const mockSpawn = makeMockSpawn();
     const env = {
       CLOUDFLARE_TUNNEL_APP_ENABLED: "false",
-      CLOUDFLARE_TUNNEL_APP_TOKEN: "some-token",
+      CLOUDFLARE_TUNNEL_APP_TOKEN: "cf-test-fixture",
     };
     const result = runLauncher({ env, spawnFn: mockSpawn });
     expect(result.exitCode).toBe(0);
@@ -207,7 +207,7 @@ describe("runLauncher — example paths", () => {
     const mockSpawn = makeMockSpawn();
     const env = {
       CLOUDFLARE_TUNNEL_APP_ENABLED: "true",
-      CLOUDFLARE_TUNNEL_APP_TOKEN: "test-tunnel-token",
+      CLOUDFLARE_TUNNEL_APP_TOKEN: "cf-test-fixture",
     };
     const result = runLauncher({ env, spawnFn: mockSpawn });
     expect(result.exitCode).toBe(0);
@@ -241,7 +241,7 @@ describe("runLauncher — example paths", () => {
     const mockSpawn = makeMockSpawn();
     const env = {
       CLOUDFLARE_TUNNEL_APP_ENABLED: "true",
-      CLOUDFLARE_TUNNEL_APP_TOKEN: "valid-token",
+      CLOUDFLARE_TUNNEL_APP_TOKEN: "cf-test-fixture",
       CLOUDFLARE_TUNNEL_SUPABASE_ENABLED: "true",
       CLOUDFLARE_TUNNEL_SUPABASE_TOKEN: "",
     };
@@ -257,9 +257,9 @@ describe("runLauncher — example paths", () => {
     const mockSpawn = makeMockSpawn();
     const env = {
       CLOUDFLARE_TUNNEL_APP_ENABLED: "true",
-      CLOUDFLARE_TUNNEL_APP_TOKEN: "tok1",
+      CLOUDFLARE_TUNNEL_APP_TOKEN: "cf-fixture-1",
       CLOUDFLARE_TUNNEL_SUPABASE_ENABLED: "true",
-      CLOUDFLARE_TUNNEL_SUPABASE_TOKEN: "tok2",
+      CLOUDFLARE_TUNNEL_SUPABASE_TOKEN: "cf-fixture-2",
     };
     const result = runLauncher({ env, spawnFn: mockSpawn });
     expect(result.exitCode).toBe(0);
@@ -271,14 +271,14 @@ describe("runLauncher — example paths", () => {
     const mockSpawn = makeMockSpawn();
     const env = {
       CLOUDFLARE_TUNNEL_APP_ENABLED: "true",
-      CLOUDFLARE_TUNNEL_APP_TOKEN: "exact-token",
+      CLOUDFLARE_TUNNEL_APP_TOKEN: "cf-test-fixture",
     };
     runLauncher({ env, spawnFn: mockSpawn });
     expect(mockSpawn.calls[0].args).toEqual([
       "tunnel",
       "run",
       "--token",
-      "exact-token",
+      "cf-test-fixture",
     ]);
   });
 
@@ -287,7 +287,7 @@ describe("runLauncher — example paths", () => {
     const mockSpawn = makeMockSpawn();
     const env = {
       CLOUDFLARE_TUNNEL_APP_ENABLED: "true",
-      CLOUDFLARE_TUNNEL_APP_TOKEN: "tok",
+      CLOUDFLARE_TUNNEL_APP_TOKEN: "cf-test-fixture",
     };
     runLauncher({ env, spawnFn: mockSpawn });
     expect(mockSpawn.calls[0].opts).toMatchObject({
@@ -357,7 +357,7 @@ describe("PBT — Property 2: Per-tunnel token error is non-fatal", () => {
           // Assign unique names by index; ensure at least one valid and one invalid token
           const withValid = tunnelConfigs.map((t, i) => ({
             name: `TUNNEL${i}`,
-            token: i === 0 ? `valid-token-${i}` : i === 1 ? "" : t.token,
+            token: i === 0 ? `cf-fixture-${i}` : i === 1 ? "" : t.token,
             enabled: true,
           }));
 
