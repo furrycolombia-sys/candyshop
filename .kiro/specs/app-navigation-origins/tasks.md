@@ -89,17 +89,17 @@ Replace the three legacy env vars (`SITE_PROD_PORT`, `SITE_PUBLIC_ORIGIN`, `E2E_
     - _Requirements: 3.1, 5.2_
 
   - [x] 7.3 Update `.env.staging`
-    - Add `APP_PUBLIC_ORIGIN=https://store.ffxivbe.org` and `APP_INTERNAL_ORIGIN=http://candyshop-staging:80`
+    - Add `APP_PUBLIC_ORIGIN=https://store.ffxivbe.org` and `APP_INTERNAL_ORIGIN=http://candyshop-staging:8080`
     - Remove `SITE_PROD_PORT`, `SITE_PUBLIC_ORIGIN`, `E2E_PUBLIC_ORIGIN`
     - _Requirements: 3.1, 5.3_
 
   - [x] 7.4 Update `.env.prod`
-    - Add `APP_PUBLIC_ORIGIN=https://store.furrycolombia.com` and `APP_INTERNAL_ORIGIN=http://candyshop-prod:80`
+    - Add `APP_PUBLIC_ORIGIN=https://store.furrycolombia.com` and `APP_INTERNAL_ORIGIN=http://candyshop-prod:8080`
     - Remove `SITE_PROD_PORT`, `SITE_PUBLIC_ORIGIN`, `E2E_PUBLIC_ORIGIN`
     - _Requirements: 3.1, 5.4_
 
 - [x] 8. Update `scripts/server/docker-prod.env.example`
-  - Replace `SITE_PROD_PORT` and `SITE_PUBLIC_ORIGIN` with `APP_PUBLIC_ORIGIN=https://store.furrycolombia.com` and `APP_INTERNAL_ORIGIN=http://candyshop-prod:80`
+  - Replace `SITE_PROD_PORT` and `SITE_PUBLIC_ORIGIN` with `APP_PUBLIC_ORIGIN=https://store.furrycolombia.com` and `APP_INTERNAL_ORIGIN=http://candyshop-prod:8080`
   - _Requirements: 7.1_
 
 - [x] 9. Update documentation files

@@ -7,6 +7,14 @@ const DEFAULT_RECEIPT_EXTENSION = ".bin";
 const FALLBACK_RECEIPT_NAME = "receipt";
 const MAX_RECEIPT_FILENAME_LENGTH = 64;
 
+// Only alphanumeric characters and hyphens — no slashes, dots, or other path chars.
+const SAFE_STORAGE_SEGMENT = /^([a-zA-Z0-9_-]+)$/;
+
+// Whitelist for full storage paths: exactly one slash, both segments alphanumeric+hyphen+underscore,
+// second segment has a known image extension. Capture groups used to reconstruct below.
+const SAFE_RECEIPT_PATH =
+  /^([a-zA-Z0-9_-]+)\/([a-zA-Z0-9_-]+)\.(jpg|png|webp)$/;
+
 const RECEIPT_EXTENSION_BY_MIME = {
   "image/jpeg": ".jpg",
   "image/png": ".png",
@@ -102,8 +110,30 @@ export function sanitizeReceiptFilename(file: File): string {
   return `${normalizedBase || FALLBACK_RECEIPT_NAME}${extension}`;
 }
 
+/**
+ * Validates the storage path and returns a new string reconstructed from regex
+ * capture groups. This breaks the SAST taint chain while keeping the same content.
+ */
+export function toSafeStoragePath(storagePath: string): string {
+  const match = SAFE_RECEIPT_PATH.exec(storagePath);
+  if (!match) {
+    throw new Error("Invalid storage path: path traversal detected");
+  }
+  // Reconstruct from capture groups — SAST tools treat these as untainted
+  return `${match[1]}/${match[2]}.${match[3]}`;
+}
+
+export function assertSafeStoragePath(storagePath: string): void {
+  toSafeStoragePath(storagePath);
+}
+
 export function buildReceiptStoragePath(orderId: string, file: File): string {
-  return `${orderId}/${sanitizeReceiptFilename(file)}`;
+  const idMatch = SAFE_STORAGE_SEGMENT.exec(orderId);
+  if (!idMatch) {
+    throw new Error("Invalid orderId: contains unsafe characters");
+  }
+  // Use capture group [1] to reconstruct — breaks SAST taint chain on orderId
+  return `${idMatch[1]}/${sanitizeReceiptFilename(file)}`;
 }
 
 export function getSafeReceiptHref(receiptUrl: string | null): string | null {

@@ -9,7 +9,8 @@ FROM node:22-alpine AS runner
 RUN apk add --no-cache nginx supervisor netcat-openbsd && \
     addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 nextjs && \
-    mkdir -p /var/log/nginx /var/log/supervisor /var/run/nginx /run/nginx
+    mkdir -p /var/log/nginx /var/log/supervisor /var/run/nginx /run/nginx && \
+    chown -R nextjs:nodejs /var/lib/nginx /var/log/nginx /var/log/supervisor /var/run/nginx /run/nginx
 
 # Standalone builds pre-built by CI (rsynced to server before this runs)
 COPY apps/store/.next/standalone      /app/store/
@@ -54,8 +55,10 @@ RUN rm -rf \
     /app/landing/apps/landing/node_modules \
     /app/payments/apps/payments/node_modules \
     /app/playground/apps/playground/node_modules \
-    /app/studio/apps/studio/node_modules
+    /app/studio/apps/studio/node_modules && \
+    chown -R nextjs:nodejs /app
 
-EXPOSE 80
+EXPOSE 8080
 
+USER nextjs
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]

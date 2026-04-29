@@ -55,7 +55,7 @@ SITE_PROD_CONTAINER_NAME=candyshop-staging
 
 # ─── App origins ──────────────────────────────────────────────────
 HOST_PORT=3000   # host port for Docker container
-APP_INTERNAL_ORIGIN=http://candyshop-staging:80  # internal nginx address
+APP_INTERNAL_ORIGIN=http://candyshop-staging:8080  # internal nginx address
 
 # ─── Supabase ─────────────────────────────────────────────────────
 NEXT_PUBLIC_SUPABASE_URL=http://localhost:3030   # or https://... for cloud

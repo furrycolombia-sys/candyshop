@@ -36,11 +36,14 @@ Run e2e dev --fix
 | `--headed`     | flag                                  | off (headless)     | Show the browser window during tests                                                              |
 | `--app`        | `auth` \| `admin` \| `store` \| `all` | `all`              | Which app suite(s) to run                                                                         |
 | `--fix`        | flag                                  | off                | Auto-fix production code when tests fail                                                          |
+| `--no-ux`      | flag                                  | off                | Skip UX-tagged tests (drag-and-drop, animations, layout). UX tests run by default.                |
 | `--files`      | path(s) or pattern                    | all specs          | Restrict to specific test files or grep pattern                                                   |
 | `--skip-infra` | flag                                  | off                | Skip infrastructure startup (phases 1–2); assume services are already running                     |
 | `--clean`      | flag                                  | off                | Reset Supabase DB before running (re-applies all migrations from scratch)                         |
 | `--retries`    | integer                               | `1`                | Number of times to retry a failing test before classifying it as a real failure (flaky detection) |
 | `--timeout`    | milliseconds                          | Playwright default | Override per-test timeout for slow environments                                                   |
+
+**UX tests are included by default.** Pass `--no-ux` to skip them (e.g. for a fast smoke run). Do not require the user to opt-in — if they didn't say "skip ux" or "no ux", run them.
 
 Google OAuth tests are always skipped automatically (they require live Google credentials and are explicitly skipped by the specs themselves).
 
@@ -200,15 +203,72 @@ Otherwise check if local Supabase is already running by reading `SUPABASE_PORT` 
 node scripts/supabase-docker.mjs start --env dev
 ```
 
-**2b. Dev servers**
+**2b. Dev servers — always kill and restart**
 
-Check if app ports are already listening. For each app being tested, check the relevant port (auth=5000, admin=5002, store=5001). If any are down:
+For dev runs, **always kill any existing dev server processes and start a fresh one**, even if ports are already responding. A long-running dev server can accumulate Turbopack module state that causes silent SSR failures (HTTP 500 with no obvious cause). A fresh start guarantees a clean slate and gives you captured stdout/stderr for immediate diagnosis.
 
-```bash
-pnpm dev
+**Step 1 — Kill all app ports:**
+
+```powershell
+# PowerShell — kill processes on all dev app ports
+$ports = @(5000, 5001, 5002, 5003, 5004, 5005, 5006)
+foreach ($port in $ports) {
+    $conn = Get-NetTCPConnection -LocalPort $port -ErrorAction SilentlyContinue
+    if ($conn) {
+        $procId = ($conn.OwningProcess | Select-Object -Unique)
+        Write-Host "Killing PID $procId on port $port"
+        Stop-Process -Id $procId -Force -ErrorAction SilentlyContinue
+    }
+}
 ```
 
-Wait up to 120 seconds for the ports to respond before proceeding.
+**Step 2 — Start `pnpm dev` with captured output:**
+
+```powershell
+# Redirect both stdout and stderr to a log file
+$proc = Start-Process -FilePath "cmd.exe" `
+    -ArgumentList "/c pnpm dev > C:\Temp\devserver.log 2>&1" `
+    -WorkingDirectory "Z:\Github\candystore" `
+    -WindowStyle Hidden -PassThru
+Write-Host "Dev server started, PID $($proc.Id)"
+```
+
+**Step 3 — Wait for required ports to respond:**
+
+Poll each app port needed for the test run (auth=5000, admin=5002, store=5001). Wait up to 120 seconds:
+
+```bash
+until curl -s -o /dev/null -w "%{http_code}" http://localhost:5002/ | grep -qE "^[245]"; do sleep 3; done
+echo "admin up"
+```
+
+**Step 4 — Check log for startup errors:**
+
+Once ports respond (or if a port times out), read the captured log to catch any startup exceptions before running tests:
+
+```powershell
+Get-Content "C:\Temp\devserver.log" | Select-Object -First 100
+```
+
+If you see stack traces, module-not-found errors, or missing env var throws, diagnose and fix before proceeding to Phase 3. Common patterns:
+
+| Log pattern                                   | Likely cause                                               |
+| --------------------------------------------- | ---------------------------------------------------------- |
+| `Error: NEXT_PUBLIC_SUPABASE_URL is required` | Env var not propagated to SSR — check `.env.dev` is loaded |
+| `Module not found`                            | Import path error or missing dependency                    |
+| `Cannot find module '...'`                    | Package not installed — run `pnpm install`                 |
+| `Error: listen EADDRINUSE`                    | Port still held — re-run kill step                         |
+
+**Step 5 — Verify app routes return expected status:**
+
+After ports respond, do a quick sanity check on the actual app routes (not just the root):
+
+```bash
+curl -s -o /dev/null -w "admin /en: %{http_code}\n" http://localhost:5002/en
+curl -s -o /dev/null -w "auth /en: %{http_code}\n" http://localhost:5000/en
+```
+
+A 200 or 3xx is healthy. A 500 on a valid route means the server is broken — **do not proceed to Phase 3**. Read `C:\Temp\devserver.log` for the exception, fix the underlying cause, then restart.
 
 #### Staging environment
 
@@ -266,6 +326,8 @@ docker logs candyshop-staging --tail 50
 ### PHASE 3 — Run Tests
 
 Run tests for each requested app using `node scripts/e2e.mjs`.
+
+**UX tests:** Included by default. Only skip when `--no-ux` was explicitly passed. UX tests cover drag-and-drop, animations, mobile layouts, and other interaction-heavy scenarios — they run as part of the normal suite and their results appear in the summary table.
 
 **Strategy for `--app all`:** Run auth first, then admin. Collect all results.
 
@@ -453,13 +515,16 @@ Save a timestamped markdown report to `.ai-context/reports/`:
 
 ## Infrastructure
 
-| Service             | Status                                                      |
-| ------------------- | ----------------------------------------------------------- |
-| Supabase            | ✅ Started / ✅ Already running / ⏭️ Skipped (--skip-infra) |
-| Docker container    | ✅ Built + started (staging) / ⏭️ N/A (dev)                 |
-| Cloudflare tunnel   | ✅ Active (staging) / ⏭️ N/A (dev)                          |
-| Playwright browsers | ✅ Installed                                                |
-| DB reset            | ✅ Done (--clean) / ⏭️ Skipped                              |
+| Service             | Status                                                           |
+| ------------------- | ---------------------------------------------------------------- |
+| Supabase            | ✅ Started / ✅ Already running / ⏭️ Skipped (--skip-infra)      |
+| Docker container    | ✅ Built + started (staging) / ⏭️ N/A (dev)                      |
+| Cloudflare tunnel   | ✅ Active (staging) / ⏭️ N/A (dev)                               |
+| Playwright browsers | ✅ Installed                                                     |
+| DB reset            | ✅ Done (--clean) / ⏭️ Skipped                                   |
+| Dev server (dev)    | ✅ Killed + restarted clean / ⏭️ N/A (staging)                   |
+| Dev server log      | ✅ Clean startup / ⚠️ Errors captured at `C:\Temp\devserver.log` |
+| UX tests            | ✅ Included (default) / ⏭️ Skipped (--no-ux)                     |
 
 ---
 

@@ -20,7 +20,7 @@ The `E2E_PUBLIC_ORIGIN` dual-purpose pattern (navigation config + test-mode flag
 ## Glossary
 
 - **App_Navigation_Origins**: The feature described in this document — the two-variable model replacing the three legacy variables.
-- **APP_INTERNAL_ORIGIN**: New env var. The base URL used for Docker inter-service HTTP calls (e.g., `http://candyshop-prod:80`). Server-side only; never exposed to the browser.
+- **APP_INTERNAL_ORIGIN**: New env var. The base URL used for Docker inter-service HTTP calls (e.g., `http://candyshop-prod:808080`). Server-side only; never exposed to the browser.
 - **APP_PUBLIC_ORIGIN**: New env var. The browser-facing base URL of the deployed app (e.g., `https://store.furrycolombia.com`). Used by `appUrls.ts` and any code that builds canonical or nav-bar URLs.
 - **Env_File**: One of `.env.dev`, `.env.test`, `.env.staging`, `.env.prod` — the flat env files at the monorepo root loaded by `scripts/load-env.mjs`.
 - **Env_Linter**: `scripts/lint-envs.mjs`, enforces that all Env_Files have exactly the same set of keys.
@@ -93,8 +93,8 @@ The `E2E_PUBLIC_ORIGIN` dual-purpose pattern (navigation config + test-mode flag
 
 1. THE Env_File `.env.dev` SHALL set `APP_PUBLIC_ORIGIN` to `"http://localhost:8088"` and `APP_INTERNAL_ORIGIN` to `"http://localhost:8088"`, because in dev the public and internal origins are the same local address.
 2. THE Env_File `.env.test` SHALL set `APP_PUBLIC_ORIGIN` to `"http://localhost:8088"` and `APP_INTERNAL_ORIGIN` to `"http://localhost:8088"`.
-3. THE Env_File `.env.staging` SHALL set `APP_PUBLIC_ORIGIN` to `"https://store.ffxivbe.org"` and `APP_INTERNAL_ORIGIN` to `"http://candyshop-staging:80"`.
-4. THE Env_File `.env.prod` SHALL set `APP_PUBLIC_ORIGIN` to `"https://store.furrycolombia.com"` and `APP_INTERNAL_ORIGIN` to `"http://candyshop-prod:80"`.
+3. THE Env_File `.env.staging` SHALL set `APP_PUBLIC_ORIGIN` to `"https://store.ffxivbe.org"` and `APP_INTERNAL_ORIGIN` to `"http://candyshop-staging:8080"`.
+4. THE Env_File `.env.prod` SHALL set `APP_PUBLIC_ORIGIN` to `"https://store.furrycolombia.com"` and `APP_INTERNAL_ORIGIN` to `"http://candyshop-prod:8080"`.
 5. WHEN the Env_Linter runs, THE Env_Linter SHALL confirm that `APP_PUBLIC_ORIGIN` and `APP_INTERNAL_ORIGIN` are present in all four Env_Files and that no Env_File contains any Legacy_Var key.
 
 ---

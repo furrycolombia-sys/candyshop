@@ -20,12 +20,18 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const rootDir = resolve(__dirname, "..");
 const isWindows = process.platform === "win32";
 
-const result = spawnSync(
-  isWindows
-    ? `"${resolve(rootDir, "node_modules", ".bin", "turbo.cmd")}"`
-    : resolve(rootDir, "node_modules", ".bin", "turbo"),
-  ["build"],
-  { cwd: rootDir, stdio: "inherit", env: process.env, shell: isWindows },
-);
+// On Windows, turbo.CMD requires cmd.exe. Using shell:true with a quoted path
+// is deprecated (DEP0190) and flagged by SAST (CWE-78). Invoke cmd.exe explicitly.
+const result = isWindows
+  ? spawnSync(
+      "cmd.exe",
+      ["/d", "/s", "/c", resolve(rootDir, "node_modules", ".bin", "turbo.CMD"), "build"],
+      { cwd: rootDir, stdio: "inherit", env: process.env, shell: false },
+    )
+  : spawnSync(
+      resolve(rootDir, "node_modules", ".bin", "turbo"),
+      ["build"],
+      { cwd: rootDir, stdio: "inherit", env: process.env },
+    );
 
 process.exit(result.status ?? 0);

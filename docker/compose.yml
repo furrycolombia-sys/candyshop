@@ -14,10 +14,10 @@ services:
     image: ${SITE_PROD_IMAGE_NAME}
     container_name: ${SITE_PROD_CONTAINER_NAME}
     ports:
-      - "${HOST_PORT}:80"
+      - "${HOST_PORT}:8080"
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "wget", "-q", "-O-", "http://127.0.0.1/health"]
+      test: ["CMD", "wget", "-q", "-O-", "http://127.0.0.1:8080/health"]
       interval: 15s
       timeout: 5s
       retries: 3

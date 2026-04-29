@@ -662,8 +662,13 @@ function sanitizeFilename(filename) {
 
 // Helper to upload a file to Linear's storage
 async function uploadFileToLinear(filePath, filenameOverride) {
-  // Validate path is within project root
   const resolvedPath = resolve(filePath);
+  const normalizedRoot = resolve(projectRoot);
+
+  // Prevent path traversal — file must be within the project root
+  if (!resolvedPath.startsWith(normalizedRoot + "/") && !resolvedPath.startsWith(normalizedRoot + "\\")) {
+    throw new Error(`Access denied: path is outside project root: ${filePath}`);
+  }
 
   if (!existsSync(resolvedPath)) {
     throw new Error(`File not found: ${filePath}`);

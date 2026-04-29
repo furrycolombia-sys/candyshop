@@ -8,8 +8,6 @@ import {
 } from "./config";
 import { mergeSupabaseCookieOptions } from "./cookies";
 
-const LOCAL_HOST = "localhost";
-
 /**
  * Allowed redirect origins for post-auth redirects.
  * Prevents open redirect attacks by validating absolute URLs
@@ -30,25 +28,6 @@ function trimTrailingSlash(value: string) {
   return value.replace(/\/+$/, "");
 }
 
-function getRequestOrigin(request: NextRequest): string {
-  const fallback = new URL(request.url).origin;
-  const forwardedHost = request.headers.get("x-forwarded-host");
-  const forwardedProto = request.headers.get("x-forwarded-proto");
-  const host = request.headers.get("host");
-
-  const candidateHost = forwardedHost ?? host;
-  if (!candidateHost) return fallback;
-
-  const protocol =
-    forwardedProto ?? (candidateHost.includes(LOCAL_HOST) ? "http" : "https");
-
-  try {
-    return new URL(`${protocol}://${candidateHost}`).origin;
-  } catch {
-    return fallback;
-  }
-}
-
 function isSafeRedirect(url: string): boolean {
   // Relative paths are safe, but reject protocol-relative URLs (//evil.com)
   if (url.startsWith("/") && !url.startsWith("//")) return true;
@@ -66,21 +45,22 @@ function isSafeRedirect(url: string): boolean {
   }
 }
 
-function getAuthAppBaseUrl(request: NextRequest) {
-  const explicit = process.env.NEXT_PUBLIC_AUTH_URL?.trim();
-  if (explicit) {
-    return explicit;
-  }
-
-  return getRequestOrigin(request);
+/**
+ * Returns the configured auth app base URL.
+ * Uses the NEXT_PUBLIC_AUTH_URL env var exclusively so that the redirect
+ * base is never derived from attacker-controlled request headers.
+ */
+function getAuthAppBaseUrl(): string {
+  return process.env.NEXT_PUBLIC_AUTH_URL?.trim() ?? "http://localhost:5000";
 }
 
-function buildRedirectUrl(destination: string, request: NextRequest): URL {
+function buildRedirectUrl(destination: string): URL {
   if (!destination.startsWith("/")) {
+    // Absolute URL — caller must have verified via isSafeRedirect()
     return new URL(destination);
   }
 
-  const appBaseUrl = new URL(getAuthAppBaseUrl(request));
+  const appBaseUrl = new URL(getAuthAppBaseUrl());
   const appBasePath =
     appBaseUrl.pathname === "/" ? "" : trimTrailingSlash(appBaseUrl.pathname);
   const nextPath = destination === "/" ? "" : destination;
@@ -104,10 +84,10 @@ export async function handleOAuthCallback(request: NextRequest) {
   const destination = isSafeRedirect(next) ? next : "/en";
 
   if (!code) {
-    return NextResponse.redirect(buildRedirectUrl("/en/login", request));
+    return NextResponse.redirect(buildRedirectUrl("/en/login"));
   }
 
-  const redirectUrl = buildRedirectUrl(destination, request);
+  const redirectUrl = buildRedirectUrl(destination);
   let response = NextResponse.redirect(redirectUrl);
 
   const supabase = createServerClient(SUPABASE_REST_URL, SUPABASE_ANON_KEY, {
@@ -138,7 +118,7 @@ export async function handleOAuthCallback(request: NextRequest) {
 
   if (error) {
     console.error("[auth/callback] Code exchange failed:", error.message);
-    return NextResponse.redirect(buildRedirectUrl("/en/login", request));
+    return NextResponse.redirect(buildRedirectUrl("/en/login"));
   }
 
   return response;

@@ -134,7 +134,7 @@ export function InlineImageCarousel({ control }: InlineImageCarouselProps) {
       return <ImageOff className="size-5 text-muted-foreground" />;
     }
     return (
-      <span className="px-0.5 text-center font-display text-ui-xs font-extrabold uppercase tracking-wide leading-tight">
+      <span className="px-0.5 text-center font-display text-ui-xs/tight font-extrabold uppercase tracking-wide">
         #{index + 1}
       </span>
     );

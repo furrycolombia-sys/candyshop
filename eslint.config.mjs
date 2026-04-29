@@ -1499,35 +1499,35 @@ const eslintConfig = defineConfig([
       "better-tailwindcss/no-deprecated-classes": [
         "error",
         {
-          entryPoint: "apps/web/src/app/globals.css",
+          entryPoint: "apps/store/src/app/globals.css",
         },
       ],
       // Simplify verbose classes (e.g. bg-[var(--x)] → bg-(--x), rotate-[30deg] → rotate-30)
       "better-tailwindcss/enforce-canonical-classes": [
         "error",
         {
-          entryPoint: "apps/web/src/app/globals.css",
+          entryPoint: "apps/store/src/app/globals.css",
         },
       ],
       // Catch duplicate classes in the same className string
       "better-tailwindcss/no-duplicate-classes": [
         "error",
         {
-          entryPoint: "apps/web/src/app/globals.css",
+          entryPoint: "apps/store/src/app/globals.css",
         },
       ],
       // Catch conflicting classes (e.g. p-4 + p-6 on same element)
       "better-tailwindcss/no-conflicting-classes": [
         "error",
         {
-          entryPoint: "apps/web/src/app/globals.css",
+          entryPoint: "apps/store/src/app/globals.css",
         },
       ],
       // Remove extra whitespace in class strings
       "better-tailwindcss/no-unnecessary-whitespace": [
         "warn",
         {
-          entryPoint: "apps/web/src/app/globals.css",
+          entryPoint: "apps/store/src/app/globals.css",
         },
       ],
       // Too many false positives with custom @layer utilities classes — disable

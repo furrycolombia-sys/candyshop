@@ -86,7 +86,7 @@ echo "Using port $PORT for health check."
 # ── 3. Run container ──────────────────────────────────────────────────────────
 docker run -d \
   --name "$CONTAINER_NAME" \
-  -p "${PORT}:80" \
+  -p "${PORT}:8080" \
   "$IMAGE_NAME" > /dev/null
 
 # ── 4. Wait for /health endpoint (max 60s) ────────────────────────────────────

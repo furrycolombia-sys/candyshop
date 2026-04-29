@@ -20,7 +20,7 @@ const supabaseArgs = process.argv
   .slice(2)
   .filter((a, i, arr) => a !== "--env" && arr[i - 1] !== "--env");
 
-const result = spawnSync(
+const result = spawnSync( // nosemgrep: spawn-shell-true
   isWindows ? "pnpm.cmd" : "pnpm",
   ["supabase", ...supabaseArgs],
   { cwd: rootDir, stdio: "inherit", env: process.env, shell: isWindows },

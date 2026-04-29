@@ -151,7 +151,7 @@ export function PaymentMethodEditor({ method }: PaymentMethodEditorProps) {
           type="button"
           onClick={save}
           disabled={!canSave}
-          className="border-strong border-foreground bg-foreground px-4 py-2 text-sm font-bold text-background shadow-brutal-sm transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none disabled:cursor-not-allowed disabled:opacity-40"
+          className="border-strong border-foreground bg-foreground px-4 py-2 text-sm font-bold text-background shadow-brutal-sm transition-all hover:translate-[2px] hover:shadow-none disabled:cursor-not-allowed disabled:opacity-40"
           {...tid("payment-method-save")}
         >
           {isPending ? t("saving") : t("save")}

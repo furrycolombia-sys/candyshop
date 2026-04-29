@@ -20,6 +20,28 @@ import { loadEnv } from "./load-env.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const rootDir = resolve(__dirname, "..");
+const isWindows = process.platform === "win32";
+
+// On Windows, pnpm is a .CMD file that requires cmd.exe. Using shell:true with
+// args is deprecated (DEP0190) and risks injection. Instead, invoke cmd.exe
+// explicitly with a fixed argument list.
+function pnpmSpawnSync(pnpmArgs, opts) {
+  return isWindows
+    ? spawnSync("cmd.exe", ["/d", "/s", "/c", "pnpm", ...pnpmArgs], {
+        ...opts,
+        shell: false,
+      })
+    : spawnSync("pnpm", pnpmArgs, { ...opts, shell: false });
+}
+
+function pnpmSpawn(pnpmArgs, opts) {
+  return isWindows
+    ? spawn("cmd.exe", ["/d", "/s", "/c", "pnpm", ...pnpmArgs], {
+        ...opts,
+        shell: false,
+      })
+    : spawn("pnpm", pnpmArgs, { ...opts, shell: false });
+}
 
 // ── CLI ───────────────────────────────────────────────────────────────────────
 
@@ -83,25 +105,22 @@ let devProc = null;
 // 1. Stop any running tunnel before touching infrastructure
 if (tunnelEnabled) {
   console.log(`▶ tunnel:stop --env ${targetEnv}`);
-  spawnSync("pnpm", ["tunnel:stop", "--env", targetEnv], {
+  pnpmSpawnSync(["tunnel:stop", "--env", targetEnv], {
     cwd: rootDir,
     stdio: "inherit",
     env: process.env,
-    shell: true,
   });
 }
 
 // 2. Start Supabase if using local Docker
 if (supabaseMode === "docker") {
   console.log(`▶ supabase:docker start --env ${targetEnv}`);
-  const result = spawnSync(
-    "pnpm",
+  const result = pnpmSpawnSync(
     ["supabase:docker", "start", "--env", targetEnv],
     {
       cwd: rootDir,
       stdio: "inherit",
       env: process.env,
-      shell: true,
     },
   );
   if (result.status !== 0) process.exit(result.status ?? 1);
@@ -136,16 +155,15 @@ if (appsMode === "docker") {
       if (result.status !== 0) process.exit(result.status ?? 1);
     } else {
       console.log(`\n▶ docker:build --env ${targetEnv} --up`);
-      const result = spawnSync(
-        "pnpm",
+      const result = pnpmSpawnSync(
         ["docker:build", "--env", targetEnv, "--up"],
-        { cwd: rootDir, stdio: "inherit", env: process.env, shell: true },
+        { cwd: rootDir, stdio: "inherit", env: process.env },
       );
       if (result.status !== 0) process.exit(result.status ?? 1);
     }
 
     console.log(`\n   Waiting for app on :${port}...`);
-    await waitForPort(port, 120_000);
+    await waitForHttp(`http://127.0.0.1:${port}/`, 120_000);
     console.log("✓ App ready\n");
   }
 } else {
@@ -157,11 +175,10 @@ if (appsMode === "docker") {
     console.log(`✓ Dev servers already running (${targetApp} on :${port})\n`);
   } else {
     console.log(`\n▶ pnpm dev`);
-    devProc = spawn("pnpm", ["dev"], {
+    devProc = pnpmSpawn(["dev"], {
       cwd: rootDir,
       stdio: "inherit",
       env: process.env,
-      shell: true,
     });
     console.log(`   Waiting for ${targetApp} on :${port}...`);
     await waitForPort(port, 120_000);
@@ -172,11 +189,10 @@ if (appsMode === "docker") {
 // 4. Launch tunnel if enabled
 if (tunnelEnabled) {
   console.log(`\n▶ tunnel --env ${targetEnv}`);
-  const result = spawnSync("pnpm", ["tunnel", "--env", targetEnv], {
+  const result = pnpmSpawnSync(["tunnel", "--env", targetEnv], {
     cwd: rootDir,
     stdio: "inherit",
     env: process.env,
-    shell: true,
   });
   if (result.status !== 0) process.exit(result.status ?? 1);
 }
@@ -210,18 +226,16 @@ if (uxOnly) {
 } else if (!includeUx) {
   pwArgs.push("--grep-invert", "@ux");
 }
-// Quote args that contain spaces so shell: true doesn't break them into tokens
 if (passthroughArgs.length) {
-  pwArgs.push(...passthroughArgs.map((a) => (a.includes(" ") ? `"${a}"` : a)));
+  pwArgs.push(...passthroughArgs);
 }
 
 console.log(`▶ playwright test  app=${targetApp}  env=${targetEnv}\n`);
 
-const pw = spawn("pnpm", pwArgs, {
+const pw = pnpmSpawn(pwArgs, {
   cwd: rootDir,
   stdio: "inherit",
   env: { ...process.env, TARGET_ENV: targetEnv },
-  shell: true,
 });
 
 pw.on("exit", (code) => {
@@ -265,5 +279,33 @@ async function waitForPort(port, timeoutMs) {
     await new Promise((r) => setTimeout(r, 1000));
   }
   console.error(`ERROR: port ${port} not ready after ${timeoutMs}ms`);
+  process.exit(1);
+}
+
+// HTTP-level readiness check — used for Docker mode where the port mapping layer
+// accepts TCP connections before nginx inside the container is actually serving.
+async function checkHttp(url) {
+  const { request } = await import("node:http");
+  return new Promise((res) => {
+    const req = request(url, { timeout: 3000 }, (resp) => {
+      resp.resume();
+      res(true);
+    });
+    req.once("error", () => res(false));
+    req.once("timeout", () => {
+      req.destroy();
+      res(false);
+    });
+    req.end();
+  });
+}
+
+async function waitForHttp(url, timeoutMs) {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    if (await checkHttp(url)) return;
+    await new Promise((r) => setTimeout(r, 1000));
+  }
+  console.error(`ERROR: ${url} not ready after ${timeoutMs}ms`);
   process.exit(1);
 }
