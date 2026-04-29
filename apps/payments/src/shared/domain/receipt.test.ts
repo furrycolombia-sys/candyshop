@@ -6,6 +6,7 @@ import {
   buildReceiptStoragePath,
   getSafeReceiptHref,
   sanitizeReceiptFilename,
+  toSafeStoragePath,
   validateReceiptFile,
 } from "./receipt";
 
@@ -80,6 +81,22 @@ describe("receipt helpers", () => {
       assertSafeStoragePath("order-123/../../other/file.png"),
     ).toThrow("path traversal");
     expect(() => assertSafeStoragePath("../secret.txt")).toThrow(
+      "path traversal",
+    );
+  });
+
+  it("toSafeStoragePath returns reconstructed path for valid input", () => {
+    expect(toSafeStoragePath("order-123/receipt.png")).toBe(
+      "order-123/receipt.png",
+    );
+    expect(toSafeStoragePath("abc_def/my-file.webp")).toBe(
+      "abc_def/my-file.webp",
+    );
+  });
+
+  it("toSafeStoragePath throws for path traversal", () => {
+    expect(() => toSafeStoragePath("../secret.txt")).toThrow("path traversal");
+    expect(() => toSafeStoragePath("order/../../admin/file.png")).toThrow(
       "path traversal",
     );
   });

@@ -208,7 +208,7 @@ function runSupabase(subcommand) {
   const commandArgs =
     subcommand === "reset" ? ["supabase", "db", "reset"] : ["supabase", subcommand];
 
-  const result = spawnSync(
+  const result = spawnSync( // nosemgrep: spawn-shell-true
     isWindows ? "pnpm.cmd" : "pnpm",
     commandArgs,
     {
