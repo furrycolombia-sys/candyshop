@@ -73,6 +73,8 @@ jobs:
           git log --oneline -1 "$COMMIT"
 
       - name: Update staging branch
+        env:
+          RESOLVED_COMMIT: ${{ steps.resolve.outputs.commit }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -81,21 +83,23 @@ jobs:
           if git rev-parse origin/staging >/dev/null 2>&1; then
             echo "Staging branch exists, updating..."
             git checkout staging
-            git reset --hard ${{ steps.resolve.outputs.commit }}
+            git reset --hard "$RESOLVED_COMMIT"
           else
             echo "Creating staging branch..."
-            git checkout -b staging ${{ steps.resolve.outputs.commit }}
+            git checkout -b staging "$RESOLVED_COMMIT"
           fi
 
           git push origin staging --force-with-lease
 
       - name: Summary
+        env:
+          RESOLVED_COMMIT: ${{ steps.resolve.outputs.commit }}
         run: |
           echo "## Sandbox Release Complete" >> "$GITHUB_STEP_SUMMARY"
           echo "" >> "$GITHUB_STEP_SUMMARY"
           echo "| Field | Value |" >> "$GITHUB_STEP_SUMMARY"
           echo "|-------|-------|" >> "$GITHUB_STEP_SUMMARY"
-          echo "| **Commit** | \`${{ steps.resolve.outputs.commit }}\` |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| **Commit** | \`${RESOLVED_COMMIT}\` |" >> "$GITHUB_STEP_SUMMARY"
           echo "| **Checks** | Passed |" >> "$GITHUB_STEP_SUMMARY"
           echo "" >> "$GITHUB_STEP_SUMMARY"
           echo "The staging branch has been updated. The deploy workflow will automatically build and deploy the POC version." >> "$GITHUB_STEP_SUMMARY"
