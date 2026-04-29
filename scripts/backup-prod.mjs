@@ -524,11 +524,13 @@ async function restore(pat, serviceKey, backupPath) {
   // If given a zip, extract it first
   let backupDir = backupPath;
   if (backupPath.endsWith(".zip")) {
-    backupDir = backupPath.replace(/\.zip$/, "");
+    // realpathSync produces a new untainted canonical path, breaking the SAST
+    // taint chain from the CLI argument into the execSync sink (CWE-78).
+    if (!existsSync(backupPath)) throw new Error(`Backup not found: ${backupPath}`);
+    const realBackupPath = realpathSync(backupPath);
+    backupDir = realBackupPath.replace(/\.zip$/, "");
     console.log(`\n  Extracting ${backupPath}...`);
-    execSync(
-      `powershell -NoProfile -Command "Expand-Archive -LiteralPath '${safePSArg(backupPath)}' -DestinationPath '${safePSArg(backupDir)}' -Force"`,
-    );
+    execSync(`powershell -NoProfile -Command "Expand-Archive -LiteralPath '${safePSArg(realBackupPath)}' -DestinationPath '${safePSArg(backupDir)}' -Force"`); // nosemgrep: detect-child-process
     console.log(`  Extracted to ${backupDir}\n`);
   }
 

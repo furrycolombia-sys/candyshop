@@ -57,6 +57,7 @@ console.log(`   env: ${targetEnv}\n`);
 // ── Generate ~/.cloudflared/config.yml from env ───────────────────────────────
 
 const tunnelId = process.env.CLOUDFLARE_TUNNEL_ID;
+let baseHost = null; // set below when tunnelId is present; used for readiness poll
 
 if (tunnelId) {
   const credentialsFile = resolve(
@@ -95,7 +96,7 @@ if (tunnelId) {
     );
     process.exit(1);
   }
-  const baseHost = new URL(siteUrl).hostname.split(".").slice(-2).join(".");
+  baseHost = new URL(siteUrl).hostname.split(".").slice(-2).join(".");
 
   const configPath = resolve(homedir(), ".cloudflared", "config.yml");
   const config = `tunnel: ${tunnelId}
@@ -179,6 +180,42 @@ for (const name of tunnelNames) {
 
 if (launchedCount === 0) {
   console.log("No tunnels were enabled — nothing launched.");
+}
+
+// Wait until the tunnel is actually routing traffic before exiting.
+// cloudflared takes 5–15 s to connect to Cloudflare's edge after spawning.
+// Without this poll, callers (e2e.mjs) would start tests before the tunnel
+// is ready, receiving 530 HTML responses instead of JSON from Supabase.
+if (launchedCount > 0 && baseHost) {
+  const checkUrl = `https://supabase.${baseHost}/auth/v1/health`;
+  console.log(`\n   Waiting for tunnel to route traffic (${checkUrl})...`);
+  const deadline = Date.now() + 300_000;
+  let ready = false;
+  while (Date.now() < deadline) {
+    try {
+      // Manual controller avoids AbortSignal.timeout() libuv crash on Windows
+      // when process.exit() fires while the internal timer is still pending.
+      const ac = new AbortController();
+      const tid = setTimeout(() => ac.abort(), 5_000);
+      let res;
+      try {
+        res = await fetch(checkUrl, { signal: ac.signal });
+      } finally {
+        clearTimeout(tid);
+      }
+      if (res.status !== 530) {
+        console.log(`✓ Tunnel ready (HTTP ${res.status})\n`);
+        ready = true;
+        break;
+      }
+    } catch {
+      // connection error or abort — tunnel not yet routing, keep polling
+    }
+    await new Promise((r) => setTimeout(r, 2_000));
+  }
+  if (!ready) {
+    console.warn(`⚠ Tunnel readiness check timed out after 300 s — tests may fail\n`);
+  }
 }
 
 process.exit(0);

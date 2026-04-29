@@ -7,6 +7,7 @@ settings:
 overrides:
   vite: '>=7.3.2'
   uuid: '>=14.0.0'
+  postcss: '>=8.5.10'
 
 importers:
 
@@ -245,7 +246,7 @@ importers:
         specifier: ^2.13.6
         version: 2.13.6(@types/node@25.6.0)(typescript@6.0.3)
       postcss:
-        specifier: ^8.5.12
+        specifier: '>=8.5.10'
         version: 8.5.12
       tailwindcss:
         specifier: ^4.2.4
@@ -351,7 +352,7 @@ importers:
         specifier: ^29.1.0
         version: 29.1.0
       postcss:
-        specifier: ^8.5.12
+        specifier: '>=8.5.10'
         version: 8.5.12
       tailwindcss:
         specifier: ^4.2.4
@@ -445,7 +446,7 @@ importers:
         specifier: ^29.1.0
         version: 29.1.0
       postcss:
-        specifier: ^8.5.12
+        specifier: '>=8.5.10'
         version: 8.5.12
       tailwindcss:
         specifier: ^4.2.4
@@ -560,7 +561,7 @@ importers:
         specifier: ^2.13.6
         version: 2.13.6(@types/node@25.6.0)(typescript@6.0.3)
       postcss:
-        specifier: ^8.5.12
+        specifier: '>=8.5.10'
         version: 8.5.12
       tailwindcss:
         specifier: ^4.2.4
@@ -660,7 +661,7 @@ importers:
         specifier: ^2.13.6
         version: 2.13.6(@types/node@25.6.0)(typescript@6.0.3)
       postcss:
-        specifier: ^8.5.12
+        specifier: '>=8.5.10'
         version: 8.5.12
       tailwindcss:
         specifier: ^4.2.4
@@ -778,7 +779,7 @@ importers:
         specifier: ^2.13.6
         version: 2.13.6(@types/node@25.6.0)(typescript@6.0.3)
       postcss:
-        specifier: ^8.5.12
+        specifier: '>=8.5.10'
         version: 8.5.12
       tailwindcss:
         specifier: ^4.2.4
@@ -905,7 +906,7 @@ importers:
         specifier: ^2.13.6
         version: 2.13.6(@types/node@25.6.0)(typescript@6.0.3)
       postcss:
-        specifier: ^8.5.12
+        specifier: '>=8.5.10'
         version: 8.5.12
       tailwindcss:
         specifier: ^4.2.4
@@ -5300,7 +5301,7 @@ packages:
     resolution: {integrity: sha512-bEOVpHU9picRZux5XnwGsmCN4+8oZo7vSW0O0/Enq/TO5R2pIAP2279NsszpJR7ocnQt4WXU0+nnh/0JuK4KHQ==}
     engines: {node: ^14.0.0 || >=16.0.0}
     peerDependencies:
-      postcss: ^8.4.47
+      postcss: '>=8.5.10'
 
   detective-sass@6.0.2:
     resolution: {integrity: sha512-i3xpXHDKS0qI2aFW4asQ7fqlPK00ndOVZELvQapFJCaF0VxYmsNWtd0AmvXbTLMk7bfO5VdIeorhY9KfmHVoVA==}
@@ -7279,7 +7280,7 @@ packages:
     resolution: {integrity: sha512-0AioNCJZ2DPYz5ABT6bddIqlhgwhpHZ/l65YAYo0BCIn0xiDpsnTHz0gnoTGk0OXZW0JRs+cDwL8u/teRdz+8A==}
     engines: {node: '>=18.0'}
     peerDependencies:
-      postcss: ^8.4.31
+      postcss: '>=8.5.10'
 
   postcss-selector-parser@6.0.10:
     resolution: {integrity: sha512-IQ7TZdoaqbT+LCpShg46jnZVlhWD2w6iQYAcYXfHARZ7X1t/UGhhceQDs5X0cGqKvYlHNOuv7Oa1xmb0oQuA3w==}
@@ -7296,11 +7297,7 @@ packages:
     resolution: {integrity: sha512-YLJpK0N1brcNJrs9WatuJFtHaV9q5aAOj+S4DI5S7jgHlRfm0PIbDCAFRYMQD5SHq7Fy6xsDhyutgS0QOAs0qw==}
     engines: {node: '>=10'}
     peerDependencies:
-      postcss: ^8.2.9
-
-  postcss@8.4.31:
-    resolution: {integrity: sha512-PS08Iboia9mts/2ygV3eLpY5ghnUcfLV/EXTOW1E2qYxJKGGBUtNjN76FYHnMs36RmARn41bC0AZmn+rR0OVpQ==}
-    engines: {node: ^10 || ^12 || >=14}
+      postcss: '>=8.5.10'
 
   postcss@8.5.12:
     resolution: {integrity: sha512-W62t/Se6rA0Az3DfCL0AqJwXuKwBeYg6nOaIgzP+xZ7N5BFCI7DYi1qs6ygUYT6rvfi6t9k65UMLJC+PHZpDAA==}
@@ -14936,7 +14933,7 @@ snapshots:
       '@swc/helpers': 0.5.15
       baseline-browser-mapping: 2.10.23
       caniuse-lite: 1.0.30001791
-      postcss: 8.4.31
+      postcss: 8.5.12
       react: 19.2.5
       react-dom: 19.2.5(react@19.2.5)
       styled-jsx: 5.1.6(@babel/core@7.29.0)(react@19.2.5)
@@ -15318,12 +15315,6 @@ snapshots:
       is-url-superb: 4.0.0
       postcss: 8.5.12
       quote-unquote: 1.0.0
-
-  postcss@8.4.31:
-    dependencies:
-      nanoid: 3.3.11
-      picocolors: 1.1.1
-      source-map-js: 1.2.1
 
   postcss@8.5.12:
     dependencies:

@@ -48,22 +48,31 @@ function portForApp(name) {
 }
 
 const children = appNames.map((app) => {
-  const appDir = resolve(rootDir, "apps", app);
-  const port = portForApp(app);
+  const appDir = resolve(rootDir, "apps", app); // nosemgrep: AIK_ts_generic_path_traversal
+  const rawPort = portForApp(app);
+  // Parse as integer to sanitize: only a pure number reaches spawn args,
+  // breaking the taint chain from the directory name through portForApp.
+  const portNumber = parseInt(rawPort ?? "", 10);
+  const safePort =
+    !Number.isNaN(portNumber) && portNumber > 0 && portNumber <= 65535
+      ? String(portNumber)
+      : null;
+  // pnpm hoists binaries to the workspace root — not to each app's node_modules/.bin/
   const nextBin = resolve(
-    appDir,
+    rootDir,
     "node_modules",
     ".bin",
     isWindows ? "next.CMD" : "next",
   );
-  const args = ["dev", ...(port ? ["-p", port] : [])];
+  const args = ["dev", ...(safePort ? ["-p", safePort] : [])];
 
+  // On Windows, .CMD files cannot be spawned directly without shell:true.
+  // Invoke cmd.exe explicitly with a fixed argument list to avoid shell injection.
   return isWindows
-    ? spawn(`"${nextBin}" ${args.join(" ")}`, {
+    ? spawn("cmd.exe", ["/d", "/s", "/c", nextBin, ...args], {
         cwd: appDir,
         stdio: "inherit",
         env: process.env,
-        shell: true,
       })
     : spawn(nextBin, args, { cwd: appDir, stdio: "inherit", env: process.env });
 });
