@@ -209,7 +209,7 @@ docker rm -f "$CONTAINER_NAME" 2>/dev/null || true
 docker run -d \
   --name "$CONTAINER_NAME" \
   --restart unless-stopped \
-  -p "${HOST_PORT}:80" \
+  -p "${HOST_PORT}:8080" \
   -e "SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY:-}" \
   -e "TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN:-}" \
   -e "TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID:-}" \
