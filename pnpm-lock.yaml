@@ -7,7 +7,7 @@ settings:
 overrides:
   vite: '>=7.3.2'
   uuid: '>=14.0.0'
-  postcss: '>=8.5.10'
+  postcss: ^8.5.12
 
 importers:
 
@@ -246,7 +246,7 @@ importers:
         specifier: ^2.13.6
         version: 2.13.6(@types/node@25.6.0)(typescript@6.0.3)
       postcss:
-        specifier: '>=8.5.10'
+        specifier: ^8.5.12
         version: 8.5.12
       tailwindcss:
         specifier: ^4.2.4
@@ -352,7 +352,7 @@ importers:
         specifier: ^29.1.0
         version: 29.1.0
       postcss:
-        specifier: '>=8.5.10'
+        specifier: ^8.5.12
         version: 8.5.12
       tailwindcss:
         specifier: ^4.2.4
@@ -446,7 +446,7 @@ importers:
         specifier: ^29.1.0
         version: 29.1.0
       postcss:
-        specifier: '>=8.5.10'
+        specifier: ^8.5.12
         version: 8.5.12
       tailwindcss:
         specifier: ^4.2.4
@@ -561,7 +561,7 @@ importers:
         specifier: ^2.13.6
         version: 2.13.6(@types/node@25.6.0)(typescript@6.0.3)
       postcss:
-        specifier: '>=8.5.10'
+        specifier: ^8.5.12
         version: 8.5.12
       tailwindcss:
         specifier: ^4.2.4
@@ -661,7 +661,7 @@ importers:
         specifier: ^2.13.6
         version: 2.13.6(@types/node@25.6.0)(typescript@6.0.3)
       postcss:
-        specifier: '>=8.5.10'
+        specifier: ^8.5.12
         version: 8.5.12
       tailwindcss:
         specifier: ^4.2.4
@@ -779,7 +779,7 @@ importers:
         specifier: ^2.13.6
         version: 2.13.6(@types/node@25.6.0)(typescript@6.0.3)
       postcss:
-        specifier: '>=8.5.10'
+        specifier: ^8.5.12
         version: 8.5.12
       tailwindcss:
         specifier: ^4.2.4
@@ -906,7 +906,7 @@ importers:
         specifier: ^2.13.6
         version: 2.13.6(@types/node@25.6.0)(typescript@6.0.3)
       postcss:
-        specifier: '>=8.5.10'
+        specifier: ^8.5.12
         version: 8.5.12
       tailwindcss:
         specifier: ^4.2.4
@@ -5301,7 +5301,7 @@ packages:
     resolution: {integrity: sha512-bEOVpHU9picRZux5XnwGsmCN4+8oZo7vSW0O0/Enq/TO5R2pIAP2279NsszpJR7ocnQt4WXU0+nnh/0JuK4KHQ==}
     engines: {node: ^14.0.0 || >=16.0.0}
     peerDependencies:
-      postcss: '>=8.5.10'
+      postcss: ^8.5.12
 
   detective-sass@6.0.2:
     resolution: {integrity: sha512-i3xpXHDKS0qI2aFW4asQ7fqlPK00ndOVZELvQapFJCaF0VxYmsNWtd0AmvXbTLMk7bfO5VdIeorhY9KfmHVoVA==}
@@ -7280,7 +7280,7 @@ packages:
     resolution: {integrity: sha512-0AioNCJZ2DPYz5ABT6bddIqlhgwhpHZ/l65YAYo0BCIn0xiDpsnTHz0gnoTGk0OXZW0JRs+cDwL8u/teRdz+8A==}
     engines: {node: '>=18.0'}
     peerDependencies:
-      postcss: '>=8.5.10'
+      postcss: ^8.5.12
 
   postcss-selector-parser@6.0.10:
     resolution: {integrity: sha512-IQ7TZdoaqbT+LCpShg46jnZVlhWD2w6iQYAcYXfHARZ7X1t/UGhhceQDs5X0cGqKvYlHNOuv7Oa1xmb0oQuA3w==}
@@ -7297,7 +7297,7 @@ packages:
     resolution: {integrity: sha512-YLJpK0N1brcNJrs9WatuJFtHaV9q5aAOj+S4DI5S7jgHlRfm0PIbDCAFRYMQD5SHq7Fy6xsDhyutgS0QOAs0qw==}
     engines: {node: '>=10'}
     peerDependencies:
-      postcss: '>=8.5.10'
+      postcss: ^8.5.12
 
   postcss@8.5.12:
     resolution: {integrity: sha512-W62t/Se6rA0Az3DfCL0AqJwXuKwBeYg6nOaIgzP+xZ7N5BFCI7DYi1qs6ygUYT6rvfi6t9k65UMLJC+PHZpDAA==}
