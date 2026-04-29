@@ -1,9 +1,9 @@
 # =============================================================================
 # Candyshop — CI / local-dev image (all apps, built from source)
 # Builds all 7 apps in standalone mode, runs them behind nginx via supervisord.
-# Exposes port 80 (nginx) for E2E testing all routes.
+# Exposes port 8080 (nginx) for E2E testing all routes.
 # Build: docker build -f docker/ci/Dockerfile -t candyshop-ci .
-# Run:   docker run -p 8088:80 candyshop-ci
+# Run:   docker run -p 8088:8080 candyshop-ci
 # =============================================================================
 
 # ── Stage 1: install deps ─────────────────────────────────────────────────────
@@ -76,7 +76,8 @@ FROM node:22-alpine AS runner
 RUN apk add --no-cache nginx supervisor netcat-openbsd && \
     addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 nextjs && \
-    mkdir -p /var/log/nginx /var/log/supervisor /var/run/nginx /run/nginx
+    mkdir -p /var/log/nginx /var/log/supervisor /var/run/nginx /run/nginx && \
+    chown -R nextjs:nodejs /var/lib/nginx /var/log/nginx /var/log/supervisor /var/run/nginx /run/nginx
 
 # Copy standalone builds for each app
 COPY --from=builder /app/apps/store/.next/standalone    /app/store/
@@ -114,6 +115,9 @@ COPY docker/prod/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 # Copy the in-container health watcher
 COPY docker/watcher.mjs /app/watcher.mjs
 
-EXPOSE 80
+RUN chown -R nextjs:nodejs /app
 
+EXPOSE 8080
+
+USER nextjs
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]

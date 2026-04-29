@@ -206,12 +206,12 @@ No `isE2EMode` flag. No `E2E_PUBLIC_ORIGIN` reference. The script is environment
 
 ### 6. Env files (all four)
 
-| File           | `APP_PUBLIC_ORIGIN`               | `APP_INTERNAL_ORIGIN`         |
-| -------------- | --------------------------------- | ----------------------------- |
-| `.env.dev`     | `http://localhost:8088`           | `http://localhost:8088`       |
-| `.env.test`    | `http://localhost:8088`           | `http://localhost:8088`       |
-| `.env.staging` | `https://store.ffxivbe.org`       | `http://candyshop-staging:80` |
-| `.env.prod`    | `https://store.furrycolombia.com` | `http://candyshop-prod:80`    |
+| File           | `APP_PUBLIC_ORIGIN`               | `APP_INTERNAL_ORIGIN`           |
+| -------------- | --------------------------------- | ------------------------------- |
+| `.env.dev`     | `http://localhost:8088`           | `http://localhost:8088`         |
+| `.env.test`    | `http://localhost:8088`           | `http://localhost:8088`         |
+| `.env.staging` | `https://store.ffxivbe.org`       | `http://candyshop-staging:8080` |
+| `.env.prod`    | `https://store.furrycolombia.com` | `http://candyshop-prod:8080`    |
 
 Remove from all four: `SITE_PROD_PORT`, `SITE_PUBLIC_ORIGIN`, `E2E_PUBLIC_ORIGIN`.
 
@@ -230,7 +230,7 @@ With:
 
 ```
 APP_PUBLIC_ORIGIN=https://store.furrycolombia.com
-APP_INTERNAL_ORIGIN=http://candyshop-prod:80
+APP_INTERNAL_ORIGIN=http://candyshop-prod:8080
 ```
 
 ### 8. Documentation files

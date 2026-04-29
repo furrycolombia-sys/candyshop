@@ -150,7 +150,7 @@ The container runs Nginx + supervisord with 7 standalone Next.js servers inside.
 SITE_PROD_CONTAINER_NAME=candyshop-prod
 SITE_PROD_IMAGE_NAME=candyshop-prod
 HOST_PORT=9090
-APP_INTERNAL_ORIGIN=http://candyshop-prod:80
+APP_INTERNAL_ORIGIN=http://candyshop-prod:8080
 NEXT_PUBLIC_SUPABASE_URL=<supabase-url>
 NEXT_PUBLIC_SUPABASE_ANON_KEY=<supabase-anon-key>
 AUTH_PROVIDER_MODE=supabase
@@ -365,7 +365,7 @@ cat > ~/.env.prod << 'EOF'
 SITE_PROD_CONTAINER_NAME=candyshop-prod
 SITE_PROD_IMAGE_NAME=candyshop-prod
 HOST_PORT=9090
-APP_INTERNAL_ORIGIN=http://candyshop-prod:80
+APP_INTERNAL_ORIGIN=http://candyshop-prod:8080
 NEXT_PUBLIC_SUPABASE_URL=<supabase-url>
 NEXT_PUBLIC_SUPABASE_ANON_KEY=<supabase-anon-key>
 AUTH_PROVIDER_MODE=supabase
