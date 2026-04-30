@@ -10,6 +10,27 @@ import {
 
 const JSON_CONTENT_TYPE = "application/json";
 
+const ISO_DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/;
+const UUID_REGEX =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const ALLOWED_STATUSES = new Set([
+  "pending",
+  "paid",
+  "failed",
+  "refunded",
+  "cancelled",
+]);
+const ALLOWED_CURRENCIES = new Set(["usd", "cop", "eur", "gbp"]);
+
+function isValidIsoDate(value: string): boolean {
+  return ISO_DATE_REGEX.test(value) && !Number.isNaN(Date.parse(value));
+}
+
+function isValidAmount(value: string): boolean {
+  const num = Number.parseFloat(value);
+  return !Number.isNaN(num) && num >= 0;
+}
+
 type OrderRow = {
   id: string;
   created_at: string;
@@ -35,10 +56,75 @@ type UserProfileRow = {
   display_name: string | null;
 };
 
+type BuildQueryResult =
+  | { ok: true; query: Record<string, string | readonly string[]> }
+  | { ok: false; error: string };
+
+function applyDateFilters(
+  query: Record<string, string>,
+  params: URLSearchParams,
+): string | null {
+  const dateFrom = params.get("dateFrom");
+  if (dateFrom) {
+    if (!isValidIsoDate(dateFrom)) return "Invalid dateFrom";
+    query["created_at"] = `gte.${dateFrom}`;
+  }
+  const dateTo = params.get("dateTo");
+  if (dateTo) {
+    if (!isValidIsoDate(dateTo)) return "Invalid dateTo";
+    if (query["created_at"]) {
+      query["created_at_lte"] = `lte.${dateTo}T23:59:59`;
+    } else {
+      query["created_at"] = `lte.${dateTo}T23:59:59`;
+    }
+  }
+  return null;
+}
+
+function applyAmountFilters(
+  query: Record<string, string>,
+  params: URLSearchParams,
+): string | null {
+  const amountMin = params.get("amountMin");
+  if (amountMin) {
+    if (!isValidAmount(amountMin)) return "Invalid amountMin";
+    query["total"] = `gte.${amountMin}`;
+  }
+  const amountMax = params.get("amountMax");
+  if (amountMax) {
+    if (!isValidAmount(amountMax)) return "Invalid amountMax";
+    query[query["total"] ? "total_lte" : "total"] = `lte.${amountMax}`;
+  }
+  return null;
+}
+
+function applyScalarFilters(
+  query: Record<string, string>,
+  params: URLSearchParams,
+): string | null {
+  const status = params.get("status");
+  if (status) {
+    if (!ALLOWED_STATUSES.has(status)) return "Invalid status";
+    query["payment_status"] = `eq.${status}`;
+  }
+  const buyerId = params.get("buyerId");
+  if (buyerId) {
+    if (!UUID_REGEX.test(buyerId)) return "Invalid buyerId";
+    query["user_id"] = `eq.${buyerId}`;
+  }
+  const currency = params.get("currency");
+  if (currency) {
+    if (!ALLOWED_CURRENCIES.has(currency.toLowerCase()))
+      return "Invalid currency";
+    query["currency"] = `eq.${currency.toLowerCase()}`;
+  }
+  return null;
+}
+
 function buildQuery(
   sellerId: string,
   params: URLSearchParams,
-): Record<string, string | readonly string[]> {
+): BuildQueryResult {
   const query: Record<string, string> = {
     seller_id: `eq.${sellerId}`,
     select:
@@ -46,44 +132,16 @@ function buildQuery(
     order: "created_at.desc",
   };
 
-  const dateFrom = params.get("dateFrom");
-  if (dateFrom) query["created_at"] = `gte.${dateFrom}`;
+  const dateError = applyDateFilters(query, params);
+  if (dateError) return { ok: false, error: dateError };
 
-  const dateTo = params.get("dateTo");
-  if (dateTo) {
-    const existing = query["created_at"];
-    if (existing) {
-      // Both from and to: use range
-      query["created_at"] = `gte.${dateFrom}`;
-      query["created_at_lte"] = `lte.${dateTo}T23:59:59`;
-    } else {
-      query["created_at"] = `lte.${dateTo}T23:59:59`;
-    }
-  }
+  const amountError = applyAmountFilters(query, params);
+  if (amountError) return { ok: false, error: amountError };
 
-  const status = params.get("status");
-  if (status) query["payment_status"] = `eq.${status}`;
+  const scalarError = applyScalarFilters(query, params);
+  if (scalarError) return { ok: false, error: scalarError };
 
-  const buyerId = params.get("buyerId");
-  if (buyerId) query["user_id"] = `eq.${buyerId}`;
-
-  const currency = params.get("currency");
-  if (currency) query["currency"] = `eq.${currency}`;
-
-  const amountMin = params.get("amountMin");
-  if (amountMin) query["total"] = `gte.${amountMin}`;
-
-  const amountMax = params.get("amountMax");
-  if (amountMax) {
-    const existing = query["total"];
-    if (existing) {
-      query["total_lte"] = `lte.${amountMax}`;
-    } else {
-      query["total"] = `lte.${amountMax}`;
-    }
-  }
-
-  return query;
+  return { ok: true, query };
 }
 
 function mapOrder(
@@ -125,8 +183,11 @@ export async function GET(request: Request) {
     }
 
     const { searchParams } = new URL(request.url);
-    const query = buildQuery(user.id, searchParams);
-    const path = createRestPath("orders", query);
+    const queryResult = buildQuery(user.id, searchParams);
+    if (!queryResult.ok) {
+      return NextResponse.json({ error: queryResult.error }, { status: 400 });
+    }
+    const path = createRestPath("orders", queryResult.query);
     const rows = await adminFetchJson<OrderRow[]>(path, {
       headers: { Accept: JSON_CONTENT_TYPE },
     });
