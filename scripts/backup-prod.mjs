@@ -395,11 +395,13 @@ async function restoreTable(pat, serviceKey, table, rows) {
 function computeBackupHash(outDir) {
   const hash = createHash("sha256");
   const files = readdirSync(outDir)
-    .filter((f) => f.endsWith(".json"))
+    .filter((f) => f.endsWith(".json") && f !== "manifest.json")
     .sort();
   for (const file of files) {
+    const filePath = join(outDir, file); // nosemgrep: AIK_ts_generic_path_traversal
+    assertPathInside(outDir, filePath);
     hash.update(file);
-    hash.update(readFileSync(join(outDir, file)));
+    hash.update(readFileSync(filePath));
   }
   return hash.digest("hex");
 }
@@ -457,6 +459,22 @@ async function backup(pat, serviceKey) {
     }
   }
 
+  const totalRows = Object.values(manifest.tables)
+    .filter((v) => typeof v === "number")
+    .reduce((a, b) => a + b, 0);
+
+  // ── Change detection (DB-only hash — skip storage download if unchanged) ──
+  const hashPath = resolve(rootDir, ".backup-hash");
+  const currentHash = computeBackupHash(outDir);
+  const lastHash = existsSync(hashPath) ? readFileSync(hashPath, "utf-8").trim() : null;
+
+  if (currentHash === lastHash) {
+    console.log("\n  ℹ️  DB content unchanged since last upload — skipping storage download and Telegram upload");
+    rmSync(outDir, { recursive: true, force: true });
+    console.log(`\n✅ No changes detected. DB tables: ${tables.length}, rows: ${totalRows}\n`);
+    return;
+  }
+
   // ── Storage ──
   console.log("\n── Storage ───────────────────────────────────");
   console.log(`  Listing objects in bucket "${STORAGE_BUCKET}"...`);
@@ -486,22 +504,6 @@ async function backup(pat, serviceKey) {
 
   // ── Manifest ──
   writeFileSync(resolve(outDir, "manifest.json"), JSON.stringify(manifest, null, 2));
-
-  const totalRows = Object.values(manifest.tables)
-    .filter((v) => typeof v === "number")
-    .reduce((a, b) => a + b, 0);
-
-  // ── Change detection ──
-  const hashPath = resolve(rootDir, ".backup-hash");
-  const currentHash = computeBackupHash(outDir);
-  const lastHash = existsSync(hashPath) ? readFileSync(hashPath, "utf-8").trim() : null;
-
-  if (currentHash === lastHash) {
-    console.log("\n  ℹ️  Backup content unchanged since last upload — skipping zip and Telegram upload");
-    rmSync(outDir, { recursive: true, force: true });
-    console.log(`\n✅ No changes detected. DB tables: ${tables.length}, rows: ${totalRows}, storage files: ${objects.length}\n`);
-    return;
-  }
 
   // ── Zip and clean up ──
   const zipName = `prod_${timestamp}.zip`;
