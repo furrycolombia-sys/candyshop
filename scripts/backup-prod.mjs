@@ -521,6 +521,9 @@ async function backup(pat, serviceKey) {
   rmSync(outDir, { recursive: true, force: true });
   console.log(` done`);
 
+  // ── Persist hash unconditionally so future runs can skip unchanged content ──
+  writeFileSync(hashPath, currentHash);
+
   // ── Upload to Telegram ──
   const { TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, TELEGRAM_BACKUPS_THREAD_ID } = secrets;
   if (TELEGRAM_BOT_TOKEN && TELEGRAM_CHAT_ID && TELEGRAM_BACKUPS_THREAD_ID) {
@@ -529,7 +532,6 @@ async function backup(pat, serviceKey) {
       zipPath,
       manifest,
     );
-    writeFileSync(hashPath, currentHash);
   } else {
     console.log("\n  ℹ️  Telegram credentials not configured — skipping upload");
   }
