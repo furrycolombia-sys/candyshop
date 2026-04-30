@@ -32,7 +32,7 @@ import {
 } from "node:fs";
 import { resolve, dirname, join, basename, extname } from "node:path";
 import { fileURLToPath } from "node:url";
-import { execSync } from "node:child_process";
+import { execSync, execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -514,7 +514,7 @@ async function backup(pat, serviceKey) {
       `powershell -NoProfile -Command "Compress-Archive -LiteralPath '${safePSArg(outDir)}' -DestinationPath '${safePSArg(zipPath)}' -Force"`,
     );
   } else {
-    execSync(`zip -r "${zipPath}" "${basename(outDir)}"`, { cwd: dirname(outDir) });
+    execFileSync("zip", ["-r", zipPath, basename(outDir)], { cwd: dirname(outDir) });
   }
   rmSync(outDir, { recursive: true, force: true });
   console.log(` done`);
@@ -566,7 +566,7 @@ async function restore(pat, serviceKey, backupPath) {
     if (process.platform === "win32") {
       execSync(`powershell -NoProfile -Command "Expand-Archive -LiteralPath '${safePSArg(realBackupPath)}' -DestinationPath '${safePSArg(backupDir)}' -Force"`); // nosemgrep: detect-child-process
     } else {
-      execSync(`unzip -o "${realBackupPath}" -d "${dirname(backupDir)}"`); // nosemgrep: detect-child-process
+      execFileSync("unzip", ["-o", realBackupPath, "-d", dirname(backupDir)]); // nosemgrep: detect-child-process
     }
     console.log(`  Extracted to ${backupDir}\n`);
   }

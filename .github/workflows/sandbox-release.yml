@@ -8,6 +8,8 @@ on:
         required: false
         default: ""
 
+permissions: {}
+
 jobs:
   quality-checks:
     runs-on: ubuntu-latest
