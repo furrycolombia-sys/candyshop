@@ -33,6 +33,7 @@ import {
 import { resolve, dirname, join, basename, extname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { execSync } from "node:child_process";
+import { createHash } from "node:crypto";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const rootDir = resolve(__dirname, "..");
@@ -388,6 +389,21 @@ async function restoreTable(pat, serviceKey, table, rows) {
   console.log(`\r  ✅ ${table}: ${rows.length} rows restored          `);
 }
 
+// ─── Content hash ─────────────────────────────────────────────────────────────
+
+/** SHA-256 of all table JSON files in sorted order — captures any data change. */
+function computeBackupHash(outDir) {
+  const hash = createHash("sha256");
+  const files = readdirSync(outDir)
+    .filter((f) => f.endsWith(".json"))
+    .sort();
+  for (const file of files) {
+    hash.update(file);
+    hash.update(readFileSync(join(outDir, file)));
+  }
+  return hash.digest("hex");
+}
+
 // ─── Backup ───────────────────────────────────────────────────────────────────
 
 async function backup(pat, serviceKey) {
@@ -475,15 +491,31 @@ async function backup(pat, serviceKey) {
     .filter((v) => typeof v === "number")
     .reduce((a, b) => a + b, 0);
 
+  // ── Change detection ──
+  const hashPath = resolve(rootDir, ".backup-hash");
+  const currentHash = computeBackupHash(outDir);
+  const lastHash = existsSync(hashPath) ? readFileSync(hashPath, "utf-8").trim() : null;
+
+  if (currentHash === lastHash) {
+    console.log("\n  ℹ️  Backup content unchanged since last upload — skipping zip and Telegram upload");
+    rmSync(outDir, { recursive: true, force: true });
+    console.log(`\n✅ No changes detected. DB tables: ${tables.length}, rows: ${totalRows}, storage files: ${objects.length}\n`);
+    return;
+  }
+
   // ── Zip and clean up ──
   const zipName = `prod_${timestamp}.zip`;
   const zipPath = resolve(rootDir, `.ai-context/backups/${zipName}`);
 
   console.log(`\n── Compressing ───────────────────────────────`);
   process.stdout.write(`  Creating ${zipName}...`);
-  execSync(
-    `powershell -NoProfile -Command "Compress-Archive -LiteralPath '${safePSArg(outDir)}' -DestinationPath '${safePSArg(zipPath)}' -Force"`,
-  );
+  if (process.platform === "win32") {
+    execSync(
+      `powershell -NoProfile -Command "Compress-Archive -LiteralPath '${safePSArg(outDir)}' -DestinationPath '${safePSArg(zipPath)}' -Force"`,
+    );
+  } else {
+    execSync(`zip -r "${zipPath}" "${basename(outDir)}"`, { cwd: dirname(outDir) });
+  }
   rmSync(outDir, { recursive: true, force: true });
   console.log(` done`);
 
@@ -495,6 +527,7 @@ async function backup(pat, serviceKey) {
       zipPath,
       manifest,
     );
+    writeFileSync(hashPath, currentHash);
   } else {
     console.log("\n  ℹ️  Telegram credentials not configured — skipping upload");
   }
@@ -530,7 +563,11 @@ async function restore(pat, serviceKey, backupPath) {
     const realBackupPath = realpathSync(backupPath);
     backupDir = realBackupPath.replace(/\.zip$/, "");
     console.log(`\n  Extracting ${backupPath}...`);
-    execSync(`powershell -NoProfile -Command "Expand-Archive -LiteralPath '${safePSArg(realBackupPath)}' -DestinationPath '${safePSArg(backupDir)}' -Force"`); // nosemgrep: detect-child-process
+    if (process.platform === "win32") {
+      execSync(`powershell -NoProfile -Command "Expand-Archive -LiteralPath '${safePSArg(realBackupPath)}' -DestinationPath '${safePSArg(backupDir)}' -Force"`); // nosemgrep: detect-child-process
+    } else {
+      execSync(`unzip -o "${realBackupPath}" -d "${dirname(backupDir)}"`); // nosemgrep: detect-child-process
+    }
     console.log(`  Extracted to ${backupDir}\n`);
   }
 

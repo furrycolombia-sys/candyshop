@@ -1,0 +1,61 @@
+# Runs the production backup script every day at 4am UTC.
+# Only uploads to Telegram when backup content has changed since the last upload.
+# Manual trigger available via workflow_dispatch for on-demand runs.
+
+name: Scheduled Backup (Production)
+
+on:
+  schedule:
+    - cron: '0 4 * * *' # 4am UTC daily
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  backup:
+    name: Production Backup
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Restore backup hash cache
+        uses: actions/cache/restore@v4
+        with:
+          path: .backup-hash
+          key: backup-hash-${{ github.run_id }}
+          restore-keys: |
+            backup-hash-
+
+      - name: Create .secrets
+        env:
+          PROD_SUPABASE_ACCESS_TOKEN: ${{ secrets.PROD_SUPABASE_ACCESS_TOKEN }}
+          PROD_SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.PROD_SUPABASE_SERVICE_ROLE_KEY }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          TELEGRAM_BACKUPS_THREAD_ID: ${{ secrets.TELEGRAM_BACKUPS_THREAD_ID }}
+        run: |
+          {
+            echo "PROD_SUPABASE_ACCESS_TOKEN=$PROD_SUPABASE_ACCESS_TOKEN"
+            echo "PROD_SUPABASE_SERVICE_ROLE_KEY=$PROD_SUPABASE_SERVICE_ROLE_KEY"
+            echo "TELEGRAM_BOT_TOKEN=$TELEGRAM_BOT_TOKEN"
+            echo "TELEGRAM_CHAT_ID=$TELEGRAM_CHAT_ID"
+            echo "TELEGRAM_BACKUPS_THREAD_ID=$TELEGRAM_BACKUPS_THREAD_ID"
+          } > .secrets
+
+      - name: Run backup
+        run: node scripts/backup-prod.mjs
+
+      - name: Save backup hash cache
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: .backup-hash
+          key: backup-hash-${{ github.run_id }}

@@ -103,21 +103,3 @@ jobs:
           echo "| **Checks** | Passed |" >> "$GITHUB_STEP_SUMMARY"
           echo "" >> "$GITHUB_STEP_SUMMARY"
           echo "The staging branch has been updated. The deploy workflow will automatically build and deploy the POC version." >> "$GITHUB_STEP_SUMMARY"
-
-  trigger-deploy:
-    needs: [promote]
-    runs-on: ubuntu-latest
-    permissions:
-      actions: write
-    steps:
-      - name: Trigger deploy workflow on staging
-        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
-        with:
-          script: |
-            await github.rest.actions.createWorkflowDispatch({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              workflow_id: 'deploy-combined.yml',
-              ref: 'staging',
-            });
-            console.log('Deploy workflow triggered on staging branch');
