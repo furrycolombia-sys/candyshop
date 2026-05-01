@@ -200,7 +200,7 @@ function* walkDir(dir) {
   }
 }
 
-async function compressImagesToWebP(storageDir) {
+async function compressImagesToAvif(storageDir) {
   let sharp;
   try {
     sharp = (await import("sharp")).default;
@@ -218,7 +218,7 @@ async function compressImagesToWebP(storageDir) {
     return;
   }
 
-  console.log(`  Compressing ${imageFiles.length} image(s) to WebP (quality 85)...`);
+  console.log(`  Compressing ${imageFiles.length} image(s) to AVIF (quality 85)...`);
   let compressed = 0;
   let skipped = 0;
   let savedBytes = 0;
@@ -229,7 +229,7 @@ async function compressImagesToWebP(storageDir) {
     process.stdout.write(`\r  [${i + 1}/${imageFiles.length}] ${basename(filePath).slice(0, 50)}...`);
     try {
       const input = readFileSync(filePath); // nosemgrep: AIK_ts_generic_path_traversal
-      const buf = await sharp(input).webp({ quality: 85 }).toBuffer();
+      const buf = await sharp(input).avif({ quality: 85 }).toBuffer();
       if (buf.length < originalSize) {
         writeFileSync(filePath, buf);
         savedBytes += originalSize - buf.length;
@@ -498,9 +498,9 @@ async function backup(pat, serviceKey) {
   }
   if (objects.length > 0) console.log(`\r  ✅ ${objects.length} files downloaded            `);
 
-  // ── Compress images to WebP ──
+  // ── Compress images to AVIF ──
   console.log("\n── Image compression ─────────────────────────");
-  await compressImagesToWebP(storageDir);
+  await compressImagesToAvif(storageDir);
 
   // ── Manifest ──
   writeFileSync(resolve(outDir, "manifest.json"), JSON.stringify(manifest, null, 2));
