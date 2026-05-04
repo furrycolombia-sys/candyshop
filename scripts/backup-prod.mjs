@@ -430,7 +430,7 @@ function computeBackupHash(outDir) {
     const filePath = join(outDir, file); // nosemgrep: AIK_ts_generic_path_traversal
     assertPathInside(outDir, filePath);
     hash.update(file);
-    hash.update(readFileSync(filePath));
+    hash.update(readFileSync(filePath)); // nosemgrep: AIK_ts_generic_path_traversal
   }
   return hash.digest("hex");
 }
