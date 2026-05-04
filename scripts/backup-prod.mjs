@@ -319,14 +319,43 @@ async function uploadToTelegram(tg, zipPath, manifest) {
 
 // ─── Database export ──────────────────────────────────────────────────────────
 
-// safeTable must already be validated by assertSafeIdentifier + SAFE_IDENTIFIER.exec() at call site.
-async function exportTable(pat, safeTable) {
+/**
+ * Returns a map of { tableName → [pkCol1, pkCol2, …] } for all public tables.
+ * Used to build a stable ORDER BY so the exported JSON — and thus the hash — is
+ * deterministic across runs even when PostgreSQL returns rows in different
+ * physical orders (heap scan order varies after autovacuum, replication, etc.).
+ */
+async function fetchPrimaryKeys(pat) {
+  const rows = await query(
+    pat,
+    `SELECT tc.table_name, kcu.column_name
+     FROM information_schema.table_constraints tc
+     JOIN information_schema.key_column_usage kcu
+       ON tc.constraint_name = kcu.constraint_name
+       AND tc.table_schema  = kcu.table_schema
+     WHERE tc.constraint_type = 'PRIMARY KEY'
+       AND tc.table_schema   = 'public'
+     ORDER BY tc.table_name, kcu.ordinal_position`,
+  );
+  const pkMap = {};
+  for (const { table_name, column_name } of rows) {
+    (pkMap[table_name] ??= []).push(column_name);
+  }
+  return pkMap;
+}
+
+// safeTable and each element of pkColumns must already be validated by
+// assertSafeIdentifier + SAFE_IDENTIFIER.exec() at the call site.
+async function exportTable(pat, safeTable, pkColumns) {
+  const orderBy = pkColumns.length > 0
+    ? pkColumns.map((c) => `"${c}"`).join(", ")
+    : "(SELECT NULL)";
   const rows = [];
   let offset = 0;
   while (true) {
     const page = await query(
       pat,
-      `SELECT * FROM "${safeTable}" ORDER BY (SELECT NULL) LIMIT ${PAGE_SIZE} OFFSET ${offset}`, // nosemgrep: AIK_node_sqli_injection
+      `SELECT * FROM "${safeTable}" ORDER BY ${orderBy} LIMIT ${PAGE_SIZE} OFFSET ${offset}`, // nosemgrep: AIK_node_sqli_injection
     );
     rows.push(...page);
     if (page.length < PAGE_SIZE) break;
@@ -431,6 +460,8 @@ async function backup(pat, serviceKey) {
   const tables = tableRows.map((r) => r.table_name);
   console.log(`Found ${tables.length} tables: ${tables.join(", ")}\n`);
 
+  const primaryKeys = await fetchPrimaryKeys(pat);
+
   const manifest = {
     timestamp,
     project: PROJECT_ID,
@@ -449,7 +480,8 @@ async function backup(pat, serviceKey) {
       if (!safeTable) throw new Error(`Unsafe SQL identifier in backup data: "${table}"`);
       const outPath = join(outDir, `${safeTable}.json`); // nosemgrep: AIK_ts_generic_path_traversal
       assertPathInside(outDir, outPath);
-      const rows = await exportTable(pat, safeTable);
+      const pkColumns = (primaryKeys[table] ?? []).filter((c) => SAFE_IDENTIFIER.test(c));
+      const rows = await exportTable(pat, safeTable, pkColumns);
       writeFileSync(outPath, JSON.stringify({ table: safeTable, rows }, null, 2));
       manifest.tables[table] = rows.length;
       console.log(`\r  ✅ ${table}: ${rows.length} rows            `);
