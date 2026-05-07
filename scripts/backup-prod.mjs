@@ -420,7 +420,16 @@ async function restoreTable(pat, serviceKey, table, rows) {
 
 // ─── Content hash ─────────────────────────────────────────────────────────────
 
-/** SHA-256 of all table JSON files in sorted order — captures any data change. */
+// Columns auto-managed by DB triggers that change on every user login or any row
+// touch.  Including them in the hash causes a false-positive upload every day even
+// when no real business data changed.  The backup ZIP still captures these columns
+// for restore purposes — they are only excluded from change detection.
+const HASH_EXCLUDED_COLS = new Set(["updated_at", "last_seen_at"]);
+
+/**
+ * SHA-256 of all table JSON files in sorted order — captures any data change,
+ * excluding system-managed timestamp columns that update on every user login.
+ */
 function computeBackupHash(outDir) {
   const hash = createHash("sha256");
   const files = readdirSync(outDir)
@@ -430,7 +439,13 @@ function computeBackupHash(outDir) {
     const filePath = join(outDir, file); // nosemgrep: AIK_ts_generic_path_traversal
     assertPathInside(outDir, filePath);
     hash.update(file);
-    hash.update(readFileSync(filePath)); // nosemgrep: AIK_ts_generic_path_traversal
+    const { table, rows } = JSON.parse(readFileSync(filePath, "utf-8")); // nosemgrep: AIK_ts_generic_path_traversal
+    const stableRows = rows.map((row) => {
+      const stable = { ...row };
+      for (const col of HASH_EXCLUDED_COLS) delete stable[col];
+      return stable;
+    });
+    hash.update(JSON.stringify({ table, rows: stableRows }));
   }
   return hash.digest("hex");
 }
