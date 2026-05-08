@@ -274,6 +274,15 @@ function splitZip(zipPath, chunkSize) {
   return parts;
 }
 
+async function sendTelegramMessage(botToken, chatId, threadId, text) {
+  const res = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ chat_id: chatId, message_thread_id: Number(threadId), text }),
+  });
+  if (!res.ok) throw new Error(`Telegram sendMessage (${res.status}): ${await res.text()}`);
+}
+
 async function sendTelegramDocument(botToken, chatId, threadId, filePath, caption) {
   const bytes = readFileSync(filePath); // nosemgrep: AIK_ts_generic_path_traversal
   const form = new FormData();
@@ -518,6 +527,21 @@ async function backup(pat, serviceKey) {
   if (currentHash === lastHash) {
     console.log("\n  ℹ️  DB content unchanged since last upload — skipping storage download and Telegram upload");
     rmSync(outDir, { recursive: true, force: true });
+
+    const { TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, TELEGRAM_THREAD_ID } = secrets;
+    if (TELEGRAM_BOT_TOKEN && TELEGRAM_CHAT_ID && TELEGRAM_THREAD_ID) {
+      const msg =
+        `ℹ️ Backup skipped — no changes\n\n` +
+        `DB content unchanged since the last upload. No new data to back up.\n` +
+        `Tables: ${tables.length} | Rows: ${totalRows}`;
+      try {
+        await sendTelegramMessage(TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, TELEGRAM_THREAD_ID, msg);
+        console.log("  ✅ Skip notification sent to Server Notifications");
+      } catch (err) {
+        console.error(`  ⚠️  Failed to send skip notification: ${err.message}`);
+      }
+    }
+
     console.log(`\n✅ No changes detected. DB tables: ${tables.length}, rows: ${totalRows}\n`);
     return;
   }
