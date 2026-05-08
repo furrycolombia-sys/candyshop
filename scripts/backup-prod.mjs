@@ -274,6 +274,15 @@ function splitZip(zipPath, chunkSize) {
   return parts;
 }
 
+async function sendTelegramMessage(botToken, chatId, threadId, text) {
+  const res = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ chat_id: chatId, message_thread_id: Number(threadId), text }),
+  });
+  if (!res.ok) throw new Error(`Telegram sendMessage (${res.status}): ${await res.text()}`);
+}
+
 async function sendTelegramDocument(botToken, chatId, threadId, filePath, caption) {
   const bytes = readFileSync(filePath); // nosemgrep: AIK_ts_generic_path_traversal
   const form = new FormData();
@@ -420,7 +429,16 @@ async function restoreTable(pat, serviceKey, table, rows) {
 
 // ─── Content hash ─────────────────────────────────────────────────────────────
 
-/** SHA-256 of all table JSON files in sorted order — captures any data change. */
+// Columns auto-managed by DB triggers that change on every user login or any row
+// touch.  Including them in the hash causes a false-positive upload every day even
+// when no real business data changed.  The backup ZIP still captures these columns
+// for restore purposes — they are only excluded from change detection.
+const HASH_EXCLUDED_COLS = new Set(["updated_at", "last_seen_at"]);
+
+/**
+ * SHA-256 of all table JSON files in sorted order — captures any data change,
+ * excluding system-managed timestamp columns that update on every user login.
+ */
 function computeBackupHash(outDir) {
   const hash = createHash("sha256");
   const files = readdirSync(outDir)
@@ -430,7 +448,13 @@ function computeBackupHash(outDir) {
     const filePath = join(outDir, file); // nosemgrep: AIK_ts_generic_path_traversal
     assertPathInside(outDir, filePath);
     hash.update(file);
-    hash.update(readFileSync(filePath)); // nosemgrep: AIK_ts_generic_path_traversal
+    const { table, rows } = JSON.parse(readFileSync(filePath, "utf-8")); // nosemgrep: AIK_ts_generic_path_traversal
+    const stableRows = rows.map((row) => {
+      const stable = { ...row };
+      for (const col of HASH_EXCLUDED_COLS) delete stable[col];
+      return stable;
+    });
+    hash.update(JSON.stringify({ table, rows: stableRows }));
   }
   return hash.digest("hex");
 }
@@ -503,6 +527,21 @@ async function backup(pat, serviceKey) {
   if (currentHash === lastHash) {
     console.log("\n  ℹ️  DB content unchanged since last upload — skipping storage download and Telegram upload");
     rmSync(outDir, { recursive: true, force: true });
+
+    const { TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, TELEGRAM_THREAD_ID } = secrets;
+    if (TELEGRAM_BOT_TOKEN && TELEGRAM_CHAT_ID && TELEGRAM_THREAD_ID) {
+      const msg =
+        `ℹ️ Backup skipped — no changes\n\n` +
+        `DB content unchanged since the last upload. No new data to back up.\n` +
+        `Tables: ${tables.length} | Rows: ${totalRows}`;
+      try {
+        await sendTelegramMessage(TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, TELEGRAM_THREAD_ID, msg);
+        console.log("  ✅ Skip notification sent to Server Notifications");
+      } catch (err) {
+        console.error(`  ⚠️  Failed to send skip notification: ${err.message}`);
+      }
+    }
+
     console.log(`\n✅ No changes detected. DB tables: ${tables.length}, rows: ${totalRows}\n`);
     return;
   }
@@ -669,10 +708,35 @@ if (!pat) throw new Error("PROD_SUPABASE_ACCESS_TOKEN not found in .secrets");
 if (!serviceKey) throw new Error("PROD_SUPABASE_SERVICE_ROLE_KEY not found in .secrets");
 
 const restoreIdx = process.argv.indexOf("--restore");
-if (restoreIdx !== -1) {
-  const backupDir = process.argv[restoreIdx + 1];
-  if (!backupDir) throw new Error("--restore requires a path argument");
-  await restore(pat, serviceKey, resolve(process.cwd(), backupDir));
-} else {
-  await backup(pat, serviceKey);
+try {
+  if (restoreIdx !== -1) {
+    const backupDir = process.argv[restoreIdx + 1];
+    if (!backupDir) throw new Error("--restore requires a path argument");
+    await restore(pat, serviceKey, resolve(process.cwd(), backupDir));
+  } else {
+    await backup(pat, serviceKey);
+  }
+} catch (err) {
+  console.error(`\n❌ Backup failed: ${err.message}\n`);
+  const { TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, TELEGRAM_CRITICAL_THREAD_ID } = secrets;
+  if (TELEGRAM_BOT_TOKEN && TELEGRAM_CHAT_ID && TELEGRAM_CRITICAL_THREAD_ID) {
+    try {
+      // Sanitize before sending: strip bearer tokens and cap length so that
+      // raw API response bodies (which may include credentials or DB content)
+      // are never forwarded to Telegram.
+      const safeMsg = err.message
+        .replace(/Bearer\s+\S+/gi, "Bearer [REDACTED]")
+        .replace(/apikey[=:\s]+\S+/gi, "apikey=[REDACTED]")
+        .slice(0, 500);
+      await sendTelegramMessage(
+        TELEGRAM_BOT_TOKEN,
+        TELEGRAM_CHAT_ID,
+        TELEGRAM_CRITICAL_THREAD_ID,
+        `🚨 Prod backup FAILED\n\n${safeMsg}`,
+      );
+    } catch {
+      // Swallow — don't mask the original error
+    }
+  }
+  process.exit(1);
 }

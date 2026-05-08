@@ -52,6 +52,8 @@ jobs:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           TELEGRAM_BACKUPS_THREAD_ID: ${{ secrets.TELEGRAM_BACKUPS_THREAD_ID }}
+          TELEGRAM_THREAD_ID: ${{ secrets.TELEGRAM_THREAD_ID }}
+          TELEGRAM_CRITICAL_THREAD_ID: ${{ secrets.TELEGRAM_CRITICAL_THREAD_ID }}
         run: |
           {
             echo "PROD_SUPABASE_ACCESS_TOKEN=$PROD_SUPABASE_ACCESS_TOKEN"
@@ -59,6 +61,8 @@ jobs:
             echo "TELEGRAM_BOT_TOKEN=$TELEGRAM_BOT_TOKEN"
             echo "TELEGRAM_CHAT_ID=$TELEGRAM_CHAT_ID"
             echo "TELEGRAM_BACKUPS_THREAD_ID=$TELEGRAM_BACKUPS_THREAD_ID"
+            echo "TELEGRAM_THREAD_ID=$TELEGRAM_THREAD_ID"
+            echo "TELEGRAM_CRITICAL_THREAD_ID=$TELEGRAM_CRITICAL_THREAD_ID"
           } > .secrets
 
       - name: Run backup
