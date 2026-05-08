@@ -44,6 +44,7 @@ COPY apps/studio/public               /app/studio/apps/studio/public
 COPY docker/prod/nginx.conf           /etc/nginx/nginx.conf
 COPY docker/prod/supervisord.conf     /etc/supervisor/conf.d/supervisord.conf
 COPY docker/watcher.mjs               /app/watcher.mjs
+COPY docker/boot-reporter.mjs         /app/boot-reporter.mjs
 
 # pnpm workspace linking creates stub node_modules inside each app directory
 # (package.json only, no dist/) that shadow the complete packages at the

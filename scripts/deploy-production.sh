@@ -205,6 +205,45 @@ notify_telegram "$(printf '🐳 <b>Image built</b> (%s)\n<code>%s</code>' "$(_du
 # =============================================================================
 log "Restarting container '$CONTAINER_NAME'..."
 _STEP_START=$(date +%s)
+
+# Create boot progress message; container edits it live via TELEGRAM_BOOT_MSG_ID
+_BOOT_MSG_ID=""
+if [ -n "${TELEGRAM_BOT_TOKEN:-}" ] && [ -n "${TELEGRAM_CHAT_ID:-}" ]; then
+  _boot_now=$(python3 -c "from datetime import datetime,timezone; print(datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC'))" 2>/dev/null || true)
+  _BOOT_RESP=$(python3 -c "
+import json, urllib.request
+text = (
+  '\U0001f504 <b>Container Boot</b> — $_boot_now\n\n'
+  'Progress: 0/7  ░░░░░░░░░░░░░░░░  0%\n\n'
+  '  ⏳ auth         ...\n'
+  '  ⏳ store        ...\n'
+  '  ⏳ admin        ...\n'
+  '  ⏳ playground   ...\n'
+  '  ⏳ landing      ...\n'
+  '  ⏳ payments     ...\n'
+  '  ⏳ studio       ...\n'
+  '  ⏳ nginx        waiting for all apps...\n\n'
+  'Elapsed: 0s'
+)
+payload = {'chat_id': '${TELEGRAM_CHAT_ID}', 'text': text, 'parse_mode': 'HTML'}
+thread = '${TELEGRAM_THREAD_ID:-}'
+if thread:
+    payload['message_thread_id'] = int(thread)
+data = json.dumps(payload).encode()
+req = urllib.request.Request(
+    'https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage',
+    data=data, headers={'Content-Type': 'application/json'}, method='POST')
+try:
+    with urllib.request.urlopen(req, timeout=10) as r:
+        resp = json.loads(r.read())
+        if resp.get('ok'):
+            print(resp['result']['message_id'])
+except Exception:
+    pass
+" 2>/dev/null || true)
+  _BOOT_MSG_ID="${_BOOT_RESP:-}"
+fi
+
 docker rm -f "$CONTAINER_NAME" 2>/dev/null || true
 docker run -d \
   --name "$CONTAINER_NAME" \
@@ -215,6 +254,7 @@ docker run -d \
   -e "TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID:-}" \
   -e "TELEGRAM_THREAD_ID=${TELEGRAM_THREAD_ID:-}" \
   -e "TELEGRAM_CRITICAL_THREAD_ID=${TELEGRAM_CRITICAL_THREAD_ID:-}" \
+  -e "TELEGRAM_BOOT_MSG_ID=${_BOOT_MSG_ID:-}" \
   "$IMAGE_TAG" \
   || err "Docker container start failed"
 
@@ -226,8 +266,6 @@ docker images --format '{{.Repository}}:{{.Tag}}' \
   | sort -r \
   | tail -n +3 \
   | xargs -r docker rmi 2>/dev/null || true
-
-notify_telegram "$(printf '🔄 <b>Container restarted</b> (%s)' "$(_dur $_STEP_START)")"
 
 # Clean up env file — secrets must not persist on disk
 rm -f "$ENV_FILE"
@@ -243,7 +281,11 @@ pm2 delete candyshop-watcher 2>/dev/null || true
 WATCHER_NGINX_PORT=$HOST_PORT pm2 start "$DEPLOY_DIR/docker/watcher.mjs" \
   --name candyshop-watcher
 
-# Persist watcher across reboots
+pm2 delete candyshop-boot-notifier 2>/dev/null || true
+WATCHER_NGINX_PORT=$HOST_PORT pm2 start "$DEPLOY_DIR/scripts/server/boot-notifier.mjs" \
+  --name candyshop-boot-notifier
+
+# Persist both processes across reboots
 pm2 save
 
 # =============================================================================
@@ -252,9 +294,6 @@ pm2 save
 # compilation penalty on every route. We hit each app's key localized pages
 # 3 times so V8 JIT-compiles the hot paths before real traffic arrives.
 # =============================================================================
-log "Waiting for container to be ready..."
-sleep 60
-
 APPS=(
   "store:/store/health"
   "auth:/auth/health"
@@ -264,6 +303,19 @@ APPS=(
   "payments:/payments/health"
   "studio:/studio/health"
 )
+
+log "Waiting for container health endpoints..."
+_POLL_START=$(date +%s)
+while [ $(( $(date +%s) - _POLL_START )) -lt 120 ]; do
+  _HEALTHY_COUNT=0
+  for APP_ENTRY in "${APPS[@]}"; do
+    APP_HEALTH="${APP_ENTRY#*:}"
+    curl -sf --max-time 5 "http://localhost:${HOST_PORT}${APP_HEALTH}" >/dev/null 2>&1 && \
+      _HEALTHY_COUNT=$(( _HEALTHY_COUNT + 1 ))
+  done
+  [ "$_HEALTHY_COUNT" -eq "${#APPS[@]}" ] && break
+  sleep 5
+done
 
 # --- phase 1: liveness check ---
 FAILED=0
