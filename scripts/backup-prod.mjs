@@ -708,10 +708,28 @@ if (!pat) throw new Error("PROD_SUPABASE_ACCESS_TOKEN not found in .secrets");
 if (!serviceKey) throw new Error("PROD_SUPABASE_SERVICE_ROLE_KEY not found in .secrets");
 
 const restoreIdx = process.argv.indexOf("--restore");
-if (restoreIdx !== -1) {
-  const backupDir = process.argv[restoreIdx + 1];
-  if (!backupDir) throw new Error("--restore requires a path argument");
-  await restore(pat, serviceKey, resolve(process.cwd(), backupDir));
-} else {
-  await backup(pat, serviceKey);
+try {
+  if (restoreIdx !== -1) {
+    const backupDir = process.argv[restoreIdx + 1];
+    if (!backupDir) throw new Error("--restore requires a path argument");
+    await restore(pat, serviceKey, resolve(process.cwd(), backupDir));
+  } else {
+    await backup(pat, serviceKey);
+  }
+} catch (err) {
+  console.error(`\n❌ Backup failed: ${err.message}\n`);
+  const { TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, TELEGRAM_CRITICAL_THREAD_ID } = secrets;
+  if (TELEGRAM_BOT_TOKEN && TELEGRAM_CHAT_ID && TELEGRAM_CRITICAL_THREAD_ID) {
+    try {
+      await sendTelegramMessage(
+        TELEGRAM_BOT_TOKEN,
+        TELEGRAM_CHAT_ID,
+        TELEGRAM_CRITICAL_THREAD_ID,
+        `🚨 Prod backup FAILED\n\n${err.message}`,
+      );
+    } catch {
+      // Swallow — don't mask the original error
+    }
+  }
+  process.exit(1);
 }
