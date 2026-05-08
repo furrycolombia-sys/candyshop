@@ -721,11 +721,18 @@ try {
   const { TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, TELEGRAM_CRITICAL_THREAD_ID } = secrets;
   if (TELEGRAM_BOT_TOKEN && TELEGRAM_CHAT_ID && TELEGRAM_CRITICAL_THREAD_ID) {
     try {
+      // Sanitize before sending: strip bearer tokens and cap length so that
+      // raw API response bodies (which may include credentials or DB content)
+      // are never forwarded to Telegram.
+      const safeMsg = err.message
+        .replace(/Bearer\s+\S+/gi, "Bearer [REDACTED]")
+        .replace(/apikey[=:\s]+\S+/gi, "apikey=[REDACTED]")
+        .slice(0, 500);
       await sendTelegramMessage(
         TELEGRAM_BOT_TOKEN,
         TELEGRAM_CHAT_ID,
         TELEGRAM_CRITICAL_THREAD_ID,
-        `🚨 Prod backup FAILED\n\n${err.message}`,
+        `🚨 Prod backup FAILED\n\n${safeMsg}`,
       );
     } catch {
       // Swallow — don't mask the original error
