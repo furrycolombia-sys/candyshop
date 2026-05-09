@@ -257,6 +257,8 @@ jobs:
 
       - name: Sync build artifacts to GCP server
         run: |
+          # Ensure rsync is available on the remote server
+          ssh $GCP_HOST 'which rsync || (sudo apt-get update -qq && sudo apt-get install -y -qq rsync)'
           ssh $GCP_HOST \
             'mkdir -p /opt/candyshop/apps/{store,admin,auth,landing,payments,studio,playground}'
           for APP in store admin auth landing payments studio playground; do
