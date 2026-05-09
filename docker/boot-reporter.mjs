@@ -33,6 +33,7 @@ const CHAT_ID            = process.env.TELEGRAM_CHAT_ID || '';
 const CRITICAL_THREAD_ID = process.env.TELEGRAM_CRITICAL_THREAD_ID
                         || process.env.TELEGRAM_THREAD_ID || '';
 const SERVER_HOSTNAME    = htmlEscape(process.env.SERVER_HOSTNAME || '');
+const CONTAINER_NAME     = htmlEscape(process.env.CONTAINER_NAME || 'candyshop-prod');
 
 if (!BOOT_MSG_ID) process.exit(0);
 
@@ -114,7 +115,7 @@ function formatProgress(appStatus, startTime) {
   rows.push(`  ⏳ ${'nginx'.padEnd(12)}waiting for all apps...`);
 
   return [
-    `🔄 <b>Container Boot</b>${SERVER_HOSTNAME ? `  •  <code>${SERVER_HOSTNAME}</code>` : ''}  •  ${dateStr}`, '',
+    `🔄 <b>Container Boot</b>${SERVER_HOSTNAME ? `  •  <code>${SERVER_HOSTNAME}</code>` : ''}  •  <code>${CONTAINER_NAME}</code>  •  ${dateStr}`, '',
     `Progress: ${ready}/${total}  ${progressBar(ready, total)}  ${pct}%`, '',
     ...rows, '',
     `Elapsed: ${fmtElapsed(startTime)}`,
@@ -138,8 +139,8 @@ async function main() {
       const dur = fmtElapsed(startTime);
       const host = SERVER_HOSTNAME ? `  •  <code>${SERVER_HOSTNAME}</code>` : '';
       await tgEdit(nginxOk
-        ? `✅ <b>All ${APPS.length} apps ready</b>${host}  •  Boot in ${dur}\n   nginx up — traffic restored`
-        : `✅ <b>All ${APPS.length} apps ready</b>${host}  •  Boot in ${dur}\n   ⚠️ nginx not yet up`
+        ? `✅ <b>All ${APPS.length} apps ready</b>${host}  •  <code>${CONTAINER_NAME}</code>  •  Boot in ${dur}\n   nginx up — traffic restored`
+        : `✅ <b>All ${APPS.length} apps ready</b>${host}  •  <code>${CONTAINER_NAME}</code>  •  Boot in ${dur}\n   ⚠️ nginx not yet up`
       );
       process.exit(0);
     }
@@ -151,7 +152,7 @@ async function main() {
   const failed = appStatus.filter(a => a.readyAt === null).map(a => a.name).join(', ');
   const host = SERVER_HOSTNAME ? `  •  <code>${SERVER_HOSTNAME}</code>` : '';
   await tgCritical(
-    `❌ <b>${failed} failed to start after 120s</b>${host}\n   Check: <code>docker logs candyshop-prod</code>`
+    `❌ <b>${failed} failed to start after 120s</b>${host}  •  <code>${CONTAINER_NAME}</code>\n   Check: <code>docker logs ${CONTAINER_NAME}</code>`
   );
   process.exit(1);
 }

@@ -291,17 +291,14 @@ jobs:
             'cat > /tmp/deploy-production.sh && chmod +x /tmp/deploy-production.sh'
 
       - name: Start deployment
-        env:
-          GH_REPOSITORY: ${{ github.repository }}
-          GH_REF_NAME: ${{ github.ref_name }}
         run: |
           # Fire-and-forget: start the deploy in background and disconnect immediately.
           # The Cloudflare Access proxy drops long-lived SSH WebSockets mid-build,
           # so we never keep a connection open for more than a few seconds.
           ssh ${{ secrets.PROD_SERVER_HOST }} "
             rm -f /tmp/deploy-candyshop.done /tmp/deploy-candyshop.log
-            REPO_URL='https://github.com/${GH_REPOSITORY}.git' \
-            BRANCH='${GH_REF_NAME}' \
+            REPO_URL='https://github.com/${{ github.repository }}.git' \
+            BRANCH='${{ github.ref_name }}' \
             ENV_FILE='/tmp/.candyshop-build.env' \
             DEPLOY_DETACHED=1 \
             nohup bash /tmp/deploy-production.sh > /tmp/deploy-candyshop.log 2>&1 &
@@ -352,179 +349,16 @@ jobs:
           rm -f ~/.ssh/deploy_key
 
   # ============================================
-  # Deploy to GCP production server via SSH
-  # ============================================
-  deploy-gcp:
-    name: Deploy to GCP Server
-    runs-on: ubuntu-latest
-    timeout-minutes: 25
-    needs: build
-    environment: production
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
-
-      - name: Install cloudflared
-        run: |
-          curl -fsSL https://pkg.cloudflare.com/cloudflare-main.gpg | sudo tee /usr/share/keyrings/cloudflare-main.gpg > /dev/null
-          echo "deb [signed-by=/usr/share/keyrings/cloudflare-main.gpg] https://pkg.cloudflare.com/cloudflared $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/cloudflared.list
-          sudo apt-get update -qq && sudo apt-get install -y -qq cloudflared
-
-      - name: Setup SSH key
-        run: |
-          mkdir -p ~/.ssh
-          printf '%s' "${{ secrets.GCP_PROD_SERVER_SSH_KEY }}" | tr -d '\r' > ~/.ssh/gcp_deploy_key
-          chmod 600 ~/.ssh/gcp_deploy_key
-          cat >> ~/.ssh/config << EOF
-          Host ${{ secrets.GCP_PROD_SERVER_HOST }}
-            HostName ${{ secrets.GCP_PROD_SERVER_HOST }}
-            User ${{ secrets.GCP_PROD_SERVER_USER }}
-            IdentityFile ~/.ssh/gcp_deploy_key
-            StrictHostKeyChecking no
-            ProxyCommand cloudflared access ssh --hostname %h
-            ServerAliveInterval 30
-            ServerAliveCountMax 20
-          EOF
-
-      - name: Compute app version
-        id: app_version
-        run: |
-          VERSION=$(git log -1 --pretty=%s | grep -oP 'v\d{4}\.\d{2}\.\d{2}\.\d+' || true)
-          if [ -z "$VERSION" ]; then
-            VERSION="${GITHUB_SHA:0:7}"
-          fi
-          echo "value=$VERSION" >> "$GITHUB_OUTPUT"
-          echo "App version: $VERSION"
-
-      - name: Write ephemeral env file on server
-        env:
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.PROD_SUPABASE_SERVICE_ROLE_KEY }}
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-          TELEGRAM_THREAD_ID: ${{ secrets.TELEGRAM_THREAD_ID }}
-          TELEGRAM_CRITICAL_THREAD_ID: ${{ secrets.TELEGRAM_CRITICAL_THREAD_ID }}
-        run: |
-          {
-            printf 'SUPABASE_SERVICE_ROLE_KEY=%s\n'    "$SUPABASE_SERVICE_ROLE_KEY"
-            printf 'TELEGRAM_BOT_TOKEN=%s\n'           "$TELEGRAM_BOT_TOKEN"
-            printf 'TELEGRAM_CHAT_ID=%s\n'             "$TELEGRAM_CHAT_ID"
-            printf 'TELEGRAM_THREAD_ID=%s\n'           "$TELEGRAM_THREAD_ID"
-            printf 'TELEGRAM_CRITICAL_THREAD_ID=%s\n' "$TELEGRAM_CRITICAL_THREAD_ID"
-            printf 'NEXT_PUBLIC_APP_VERSION=%s\n'      "${{ steps.app_version.outputs.value }}"
-          } | ssh ${{ secrets.GCP_PROD_SERVER_HOST }} 'cat > /tmp/.candyshop-build.env'
-
-      - name: Download store build artifacts
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
-        with:
-          name: build-store
-          path: apps/store/.next/
-
-      - name: Download admin build artifacts
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
-        with:
-          name: build-admin
-          path: apps/admin/.next/
-
-      - name: Download auth build artifacts
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
-        with:
-          name: build-auth
-          path: apps/auth/.next/
-
-      - name: Download landing build artifacts
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
-        with:
-          name: build-landing
-          path: apps/landing/.next/
-
-      - name: Download payments build artifacts
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
-        with:
-          name: build-payments
-          path: apps/payments/.next/
-
-      - name: Download studio build artifacts
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
-        with:
-          name: build-studio
-          path: apps/studio/.next/
-
-      - name: Download playground build artifacts
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
-        with:
-          name: build-playground
-          path: apps/playground/.next/
-
-      - name: Sync build artifacts to server
-        run: |
-          for APP in store admin auth landing payments studio playground; do
-            echo "Syncing .next for ${APP}..."
-            rsync -az --delete --exclude=cache \
-              "apps/${APP}/.next/" \
-              "${{ secrets.GCP_PROD_SERVER_HOST }}:/home/${{ secrets.GCP_PROD_SERVER_USER }}/candyshop/apps/${APP}/.next/"
-          done
-
-      - name: Copy deploy script to server
-        run: |
-          cat scripts/deploy-production.sh | ssh ${{ secrets.GCP_PROD_SERVER_HOST }} \
-            'cat > /tmp/deploy-production.sh && chmod +x /tmp/deploy-production.sh'
-
-      - name: Start deployment
-        env:
-          GH_REPOSITORY: ${{ github.repository }}
-          GH_REF_NAME: ${{ github.ref_name }}
-        run: |
-          ssh ${{ secrets.GCP_PROD_SERVER_HOST }} "
-            rm -f /tmp/deploy-candyshop.done /tmp/deploy-candyshop.log
-            REPO_URL='https://github.com/${GH_REPOSITORY}.git' \
-            BRANCH='${GH_REF_NAME}' \
-            ENV_FILE='/tmp/.candyshop-build.env' \
-            DEPLOY_DETACHED=1 \
-            nohup bash /tmp/deploy-production.sh > /tmp/deploy-candyshop.log 2>&1 &
-            disown
-          "
-          echo "Deploy process started on GCP server — polling for result..."
-
-      - name: Wait for deployment
-        run: |
-          for i in $(seq 1 60); do
-            sleep 15
-            echo "--- log tail [poll $i/60] ---"
-            ssh ${{ secrets.GCP_PROD_SERVER_HOST }} \
-              "tail -25 /tmp/deploy-candyshop.log 2>/dev/null" || true
-            RESULT=$(ssh ${{ secrets.GCP_PROD_SERVER_HOST }} \
-              "cat /tmp/deploy-candyshop.done 2>/dev/null || echo pending" || echo pending)
-            if [ "$RESULT" != "pending" ]; then
-              echo "Deploy finished with exit code: $RESULT"
-              [ "$RESULT" = "0" ] && exit 0 || exit 1
-            fi
-          done
-          echo "Timed out after 15 minutes waiting for deployment"
-          exit 1
-
-      - name: Verify deployment
-        run: |
-          ssh ${{ secrets.GCP_PROD_SERVER_HOST }} \
-            'docker ps --filter name=candyshop-prod --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" 2>/dev/null || true'
-
-      - name: Cleanup
-        if: always()
-        run: |
-          ssh ${{ secrets.GCP_PROD_SERVER_HOST }} \
-            'rm -f /tmp/.candyshop-build.env /tmp/deploy-production.sh' 2>/dev/null || true
-          rm -f ~/.ssh/gcp_deploy_key
-
-  # ============================================
   # Alert Telegram when any deploy job fails
   # ============================================
   notify-failure:
     name: Notify Deploy Failure
     runs-on: ubuntu-latest
     timeout-minutes: 2
-    needs: [build, deploy, deploy-gcp]
+    needs: [build, deploy]
     # always() lets this job run even when upstream jobs are skipped due to failure;
     # the explicit result checks ensure we only fire on actual failures, not cancellations.
-    if: ${{ always() && (needs.build.result == 'failure' || needs.deploy.result == 'failure' || needs.deploy-gcp.result == 'failure') }}
+    if: ${{ always() && (needs.build.result == 'failure' || needs.deploy.result == 'failure') }}
     steps:
       - name: Send Telegram alert
         env:
