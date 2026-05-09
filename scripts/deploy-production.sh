@@ -144,7 +144,12 @@ notify_telegram "$(printf '🚀 <b>Deploy started</b>  •  <code>%s</code>\nBra
 _STEP_START=$(date +%s)
 if [ ! -d "$DEPLOY_DIR/.git" ]; then
   log "First deploy — cloning repository..."
-  git clone --branch "$BRANCH" --depth 1 "$REPO_URL" "$DEPLOY_DIR"
+  # DEPLOY_DIR may already exist (rsync creates app dirs before this script runs).
+  # git clone refuses non-empty dirs, so clone to a temp dir then merge in.
+  _CLONE_TMP=$(mktemp -d)
+  git clone --branch "$BRANCH" --depth 1 "$REPO_URL" "$_CLONE_TMP"
+  cp -a "$_CLONE_TMP/." "$DEPLOY_DIR/"
+  rm -rf "$_CLONE_TMP"
 else
   log "Pulling latest from $BRANCH..."
   cd "$DEPLOY_DIR"
