@@ -269,9 +269,10 @@ jobs:
             User $GCP_USER
             IdentityFile ~/.ssh/gcp_deploy_key
             StrictHostKeyChecking accept-new
-            ConnectTimeout 90
+            ConnectTimeout 150
             ServerAliveInterval 30
             ServerAliveCountMax 20
+            GSSAPIAuthentication no
             ControlMaster auto
             ControlPath ~/.ssh/cm-%r@%h:%p
             ControlPersist 600
@@ -281,13 +282,19 @@ jobs:
         run: |
           # Establish one persistent TCP connection; all later SSH calls reuse it.
           # Retry up to 5 times — VM sshd can be slow after a prior session.
+          connected=0
           for attempt in 1 2 3 4 5; do
             if ssh $GCP_HOST echo "SSH master ready (attempt $attempt)"; then
+              connected=1
               break
             fi
             echo "Attempt $attempt failed, waiting 30s..."
             sleep 30
           done
+          if [ "$connected" -eq 0 ]; then
+            echo "All 5 SSH attempts failed — VM sshd not responding within ConnectTimeout"
+            exit 1
+          fi
 
       - name: Compute app version
         id: app_version
