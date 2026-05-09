@@ -288,7 +288,7 @@ WATCHER_NGINX_PORT=$HOST_PORT pm2 start "$DEPLOY_DIR/docker/watcher.mjs" \
 
 pm2 delete candyshop-boot-notifier 2>/dev/null || true
 WATCHER_NGINX_PORT=$HOST_PORT SERVER_HOSTNAME=$HOSTNAME pm2 start "$DEPLOY_DIR/scripts/server/boot-notifier.mjs" \
-  --name candyshop-boot-notifier
+  --name candyshop-boot-notifier || warn "boot-notifier failed to start (non-critical)"
 
 # Persist both processes across reboots
 pm2 save
