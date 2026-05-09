@@ -15,12 +15,20 @@ import { readFileSync } from 'fs';
 import { hostname   } from 'os';
 
 const NGINX_PORT         = process.env.WATCHER_NGINX_PORT || '9090';
-const SERVER_HOSTNAME    = (process.env.SERVER_HOSTNAME || hostname())
-  .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+const SERVER_HOSTNAME    = htmlEscape(process.env.SERVER_HOSTNAME || hostname());
 const BOT_TOKEN          = process.env.TELEGRAM_BOT_TOKEN || '';
 const CHAT_ID            = process.env.TELEGRAM_CHAT_ID || '';
 const THREAD_ID          = process.env.TELEGRAM_THREAD_ID || '';
 const CRITICAL_THREAD_ID = process.env.TELEGRAM_CRITICAL_THREAD_ID || THREAD_ID;
+
+function htmlEscape(str) {
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function asPositiveInt(v) {
+  const n = parseInt(v, 10);
+  return Number.isInteger(n) && n > 0 ? n : null;
+}
 
 const APPS = [
   { name: 'auth',       path: '/auth/health' },
@@ -41,7 +49,8 @@ async function tgPost(text, threadId) {
   if (!BOT_TOKEN || !CHAT_ID) return null;
   try {
     const body = { chat_id: CHAT_ID, text, parse_mode: 'HTML' };
-    if (threadId) body.message_thread_id = parseInt(threadId);
+    const tid = asPositiveInt(threadId);
+    if (tid) body.message_thread_id = tid;
     const res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

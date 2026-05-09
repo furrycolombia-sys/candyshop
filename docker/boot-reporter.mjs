@@ -18,13 +18,21 @@
 import { createConnection } from 'net';
 import { readFileSync }     from 'fs';
 
-const BOOT_MSG_ID        = parseInt(process.env.TELEGRAM_BOOT_MSG_ID || '0') || 0;
+function htmlEscape(str) {
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function asPositiveInt(v) {
+  const n = parseInt(v, 10);
+  return Number.isInteger(n) && n > 0 ? n : null;
+}
+
+const BOOT_MSG_ID        = asPositiveInt(process.env.TELEGRAM_BOOT_MSG_ID || '') ?? 0;
 const BOT_TOKEN          = process.env.TELEGRAM_BOT_TOKEN || '';
 const CHAT_ID            = process.env.TELEGRAM_CHAT_ID || '';
 const CRITICAL_THREAD_ID = process.env.TELEGRAM_CRITICAL_THREAD_ID
                         || process.env.TELEGRAM_THREAD_ID || '';
-const SERVER_HOSTNAME    = (process.env.SERVER_HOSTNAME || '')
-  .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+const SERVER_HOSTNAME    = htmlEscape(process.env.SERVER_HOSTNAME || '');
 
 if (!BOOT_MSG_ID) process.exit(0);
 
@@ -69,7 +77,8 @@ async function tgCritical(text) {
   if (!BOT_TOKEN || !CHAT_ID) return;
   try {
     const body = { chat_id: CHAT_ID, text, parse_mode: 'HTML' };
-    if (CRITICAL_THREAD_ID) body.message_thread_id = parseInt(CRITICAL_THREAD_ID);
+    const tid = asPositiveInt(CRITICAL_THREAD_ID);
+    if (tid) body.message_thread_id = tid;
     await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
