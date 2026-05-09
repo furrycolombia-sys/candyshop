@@ -172,10 +172,13 @@ rm -f "$DEPLOY_DIR/.secrets"
 ENV_FILE="${ENV_FILE:-/tmp/.candyshop-build.env}"
 if [ -f "$ENV_FILE" ]; then
   log "Loading runtime env from $ENV_FILE"
-  set -o allexport
-  # shellcheck source=/dev/null
-  source "$ENV_FILE"
-  set +o allexport
+  while IFS= read -r _line || [ -n "$_line" ]; do
+    [[ -z "$_line" || "$_line" == \#* ]] && continue
+    _key="${_line%%=*}"
+    _val="${_line#*=}"
+    [[ "$_key" =~ ^[A-Za-z_][A-Za-z0-9_]*$ ]] || continue
+    export "$_key=$_val"
+  done < "$ENV_FILE"
 else
   warn "No env file found at $ENV_FILE — container may lack runtime secrets"
 fi
@@ -215,9 +218,16 @@ _BOOT_MSG_ID=""
 if [ -n "${TELEGRAM_BOT_TOKEN:-}" ] && [ -n "${TELEGRAM_CHAT_ID:-}" ]; then
   _boot_now=$(python3 -c "from datetime import datetime,timezone; print(datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC'))" 2>/dev/null || true)
   _BOOT_RESP=$(python3 -c "
-import json, urllib.request
+import json, os, sys, urllib.request
+hostname  = sys.argv[1]
+boot_now  = sys.argv[2]
+chat_id   = os.environ.get('TELEGRAM_CHAT_ID', '')
+thread    = os.environ.get('TELEGRAM_THREAD_ID', '')
+bot_token = os.environ.get('TELEGRAM_BOT_TOKEN', '')
+if not (chat_id and bot_token):
+    raise SystemExit(0)
 text = (
-  '\U0001f504 <b>Container Boot</b>  •  <code>$_safe_hostname</code>  •  $_boot_now\n\n'
+  '\U0001f504 <b>Container Boot</b>  •  <code>' + hostname + '</code>  •  ' + boot_now + '\n\n'
   'Progress: 0/7  ░░░░░░░░░░░░░░░░  0%\n\n'
   '  ⏳ auth         ...\n'
   '  ⏳ store        ...\n'
@@ -229,13 +239,12 @@ text = (
   '  ⏳ nginx        waiting for all apps...\n\n'
   'Elapsed: 0s'
 )
-payload = {'chat_id': '${TELEGRAM_CHAT_ID}', 'text': text, 'parse_mode': 'HTML'}
-thread = '${TELEGRAM_THREAD_ID:-}'
+payload = {'chat_id': chat_id, 'text': text, 'parse_mode': 'HTML'}
 if thread:
     payload['message_thread_id'] = int(thread)
 data = json.dumps(payload).encode()
 req = urllib.request.Request(
-    'https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage',
+    'https://api.telegram.org/bot' + bot_token + '/sendMessage',
     data=data, headers={'Content-Type': 'application/json'}, method='POST')
 try:
     with urllib.request.urlopen(req, timeout=10) as r:
@@ -244,7 +253,7 @@ try:
             print(resp['result']['message_id'])
 except Exception:
     pass
-" 2>/dev/null || true)
+" "$_safe_hostname" "${_boot_now:-}" 2>/dev/null || true)
   _BOOT_MSG_ID="${_BOOT_RESP:-}"
 fi
 
@@ -253,13 +262,16 @@ docker run -d \
   --name "$CONTAINER_NAME" \
   --restart unless-stopped \
   -p "${HOST_PORT}:8080" \
+  --cap-drop=ALL \
+  --security-opt=no-new-privileges \
+  --pids-limit=1024 \
   -e "SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY:-}" \
   -e "TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN:-}" \
   -e "TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID:-}" \
   -e "TELEGRAM_THREAD_ID=${TELEGRAM_THREAD_ID:-}" \
   -e "TELEGRAM_CRITICAL_THREAD_ID=${TELEGRAM_CRITICAL_THREAD_ID:-}" \
   -e "TELEGRAM_BOOT_MSG_ID=${_BOOT_MSG_ID:-}" \
-  -e "SERVER_HOSTNAME=${HOSTNAME}" \
+  -e "SERVER_HOSTNAME=${_safe_hostname}" \
   "$IMAGE_TAG" \
   || err "Docker container start failed"
 
@@ -287,7 +299,7 @@ WATCHER_NGINX_PORT=$HOST_PORT pm2 start "$DEPLOY_DIR/docker/watcher.mjs" \
   --name candyshop-watcher
 
 pm2 delete candyshop-boot-notifier 2>/dev/null || true
-WATCHER_NGINX_PORT=$HOST_PORT SERVER_HOSTNAME=$HOSTNAME pm2 start "$DEPLOY_DIR/scripts/server/boot-notifier.mjs" \
+WATCHER_NGINX_PORT=$HOST_PORT SERVER_HOSTNAME=$_safe_hostname pm2 start "$DEPLOY_DIR/scripts/server/boot-notifier.mjs" \
   --name candyshop-boot-notifier || warn "boot-notifier failed to start (non-critical)"
 
 # Persist both processes across reboots

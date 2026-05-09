@@ -360,21 +360,29 @@ jobs:
     timeout-minutes: 25
     needs: build
     environment: production
+    env:
+      DEPLOY_HOST: ${{ secrets.GCP_PROD_SERVER_HOST }}
+      DEPLOY_USER: ${{ secrets.GCP_PROD_SERVER_USER }}
     steps:
       - name: Checkout code
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
 
       - name: Setup SSH key
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.GCP_PROD_SERVER_SSH_KEY }}
+          KNOWN_HOSTS: ${{ secrets.GCP_PROD_SERVER_KNOWN_HOSTS }}
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.GCP_PROD_SERVER_SSH_KEY }}" | tr -d '\r' > ~/.ssh/deploy_key
+          printf '%s\n' "$SSH_PRIVATE_KEY" | tr -d '\r' > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
+          printf '%s\n' "$KNOWN_HOSTS" >> ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
           cat >> ~/.ssh/config << EOF
-          Host ${{ secrets.GCP_PROD_SERVER_HOST }}
-            HostName ${{ secrets.GCP_PROD_SERVER_HOST }}
-            User ${{ secrets.GCP_PROD_SERVER_USER }}
+          Host $DEPLOY_HOST
+            HostName $DEPLOY_HOST
+            User $DEPLOY_USER
             IdentityFile ~/.ssh/deploy_key
-            StrictHostKeyChecking no
+            StrictHostKeyChecking yes
             ServerAliveInterval 30
             ServerAliveCountMax 20
           EOF
@@ -395,6 +403,7 @@ jobs:
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           TELEGRAM_THREAD_ID: ${{ secrets.TELEGRAM_THREAD_ID }}
           TELEGRAM_CRITICAL_THREAD_ID: ${{ secrets.TELEGRAM_CRITICAL_THREAD_ID }}
+          APP_VERSION: ${{ steps.app_version.outputs.value }}
         run: |
           {
             printf 'SUPABASE_SERVICE_ROLE_KEY=%s\n'      "$SUPABASE_SERVICE_ROLE_KEY"
@@ -402,8 +411,8 @@ jobs:
             printf 'TELEGRAM_CHAT_ID=%s\n'               "$TELEGRAM_CHAT_ID"
             printf 'TELEGRAM_THREAD_ID=%s\n'             "$TELEGRAM_THREAD_ID"
             printf 'TELEGRAM_CRITICAL_THREAD_ID=%s\n'   "$TELEGRAM_CRITICAL_THREAD_ID"
-            printf 'NEXT_PUBLIC_APP_VERSION=%s\n'        "${{ steps.app_version.outputs.value }}"
-          } | ssh ${{ secrets.GCP_PROD_SERVER_HOST }} 'cat > /tmp/.candyshop-build.env'
+            printf 'NEXT_PUBLIC_APP_VERSION=%s\n'        "$APP_VERSION"
+          } | ssh "$DEPLOY_HOST" 'umask 077; cat > /tmp/.candyshop-build.env'
 
       - name: Download build artifacts
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
@@ -453,20 +462,20 @@ jobs:
             echo "Syncing .next for ${APP}..."
             rsync -az --delete --exclude=cache --mkpath \
               "apps/${APP}/.next/" \
-              "${{ secrets.GCP_PROD_SERVER_USER }}@${{ secrets.GCP_PROD_SERVER_HOST }}:/home/furrycolombia/candyshop/apps/${APP}/.next/"
+              "${DEPLOY_USER}@${DEPLOY_HOST}:/home/furrycolombia/candyshop/apps/${APP}/.next/"
           done
 
       - name: Copy deploy script to server
         run: |
-          cat scripts/deploy-production.sh | ssh ${{ secrets.GCP_PROD_SERVER_HOST }} \
-            'cat > /tmp/deploy-production.sh && chmod +x /tmp/deploy-production.sh'
+          ssh "$DEPLOY_HOST" 'umask 077; cat > /tmp/deploy-production.sh && chmod +x /tmp/deploy-production.sh' \
+            < scripts/deploy-production.sh
 
       - name: Start deployment
         env:
           GH_REPOSITORY: ${{ github.repository }}
           GH_REF_NAME: ${{ github.ref_name }}
         run: |
-          ssh ${{ secrets.GCP_PROD_SERVER_HOST }} "
+          ssh "$DEPLOY_HOST" "
             rm -f /tmp/deploy-candyshop.done /tmp/deploy-candyshop.log
             REPO_URL='https://github.com/${GH_REPOSITORY}.git' \
             BRANCH='${GH_REF_NAME}' \
@@ -482,9 +491,9 @@ jobs:
           for i in $(seq 1 60); do
             sleep 15
             echo "--- log tail [poll $i/60] ---"
-            ssh ${{ secrets.GCP_PROD_SERVER_HOST }} \
+            ssh "$DEPLOY_HOST" \
               "tail -25 /tmp/deploy-candyshop.log 2>/dev/null" || true
-            RESULT=$(ssh ${{ secrets.GCP_PROD_SERVER_HOST }} \
+            RESULT=$(ssh "$DEPLOY_HOST" \
               "cat /tmp/deploy-candyshop.done 2>/dev/null || echo pending" || echo pending)
             if [ "$RESULT" != "pending" ]; then
               echo "Deploy finished with exit code: $RESULT"
@@ -497,7 +506,7 @@ jobs:
       - name: Cleanup
         if: always()
         run: |
-          ssh ${{ secrets.GCP_PROD_SERVER_HOST }} \
+          ssh "$DEPLOY_HOST" \
             'rm -f /tmp/.candyshop-build.env /tmp/deploy-production.sh' 2>/dev/null || true
           rm -f ~/.ssh/deploy_key
 
