@@ -114,7 +114,7 @@ _on_exit() {
 trap _on_exit EXIT
 # ─────────────────────────────────────────────────────────────────────────────
 
-DEPLOY_DIR="/home/furrycolombia/candyshop"
+DEPLOY_DIR="${DEPLOY_DIR:-/home/furrycolombia/candyshop}"
 REPO_URL="${REPO_URL:-}"
 BRANCH="${BRANCH:-main}"
 CONTAINER_NAME="${SITE_PROD_CONTAINER_NAME:-candyshop-prod}"
