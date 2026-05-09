@@ -167,12 +167,15 @@ jobs:
 
       - name: Setup SSH key
         run: |
+          # Strip BOM and whitespace from host secret before use
+          GCP_HOST=$(echo "${{ secrets.GCP_PROD_SERVER_HOST }}" | python3 -c "import sys; print(sys.stdin.buffer.read().decode('utf-8-sig').strip())")
+          echo "GCP_HOST=$GCP_HOST" >> "$GITHUB_ENV"
           mkdir -p ~/.ssh
           echo "${{ secrets.GCP_PROD_SERVER_SSH_KEY }}" | tr -d '\r' > ~/.ssh/gcp_deploy_key
           chmod 600 ~/.ssh/gcp_deploy_key
           cat >> ~/.ssh/config << EOF
-          Host ${{ secrets.GCP_PROD_SERVER_HOST }}
-            HostName ${{ secrets.GCP_PROD_SERVER_HOST }}
+          Host $GCP_HOST
+            HostName $GCP_HOST
             User ${{ secrets.GCP_PROD_SERVER_USER }}
             IdentityFile ~/.ssh/gcp_deploy_key
             StrictHostKeyChecking no
@@ -205,7 +208,7 @@ jobs:
             printf 'TELEGRAM_THREAD_ID=%s\n'            "$TELEGRAM_THREAD_ID"
             printf 'TELEGRAM_CRITICAL_THREAD_ID=%s\n'  "$TELEGRAM_CRITICAL_THREAD_ID"
             printf 'NEXT_PUBLIC_APP_VERSION=%s\n'       "${{ steps.app_version.outputs.value }}"
-          } | ssh ${{ secrets.GCP_PROD_SERVER_HOST }} 'cat > /tmp/.candyshop-build.env'
+          } | ssh $GCP_HOST 'cat > /tmp/.candyshop-build.env'
 
       - name: Download store build artifacts
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
@@ -251,18 +254,18 @@ jobs:
 
       - name: Sync build artifacts to GCP server
         run: |
-          ssh ${{ secrets.GCP_PROD_SERVER_HOST }} \
+          ssh $GCP_HOST \
             'mkdir -p /opt/candyshop/apps/{store,admin,auth,landing,payments,studio,playground}'
           for APP in store admin auth landing payments studio playground; do
             echo "Syncing .next for ${APP}..."
             rsync -az --delete --exclude=cache \
               "apps/${APP}/.next/" \
-              "${{ secrets.GCP_PROD_SERVER_HOST }}:/opt/candyshop/apps/${APP}/.next/"
+              "$GCP_HOST:/opt/candyshop/apps/${APP}/.next/"
           done
 
       - name: Copy deploy script to GCP server
         run: |
-          cat scripts/deploy-production.sh | ssh ${{ secrets.GCP_PROD_SERVER_HOST }} \
+          cat scripts/deploy-production.sh | ssh $GCP_HOST \
             'cat > /tmp/deploy-production.sh && chmod +x /tmp/deploy-production.sh'
 
       - name: Start deployment
@@ -270,7 +273,7 @@ jobs:
           DEPLOY_REPO_URL: https://github.com/${{ github.repository }}.git
           DEPLOY_BRANCH: ${{ github.ref_name }}
         run: |
-          ssh ${{ secrets.GCP_PROD_SERVER_HOST }} "
+          ssh $GCP_HOST "
             rm -f /tmp/deploy-candyshop.done /tmp/deploy-candyshop.log
             REPO_URL='${DEPLOY_REPO_URL}' \
             BRANCH='${DEPLOY_BRANCH}' \
@@ -287,9 +290,9 @@ jobs:
           for i in $(seq 1 60); do
             sleep 15
             echo "--- log tail [poll $i/60] ---"
-            ssh ${{ secrets.GCP_PROD_SERVER_HOST }} \
+            ssh $GCP_HOST \
               "tail -25 /tmp/deploy-candyshop.log 2>/dev/null" || true
-            RESULT=$(ssh ${{ secrets.GCP_PROD_SERVER_HOST }} \
+            RESULT=$(ssh $GCP_HOST \
               "cat /tmp/deploy-candyshop.done 2>/dev/null || echo pending" || echo pending)
             if [ "$RESULT" != "pending" ]; then
               echo "Deploy finished with exit code: $RESULT"
@@ -301,12 +304,12 @@ jobs:
 
       - name: Verify deployment
         run: |
-          ssh ${{ secrets.GCP_PROD_SERVER_HOST }} \
+          ssh $GCP_HOST \
             'docker ps --filter name=candyshop-prod --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" 2>/dev/null || true'
 
       - name: Cleanup
         if: always()
         run: |
-          ssh ${{ secrets.GCP_PROD_SERVER_HOST }} \
+          ssh $GCP_HOST \
             'rm -f /tmp/.candyshop-build.env /tmp/deploy-production.sh' 2>/dev/null || true
           rm -f ~/.ssh/gcp_deploy_key
