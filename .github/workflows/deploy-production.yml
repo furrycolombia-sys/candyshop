@@ -451,7 +451,7 @@ jobs:
         run: |
           for APP in store admin auth landing payments studio playground; do
             echo "Syncing .next for ${APP}..."
-            rsync -az --delete --exclude=cache \
+            rsync -az --delete --exclude=cache --mkpath \
               "apps/${APP}/.next/" \
               "${{ secrets.GCP_PROD_SERVER_USER }}@${{ secrets.GCP_PROD_SERVER_HOST }}:/home/furrycolombia/candyshop/apps/${APP}/.next/"
           done
