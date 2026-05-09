@@ -139,25 +139,21 @@ log "Node $(node --version) | PM2 $(pm2 --version)"
 notify_telegram "$(printf '🚀 <b>Deploy started</b>  •  <code>%s</code>\nBranch: <code>%s</code>' "$_safe_hostname" "$BRANCH")"
 
 # =============================================================================
-# Clone or pull
+# Sync repository (works whether DEPLOY_DIR is absent, non-empty, or already a repo)
 # =============================================================================
 _STEP_START=$(date +%s)
-if [ ! -d "$DEPLOY_DIR/.git" ]; then
-  log "First deploy — cloning repository..."
-  # DEPLOY_DIR may already exist (rsync creates app dirs before this script runs).
-  # git clone refuses non-empty dirs, so clone to a temp dir then merge in.
-  _CLONE_TMP=$(mktemp -d)
-  git clone --branch "$BRANCH" --depth 1 "$REPO_URL" "$_CLONE_TMP"
-  cp -a "$_CLONE_TMP/." "$DEPLOY_DIR/"
-  rm -rf "$_CLONE_TMP"
+log "Syncing repository..."
+mkdir -p "$DEPLOY_DIR"
+cd "$DEPLOY_DIR"
+if [ ! -d ".git" ]; then
+  git init -q
+  git remote add origin "$REPO_URL"
 else
-  log "Pulling latest from $BRANCH..."
-  cd "$DEPLOY_DIR"
   git remote set-url origin "$REPO_URL" 2>/dev/null || true
-  git fetch origin "$BRANCH" --depth 1
-  git checkout -B "$BRANCH" "FETCH_HEAD"
-  git clean -fd
 fi
+git fetch origin "$BRANCH" --depth 1
+git checkout -B "$BRANCH" FETCH_HEAD
+git clean -fd
 
 cd "$DEPLOY_DIR"
 DEPLOY_COMMIT=$(git log --format="%h %s" -1 2>/dev/null || true)
