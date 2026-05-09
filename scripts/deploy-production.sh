@@ -53,6 +53,9 @@ if [ -f "$_tg_env" ]; then
   TELEGRAM_CHAT_ID="${TELEGRAM_CHAT_ID:-$(grep '^TELEGRAM_CHAT_ID=' "$_tg_env" | cut -d= -f2- 2>/dev/null || true)}"
   TELEGRAM_THREAD_ID="${TELEGRAM_THREAD_ID:-$(grep '^TELEGRAM_THREAD_ID=' "$_tg_env" | cut -d= -f2- 2>/dev/null || true)}"
 fi
+# Sanitize hostname once: only RFC-1123-valid chars so it can't break the Python
+# string literal or inject HTML into Telegram messages.
+_safe_hostname=$(printf '%s' "$HOSTNAME" | tr -dc '[:alnum:]._-')
 
 _telegram_send() {
   local thread_id="$1" text="$2"
@@ -101,11 +104,11 @@ _on_exit() {
   dur="$(_dur $DEPLOY_START)"
   local commit="${DEPLOY_COMMIT:-unknown}"
   if [ "$code" -eq 0 ]; then
-    notify_telegram "$(printf '✅ <b>Deploy complete</b>\nBranch: <code>%s</code>\nCommit: <code>%s</code>\nTotal: %s' \
-      "$BRANCH" "$commit" "$dur")"
+    notify_telegram "$(printf '✅ <b>Deploy complete</b>  •  <code>%s</code>\nBranch: <code>%s</code>\nCommit: <code>%s</code>\nTotal: %s' \
+      "$_safe_hostname" "$BRANCH" "$commit" "$dur")"
   else
-    notify_telegram_critical "$(printf '❌ <b>Deploy FAILED</b> (exit %s)\nBranch: <code>%s</code>\nCommit: <code>%s</code>\nTotal: %s' \
-      "$code" "$BRANCH" "$commit" "$dur")"
+    notify_telegram_critical "$(printf '❌ <b>Deploy FAILED</b> (exit %s)  •  <code>%s</code>\nBranch: <code>%s</code>\nCommit: <code>%s</code>\nTotal: %s' \
+      "$code" "$_safe_hostname" "$BRANCH" "$commit" "$dur")"
   fi
 }
 trap _on_exit EXIT
@@ -133,7 +136,7 @@ export NVM_DIR="$HOME/.nvm"
 nvm use 22 --silent || err "Node 22 not available via nvm"
 
 log "Node $(node --version) | PM2 $(pm2 --version)"
-notify_telegram "$(printf '🚀 <b>Deploy started</b>\nBranch: <code>%s</code>' "$BRANCH")"
+notify_telegram "$(printf '🚀 <b>Deploy started</b>  •  <code>%s</code>\nBranch: <code>%s</code>' "$_safe_hostname" "$BRANCH")"
 
 # =============================================================================
 # Clone or pull
@@ -213,7 +216,7 @@ if [ -n "${TELEGRAM_BOT_TOKEN:-}" ] && [ -n "${TELEGRAM_CHAT_ID:-}" ]; then
   _BOOT_RESP=$(python3 -c "
 import json, urllib.request
 text = (
-  '\U0001f504 <b>Container Boot</b> — $_boot_now\n\n'
+  '\U0001f504 <b>Container Boot</b>  •  <code>$_safe_hostname</code>  •  $_boot_now\n\n'
   'Progress: 0/7  ░░░░░░░░░░░░░░░░  0%\n\n'
   '  ⏳ auth         ...\n'
   '  ⏳ store        ...\n'
@@ -255,6 +258,7 @@ docker run -d \
   -e "TELEGRAM_THREAD_ID=${TELEGRAM_THREAD_ID:-}" \
   -e "TELEGRAM_CRITICAL_THREAD_ID=${TELEGRAM_CRITICAL_THREAD_ID:-}" \
   -e "TELEGRAM_BOOT_MSG_ID=${_BOOT_MSG_ID:-}" \
+  -e "SERVER_HOSTNAME=${HOSTNAME}" \
   "$IMAGE_TAG" \
   || err "Docker container start failed"
 
@@ -282,7 +286,7 @@ WATCHER_NGINX_PORT=$HOST_PORT pm2 start "$DEPLOY_DIR/docker/watcher.mjs" \
   --name candyshop-watcher
 
 pm2 delete candyshop-boot-notifier 2>/dev/null || true
-WATCHER_NGINX_PORT=$HOST_PORT pm2 start "$DEPLOY_DIR/scripts/server/boot-notifier.mjs" \
+WATCHER_NGINX_PORT=$HOST_PORT SERVER_HOSTNAME=$HOSTNAME pm2 start "$DEPLOY_DIR/scripts/server/boot-notifier.mjs" \
   --name candyshop-boot-notifier
 
 # Persist both processes across reboots
@@ -334,7 +338,7 @@ for APP_ENTRY in "${APPS[@]}"; do
 done
 
 if [ "$FAILED" -gt 0 ]; then
-  notify_telegram_critical "$(printf '⚠️ <b>Health check: %d/%d apps not responding</b>\nDeploy complete with warnings.\n<i>Check: docker logs %s</i>' "$FAILED" "${#APPS[@]}" "$CONTAINER_NAME")"
+  notify_telegram_critical "$(printf '⚠️ <b>Health check: %d/%d apps not responding</b>  •  <code>%s</code>\nDeploy complete with warnings.\n<i>Check: docker logs %s</i>' "$FAILED" "${#APPS[@]}" "$_safe_hostname" "$CONTAINER_NAME")"
   warn "$FAILED app(s) not responding. Skipping warm-up."
   log "Deployment complete (with warnings)."
   exit 0

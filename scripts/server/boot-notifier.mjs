@@ -12,8 +12,11 @@
  */
 
 import { readFileSync } from 'fs';
+import { hostname   } from 'os';
 
 const NGINX_PORT         = process.env.WATCHER_NGINX_PORT || '9090';
+const SERVER_HOSTNAME    = (process.env.SERVER_HOSTNAME || hostname())
+  .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 const BOT_TOKEN          = process.env.TELEGRAM_BOT_TOKEN || '';
 const CHAT_ID            = process.env.TELEGRAM_CHAT_ID || '';
 const THREAD_ID          = process.env.TELEGRAM_THREAD_ID || '';
@@ -97,7 +100,7 @@ function formatProgress(appStatus, startTime, label) {
   rows.push(`  ⏳ ${'nginx'.padEnd(12)}waiting for all apps...`);
 
   return [
-    `🔄 <b>${label}</b> — ${dateStr}`, '',
+    `🔄 <b>${label}</b>  •  <code>${SERVER_HOSTNAME}</code>  •  ${dateStr}`, '',
     `Progress: ${ready}/${total}  ${progressBar(ready, total)}  ${pct}%`, '',
     ...rows, '',
     `Elapsed: ${fmtElapsed(startTime)}`,
@@ -122,7 +125,7 @@ async function runBootSequence(label) {
     if (appStatus.every(a => a.readyAt !== null)) {
       const dur = fmtElapsed(startTime);
       await tgEdit(msgId,
-        `✅ <b>All ${APPS.length} apps ready</b> — Boot in ${dur}\n   nginx up — traffic restored`
+        `✅ <b>All ${APPS.length} apps ready</b>  •  <code>${SERVER_HOSTNAME}</code>  •  Boot in ${dur}\n   nginx up — traffic restored`
       );
       return;
     }
@@ -132,7 +135,7 @@ async function runBootSequence(label) {
 
   const failed = appStatus.filter(a => a.readyAt === null).map(a => a.name).join(', ');
   await tgPost(
-    `❌ <b>${failed} failed to start after 180s</b>\n   Check: <code>docker logs candyshop-prod</code>`,
+    `❌ <b>${failed} failed to start after 180s</b>  •  <code>${SERVER_HOSTNAME}</code>\n   Check: <code>docker logs candyshop-prod</code>`,
     CRITICAL_THREAD_ID
   );
 }

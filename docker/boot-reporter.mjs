@@ -23,6 +23,8 @@ const BOT_TOKEN          = process.env.TELEGRAM_BOT_TOKEN || '';
 const CHAT_ID            = process.env.TELEGRAM_CHAT_ID || '';
 const CRITICAL_THREAD_ID = process.env.TELEGRAM_CRITICAL_THREAD_ID
                         || process.env.TELEGRAM_THREAD_ID || '';
+const SERVER_HOSTNAME    = (process.env.SERVER_HOSTNAME || '')
+  .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
 if (!BOOT_MSG_ID) process.exit(0);
 
@@ -103,7 +105,7 @@ function formatProgress(appStatus, startTime) {
   rows.push(`  ⏳ ${'nginx'.padEnd(12)}waiting for all apps...`);
 
   return [
-    `🔄 <b>Container Boot</b> — ${dateStr}`, '',
+    `🔄 <b>Container Boot</b>${SERVER_HOSTNAME ? `  •  <code>${SERVER_HOSTNAME}</code>` : ''}  •  ${dateStr}`, '',
     `Progress: ${ready}/${total}  ${progressBar(ready, total)}  ${pct}%`, '',
     ...rows, '',
     `Elapsed: ${fmtElapsed(startTime)}`,
@@ -125,9 +127,10 @@ async function main() {
     if (appStatus.every(a => a.readyAt !== null)) {
       const nginxOk = await checkPort(NGINX_PORT);
       const dur = fmtElapsed(startTime);
+      const host = SERVER_HOSTNAME ? `  •  <code>${SERVER_HOSTNAME}</code>` : '';
       await tgEdit(nginxOk
-        ? `✅ <b>All ${APPS.length} apps ready</b> — Boot in ${dur}\n   nginx up — traffic restored`
-        : `✅ <b>All ${APPS.length} apps ready</b> — Boot in ${dur}\n   ⚠️ nginx not yet up`
+        ? `✅ <b>All ${APPS.length} apps ready</b>${host}  •  Boot in ${dur}\n   nginx up — traffic restored`
+        : `✅ <b>All ${APPS.length} apps ready</b>${host}  •  Boot in ${dur}\n   ⚠️ nginx not yet up`
       );
       process.exit(0);
     }
@@ -137,8 +140,9 @@ async function main() {
   }
 
   const failed = appStatus.filter(a => a.readyAt === null).map(a => a.name).join(', ');
+  const host = SERVER_HOSTNAME ? `  •  <code>${SERVER_HOSTNAME}</code>` : '';
   await tgCritical(
-    `❌ <b>${failed} failed to start after 120s</b>\n   Check: <code>docker logs candyshop-prod</code>`
+    `❌ <b>${failed} failed to start after 120s</b>${host}\n   Check: <code>docker logs candyshop-prod</code>`
   );
   process.exit(1);
 }
