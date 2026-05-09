@@ -160,8 +160,6 @@ jobs:
     # Run when build succeeded (dispatch mode) or was skipped (workflow_call mode).
     if: ${{ always() && (needs.build.result == 'success' || needs.build.result == 'skipped') }}
     environment: production
-    env:
-      SSH_OPTS: "-o StrictHostKeyChecking=no -o ProxyCommand='cloudflared access ssh --hostname %h'"
     steps:
       - name: Checkout code
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
@@ -182,7 +180,7 @@ jobs:
             HostName ${{ secrets.PROD_SERVER_HOST }}
             User ${{ secrets.PROD_SERVER_USER }}
             IdentityFile ~/.ssh/deploy_key
-            StrictHostKeyChecking no
+            StrictHostKeyChecking accept-new
             ProxyCommand cloudflared access ssh --hostname %h
             ServerAliveInterval 30
             ServerAliveCountMax 20
@@ -213,7 +211,7 @@ jobs:
             printf 'TELEGRAM_THREAD_ID=%s\n'             "$TELEGRAM_THREAD_ID"
             printf 'TELEGRAM_CRITICAL_THREAD_ID=%s\n'   "$TELEGRAM_CRITICAL_THREAD_ID"
             printf 'NEXT_PUBLIC_APP_VERSION=%s\n'        "${{ steps.app_version.outputs.value }}"
-          } | ssh ${{ secrets.PROD_SERVER_HOST }} 'cat > /tmp/.candyshop-build.env'
+          } | ssh ${{ secrets.PROD_SERVER_HOST }} 'cat > /tmp/.candyshop-build.env && chmod 600 /tmp/.candyshop-build.env'
 
       - name: Download store build artifacts
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4

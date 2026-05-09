@@ -181,7 +181,7 @@ jobs:
             HostName $GCP_HOST
             User $GCP_USER
             IdentityFile ~/.ssh/gcp_deploy_key
-            StrictHostKeyChecking no
+            StrictHostKeyChecking accept-new
             ServerAliveInterval 30
             ServerAliveCountMax 20
           EOF
@@ -211,7 +211,7 @@ jobs:
             printf 'TELEGRAM_THREAD_ID=%s\n'            "$TELEGRAM_THREAD_ID"
             printf 'TELEGRAM_CRITICAL_THREAD_ID=%s\n'  "$TELEGRAM_CRITICAL_THREAD_ID"
             printf 'NEXT_PUBLIC_APP_VERSION=%s\n'       "${{ steps.app_version.outputs.value }}"
-          } | ssh $GCP_HOST 'cat > /tmp/.candyshop-build.env'
+          } | ssh $GCP_HOST 'cat > /tmp/.candyshop-build.env && chmod 600 /tmp/.candyshop-build.env'
 
       - name: Download store build artifacts
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
