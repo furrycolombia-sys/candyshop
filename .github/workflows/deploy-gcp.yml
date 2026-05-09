@@ -167,16 +167,19 @@ jobs:
 
       - name: Setup SSH key
         run: |
-          # Strip BOM and whitespace from host secret before use
+          # Strip BOM and whitespace from all GCP secrets before use
           GCP_HOST=$(echo "${{ secrets.GCP_PROD_SERVER_HOST }}" | python3 -c "import sys; print(sys.stdin.buffer.read().decode('utf-8-sig').strip())")
+          GCP_USER=$(echo "${{ secrets.GCP_PROD_SERVER_USER }}" | python3 -c "import sys; print(sys.stdin.buffer.read().decode('utf-8-sig').strip())")
           echo "GCP_HOST=$GCP_HOST" >> "$GITHUB_ENV"
+          echo "GCP_USER=$GCP_USER" >> "$GITHUB_ENV"
           mkdir -p ~/.ssh
-          echo "${{ secrets.GCP_PROD_SERVER_SSH_KEY }}" | tr -d '\r' > ~/.ssh/gcp_deploy_key
+          # Strip BOM and carriage returns from SSH private key
+          echo "${{ secrets.GCP_PROD_SERVER_SSH_KEY }}" | python3 -c "import sys; data=sys.stdin.buffer.read().decode('utf-8-sig'); sys.stdout.write(data.replace('\r',''))" > ~/.ssh/gcp_deploy_key
           chmod 600 ~/.ssh/gcp_deploy_key
           cat >> ~/.ssh/config << EOF
           Host $GCP_HOST
             HostName $GCP_HOST
-            User ${{ secrets.GCP_PROD_SERVER_USER }}
+            User $GCP_USER
             IdentityFile ~/.ssh/gcp_deploy_key
             StrictHostKeyChecking no
             ServerAliveInterval 30
