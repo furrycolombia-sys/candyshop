@@ -364,18 +364,24 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
 
+      - name: Install cloudflared
+        run: |
+          curl -fsSL https://pkg.cloudflare.com/cloudflare-main.gpg | sudo tee /usr/share/keyrings/cloudflare-main.gpg > /dev/null
+          echo "deb [signed-by=/usr/share/keyrings/cloudflare-main.gpg] https://pkg.cloudflare.com/cloudflared $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/cloudflared.list
+          sudo apt-get update -qq && sudo apt-get install -y -qq cloudflared
+
       - name: Setup SSH key
         run: |
           mkdir -p ~/.ssh
           printf '%s' "${{ secrets.GCP_PROD_SERVER_SSH_KEY }}" | tr -d '\r' > ~/.ssh/gcp_deploy_key
           chmod 600 ~/.ssh/gcp_deploy_key
-          echo "${{ secrets.GCP_PROD_SERVER_KNOWN_HOSTS }}" >> ~/.ssh/known_hosts
           cat >> ~/.ssh/config << EOF
           Host ${{ secrets.GCP_PROD_SERVER_HOST }}
             HostName ${{ secrets.GCP_PROD_SERVER_HOST }}
             User ${{ secrets.GCP_PROD_SERVER_USER }}
             IdentityFile ~/.ssh/gcp_deploy_key
-            StrictHostKeyChecking yes
+            StrictHostKeyChecking no
+            ProxyCommand cloudflared access ssh --hostname %h
             ServerAliveInterval 30
             ServerAliveCountMax 20
           EOF
