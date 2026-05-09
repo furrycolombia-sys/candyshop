@@ -184,28 +184,40 @@ else
 fi
 
 # =============================================================================
-# Build Docker image from CI-rsynced pre-built artifacts
-# CI already ran pnpm build; we just wrap the .next/ dirs in a Docker image.
+# Obtain the Docker image.
+# GCP: CI builds in GitHub Actions (7 GB RAM) and pushes to GHCR; we pull.
+# Local/fallback: build from the CI-rsynced pre-built artifacts on this server.
 # =============================================================================
-log "Building Docker image from pre-built artifacts..."
 _STEP_START=$(date +%s)
-IMAGE_TAG="candyshop-prod:$(git rev-parse --short HEAD 2>/dev/null || date +%s)"
+if [ -n "${DOCKER_IMAGE:-}" ]; then
+  log "Pulling pre-built Docker image: $DOCKER_IMAGE"
+  if [ -n "${GHCR_TOKEN:-}" ]; then
+    echo "$GHCR_TOKEN" | docker login ghcr.io -u "${GHCR_USERNAME:-github}" --password-stdin \
+      || warn "GHCR login failed — attempting pull unauthenticated"
+  fi
+  docker pull "$DOCKER_IMAGE" || err "Docker image pull failed"
+  IMAGE_TAG="$DOCKER_IMAGE"
+  log "Image pulled: $IMAGE_TAG (took $(_dur $_STEP_START))"
+  notify_telegram "$(printf '🐳 <b>Image pulled</b> (%s)\n<code>%s</code>' "$(_dur $_STEP_START)" "$IMAGE_TAG")"
+else
+  log "Building Docker image from pre-built artifacts..."
+  IMAGE_TAG="candyshop-prod:$(git rev-parse --short HEAD 2>/dev/null || date +%s)"
 
-# CI artifacts silently drop empty directories; docker COPY fails on missing paths.
-# Ensure every path the Dockerfile COPYs exists before building.
-for APP in store auth admin landing payments studio playground; do
-  mkdir -p "$DEPLOY_DIR/apps/$APP/.next/static"
-  mkdir -p "$DEPLOY_DIR/apps/$APP/public"
-done
+  # Ensure every path the Dockerfile COPYs exists (artifacts may omit empty dirs).
+  for APP in store auth admin landing payments studio playground; do
+    mkdir -p "$DEPLOY_DIR/apps/$APP/.next/static"
+    mkdir -p "$DEPLOY_DIR/apps/$APP/public"
+  done
 
-docker build \
-  -f "$DEPLOY_DIR/docker/prod/Dockerfile" \
-  -t "$IMAGE_TAG" \
-  "$DEPLOY_DIR" \
-  || err "Docker image build failed"
+  docker build \
+    -f "$DEPLOY_DIR/docker/prod/Dockerfile" \
+    -t "$IMAGE_TAG" \
+    "$DEPLOY_DIR" \
+    || err "Docker image build failed"
 
-log "Image built: $IMAGE_TAG (took $(_dur $_STEP_START))"
-notify_telegram "$(printf '🐳 <b>Image built</b> (%s)\n<code>%s</code>' "$(_dur $_STEP_START)" "$IMAGE_TAG")"
+  log "Image built: $IMAGE_TAG (took $(_dur $_STEP_START))"
+  notify_telegram "$(printf '🐳 <b>Image built</b> (%s)\n<code>%s</code>' "$(_dur $_STEP_START)" "$IMAGE_TAG")"
+fi
 
 # =============================================================================
 # Hot-swap the container (traffic resumes within seconds of docker run)
@@ -278,9 +290,10 @@ docker run -d \
 
 log "Container started (took $(_dur $_STEP_START))"
 
-# Keep only the 2 most recent candyshop-prod images; prune older ones
+# Keep only the 2 most recent images; prune older ones (handles both local
+# candyshop-prod:sha tags and ghcr.io/.../candyshop-prod:sha tags)
 docker images --format '{{.Repository}}:{{.Tag}}' \
-  | grep '^candyshop-prod:' \
+  | grep 'candyshop-prod' \
   | sort -r \
   | tail -n +3 \
   | xargs -r docker rmi 2>/dev/null || true

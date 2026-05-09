@@ -12,6 +12,7 @@ on:
 
 permissions:
   contents: read
+  packages: write
 
 env:
   NODE_VERSION: "24"
@@ -150,6 +151,91 @@ jobs:
           include-hidden-files: true
 
   # ============================================
+  # Build the Docker image in CI (7 GB RAM) and push to GHCR.
+  # The e2-micro VM (1 GB RAM) OOMs during "exporting layers" when building
+  # locally, so we build here and let the VM do a cheap docker pull instead.
+  # ============================================
+  docker-build-push:
+    name: Build & Push Docker Image
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: [build]
+    if: ${{ always() && (needs.build.result == 'success' || needs.build.result == 'skipped') }}
+    outputs:
+      image: ${{ steps.image.outputs.name }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - name: Download store build artifacts
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: build-store
+          path: apps/store/.next/
+
+      - name: Download admin build artifacts
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: build-admin
+          path: apps/admin/.next/
+
+      - name: Download auth build artifacts
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: build-auth
+          path: apps/auth/.next/
+
+      - name: Download landing build artifacts
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: build-landing
+          path: apps/landing/.next/
+
+      - name: Download payments build artifacts
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: build-payments
+          path: apps/payments/.next/
+
+      - name: Download studio build artifacts
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: build-studio
+          path: apps/studio/.next/
+
+      - name: Download playground build artifacts
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: build-playground
+          path: apps/playground/.next/
+
+      - name: Ensure artifact directories exist
+        run: |
+          for app in store admin auth landing payments studio playground; do
+            mkdir -p "apps/$app/.next/static" "apps/$app/public"
+          done
+
+      - name: Set image name
+        id: image
+        run: |
+          OWNER="${{ github.repository_owner }}"
+          OWNER_LC=$(echo "$OWNER" | tr '[:upper:]' '[:lower:]')
+          echo "name=ghcr.io/${OWNER_LC}/candyshop-prod:${GITHUB_SHA:0:7}" >> "$GITHUB_OUTPUT"
+
+      - name: Log in to GitHub Container Registry
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+
+      - name: Build and push Docker image
+        run: |
+          IMAGE="${{ steps.image.outputs.name }}"
+          docker build \
+            -f docker/prod/Dockerfile \
+            -t "$IMAGE" \
+            .
+          docker push "$IMAGE"
+
+  # ============================================
   # Deploy to GCP production VM via direct SSH
   # No cloudflared — connects directly to 35.238.125.109
   # ============================================
@@ -157,9 +243,10 @@ jobs:
     name: Deploy to GCP
     runs-on: ubuntu-latest
     timeout-minutes: 25
-    needs: [build]
-    # Run when build succeeded (dispatch mode) or was skipped (workflow_call mode).
-    if: ${{ always() && (needs.build.result == 'success' || needs.build.result == 'skipped') }}
+    needs: [build, docker-build-push]
+    # Run when build succeeded (dispatch mode) or was skipped (workflow_call mode),
+    # and the Docker image was successfully pushed to GHCR.
+    if: ${{ always() && (needs.build.result == 'success' || needs.build.result == 'skipped') && needs['docker-build-push'].result == 'success' }}
     environment: production
     steps:
       - name: Checkout code
@@ -204,6 +291,9 @@ jobs:
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           TELEGRAM_THREAD_ID: ${{ secrets.TELEGRAM_THREAD_ID }}
           TELEGRAM_CRITICAL_THREAD_ID: ${{ secrets.TELEGRAM_CRITICAL_THREAD_ID }}
+          DOCKER_IMAGE: ${{ needs['docker-build-push'].outputs.image }}
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GHCR_USERNAME: ${{ github.actor }}
         run: |
           {
             printf 'SUPABASE_SERVICE_ROLE_KEY=%s\n'     "$SUPABASE_SERVICE_ROLE_KEY"
@@ -212,6 +302,9 @@ jobs:
             printf 'TELEGRAM_THREAD_ID=%s\n'            "$TELEGRAM_THREAD_ID"
             printf 'TELEGRAM_CRITICAL_THREAD_ID=%s\n'  "$TELEGRAM_CRITICAL_THREAD_ID"
             printf 'NEXT_PUBLIC_APP_VERSION=%s\n'       "${{ steps.app_version.outputs.value }}"
+            printf 'DOCKER_IMAGE=%s\n'                  "$DOCKER_IMAGE"
+            printf 'GHCR_TOKEN=%s\n'                    "$GHCR_TOKEN"
+            printf 'GHCR_USERNAME=%s\n'                 "$GHCR_USERNAME"
           } | ssh $GCP_HOST 'cat > /tmp/.candyshop-build.env && chmod 600 /tmp/.candyshop-build.env'
 
       - name: Download store build artifacts
