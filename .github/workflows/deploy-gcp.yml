@@ -182,6 +182,7 @@ jobs:
             User $GCP_USER
             IdentityFile ~/.ssh/gcp_deploy_key
             StrictHostKeyChecking accept-new
+            ConnectTimeout 30
             ServerAliveInterval 30
             ServerAliveCountMax 20
           EOF

@@ -265,6 +265,7 @@ docker run -d \
   --cap-drop=ALL \
   --security-opt=no-new-privileges \
   --pids-limit=1024 \
+  --oom-score-adj=800 \
   -e "SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY:-}" \
   -e "TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN:-}" \
   -e "TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID:-}" \
