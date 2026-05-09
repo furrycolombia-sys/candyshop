@@ -40,6 +40,7 @@ const TELEGRAM_TOKEN           = process.env.TELEGRAM_BOT_TOKEN          ?? "";
 const TELEGRAM_CHAT            = process.env.TELEGRAM_CHAT_ID             ?? "";
 const TELEGRAM_THREAD          = process.env.TELEGRAM_THREAD_ID           ?? "";
 const TELEGRAM_CRITICAL_THREAD = process.env.TELEGRAM_CRITICAL_THREAD_ID ?? TELEGRAM_THREAD;
+const CONTAINER_NAME           = process.env.CONTAINER_NAME ?? "candyshop-prod";
 
 // Consecutive tunnel-detection failures required before alerting (avoids
 // false positives when pgrep can't see a Docker/systemd-managed process on first check)
@@ -233,11 +234,11 @@ async function checkSystem() {
     if (next !== "ok") {
       const icon = next === "critical" ? "🔴" : "🟡";
       const severity = next === "critical" ? "CRITICAL" : "warning";
-      const msg = `${icon} <b>RAM ${severity}</b>\nAvailable: <code>${ramMB.toFixed(0)} MB</code>`;
+      const msg = `${icon} <b>RAM ${severity}</b>\nAvailable: <code>${ramMB.toFixed(0)} MB</code>  •  <code>${CONTAINER_NAME}</code>`;
       await maybeAlert("ram", prev === "ok" || prev === "unknown", msg);
       console.error(`[watcher] RAM ${next}: ${ramMB.toFixed(0)} MB available`);
     } else if (prev === "warning" || prev === "critical") {
-      await sendTelegram(`✅ <b>RAM recovered</b>\nAvailable: <code>${ramMB.toFixed(0)} MB</code>`);
+      await sendTelegram(`✅ <b>RAM recovered</b>\nAvailable: <code>${ramMB.toFixed(0)} MB</code>  •  <code>${CONTAINER_NAME}</code>`);
       console.log(`[watcher] RAM recovered: ${ramMB.toFixed(0)} MB`);
     } else {
       console.log(`[watcher] RAM ok: ${ramMB.toFixed(0)} MB`);
@@ -257,11 +258,11 @@ async function checkSystem() {
     if (next !== "ok") {
       const icon = next === "critical" ? "🔴" : "🟡";
       const severity = next === "critical" ? "CRITICAL" : "warning";
-      const msg = `${icon} <b>Disk ${severity}</b>\nUsed: <code>${diskPct}%</code> of root filesystem`;
+      const msg = `${icon} <b>Disk ${severity}</b>\nUsed: <code>${diskPct}%</code> of root filesystem  •  <code>${CONTAINER_NAME}</code>`;
       await maybeAlert("disk", prev === "ok" || prev === "unknown", msg);
       console.error(`[watcher] Disk ${next}: ${diskPct}% used`);
     } else if (prev === "warning" || prev === "critical") {
-      await sendTelegram(`✅ <b>Disk recovered</b>\nUsed: <code>${diskPct}%</code>`);
+      await sendTelegram(`✅ <b>Disk recovered</b>\nUsed: <code>${diskPct}%</code>  •  <code>${CONTAINER_NAME}</code>`);
       console.log(`[watcher] Disk recovered: ${diskPct}%`);
     } else {
       console.log(`[watcher] Disk ok: ${diskPct}%`);
@@ -281,7 +282,7 @@ async function checkSystem() {
       // when pgrep transiently can't see the process.
       if (tunnelFailStreak >= 2) {
         sysState.tunnel = "critical";
-        const msg = `🔴 <b>Cloudflare tunnel is DOWN</b>\n<code>cloudflared</code> process not found — SSH access and public routing may be unavailable`;
+        const msg = `🔴 <b>Cloudflare tunnel is DOWN</b>\n<code>cloudflared</code> process not found — SSH access and public routing may be unavailable  •  <code>${CONTAINER_NAME}</code>`;
         await maybeAlert("tunnel", prev !== "critical", msg);
         console.error("[watcher] Cloudflare tunnel: DOWN");
       } else {
@@ -292,7 +293,7 @@ async function checkSystem() {
       tunnelFailStreak = 0;
       sysState.tunnel = "ok";
       if (wasDown) {
-        await sendTelegram(`✅ <b>Cloudflare tunnel recovered</b>\n<code>cloudflared</code> is running again`);
+        await sendTelegram(`✅ <b>Cloudflare tunnel recovered</b>\n<code>cloudflared</code> is running again  •  <code>${CONTAINER_NAME}</code>`);
         console.log("[watcher] Cloudflare tunnel: recovered");
       } else {
         console.log("[watcher] Cloudflare tunnel: ok");
@@ -341,7 +342,7 @@ async function ping(app) {
     if (prev === "down") {
       console.log(`[watcher] ${app.name}: ✓ recovered`);
       state[app.name] = "up";
-      await sendTelegram(`✅ <b>${app.name}</b> is back up`);
+      await sendTelegram(`✅ <b>${app.name}</b> is back up  •  <code>${CONTAINER_NAME}</code>`);
     } else {
       console.log(`[watcher] ${app.name}: ok`);
       state[app.name] = "up";
@@ -352,7 +353,7 @@ async function ping(app) {
     if (prev === "up") {
       console.error(`[watcher] ${app.name}: ✗ DOWN — ${err.message}`);
       await sendTelegramCritical(
-        `🔴 <b>${app.name}</b> is not responding\n<code>${err.message}</code>`,
+        `🔴 <b>${app.name}</b> is not responding\n<code>${err.message}</code>  •  <code>${CONTAINER_NAME}</code>`,
       );
     } else if (prev === "unknown") {
       console.error(`[watcher] ${app.name}: ✗ unreachable on first check — ${err.message}`);
