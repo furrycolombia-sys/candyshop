@@ -363,12 +363,14 @@ jobs:
 
       - name: Verify deployment
         run: |
-          ssh $GCP_HOST \
-            'docker ps --filter name=candyshop-prod --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" 2>/dev/null || true'
+          # timeout 30: prevents hanging if ControlMaster expired and banner exchange stalls
+          timeout 30 ssh $GCP_HOST \
+            'docker ps --filter name=candyshop-prod --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" 2>/dev/null || true' \
+            || echo "Verify skipped (SSH timed out) — deploy confirmed by wait loop above"
 
       - name: Cleanup
         if: always()
         run: |
-          ssh $GCP_HOST \
+          timeout 15 ssh $GCP_HOST \
             'rm -f /tmp/.candyshop-build.env /tmp/deploy-production.sh' 2>/dev/null || true
           rm -f ~/.ssh/gcp_deploy_key
