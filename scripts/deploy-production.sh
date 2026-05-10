@@ -143,13 +143,16 @@ log()  { echo -e "${GREEN}[DEPLOY]${NC} $1"; }
 warn() { echo -e "${YELLOW}[WARN]${NC} $1"; }
 err()  { echo -e "${RED}[ERROR]${NC} $1"; exit 1; }
 
-# Load nvm
+# Activate Node 22 via direct PATH — avoids sourcing the full 3000-line nvm.sh
+# which takes 5+ minutes on the e2-micro due to CPU/RAM constraints.
 echo "[DEPLOY] Script started at $(date)"
 export NVM_DIR="$HOME/.nvm"
-echo "[DEPLOY] Loading NVM from $NVM_DIR"
-[ -s "$NVM_DIR/nvm.sh" ] && source "$NVM_DIR/nvm.sh" || err "NVM not found at $NVM_DIR"
-echo "[DEPLOY] Activating Node 22"
-nvm use 22 || err "Node 22 not available via nvm — run: nvm install 22"
+echo "[DEPLOY] Activating Node 22 (direct path)..."
+NODE_22_BIN=$(ls -d "$NVM_DIR/versions/node"/v22.*/bin 2>/dev/null | sort -V | tail -1)
+if [ -z "$NODE_22_BIN" ] || [ ! -f "$NODE_22_BIN/node" ]; then
+  err "Node 22 not found in $NVM_DIR/versions/node — run: nvm install 22"
+fi
+export PATH="$NODE_22_BIN:$PATH"
 
 log "Node $(node --version) | PM2 $(pm2 --version)"
 notify_telegram "$(printf '🚀 <b>Deploy started</b>  •  <code>%s</code>\nBranch: <code>%s</code>' "$_safe_hostname" "$BRANCH")"
@@ -167,7 +170,7 @@ if [ ! -d ".git" ]; then
 else
   git remote set-url origin "$REPO_URL" 2>/dev/null || true
 fi
-git fetch origin "$BRANCH" --depth 1
+timeout 120 git fetch origin "$BRANCH" --depth 1 || err "git fetch timed out or failed after 120s"
 git checkout -B "$BRANCH" FETCH_HEAD
 git clean -fd
 
