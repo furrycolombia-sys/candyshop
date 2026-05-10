@@ -410,44 +410,35 @@ fi
 
 notify_telegram "$(printf '🏥 <b>All %d apps healthy</b>' "${#APPS[@]}")"
 
+# Signal CI now — all correctness checks passed. Warm-up is a best-effort
+# post-deploy optimisation and must not block the CI wait loop.
+log "Deployment complete — signalling CI..."
+echo 0 > /tmp/deploy-candyshop.done
+docker ps --filter "name=${CONTAINER_NAME}" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" || true
+
 # --- phase 2: JIT warm-up ---
-# Hit each app's root + both locale routes 3 times in parallel.
-# 3 hits is enough for V8 to promote the hot functions out of interpreter mode.
-log "Warming up V8 JIT (3 passes × key routes)..."
+# Sequential per-app: avoids a thundering herd on the single-vCPU VM.
+# Health checks already confirmed all apps are up; one hit per route is
+# enough for V8 to JIT-compile the hot paths before real traffic arrives.
+log "Warming up V8 JIT (1 pass × key routes, sequential)..."
 _STEP_START=$(date +%s)
 _WARM_FAIL_LOG=$(mktemp)
+BASE="http://localhost:${HOST_PORT}"
 
-warm_url() {
-  local url="$1"
-  local ok=0
-  for _ in 1 2 3; do
-    if curl -sf --max-time 30 "$url" > /dev/null 2>&1; then
-      ok=1
-      break
-    fi
-  done
-  if [ "$ok" -eq 0 ]; then
-    echo "$url" >> "$_WARM_FAIL_LOG"
+warm_route() {
+  if ! curl -sf --max-time 10 "${BASE}$1" > /dev/null 2>&1; then
+    echo "$1" >> "$_WARM_FAIL_LOG"
   fi
 }
 
-BASE="http://localhost:${HOST_PORT}"
-warm_url "${BASE}/"            &
-warm_url "${BASE}/en"          &
-warm_url "${BASE}/es"          &
-warm_url "${BASE}/store"       &
-warm_url "${BASE}/store/en"    &
-warm_url "${BASE}/store/es"    &
-warm_url "${BASE}/payments"    &
-warm_url "${BASE}/payments/en" &
-warm_url "${BASE}/payments/es" &
-warm_url "${BASE}/auth"        &
-warm_url "${BASE}/auth/en"     &
-warm_url "${BASE}/admin"       &
-warm_url "${BASE}/admin/en"    &
-warm_url "${BASE}/studio"      &
-warm_url "${BASE}/studio/en"   &
-wait
+for _r in / /en /es \
+          /store /store/en /store/es \
+          /payments /payments/en /payments/es \
+          /auth /auth/en \
+          /admin /admin/en \
+          /studio /studio/en; do
+  warm_route "$_r"
+done
 
 _warm_dur=$(_dur $_STEP_START)
 _failed_urls=$(cat "$_WARM_FAIL_LOG" 2>/dev/null || true)
@@ -455,16 +446,10 @@ rm -f "$_WARM_FAIL_LOG"
 
 if [ -n "$_failed_urls" ]; then
   _fail_count=$(echo "$_failed_urls" | wc -l | tr -d ' ')
-  _fail_list=$(echo "$_failed_urls" | sed "s|${BASE}/||" | tr '\n' ' ' | sed 's/ $//')
-  notify_telegram_critical "$(printf '⚠️ <b>JIT warm-up incomplete</b> (%s)\n%s route(s) failed after 3 attempts:\n<code>%s</code>\nFirst visit to these routes may be slow.' "$_warm_dur" "$_fail_count" "$_fail_list")"
+  _fail_list=$(echo "$_failed_urls" | tr '\n' ' ' | sed 's/ $//')
+  notify_telegram "$(printf '⚠️ <b>JIT warm-up incomplete</b> (%s)\n%s route(s) slow/unreachable:\n<code>%s</code>' "$_warm_dur" "$_fail_count" "$_fail_list")"
   warn "Warm-up incomplete — $_fail_count route(s) unreachable: $_fail_list"
 else
-  log "Warm-up complete — all routes pre-compiled."
+  log "Warm-up complete in $_warm_dur — all routes pre-compiled."
   notify_telegram "$(printf '🔥 <b>JIT warm-up complete</b> (%s)\nAll routes pre-compiled.' "$_warm_dur")"
 fi
-
-log "Deployment complete!"
-# Signal CI now — write before docker ps so a hung Docker daemon can't block the done file.
-# _on_exit will overwrite with 0 on clean exit (idempotent) or the real error code on failure.
-echo 0 > /tmp/deploy-candyshop.done
-docker ps --filter "name=${CONTAINER_NAME}" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" || true
