@@ -144,9 +144,12 @@ warn() { echo -e "${YELLOW}[WARN]${NC} $1"; }
 err()  { echo -e "${RED}[ERROR]${NC} $1"; exit 1; }
 
 # Load nvm
+echo "[DEPLOY] Script started at $(date)"
 export NVM_DIR="$HOME/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && source "$NVM_DIR/nvm.sh"
-nvm use 22 --silent || err "Node 22 not available via nvm"
+echo "[DEPLOY] Loading NVM from $NVM_DIR"
+[ -s "$NVM_DIR/nvm.sh" ] && source "$NVM_DIR/nvm.sh" || err "NVM not found at $NVM_DIR"
+echo "[DEPLOY] Activating Node 22"
+nvm use 22 || err "Node 22 not available via nvm — run: nvm install 22"
 
 log "Node $(node --version) | PM2 $(pm2 --version)"
 notify_telegram "$(printf '🚀 <b>Deploy started</b>  •  <code>%s</code>\nBranch: <code>%s</code>' "$_safe_hostname" "$BRANCH")"

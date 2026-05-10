@@ -9,19 +9,9 @@
 
 name: Deploy Production (Archived)
 
-# All triggers removed — this workflow will not run automatically or on demand.
-# on:
-#   push:
-#     branches:
-#       - main
-#     paths:
-#       - "apps/**"
-#       - "packages/**"
-#       - "package.json"
-#       - "pnpm-lock.yaml"
-#       - "docker/**"
-#       - "scripts/**"
-#   workflow_dispatch:
+# Archived — manual dispatch only (kept as emergency fallback).
+on:
+  workflow_dispatch:
 
 permissions:
   contents: read
