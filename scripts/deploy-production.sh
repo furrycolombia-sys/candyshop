@@ -461,4 +461,7 @@ else
 fi
 
 log "Deployment complete!"
-docker ps --filter "name=${CONTAINER_NAME}" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
+# Signal CI now — write before docker ps so a hung Docker daemon can't block the done file.
+# _on_exit will overwrite with 0 on clean exit (idempotent) or the real error code on failure.
+echo 0 > /tmp/deploy-candyshop.done
+docker ps --filter "name=${CONTAINER_NAME}" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" || true
