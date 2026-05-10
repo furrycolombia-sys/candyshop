@@ -1,17 +1,27 @@
-name: Deploy Production
+# ============================================================
+# ARCHIVED — no longer in active use.
+# Production deploys now go through deploy-gcp.yml directly,
+# which owns the push-to-main trigger and builds its own
+# artifacts. This orchestrator layer is no longer needed.
+# This file is kept as a reference / emergency fallback only.
+# To re-enable: restore the `on:` block below.
+# ============================================================
 
-on:
-  push:
-    branches:
-      - main
-    paths:
-      - "apps/**"
-      - "packages/**"
-      - "package.json"
-      - "pnpm-lock.yaml"
-      - "docker/**"
-      - "scripts/**"
-  workflow_dispatch:
+name: Deploy Production (Archived)
+
+# All triggers removed — this workflow will not run automatically or on demand.
+# on:
+#   push:
+#     branches:
+#       - main
+#     paths:
+#       - "apps/**"
+#       - "packages/**"
+#       - "package.json"
+#       - "pnpm-lock.yaml"
+#       - "docker/**"
+#       - "scripts/**"
+#   workflow_dispatch:
 
 permissions:
   contents: read
@@ -166,16 +176,14 @@ jobs:
           include-hidden-files: true
 
   # ============================================
-  # Deploy to both targets in parallel.
-  # Each reusable workflow skips its own build job
+  # Deploy to GCP (primary production target).
+  # The reusable workflow skips its own build job
   # and downloads artifacts from this run's build.
+  #
+  # deploy-local.yml is kept as a manual fallback
+  # (workflow_dispatch only) for reverting to the
+  # local server if needed.
   # ============================================
-  deploy-local:
-    name: Deploy to Server
-    needs: build
-    uses: ./.github/workflows/deploy-local.yml
-    secrets: inherit
-
   deploy-gcp:
     name: Deploy to GCP
     needs: build
@@ -189,8 +197,8 @@ jobs:
     name: Notify Deploy Failure
     runs-on: ubuntu-latest
     timeout-minutes: 2
-    needs: [build, deploy-local, deploy-gcp]
-    if: ${{ always() && (needs.build.result == 'failure' || needs['deploy-local'].result == 'failure' || needs['deploy-gcp'].result == 'failure') }}
+    needs: [build, deploy-gcp]
+    if: ${{ always() && (needs.build.result == 'failure' || needs['deploy-gcp'].result == 'failure') }}
     steps:
       - name: Send Telegram alert
         env:

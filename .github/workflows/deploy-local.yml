@@ -1,14 +1,17 @@
-# Local production deploy — runs standalone (workflow_dispatch) or is called
-# by deploy-production.yml (workflow_call). When called by the orchestrator,
-# the build job is skipped and artifacts are downloaded from the parent run.
-#
-# Standalone usage: Actions tab → "Deploy Local Production" → Run workflow.
+# ============================================================
+# ARCHIVED — no longer in active use.
+# Production deploys now go through deploy-gcp.yml (GCP VM).
+# This file is kept as a reference / emergency fallback only.
+# To re-enable: restore the `on:` block below.
+# ============================================================
 
-name: Deploy Local Production
+name: Deploy Local Production (Archived)
 
-on:
-  workflow_call: {}
-  workflow_dispatch:
+# All triggers removed — this workflow will not appear in the
+# GitHub Actions tab nor run automatically or on demand.
+# on:
+#   workflow_call: {}
+#   workflow_dispatch:
 
 permissions:
   contents: read

@@ -1,18 +1,28 @@
-# GCP production deploy — runs standalone (workflow_dispatch) or is called
-# by deploy-production.yml (workflow_call). When called by the orchestrator,
-# the build job is skipped and artifacts are downloaded from the parent run.
+# GCP production deploy — primary deploy workflow.
+# Triggers automatically on push to main, or manually via workflow_dispatch.
+# Can also be called as a reusable workflow (workflow_call); in that mode
+# the build job is skipped (caller already built and uploaded artifacts).
 #
-# Standalone usage: Actions tab → "Deploy GCP Production" → Run workflow.
+# Manual usage: Actions tab → "Deploy GCP Production" → Run workflow.
 
 name: Deploy GCP Production
 
 on:
+  push:
+    branches:
+      - main
+    paths:
+      - "apps/**"
+      - "packages/**"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - "docker/**"
+      - "scripts/**"
   workflow_call: {}
   workflow_dispatch:
 
 permissions:
   contents: read
-  packages: write
 
 env:
   NODE_VERSION: "24"
@@ -27,7 +37,7 @@ jobs:
     name: Build (Standalone Production)
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    if: github.event_name == 'workflow_dispatch'
+    if: github.event_name != 'workflow_call'
     steps:
       - name: Checkout code
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
@@ -158,11 +168,15 @@ jobs:
   docker-build-push:
     name: Build & Push Docker Image
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 25
     needs: [build]
     if: ${{ always() && (needs.build.result == 'success' || needs.build.result == 'skipped') }}
+    permissions:
+      contents: read
+      packages: write
     outputs:
       image: ${{ steps.image.outputs.name }}
+      image_latest: ${{ steps.image.outputs.latest }}
     steps:
       - name: Checkout code
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
@@ -221,6 +235,7 @@ jobs:
           OWNER="${{ github.repository_owner }}"
           OWNER_LC=$(echo "$OWNER" | tr '[:upper:]' '[:lower:]')
           echo "name=ghcr.io/${OWNER_LC}/candyshop-prod:${GITHUB_SHA:0:7}" >> "$GITHUB_OUTPUT"
+          echo "latest=ghcr.io/${OWNER_LC}/candyshop-prod:latest" >> "$GITHUB_OUTPUT"
 
       - name: Log in to GitHub Container Registry
         run: |
@@ -229,11 +244,16 @@ jobs:
       - name: Build and push Docker image
         run: |
           IMAGE="${{ steps.image.outputs.name }}"
+          LATEST="${{ steps.image.outputs.latest }}"
+          docker pull "$LATEST" 2>/dev/null || true
           docker build \
             -f docker/prod/Dockerfile \
             -t "$IMAGE" \
+            --cache-from "$LATEST" \
             .
           docker push "$IMAGE"
+          docker tag "$IMAGE" "$LATEST"
+          docker push "$LATEST"
 
   # ============================================
   # Deploy to GCP production VM via direct SSH
@@ -269,7 +289,7 @@ jobs:
             User $GCP_USER
             IdentityFile ~/.ssh/gcp_deploy_key
             StrictHostKeyChecking accept-new
-            ConnectTimeout 150
+            ConnectTimeout 30
             ServerAliveInterval 30
             ServerAliveCountMax 20
             GSSAPIAuthentication no
@@ -284,7 +304,7 @@ jobs:
           # Retry up to 5 times — VM sshd can be slow after a prior session.
           connected=0
           for attempt in 1 2 3 4 5; do
-            if ssh $GCP_HOST "echo SSH_READY_$attempt"; then
+            if ssh "$GCP_HOST" "echo SSH_READY_$attempt"; then
               connected=1
               break
             fi
@@ -314,6 +334,7 @@ jobs:
           TELEGRAM_THREAD_ID: ${{ secrets.TELEGRAM_THREAD_ID }}
           TELEGRAM_CRITICAL_THREAD_ID: ${{ secrets.TELEGRAM_CRITICAL_THREAD_ID }}
           DOCKER_IMAGE: ${{ needs['docker-build-push'].outputs.image }}
+          DOCKER_IMAGE_LATEST: ${{ needs['docker-build-push'].outputs.image_latest }}
           GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GHCR_USERNAME: ${{ github.actor }}
         run: |
@@ -325,13 +346,14 @@ jobs:
             printf 'TELEGRAM_CRITICAL_THREAD_ID=%s\n'  "$TELEGRAM_CRITICAL_THREAD_ID"
             printf 'NEXT_PUBLIC_APP_VERSION=%s\n'       "${{ steps.app_version.outputs.value }}"
             printf 'DOCKER_IMAGE=%s\n'                  "$DOCKER_IMAGE"
+            printf 'DOCKER_IMAGE_LATEST=%s\n'           "$DOCKER_IMAGE_LATEST"
             printf 'GHCR_TOKEN=%s\n'                    "$GHCR_TOKEN"
             printf 'GHCR_USERNAME=%s\n'                 "$GHCR_USERNAME"
-          } | ssh $GCP_HOST 'cat > /tmp/.candyshop-build.env && chmod 600 /tmp/.candyshop-build.env'
+          } | ssh "$GCP_HOST" 'umask 077 && cat > /tmp/.candyshop-build.env'
 
       - name: Copy deploy script to GCP server
         run: |
-          cat scripts/deploy-production.sh | ssh $GCP_HOST \
+          cat scripts/deploy-production.sh | ssh "$GCP_HOST" \
             'cat > /tmp/deploy-production.sh && chmod +x /tmp/deploy-production.sh'
 
       - name: Start deployment
@@ -339,10 +361,13 @@ jobs:
           DEPLOY_REPO_URL: https://github.com/${{ github.repository }}.git
           DEPLOY_BRANCH: ${{ github.ref_name }}
         run: |
-          ssh $GCP_HOST "
+          # Escape values before interpolating into the remote shell command.
+          SAFE_REPO=$(printf '%q' "$DEPLOY_REPO_URL")
+          SAFE_BRANCH=$(printf '%q' "$DEPLOY_BRANCH")
+          ssh "$GCP_HOST" "
             rm -f /tmp/deploy-candyshop.done /tmp/deploy-candyshop.log
-            REPO_URL='${DEPLOY_REPO_URL}' \
-            BRANCH='${DEPLOY_BRANCH}' \
+            REPO_URL=$SAFE_REPO \
+            BRANCH=$SAFE_BRANCH \
             ENV_FILE='/tmp/.candyshop-build.env' \
             DEPLOY_DIR='/opt/candyshop' \
             DEPLOY_DETACHED=1 \
@@ -351,33 +376,226 @@ jobs:
           "
           echo "Deploy process started on GCP server — polling for result..."
 
+      - name: Notify deploy started
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          TELEGRAM_THREAD_ID: ${{ secrets.TELEGRAM_THREAD_ID }}
+          RUN_URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          python3 - <<'EOF'
+          import html, json, os, urllib.error, urllib.request
+
+          token = os.environ.get("TELEGRAM_BOT_TOKEN", "")
+          chat_id = os.environ.get("TELEGRAM_CHAT_ID", "")
+          if not token or not chat_id:
+              print("Missing Telegram credentials — skipping notification")
+              raise SystemExit(0)
+
+          sha = os.environ.get("GITHUB_SHA", "")[:7]
+          repo = os.environ.get("GITHUB_REPOSITORY", "")
+          text = (
+              "🚀 <b>GCP Deploy Started</b>\n\n"
+              f"Commit: <code>{html.escape(sha)}</code>\n"
+              f"Triggered by: {html.escape(os.environ.get('GITHUB_ACTOR', ''))}\n\n"
+              f"🔗 {html.escape(os.environ.get('RUN_URL', ''))}\n\n"
+              f"\U0001F4CD github.com/{html.escape(repo)}"
+          )
+
+          payload = {"chat_id": chat_id, "text": text, "parse_mode": "HTML"}
+          thread_id = os.environ.get("TELEGRAM_THREAD_ID", "").strip()
+          if thread_id:
+              try:
+                  payload["message_thread_id"] = int(thread_id)
+              except ValueError:
+                  pass
+
+          data = json.dumps(payload).encode()
+          req = urllib.request.Request(
+              f"https://api.telegram.org/bot{token}/sendMessage",
+              data=data,
+              headers={"Content-Type": "application/json"},
+          )
+          try:
+              with urllib.request.urlopen(req, timeout=10) as resp:
+                  print(f"Notification sent: {resp.status}")
+          except Exception as e:
+              print(f"Telegram notification failed (non-fatal): {e}")
+          EOF
+
       - name: Wait for deployment
         run: |
-          for i in $(seq 1 60); do
+          ssh_errors=0
+          for i in $(seq 1 80); do
             sleep 15
-            echo "--- log tail [poll $i/60] ---"
-            ssh $GCP_HOST \
-              "tail -25 /tmp/deploy-candyshop.log 2>/dev/null" || true
-            RESULT=$(ssh $GCP_HOST \
-              "cat /tmp/deploy-candyshop.done 2>/dev/null || echo pending" || echo pending)
-            if [ "$RESULT" != "pending" ]; then
+            echo "--- poll $i/80 ---"
+            if OUTPUT=$(ssh "$GCP_HOST" \
+              'tail -25 /tmp/deploy-candyshop.log 2>/dev/null; printf "\n__DONE__:"; cat /tmp/deploy-candyshop.done 2>/dev/null || printf "pending"' \
+              2>&1); then
+              ssh_errors=0
+            else
+              ssh_errors=$((ssh_errors + 1))
+              echo "SSH error ($ssh_errors/5): $OUTPUT"
+              if [ "$ssh_errors" -ge 5 ]; then
+                echo "5 consecutive SSH failures — aborting"
+                exit 1
+              fi
+              continue
+            fi
+            printf '%s\n' "$OUTPUT" | grep -v '__DONE__:' || true
+            RESULT=$(printf '%s' "$OUTPUT" | grep -o '__DONE__:.*' | sed 's/__DONE__://')
+            if [ -n "$RESULT" ] && [ "$RESULT" != "pending" ]; then
               echo "Deploy finished with exit code: $RESULT"
               [ "$RESULT" = "0" ] && exit 0 || exit 1
             fi
           done
-          echo "Timed out after 15 minutes waiting for deployment"
+          echo "Timed out after 20 minutes waiting for deployment"
           exit 1
 
       - name: Verify deployment
         run: |
           # timeout 30: prevents hanging if ControlMaster expired and banner exchange stalls
-          timeout 30 ssh $GCP_HOST \
+          timeout 30 ssh "$GCP_HOST" \
             'docker ps --filter name=candyshop-prod --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" 2>/dev/null || true' \
             || echo "Verify skipped (SSH timed out) — deploy confirmed by wait loop above"
+
+      - name: Purge Cloudflare cache
+        env:
+          CF_API_TOKEN: ${{ secrets.PROD_CF_API_TOKEN }}
+          CF_ZONE_ID: ${{ secrets.PROD_CF_ZONE_ID }}
+        run: |
+          RESPONSE=$(curl -sS -w '\n%{http_code}' -X POST \
+            "https://api.cloudflare.com/client/v4/zones/${CF_ZONE_ID}/purge_cache" \
+            -H "Authorization: Bearer ${CF_API_TOKEN}" \
+            -H "Content-Type: application/json" \
+            --data '{"purge_everything":true}')
+          HTTP_CODE=$(printf '%s' "$RESPONSE" | tail -1)
+          BODY=$(printf '%s' "$RESPONSE" | head -n -1)
+          echo "Cloudflare response ($HTTP_CODE): $BODY"
+          if [ "$HTTP_CODE" != "200" ]; then
+            echo "Cloudflare purge failed with HTTP $HTTP_CODE"
+            exit 1
+          fi
+
+      - name: Notify deploy complete
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          TELEGRAM_THREAD_ID: ${{ secrets.TELEGRAM_THREAD_ID }}
+          RUN_URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          python3 - <<'EOF'
+          import html, json, os, urllib.error, urllib.request
+
+          token = os.environ.get("TELEGRAM_BOT_TOKEN", "")
+          chat_id = os.environ.get("TELEGRAM_CHAT_ID", "")
+          if not token or not chat_id:
+              print("Missing Telegram credentials — skipping notification")
+              raise SystemExit(0)
+
+          sha = os.environ.get("GITHUB_SHA", "")[:7]
+          repo = os.environ.get("GITHUB_REPOSITORY", "")
+          text = (
+              "✅ <b>GCP Deploy Complete</b>\n\n"
+              f"Commit: <code>{html.escape(sha)}</code>\n"
+              f"Triggered by: {html.escape(os.environ.get('GITHUB_ACTOR', ''))}\n"
+              f"Cloudflare cache purged ✓\n\n"
+              f"🔗 {html.escape(os.environ.get('RUN_URL', ''))}\n\n"
+              f"\U0001F4CD github.com/{html.escape(repo)}"
+          )
+
+          payload = {"chat_id": chat_id, "text": text, "parse_mode": "HTML"}
+          thread_id = os.environ.get("TELEGRAM_THREAD_ID", "").strip()
+          if thread_id:
+              try:
+                  payload["message_thread_id"] = int(thread_id)
+              except ValueError:
+                  pass
+
+          data = json.dumps(payload).encode()
+          req = urllib.request.Request(
+              f"https://api.telegram.org/bot{token}/sendMessage",
+              data=data,
+              headers={"Content-Type": "application/json"},
+          )
+          try:
+              with urllib.request.urlopen(req, timeout=10) as resp:
+                  print(f"Notification sent: {resp.status}")
+          except Exception as e:
+              print(f"Telegram notification failed (non-fatal): {e}")
+          EOF
 
       - name: Cleanup
         if: always()
         run: |
-          timeout 15 ssh $GCP_HOST \
+          timeout 15 ssh "$GCP_HOST" \
             'rm -f /tmp/.candyshop-build.env /tmp/deploy-production.sh' 2>/dev/null || true
           rm -f ~/.ssh/gcp_deploy_key
+
+  # ============================================
+  # Alert Telegram when any job fails (standalone runs only).
+  # When called from deploy-production.yml, that workflow's
+  # notify-failure job already covers the failure alert.
+  # ============================================
+  notify-failure:
+    name: Notify Deploy Failure
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    needs: [build, docker-build-push, deploy]
+    if: ${{ always() && github.event_name != 'workflow_call' && (needs.build.result == 'failure' || needs['docker-build-push'].result == 'failure' || needs.deploy.result == 'failure') }}
+    steps:
+      - name: Send Telegram alert
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          TELEGRAM_CRITICAL_THREAD_ID: ${{ secrets.TELEGRAM_CRITICAL_THREAD_ID }}
+          RUN_URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          COMMIT_SHA: ${{ github.sha }}
+          ACTOR: ${{ github.actor }}
+        run: |
+          python3 - <<'EOF'
+          import html, json, os, urllib.error, urllib.request
+
+          token = os.environ.get("TELEGRAM_BOT_TOKEN", "")
+          chat_id = os.environ.get("TELEGRAM_CHAT_ID", "")
+          if not token or not chat_id:
+              raise SystemExit("Missing required secret: TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID")
+
+          sha = os.environ["COMMIT_SHA"][:7]
+          repo = os.environ.get("GITHUB_REPOSITORY", "")
+          text = (
+              "🚨 <b>GCP Deploy Failed</b>\n\n"
+              f"Commit: <code>{html.escape(sha)}</code>\n"
+              f"Triggered by: {html.escape(os.environ['ACTOR'])}\n\n"
+              f"🔗 {html.escape(os.environ['RUN_URL'])}\n\n"
+              f"\U0001F4CD github.com/{html.escape(repo)}"
+          )
+
+          payload = {
+              "chat_id": chat_id,
+              "text": text,
+              "parse_mode": "HTML",
+          }
+          thread_id = os.environ.get("TELEGRAM_CRITICAL_THREAD_ID", "").strip()
+          if thread_id:
+              try:
+                  payload["message_thread_id"] = int(thread_id)
+              except ValueError:
+                  print(f"Warning: invalid TELEGRAM_CRITICAL_THREAD_ID={thread_id!r}, sending without thread")
+
+          data = json.dumps(payload).encode()
+          req = urllib.request.Request(
+              f"https://api.telegram.org/bot{token}/sendMessage",
+              data=data,
+              headers={"Content-Type": "application/json"},
+          )
+          try:
+              with urllib.request.urlopen(req, timeout=10) as resp:
+                  print(f"Alert sent: {resp.read().decode('utf-8', errors='replace')}")
+          except urllib.error.HTTPError as e:
+              print(f"Telegram API error {e.code}: {e.read().decode('utf-8', errors='replace')}")
+              raise
+          except urllib.error.URLError as e:
+              print(f"Network error reaching Telegram: {e.reason}")
+              raise
+          EOF
