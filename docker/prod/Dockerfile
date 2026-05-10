@@ -12,6 +12,14 @@ RUN apk add --no-cache nginx supervisor netcat-openbsd && \
     mkdir -p /var/log/nginx /var/log/supervisor /var/run/nginx /run/nginx && \
     chown -R nextjs:nodejs /var/lib/nginx /var/log/nginx /var/log/supervisor /var/run/nginx /run/nginx
 
+# Stable infrastructure config — placed BEFORE volatile app layers so these
+# layers keep identical hashes across deploys and are cache-hit by both CI
+# (--cache-from :latest) and the VM's local layer store.
+COPY docker/prod/nginx.conf           /etc/nginx/nginx.conf
+COPY docker/prod/supervisord.conf     /etc/supervisor/conf.d/supervisord.conf
+COPY docker/watcher.mjs               /app/watcher.mjs
+COPY docker/boot-reporter.mjs         /app/boot-reporter.mjs
+
 # Standalone builds pre-built by CI (rsynced to server before this runs)
 COPY apps/store/.next/standalone      /app/store/
 COPY apps/store/.next/static          /app/store/apps/store/.next/static
@@ -40,11 +48,6 @@ COPY apps/playground/public           /app/playground/apps/playground/public
 COPY apps/studio/.next/standalone     /app/studio/
 COPY apps/studio/.next/static         /app/studio/apps/studio/.next/static
 COPY apps/studio/public               /app/studio/apps/studio/public
-
-COPY docker/prod/nginx.conf           /etc/nginx/nginx.conf
-COPY docker/prod/supervisord.conf     /etc/supervisor/conf.d/supervisord.conf
-COPY docker/watcher.mjs               /app/watcher.mjs
-COPY docker/boot-reporter.mjs         /app/boot-reporter.mjs
 
 # pnpm workspace linking creates stub node_modules inside each app directory
 # (package.json only, no dist/) that shadow the complete packages at the
