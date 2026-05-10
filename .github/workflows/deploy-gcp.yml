@@ -11,13 +11,6 @@ on:
   push:
     branches:
       - main
-    paths:
-      - "apps/**"
-      - "packages/**"
-      - "package.json"
-      - "pnpm-lock.yaml"
-      - "docker/**"
-      - "scripts/**"
   workflow_call: {}
   workflow_dispatch:
 
