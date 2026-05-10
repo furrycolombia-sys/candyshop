@@ -6,32 +6,145 @@
 
 ## Architecture Overview
 
+### Primary (GCP)
+
 ```
-GitHub (push to main)
+GitHub push → main
   │
-  └─ Webhook POST ──► deploy.furrycolombia.com
-                          │
-                          ▼
-                    Webhook receiver (PM2, port 9091)
-                          │
-                          ▼
-                    Docker build --no-cache
-                          │
-                          ▼
-                    candyshop-prod container (port 9090)
-                      ├─ Nginx :80 (inside container)
-                      │   ├─ /          → landing  :5004
-                      │   ├─ /store     → store    :5001
-                      │   ├─ /admin     → admin    :5002
-                      │   ├─ /auth      → auth     :5000
-                      │   ├─ /payments  → payments :5005
-                      │   ├─ /playground→ playground:5003
-                      │   └─ /studio    → studio   :5006
-                      └─ supervisord (7 Next.js standalone servers)
-                          │
-                          ▼
-                    Cloudflare Tunnel → store.furrycolombia.com (SSL)
+  └─ GitHub Actions (deploy-gcp.yml)
+        │
+        ├─ 1. Build   — pnpm build (7 Next.js apps, standalone)
+        │
+        ├─ 2. Docker  — docker build + push → GHCR
+        │               (ghcr.io/furrycolombia-sys/candyshop-prod:sha + :latest)
+        │
+        ├─ 3. Deploy  — SSH → GCP VM (candyshop-prod, us-central1-a)
+        │                   └─ deploy-production.sh (nohup, survives SSH drop)
+        │                         ├─ Pre-pull :latest  (warm layer cache)
+        │                         ├─ Pull :sha-xxxxx   (instant — layers cached)
+        │                         ├─ Stop old container
+        │                         ├─ Start new container (hardened, --cap-drop=ALL)
+        │                         ├─ Health check + JIT warm-up (all routes × 3)
+        │                         └─ Telegram notifications throughout
+        │
+        ├─ 4. Purge   — Cloudflare cache (purge_everything: true)
+        │
+        └─ 5. Release — GitHub Release auto-created on release/* merges
+                        (Telegram notification on success or failure)
+
+GCP VM (candyshop-prod, us-central1-a, 35.238.125.109)
+  └─ candyshop-prod container (port 9090:80)
+        ├─ Nginx :80 (inside container)
+        │   ├─ /          → landing    :5004
+        │   ├─ /store     → store      :5001
+        │   ├─ /admin     → admin      :5002
+        │   ├─ /auth      → auth       :5000
+        │   ├─ /payments  → payments   :5005
+        │   ├─ /playground→ playground :5003
+        │   └─ /studio    → studio     :5006
+        └─ supervisord (7 Next.js standalone servers)
+              │
+              ▼
+        Cloudflare Tunnel → store.furrycolombia.com (SSL)
 ```
+
+### Fallback (Local server — manual only)
+
+The original local-server deploy (`deploy-local.yml`) still exists as an emergency fallback via `workflow_dispatch`. It deploys to `192.168.2.71` via the old webhook receiver. See the [Local Server](#local-server-legacy-fallback) section below.
+
+---
+
+## GCP Deploy Workflow
+
+### Trigger
+
+Automatically on any push to `main` (including PR merges). Also runnable manually from the Actions tab.
+
+### Workflow Files
+
+| File                    | Status       | Trigger                         | Purpose                                 |
+| ----------------------- | ------------ | ------------------------------- | --------------------------------------- |
+| `deploy-gcp.yml`        | **Primary**  | push to main, workflow_dispatch | Full GCP deploy pipeline                |
+| `deploy-production.yml` | **Archived** | none (triggers removed)         | Legacy orchestrator — kept as reference |
+| `deploy-local.yml`      | Fallback     | workflow_dispatch only          | Emergency fallback to local server      |
+
+> **`deploy-production.yml` has no `on:` block** — it will not trigger. GitHub may surface it as a "workflow file issue" in Actions; this is expected and harmless.
+
+### Job Pipeline
+
+```
+build (20 min timeout)
+  └─ docker-build-push (depends on build)
+        └─ deploy (45 min timeout, depends on docker-build-push)
+              ├─ purge-cloudflare-cache (depends on deploy)
+              └─ notify-failure (runs on any failure)
+```
+
+#### `build` job
+
+- Checks out code, installs pnpm deps
+- Restores Next.js `.next/cache` from Actions cache (keyed by `pnpm-lock.yaml` + source hash)
+- Runs `pnpm build` with all `PROD_*` secrets baked in for server-side code
+- Uploads 7 app artifacts (`build-store`, `build-auth`, …) with 1-day retention
+
+#### `docker-build-push` job
+
+- Downloads the 7 build artifacts
+- Logs in to GHCR with `GITHUB_TOKEN`
+- Pre-pulls `:latest` for layer cache (`--cache-from`)
+- Builds the Docker image (`docker/prod/Dockerfile`)
+- Pushes both `ghcr.io/…/candyshop-prod:sha-XXXXXXX` and `…:latest`
+
+#### `deploy` job (45 min timeout)
+
+1. **Sets up SSH** — writes private key and nginx-style SSH config targeting `ssh.furrycolombia.com` → GCP VM
+2. **Creates ControlMaster** — persistent connection so all SSH calls share one TCP session
+3. **Copies deploy script** — `scp scripts/deploy-production.sh` fresh from repo on every run (guarantees script changes take effect immediately)
+4. **Writes env file** — 24 secrets piped over SSH to `/tmp/.candyshop-build.env` (umask 077)
+5. **Launches deploy** — `nohup bash /tmp/deploy-production.sh` relaunches itself detached from the SSH session so a connection drop doesn't abort it
+6. **Polls for completion** — checks `/tmp/deploy-candyshop.done` every 15s for up to 80 polls (20 min window); tails `/tmp/deploy-candyshop.log` to CI output
+
+#### `purge-cloudflare-cache` job
+
+- Calls `https://api.cloudflare.com/client/v4/zones/{PROD_CF_ZONE_ID}/purge_cache` with `purge_everything: true`
+- Only runs after a successful deploy job
+- Uses `PROD_CF_API_TOKEN` and `PROD_CF_ZONE_ID` secrets
+
+### Docker Image (`docker/prod/Dockerfile`)
+
+Single-stage image based on `node:22-alpine`. Layer order is optimized for cache efficiency:
+
+```
+1. RUN apk add (nginx, supervisor, netcat)    — stable, rarely changes
+2. COPY nginx.conf, supervisord.conf,          — stable config files
+        watcher.mjs, boot-reporter.mjs         (placed BEFORE app layers)
+3. COPY apps/*/standalone, static, public      — volatile (changes every deploy)
+4. RUN rm stub node_modules + chown           — always runs
+```
+
+Stable config layers are placed before volatile app layers so their hashes stay identical between deploys. CI's `--cache-from :latest` and the VM's local layer store can reuse them.
+
+**Security hardening in `docker run`:**
+
+- `--user nextjs:nodejs` (UID 1001, non-root)
+- `--cap-drop=ALL`
+- `--security-opt=no-new-privileges`
+- `--pids-limit=1024`
+- `--restart=unless-stopped`
+- Secrets injected via `--env-file` (temp file, chmod 600, deleted after `docker run`)
+
+### `scripts/deploy-production.sh` Key Behaviors
+
+| Feature       | Detail                                                                          |
+| ------------- | ------------------------------------------------------------------------------- |
+| Detached mode | Relaunches itself via `nohup` so SSH drop doesn't abort it                      |
+| Pre-pull      | Pulls `:latest` before the SHA-tagged image to warm layer cache                 |
+| Re-tag        | After successful pull, tags image as `:latest` locally for next deploy          |
+| Hot-swap      | Old container stopped AFTER new image is fully pulled                           |
+| Health check  | Polls `/health` on all 7 apps for up to 120s                                    |
+| JIT warm-up   | Hits all routes 3× in parallel after health check passes                        |
+| Telegram      | Progress notifications throughout: start, image pulled, container healthy, done |
+| Cleanup       | On exit (success or fail), removes temp env and done files                      |
 
 ## Development Environments
 
