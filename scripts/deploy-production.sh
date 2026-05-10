@@ -86,6 +86,11 @@ notify_telegram_critical() {
   _telegram_send "${TELEGRAM_CRITICAL_THREAD_ID:-${TELEGRAM_THREAD_ID:-}}" "$1"
 }
 
+# Escapes &, <, > for Telegram HTML parse_mode
+_html_escape() {
+  printf '%s' "$1" | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g'
+}
+
 # Returns human-readable duration from a start timestamp: "2m 14s" or "38s"
 _dur() {
   local secs=$(( $(date +%s) - $1 ))
@@ -101,15 +106,20 @@ DEPLOY_START=$(date +%s)
 _on_exit() {
   local code=$?
   echo $code >/tmp/deploy-candyshop.done
+  # Ensure ephemeral secrets file is removed on any exit path (early failure,
+  # success, or signal) — don't rely solely on the CI cleanup SSH step.
+  rm -f "${ENV_FILE:-/tmp/.candyshop-build.env}" 2>/dev/null || true
   local dur
   dur="$(_dur $DEPLOY_START)"
   local commit="${DEPLOY_COMMIT:-unknown}"
+  local commit_html
+  commit_html=$(_html_escape "$commit")
   if [ "$code" -eq 0 ]; then
     notify_telegram "$(printf '✅ <b>Deploy complete</b>  •  <code>%s</code>\nBranch: <code>%s</code>\nCommit: <code>%s</code>\nTotal: %s' \
-      "$_safe_hostname" "$BRANCH" "$commit" "$dur")"
+      "$_safe_hostname" "$BRANCH" "$commit_html" "$dur")"
   else
     notify_telegram_critical "$(printf '❌ <b>Deploy FAILED</b> (exit %s)  •  <code>%s</code>\nBranch: <code>%s</code>\nCommit: <code>%s</code>\nTotal: %s' \
-      "$code" "$_safe_hostname" "$BRANCH" "$commit" "$dur")"
+      "$code" "$_safe_hostname" "$BRANCH" "$commit_html" "$dur")"
   fi
 }
 trap _on_exit EXIT
@@ -158,8 +168,9 @@ git clean -fd
 
 cd "$DEPLOY_DIR"
 DEPLOY_COMMIT=$(git log --format="%h %s" -1 2>/dev/null || true)
+DEPLOY_COMMIT_HTML=$(_html_escape "$DEPLOY_COMMIT")
 log "Checked out $DEPLOY_COMMIT"
-notify_telegram "$(printf '📥 <b>Code pulled</b> (%s)\nCommit: <code>%s</code>' "$(_dur $_STEP_START)" "$DEPLOY_COMMIT")"
+notify_telegram "$(printf '📥 <b>Code pulled</b> (%s)\nCommit: <code>%s</code>' "$(_dur $_STEP_START)" "$DEPLOY_COMMIT_HTML")"
 
 # Remove .secrets — builds happen in CI, not on this server.
 rm -f "$DEPLOY_DIR/.secrets"
@@ -202,6 +213,7 @@ if [ -n "${DOCKER_IMAGE:-}" ]; then
   fi
   docker pull "$DOCKER_IMAGE" || err "Docker image pull failed"
   IMAGE_TAG="$DOCKER_IMAGE"
+  docker logout ghcr.io 2>/dev/null || true
   log "Image pulled: $IMAGE_TAG (took $(_dur $_STEP_START))"
   notify_telegram "$(printf '🐳 <b>Image pulled</b> (%s)\n<code>%s</code>' "$(_dur $_STEP_START)" "$IMAGE_TAG")"
 else
@@ -274,6 +286,19 @@ except Exception:
   _BOOT_MSG_ID="${_BOOT_RESP:-}"
 fi
 
+# Write runtime env to a temp file so secrets don't appear in /proc/PID/cmdline
+_CONTAINER_ENV=$(mktemp /tmp/.candyshop-run.XXXXXX)
+chmod 600 "$_CONTAINER_ENV"
+{
+  printf 'SUPABASE_SERVICE_ROLE_KEY=%s\n'    "${SUPABASE_SERVICE_ROLE_KEY:-}"
+  printf 'TELEGRAM_BOT_TOKEN=%s\n'           "${TELEGRAM_BOT_TOKEN:-}"
+  printf 'TELEGRAM_CHAT_ID=%s\n'             "${TELEGRAM_CHAT_ID:-}"
+  printf 'TELEGRAM_THREAD_ID=%s\n'           "${TELEGRAM_THREAD_ID:-}"
+  printf 'TELEGRAM_CRITICAL_THREAD_ID=%s\n' "${TELEGRAM_CRITICAL_THREAD_ID:-}"
+  printf 'TELEGRAM_BOOT_MSG_ID=%s\n'         "${_BOOT_MSG_ID:-}"
+  printf 'SERVER_HOSTNAME=%s\n'              "$_safe_hostname"
+} > "$_CONTAINER_ENV"
+
 docker rm -f "$CONTAINER_NAME" 2>/dev/null || true
 docker run -d \
   --name "$CONTAINER_NAME" \
@@ -283,24 +308,18 @@ docker run -d \
   --security-opt=no-new-privileges \
   --pids-limit=1024 \
   --oom-score-adj=800 \
-  -e "SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY:-}" \
-  -e "TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN:-}" \
-  -e "TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID:-}" \
-  -e "TELEGRAM_THREAD_ID=${TELEGRAM_THREAD_ID:-}" \
-  -e "TELEGRAM_CRITICAL_THREAD_ID=${TELEGRAM_CRITICAL_THREAD_ID:-}" \
-  -e "TELEGRAM_BOOT_MSG_ID=${_BOOT_MSG_ID:-}" \
-  -e "SERVER_HOSTNAME=${_safe_hostname}" \
+  --env-file "$_CONTAINER_ENV" \
   "$IMAGE_TAG" \
-  || err "Docker container start failed"
+  || { rm -f "$_CONTAINER_ENV"; err "Docker container start failed"; }
+rm -f "$_CONTAINER_ENV"
 
 log "Container started (took $(_dur $_STEP_START))"
 
-# Keep only the 2 most recent images; prune older ones (handles both local
-# candyshop-prod:sha tags and ghcr.io/.../candyshop-prod:sha tags)
-docker images --format '{{.Repository}}:{{.Tag}}' \
+# Keep only the 2 most recent images by creation time; prune older ones
+docker images --format '{{.CreatedAt}}\t{{.Repository}}:{{.Tag}}' \
   | grep 'candyshop-prod' \
-  | sort -r \
-  | tail -n +3 \
+  | sort -rk1 \
+  | awk 'NR>2{print $2}' \
   | xargs -r docker rmi 2>/dev/null || true
 
 # Clean up env file — secrets must not persist on disk
