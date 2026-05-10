@@ -284,11 +284,11 @@ jobs:
           # Retry up to 5 times — VM sshd can be slow after a prior session.
           connected=0
           for attempt in 1 2 3 4 5; do
-            if ssh $GCP_HOST echo "SSH master ready (attempt $attempt)"; then
+            if ssh $GCP_HOST "echo SSH_READY_$attempt"; then
               connected=1
               break
             fi
-            echo "Attempt $attempt failed, waiting 30s..."
+            echo "SSH attempt $attempt failed, waiting 30s..."
             sleep 30
           done
           if [ "$connected" -eq 0 ]; then
