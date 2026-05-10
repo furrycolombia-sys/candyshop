@@ -56,6 +56,7 @@ fi
 # Sanitize hostname once: only RFC-1123-valid chars so it can't break the Python
 # string literal or inject HTML into Telegram messages.
 _safe_hostname=$(printf '%s' "$HOSTNAME" | tr -dc '[:alnum:]._-')
+TELEGRAM_SOURCE="${_safe_hostname}"
 
 _telegram_send() {
   local thread_id="$1" text="$2"
@@ -65,10 +66,10 @@ _telegram_send() {
   local payload
   payload=$(python3 -c "
 import json, sys
-d = {'chat_id': sys.argv[1], 'text': sys.argv[2], 'parse_mode': 'HTML'}
+d = {'chat_id': sys.argv[1], 'text': sys.argv[2] + '\n\n\U0001F4CD ' + sys.argv[4], 'parse_mode': 'HTML'}
 if sys.argv[3]:
     d['message_thread_id'] = int(sys.argv[3])
-print(json.dumps(d))" "$TELEGRAM_CHAT_ID" "$text" "$thread_id") || return 0
+print(json.dumps(d))" "$TELEGRAM_CHAT_ID" "$text" "$thread_id" "$TELEGRAM_SOURCE") || return 0
   curl -sf --max-time 10 -X POST \
     "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
     -H 'Content-Type: application/json' \
@@ -309,7 +310,7 @@ rm -f "$ENV_FILE"
 # =============================================================================
 log "Starting health watcher..."
 pm2 delete candyshop-watcher 2>/dev/null || true
-WATCHER_NGINX_PORT=$HOST_PORT pm2 start "$DEPLOY_DIR/docker/watcher.mjs" \
+WATCHER_NGINX_PORT=$HOST_PORT SERVER_HOSTNAME=$_safe_hostname pm2 start "$DEPLOY_DIR/docker/watcher.mjs" \
   --name candyshop-watcher
 
 pm2 delete candyshop-boot-notifier 2>/dev/null || true

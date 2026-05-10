@@ -17,6 +17,7 @@
 
 import { createConnection } from 'net';
 import { readFileSync }     from 'fs';
+import { hostname }         from 'os';
 
 function htmlEscape(str) {
   return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -34,6 +35,7 @@ const CRITICAL_THREAD_ID = process.env.TELEGRAM_CRITICAL_THREAD_ID
                         || process.env.TELEGRAM_THREAD_ID || '';
 const SERVER_HOSTNAME    = htmlEscape(process.env.SERVER_HOSTNAME || '');
 const CONTAINER_NAME     = htmlEscape(process.env.CONTAINER_NAME || 'candyshop-prod');
+const TELEGRAM_SOURCE    = htmlEscape(process.env.SERVER_HOSTNAME || hostname());
 
 if (!BOOT_MSG_ID) process.exit(0);
 
@@ -68,7 +70,7 @@ async function tgEdit(text) {
     await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/editMessageText`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ chat_id: CHAT_ID, message_id: BOOT_MSG_ID, text, parse_mode: 'HTML' }),
+      body: JSON.stringify({ chat_id: CHAT_ID, message_id: BOOT_MSG_ID, text: `${text}\n\n📍 ${TELEGRAM_SOURCE}`, parse_mode: 'HTML' }),
       signal: AbortSignal.timeout(10_000),
     });
   } catch {}
@@ -77,7 +79,7 @@ async function tgEdit(text) {
 async function tgCritical(text) {
   if (!BOT_TOKEN || !CHAT_ID) return;
   try {
-    const body = { chat_id: CHAT_ID, text, parse_mode: 'HTML' };
+    const body = { chat_id: CHAT_ID, text: `${text}\n\n📍 ${TELEGRAM_SOURCE}`, parse_mode: 'HTML' };
     const tid = asPositiveInt(CRITICAL_THREAD_ID);
     if (tid) body.message_thread_id = tid;
     await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {

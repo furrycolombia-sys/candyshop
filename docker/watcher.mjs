@@ -19,6 +19,7 @@
 
 import { readFileSync, existsSync } from "node:fs";
 import { spawnSync } from "node:child_process";
+import { hostname } from "node:os";
 
 // ── Configuration ─────────────────────────────────────────────────────────────
 
@@ -41,6 +42,12 @@ const TELEGRAM_CHAT            = process.env.TELEGRAM_CHAT_ID             ?? "";
 const TELEGRAM_THREAD          = process.env.TELEGRAM_THREAD_ID           ?? "";
 const TELEGRAM_CRITICAL_THREAD = process.env.TELEGRAM_CRITICAL_THREAD_ID ?? TELEGRAM_THREAD;
 const CONTAINER_NAME           = process.env.CONTAINER_NAME ?? "candyshop-prod";
+
+function htmlEscape(str) {
+  return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+const TELEGRAM_SOURCE = htmlEscape(process.env.SERVER_HOSTNAME || hostname());
 
 // Consecutive tunnel-detection failures required before alerting (avoids
 // false positives when pgrep can't see a Docker/systemd-managed process on first check)
@@ -112,7 +119,7 @@ async function sendTelegramTo(text, threadId) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           chat_id: TELEGRAM_CHAT,
-          text,
+          text: `${text}\n\n📍 ${TELEGRAM_SOURCE}`,
           parse_mode: "HTML",
           ...(threadId ? { message_thread_id: Number(threadId) } : {}),
         }),
