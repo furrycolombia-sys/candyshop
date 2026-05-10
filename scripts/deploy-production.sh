@@ -213,6 +213,11 @@ if [ -n "${DOCKER_IMAGE:-}" ]; then
   fi
   docker pull "$DOCKER_IMAGE" || err "Docker image pull failed"
   IMAGE_TAG="$DOCKER_IMAGE"
+  # Keep local :latest in sync so the next deploy's cache-warming pre-pull
+  # finds these layers already present and skips re-downloading them.
+  if [ -n "${DOCKER_IMAGE_LATEST:-}" ]; then
+    docker tag "$DOCKER_IMAGE" "$DOCKER_IMAGE_LATEST" 2>/dev/null || true
+  fi
   docker logout ghcr.io 2>/dev/null || true
   log "Image pulled: $IMAGE_TAG (took $(_dur $_STEP_START))"
   notify_telegram "$(printf '🐳 <b>Image pulled</b> (%s)\n<code>%s</code>' "$(_dur $_STEP_START)" "$IMAGE_TAG")"
