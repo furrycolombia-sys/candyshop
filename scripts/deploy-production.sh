@@ -1,5 +1,6 @@
 #!/bin/bash
 set -euo pipefail
+set +x  # Never echo commands — prevents secrets leaking into CI log streams
 
 # =============================================================================
 # Production Deployment Script for hestia.local
@@ -106,9 +107,10 @@ DEPLOY_START=$(date +%s)
 _on_exit() {
   local code=$?
   echo $code >/tmp/deploy-candyshop.done
-  # Ensure ephemeral secrets file is removed on any exit path (early failure,
-  # success, or signal) — don't rely solely on the CI cleanup SSH step.
+  # Ensure all ephemeral secrets files are removed on any exit path (early
+  # failure, success, or signal) — don't rely solely on the CI cleanup step.
   rm -f "${ENV_FILE:-/tmp/.candyshop-build.env}" 2>/dev/null || true
+  rm -f "${_CONTAINER_ENV:-}" 2>/dev/null || true
   local dur
   dur="$(_dur $DEPLOY_START)"
   local commit="${DEPLOY_COMMIT:-unknown}"
@@ -219,6 +221,9 @@ if [ -n "${DOCKER_IMAGE:-}" ]; then
     docker tag "$DOCKER_IMAGE" "$DOCKER_IMAGE_LATEST" 2>/dev/null || true
   fi
   docker logout ghcr.io 2>/dev/null || true
+  # Scrub registry credentials from this process's environment; they must not
+  # be inherited by PM2-managed watcher/boot-notifier child processes.
+  unset GHCR_TOKEN GHCR_USERNAME
   log "Image pulled: $IMAGE_TAG (took $(_dur $_STEP_START))"
   notify_telegram "$(printf '🐳 <b>Image pulled</b> (%s)\n<code>%s</code>' "$(_dur $_STEP_START)" "$IMAGE_TAG")"
 else
