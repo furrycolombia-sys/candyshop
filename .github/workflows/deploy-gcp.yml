@@ -255,7 +255,7 @@ jobs:
   deploy:
     name: Deploy to GCP
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 45
     needs: [build, docker-build-push]
     # Run when build succeeded (dispatch mode) or was skipped (workflow_call mode),
     # and the Docker image was successfully pushed to GHCR.
