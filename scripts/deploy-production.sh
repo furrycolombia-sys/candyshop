@@ -196,6 +196,10 @@ if [ -n "${DOCKER_IMAGE:-}" ]; then
     echo "$GHCR_TOKEN" | docker login ghcr.io -u "${GHCR_USERNAME:-github}" --password-stdin \
       || warn "GHCR login failed — attempting pull unauthenticated"
   fi
+  if [ -n "${DOCKER_IMAGE_LATEST:-}" ]; then
+    log "Pre-pulling :latest to warm layer cache..."
+    docker pull "$DOCKER_IMAGE_LATEST" 2>/dev/null || true
+  fi
   docker pull "$DOCKER_IMAGE" || err "Docker image pull failed"
   IMAGE_TAG="$DOCKER_IMAGE"
   log "Image pulled: $IMAGE_TAG (took $(_dur $_STEP_START))"

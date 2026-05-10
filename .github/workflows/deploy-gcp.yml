@@ -163,6 +163,7 @@ jobs:
     if: ${{ always() && (needs.build.result == 'success' || needs.build.result == 'skipped') }}
     outputs:
       image: ${{ steps.image.outputs.name }}
+      image_latest: ${{ steps.image.outputs.latest }}
     steps:
       - name: Checkout code
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
@@ -221,6 +222,7 @@ jobs:
           OWNER="${{ github.repository_owner }}"
           OWNER_LC=$(echo "$OWNER" | tr '[:upper:]' '[:lower:]')
           echo "name=ghcr.io/${OWNER_LC}/candyshop-prod:${GITHUB_SHA:0:7}" >> "$GITHUB_OUTPUT"
+          echo "latest=ghcr.io/${OWNER_LC}/candyshop-prod:latest" >> "$GITHUB_OUTPUT"
 
       - name: Log in to GitHub Container Registry
         run: |
@@ -229,11 +231,16 @@ jobs:
       - name: Build and push Docker image
         run: |
           IMAGE="${{ steps.image.outputs.name }}"
+          LATEST="${{ steps.image.outputs.latest }}"
+          docker pull "$LATEST" 2>/dev/null || true
           docker build \
             -f docker/prod/Dockerfile \
             -t "$IMAGE" \
+            --cache-from "$LATEST" \
             .
           docker push "$IMAGE"
+          docker tag "$IMAGE" "$LATEST"
+          docker push "$LATEST"
 
   # ============================================
   # Deploy to GCP production VM via direct SSH
@@ -314,6 +321,7 @@ jobs:
           TELEGRAM_THREAD_ID: ${{ secrets.TELEGRAM_THREAD_ID }}
           TELEGRAM_CRITICAL_THREAD_ID: ${{ secrets.TELEGRAM_CRITICAL_THREAD_ID }}
           DOCKER_IMAGE: ${{ needs['docker-build-push'].outputs.image }}
+          DOCKER_IMAGE_LATEST: ${{ needs['docker-build-push'].outputs.image_latest }}
           GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GHCR_USERNAME: ${{ github.actor }}
         run: |
@@ -325,6 +333,7 @@ jobs:
             printf 'TELEGRAM_CRITICAL_THREAD_ID=%s\n'  "$TELEGRAM_CRITICAL_THREAD_ID"
             printf 'NEXT_PUBLIC_APP_VERSION=%s\n'       "${{ steps.app_version.outputs.value }}"
             printf 'DOCKER_IMAGE=%s\n'                  "$DOCKER_IMAGE"
+            printf 'DOCKER_IMAGE_LATEST=%s\n'           "$DOCKER_IMAGE_LATEST"
             printf 'GHCR_TOKEN=%s\n'                    "$GHCR_TOKEN"
             printf 'GHCR_USERNAME=%s\n'                 "$GHCR_USERNAME"
           } | ssh $GCP_HOST 'cat > /tmp/.candyshop-build.env && chmod 600 /tmp/.candyshop-build.env'
