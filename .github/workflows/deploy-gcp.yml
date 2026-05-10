@@ -2,6 +2,7 @@
 # Triggers automatically on push to main, or manually via workflow_dispatch.
 # Can also be called as a reusable workflow (workflow_call); in that mode
 # the build job is skipped (caller already built and uploaded artifacts).
+# Last reviewed: v2026.05.10.4 — deploy step ~3m, warm-up non-blocking.
 #
 # Manual usage: Actions tab → "Deploy GCP Production" → Run workflow.
 
