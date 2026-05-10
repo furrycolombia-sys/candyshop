@@ -20,6 +20,7 @@ const BOT_TOKEN          = process.env.TELEGRAM_BOT_TOKEN || '';
 const CHAT_ID            = process.env.TELEGRAM_CHAT_ID || '';
 const THREAD_ID          = process.env.TELEGRAM_THREAD_ID || '';
 const CRITICAL_THREAD_ID = process.env.TELEGRAM_CRITICAL_THREAD_ID || THREAD_ID;
+const TELEGRAM_SOURCE    = SERVER_HOSTNAME;
 
 function htmlEscape(str) {
   return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -48,7 +49,7 @@ function readUptime() {
 async function tgPost(text, threadId) {
   if (!BOT_TOKEN || !CHAT_ID) return null;
   try {
-    const body = { chat_id: CHAT_ID, text, parse_mode: 'HTML' };
+    const body = { chat_id: CHAT_ID, text: `${text}\n\n📍 ${TELEGRAM_SOURCE}`, parse_mode: 'HTML' };
     const tid = asPositiveInt(threadId);
     if (tid) body.message_thread_id = tid;
     const res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
@@ -68,7 +69,7 @@ async function tgEdit(msgId, text) {
     await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/editMessageText`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ chat_id: CHAT_ID, message_id: msgId, text, parse_mode: 'HTML' }),
+      body: JSON.stringify({ chat_id: CHAT_ID, message_id: msgId, text: `${text}\n\n📍 ${TELEGRAM_SOURCE}`, parse_mode: 'HTML' }),
       signal: AbortSignal.timeout(10_000),
     });
   } catch {}

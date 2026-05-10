@@ -54,6 +54,7 @@ jobs:
           TELEGRAM_BACKUPS_THREAD_ID: ${{ secrets.TELEGRAM_BACKUPS_THREAD_ID }}
           TELEGRAM_THREAD_ID: ${{ secrets.TELEGRAM_THREAD_ID }}
           TELEGRAM_CRITICAL_THREAD_ID: ${{ secrets.TELEGRAM_CRITICAL_THREAD_ID }}
+          SERVER_HOSTNAME: "github.com/${{ github.repository }}"
         run: |
           {
             echo "PROD_SUPABASE_ACCESS_TOKEN=$PROD_SUPABASE_ACCESS_TOKEN"
@@ -63,9 +64,12 @@ jobs:
             echo "TELEGRAM_BACKUPS_THREAD_ID=$TELEGRAM_BACKUPS_THREAD_ID"
             echo "TELEGRAM_THREAD_ID=$TELEGRAM_THREAD_ID"
             echo "TELEGRAM_CRITICAL_THREAD_ID=$TELEGRAM_CRITICAL_THREAD_ID"
+            echo "SERVER_HOSTNAME=$SERVER_HOSTNAME"
           } > .secrets
 
       - name: Run backup
+        env:
+          SERVER_HOSTNAME: "github.com/${{ github.repository }}"
         run: node scripts/backup-prod.mjs
 
       - name: Remove .secrets

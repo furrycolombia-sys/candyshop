@@ -200,6 +200,7 @@ jobs:
           RUN_URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
           COMMIT_SHA: ${{ github.sha }}
           ACTOR: ${{ github.actor }}
+          SERVER_HOSTNAME: "github.com/${{ github.repository }}"
         run: |
           python3 - <<'EOF'
           import html, json, os, urllib.error, urllib.request
@@ -210,11 +211,13 @@ jobs:
               raise SystemExit("Missing required secret: TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID")
 
           sha = os.environ["COMMIT_SHA"][:7]
+          source = os.environ.get("SERVER_HOSTNAME", "github-actions")
           text = (
               "🚨 <b>Production Deploy Failed</b>\n\n"
               f"Commit: <code>{sha}</code>\n"
               f"Triggered by: {html.escape(os.environ['ACTOR'])}\n\n"
-              f"🔗 {html.escape(os.environ['RUN_URL'])}"
+              f"🔗 {html.escape(os.environ['RUN_URL'])}\n\n"
+              f"\U0001F4CD {source}"
           )
 
           payload = {
