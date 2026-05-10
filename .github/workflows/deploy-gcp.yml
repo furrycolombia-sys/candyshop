@@ -255,7 +255,7 @@ jobs:
   deploy:
     name: Deploy to GCP
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 20
     needs: [build, docker-build-push]
     # Run when build succeeded (dispatch mode) or was skipped (workflow_call mode),
     # and the Docker image was successfully pushed to GHCR.
@@ -419,9 +419,9 @@ jobs:
       - name: Wait for deployment
         run: |
           ssh_errors=0
-          echo "Waiting for deploy script to complete on GCP (up to 20 min)..."
-          for i in $(seq 1 80); do
-            sleep 15
+          echo "Waiting for deploy script to complete on GCP (up to 15 min)..."
+          for i in $(seq 1 30); do
+            sleep 20
             if OUTPUT=$(ssh "$GCP_HOST" \
               'printf "__DONE__:"; cat /tmp/deploy-candyshop.done 2>/dev/null || printf "pending"; printf "\n__LOG__:"; tail -1 /tmp/deploy-candyshop.log 2>/dev/null' \
               2>&1); then
@@ -440,14 +440,14 @@ jobs:
               echo "Deploy finished with exit code: $RESULT"
               [ "$RESULT" = "0" ] && exit 0 || exit 1
             fi
-            # Print a status line once per minute (every 4 polls × 15s = 60s)
-            if [ $(( i % 4 )) -eq 0 ]; then
-              elapsed=$(( i * 15 ))
+            # Print a status line once per minute (every 3 polls × 20s = 60s)
+            if [ $(( i % 3 )) -eq 0 ]; then
+              elapsed=$(( i * 20 ))
               LAST_LOG=$(printf '%s' "$OUTPUT" | grep '__LOG__:' | sed 's/__LOG__://' | xargs)
               echo "Still deploying — ${elapsed}s elapsed | ${LAST_LOG:-…}"
             fi
           done
-          echo "Timed out after 20 minutes — dumping last 50 lines of deploy log:"
+          echo "Timed out after 10 minutes — dumping last 50 lines of deploy log:"
           ssh "$GCP_HOST" 'tail -50 /tmp/deploy-candyshop.log 2>/dev/null || true' || true
           exit 1
 

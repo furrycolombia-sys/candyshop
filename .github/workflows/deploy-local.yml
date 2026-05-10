@@ -7,11 +7,9 @@
 
 name: Deploy Local Production (Archived)
 
-# All triggers removed — this workflow will not appear in the
-# GitHub Actions tab nor run automatically or on demand.
-# on:
-#   workflow_call: {}
-#   workflow_dispatch:
+# Archived — manual dispatch only (kept as emergency fallback).
+on:
+  workflow_dispatch:
 
 permissions:
   contents: read
