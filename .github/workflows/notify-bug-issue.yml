@@ -23,6 +23,7 @@ jobs:
           ISSUE_TITLE: ${{ github.event.issue.title }}
           ISSUE_URL: ${{ github.event.issue.html_url }}
           ISSUE_AUTHOR: ${{ github.event.issue.user.login }}
+          SERVER_HOSTNAME: "github.com/${{ github.repository }}"
         run: |
           python3 - <<'EOF'
           import html, json, os, urllib.error, urllib.request
@@ -32,11 +33,13 @@ jobs:
           if not token or not chat_id:
               raise SystemExit("Missing required secret: TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID")
 
+          source = os.environ.get("SERVER_HOSTNAME", "github-actions")
           text = (
               "🐛 <b>New Bug Report</b>\n\n"
               f"<b>#{os.environ['ISSUE_NUMBER']}</b>: {html.escape(os.environ['ISSUE_TITLE'])}\n"
               f"👤 {html.escape(os.environ['ISSUE_AUTHOR'])}\n\n"
-              f"🔗 {html.escape(os.environ['ISSUE_URL'])}"
+              f"🔗 {html.escape(os.environ['ISSUE_URL'])}\n\n"
+              f"\U0001F4CD {source}"
           )
 
           payload = {

@@ -15,6 +15,7 @@ on:
 
 permissions:
   contents: read
+  packages: write
 
 concurrency:
   group: deploy-production
@@ -25,8 +26,9 @@ env:
 
 jobs:
   # ============================================
-  # Build all apps with production config
-  # (replaces the old ci-gate + server-side build)
+  # Build all apps with production config.
+  # Artifacts are shared with the deploy jobs via
+  # the same github.run_id (reusable workflow context).
   # ============================================
   build:
     name: Build (Standalone Production)
@@ -75,9 +77,6 @@ jobs:
           CI: "true"
           TARGET_ENV: prod
           STANDALONE: "true"
-          # Expose secrets under the names .env.prod uses in its $secret:KEY references.
-          # load-env.mjs reads .env.prod and resolves $secret:KEY from process.env.
-          # All other prod vars (NEXT_PUBLIC_* URLs, etc.) come from .env.prod directly.
           PROD_SUPABASE_ANON_KEY: ${{ secrets.PROD_SUPABASE_ANON_KEY }}
           PROD_SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.PROD_SUPABASE_SERVICE_ROLE_KEY }}
           TALLY_FORM_ID: ${{ secrets.TALLY_FORM_ID }}
@@ -167,198 +166,31 @@ jobs:
           include-hidden-files: true
 
   # ============================================
-  # Deploy to production server via SSH
+  # Deploy to both targets in parallel.
+  # Each reusable workflow skips its own build job
+  # and downloads artifacts from this run's build.
   # ============================================
-  deploy:
+  deploy-local:
     name: Deploy to Server
-    runs-on: ubuntu-latest
-    timeout-minutes: 25
     needs: build
-    environment: production
-    env:
-      SSH_OPTS: "-o StrictHostKeyChecking=no -o ProxyCommand='cloudflared access ssh --hostname %h'"
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+    uses: ./.github/workflows/deploy-local.yml
+    secrets: inherit
 
-      - name: Install cloudflared
-        run: |
-          curl -fsSL https://pkg.cloudflare.com/cloudflare-main.gpg | sudo tee /usr/share/keyrings/cloudflare-main.gpg > /dev/null
-          echo "deb [signed-by=/usr/share/keyrings/cloudflare-main.gpg] https://pkg.cloudflare.com/cloudflared $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/cloudflared.list
-          sudo apt-get update -qq && sudo apt-get install -y -qq cloudflared
-
-      - name: Setup SSH key
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.PROD_SERVER_SSH_KEY }}" | tr -d '\r' > ~/.ssh/deploy_key
-          chmod 600 ~/.ssh/deploy_key
-          cat >> ~/.ssh/config << EOF
-          Host ${{ secrets.PROD_SERVER_HOST }}
-            HostName ${{ secrets.PROD_SERVER_HOST }}
-            User ${{ secrets.PROD_SERVER_USER }}
-            IdentityFile ~/.ssh/deploy_key
-            StrictHostKeyChecking no
-            ProxyCommand cloudflared access ssh --hostname %h
-            ServerAliveInterval 30
-            ServerAliveCountMax 20
-          EOF
-
-      - name: Compute app version
-        id: app_version
-        run: |
-          # Extract release version from merge commit message (e.g. "Merge pull request #N from owner/release/v2026.04.24.1")
-          VERSION=$(git log -1 --pretty=%s | grep -oP 'v\d{4}\.\d{2}\.\d{2}\.\d+' || true)
-          if [ -z "$VERSION" ]; then
-            VERSION="${GITHUB_SHA:0:7}"
-          fi
-          echo "value=$VERSION" >> "$GITHUB_OUTPUT"
-          echo "App version: $VERSION"
-
-      - name: Write ephemeral env file on server
-        env:
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.PROD_SUPABASE_SERVICE_ROLE_KEY }}
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-          TELEGRAM_THREAD_ID: ${{ secrets.TELEGRAM_THREAD_ID }}
-          TELEGRAM_CRITICAL_THREAD_ID: ${{ secrets.TELEGRAM_CRITICAL_THREAD_ID }}
-        run: |
-          # Pipe via stdin so secret values never appear in command-line arguments or SSH logs.
-          {
-            printf 'SUPABASE_SERVICE_ROLE_KEY=%s\n'      "$SUPABASE_SERVICE_ROLE_KEY"
-            printf 'TELEGRAM_BOT_TOKEN=%s\n'             "$TELEGRAM_BOT_TOKEN"
-            printf 'TELEGRAM_CHAT_ID=%s\n'               "$TELEGRAM_CHAT_ID"
-            printf 'TELEGRAM_THREAD_ID=%s\n'             "$TELEGRAM_THREAD_ID"
-            printf 'TELEGRAM_CRITICAL_THREAD_ID=%s\n'   "$TELEGRAM_CRITICAL_THREAD_ID"
-            printf 'NEXT_PUBLIC_APP_VERSION=%s\n'        "${{ steps.app_version.outputs.value }}"
-          } | ssh ${{ secrets.PROD_SERVER_HOST }} 'cat > /tmp/.candyshop-build.env'
-
-      - name: Download build artifacts
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
-        with:
-          name: build-store
-          path: apps/store/.next/
-
-      - name: Download admin build artifacts
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
-        with:
-          name: build-admin
-          path: apps/admin/.next/
-
-      - name: Download auth build artifacts
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
-        with:
-          name: build-auth
-          path: apps/auth/.next/
-
-      - name: Download landing build artifacts
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
-        with:
-          name: build-landing
-          path: apps/landing/.next/
-
-      - name: Download payments build artifacts
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
-        with:
-          name: build-payments
-          path: apps/payments/.next/
-
-      - name: Download studio build artifacts
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
-        with:
-          name: build-studio
-          path: apps/studio/.next/
-
-      - name: Download playground build artifacts
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
-        with:
-          name: build-playground
-          path: apps/playground/.next/
-
-      - name: Sync build artifacts to server
-        run: |
-          # Rsync each app's .next dir to the server, excluding the build cache
-          # (standalone + static are what the server needs; cache is CI-only)
-          for APP in store admin auth landing payments studio playground; do
-            echo "Syncing .next for ${APP}..."
-            rsync -az --delete --exclude=cache \
-              "apps/${APP}/.next/" \
-              "${{ secrets.PROD_SERVER_HOST }}:/home/furrycolombia/candyshop/apps/${APP}/.next/"
-          done
-
-      - name: Copy deploy script to server
-        run: |
-          cat scripts/deploy-production.sh | ssh ${{ secrets.PROD_SERVER_HOST }} \
-            'cat > /tmp/deploy-production.sh && chmod +x /tmp/deploy-production.sh'
-
-      - name: Start deployment
-        run: |
-          # Fire-and-forget: start the deploy in background and disconnect immediately.
-          # The Cloudflare Access proxy drops long-lived SSH WebSockets mid-build,
-          # so we never keep a connection open for more than a few seconds.
-          ssh ${{ secrets.PROD_SERVER_HOST }} "
-            rm -f /tmp/deploy-candyshop.done /tmp/deploy-candyshop.log
-            REPO_URL='https://github.com/${{ github.repository }}.git' \
-            BRANCH='${{ github.ref_name }}' \
-            ENV_FILE='/tmp/.candyshop-build.env' \
-            DEPLOY_DETACHED=1 \
-            nohup bash /tmp/deploy-production.sh > /tmp/deploy-candyshop.log 2>&1 &
-            disown
-          "
-          echo "Deploy process started on server — polling for result..."
-
-      - name: Wait for deployment
-        run: |
-          # Poll every 15s via short-lived SSH connections (max 15 min).
-          # Docker image build takes ~6-8 min; allow extra headroom for health checks.
-          for i in $(seq 1 60); do
-            sleep 15
-            echo "--- log tail [poll $i/60] ---"
-            ssh ${{ secrets.PROD_SERVER_HOST }} \
-              "tail -25 /tmp/deploy-candyshop.log 2>/dev/null" || true
-            RESULT=$(ssh ${{ secrets.PROD_SERVER_HOST }} \
-              "cat /tmp/deploy-candyshop.done 2>/dev/null || echo pending" || echo pending)
-            if [ "$RESULT" != "pending" ]; then
-              echo "Deploy finished with exit code: $RESULT"
-              [ "$RESULT" = "0" ] && exit 0 || exit 1
-            fi
-          done
-          echo "Timed out after 15 minutes waiting for deployment"
-          exit 1
-
-      - name: Verify deployment
-        run: |
-          ssh ${{ secrets.PROD_SERVER_HOST }} \
-            'docker ps --filter name=candyshop-prod --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" 2>/dev/null || true'
-
-      - name: Purge Cloudflare cache
-        env:
-          CF_API_TOKEN: ${{ secrets.PROD_CF_API_TOKEN }}
-          CF_ZONE_ID: ${{ secrets.PROD_CF_ZONE_ID }}
-        run: |
-          curl -s -X POST \
-            "https://api.cloudflare.com/client/v4/zones/${CF_ZONE_ID}/purge_cache" \
-            -H "Authorization: Bearer ${CF_API_TOKEN}" \
-            -H "Content-Type: application/json" \
-            --data '{"purge_everything":true}'
-
-      - name: Cleanup
-        if: always()
-        run: |
-          ssh ${{ secrets.PROD_SERVER_HOST }} \
-            'rm -f /tmp/.candyshop-build.env /tmp/deploy-production.sh' 2>/dev/null || true
-          rm -f ~/.ssh/deploy_key
+  deploy-gcp:
+    name: Deploy to GCP
+    needs: build
+    uses: ./.github/workflows/deploy-gcp.yml
+    secrets: inherit
 
   # ============================================
-  # Alert Telegram when any deploy job fails
+  # Alert Telegram when any job fails
   # ============================================
   notify-failure:
     name: Notify Deploy Failure
     runs-on: ubuntu-latest
     timeout-minutes: 2
-    needs: [build, deploy]
-    # always() lets this job run even when upstream jobs are skipped due to failure;
-    # the explicit result checks ensure we only fire on actual failures, not cancellations.
-    if: ${{ always() && (needs.build.result == 'failure' || needs.deploy.result == 'failure') }}
+    needs: [build, deploy-local, deploy-gcp]
+    if: ${{ always() && (needs.build.result == 'failure' || needs['deploy-local'].result == 'failure' || needs['deploy-gcp'].result == 'failure') }}
     steps:
       - name: Send Telegram alert
         env:
@@ -368,6 +200,7 @@ jobs:
           RUN_URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
           COMMIT_SHA: ${{ github.sha }}
           ACTOR: ${{ github.actor }}
+          SERVER_HOSTNAME: "github.com/${{ github.repository }}"
         run: |
           python3 - <<'EOF'
           import html, json, os, urllib.error, urllib.request
@@ -378,11 +211,13 @@ jobs:
               raise SystemExit("Missing required secret: TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID")
 
           sha = os.environ["COMMIT_SHA"][:7]
+          source = os.environ.get("SERVER_HOSTNAME", "github-actions")
           text = (
               "🚨 <b>Production Deploy Failed</b>\n\n"
               f"Commit: <code>{sha}</code>\n"
               f"Triggered by: {html.escape(os.environ['ACTOR'])}\n\n"
-              f"🔗 {html.escape(os.environ['RUN_URL'])}"
+              f"🔗 {html.escape(os.environ['RUN_URL'])}\n\n"
+              f"\U0001F4CD {source}"
           )
 
           payload = {

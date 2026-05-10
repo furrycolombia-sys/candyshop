@@ -34,6 +34,9 @@ import { resolve, dirname, join, basename, extname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { execSync, execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
+import { hostname }   from "node:os";
+
+const TELEGRAM_SOURCE = process.env.SERVER_HOSTNAME || hostname();
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const rootDir = resolve(__dirname, "..");
@@ -278,7 +281,7 @@ async function sendTelegramMessage(botToken, chatId, threadId, text) {
   const res = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ chat_id: chatId, message_thread_id: Number(threadId), text }),
+    body: JSON.stringify({ chat_id: chatId, message_thread_id: Number(threadId), text: `${text}\n\n📍 ${TELEGRAM_SOURCE}` }),
   });
   if (!res.ok) throw new Error(`Telegram sendMessage (${res.status}): ${await res.text()}`);
 }
@@ -289,7 +292,7 @@ async function sendTelegramDocument(botToken, chatId, threadId, filePath, captio
   form.append("chat_id", chatId);
   form.append("message_thread_id", String(threadId));
   form.append("document", new Blob([bytes]), basename(filePath));
-  if (caption) form.append("caption", caption);
+  if (caption) form.append("caption", `${caption}\n\n📍 ${TELEGRAM_SOURCE}`);
 
   const res = await fetch(`https://api.telegram.org/bot${botToken}/sendDocument`, {
     method: "POST",

@@ -56,6 +56,7 @@ fi
 # Sanitize hostname once: only RFC-1123-valid chars so it can't break the Python
 # string literal or inject HTML into Telegram messages.
 _safe_hostname=$(printf '%s' "$HOSTNAME" | tr -dc '[:alnum:]._-')
+TELEGRAM_SOURCE="${_safe_hostname}"
 
 _telegram_send() {
   local thread_id="$1" text="$2"
@@ -65,10 +66,10 @@ _telegram_send() {
   local payload
   payload=$(python3 -c "
 import json, sys
-d = {'chat_id': sys.argv[1], 'text': sys.argv[2], 'parse_mode': 'HTML'}
+d = {'chat_id': sys.argv[1], 'text': sys.argv[2] + '\n\n\U0001F4CD ' + sys.argv[4], 'parse_mode': 'HTML'}
 if sys.argv[3]:
     d['message_thread_id'] = int(sys.argv[3])
-print(json.dumps(d))" "$TELEGRAM_CHAT_ID" "$text" "$thread_id") || return 0
+print(json.dumps(d))" "$TELEGRAM_CHAT_ID" "$text" "$thread_id" "$TELEGRAM_SOURCE") || return 0
   curl -sf --max-time 10 -X POST \
     "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
     -H 'Content-Type: application/json' \
@@ -114,7 +115,7 @@ _on_exit() {
 trap _on_exit EXIT
 # ─────────────────────────────────────────────────────────────────────────────
 
-DEPLOY_DIR="/home/furrycolombia/candyshop"
+DEPLOY_DIR="${DEPLOY_DIR:-/home/furrycolombia/candyshop}"
 REPO_URL="${REPO_URL:-}"
 BRANCH="${BRANCH:-main}"
 CONTAINER_NAME="${SITE_PROD_CONTAINER_NAME:-candyshop-prod}"
@@ -184,28 +185,40 @@ else
 fi
 
 # =============================================================================
-# Build Docker image from CI-rsynced pre-built artifacts
-# CI already ran pnpm build; we just wrap the .next/ dirs in a Docker image.
+# Obtain the Docker image.
+# GCP: CI builds in GitHub Actions (7 GB RAM) and pushes to GHCR; we pull.
+# Local/fallback: build from the CI-rsynced pre-built artifacts on this server.
 # =============================================================================
-log "Building Docker image from pre-built artifacts..."
 _STEP_START=$(date +%s)
-IMAGE_TAG="candyshop-prod:$(git rev-parse --short HEAD 2>/dev/null || date +%s)"
+if [ -n "${DOCKER_IMAGE:-}" ]; then
+  log "Pulling pre-built Docker image: $DOCKER_IMAGE"
+  if [ -n "${GHCR_TOKEN:-}" ]; then
+    echo "$GHCR_TOKEN" | docker login ghcr.io -u "${GHCR_USERNAME:-github}" --password-stdin \
+      || warn "GHCR login failed — attempting pull unauthenticated"
+  fi
+  docker pull "$DOCKER_IMAGE" || err "Docker image pull failed"
+  IMAGE_TAG="$DOCKER_IMAGE"
+  log "Image pulled: $IMAGE_TAG (took $(_dur $_STEP_START))"
+  notify_telegram "$(printf '🐳 <b>Image pulled</b> (%s)\n<code>%s</code>' "$(_dur $_STEP_START)" "$IMAGE_TAG")"
+else
+  log "Building Docker image from pre-built artifacts..."
+  IMAGE_TAG="candyshop-prod:$(git rev-parse --short HEAD 2>/dev/null || date +%s)"
 
-# CI artifacts silently drop empty directories; docker COPY fails on missing paths.
-# Ensure every path the Dockerfile COPYs exists before building.
-for APP in store auth admin landing payments studio playground; do
-  mkdir -p "$DEPLOY_DIR/apps/$APP/.next/static"
-  mkdir -p "$DEPLOY_DIR/apps/$APP/public"
-done
+  # Ensure every path the Dockerfile COPYs exists (artifacts may omit empty dirs).
+  for APP in store auth admin landing payments studio playground; do
+    mkdir -p "$DEPLOY_DIR/apps/$APP/.next/static"
+    mkdir -p "$DEPLOY_DIR/apps/$APP/public"
+  done
 
-docker build \
-  -f "$DEPLOY_DIR/docker/prod/Dockerfile" \
-  -t "$IMAGE_TAG" \
-  "$DEPLOY_DIR" \
-  || err "Docker image build failed"
+  docker build \
+    -f "$DEPLOY_DIR/docker/prod/Dockerfile" \
+    -t "$IMAGE_TAG" \
+    "$DEPLOY_DIR" \
+    || err "Docker image build failed"
 
-log "Image built: $IMAGE_TAG (took $(_dur $_STEP_START))"
-notify_telegram "$(printf '🐳 <b>Image built</b> (%s)\n<code>%s</code>' "$(_dur $_STEP_START)" "$IMAGE_TAG")"
+  log "Image built: $IMAGE_TAG (took $(_dur $_STEP_START))"
+  notify_telegram "$(printf '🐳 <b>Image built</b> (%s)\n<code>%s</code>' "$(_dur $_STEP_START)" "$IMAGE_TAG")"
+fi
 
 # =============================================================================
 # Hot-swap the container (traffic resumes within seconds of docker run)
@@ -265,6 +278,7 @@ docker run -d \
   --cap-drop=ALL \
   --security-opt=no-new-privileges \
   --pids-limit=1024 \
+  --oom-score-adj=800 \
   -e "SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY:-}" \
   -e "TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN:-}" \
   -e "TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID:-}" \
@@ -277,9 +291,10 @@ docker run -d \
 
 log "Container started (took $(_dur $_STEP_START))"
 
-# Keep only the 2 most recent candyshop-prod images; prune older ones
+# Keep only the 2 most recent images; prune older ones (handles both local
+# candyshop-prod:sha tags and ghcr.io/.../candyshop-prod:sha tags)
 docker images --format '{{.Repository}}:{{.Tag}}' \
-  | grep '^candyshop-prod:' \
+  | grep 'candyshop-prod' \
   | sort -r \
   | tail -n +3 \
   | xargs -r docker rmi 2>/dev/null || true
@@ -295,7 +310,7 @@ rm -f "$ENV_FILE"
 # =============================================================================
 log "Starting health watcher..."
 pm2 delete candyshop-watcher 2>/dev/null || true
-WATCHER_NGINX_PORT=$HOST_PORT pm2 start "$DEPLOY_DIR/docker/watcher.mjs" \
+WATCHER_NGINX_PORT=$HOST_PORT SERVER_HOSTNAME=$_safe_hostname pm2 start "$DEPLOY_DIR/docker/watcher.mjs" \
   --name candyshop-watcher
 
 pm2 delete candyshop-boot-notifier 2>/dev/null || true

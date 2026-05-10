@@ -58,3 +58,41 @@ docs
 .agents
 *.md
 !apps/store/README.md
+
+# ── Build-context size reduction ──────────────────────────────────────
+# The Dockerfile only needs:
+#   apps/*/.next/{standalone,static}/   apps/*/public/   docker/
+# Exclude everything that is NOT required at docker build time.
+
+# Monorepo shared-package source (standalone bundles all runtime deps)
+packages
+
+# Deploy/build tooling scripts (not baked into the image)
+scripts
+
+# Database migrations and Supabase config
+supabase
+
+# TypeScript source files (pre-built by CI; artifacts already rsynced)
+apps/*/src
+
+# .next/server/ — SSR chunks from the standard Next.js build.
+# Standalone mode ships its own server.js; the server/ dir is NOT needed.
+apps/*/.next/server
+
+# .next/types/ — TypeScript declarations emitted during build
+apps/*/.next/types
+
+# .next/analyze/ — bundle-analyser output (optional, only present when ANALYZE=true)
+apps/*/.next/analyze
+
+# Root-level workspace/tooling config files (not needed in the image)
+package.json
+pnpm-lock.yaml
+pnpm-workspace.yaml
+tsconfig.json
+tsconfig.base.json
+orval.config.ts
+turbo.json
+*.config.mjs
+*.config.js
