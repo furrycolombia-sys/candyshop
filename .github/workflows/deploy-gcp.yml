@@ -448,35 +448,43 @@ jobs:
       - name: Wait for deployment
         run: |
           ssh_errors=0
-          echo "Waiting for deploy script to complete on GCP (up to 15 min)..."
-          for i in $(seq 1 30); do
+          echo "Polling GCP deploy script every 20s (up to 15 min)..."
+          for i in $(seq 1 45); do
             sleep 20
-            if OUTPUT=$(ssh "$GCP_HOST" \
-              'printf "__DONE__:"; cat /tmp/deploy-candyshop.done 2>/dev/null || printf "pending"; printf "\n__LOG__:"; tail -1 /tmp/deploy-candyshop.log 2>/dev/null' \
+            elapsed=$(( i * 20 ))
+
+            if RAW=$(ssh "$GCP_HOST" \
+              'printf "DONE:%s\n" "$(cat /tmp/deploy-candyshop.done 2>/dev/null || echo pending)"
+               echo "---LOG---"
+               tail -5 /tmp/deploy-candyshop.log 2>/dev/null || echo "(no log yet)"
+               echo "---END---"' \
               2>&1); then
               ssh_errors=0
             else
               ssh_errors=$((ssh_errors + 1))
-              echo "SSH error ($ssh_errors/5): $OUTPUT"
+              echo "[${elapsed}s] SSH error ($ssh_errors/5):"
+              echo "$RAW"
               if [ "$ssh_errors" -ge 5 ]; then
                 echo "5 consecutive SSH failures — aborting"
                 exit 1
               fi
               continue
             fi
-            RESULT=$(printf '%s' "$OUTPUT" | grep -o '__DONE__:.*' | sed 's/__DONE__://')
+
+            RESULT=$(printf '%s' "$RAW" | grep '^DONE:' | sed 's/^DONE://')
+            LOG=$(printf '%s' "$RAW" | awk '/^---LOG---/{f=1;next} /^---END---/{f=0} f{print}')
+
+            echo "── [${elapsed}s | poll ${i}/45] ──────────────────────────"
+            printf '%s\n' "${LOG:-(no output yet)}"
+
             if [ -n "$RESULT" ] && [ "$RESULT" != "pending" ]; then
-              echo "Deploy finished with exit code: $RESULT"
+              echo "──────────────────────────────────────────────────"
+              echo "Deploy finished — exit code: $RESULT"
               [ "$RESULT" = "0" ] && exit 0 || exit 1
             fi
-            # Print a status line once per minute (every 3 polls × 20s = 60s)
-            if [ $(( i % 3 )) -eq 0 ]; then
-              elapsed=$(( i * 20 ))
-              LAST_LOG=$(printf '%s' "$OUTPUT" | grep '__LOG__:' | sed 's/__LOG__://' | xargs)
-              echo "Still deploying — ${elapsed}s elapsed | ${LAST_LOG:-…}"
-            fi
           done
-          echo "Timed out after 10 minutes — dumping last 50 lines of deploy log:"
+
+          echo "Timed out after 15 min — dumping last 50 lines of deploy log:"
           ssh "$GCP_HOST" 'tail -50 /tmp/deploy-candyshop.log 2>/dev/null || true' || true
           exit 1
 
