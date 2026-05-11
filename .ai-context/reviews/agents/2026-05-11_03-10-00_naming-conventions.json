@@ -1,0 +1,73 @@
+{
+  "agent": "naming-conventions",
+  "timestamp": "2026-05-11T03:10:00Z",
+  "scope": "scripts/tunnel-switch.mjs",
+  "summary": {
+    "filesAnalyzed": 1,
+    "issuesFound": 3,
+    "critical": 0,
+    "warning": 0,
+    "suggestion": 3,
+    "info": 0
+  },
+  "issues": [
+    {
+      "id": "NAME-001",
+      "severity": "suggestion",
+      "title": "Single-letter variable names in SSH helper (c, s, s1, s2)",
+      "file": "scripts/tunnel-switch.mjs",
+      "line": 213,
+      "currentName": "c, s, s1, s2",
+      "suggestedName": "conn, status, status1, status2",
+      "convention": "Variable naming — camelCase, clearly named",
+      "rule": "naming-conventions.md#variables--functions",
+      "fix": "Rename single-letter locals to descriptive names. In cmdStatus and cmdSwitch, use 'conn' instead of 'c' and 'status' / 'status1' / 'status2' instead of 's' / 's1' / 's2'. This keeps intent visible at a glance."
+    },
+    {
+      "id": "NAME-002",
+      "severity": "suggestion",
+      "title": "Single-letter variable 't' in loadSecrets",
+      "file": "scripts/tunnel-switch.mjs",
+      "line": 67,
+      "currentName": "t",
+      "suggestedName": "trimmedLine",
+      "convention": "Variable naming — camelCase, clearly named",
+      "rule": "naming-conventions.md#variables--functions",
+      "fix": "Rename 't' to 'trimmedLine' (or 'line' after reassignment) to make the loop body self-documenting."
+    },
+    {
+      "id": "NAME-003",
+      "severity": "suggestion",
+      "title": "Single-letter variable 'r' in setTimeout promise wrapper",
+      "file": "scripts/tunnel-switch.mjs",
+      "line": 331,
+      "currentName": "r",
+      "suggestedName": "resolve",
+      "convention": "Parameter naming — clearly named and consistent",
+      "rule": "naming-conventions.md#variables--functions",
+      "fix": "Rename the executor parameter 'r' to 'resolve' so the intent of the Promise constructor is immediately clear."
+    }
+  ],
+  "patterns": [
+    {
+      "pattern": "Command functions use 'cmd' prefix (cmdStatus, cmdSwitch, cmdConfigureIngress)",
+      "assessment": "Consistent and clear — follows the verb-prefix convention well for CLI entry points.",
+      "recommendation": "No change needed."
+    },
+    {
+      "pattern": "Connect helpers use 'connect' prefix (connectLocal, connectGcp)",
+      "assessment": "Good verb-prefix naming, clearly communicates intent.",
+      "recommendation": "No change needed."
+    },
+    {
+      "pattern": "Helper functions use verb prefix: loadSecrets, parseCertPem, parseTunnelToken, getStatus, start, stop, run, sshConnect",
+      "assessment": "Mostly consistent. 'start' and 'stop' are slightly generic but acceptable in this narrow domain context (they always operate on cloudflared).",
+      "recommendation": "No change needed — KISS applies; renaming to 'startCloudflared' would be over-specification."
+    },
+    {
+      "pattern": "Module-level constants use SCREAMING_SNAKE_CASE (LOCAL_HOST, LOCAL_USER, GCP_HOST, etc.)",
+      "assessment": "Correctly follows the rule for exported/global constants.",
+      "recommendation": "No change needed."
+    }
+  ]
+}

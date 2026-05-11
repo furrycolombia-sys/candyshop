@@ -1,0 +1,65 @@
+{
+  "agent": "dry",
+  "timestamp": "2026-05-11T03:10:00Z",
+  "scope": "scripts/tunnel-switch.mjs",
+  "summary": {
+    "filesAnalyzed": 1,
+    "issuesFound": 4,
+    "critical": 0,
+    "warning": 2,
+    "suggestion": 2,
+    "info": 0
+  },
+  "issues": [
+    {
+      "id": "DRY-001",
+      "severity": "suggestion",
+      "title": "Duplicate status-check-and-print pattern in cmdStatus",
+      "files": ["scripts/tunnel-switch.mjs"],
+      "duplicatedCode": "process.stdout.write(`  <name> (<host>): `); try { const c = await connect<X>(); const s = await getStatus(c, pass?); c.end(); console.log(s === 'active' ? '...' : `[${s}]`); } catch (e) { console.log(`[unreachable] ${e.message}`); }",
+      "occurrences": 2,
+      "description": "The Local and GCP branches of cmdStatus (lines 211-229) share identical structure: write label, connect, getStatus, end, log result, catch unreachable. Only the label string, connect function, and sudo-password argument differ.",
+      "rule": "dry-principle.md#extract-utility-functions",
+      "fix": "Extract a helper such as `async function printStatus(label, connectFn, sudoPass)` that encapsulates the try/catch and console output. Call it twice: printStatus(`Local (${LOCAL_HOST})`, connectLocal, LOCAL_PASS) and printStatus(`GCP   (${GCP_HOST})`, connectGcp, undefined). This is a 3-line call-site reduction with no added complexity."
+    },
+    {
+      "id": "DRY-002",
+      "severity": "suggestion",
+      "title": "Duplicate start-then-stop step pattern in cmdSwitch",
+      "files": ["scripts/tunnel-switch.mjs"],
+      "duplicatedCode": "process.stdout.write(`[N/2] Starting/Stopping cloudflared on <side> (<host>)... `); const conn = await connect<X>(); const s = await start/stop(conn, pass?); conn.end(); console.log(s === 'active' ? 'OK' : `WARNING: ${s}` OR ['inactive','dead'].includes(s) ? 'OK' : `WARNING: ${s}`);",
+      "occurrences": 4,
+      "description": "cmdSwitch has four almost-identical step blocks (lines 236-263): each writes a step label, connects, calls start/stop, ends the connection, and logs OK or WARNING. The local and GCP branches are mirror-images. The GCP->local branch also lacks the try/catch guard on the stop step that the local->gcp branch has, which is a latent inconsistency caused by the duplication.",
+      "rule": "dry-principle.md#extract-utility-functions",
+      "fix": "Extract helpers such as `async function startAndLog(label, connectFn, sudoPass)` and `async function stopAndLog(label, connectFn, sudoPass, optional)` that handle connect/action/end/log and optionally swallow errors when optional=true. This reduces cmdSwitch to four simple calls and eliminates the latent asymmetry."
+    },
+    {
+      "id": "DRY-003",
+      "severity": "warning",
+      "title": "readyTimeout hardcoded to 15_000 in two separate connect functions",
+      "files": ["scripts/tunnel-switch.mjs"],
+      "duplicatedCode": "readyTimeout: 15_000",
+      "occurrences": 2,
+      "description": "connectLocal (line 107) and connectGcp (line 121) both hardcode `readyTimeout: 15_000`. If the timeout needs changing, it must be changed in two places and can drift.",
+      "rule": "dry-principle.md#extract-constants",
+      "fix": "Declare `const SSH_READY_TIMEOUT = 15_000;` near the SSH helpers section and reference it in both connect functions. One-line change, zero complexity added."
+    },
+    {
+      "id": "DRY-004",
+      "severity": "warning",
+      "title": "Duplicate missing-secret guard pattern (three separate manual checks)",
+      "files": ["scripts/tunnel-switch.mjs"],
+      "duplicatedCode": "if (!VAR) throw new Error('... missing from .secrets (need ...)')",
+      "occurrences": 3,
+      "description": "connectLocal (lines 97-100), connectGcp (lines 111-113), and cmdConfigureIngress (lines 281-284) each manually check one or more secrets and throw a formatted error. The pattern `if (!X) throw new Error('X missing from .secrets ...')` appears three times. A shared helper would centralise the message format and make future additions consistent.",
+      "rule": "dry-principle.md#extract-utility-functions",
+      "fix": "Add a small helper: `function requireSecret(name, value) { if (!value) throw new Error(`${name} missing from .secrets`); return value; }`. Replace the inline checks: `requireSecret('LOCAL_PROD_SERVER_HOST', LOCAL_HOST)` etc. This is pure reduction with no new abstraction layers."
+    }
+  ],
+  "patterns": [
+    {
+      "name": "Mirror-image switch branches",
+      "description": "cmdSwitch duplicates the Local and GCP code paths as a mirror image. This is a common pattern in two-sided scripts but creates a maintenance burden. DRY-002's extract-and-call approach keeps the symmetry readable while removing duplication."
+    }
+  ]
+}

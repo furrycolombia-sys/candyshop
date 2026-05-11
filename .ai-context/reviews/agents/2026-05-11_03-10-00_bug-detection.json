@@ -1,0 +1,130 @@
+{
+  "agent": "bug-detection",
+  "timestamp": "2026-05-11T03:10:00Z",
+  "scope": "scripts/tunnel-switch.mjs",
+  "summary": {
+    "filesAnalyzed": 1,
+    "issuesFound": 9,
+    "critical": 0,
+    "warning": 6,
+    "suggestion": 3,
+    "info": 0
+  },
+  "issues": [
+    {
+      "id": "BUG-001",
+      "severity": "warning",
+      "title": "SSH exec stream has no error handler — promise hangs on stream error",
+      "file": "scripts/tunnel-switch.mjs",
+      "line": 133,
+      "bugType": "stream",
+      "description": "Inside `run()`, `conn.exec()` creates a stream. There is no `stream.on('error', rej)` handler. If the remote stream emits an error (network drop, permission denied from exec layer), the promise never settles — it neither resolves nor rejects — leaving the caller awaiting forever.",
+      "impact": "Any SSH exec error after the channel is opened will hang the entire script indefinitely. The Node process will never exit, and CI/terminal sessions will stall until manually killed.",
+      "rule": "code-review-standards.md#bug-detection-standards",
+      "fix": "Add a stream error handler: `stream.on('error', rej);` immediately after `conn.exec()` succeeds and before registering data listeners."
+    },
+    {
+      "id": "BUG-002",
+      "severity": "warning",
+      "title": "SSH connections not closed on error paths in cmdSwitch",
+      "file": "scripts/tunnel-switch.mjs",
+      "line": 237,
+      "bugType": "connection",
+      "description": "In `cmdSwitch`, after `connectLocal()` or `connectGcp()` resolves and assigns to `local` / `gcp`, if the subsequent `start()`, `stop()`, or `getStatus()` call throws, the `conn.end()` call on the next line is skipped. For example, at line 237–239: if `start(local, LOCAL_PASS)` throws, `local.end()` at line 239 never executes. Same pattern on lines 253–255 for GCP, and lines 259–262 for local in the `gcp` branch.",
+      "impact": "SSH connections remain open after the error is thrown. The Node process continues to hold the TCP socket open; in some cases `ssh2` will keep event-loop references alive and the process will not exit even after the top-level catch calls `process.exit(1)` — or it will exit with dangling connections that fill the server's `MaxSessions` limit.",
+      "rule": "code-review-standards.md#bug-detection-standards",
+      "fix": "Use try/finally blocks around each SSH connection usage:\n```js\nconst local = await connectLocal();\ntry {\n  const s1 = await start(local, LOCAL_PASS);\n  console.log(...);\n} finally {\n  local.end();\n}\n```"
+    },
+    {
+      "id": "BUG-003",
+      "severity": "warning",
+      "title": "SSH connection not closed on error path in cmdConfigureIngress",
+      "file": "scripts/tunnel-switch.mjs",
+      "line": 329,
+      "bugType": "connection",
+      "description": "In `cmdConfigureIngress`, after `connectGcp()` resolves at line 329 and assigns to `conn`, if `run(conn, 'systemctl restart cloudflared')` or the subsequent `getStatus(conn)` call throws, `conn.end()` at line 333 is never reached.",
+      "impact": "Same impact as BUG-002: dangling open SSH connection. The process may hang or leave server sessions consumed.",
+      "rule": "code-review-standards.md#bug-detection-standards",
+      "fix": "Wrap in try/finally:\n```js\nconst conn = await connectGcp();\ntry {\n  await run(conn, 'systemctl restart cloudflared');\n  await new Promise((r) => setTimeout(r, 5_000));\n  const status = await getStatus(conn);\n  console.log(...);\n} finally {\n  conn.end();\n}\n```"
+    },
+    {
+      "id": "BUG-004",
+      "severity": "warning",
+      "title": "Empty catch in parseTunnelToken silently swallows JWT decode failure",
+      "file": "scripts/tunnel-switch.mjs",
+      "line": 198,
+      "bugType": "parsing",
+      "description": "The empty `catch {}` on line 198 silently discards any error from JSON.parse or Buffer.from in the JWT path. Execution then falls through to the raw-base64 parse path (line 201). If the raw-base64 path also fails, the error thrown ('Could not extract tunnel ID from PROD_CLOUDFLARE_TUNNEL_TOKEN') gives no indication of why the JWT path failed (e.g. malformed base64url, unexpected JSON shape). This makes debugging token issues very difficult.",
+      "impact": "Operators see a confusing generic error with no hint that the token might be a valid JWT but with an unexpected payload structure. Diagnostic information is permanently lost.",
+      "rule": "code-review-standards.md#bug-detection-standards",
+      "fix": "Log or capture the JWT parse error before falling through:\n```js\n} catch (jwtErr) {\n  // fall through to raw-base64 path; log for diagnostics\n  process.stderr.write(`[debug] JWT parse failed: ${jwtErr.message}\\n`);\n}\n```\nOr at minimum use a named variable so it can be inspected during development."
+    },
+    {
+      "id": "BUG-005",
+      "severity": "suggestion",
+      "title": "parseTunnelToken does not validate accountID from JWT payload",
+      "file": "scripts/tunnel-switch.mjs",
+      "line": 197,
+      "bugType": "null-access",
+      "description": "On line 197, `if (payload.t)` only checks the tunnel ID. `payload.a` (the account ID) is returned without any existence check. If the JWT payload has `t` but not `a`, the function returns `{ tunnelID: payload.t, accountID: undefined }`. On line 288, `certAccountID ?? tokenAccountID` then yields `undefined` (if certAccountID is also absent), and the check on line 290 catches it — but only with a generic message that doesn't identify which source was missing the account ID.",
+      "impact": "Low probability but would produce a confusing generic error message. No crash or hang.",
+      "rule": "code-review-standards.md#bug-detection-standards",
+      "fix": "Change the JWT check to also validate accountID: `if (payload.t && payload.a) return { tunnelID: payload.t, accountID: payload.a };`"
+    },
+    {
+      "id": "BUG-006",
+      "severity": "warning",
+      "title": "No execution timeout in run() — script can hang indefinitely on stuck remote command",
+      "file": "scripts/tunnel-switch.mjs",
+      "line": 127,
+      "bugType": "async-error",
+      "description": "The `run()` function creates a promise that only resolves on `stream.on('close')`. The SSH `readyTimeout: 15_000` (lines 106, 121) only guards the connection handshake. Once connected, if the remote command hangs (e.g. `sudo -S` waits for a password that doesn't arrive via stdin, `systemctl` blocks waiting for a unit transition, or the network stalls mid-session), the promise never resolves and the script hangs forever.",
+      "impact": "In CI or automated contexts, the script process runs until the CI job timeout (often 30–60 minutes) is hit. In interactive use, the terminal session stalls with no output.",
+      "rule": "code-review-standards.md#bug-detection-standards",
+      "fix": "Wrap the exec promise in a race against a timeout:\n```js\nconst EXEC_TIMEOUT_MS = 30_000;\nconst execPromise = new Promise((res, rej) => { /* existing logic */ });\nconst timeoutPromise = new Promise((_, rej) =>\n  setTimeout(() => rej(new Error(`Command timed out after ${EXEC_TIMEOUT_MS}ms: ${cmd}`)), EXEC_TIMEOUT_MS)\n);\nreturn Promise.race([execPromise, timeoutPromise]);\n```"
+    },
+    {
+      "id": "BUG-007",
+      "severity": "suggestion",
+      "title": "stderr suppressed with 2>/dev/null hides authentication and command failures",
+      "file": "scripts/tunnel-switch.mjs",
+      "line": 130,
+      "bugType": "logic",
+      "description": "The sudo invocation for the local server uses `2>/dev/null` to suppress stderr. This means if the password is wrong, if sudo is not configured for the user, or if the systemctl command itself writes an error to stderr, all diagnostic output is silently discarded. The `out` variable will be empty and `getStatus` will return 'unknown', giving no indication of the actual failure.",
+      "impact": "Authentication failures and systemctl errors are invisible. Operators see 'WARNING: unknown' with no explanation, making it very hard to diagnose misconfigured credentials or missing sudo permissions.",
+      "rule": "code-review-standards.md#bug-detection-standards",
+      "fix": "Remove `2>/dev/null` so stderr is captured and included in `out`, which is already collected via `stream.stderr.on('data', ...)`. The stderr data already goes into `out` via the existing handler on line 137; the shell-level redirect just prevents it from reaching that handler at all."
+    },
+    {
+      "id": "BUG-008",
+      "severity": "suggestion",
+      "title": "Cloudflare API response shape not validated before use",
+      "file": "scripts/tunnel-switch.mjs",
+      "line": 320,
+      "bugType": "null-access",
+      "description": "After `resp.json()` on line 320, only `data.success` is checked. `data.result?.version` uses optional chaining safely, but `resp.json()` itself can throw if the response body is not valid JSON (e.g. if Cloudflare returns an HTML error page for a 5xx). This unhandled rejection would bypass the `if (!data.success)` check and produce an unhelpful 'SyntaxError: Unexpected token' message.",
+      "impact": "A Cloudflare-side 500 or rate-limit 429 with an HTML body causes an unhandled JSON parse error instead of a descriptive message.",
+      "rule": "code-review-standards.md#bug-detection-standards",
+      "fix": "Check HTTP status before parsing JSON:\n```js\nif (!resp.ok && resp.headers.get('content-type')?.includes('application/json') === false) {\n  throw new Error(`Cloudflare API HTTP ${resp.status} (non-JSON response)`);\n}\nconst data = await resp.json();\n```"
+    },
+    {
+      "id": "BUG-009",
+      "severity": "warning",
+      "title": "stream close event consumed before stderr may have finished flushing",
+      "file": "scripts/tunnel-switch.mjs",
+      "line": 138,
+      "bugType": "stream",
+      "description": "In `run()`, the promise resolves on `stream.on('close')`. In ssh2, the main stream close event fires when the channel closes, but `stream.stderr` is a separate readable. If the remote process writes to stderr after its last stdout write, the `stderr.on('data')` handler may not have received all bytes before the close event fires, causing partial stderr capture in `out`.",
+      "impact": "stderr output from remote commands may be truncated in `out`, leading to incomplete diagnostics in error cases. Low probability but observable when stderr is large or arrives in multiple TCP segments.",
+      "rule": "code-review-standards.md#bug-detection-standards",
+      "fix": "The ssh2 library's `Channel` emits `close` only after both the channel and its extended (stderr) stream are exhausted, so in practice this is safe with ssh2. However, to be explicit and defensive, use the `close` event code/signal parameters and ensure `stream.stderr` is fully read. Alternatively, rely on the fact that ssh2 guarantees ordering and leave as-is, but document the assumption."
+    }
+  ],
+  "patterns": [
+    {
+      "pattern": "Missing try/finally around SSH connection usage",
+      "description": "All three functions that open SSH connections (cmdStatus being the exception because it has try/catch at connection level) do not use try/finally to guarantee conn.end() is called. This is a systemic pattern that should be addressed consistently.",
+      "recommendation": "Establish a helper pattern (e.g., a withConnection(connectFn, fn) wrapper) that guarantees conn.end() is called in a finally block, eliminating the need to remember it at each call site."
+    }
+  ]
+}
