@@ -25,6 +25,7 @@ interface AppNavigationProps {
     grantedKeys: string[];
     isLoading: boolean;
     isAuthenticated?: boolean;
+    hasCachedPermissions?: boolean;
   };
 }
 
@@ -94,10 +95,15 @@ export function AppNavigation({
 }: AppNavigationProps) {
   const t = useTranslations("nav");
   const locale = useLocale();
-  const { grantedKeys, isLoading } = permissionState ?? {
+  const {
+    grantedKeys,
+    isLoading,
+    hasCachedPermissions = false,
+  } = permissionState ?? {
     grantedKeys: [],
     isLoading: true,
     isAuthenticated: false,
+    hasCachedPermissions: false,
   };
 
   /** Append current locale to cross-app URL so the target app opens in the same language */
@@ -108,7 +114,7 @@ export function AppNavigation({
   const visibleApps = APP_ORDER.filter(({ id }) => {
     const rule = APP_ACCESS_RULES[id];
     if (!rule) return true;
-    if (isLoading) return false;
+    if (isLoading && !hasCachedPermissions) return false;
 
     return matchesPermissions(grantedKeys, rule.required, rule.mode ?? "all");
   });
