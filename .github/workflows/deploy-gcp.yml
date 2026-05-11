@@ -292,10 +292,46 @@ jobs:
             ControlPersist 600
           EOF
 
+      - name: Restart GCP VM
+        run: |
+          # Decode the GCP service account key
+          echo "${{ secrets.GCP_PROD_SA_KEY_B64 }}" | base64 -d > /tmp/gcp-sa-key.json
+          chmod 600 /tmp/gcp-sa-key.json
+
+          # Activate the service account
+          gcloud auth activate-service-account --key-file=/tmp/gcp-sa-key.json --quiet
+
+          # Derive project from the SA key JSON
+          PROJECT=$(python3 -c "import json; print(json.load(open('/tmp/gcp-sa-key.json'))['project_id'])")
+          echo "GCP project: $PROJECT"
+
+          # Find the instance by its external IP ($GCP_HOST set in previous step)
+          INSTANCE_INFO=$(gcloud compute instances list \
+            --project="$PROJECT" \
+            --filter="networkInterfaces[0].accessConfigs[0].natIP=$GCP_HOST" \
+            --format="value(name,zone)" \
+            --quiet)
+
+          if [ -z "$INSTANCE_INFO" ]; then
+            echo "WARNING: Could not find GCP instance with IP $GCP_HOST — skipping restart"
+          else
+            INSTANCE_NAME=$(echo "$INSTANCE_INFO" | awk '{print $1}')
+            INSTANCE_ZONE=$(echo "$INSTANCE_INFO" | awk '{print $2}')
+            echo "Resetting instance: $INSTANCE_NAME in zone $INSTANCE_ZONE"
+            gcloud compute instances reset "$INSTANCE_NAME" \
+              --zone="$INSTANCE_ZONE" \
+              --project="$PROJECT" \
+              --quiet
+            echo "VM reset triggered — waiting 45s for sshd to come back online..."
+            sleep 45
+          fi
+
+          rm -f /tmp/gcp-sa-key.json
+
       - name: Open SSH master connection
         run: |
           # Establish one persistent TCP connection; all later SSH calls reuse it.
-          # Retry up to 5 times — VM sshd can be slow after a prior session.
+          # Retry up to 5 times — VM sshd can be slow after a reset.
           connected=0
           for attempt in 1 2 3 4 5; do
             if ssh "$GCP_HOST" "echo SSH_READY_$attempt"; then
@@ -530,7 +566,7 @@ jobs:
         run: |
           timeout 15 ssh "$GCP_HOST" \
             'rm -f /tmp/.candyshop-build.env /tmp/deploy-production.sh' 2>/dev/null || true
-          rm -f ~/.ssh/gcp_deploy_key
+          rm -f ~/.ssh/gcp_deploy_key /tmp/gcp-sa-key.json
 
   # ============================================
   # Alert Telegram when any job fails (standalone runs only).
