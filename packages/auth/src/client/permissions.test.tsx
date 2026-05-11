@@ -92,7 +92,9 @@ describe("useCurrentUserPermissions — cookie seeding", () => {
   it("initializes grantedKeys to [] and hasCachedPermissions false when no cookie", () => {
     mockReadCache.mockReturnValue(null);
     mockCreateClient.mockReturnValue(
-      makeSupabase() as ReturnType<typeof createBrowserSupabaseClient>,
+      makeSupabase() as unknown as ReturnType<
+        typeof createBrowserSupabaseClient
+      >,
     );
 
     const { result } = renderHook(() => useCurrentUserPermissions());
@@ -104,7 +106,9 @@ describe("useCurrentUserPermissions — cookie seeding", () => {
   it("initializes grantedKeys from cookie and hasCachedPermissions true when cookie present", () => {
     mockReadCache.mockReturnValue(["products.create", "orders.read"]);
     mockCreateClient.mockReturnValue(
-      makeSupabase() as ReturnType<typeof createBrowserSupabaseClient>,
+      makeSupabase() as unknown as ReturnType<
+        typeof createBrowserSupabaseClient
+      >,
     );
 
     const { result } = renderHook(() => useCurrentUserPermissions());
@@ -127,7 +131,9 @@ describe("useCurrentUserPermissions — cache write on fetch", () => {
       },
     ];
     mockCreateClient.mockReturnValue(
-      makeSupabase(perms) as ReturnType<typeof createBrowserSupabaseClient>,
+      makeSupabase(perms) as unknown as ReturnType<
+        typeof createBrowserSupabaseClient
+      >,
     );
 
     const { result } = renderHook(() => useCurrentUserPermissions());
@@ -141,7 +147,9 @@ describe("useCurrentUserPermissions — cache write on fetch", () => {
   it("writes empty array to cache when user has no permissions", async () => {
     mockReadCache.mockReturnValue(null);
     mockCreateClient.mockReturnValue(
-      makeSupabase([]) as ReturnType<typeof createBrowserSupabaseClient>,
+      makeSupabase([]) as unknown as ReturnType<
+        typeof createBrowserSupabaseClient
+      >,
     );
 
     const { result } = renderHook(() => useCurrentUserPermissions());
@@ -154,7 +162,7 @@ describe("useCurrentUserPermissions — cache write on fetch", () => {
   it("does NOT call writeNavPermCache when the fetch returns an error", async () => {
     mockReadCache.mockReturnValue(null);
     mockCreateClient.mockReturnValue(
-      makeSupabase([], [], new Error("DB error")) as ReturnType<
+      makeSupabase([], [], new Error("DB error")) as unknown as ReturnType<
         typeof createBrowserSupabaseClient
       >,
     );
@@ -171,7 +179,9 @@ describe("useCurrentUserPermissions — cache clear on logout", () => {
   it("calls clearNavPermCache and resets grantedKeys when userId becomes null", async () => {
     mockReadCache.mockReturnValue(["products.create"]);
     mockCreateClient.mockReturnValue(
-      makeSupabase() as ReturnType<typeof createBrowserSupabaseClient>,
+      makeSupabase() as unknown as ReturnType<
+        typeof createBrowserSupabaseClient
+      >,
     );
 
     mockUseSupabaseAuth.mockReturnValue({
@@ -196,7 +206,9 @@ describe("useCurrentUserPermissions — hasCachedPermissions stability", () => {
   it("hasCachedPermissions stays true even after fetch completes with empty keys", async () => {
     mockReadCache.mockReturnValue(["products.create"]);
     mockCreateClient.mockReturnValue(
-      makeSupabase([]) as ReturnType<typeof createBrowserSupabaseClient>,
+      makeSupabase([]) as unknown as ReturnType<
+        typeof createBrowserSupabaseClient
+      >,
     );
 
     const { result } = renderHook(() => useCurrentUserPermissions());

@@ -44,6 +44,7 @@ describe("AdminSidebar", () => {
     overrides?: Partial<ReturnType<typeof useCurrentUserPermissions>>,
   ): ReturnType<typeof useCurrentUserPermissions> => ({
     grantedKeys,
+    hasCachedPermissions: false,
     isLoading: false,
     isAuthenticated: true,
     hasPermission: (required, mode = "all") => {
