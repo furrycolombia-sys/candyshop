@@ -6,7 +6,7 @@
 # =============================================================================
 FROM node:22-alpine AS runner
 
-RUN apk add --no-cache nginx supervisor netcat-openbsd && \
+RUN apk add --no-cache nginx supervisor netcat-openbsd curl && \
     addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 nextjs && \
     mkdir -p /var/log/nginx /var/log/supervisor /var/run/nginx /run/nginx && \
@@ -19,6 +19,7 @@ COPY docker/prod/nginx.conf           /etc/nginx/nginx.conf
 COPY docker/prod/supervisord.conf     /etc/supervisor/conf.d/supervisord.conf
 COPY docker/watcher.mjs               /app/watcher.mjs
 COPY docker/boot-reporter.mjs         /app/boot-reporter.mjs
+COPY docker/warmer.sh                 /app/warmer.sh
 
 # Standalone builds pre-built by CI (rsynced to server before this runs)
 COPY apps/store/.next/standalone      /app/store/
@@ -60,7 +61,8 @@ RUN rm -rf \
     /app/payments/apps/payments/node_modules \
     /app/playground/apps/playground/node_modules \
     /app/studio/apps/studio/node_modules && \
-    chown -R nextjs:nodejs /app
+    chown -R nextjs:nodejs /app && \
+    chmod +x /app/warmer.sh
 
 EXPOSE 8080
 
