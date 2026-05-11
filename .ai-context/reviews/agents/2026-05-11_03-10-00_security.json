@@ -1,0 +1,98 @@
+{
+  "agent": "security",
+  "timestamp": "2026-05-11T03:10:00Z",
+  "scope": "scripts/tunnel-switch.mjs",
+  "summary": {
+    "filesAnalyzed": 1,
+    "issuesFound": 6,
+    "critical": 2,
+    "warning": 3,
+    "suggestion": 1,
+    "info": 0
+  },
+  "issues": [
+    {
+      "id": "SEC-001",
+      "severity": "critical",
+      "title": "Password injected via shell substitution — exploitable if password contains shell metacharacters",
+      "file": "scripts/tunnel-switch.mjs",
+      "line": 130,
+      "vulnerabilityType": "injection",
+      "description": "The sudo password is embedded into the remote shell command using `echo ${JSON.stringify(sudoPass)} | sudo -S`. `JSON.stringify` wraps the string in double-quotes and escapes inner double-quotes, but it does NOT escape shell metacharacters such as backticks, `$()`, `!`, `\\n`, or single-quotes. If the password stored in `.secrets` under `LOCAL_PROD_SERVER_PASS` contains any of those characters, the shell on the remote server will interpret them, potentially allowing arbitrary command execution. For example a password of `x$(reboot)` would execute `reboot` on the production server.",
+      "risk": "An attacker who can write to `.secrets` (or who controls the password value stored there) can achieve arbitrary remote code execution on the local production server as root (via sudo).",
+      "rule": "code-review-standards.md#security-standards",
+      "fix": "Never pass secrets through the shell command string. Instead supply the password via the SSH `stdin` stream so it never touches a shell. With ssh2 you can write to `stream.stdin` before sending the command, or use a dedicated `sudo -S` approach where you write the password bytes directly to the process stdin rather than constructing an `echo` command. Alternatively, configure passwordless `sudo` for the specific `cloudflared` service commands and remove password-based sudo entirely.",
+      "cwe": "CWE-78"
+    },
+    {
+      "id": "SEC-002",
+      "severity": "critical",
+      "title": "No SSH host-key verification — vulnerable to MITM on both servers",
+      "file": "scripts/tunnel-switch.mjs",
+      "line": 102,
+      "vulnerabilityType": "auth",
+      "description": "Neither `connectLocal()` (line 102) nor `connectGcp()` (line 117) passes a `hostVerifier` or `hostHash` option to `ssh2`. By default ssh2 accepts any host key without verification. An attacker who can perform ARP spoofing, DNS poisoning, or a BGP hijack on the network path to `LOCAL_HOST` or `GCP_HOST` can intercept the connection, capture the plaintext password (`LOCAL_PASS`) or observe the private key exchange, and execute the sudo commands on a rogue server while relaying traffic invisibly.",
+      "risk": "Full machine-in-the-middle: credential theft (the plaintext `LOCAL_PROD_SERVER_PASS`) and arbitrary command execution on attacker-controlled infrastructure instead of the real servers.",
+      "rule": "code-review-standards.md#security-standards",
+      "fix": "Add a `hostVerifier` function that compares the presented host key fingerprint against a known-good value stored in `.secrets` (e.g. `LOCAL_PROD_SERVER_HOST_FINGERPRINT`). ssh2 provides the fingerprint as the first argument to `hostVerifier`. Reject the connection if it does not match. Example: `hostVerifier: (fingerprint) => fingerprint === knownFingerprint`.",
+      "cwe": "CWE-295"
+    },
+    {
+      "id": "SEC-003",
+      "severity": "warning",
+      "title": "Cloudflare API token and SSH private key held in process memory as plain strings for the script lifetime",
+      "file": "scripts/tunnel-switch.mjs",
+      "line": 75,
+      "vulnerabilityType": "exposure",
+      "description": "All secrets are loaded at startup into the module-level `secrets` object (line 75) and then assigned to top-level `const` variables (`LOCAL_PASS`, `GCP_KEY_B64`, etc.) that persist for the entire process lifetime. The decoded GCP private key (line 116) is stored as a plain `string` in the `privateKey` variable. If a crash-dump, heap snapshot, or process introspection tool (e.g. `--inspect`, `node --heapsnapshot-signal`) is attached to the process at any point, all secrets are trivially readable in the heap. Additionally, on some systems core dumps may be written to disk.",
+      "risk": "Secrets readable from heap dumps or debugger attachments. Low likelihood in typical usage but elevated on shared developer machines or CI environments.",
+      "rule": "code-review-standards.md#security-standards",
+      "fix": "Load secrets lazily inside the function that needs them (already partially done for `cmdConfigureIngress`) and zero-out sensitive buffers after use. For the GCP private key specifically, pass the `Buffer` directly to ssh2 instead of converting it to a UTF-8 string — this reduces the number of copies and makes zeroing easier. Consider using `buffer.fill(0)` after the connection is established.",
+      "cwe": "CWE-316"
+    },
+    {
+      "id": "SEC-004",
+      "severity": "warning",
+      "title": "SSH password transmitted in plaintext via `echo` — visible in remote process list and shell history",
+      "file": "scripts/tunnel-switch.mjs",
+      "line": 129,
+      "vulnerabilityType": "exposure",
+      "description": "The command constructed at line 129-130 uses `echo <password> | sudo -S ...`. On the remote Linux host, `echo <password>` briefly appears as a process argument in `/proc/<pid>/cmdline` and may be captured by process-accounting tools, `ps aux`, or audit daemons (auditd) before the shell replaces the argument list. Although `JSON.stringify` wraps it in double-quotes, the raw password value is still a command-line argument at the OS level for the duration of the `echo` process.",
+      "risk": "Local users on the remote production server can read the password from `/proc` or system audit logs. On shared hosting this is a significant exposure.",
+      "rule": "code-review-standards.md#security-standards",
+      "fix": "Pass the password to `sudo -S` via the SSH channel stdin stream rather than constructing an `echo` shell command. This keeps the secret off the process argument list entirely. With ssh2: write `LOCAL_PASS + '\\n'` to `stream.stdin` after `conn.exec('sudo -S systemctl ...')` and before the stream closes.",
+      "cwe": "CWE-214"
+    },
+    {
+      "id": "SEC-005",
+      "severity": "warning",
+      "title": "JWT tunnel token parsed without signature verification",
+      "file": "scripts/tunnel-switch.mjs",
+      "line": 192,
+      "vulnerabilityType": "crypto",
+      "description": "`parseTunnelToken()` decodes the JWT payload at line 196 by splitting on `.` and base64-decoding the middle segment. It does not verify the JWT signature. While this function is only used to extract the `accountID` and `tunnelID` for constructing an API URL (line 313), an attacker who tampers with the `.secrets` file can supply a crafted JWT with arbitrary `a` (accountID) and `t` (tunnelID) values, causing the API call to target a different tunnel or account — effectively hijacking ingress configuration for another Cloudflare account.",
+      "risk": "If `.secrets` is compromised or writable by another process, a crafted token value could redirect the ingress-configuration API call to a Cloudflare account/tunnel owned by the attacker, or to an attacker-controlled tunnel ID that Cloudflare rejects with an error that leaks the API token in the error response.",
+      "rule": "code-review-standards.md#security-standards",
+      "fix": "After decoding, validate that the extracted `tunnelID` and `accountID` match hardcoded or separately-verified expected values before using them in the API URL. Since the values ultimately come from the same `.secrets` file as the API token, the simplest fix is to store `CLOUDFLARE_TUNNEL_ID` and `CLOUDFLARE_ACCOUNT_ID` as explicit secrets and use those directly, eliminating the need to parse the JWT at all.",
+      "cwe": "CWE-347"
+    },
+    {
+      "id": "SEC-006",
+      "severity": "suggestion",
+      "title": "`.secrets` parsing strips surrounding whitespace but does not handle quoted values or multi-line content",
+      "file": "scripts/tunnel-switch.mjs",
+      "line": 65,
+      "vulnerabilityType": "secrets",
+      "description": "The `loadSecrets()` parser at lines 65-71 does a simple `indexOf('=')` split and strips whitespace. It does not handle quoted values (`KEY=\"value with spaces\"`), escape sequences, or multi-line values. The base64-encoded cert PEM (`CLOUDFLARED_PROD_CERT_PEM_B64`) and SSH key (`GCP_PROD_SERVER_SSH_KEY_B64`) could silently be truncated if they contain `=` padding characters that appear before the first real `=` sign — though since the split uses `indexOf` (first `=`) this is correct for base64. The risk is that a password containing `=` would be truncated at the `=` character only if the key itself contained `=`, which is unlikely but possible if the `.secrets` format is not strictly enforced. More concretely: if a developer wraps a value in quotes (`PASS=\"abc=def\"`), the stored value will include the literal quote characters, potentially breaking authentication silently.",
+      "risk": "Silent secret mis-parsing leading to authentication failures or, in edge cases, a weaker secret being used than intended.",
+      "rule": "code-review-standards.md#security-standards",
+      "fix": "Use a well-tested dotenv library (e.g. the `dotenv` package already common in Node.js ecosystems) to parse `.secrets` instead of the custom hand-rolled parser. This handles quoting, escaping, and multi-line values correctly and removes a class of parsing bugs. If adding a dependency is undesirable, at minimum document that values must not be quoted and must not contain newlines.",
+      "cwe": "CWE-20"
+    }
+  ],
+  "patterns": [
+    "Password-based sudo over SSH is used for the local server while the GCP server uses passwordless sudo — the asymmetry increases the attack surface for the local path only.",
+    "All secrets are loaded eagerly at module initialisation rather than on-demand, widening the window during which secrets exist in process memory.",
+    "The `run()` helper silently merges stdout and stderr into a single string, which means command error output (potentially containing sensitive data echoed by the shell) is captured and returned to the caller but never inspected for secret leakage."
+  ]
+}
