@@ -3,6 +3,11 @@
 import { createBrowserSupabaseClient } from "api/supabase";
 import { useEffect, useMemo, useRef, useState } from "react";
 
+import {
+  clearNavPermCache,
+  readNavPermCache,
+  writeNavPermCache,
+} from "./navPermCachePersistence";
 import { useSupabaseAuth } from "./useSupabaseAuth";
 
 type PermissionRow = {
@@ -44,7 +49,11 @@ export function matchesPermissions(
 export function useCurrentUserPermissions() {
   const { user, isAuthenticated, isLoading: authLoading } = useSupabaseAuth();
   const supabase = useMemo(() => createBrowserSupabaseClient(), []);
-  const [grantedKeys, setGrantedKeys] = useState<string[]>([]);
+  // Captured once on mount — true only when a valid cookie exists at page load.
+  const hasCachedPermissions = useRef(readNavPermCache() !== null).current;
+  const [grantedKeys, setGrantedKeys] = useState<string[]>(
+    () => readNavPermCache() ?? [],
+  );
   const [isLoading, setIsLoading] = useState(true);
   const loadedUserIdRef = useRef<string | null>(null);
   const userId = user?.id ?? null;
@@ -57,6 +66,7 @@ export function useCurrentUserPermissions() {
 
       if (!userId) {
         if (isActive) {
+          clearNavPermCache();
           setGrantedKeys([]);
           loadedUserIdRef.current = null;
           setIsLoading(false);
@@ -104,6 +114,7 @@ export function useCurrentUserPermissions() {
         }
       }
 
+      writeNavPermCache([...uniqueKeys]);
       setGrantedKeys([...uniqueKeys]);
       loadedUserIdRef.current = userId;
       setIsLoading(false);
@@ -118,6 +129,7 @@ export function useCurrentUserPermissions() {
 
   return {
     grantedKeys,
+    hasCachedPermissions,
     isLoading: authLoading || isLoading,
     isAuthenticated,
     hasPermission: (
