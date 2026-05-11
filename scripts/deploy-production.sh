@@ -62,6 +62,23 @@ if [ -z "${DEPLOY_DETACHED:-}" ]; then
   exit "$DEPLOY_EXIT"
 fi
 
+# ─── Kill any lingering deploy from a previous timed-out CI job ──────────────
+# CI passes DEPLOY_DETACHED=1 directly, bypassing the wrapper block above.
+# GHA job timeouts leave nohup'd deploy processes running on the e2-micro;
+# those zombies consume all CPU and make the new deploy hang from the start.
+_DEPLOY_PIDFILE=/tmp/deploy-candyshop.pid
+if [ -f "$_DEPLOY_PIDFILE" ]; then
+  _PREV_PID=$(cat "$_DEPLOY_PIDFILE" 2>/dev/null || true)
+  if [ -n "$_PREV_PID" ] && [ "$_PREV_PID" != "$$" ] && kill -0 "$_PREV_PID" 2>/dev/null; then
+    echo "[DEPLOY] Killing previous deploy (PID $_PREV_PID) — freeing CPU on e2-micro..."
+    pkill -KILL -P "$_PREV_PID" 2>/dev/null || true
+    kill -KILL "$_PREV_PID" 2>/dev/null || true
+    sleep 2
+  fi
+fi
+echo "$$" > "$_DEPLOY_PIDFILE"
+# ─────────────────────────────────────────────────────────────────────────────
+
 # ─── Telegram deploy notifications ───────────────────────────────────────────
 # Extract Telegram vars early from the env file so we can notify before the full
 # env is sourced (which happens later, just before the build step).
