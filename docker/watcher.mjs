@@ -32,8 +32,7 @@ const STARTUP_GRACE_MS = 90_000; // wait before first check so apps can boot
 const REPEAT_ALERT_MS = 2 * 60 * 60 * 1_000;
 
 // System resource thresholds
-const RAM_CRITICAL_MB = 200;
-const RAM_WARN_MB     = 400;
+const RAM_CRITICAL_PCT  = 2;   // alert only when free RAM drops below 2% of total
 const DISK_CRITICAL_PCT = 90;
 const DISK_WARN_PCT     = 80;
 
@@ -168,15 +167,26 @@ async function maybeAlert(key, isNew, text) {
 
 // ── System health checks ──────────────────────────────────────────────────────
 
-function readRamFreeBytes() {
+/** Returns { freeMB, totalMB } from /proc/meminfo, or null if unavailable. */
+function readRamInfo() {
   try {
     const meminfo = readFileSync("/proc/meminfo", "utf8");
-    // MemAvailable is the best indicator of free+reclaimable RAM
-    const match = meminfo.match(/^MemAvailable:\s+(\d+)\s+kB/m);
-    if (match) return Number(match[1]) * 1024;
-    // Fallback: MemFree
-    const fallback = meminfo.match(/^MemFree:\s+(\d+)\s+kB/m);
-    if (fallback) return Number(fallback[1]) * 1024;
+    const total = meminfo.match(/^MemTotal:\s+(\d+)\s+kB/m);
+    const avail = meminfo.match(/^MemAvailable:\s+(\d+)\s+kB/m);
+    if (total && avail) {
+      return {
+        totalMB: Number(total[1]) / 1024,
+        freeMB:  Number(avail[1]) / 1024,
+      };
+    }
+    // Fallback: MemFree (less accurate — doesn't include reclaimable cache)
+    const free = meminfo.match(/^MemFree:\s+(\d+)\s+kB/m);
+    if (total && free) {
+      return {
+        totalMB: Number(total[1]) / 1024,
+        freeMB:  Number(free[1]) / 1024,
+      };
+    }
   } catch {
     // not Linux or no /proc — ignore
   }
@@ -229,26 +239,22 @@ function isTunnelRunning() {
 
 async function checkSystem() {
   // ── RAM ──
-  const ramBytes = readRamFreeBytes();
-  if (ramBytes !== null) {
-    const ramMB = ramBytes / (1024 * 1024);
+  const ramInfo = readRamInfo();
+  if (ramInfo !== null) {
+    const { freeMB, totalMB } = ramInfo;
+    const freePct = (freeMB / totalMB) * 100;
     const prev = sysState.ram;
-    let next;
-    if (ramMB < RAM_CRITICAL_MB) next = "critical";
-    else if (ramMB < RAM_WARN_MB) next = "warning";
-    else next = "ok";
+    const next = freePct < RAM_CRITICAL_PCT ? "critical" : "ok";
 
-    if (next !== "ok") {
-      const icon = next === "critical" ? "🔴" : "🟡";
-      const severity = next === "critical" ? "CRITICAL" : "warning";
-      const msg = `${icon} <b>RAM ${severity}</b>\nAvailable: <code>${ramMB.toFixed(0)} MB</code>  •  <code>${CONTAINER_NAME}</code>`;
-      await maybeAlert("ram", prev === "ok" || prev === "unknown", msg);
-      console.error(`[watcher] RAM ${next}: ${ramMB.toFixed(0)} MB available`);
-    } else if (prev === "warning" || prev === "critical") {
-      await sendTelegram(`✅ <b>RAM recovered</b>\nAvailable: <code>${ramMB.toFixed(0)} MB</code>  •  <code>${CONTAINER_NAME}</code>`);
-      console.log(`[watcher] RAM recovered: ${ramMB.toFixed(0)} MB`);
+    if (next === "critical") {
+      const msg = `🔴 <b>RAM CRITICAL</b>\nAvailable: <code>${freeMB.toFixed(0)} MB</code> (<code>${freePct.toFixed(1)}%</code> of <code>${totalMB.toFixed(0)} MB</code>)  •  <code>${CONTAINER_NAME}</code>`;
+      await maybeAlert("ram", prev !== "critical", msg);
+      console.error(`[watcher] RAM critical: ${freeMB.toFixed(0)} MB (${freePct.toFixed(1)}%) of ${totalMB.toFixed(0)} MB`);
+    } else if (prev === "critical") {
+      await sendTelegram(`✅ <b>RAM recovered</b>\nAvailable: <code>${freeMB.toFixed(0)} MB</code> (<code>${freePct.toFixed(1)}%</code>)  •  <code>${CONTAINER_NAME}</code>`);
+      console.log(`[watcher] RAM recovered: ${freeMB.toFixed(0)} MB (${freePct.toFixed(1)}%)`);
     } else {
-      console.log(`[watcher] RAM ok: ${ramMB.toFixed(0)} MB`);
+      console.log(`[watcher] RAM ok: ${freeMB.toFixed(0)} MB (${freePct.toFixed(1)}% of ${totalMB.toFixed(0)} MB)`);
     }
     sysState.ram = next;
   }

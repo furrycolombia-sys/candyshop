@@ -531,6 +531,19 @@ jobs:
             'docker ps --filter name=candyshop-prod --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" 2>/dev/null || true' \
             || echo "Verify skipped (SSH timed out) — deploy confirmed by wait loop above"
 
+      - name: Warm up apps
+        run: |
+          # Hit one representative route per app immediately after deploy so the
+          # first real user never sees a cold-start. The in-container warmer.sh
+          # keeps them warm from here on (every 12 min via supervisord).
+          # Uses the nginx proxy port (9090) — same path the tunnel serves.
+          APPS="/auth/en /store/en /admin/en /playground/en /en /payments/en /studio/en"
+          for path in $APPS; do
+            status=$(ssh "$GCP_HOST" \
+              "curl -s -o /dev/null -w '%{http_code}' --max-time 15 http://localhost:9090${path} 2>/dev/null || echo ERR")
+            echo "  localhost:9090${path} → HTTP ${status}"
+          done
+
       - name: Purge Cloudflare cache
         env:
           CF_API_TOKEN: ${{ secrets.PROD_CF_API_TOKEN }}
