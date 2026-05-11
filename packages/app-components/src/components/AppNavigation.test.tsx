@@ -271,6 +271,54 @@ describe("AppNavigation", () => {
     expect(screen.queryByTestId("nav-link-admin")).not.toBeInTheDocument();
   });
 
+  it("hides gated apps when isLoading=true and hasCachedPermissions=false", () => {
+    render(
+      <AppNavigation
+        currentApp="store"
+        urls={defaultUrls}
+        locales={defaultLocales}
+        permissionState={{
+          grantedKeys: ["products.create"],
+          isLoading: true,
+          hasCachedPermissions: false,
+        }}
+      />,
+    );
+    expect(screen.queryByTestId("nav-link-studio")).not.toBeInTheDocument();
+  });
+
+  it("shows gated apps when isLoading=true but hasCachedPermissions=true and keys grant access", () => {
+    render(
+      <AppNavigation
+        currentApp="store"
+        urls={defaultUrls}
+        locales={defaultLocales}
+        permissionState={{
+          grantedKeys: ["products.create"],
+          isLoading: true,
+          hasCachedPermissions: true,
+        }}
+      />,
+    );
+    expect(screen.getByTestId("nav-link-studio")).toBeInTheDocument();
+  });
+
+  it("applies normal permission logic when isLoading=false regardless of hasCachedPermissions", () => {
+    render(
+      <AppNavigation
+        currentApp="store"
+        urls={defaultUrls}
+        locales={defaultLocales}
+        permissionState={{
+          grantedKeys: ["products.create"],
+          isLoading: false,
+          hasCachedPermissions: false,
+        }}
+      />,
+    );
+    expect(screen.getByTestId("nav-link-studio")).toBeInTheDocument();
+  });
+
   it("clears preserved protected links after sign-out but keeps public links", () => {
     const { rerender } = render(
       <AppNavigation
