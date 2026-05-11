@@ -1,0 +1,185 @@
+{
+  "agent": "pattern-discovery",
+  "timestamp": "2026-05-11T03:10:00Z",
+  "scope": "scripts/tunnel-switch.mjs",
+  "summary": {
+    "filesAnalyzed": 1,
+    "patternsFound": 9,
+    "goodPatterns": 4,
+    "antiPatterns": 3,
+    "inconsistencies": 2,
+    "ruleCandidates": 2
+  },
+  "patterns": [
+    {
+      "id": "PAT-001",
+      "type": "good",
+      "severity": "info",
+      "title": "Self-contained secrets loader — no external env dependencies",
+      "description": "loadSecrets() reads .secrets directly from the project root, parses KEY=VALUE lines, skips comments and blanks, and handles missing files gracefully by returning {}. This makes the script usable without any shell setup or env var sourcing.",
+      "files": ["scripts/tunnel-switch.mjs"],
+      "examples": [
+        {
+          "file": "scripts/tunnel-switch.mjs",
+          "line": 61,
+          "code": "function loadSecrets() { ... if (!existsSync(path)) return {}; ... }"
+        }
+      ],
+      "recommendation": "Document: this pattern is reusable for other infra scripts. Consider extracting to scripts/lib/load-secrets.mjs if more scripts need it."
+    },
+    {
+      "id": "PAT-002",
+      "type": "good",
+      "severity": "info",
+      "title": "Defensive credential validation at connection time",
+      "description": "connectLocal() and connectGcp() validate that all required credentials are present before attempting a connection, and throw a descriptive error naming exactly which .secrets keys are missing. This gives actionable diagnostics immediately.",
+      "files": ["scripts/tunnel-switch.mjs"],
+      "examples": [
+        {
+          "file": "scripts/tunnel-switch.mjs",
+          "line": 97,
+          "code": "if (!LOCAL_HOST || !LOCAL_USER || !LOCAL_PASS) { throw new Error('Local server credentials missing from .secrets (need LOCAL_PROD_SERVER_HOST, LOCAL_PROD_SERVER_USER, LOCAL_PROD_SERVER_PASS)'); }"
+        }
+      ],
+      "recommendation": "Document: this validation-before-connect pattern should be standard for all infra scripts that use remote credentials."
+    },
+    {
+      "id": "PAT-003",
+      "type": "good",
+      "severity": "info",
+      "title": "Explicit sudo strategy differentiation per server type",
+      "description": "The run() function cleanly separates two sudo strategies: password-via-stdin (echo PASS | sudo -S) for the local server with password-based auth, and direct passwordless sudo for GCP which uses key-based auth and sudoers NOPASSWD. The sudoPass parameter being absent/undefined acts as the discriminator — no boolean flag needed.",
+      "files": ["scripts/tunnel-switch.mjs"],
+      "examples": [
+        {
+          "file": "scripts/tunnel-switch.mjs",
+          "line": 127,
+          "code": "function run(conn, cmd, sudoPass) { const fullCmd = sudoPass ? `echo ${JSON.stringify(sudoPass)} | sudo -S sh -c ${JSON.stringify(cmd)} 2>/dev/null` : `sudo ${cmd}`; }"
+        }
+      ],
+      "recommendation": "Document: this is the correct approach for managing mixed-auth environments. The 2>/dev/null suppression on the local path prevents the sudo password prompt from leaking into captured output."
+    },
+    {
+      "id": "PAT-004",
+      "type": "good",
+      "severity": "info",
+      "title": "Graceful degradation when the non-target server is unreachable",
+      "description": "In cmdSwitch(), stopping the outgoing server is wrapped in try/catch and logs 'skipped' rather than failing the entire operation. This is correct: the new server is already serving traffic, so an unreachable old server is not fatal.",
+      "files": ["scripts/tunnel-switch.mjs"],
+      "examples": [
+        {
+          "file": "scripts/tunnel-switch.mjs",
+          "line": 243,
+          "code": "try { const gcp = await connectGcp(); const s2 = await stop(gcp); gcp.end(); ... } catch (e) { console.log(`skipped (${e.message})`); }"
+        }
+      ],
+      "recommendation": "Document: this asymmetric error handling (fail-hard on start, tolerate failure on stop) is the right pattern for service switching scripts."
+    },
+    {
+      "id": "PAT-005",
+      "type": "anti",
+      "severity": "warning",
+      "title": "SSH connections are never closed on error paths",
+      "description": "In cmdSwitch() and cmdStatus(), conn.end() is called only in the happy path. If start(), stop(), or getStatus() throw, the SSH connection is leaked. Over many runs, or if an error is thrown mid-way, file descriptors accumulate. Node.js will eventually close them on process exit, but the script may hang waiting for open sockets.",
+      "files": ["scripts/tunnel-switch.mjs"],
+      "examples": [
+        {
+          "file": "scripts/tunnel-switch.mjs",
+          "line": 237,
+          "code": "const local = await connectLocal();\nconst s1 = await start(local, LOCAL_PASS);\nlocal.end(); // Not reached if start() throws"
+        }
+      ],
+      "recommendation": "Wrap each connection block in try/finally: `const conn = await connectLocal(); try { ... } finally { conn.end(); }`. This ensures cleanup regardless of errors."
+    },
+    {
+      "id": "PAT-006",
+      "type": "anti",
+      "severity": "warning",
+      "title": "Hardcoded hostname list is a maintenance liability",
+      "description": "cmdConfigureIngress() contains a hardcoded array of 8 furrycolombia.com hostnames at line 295-304. When a new app is added to the monorepo (e.g., a new subdomain), this list must be manually updated — and there's no test or validation to detect the omission. The hostnames are duplicated knowledge: they're also implicit in the nginx/Cloudflare config.",
+      "files": ["scripts/tunnel-switch.mjs"],
+      "examples": [
+        {
+          "file": "scripts/tunnel-switch.mjs",
+          "line": 295,
+          "code": "const hostnames = [\n  'furrycolombia.com',\n  'www.furrycolombia.com',\n  'store.furrycolombia.com',\n  // ... 5 more hardcoded\n];"
+        }
+      ],
+      "recommendation": "Move the hostname list to .secrets or a config file (e.g., scripts/tunnel-config.json), or derive it from CLAUDE.md app port table. At minimum add a comment listing where else these must be updated."
+    },
+    {
+      "id": "PAT-007",
+      "type": "anti",
+      "severity": "suggestion",
+      "title": "Empty catch swallows JWT parse errors silently",
+      "description": "In parseTunnelToken(), the JWT decode path has an empty catch {} block (line 198). If the base64url decode succeeds but JSON.parse fails for a reason other than 'not valid JSON' (e.g., partial data), the error is silently swallowed and the code falls through to the legacy path, which may also fail — producing a confusing error about the wrong format.",
+      "files": ["scripts/tunnel-switch.mjs"],
+      "examples": [
+        {
+          "file": "scripts/tunnel-switch.mjs",
+          "line": 195,
+          "code": "try {\n  const payload = JSON.parse(Buffer.from(parts[1], 'base64url').toString('utf-8'));\n  if (payload.t) return { tunnelID: payload.t, accountID: payload.a };\n} catch {}"
+        }
+      ],
+      "recommendation": "At minimum, log a debug message in the catch if NODE_DEBUG is set. Alternatively, check `parts.length === 3` before the try block (already done) and only swallow `SyntaxError` specifically: `catch (e) { if (!(e instanceof SyntaxError)) throw e; }`"
+    },
+    {
+      "id": "PAT-008",
+      "type": "inconsistency",
+      "severity": "suggestion",
+      "title": "Inconsistent GCP stop call — missing sudoPass argument but local stop passes it",
+      "description": "In cmdSwitch() for the 'local' branch (line 245), stop(gcp) is called without a sudoPass argument (correct — GCP uses passwordless sudo). In the 'gcp' branch (line 260), stop(local, LOCAL_PASS) correctly passes the password. This asymmetry is correct in behavior but could confuse a future reader who might think the GCP call is missing an argument by mistake. A comment would help.",
+      "files": ["scripts/tunnel-switch.mjs"],
+      "examples": [
+        {
+          "file": "scripts/tunnel-switch.mjs",
+          "line": 245,
+          "code": "const s2 = await stop(gcp);        // no sudoPass — GCP is passwordless"
+        },
+        {
+          "file": "scripts/tunnel-switch.mjs",
+          "line": 260,
+          "code": "const s2 = await stop(local, LOCAL_PASS);"
+        }
+      ],
+      "recommendation": "Add inline comment: `// GCP uses passwordless sudo; no sudoPass needed`. Already documented at run() JSDoc but easily missed at call sites."
+    },
+    {
+      "id": "PAT-009",
+      "type": "inconsistency",
+      "severity": "suggestion",
+      "title": "Hardcoded 5-second sleep after restart with no retry or health check",
+      "description": "In cmdConfigureIngress(), after restarting cloudflared on GCP, the script does `await new Promise(r => setTimeout(r, 5_000))` and then checks status once. If cloudflared takes longer to become active (e.g., on a cold VM), the check will report 'activating' or 'unknown' even though it would be fine 10 seconds later. Other commands (start/stop) do not sleep at all — they rely on systemctl's synchronous semantics. The sleep-then-check pattern is inconsistent with those.",
+      "files": ["scripts/tunnel-switch.mjs"],
+      "examples": [
+        {
+          "file": "scripts/tunnel-switch.mjs",
+          "line": 331,
+          "code": "await new Promise((r) => setTimeout(r, 5_000));\nconst status = await getStatus(conn);"
+        }
+      ],
+      "recommendation": "Either (a) use `systemctl restart --wait cloudflared` which blocks until the service reaches its post-start state (eliminating the sleep), or (b) poll getStatus() with retries up to N seconds. The current fixed sleep is fragile on slow VMs."
+    }
+  ],
+  "ruleSuggestions": [
+    {
+      "id": "RULE-001",
+      "title": "Infrastructure scripts: always close SSH connections in finally blocks",
+      "description": "Any script that opens an SSH connection must close it in a finally block, not just in the happy path. This prevents connection leaks when errors are thrown mid-operation.",
+      "example": "const conn = await connectGcp();\ntry {\n  await run(conn, 'systemctl restart cloudflared');\n} finally {\n  conn.end();\n}"
+    },
+    {
+      "id": "RULE-002",
+      "title": "Infrastructure scripts: avoid magic sleeps; use blocking systemctl or polled health checks",
+      "description": "Fixed-duration sleeps before health checks are fragile. Prefer `systemctl --wait` for service operations, or implement a poll loop with timeout for external readiness checks.",
+      "example": "// Instead of: await sleep(5000); const status = getStatus();\n// Do: await run(conn, 'systemctl restart --wait cloudflared');\nconst status = await getStatus(conn);"
+    }
+  ],
+  "positiveObservations": [
+    "Excellent header documentation: the script explains what configure-ingress does step by step, includes historical context (2026-05-11 GCP incident), and documents the failure mode that triggers it (503 / No ingress rules).",
+    "JSON.stringify() is used when interpolating the sudo password and command into the shell string, preventing injection from passwords or commands containing single quotes, spaces, or special characters.",
+    "The catch-all ingress rule `{ service: 'http_status:404' }` is required by Cloudflare and is present with a comment — easy to miss and hard to debug when absent.",
+    "numeric separators (15_000, 5_000) are used consistently for timeout literals, improving readability.",
+    "The script validates the parsed Cloudflare accountID with a fallback from two sources (certAccountID ?? tokenAccountID) and throws a clear error if neither is available."
+  ]
+}

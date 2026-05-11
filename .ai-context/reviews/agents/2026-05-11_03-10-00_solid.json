@@ -1,0 +1,58 @@
+{
+  "agent": "solid",
+  "timestamp": "2026-05-11T03:10:00Z",
+  "scope": "scripts/tunnel-switch.mjs",
+  "summary": {
+    "filesAnalyzed": 1,
+    "issuesFound": 3,
+    "critical": 0,
+    "warning": 1,
+    "suggestion": 2,
+    "info": 0
+  },
+  "issues": [
+    {
+      "id": "SOLID-001",
+      "severity": "warning",
+      "principle": "O",
+      "title": "Hardcoded hostname list in cmdConfigureIngress",
+      "file": "scripts/tunnel-switch.mjs",
+      "line": 295,
+      "description": "The `hostnames` array (lines 295-304) is hardcoded directly inside `cmdConfigureIngress`. Adding or removing a public hostname requires editing the function body. For a production tunnel switcher that may gain new subdomains, this is the most likely source of future edits to this file.",
+      "rule": "solid-principles.md#o---openclosed-principle",
+      "fix": "Move the hostname list to a config object near the top of the file (alongside the server config constants), or load it from .secrets as a comma-separated value (e.g. CLOUDFLARE_HOSTNAMES). Either approach lets the list grow without touching business logic."
+    },
+    {
+      "id": "SOLID-002",
+      "severity": "suggestion",
+      "principle": "S",
+      "title": "cmdConfigureIngress does three distinct things",
+      "file": "scripts/tunnel-switch.mjs",
+      "line": 277,
+      "description": "`cmdConfigureIngress` (1) parses secrets to derive API credentials, (2) calls the Cloudflare API to push ingress rules, and (3) SSHes into GCP to restart cloudflared. These are three separable responsibilities. If the GCP restart step ever needs to be skipped (e.g. when GCP is the inactive server) the entire function must be modified.",
+      "rule": "solid-principles.md#s---single-responsibility-principle",
+      "fix": "Extract a small `pushIngressRules(apiToken, accountID, tunnelID, ingress)` helper that owns only the Cloudflare API call. `cmdConfigureIngress` then orchestrates: parse creds → push rules → restart GCP. This keeps the API call independently testable and reusable without adding meaningful complexity."
+    },
+    {
+      "id": "SOLID-003",
+      "severity": "suggestion",
+      "principle": "S",
+      "title": "run() conflates password-sudo and passwordless-sudo in one parameter",
+      "file": "scripts/tunnel-switch.mjs",
+      "line": 127,
+      "description": "`run(conn, cmd, sudoPass)` builds two different shell command strings depending on whether `sudoPass` is truthy (lines 129-131). The caller must know which sudo style the target server uses and pass (or omit) the password accordingly. This ties the SSH execution helper to authentication-style knowledge.",
+      "rule": "solid-principles.md#s---single-responsibility-principle",
+      "fix": "Given the KISS context of a 250-line CLI script this is low priority. If desired, expose two thin wrappers: `runSudoPassword(conn, cmd, pass)` and `runSudoKeyless(conn, cmd)` that call a private `_exec(conn, fullCmd)`. The public API then expresses intent rather than relying on a nullable parameter. Skip if the added indirection feels excessive for this script's size."
+    }
+  ],
+  "patterns": [
+    {
+      "name": "Consistent connect/run/status abstraction",
+      "description": "The script cleanly separates SSH connection helpers (connectLocal, connectGcp), a generic execution helper (run), and service-state helpers (getStatus, start, stop). This is a solid SRP split for a script of this size."
+    },
+    {
+      "name": "Secret parsing isolated to dedicated functions",
+      "description": "parseCertPem and parseTunnelToken each own a single parsing concern. Both functions are pure (no side effects) and independently testable — a good DIP-aligned pattern."
+    }
+  ]
+}
