@@ -350,7 +350,7 @@ jobs:
         run: |
           ssh "$GCP_HOST" bash -s << 'SWAP'
           set -e
-          if [ "$(swapon --show | wc -l)" -eq 0 ]; then
+          if [ "$(sudo swapon --show | wc -l)" -eq 0 ]; then
             echo "[SWAP] No swap active — creating 2 GB swapfile..."
             sudo fallocate -l 2G /swapfile
             sudo chmod 600 /swapfile
@@ -371,7 +371,7 @@ jobs:
           fi
           echo "[SWAP] Memory status:"
           free -h
-          swapon --show
+          sudo swapon --show
           SWAP
 
       - name: Compute app version
