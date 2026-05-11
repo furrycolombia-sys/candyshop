@@ -23,10 +23,27 @@ set +x  # Never echo commands — prevents secrets leaking into CI log streams
 if [ -z "${DEPLOY_DETACHED:-}" ]; then
   DEPLOY_LOG=/tmp/deploy-candyshop.log
   DEPLOY_DONE=/tmp/deploy-candyshop.done
+  DEPLOY_PIDFILE=/tmp/deploy-candyshop.pid
+
+  # Kill any previous deploy still running on this server.
+  # GHA job timeouts leave detached nohup processes running; on the e2-micro
+  # that starves every CPU cycle, making the new deploy hang immediately.
+  if [ -f "$DEPLOY_PIDFILE" ]; then
+    PREV_PID=$(cat "$DEPLOY_PIDFILE" 2>/dev/null || true)
+    if [ -n "$PREV_PID" ] && kill -0 "$PREV_PID" 2>/dev/null; then
+      echo "[DEPLOY] Stopping previous deploy (PID $PREV_PID) to free CPU..."
+      pkill -KILL -P "$PREV_PID" 2>/dev/null || true
+      kill -KILL "$PREV_PID" 2>/dev/null || true
+      sleep 2
+    fi
+    rm -f "$DEPLOY_PIDFILE"
+  fi
+
   rm -f "$DEPLOY_LOG" "$DEPLOY_DONE"
 
   DEPLOY_DETACHED=1 nohup bash "$0" "$@" >"$DEPLOY_LOG" 2>&1 &
   BG_PID=$!
+  echo "$BG_PID" > "$DEPLOY_PIDFILE"
 
   # Stream log back — keeps the SSH/WebSocket alive AND surfaces build output.
   # GNU tail exits automatically when the watched PID exits (Linux coreutils).
@@ -44,6 +61,23 @@ if [ -z "${DEPLOY_DETACHED:-}" ]; then
   DEPLOY_EXIT=$(cat "$DEPLOY_DONE" 2>/dev/null || echo 1)
   exit "$DEPLOY_EXIT"
 fi
+
+# ─── Kill any lingering deploy from a previous timed-out CI job ──────────────
+# CI passes DEPLOY_DETACHED=1 directly, bypassing the wrapper block above.
+# GHA job timeouts leave nohup'd deploy processes running on the e2-micro;
+# those zombies consume all CPU and make the new deploy hang from the start.
+_DEPLOY_PIDFILE=/tmp/deploy-candyshop.pid
+if [ -f "$_DEPLOY_PIDFILE" ]; then
+  _PREV_PID=$(cat "$_DEPLOY_PIDFILE" 2>/dev/null || true)
+  if [ -n "$_PREV_PID" ] && [ "$_PREV_PID" != "$$" ] && kill -0 "$_PREV_PID" 2>/dev/null; then
+    echo "[DEPLOY] Killing previous deploy (PID $_PREV_PID) — freeing CPU on e2-micro..."
+    pkill -KILL -P "$_PREV_PID" 2>/dev/null || true
+    kill -KILL "$_PREV_PID" 2>/dev/null || true
+    sleep 2
+  fi
+fi
+echo "$$" > "$_DEPLOY_PIDFILE"
+# ─────────────────────────────────────────────────────────────────────────────
 
 # ─── Telegram deploy notifications ───────────────────────────────────────────
 # Extract Telegram vars early from the env file so we can notify before the full
@@ -107,6 +141,7 @@ DEPLOY_START=$(date +%s)
 _on_exit() {
   local code=$?
   echo $code >/tmp/deploy-candyshop.done
+  rm -f /tmp/deploy-candyshop.pid 2>/dev/null || true
   # Ensure all ephemeral secrets files are removed on any exit path (early
   # failure, success, or signal) — don't rely solely on the CI cleanup step.
   rm -f "${ENV_FILE:-/tmp/.candyshop-build.env}" 2>/dev/null || true
@@ -143,15 +178,18 @@ log()  { echo -e "${GREEN}[DEPLOY]${NC} $1"; }
 warn() { echo -e "${YELLOW}[WARN]${NC} $1"; }
 err()  { echo -e "${RED}[ERROR]${NC} $1"; exit 1; }
 
-# Load nvm
+# Activate Node 22 via direct PATH — avoids sourcing the full 3000-line nvm.sh
+# which takes 5+ minutes on the e2-micro due to CPU/RAM constraints.
 echo "[DEPLOY] Script started at $(date)"
 export NVM_DIR="$HOME/.nvm"
-echo "[DEPLOY] Loading NVM from $NVM_DIR"
-[ -s "$NVM_DIR/nvm.sh" ] && source "$NVM_DIR/nvm.sh" || err "NVM not found at $NVM_DIR"
-echo "[DEPLOY] Activating Node 22"
-nvm use 22 || err "Node 22 not available via nvm — run: nvm install 22"
+echo "[DEPLOY] Activating Node 22 (direct path)..."
+NODE_22_BIN=$(ls -d "$NVM_DIR/versions/node"/v22.*/bin 2>/dev/null | sort -V | tail -1)
+if [ -z "$NODE_22_BIN" ] || [ ! -f "$NODE_22_BIN/node" ]; then
+  err "Node 22 not found in $NVM_DIR/versions/node — run: nvm install 22"
+fi
+export PATH="$NODE_22_BIN:$PATH"
 
-log "Node $(node --version) | PM2 $(pm2 --version)"
+log "Node $(node --version)"
 notify_telegram "$(printf '🚀 <b>Deploy started</b>  •  <code>%s</code>\nBranch: <code>%s</code>' "$_safe_hostname" "$BRANCH")"
 
 # =============================================================================
@@ -167,7 +205,7 @@ if [ ! -d ".git" ]; then
 else
   git remote set-url origin "$REPO_URL" 2>/dev/null || true
 fi
-git fetch origin "$BRANCH" --depth 1
+timeout 120 git fetch origin "$BRANCH" --depth 1 || err "git fetch timed out or failed after 120s"
 git checkout -B "$BRANCH" FETCH_HEAD
 git clean -fd
 
