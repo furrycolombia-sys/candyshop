@@ -1,0 +1,52 @@
+# CI Dockerfile context — builds from source inside Docker (Alpine Linux)
+#
+# Docker applies BOTH the root .dockerignore AND this file ADDITIVELY.
+# (Per-Dockerfile .dockerignore rules are appended after all root .dockerignore rules.)
+#
+# The root .dockerignore is optimized for the prod/rsync Dockerfile which uses
+# pre-built artifacts only — it excludes the source files the CI build needs.
+# This file re-includes them with `!` negations, then re-excludes CI-specific cruft.
+
+# ── Re-include what root .dockerignore excluded (CI builds from source) ───────────
+!packages
+!packages/**
+!package.json
+!pnpm-lock.yaml
+!pnpm-workspace.yaml
+!.npmrc
+!**/tsconfig.json
+!**/tsconfig.base.json
+!apps/*/src
+!apps/*/src/**
+# App postcss/config files excluded by root's *.config.mjs and *.config.js rules
+!apps/*/*.config.mjs
+!apps/*/*.config.js
+!packages/*/*.config.mjs
+!packages/*/*.config.js
+
+# ── Re-exclude after re-include: installed fresh inside Docker ────────────────────
+packages/*/node_modules
+packages/*/node_modules/**
+
+# ── Pre-built artifacts — rebuilt from source inside Docker ──────────────────────
+**/.next
+**/dist
+**/build
+
+# ── E2E / test artifacts (not needed for Next.js build) ──────────────────────────
+apps/*/e2e
+apps/*/test-results
+apps/*/playwright-report
+**/coverage
+**/.nyc_output
+**/.turbo
+
+# ── Dev/deployment tooling (not needed inside the image) ─────────────────────────
+supabase
+.ai-context
+.claude
+.agents
+docs
+
+# ── Environment and secrets (passed as build args) ───────────────────────────────
+# .env* and .secrets are already excluded by root .dockerignore

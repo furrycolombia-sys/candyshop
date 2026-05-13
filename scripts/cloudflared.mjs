@@ -14,7 +14,7 @@
  */
 
 import { spawn } from "node:child_process";
-import { writeFileSync } from "node:fs";
+import { mkdirSync, openSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { resolve } from "node:path";
 import { loadEnv } from "./load-env.mjs";
@@ -98,7 +98,7 @@ if (tunnelId) {
   }
   baseHost = new URL(siteUrl).hostname.split(".").slice(-2).join(".");
 
-  const configPath = resolve(homedir(), ".cloudflared", "config.yml");
+  const configPath = resolve(homedir(), ".cloudflared", `${targetEnv}-config.yml`);
   const config = `tunnel: ${tunnelId}
 credentials-file: ${credentialsFile}
 protocol: http2
@@ -132,7 +132,7 @@ ingress:
 `;
   writeFileSync(configPath, config, "utf-8");
   console.log(
-    `✓ Generated ~/.cloudflared/config.yml (app: ${appPort}, supabase: ${supabasePort})`,
+    `✓ Generated ~/.cloudflared/${targetEnv}-config.yml (app: ${appPort}, supabase: ${supabasePort})`,
   );
 }
 
@@ -168,13 +168,26 @@ for (const name of tunnelNames) {
     continue;
   }
 
+  const cloudflaredDir = resolve(homedir(), ".cloudflared");
+  try {
+    mkdirSync(cloudflaredDir, { recursive: true });
+  } catch {
+    // already exists
+  }
+  const logFile = resolve(
+    cloudflaredDir,
+    `${name.toLowerCase()}-${targetEnv}.log`,
+  );
+  const logFd = openSync(logFile, "a");
+
   const child = spawn("cloudflared", ["tunnel", "run", "--token", token], {
     detached: true,
-    stdio: "ignore",
+    stdio: ["ignore", logFd, logFd],
   });
   child.unref();
 
   console.log(`✓ Tunnel launched: ${name}`);
+  console.log(`   Logs: tail -f ${logFile}`);
   launchedCount++;
 }
 

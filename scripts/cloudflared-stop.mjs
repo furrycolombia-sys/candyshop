@@ -70,10 +70,9 @@ for (const name of tunnelNames) {
 
   let result;
   if (isWindows) {
-    // On Windows, kill all cloudflared.exe processes (token matching not available)
-    result = spawnSync("taskkill", ["/F", "/IM", "cloudflared.exe"], {
-      stdio: "pipe",
-    });
+    // On Windows, use WMI to kill only cloudflared processes running with this specific token
+    const ps = `$procs = Get-CimInstance Win32_Process -Filter "Name = 'cloudflared.exe'" | Where-Object { $_.CommandLine -like '*${token}*' }; if ($procs) { $procs | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }; exit 0 } else { exit 1 }`;
+    result = spawnSync("powershell", ["-Command", ps], { stdio: "pipe" });
   } else {
     result = spawnSync(
       "pkill",
