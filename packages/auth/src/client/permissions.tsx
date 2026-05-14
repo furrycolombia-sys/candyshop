@@ -53,6 +53,10 @@ export function useCurrentUserPermissions() {
   // network call still in-flight) would call clearPermCache() and wipe the
   // cookie that SSR just seeded, causing a flicker on the next navigation.
   const hadUserIdRef = useRef(false);
+  // isPermLoading tracks whether the DB fetch is in-flight. Starts true so
+  // consumers (e.g. PaymentsSidebar) can wait for data-loading="false" before
+  // asserting on permission-gated elements.
+  const [isPermLoading, setIsPermLoading] = useState(true);
 
   useEffect(() => {
     if (authLoading) return;
@@ -67,6 +71,7 @@ export function useCurrentUserPermissions() {
         if (hadUserIdRef.current) {
           clearPermCache();
         }
+        if (isActive) setIsPermLoading(false);
         return;
       }
       hadUserIdRef.current = true;
@@ -88,7 +93,10 @@ export function useCurrentUserPermissions() {
       if (!isActive) return;
 
       // If user_permissions fails we have no safe baseline — abort without caching.
-      if (error) return;
+      if (error) {
+        setIsPermLoading(false);
+        return;
+      }
       // seller_admins is best-effort; a failure leaves delegateData null and
       // the loop below falls back to [] so user_permissions still takes effect.
 
@@ -116,6 +124,7 @@ export function useCurrentUserPermissions() {
         }
         return prev;
       });
+      setIsPermLoading(false);
     }
 
     void loadPermissions();
@@ -128,6 +137,7 @@ export function useCurrentUserPermissions() {
   return {
     grantedKeys,
     isAuthenticated,
+    isLoading: authLoading || isPermLoading,
     hasPermission: (
       required: string | readonly string[],
       mode: PermissionRequirementMode = "all",

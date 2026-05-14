@@ -177,7 +177,7 @@ describe("validateDisplayBlock", () => {
   });
 
   it("returns error for unknown block type", () => {
-    expect(validateDisplayBlock({ type: "unknown" })).not.toBeNull();
+    expect(validateDisplayBlock({ type: "unknown" as never })).not.toBeNull();
   });
 
   it("returns error for missing type", () => {
@@ -218,7 +218,7 @@ describe("validateFormField", () => {
 
   it("returns error for unknown field type", () => {
     expect(
-      validateFormField({ type: "checkbox", label_en: "Accept" }),
+      validateFormField({ type: "checkbox" as never, label_en: "Accept" }),
     ).not.toBeNull();
   });
 

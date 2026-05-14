@@ -5,7 +5,9 @@ const mockHasPermission = vi.fn(() => true);
 const mockAddMutate = vi.fn();
 const mockRemoveMutate = vi.fn();
 const mockUseDelegates = vi.fn(() => ({ data: [], isLoading: false }));
-const mockUseSupabaseAuth = vi.fn(() => ({ user: { id: "seller-1" } }));
+const mockUseSupabaseAuth = vi.fn(() => ({
+  user: { id: "seller-1" } as { id: string } | null,
+}));
 
 vi.mock("next-intl", () => ({
   useTranslations: () => (key: string) => key,

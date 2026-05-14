@@ -33,7 +33,9 @@ describe("AuditFilters", () => {
   };
 
   it("renders only the 'allTables' option when tableNames is undefined", () => {
-    mockUseAuditTableNames.mockReturnValueOnce({ data: undefined });
+    mockUseAuditTableNames.mockReturnValueOnce({
+      data: undefined as unknown as string[],
+    });
     render(<AuditFilters {...defaultProps} />);
 
     const select = screen.getByTestId("audit-filter-table");

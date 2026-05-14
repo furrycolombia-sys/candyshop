@@ -5,11 +5,15 @@ const mockHasPermission = vi.fn(() => true);
 const mockAddMutate = vi.fn();
 const mockRemoveMutate = vi.fn();
 const mockUseProductById = vi.fn(() => ({
-  data: { id: "product-1", name_en: "Test Product" },
+  data: { id: "product-1", name_en: "Test Product" } as
+    | { id: string; name_en: string | null }
+    | undefined,
   isLoading: false,
 }));
 const mockUseDelegates = vi.fn(() => ({ data: [], isLoading: false }));
-const mockUseSupabaseAuth = vi.fn(() => ({ user: { id: "seller-1" } }));
+const mockUseSupabaseAuth = vi.fn(() => ({
+  user: { id: "seller-1" } as { id: string } | null,
+}));
 
 vi.mock("next-intl", () => ({
   useTranslations: () => (key: string) => key,

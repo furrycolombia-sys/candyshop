@@ -85,7 +85,7 @@ describe("getCartCookieOptions — browser (with window)", () => {
       writable: true,
       configurable: true,
     });
-    mockGetSharedCookieDomain.mockReturnValue();
+    mockGetSharedCookieDomain.mockReturnValue(void 0);
 
     const options = getCartCookieOptions();
     expect(options.secure).toBe(false);
@@ -98,7 +98,7 @@ describe("getCartCookieOptions — browser (with window)", () => {
       writable: true,
       configurable: true,
     });
-    mockGetSharedCookieDomain.mockReturnValue();
+    mockGetSharedCookieDomain.mockReturnValue(void 0);
 
     const options = getCartCookieOptions();
     expect(options.domain).toBeUndefined();
@@ -108,7 +108,7 @@ describe("getCartCookieOptions — browser (with window)", () => {
 describe("persistCartCookie", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockGetSharedCookieDomain.mockReturnValue();
+    mockGetSharedCookieDomain.mockReturnValue(void 0);
     Object.defineProperty(globalThis, "location", {
       value: { protocol: "http:", hostname: "localhost" },
       writable: true,
@@ -118,9 +118,9 @@ describe("persistCartCookie", () => {
 
   it("calls setCookie with serialized cart items", () => {
     const items = [
-      { id: "p1", quantity: 2, sellerId: "s1" },
-      { id: "p2", quantity: 1, sellerId: "s2" },
-    ] as Parameters<typeof persistCartCookie>[0];
+      { id: "p1", quantity: 2, seller_id: "s1" },
+      { id: "p2", quantity: 1, seller_id: "s2" },
+    ] as unknown as Parameters<typeof persistCartCookie>[0];
 
     persistCartCookie(items);
 
@@ -169,7 +169,7 @@ describe("persistCartCookie", () => {
 describe("removeCartCookie", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockGetSharedCookieDomain.mockReturnValue();
+    mockGetSharedCookieDomain.mockReturnValue(void 0);
     Object.defineProperty(globalThis, "location", {
       value: { protocol: "http:", hostname: "localhost" },
       writable: true,

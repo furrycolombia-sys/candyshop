@@ -257,7 +257,7 @@ describe("insertAuditLog", () => {
     await insertAuditLog(supabase, "INSERT", "products", { id: "1" });
 
     expect(capturedRequest).not.toBeNull();
-    const body = await (capturedRequest as Request).json();
+    const body = await (capturedRequest as unknown as Request).json();
     expect(body.action_type).toBe("INSERT");
     expect(body.table_name).toBe("products");
     expect(body.row_data).toEqual({ id: "1" });

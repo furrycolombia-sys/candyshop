@@ -135,7 +135,7 @@ describe("clearCartCookie", () => {
   });
 
   it("skips domain computation and does not dispatch event when window is undefined", () => {
-    vi.stubGlobal("window");
+    vi.stubGlobal("window", void 0);
 
     // Should not throw and deleteCookie is still called
     clearCartCookie();
@@ -152,7 +152,7 @@ describe("subscribeToCartCookie", () => {
   });
 
   it("returns a callable no-op when window is not available", () => {
-    vi.stubGlobal("window");
+    vi.stubGlobal("window", void 0);
 
     const unsubscribe = subscribeToCartCookie(vi.fn());
     expect(typeof unsubscribe).toBe("function");

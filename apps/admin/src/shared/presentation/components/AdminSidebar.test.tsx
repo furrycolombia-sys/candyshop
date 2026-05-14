@@ -45,6 +45,7 @@ describe("AdminSidebar", () => {
   ): ReturnType<typeof useCurrentUserPermissions> => ({
     grantedKeys,
     isAuthenticated: true,
+    isLoading: false,
     hasPermission: (required, mode = "all") => {
       const requiredKeys = Array.isArray(required) ? required : [required];
       if (requiredKeys.length === 0) return true;
