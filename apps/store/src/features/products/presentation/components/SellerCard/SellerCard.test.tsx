@@ -19,12 +19,9 @@ vi.mock("shared", () => ({
   appUrls: { auth: "https://auth.example.com" },
 }));
 
-vi.mock(
-  "@/features/products/application/hooks/useSellerInfo",
-  () => ({
-    useSellerInfo: (sellerId: string | null) => mockUseSellerInfo(sellerId),
-  }),
-);
+vi.mock("@/features/products/application/hooks/useSellerInfo", () => ({
+  useSellerInfo: (sellerId: string | null) => mockUseSellerInfo(sellerId),
+}));
 
 vi.mock("ui", () => ({
   Avatar: ({ children, ...props }: React.PropsWithChildren<object>) => (

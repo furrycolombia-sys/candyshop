@@ -60,5 +60,4 @@ test.describe("Product detail — seller card", () => {
       new RegExp(`/profile/${product.seller_id as string}`),
     );
   });
-
 });

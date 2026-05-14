@@ -537,10 +537,10 @@ After creating 02-analysis.md, show a brief handoff message:
 
 ### Artifacts Created
 
-| File                  | Status     |
-| --------------------- | ---------- |
-| `00-task-overview.md` | ✅ Created |
-| `01-setup.md`         | ✅ Created |
+| File                  | Status                                       |
+| --------------------- | -------------------------------------------- |
+| `00-task-overview.md` | ✅ Created                                   |
+| `01-setup.md`         | ✅ Created                                   |
 | `02-analysis.md`      | ✅ Created (includes Design Questions brief) |
 
 ### Key Findings
@@ -591,10 +591,12 @@ Skill('superpowers:brainstorming', args: `
 **Approach chosen:** {one-sentence summary of the selected approach}
 
 **Key decisions:**
+
 - {Decision 1}
 - {Decision 2}
 
 **Constraints identified:**
+
 - {Hard constraints surfaced during brainstorming — or "None"}
 
 **Spec:** `docs/superpowers/specs/{YYYY-MM-DD}-{topic}-design.md`

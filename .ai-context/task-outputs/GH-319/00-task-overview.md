@@ -2,14 +2,14 @@
 
 ## Issue Details
 
-| Field        | Value                                                                                 |
-|--------------|---------------------------------------------------------------------------------------|
-| **Issue**    | [#319](https://github.com/furrycolombia-sys/candyshop/issues/319)                    |
-| **Title**    | feat(store): show seller/creator info on product pages                                |
-| **Type**     | feat                                                                                  |
-| **Labels**   | enhancement                                                                           |
-| **Assignee** | —                                                                                     |
-| **Created**  | 2026-05-14                                                                            |
+| Field        | Value                                                             |
+| ------------ | ----------------------------------------------------------------- |
+| **Issue**    | [#319](https://github.com/furrycolombia-sys/candyshop/issues/319) |
+| **Title**    | feat(store): show seller/creator info on product pages            |
+| **Type**     | feat                                                              |
+| **Labels**   | enhancement                                                       |
+| **Assignee** | —                                                                 |
+| **Created**  | 2026-05-14                                                        |
 
 ## Description
 
@@ -19,14 +19,14 @@ Product pages in the store don't show who created/sells the item. We should disp
 
 The infrastructure is already in place but not wired up to the UI:
 
-| What | Status |
-|------|--------|
-| `user_profiles` table (`display_name`, `display_avatar_url`, `avatar_url`) | ✅ exists |
-| `products.seller_id` FK to `auth.users` | ✅ exists |
-| `useSellerProfiles()` hook in store | ✅ exists (used in cart only) |
-| Public read-only profile page at `auth/[locale]/profile/[id]` | ✅ exists |
-| Seller info on product detail page | ❌ missing |
-| Seller info on product cards | ❌ missing |
+| What                                                                       | Status                        |
+| -------------------------------------------------------------------------- | ----------------------------- |
+| `user_profiles` table (`display_name`, `display_avatar_url`, `avatar_url`) | ✅ exists                     |
+| `products.seller_id` FK to `auth.users`                                    | ✅ exists                     |
+| `useSellerProfiles()` hook in store                                        | ✅ exists (used in cart only) |
+| Public read-only profile page at `auth/[locale]/profile/[id]`              | ✅ exists                     |
+| Seller info on product detail page                                         | ❌ missing                    |
+| Seller info on product cards                                               | ❌ missing                    |
 
 ## Acceptance Criteria
 

@@ -2,12 +2,12 @@
 
 ## Branch Information
 
-| Field         | Value                                          |
-|---------------|------------------------------------------------|
+| Field         | Value                                           |
+| ------------- | ----------------------------------------------- |
 | **Branch**    | `feat/GH-319_Show-Seller-Info-On-Product-Pages` |
-| **Source**    | `develop`                                      |
-| **PR Target** | `develop`                                      |
-| **Created**   | 2026-05-14                                     |
+| **Source**    | `develop`                                       |
+| **PR Target** | `develop`                                       |
+| **Created**   | 2026-05-14                                      |
 
 ## Git Status
 

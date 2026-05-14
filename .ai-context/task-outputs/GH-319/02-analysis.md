@@ -2,27 +2,27 @@
 
 ## Branch Context
 
-| Field         | Value                                          |
-|---------------|------------------------------------------------|
+| Field         | Value                                           |
+| ------------- | ----------------------------------------------- |
 | **Branch**    | `feat/GH-319_Show-Seller-Info-On-Product-Pages` |
-| **Type**      | `feat`                                         |
-| **Source**    | `develop`                                      |
-| **PR Target** | `develop`                                      |
+| **Type**      | `feat`                                          |
+| **Source**    | `develop`                                       |
+| **PR Target** | `develop`                                       |
 
 ---
 
 ## Relevant Files
 
-| File | Purpose | Action Needed |
-|------|---------|---------------|
-| `apps/store/src/features/products/presentation/pages/ProductDetailPage.tsx` | Product detail page — lines 77-79 are where seller card slots in | Modify: add `<SellerCard>` after `<ProductSections>` |
-| `apps/store/src/features/cart/application/hooks/useSellerProfiles.ts` | Fetches `Record<sellerId, displayName>` for a list of IDs | Reference only — create a new product-scoped hook instead (it only returns display name, not avatar) |
-| `apps/store/src/features/products/domain/` | Product domain types | Reference: `seller_id: string \| null` on `Product` |
-| `packages/ui/src/components/avatar.tsx` | `<Avatar>` + `<AvatarImage>` + `<AvatarFallback>` | Use as-is |
-| `packages/shared/src/config/appUrls.ts` | `appUrls.auth` — resolved from env | Use `appUrls.auth` for profile link |
-| `apps/store/src/shared/infrastructure/i18n/messages/en.json` | Translation keys — namespace `products.detail` | Add: `viewProfile` key (existing `seller` key covers the title) |
-| `apps/store/src/shared/infrastructure/i18n/messages/es.json` | Spanish translations | Add: matching `viewProfile` key |
-| `apps/store/src/features/products/presentation/components/ProductDetail/HeroSection.test.tsx` | Reference test pattern | Follow for new component tests |
+| File                                                                                          | Purpose                                                          | Action Needed                                                                                        |
+| --------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| `apps/store/src/features/products/presentation/pages/ProductDetailPage.tsx`                   | Product detail page — lines 77-79 are where seller card slots in | Modify: add `<SellerCard>` after `<ProductSections>`                                                 |
+| `apps/store/src/features/cart/application/hooks/useSellerProfiles.ts`                         | Fetches `Record<sellerId, displayName>` for a list of IDs        | Reference only — create a new product-scoped hook instead (it only returns display name, not avatar) |
+| `apps/store/src/features/products/domain/`                                                    | Product domain types                                             | Reference: `seller_id: string \| null` on `Product`                                                  |
+| `packages/ui/src/components/avatar.tsx`                                                       | `<Avatar>` + `<AvatarImage>` + `<AvatarFallback>`                | Use as-is                                                                                            |
+| `packages/shared/src/config/appUrls.ts`                                                       | `appUrls.auth` — resolved from env                               | Use `appUrls.auth` for profile link                                                                  |
+| `apps/store/src/shared/infrastructure/i18n/messages/en.json`                                  | Translation keys — namespace `products.detail`                   | Add: `viewProfile` key (existing `seller` key covers the title)                                      |
+| `apps/store/src/shared/infrastructure/i18n/messages/es.json`                                  | Spanish translations                                             | Add: matching `viewProfile` key                                                                      |
+| `apps/store/src/features/products/presentation/components/ProductDetail/HeroSection.test.tsx` | Reference test pattern                                           | Follow for new component tests                                                                       |
 
 ---
 
@@ -50,8 +50,9 @@ Composite API: `<Avatar>` + `<AvatarImage src={...} />` + `<AvatarFallback>{init
 **Location:** `packages/shared/src/config/appUrls.ts`
 
 `appUrls.auth` resolves to the auth app base URL. Profile link pattern:
+
 ```typescript
-`${appUrls.auth}/${locale}/profile/${sellerId}`
+`${appUrls.auth}/${locale}/profile/${sellerId}`;
 ```
 
 ### i18n Namespace
@@ -59,12 +60,14 @@ Composite API: `<Avatar>` + `<AvatarImage src={...} />` + `<AvatarFallback>{init
 **Location:** `apps/store/src/shared/infrastructure/i18n/messages/en.json` — namespace `products.detail`
 
 Existing relevant keys:
+
 - `"seller": "About the Seller"` — use as section title
 - Add: `"viewProfile": "View profile"`
 
 ### Test Pattern
 
 **Reference:** `HeroSection.test.tsx`
+
 - `vi.mock()` all external hooks
 - `vi.mock("shared", ...)` with `tid` returning `{ "data-testid": id }`
 - `vi.mock("next-intl", ...)` returning key strings
@@ -75,16 +78,16 @@ Existing relevant keys:
 
 ## Requirements Analysis
 
-| Requirement | Existing Support | Gap / Action |
-|-------------|-----------------|--------------|
-| Fetch seller display name | `useSellerProfiles()` ✅ | Must also fetch `display_avatar_url` + `avatar_url` — extend or new hook |
-| Fetch seller avatar URL | Nothing in store ❌ | New hook queries both name + avatar fields |
-| Render avatar with fallback | `<Avatar>` in ui package ✅ | None |
-| Link to public profile | `appUrls.auth` ✅ | Compose URL with locale + seller_id |
-| Hide when seller_id is null | Pattern in cart ✅ | Guard in `ProductDetailPage` |
-| i18n section title | `products.detail.seller` ✅ | None |
-| i18n "View profile" label | Missing ❌ | Add key to en.json + es.json |
-| Unit tests | Pattern established ✅ | Create `SellerCard.test.tsx` |
+| Requirement                 | Existing Support            | Gap / Action                                                             |
+| --------------------------- | --------------------------- | ------------------------------------------------------------------------ |
+| Fetch seller display name   | `useSellerProfiles()` ✅    | Must also fetch `display_avatar_url` + `avatar_url` — extend or new hook |
+| Fetch seller avatar URL     | Nothing in store ❌         | New hook queries both name + avatar fields                               |
+| Render avatar with fallback | `<Avatar>` in ui package ✅ | None                                                                     |
+| Link to public profile      | `appUrls.auth` ✅           | Compose URL with locale + seller_id                                      |
+| Hide when seller_id is null | Pattern in cart ✅          | Guard in `ProductDetailPage`                                             |
+| i18n section title          | `products.detail.seller` ✅ | None                                                                     |
+| i18n "View profile" label   | Missing ❌                  | Add key to en.json + es.json                                             |
+| Unit tests                  | Pattern established ✅      | Create `SellerCard.test.tsx`                                             |
 
 ---
 
@@ -102,20 +105,20 @@ Existing relevant keys:
 
 ### Files to Create
 
-| File | Description |
-|------|-------------|
-| `apps/store/src/features/products/application/hooks/useSellerInfo.ts` | New hook: queries `user_profiles` for a single seller, returns `displayName` + `avatarUrl` |
-| `apps/store/src/features/products/presentation/components/SellerCard/SellerCard.tsx` | New component: avatar, name, profile link |
-| `apps/store/src/features/products/presentation/components/SellerCard/SellerCard.test.tsx` | Unit tests |
-| `apps/store/src/features/products/presentation/components/SellerCard/index.ts` | Barrel export |
+| File                                                                                      | Description                                                                                |
+| ----------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| `apps/store/src/features/products/application/hooks/useSellerInfo.ts`                     | New hook: queries `user_profiles` for a single seller, returns `displayName` + `avatarUrl` |
+| `apps/store/src/features/products/presentation/components/SellerCard/SellerCard.tsx`      | New component: avatar, name, profile link                                                  |
+| `apps/store/src/features/products/presentation/components/SellerCard/SellerCard.test.tsx` | Unit tests                                                                                 |
+| `apps/store/src/features/products/presentation/components/SellerCard/index.ts`            | Barrel export                                                                              |
 
 ### Files to Modify
 
-| File | Change |
-|------|--------|
+| File                                                                        | Change                                                                      |
+| --------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
 | `apps/store/src/features/products/presentation/pages/ProductDetailPage.tsx` | Add `<SellerCard sellerId={product.seller_id} />` after `<ProductSections>` |
-| `apps/store/src/shared/infrastructure/i18n/messages/en.json` | Add `products.detail.viewProfile` |
-| `apps/store/src/shared/infrastructure/i18n/messages/es.json` | Add `products.detail.viewProfile` (Spanish) |
+| `apps/store/src/shared/infrastructure/i18n/messages/en.json`                | Add `products.detail.viewProfile`                                           |
+| `apps/store/src/shared/infrastructure/i18n/messages/es.json`                | Add `products.detail.viewProfile` (Spanish)                                 |
 
 ### Key Insights
 

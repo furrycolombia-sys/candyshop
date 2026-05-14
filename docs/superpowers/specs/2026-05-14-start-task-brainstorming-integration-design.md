@@ -11,7 +11,7 @@
 `/start-task` ends at codebase analysis and tells you to "start implementing." There is no structured design step before implementation begins, which means:
 
 - Design decisions happen ad-hoc during implementation
-- There's no record of *why* a particular approach was chosen
+- There's no record of _why_ a particular approach was chosen
 - The GitHub issue has no trace of design discussions that happened in the editor
 
 ---
@@ -57,20 +57,24 @@ All existing sections are preserved. A new terminal section is added:
 > and will drive the clarifying questions phase.
 
 ### What we know (pre-answered by analysis)
+
 - Relevant files: [list from analysis above]
 - Existing patterns to follow: [from analysis above]
 - Hard constraints: [migrations needed, breaking changes, DB schema impacts, etc.]
 
 ### Open questions for design dialogue
+
 - [ ] {Question 1 — e.g., "Should this be a new hook or extend the existing one?"}
 - [ ] {Question 2 — e.g., "Does this belong in the feature layer or shared?"}
 - [ ] {Question 3 — anything ambiguous from the issue or codebase}
 
 ### Suggested design scope
+
 {1–2 sentences on what a complete implementation covers, derived from the issue + analysis}
 ```
 
 **Rules for generating the Design Questions section:**
+
 - Open questions are genuine unknowns surfaced during analysis — not invented
 - If the task is clear and there are no real unknowns, the list is short (0–1 items) and brainstorming moves quickly to approach proposals
 - The "What we know" block summarizes findings already in the analysis — it does not duplicate detail, just points back to the sections above
@@ -90,6 +94,7 @@ Brainstorming's first user-facing message becomes:
 > "I've reviewed the codebase analysis for GH-{number}. I want to understand [first open question]..."
 
 The rest of the brainstorming flow is unchanged:
+
 - Clarifying questions (one at a time)
 - 2–3 approach proposals with trade-offs
 - Design sections presented for approval
@@ -138,11 +143,13 @@ After the spec is written and approved, and before brainstorming invokes `writin
 **Approach chosen:** [one-sentence summary of the selected approach]
 
 **Key decisions:**
+
 - [Decision 1]
 - [Decision 2]
 - [Decision 3]
 
 **Constraints identified:**
+
 - [Hard constraints surfaced during brainstorming]
 
 **Spec:** `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md`
@@ -150,6 +157,7 @@ After the spec is written and approved, and before brainstorming invokes `writin
 ```
 
 **Rules:**
+
 - Only posted if a GitHub issue exists (branch name contains `GH-{number}` and issue was successfully fetched in start-task)
 - Posted once — after spec approval, before writing-plans
 - Not updated later
@@ -158,10 +166,10 @@ After the spec is written and approved, and before brainstorming invokes `writin
 
 ## Files to modify
 
-| File | Change |
-|------|--------|
+| File                                 | Change                                                                                                                                                 |
+| ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `.claude/skills/start-task/SKILL.md` | Add Step 13 (invoke brainstorming); restructure Step 12 to remove terminal message; update 02-analysis.md template to include Design Questions section |
-| `.claude/skills/brainstorming/` | No changes — context skip is handled via invocation args |
+| `.claude/skills/brainstorming/`      | No changes — context skip is handled via invocation args                                                                                               |
 
 ## Files to leave unchanged
 
