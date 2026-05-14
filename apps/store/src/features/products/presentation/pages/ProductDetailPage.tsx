@@ -6,6 +6,7 @@ import { tid } from "shared";
 import { useStoreProduct } from "@/features/products/application/hooks/useStoreProducts";
 import { MobileBarWithCart } from "@/features/products/presentation/components/ProductDetail/MobileBarWithCart";
 import { ProductSections } from "@/features/products/presentation/components/ProductDetail/ProductSections";
+import { SellerCard } from "@/features/products/presentation/components/SellerCard";
 import { getCategoryTheme } from "@/shared/domain/categoryConstants";
 import { Link } from "@/shared/infrastructure/i18n";
 
@@ -75,6 +76,8 @@ export function ProductDetailPage({ productId }: ProductDetailPageProps) {
       </div>
 
       <ProductSections product={product} />
+
+      <SellerCard sellerId={product.seller_id} />
 
       <MobileBarWithCart product={product} theme={theme} />
     </div>

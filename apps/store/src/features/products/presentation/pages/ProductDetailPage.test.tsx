@@ -57,6 +57,15 @@ vi.mock(
   }),
 );
 
+vi.mock(
+  "@/features/products/presentation/components/SellerCard",
+  () => ({
+    SellerCard: ({ sellerId }: { sellerId: string | null }) => (
+      <div data-testid="seller-card-mock" data-seller-id={sellerId ?? ""} />
+    ),
+  }),
+);
+
 vi.mock("@/shared/domain/categoryConstants", () => ({
   getCategoryTheme: () => ({
     bg: "var(--mint)",
