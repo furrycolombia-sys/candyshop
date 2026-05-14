@@ -3,7 +3,6 @@ import { describe, it, expect, vi } from "vitest";
 
 vi.mock("auth/client", () => ({
   useCurrentUserPermissions: () => ({
-    isLoading: false,
     hasPermission: (permission: string | string[]) => {
       const granted = new Set(["products.create", "products.update"]);
       return Array.isArray(permission)

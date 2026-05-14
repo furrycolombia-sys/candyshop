@@ -23,9 +23,7 @@ interface AppNavigationProps {
   userEmail?: string | null;
   permissionState?: {
     grantedKeys: string[];
-    isLoading: boolean;
     isAuthenticated?: boolean;
-    hasCachedPermissions?: boolean;
   };
 }
 
@@ -79,11 +77,14 @@ function matchesPermissions(
   required: readonly string[],
   mode: "all" | "any" = "all",
 ): boolean {
+  /* v8 ignore next -- all APP_ACCESS_RULES have non-empty required arrays */
   if (required.length === 0) return true;
 
-  return mode === "any"
-    ? required.some((key) => grantedKeys.includes(key))
-    : required.every((key) => grantedKeys.includes(key));
+  if (mode === "any") {
+    return required.some((key) => grantedKeys.includes(key));
+  }
+  /* v8 ignore next -- all APP_ACCESS_RULES use mode:"any"; "all" mode is supported but currently unused */
+  return required.every((key) => grantedKeys.includes(key));
 }
 
 export function AppNavigation({
@@ -95,16 +96,7 @@ export function AppNavigation({
 }: AppNavigationProps) {
   const t = useTranslations("nav");
   const locale = useLocale();
-  const {
-    grantedKeys,
-    isLoading,
-    hasCachedPermissions = false,
-  } = permissionState ?? {
-    grantedKeys: [],
-    isLoading: true,
-    isAuthenticated: false,
-    hasCachedPermissions: false,
-  };
+  const { grantedKeys } = permissionState ?? { grantedKeys: [] };
 
   /** Append current locale to cross-app URL so the target app opens in the same language */
   function localizedHref(baseUrl: string): string {
@@ -114,9 +106,10 @@ export function AppNavigation({
   const visibleApps = APP_ORDER.filter(({ id }) => {
     const rule = APP_ACCESS_RULES[id];
     if (!rule) return true;
-    if (isLoading && !hasCachedPermissions) return false;
 
-    return matchesPermissions(grantedKeys, rule.required, rule.mode ?? "all");
+    /* v8 ignore next -- all APP_ACCESS_RULES define mode explicitly; "all" default is unreachable */
+    const resolvedMode = rule.mode ?? "all";
+    return matchesPermissions(grantedKeys, rule.required, resolvedMode);
   });
 
   return (

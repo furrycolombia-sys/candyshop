@@ -24,7 +24,6 @@ vi.mock("next/link", () => ({
 
 type PermissionState = {
   grantedKeys: string[];
-  isLoading: boolean;
   isAuthenticated?: boolean;
 };
 
@@ -64,7 +63,6 @@ const defaultLocales = ["en", "es"] as const;
 describe("AppNavigation", () => {
   const defaultPermissionState: PermissionState = {
     grantedKeys: [],
-    isLoading: false,
     isAuthenticated: false,
   };
 
@@ -97,7 +95,7 @@ describe("AppNavigation", () => {
     expect(screen.getByText("t:brand")).toBeInTheDocument();
   });
 
-  it("shows public app links while signed out and hides protected apps", () => {
+  it("shows public app links and hides protected apps when grantedKeys is empty", () => {
     render(
       <AppNavigation
         currentApp="store"
@@ -123,7 +121,6 @@ describe("AppNavigation", () => {
         locales={defaultLocales}
         permissionState={{
           grantedKeys: [],
-          isLoading: false,
           isAuthenticated: true,
         }}
       />,
@@ -141,7 +138,6 @@ describe("AppNavigation", () => {
   it("renders protected app links when the user has module access", () => {
     const permissionState: PermissionState = {
       grantedKeys: ["products.create", "orders.read", "user_permissions.read"],
-      isLoading: false,
       isAuthenticated: true,
     };
 
@@ -168,7 +164,6 @@ describe("AppNavigation", () => {
         locales={defaultLocales}
         permissionState={{
           grantedKeys: ["user_permissions.read"],
-          isLoading: false,
           isAuthenticated: true,
         }}
       />,
@@ -185,7 +180,6 @@ describe("AppNavigation", () => {
   it("appends locale to relative URLs", () => {
     const permissionState: PermissionState = {
       grantedKeys: ["products.read"],
-      isLoading: false,
       isAuthenticated: true,
     };
 
@@ -212,7 +206,6 @@ describe("AppNavigation", () => {
         locales={defaultLocales}
         permissionState={{
           grantedKeys: ["user_permissions.read"],
-          isLoading: false,
           isAuthenticated: true,
         }}
       />,
@@ -250,76 +243,45 @@ describe("AppNavigation", () => {
     expect(screen.queryByTestId("nav-user-email")).not.toBeInTheDocument();
   });
 
-  it("hides protected links while permissions are loading", () => {
-    const permissionState: PermissionState = {
-      grantedKeys: ["products.read", "orders.read", "user_permissions.read"],
-      isLoading: true,
-      isAuthenticated: true,
-    };
-
+  it("shows gated apps immediately when grantedKeys contains the required permission", () => {
     render(
       <AppNavigation
         currentApp="store"
         urls={defaultUrls}
         locales={defaultLocales}
-        permissionState={permissionState}
-      />,
-    );
-
-    expect(screen.queryByTestId("nav-link-studio")).not.toBeInTheDocument();
-    expect(screen.queryByTestId("nav-link-payments")).not.toBeInTheDocument();
-    expect(screen.queryByTestId("nav-link-admin")).not.toBeInTheDocument();
-  });
-
-  it("hides gated apps when isLoading=true and hasCachedPermissions=false", () => {
-    render(
-      <AppNavigation
-        currentApp="store"
-        urls={defaultUrls}
-        locales={defaultLocales}
-        permissionState={{
-          grantedKeys: ["products.create"],
-          isLoading: true,
-          hasCachedPermissions: false,
-        }}
-      />,
-    );
-    expect(screen.queryByTestId("nav-link-studio")).not.toBeInTheDocument();
-  });
-
-  it("shows gated apps when isLoading=true but hasCachedPermissions=true and keys grant access", () => {
-    render(
-      <AppNavigation
-        currentApp="store"
-        urls={defaultUrls}
-        locales={defaultLocales}
-        permissionState={{
-          grantedKeys: ["products.create"],
-          isLoading: true,
-          hasCachedPermissions: true,
-        }}
+        permissionState={{ grantedKeys: ["products.create"] }}
       />,
     );
     expect(screen.getByTestId("nav-link-studio")).toBeInTheDocument();
   });
 
-  it("applies normal permission logic when isLoading=false regardless of hasCachedPermissions", () => {
+  it("hides gated apps when grantedKeys is empty regardless of authentication", () => {
     render(
       <AppNavigation
         currentApp="store"
         urls={defaultUrls}
         locales={defaultLocales}
-        permissionState={{
-          grantedKeys: ["products.create"],
-          isLoading: false,
-          hasCachedPermissions: false,
-        }}
+        permissionState={{ grantedKeys: [], isAuthenticated: true }}
       />,
     );
-    expect(screen.getByTestId("nav-link-studio")).toBeInTheDocument();
+    expect(screen.queryByTestId("nav-link-studio")).not.toBeInTheDocument();
   });
 
-  it("clears preserved protected links after sign-out but keeps public links", () => {
+  it("renders public apps when permissionState prop is omitted", () => {
+    render(
+      <AppNavigation
+        currentApp="store"
+        urls={defaultUrls}
+        locales={defaultLocales}
+        // intentionally omitting permissionState to exercise the ?? fallback
+      />,
+    );
+    expect(screen.getByTestId("nav-link-store")).toBeInTheDocument();
+    expect(screen.getByTestId("nav-link-landing")).toBeInTheDocument();
+    expect(screen.queryByTestId("nav-link-studio")).not.toBeInTheDocument();
+  });
+
+  it("clears protected links when grantedKeys is cleared but keeps public links", () => {
     const { rerender } = render(
       <AppNavigation
         currentApp="store"
@@ -327,7 +289,6 @@ describe("AppNavigation", () => {
         locales={defaultLocales}
         permissionState={{
           grantedKeys: ["products.create"],
-          isLoading: false,
           isAuthenticated: true,
         }}
       />,
@@ -343,7 +304,6 @@ describe("AppNavigation", () => {
         locales={defaultLocales}
         permissionState={{
           grantedKeys: [],
-          isLoading: true,
           isAuthenticated: false,
         }}
       />,

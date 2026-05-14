@@ -95,4 +95,22 @@ describe("SearchBar", () => {
 
     expect(mockSetQuery).toHaveBeenCalledWith(null, expect.any(Object));
   });
+
+  it("initialises with null query treated as empty string", () => {
+    mockQuery = null as unknown as string;
+    render(<SearchBar />);
+    const input = screen.getByTestId("search-bar-input") as HTMLInputElement;
+    expect(input.value).toBe("");
+  });
+
+  it("syncs local value when external query changes", async () => {
+    mockQuery = "";
+    const { rerender } = render(<SearchBar />);
+    mockQuery = "external";
+    rerender(<SearchBar />);
+    await vi.waitFor(() => {
+      const input = screen.getByTestId("search-bar-input") as HTMLInputElement;
+      expect(input.value).toBe("external");
+    });
+  });
 });

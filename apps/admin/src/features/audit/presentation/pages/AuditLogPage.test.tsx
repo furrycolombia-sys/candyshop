@@ -19,11 +19,16 @@ vi.mock("shared", () => ({
   tid: (id: string) => ({ "data-testid": id }),
 }));
 
+const mockHasPermission = vi.fn(() => true);
+
 vi.mock("auth/client", () => ({
   useCurrentUserPermissions: () => ({
-    isLoading: false,
-    hasPermission: () => true,
+    hasPermission: mockHasPermission,
   }),
+}));
+
+vi.mock("@/shared/presentation/components/AccessDeniedState", () => ({
+  AccessDeniedState: () => <div data-testid="access-denied">Denied</div>,
 }));
 
 vi.mock("@/features/audit/application/hooks/useAuditLog", () => ({
@@ -66,6 +71,7 @@ describe("AuditLogPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     capturedFilterProps = {};
+    mockHasPermission.mockReturnValue(true);
   });
 
   it("renders the page with title", () => {
@@ -119,5 +125,12 @@ describe("AuditLogPage", () => {
     expect(mockSetParams).toHaveBeenCalledWith(
       expect.objectContaining({ action: "INSERT", offset: 0 }),
     );
+  });
+
+  it("shows access denied state when audit.read permission is not granted", () => {
+    mockHasPermission.mockReturnValue(false);
+    render(<AuditLogPage />);
+    expect(screen.getByTestId("access-denied")).toBeInTheDocument();
+    expect(screen.queryByTestId("audit-log-page")).not.toBeInTheDocument();
   });
 });

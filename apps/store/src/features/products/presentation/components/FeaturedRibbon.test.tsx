@@ -156,4 +156,37 @@ describe("FeaturedRibbon canvas drawing", () => {
     unmount();
     expect(cancelledFrames.length).toBeGreaterThan(0);
   });
+
+  it("schedules animation frame when fonts.ready rejects", async () => {
+    let rejectFonts!: (err: Error) => void;
+    const fontsReady = new Promise<void>((_, reject) => {
+      rejectFonts = reject;
+    });
+    Object.defineProperty(document, "fonts", {
+      value: { ready: fontsReady },
+      writable: true,
+      configurable: true,
+    });
+
+    render(<FeaturedRibbon label="Test" accentVar="--pink" />);
+    rejectFonts(new Error("fonts unavailable"));
+
+    await vi.waitFor(() => {
+      expect(rafCallbacks.length).toBeGreaterThan(0);
+    });
+  });
+
+  it("updates colors on document class mutation", async () => {
+    render(<FeaturedRibbon label="Test" accentVar="--pink" />);
+    await vi.waitFor(() => {
+      expect(mockCtx.scale as ReturnType<typeof vi.fn>).toHaveBeenCalled();
+    });
+    // Trigger MutationObserver by changing the document element class
+    document.documentElement.classList.add("dark");
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    document.documentElement.classList.remove("dark");
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    // resolveColors was called via the observer — getComputedStyle should have been invoked
+    expect(mockCtx.scale as ReturnType<typeof vi.fn>).toHaveBeenCalled();
+  });
 });

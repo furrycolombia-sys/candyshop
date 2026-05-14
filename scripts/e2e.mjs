@@ -30,6 +30,7 @@ function pnpmSpawnSync(pnpmArgs, opts) {
     ? spawnSync("cmd.exe", ["/d", "/s", "/c", "pnpm", ...pnpmArgs], {
         ...opts,
         shell: false,
+        windowsHide: true,
       })
     : spawnSync("pnpm", pnpmArgs, { ...opts, shell: false });
 }
@@ -39,6 +40,7 @@ function pnpmSpawn(pnpmArgs, opts) {
     ? spawn("cmd.exe", ["/d", "/s", "/c", "pnpm", ...pnpmArgs], {
         ...opts,
         shell: false,
+        windowsHide: true,
       })
     : spawn("pnpm", pnpmArgs, { ...opts, shell: false });
 }

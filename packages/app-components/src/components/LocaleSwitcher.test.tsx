@@ -2,8 +2,10 @@ import { render, screen, fireEvent } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 const mockReplace = vi.fn();
+let mockPathname = "/en/dashboard";
+
 vi.mock("next/navigation", () => ({
-  usePathname: () => "/en/dashboard",
+  usePathname: () => mockPathname,
   useRouter: () => ({ replace: mockReplace }),
 }));
 
@@ -21,6 +23,7 @@ import { LocaleSwitcher } from "./LocaleSwitcher";
 describe("LocaleSwitcher", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockPathname = "/en/dashboard";
   });
 
   it("renders without crashing", () => {
@@ -49,10 +52,30 @@ describe("LocaleSwitcher", () => {
     expect(esButton).toHaveAttribute("aria-checked", "false");
   });
 
-  it("calls router.replace when switching locale", () => {
+  it("calls router.replace when switching locale from localized path", () => {
+    mockPathname = "/en/dashboard";
     render(<LocaleSwitcher locales={["en", "es"]} />);
     fireEvent.click(screen.getByTestId("locale-switch-es"));
-    // startTransition is async, but the mock should have been invoked
+    expect(mockReplace).toHaveBeenCalledWith("/es/dashboard");
+  });
+
+  it("calls router.replace with prefixed path when URL has no locale segment", () => {
+    // Pathname has no locale prefix — the if-branch should be skipped
+    // and segments.join('/') will return '/dashboard', not empty, so it uses that value
+    mockPathname = "/dashboard";
+    render(<LocaleSwitcher locales={["en", "es"]} />);
+    fireEvent.click(screen.getByTestId("locale-switch-es"));
+    // segments = ['', 'dashboard'], segments[1] is 'dashboard' which is not in locales
+    // so it stays as '/dashboard' (false branch of the locale-replace if)
+    expect(mockReplace).toHaveBeenCalledWith("/dashboard");
+  });
+
+  it("uses fallback path when pathname produces empty string", () => {
+    // A single '/' splits into ['', ''] — joining back gives '', triggering the || fallback
+    mockPathname = "/";
+    render(<LocaleSwitcher locales={["en", "es"]} />);
+    fireEvent.click(screen.getByTestId("locale-switch-es"));
+    // segments[1] is '' which is not in locales, join gives '/', router called with '/'
     expect(mockReplace).toHaveBeenCalled();
   });
 

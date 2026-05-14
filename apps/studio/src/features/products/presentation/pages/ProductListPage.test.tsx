@@ -21,7 +21,6 @@ const mockHasPermission = vi.fn((permission: string) =>
 
 vi.mock("auth/client", () => ({
   useCurrentUserPermissions: () => ({
-    isLoading: false,
     hasPermission: mockHasPermission,
   }),
 }));

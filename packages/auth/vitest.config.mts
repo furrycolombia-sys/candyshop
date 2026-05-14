@@ -53,12 +53,10 @@ export default defineConfig({
       exclude: ["node_modules/", "**/*.d.ts", "**/*.config.*", "**/index.ts"],
       cleanOnRerun: false,
       thresholds: {
-        global: {
-          branches: 85,
-          functions: 85,
-          lines: 85,
-          statements: 85,
-        },
+        branches: 85,
+        functions: 85,
+        lines: 85,
+        statements: 85,
       },
     },
   },

@@ -8,10 +8,9 @@ import { SettingsPageContent } from "@/features/settings/presentation/pages/Sett
 import { AccessDeniedState } from "@/shared/presentation/components/AccessDeniedState";
 
 export function SettingsPage() {
-  const { isLoading, hasPermission } = useCurrentUserPermissions();
+  const { hasPermission } = useCurrentUserPermissions();
   const t = useTranslations("common");
 
-  if (isLoading) return null;
   if (!hasPermission("payment_settings.read")) {
     return (
       <AccessDeniedState

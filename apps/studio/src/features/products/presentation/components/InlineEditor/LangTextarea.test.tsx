@@ -6,15 +6,23 @@ vi.mock("shared", () => ({
   tid: (id: string) => ({ "data-testid": id }),
 }));
 
-vi.mock("@/features/products/application/useAutoResize", () => ({
+vi.mock("@/features/products/application/hooks/useAutoResize", () => ({
   useAutoResize: () => vi.fn(),
 }));
 
 import { LangTextarea } from "./LangTextarea";
 
-function Wrapper({ visible = true }: { visible?: boolean }) {
+function Wrapper({
+  visible = true,
+  defaultValue = "Hello",
+  isMultiline = false,
+}: {
+  visible?: boolean;
+  defaultValue?: string;
+  isMultiline?: boolean;
+}) {
   const methods = useForm({
-    defaultValues: { name_en: "Hello" },
+    defaultValues: { name_en: defaultValue },
   });
   return (
     <FormProvider {...methods}>
@@ -23,7 +31,7 @@ function Wrapper({ visible = true }: { visible?: boolean }) {
         control={methods.control as any}
         fieldName="name_en"
         placeholder="Enter name"
-        isMultiline={false}
+        isMultiline={isMultiline}
         className=""
         visible={visible}
         testId="lang-textarea"
@@ -52,5 +60,37 @@ describe("LangTextarea", () => {
       "tabindex",
       "-1",
     );
+  });
+
+  it("uses rows=1 when isMultiline is false", () => {
+    render(<Wrapper isMultiline={false} />);
+    expect(screen.getByTestId("lang-textarea")).toHaveAttribute("rows", "1");
+  });
+
+  it("uses rows=3 when isMultiline is true", () => {
+    render(<Wrapper isMultiline={true} />);
+    expect(screen.getByTestId("lang-textarea")).toHaveAttribute("rows", "3");
+  });
+
+  it("applies dashed border when value is empty", () => {
+    render(<Wrapper defaultValue="" />);
+    const textarea = screen.getByTestId("lang-textarea");
+    expect(textarea).toHaveValue("");
+    // Dashed border class indicates isEmpty=true branch was taken
+    expect(textarea.className).toContain("border-dashed");
+  });
+
+  it("applies transparent border when value is non-empty", () => {
+    render(<Wrapper defaultValue="Hello" />);
+    const textarea = screen.getByTestId("lang-textarea");
+    expect(textarea.className).toContain("border-transparent");
+  });
+
+  it("becomes empty after clearing the value", () => {
+    render(<Wrapper defaultValue="Text" />);
+    const textarea = screen.getByTestId("lang-textarea");
+    fireEvent.change(textarea, { target: { value: "" } });
+    expect(textarea).toHaveValue("");
+    expect(textarea.className).toContain("border-dashed");
   });
 });

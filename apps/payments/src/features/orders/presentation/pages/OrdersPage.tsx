@@ -7,12 +7,8 @@ import { OrdersPageContent } from "@/features/orders/presentation/pages/OrdersPa
 import { AccessDeniedState } from "@/shared/presentation/components/AccessDeniedState";
 
 export function OrdersPage() {
-  const { isLoading, hasPermission } = useCurrentUserPermissions();
+  const { hasPermission } = useCurrentUserPermissions();
   const t = useTranslations("common");
-
-  if (isLoading) {
-    return null;
-  }
 
   if (!hasPermission("orders.read")) {
     return (

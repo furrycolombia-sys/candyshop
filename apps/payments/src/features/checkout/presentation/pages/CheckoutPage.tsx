@@ -7,12 +7,8 @@ import { CheckoutPageContent } from "@/features/checkout/presentation/pages/Chec
 import { AccessDeniedState } from "@/shared/presentation/components/AccessDeniedState";
 
 export function CheckoutPage() {
-  const { isLoading, hasPermission } = useCurrentUserPermissions();
+  const { hasPermission } = useCurrentUserPermissions();
   const t = useTranslations("common");
-
-  if (isLoading) {
-    return null;
-  }
 
   if (!hasPermission(["orders.create", "receipts.create"])) {
     return (

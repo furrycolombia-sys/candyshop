@@ -1,4 +1,6 @@
 import { getServerUserEmail } from "api/supabase/server";
+import { PermissionsProvider } from "auth/client";
+import { readPermCacheServer } from "auth/server";
 import type { Metadata } from "next";
 import { NextIntlClientProvider } from "next-intl";
 import {
@@ -43,22 +45,27 @@ export default async function LocaleLayout({
 
   const messages = await getMessages();
 
-  const userEmail = await getServerUserEmail();
+  const [userEmail, initialGrantedKeys] = await Promise.all([
+    getServerUserEmail(),
+    readPermCacheServer(),
+  ]);
 
   return (
     <ThemeProvider>
       <NextIntlClientProvider messages={messages}>
-        <Providers>
-          <div className="flex min-h-screen flex-col">
-            <AppTopNavigation
-              currentApp="auth"
-              urls={appUrls}
-              locales={routing.locales}
-              userEmail={userEmail}
-            />
-            <div className="flex flex-1">{children}</div>
-          </div>
-        </Providers>
+        <PermissionsProvider initialGrantedKeys={initialGrantedKeys}>
+          <Providers>
+            <div className="flex min-h-screen flex-col">
+              <AppTopNavigation
+                currentApp="auth"
+                urls={appUrls}
+                locales={routing.locales}
+                userEmail={userEmail}
+              />
+              <div className="flex flex-1">{children}</div>
+            </div>
+          </Providers>
+        </PermissionsProvider>
       </NextIntlClientProvider>
     </ThemeProvider>
   );

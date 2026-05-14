@@ -8,10 +8,9 @@ import { UsersPageContent } from "@/features/users/presentation/pages/UsersPageC
 import { AccessDeniedState } from "@/shared/presentation/components/AccessDeniedState";
 
 export function UsersPage() {
-  const { isLoading, hasPermission } = useCurrentUserPermissions();
+  const { hasPermission } = useCurrentUserPermissions();
   const t = useTranslations("common");
 
-  if (isLoading) return null;
   if (!hasPermission("user_permissions.read")) {
     return (
       <AccessDeniedState

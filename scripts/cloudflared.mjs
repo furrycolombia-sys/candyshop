@@ -13,11 +13,13 @@
  *   pnpm tunnel
  */
 
-import { spawn } from "node:child_process";
-import { mkdirSync, openSync, writeFileSync } from "node:fs";
+import { spawn, spawnSync } from "node:child_process";
+import { closeSync, mkdirSync, openSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { resolve } from "node:path";
 import { loadEnv } from "./load-env.mjs";
+
+const isWindows = process.platform === "win32";
 
 // ── CLI arg parsing ───────────────────────────────────────────────────────────
 
@@ -178,13 +180,32 @@ for (const name of tunnelNames) {
     cloudflaredDir,
     `${name.toLowerCase()}-${targetEnv}.log`,
   );
-  const logFd = openSync(logFile, "a");
 
-  const child = spawn("cloudflared", ["tunnel", "run", "--token", token], {
-    detached: true,
-    stdio: ["ignore", logFd, logFd],
-  });
-  child.unref();
+  if (isWindows) {
+    // On Windows, Node's detached+windowsHide can still surface a console.
+    // Use PowerShell Start-Process -WindowStyle Hidden for a guaranteed hidden launch.
+    // NOTE: Do NOT use -RedirectStandardError here — it keeps PowerShell alive until
+    // cloudflared exits (a long-running daemon), which would block spawnSync forever.
+    const psScript = [
+      `Start-Process`,
+      `-FilePath cloudflared`,
+      `-ArgumentList @('tunnel','run','--token','${token}')`,
+      `-WindowStyle Hidden`,
+    ].join(" ");
+    spawnSync(
+      "powershell",
+      ["-NoProfile", "-NonInteractive", "-Command", psScript],
+      { stdio: "pipe", windowsHide: true },
+    );
+  } else {
+    const logFd = openSync(logFile, "a");
+    const child = spawn("cloudflared", ["tunnel", "run", "--token", token], {
+      detached: true,
+      stdio: ["ignore", logFd, logFd],
+    });
+    child.unref();
+    closeSync(logFd);
+  }
 
   console.log(`✓ Tunnel launched: ${name}`);
   console.log(`   Logs: tail -f ${logFile}`);

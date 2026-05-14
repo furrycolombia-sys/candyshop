@@ -2,7 +2,10 @@ import { render, screen, fireEvent } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 import { useSellerPaymentMethods } from "@/features/checkout/application/hooks/useSellerPaymentMethods";
-import type { CartItem } from "@/features/checkout/domain/types";
+import type {
+  CartItem,
+  SellerPaymentMethodWithType,
+} from "@/features/checkout/domain/types";
 
 vi.mock("next-intl", () => ({
   useTranslations: () => (key: string, params?: Record<string, unknown>) => {
@@ -33,21 +36,79 @@ vi.mock(
 vi.mock("./SellerCheckoutContent", () => ({
   SellerCheckoutContent: ({
     submission,
+    methodSelection,
+    buyerForm,
+    onSubmit,
   }: {
     submission: { hasStockIssues: boolean; error: string | null };
+    methodSelection: {
+      methods: Array<{ id: string }>;
+      onSelectMethod: (id: string) => void;
+    };
+    buyerForm: {
+      validationError: string | null;
+      onReceiptChange: (file: File | null) => void;
+      onTransferNumberChange: (value: string) => void;
+    };
+    onSubmit: () => void;
   }) => (
     <div
       data-testid="seller-checkout-content"
       data-has-stock-issues={String(submission.hasStockIssues)}
       data-error={submission.error ?? ""}
     >
-      Content
+      <span data-testid="validation-error">
+        {buyerForm.validationError ?? ""}
+      </span>
+      <button type="button" data-testid="trigger-submit" onClick={onSubmit}>
+        Submit
+      </button>
+      <button
+        type="button"
+        data-testid="select-first-method"
+        onClick={() =>
+          methodSelection.methods[0] &&
+          methodSelection.onSelectMethod(methodSelection.methods[0].id)
+        }
+      >
+        Select First Method
+      </button>
+      <button
+        type="button"
+        data-testid="set-receipt"
+        onClick={() => buyerForm.onReceiptChange(new File([], "r.png"))}
+      >
+        Set Receipt
+      </button>
+      <button
+        type="button"
+        data-testid="set-transfer"
+        onClick={() => buyerForm.onTransferNumberChange("TX-123")}
+      >
+        Set Transfer
+      </button>
     </div>
   ),
 }));
 
 // eslint-disable-next-line import/order -- vi.mock must be hoisted before this import
 import { SellerCheckoutCard } from "./SellerCheckoutCard";
+
+function makeMethod(
+  overrides: Partial<SellerPaymentMethodWithType> = {},
+): SellerPaymentMethodWithType {
+  return {
+    id: "pm-1",
+    name_en: "Transfer",
+    name_es: null,
+    display_blocks: [],
+    form_fields: [],
+    is_active: true,
+    requires_receipt: false,
+    requires_transfer_number: false,
+    ...overrides,
+  };
+}
 
 const mockItems: CartItem[] = [
   {
@@ -78,6 +139,10 @@ describe("SellerCheckoutCard", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(useSellerPaymentMethods).mockReturnValue({
+      data: { methods: [], hasStockIssues: false },
+      isLoading: false,
+    } as unknown as ReturnType<typeof useSellerPaymentMethods>);
   });
 
   it("renders seller name and subtotal", () => {
@@ -145,6 +210,138 @@ describe("SellerCheckoutCard", () => {
     expect(screen.getByTestId("seller-checkout-content")).toHaveAttribute(
       "data-error",
       "stock_error",
+    );
+  });
+
+  it("does not call onSubmit when hasStockIssues is true", () => {
+    vi.mocked(useSellerPaymentMethods).mockReturnValue({
+      data: { methods: [makeMethod()], hasStockIssues: true },
+      isLoading: false,
+    } as unknown as ReturnType<typeof useSellerPaymentMethods>);
+
+    render(<SellerCheckoutCard {...defaultProps} />);
+    fireEvent.click(screen.getByTestId("trigger-submit"));
+
+    expect(defaultProps.onSubmit).not.toHaveBeenCalled();
+  });
+
+  it("sets methodRequired validation error when no method is selected", () => {
+    vi.mocked(useSellerPaymentMethods).mockReturnValue({
+      data: { methods: [makeMethod()], hasStockIssues: false },
+      isLoading: false,
+    } as unknown as ReturnType<typeof useSellerPaymentMethods>);
+
+    render(<SellerCheckoutCard {...defaultProps} />);
+    fireEvent.click(screen.getByTestId("trigger-submit"));
+
+    expect(screen.getByTestId("validation-error")).toHaveTextContent(
+      "methodRequired",
+    );
+    expect(defaultProps.onSubmit).not.toHaveBeenCalled();
+  });
+
+  it("sets buyerFieldRequired validation error when a required form field is empty", () => {
+    const method = makeMethod({
+      form_fields: [
+        {
+          id: "field-1",
+          label_en: "Account Number",
+          type: "text",
+          required: true,
+        },
+      ],
+    });
+    vi.mocked(useSellerPaymentMethods).mockReturnValue({
+      data: { methods: [method], hasStockIssues: false },
+      isLoading: false,
+    } as unknown as ReturnType<typeof useSellerPaymentMethods>);
+
+    render(<SellerCheckoutCard {...defaultProps} />);
+    fireEvent.click(screen.getByTestId("select-first-method"));
+    fireEvent.click(screen.getByTestId("trigger-submit"));
+
+    expect(screen.getByTestId("validation-error")).toHaveTextContent(
+      "buyerFieldRequired",
+    );
+    expect(defaultProps.onSubmit).not.toHaveBeenCalled();
+  });
+
+  it("sets receiptRequired validation error when receipt is missing", () => {
+    const method = makeMethod({ requires_receipt: true });
+    vi.mocked(useSellerPaymentMethods).mockReturnValue({
+      data: { methods: [method], hasStockIssues: false },
+      isLoading: false,
+    } as unknown as ReturnType<typeof useSellerPaymentMethods>);
+
+    render(<SellerCheckoutCard {...defaultProps} />);
+    fireEvent.click(screen.getByTestId("select-first-method"));
+    fireEvent.click(screen.getByTestId("trigger-submit"));
+
+    expect(screen.getByTestId("validation-error")).toHaveTextContent(
+      "receiptRequired",
+    );
+    expect(defaultProps.onSubmit).not.toHaveBeenCalled();
+  });
+
+  it("sets transferRequired validation error when transfer number is missing", () => {
+    const method = makeMethod({ requires_transfer_number: true });
+    vi.mocked(useSellerPaymentMethods).mockReturnValue({
+      data: { methods: [method], hasStockIssues: false },
+      isLoading: false,
+    } as unknown as ReturnType<typeof useSellerPaymentMethods>);
+
+    render(<SellerCheckoutCard {...defaultProps} />);
+    fireEvent.click(screen.getByTestId("select-first-method"));
+    fireEvent.click(screen.getByTestId("trigger-submit"));
+
+    expect(screen.getByTestId("validation-error")).toHaveTextContent(
+      "transferRequired",
+    );
+    expect(defaultProps.onSubmit).not.toHaveBeenCalled();
+  });
+
+  it("calls onSubmit with correct params when all validations pass", () => {
+    const method = makeMethod();
+    vi.mocked(useSellerPaymentMethods).mockReturnValue({
+      data: { methods: [method], hasStockIssues: false },
+      isLoading: false,
+    } as unknown as ReturnType<typeof useSellerPaymentMethods>);
+
+    render(<SellerCheckoutCard {...defaultProps} />);
+    fireEvent.click(screen.getByTestId("select-first-method"));
+    fireEvent.click(screen.getByTestId("trigger-submit"));
+
+    expect(defaultProps.onSubmit).toHaveBeenCalledWith({
+      paymentMethodId: "pm-1",
+      buyerSubmission: {},
+      receiptFile: null,
+      transferNumber: null,
+    });
+    expect(screen.getByTestId("validation-error")).toHaveTextContent("");
+  });
+
+  it("calls onSubmit with receipt and transfer when provided", () => {
+    const method = makeMethod({
+      requires_receipt: true,
+      requires_transfer_number: true,
+    });
+    vi.mocked(useSellerPaymentMethods).mockReturnValue({
+      data: { methods: [method], hasStockIssues: false },
+      isLoading: false,
+    } as unknown as ReturnType<typeof useSellerPaymentMethods>);
+
+    render(<SellerCheckoutCard {...defaultProps} />);
+    fireEvent.click(screen.getByTestId("select-first-method"));
+    fireEvent.click(screen.getByTestId("set-receipt"));
+    fireEvent.click(screen.getByTestId("set-transfer"));
+    fireEvent.click(screen.getByTestId("trigger-submit"));
+
+    expect(defaultProps.onSubmit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        paymentMethodId: "pm-1",
+        transferNumber: "TX-123",
+        receiptFile: expect.any(File),
+      }),
     );
   });
 });

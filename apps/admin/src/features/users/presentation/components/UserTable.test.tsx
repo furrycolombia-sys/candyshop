@@ -96,4 +96,70 @@ describe("UserTable", () => {
     render(<UserTable {...defaultProps} users={[]} total={0} />);
     expect(screen.getByText("noResults")).toBeInTheDocument();
   });
+
+  it("does not show export button when canExport is false", () => {
+    render(<UserTable {...defaultProps} canExport={false} />);
+    expect(
+      screen.queryByRole("button", { name: /exportExcel/i }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("export button is disabled when no users are selected", () => {
+    render(<UserTable {...defaultProps} selectedUsers={new Set()} />);
+    const btn = screen.getByRole("button", { name: /exportExcel/i });
+    expect(btn).toBeDisabled();
+  });
+
+  it("calls onRoleFilterChange when role select changes", () => {
+    const onRoleFilterChange = vi.fn();
+    render(
+      <UserTable {...defaultProps} onRoleFilterChange={onRoleFilterChange} />,
+    );
+    const selects = screen.getAllByRole("combobox");
+    fireEvent.change(selects[0], { target: { value: "buyer" } });
+    expect(onRoleFilterChange).toHaveBeenCalledWith("buyer");
+  });
+
+  it("calls onItemFilterChange when item select changes", () => {
+    const onItemFilterChange = vi.fn();
+    render(
+      <UserTable {...defaultProps} onItemFilterChange={onItemFilterChange} />,
+    );
+    const selects = screen.getAllByRole("combobox");
+    fireEvent.change(selects[1], { target: { value: "has_items" } });
+    expect(onItemFilterChange).toHaveBeenCalledWith("has_items");
+  });
+
+  it("handleSelectAll — selects all users when header checkbox checked", () => {
+    const onSelectUsersChange = vi.fn();
+    render(
+      <UserTable {...defaultProps} onSelectUsersChange={onSelectUsersChange} />,
+    );
+    const checkboxes = screen.getAllByRole("checkbox");
+    // First checkbox is the select-all header checkbox
+    fireEvent.click(checkboxes[0]);
+    const called = onSelectUsersChange.mock.calls[0][0] as Set<string>;
+    expect(called.has("1")).toBe(true);
+    expect(called.has("2")).toBe(true);
+  });
+
+  it("handleSelectAll — deselects all users when header checkbox unchecked", () => {
+    const onSelectUsersChange = vi.fn();
+    render(
+      <UserTable
+        {...defaultProps}
+        selectedUsers={new Set(["1", "2"])}
+        onSelectUsersChange={onSelectUsersChange}
+      />,
+    );
+    const checkboxes = screen.getAllByRole("checkbox");
+    fireEvent.click(checkboxes[0]);
+    const called = onSelectUsersChange.mock.calls[0][0] as Set<string>;
+    expect(called.size).toBe(0);
+  });
+
+  it("does not render Pagination when total is 0", () => {
+    render(<UserTable {...defaultProps} users={[]} total={0} />);
+    expect(screen.queryByRole("navigation")).not.toBeInTheDocument();
+  });
 });

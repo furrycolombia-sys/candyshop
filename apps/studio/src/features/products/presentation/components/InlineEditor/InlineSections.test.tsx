@@ -1,5 +1,5 @@
 /* eslint-disable react/button-has-type */
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, act } from "@testing-library/react";
 import { useForm, FormProvider } from "react-hook-form";
 import { describe, it, expect, vi } from "vitest";
 
@@ -11,20 +11,36 @@ vi.mock("shared", () => ({
   tid: (id: string) => ({ "data-testid": id }),
 }));
 
+// Capture onDragEnd so tests can invoke it directly
+let capturedOnDragEnd: ((result: unknown) => void) | null = null;
+
 vi.mock("@hello-pangea/dnd", () => ({
-  DragDropContext: ({ children }: { children: React.ReactNode }) => (
-    <>{children}</>
-  ),
+  DragDropContext: ({
+    children,
+    onDragEnd,
+  }: {
+    children: React.ReactNode;
+    onDragEnd: (result: unknown) => void;
+  }) => {
+    capturedOnDragEnd = onDragEnd;
+    return <>{children}</>;
+  },
   Droppable: ({
     children,
+    droppableId,
   }: {
     children: (p: {
       innerRef: () => null;
       droppableProps: Record<string, unknown>;
       placeholder: null;
     }) => React.ReactNode;
+    droppableId: string;
   }) =>
-    children({ innerRef: () => null, droppableProps: {}, placeholder: null }),
+    children({
+      innerRef: () => null,
+      droppableProps: { "data-droppable-id": droppableId },
+      placeholder: null,
+    }),
   Draggable: ({
     children,
   }: {
@@ -59,13 +75,26 @@ vi.mock("./SectionCard", () => ({
   SectionCard: ({
     sectionIndex,
     onRemove,
+    onToggleCollapse,
+    isCollapsed,
   }: {
     sectionIndex: number;
     onRemove: () => void;
+    onToggleCollapse: () => void;
+    isCollapsed: boolean;
   }) => (
-    <div data-testid={`section-card-${sectionIndex}`}>
+    <div
+      data-testid={`section-card-${sectionIndex}`}
+      data-collapsed={isCollapsed}
+    >
       <button data-testid={`remove-section-${sectionIndex}`} onClick={onRemove}>
         Remove
+      </button>
+      <button
+        data-testid={`toggle-section-${sectionIndex}`}
+        onClick={onToggleCollapse}
+      >
+        Toggle
       </button>
     </div>
   ),
@@ -208,5 +237,117 @@ describe("InlineSections", () => {
     );
     fireEvent.click(screen.getByTestId("remove-section-0"));
     expect(screen.queryByTestId("section-card-0")).not.toBeInTheDocument();
+  });
+
+  it("toggles collapse state when toggle button is clicked", () => {
+    render(
+      <Wrapper
+        sections={[
+          {
+            name_en: "A",
+            name_es: "",
+            type: "cards",
+            sort_order: 0,
+            items: [],
+          },
+        ]}
+      />,
+    );
+    const card = screen.getByTestId("section-card-0");
+    expect(card).toHaveAttribute("data-collapsed", "false");
+
+    fireEvent.click(screen.getByTestId("toggle-section-0"));
+    expect(card).toHaveAttribute("data-collapsed", "true");
+
+    fireEvent.click(screen.getByTestId("toggle-section-0"));
+    expect(card).toHaveAttribute("data-collapsed", "false");
+  });
+
+  it("handleDragEnd does nothing when destination is null", () => {
+    render(
+      <Wrapper
+        sections={[
+          {
+            name_en: "A",
+            name_es: "",
+            type: "cards",
+            sort_order: 0,
+            items: [],
+          },
+          {
+            name_en: "B",
+            name_es: "",
+            type: "cards",
+            sort_order: 1,
+            items: [],
+          },
+        ]}
+      />,
+    );
+    act(() => {
+      capturedOnDragEnd?.({
+        source: { droppableId: "sections", index: 0 },
+        destination: null,
+      });
+    });
+    // Both sections still present — no crash
+    expect(screen.getByTestId("section-card-0")).toBeInTheDocument();
+    expect(screen.getByTestId("section-card-1")).toBeInTheDocument();
+  });
+
+  it("handleDragEnd reorders sections on section-level drag", () => {
+    render(
+      <Wrapper
+        sections={[
+          {
+            name_en: "A",
+            name_es: "",
+            type: "cards",
+            sort_order: 0,
+            items: [],
+          },
+          {
+            name_en: "B",
+            name_es: "",
+            type: "cards",
+            sort_order: 1,
+            items: [],
+          },
+        ]}
+      />,
+    );
+    act(() => {
+      capturedOnDragEnd?.({
+        source: { droppableId: "sections", index: 0 },
+        destination: { droppableId: "sections", index: 1 },
+      });
+    });
+    // Both cards still present after reorder
+    expect(screen.getByTestId("section-card-0")).toBeInTheDocument();
+    expect(screen.getByTestId("section-card-1")).toBeInTheDocument();
+  });
+
+  it("handleDragEnd triggers item move for item-level drag", () => {
+    render(
+      <Wrapper
+        sections={[
+          {
+            name_en: "A",
+            name_es: "",
+            type: "cards",
+            sort_order: 0,
+            items: [],
+          },
+        ]}
+      />,
+    );
+    // Item drag within section 0 — no crash even without a registered moveFn
+    act(() => {
+      capturedOnDragEnd?.({
+        source: { droppableId: "section-items-0", index: 0 },
+        destination: { droppableId: "section-items-0", index: 1 },
+      });
+    });
+    expect(screen.getByTestId("section-card-0")).toBeInTheDocument();
   });
 });

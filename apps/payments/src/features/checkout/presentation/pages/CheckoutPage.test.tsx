@@ -26,7 +26,6 @@ vi.mock("@/shared/infrastructure/config", async () => {
 
 vi.mock("auth/client", () => ({
   useCurrentUserPermissions: () => ({
-    isLoading: false,
     hasPermission: () => true,
   }),
   useSupabaseAuth: () => ({

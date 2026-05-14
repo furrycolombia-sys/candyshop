@@ -78,7 +78,10 @@ export function AssignedOrdersPageContent() {
 
         {isLoading && (
           <div className="flex items-center justify-center py-16">
-            <div className="size-8 animate-spin rounded-full border-4 border-foreground border-t-transparent" />
+            <div
+              className="size-8 animate-spin rounded-full border-4 border-foreground border-t-transparent"
+              {...tid("assigned-orders-spinner")}
+            />
           </div>
         )}
 

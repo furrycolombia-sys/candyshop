@@ -8,6 +8,10 @@ export default defineConfig({
     environment: "jsdom",
     globals: true,
     setupFiles: ["./src/test/setup.ts"],
+    env: {
+      NEXT_PUBLIC_SUPABASE_URL: "https://test.supabase.co",
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: "test-anon-key",
+    },
     include: ["src/**/*.test.{ts,tsx}"],
     exclude: ["node_modules/", "**/*.d.ts", "**/*.config.*", "**/index.ts"],
     coverage: {
@@ -22,7 +26,7 @@ export default defineConfig({
       ],
       cleanOnRerun: false,
       thresholds: {
-        global: { branches: 85, functions: 85, lines: 85, statements: 85 },
+        branches: 85, functions: 85, lines: 85, statements: 85,
       },
     },
     testTimeout: 10_000,

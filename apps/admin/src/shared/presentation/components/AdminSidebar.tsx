@@ -99,15 +99,13 @@ export function AdminSidebar() {
   const t = useTranslations("sidebar");
   const pathname = usePathname();
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const { grantedKeys, isLoading } = useCurrentUserPermissions();
+  const { grantedKeys } = useCurrentUserPermissions();
 
   const appPath = pathname.replace(/^\/[a-z]{2}/, "") || "/";
   const visibleSections = NAV_SECTIONS.map((section) => ({
     ...section,
     items: section.items.filter((item) =>
-      isLoading
-        ? false
-        : matchesPermissions(grantedKeys, item.required, item.mode ?? "all"),
+      matchesPermissions(grantedKeys, item.required, item.mode ?? "all"),
     ),
   })).filter((section) => section.items.length > 0);
 

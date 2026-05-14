@@ -14,7 +14,6 @@ vi.mock("auth/client", () => ({
   matchesPermissions: () => true,
   useCurrentUserPermissions: () => ({
     grantedKeys: ["audit.read", "audit-view", "manage"],
-    isLoading: false,
     hasPermission: () => true,
   }),
 }));

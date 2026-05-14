@@ -4,10 +4,10 @@ import { getCookie, setCookie, deleteCookie } from "cookies-next";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import {
-  readNavPermCache,
-  writeNavPermCache,
-  clearNavPermCache,
-} from "./navPermCachePersistence";
+  readPermCache,
+  writePermCache,
+  clearPermCache,
+} from "./permCachePersistence";
 
 vi.mock("cookies-next", () => ({
   getCookie: vi.fn(),
@@ -26,45 +26,45 @@ function setHostname(hostname: string, protocol = "http:") {
   });
 }
 
-describe("readNavPermCache", () => {
+describe("readPermCache", () => {
   afterEach(() => {
     vi.clearAllMocks();
   });
 
   it("returns null when cookie is absent", () => {
     mockGetCookie.mockReturnValue(undefined as unknown as string);
-    expect(readNavPermCache()).toBeNull();
+    expect(readPermCache()).toBeNull();
   });
 
   it("returns string[] when cookie holds valid JSON array", () => {
     mockGetCookie.mockReturnValue(
       JSON.stringify(["products.create", "orders.read"]),
     );
-    expect(readNavPermCache()).toEqual(["products.create", "orders.read"]);
+    expect(readPermCache()).toEqual(["products.create", "orders.read"]);
   });
 
   it("returns empty array when cookie holds []", () => {
     mockGetCookie.mockReturnValue("[]");
-    expect(readNavPermCache()).toEqual([]);
+    expect(readPermCache()).toEqual([]);
   });
 
   it("returns null when cookie holds invalid JSON", () => {
     mockGetCookie.mockReturnValue("not-json{{{");
-    expect(readNavPermCache()).toBeNull();
+    expect(readPermCache()).toBeNull();
   });
 
   it("returns null when cookie holds a non-array JSON value", () => {
     mockGetCookie.mockReturnValue(JSON.stringify({ key: "value" }));
-    expect(readNavPermCache()).toBeNull();
+    expect(readPermCache()).toBeNull();
   });
 
   it("returns null when cookie holds an array with non-string items", () => {
     mockGetCookie.mockReturnValue(JSON.stringify([1, 2, 3]));
-    expect(readNavPermCache()).toBeNull();
+    expect(readPermCache()).toBeNull();
   });
 });
 
-describe("writeNavPermCache", () => {
+describe("writePermCache", () => {
   afterEach(() => {
     vi.clearAllMocks();
   });
@@ -72,10 +72,10 @@ describe("writeNavPermCache", () => {
   it("calls setCookie with the key, JSON-stringified keys, and maxAge 3600", () => {
     setHostname("localhost");
     const keys = ["products.create", "orders.read"];
-    writeNavPermCache(keys);
+    writePermCache(keys);
 
     expect(mockSetCookie).toHaveBeenCalledWith(
-      "candystore-nav-perm",
+      "candystore-perm",
       JSON.stringify(keys),
       expect.objectContaining({ maxAge: 3600 }),
     );
@@ -83,53 +83,65 @@ describe("writeNavPermCache", () => {
 
   it("does NOT pre-delete when domain is undefined (localhost dev)", () => {
     setHostname("localhost");
-    writeNavPermCache(["products.create"]);
+    writePermCache(["products.create"]);
 
     expect(mockDeleteCookie).not.toHaveBeenCalled();
   });
 
   it("pre-deletes the no-domain cookie before setting when domain is present", () => {
     setHostname("store.example.com");
-    writeNavPermCache(["products.create"]);
+    writePermCache(["products.create"]);
 
-    expect(mockDeleteCookie).toHaveBeenCalledWith("candystore-nav-perm", {
+    expect(mockDeleteCookie).toHaveBeenCalledWith("candystore-perm", {
       path: "/",
     });
     expect(mockSetCookie).toHaveBeenCalledWith(
-      "candystore-nav-perm",
+      "candystore-perm",
       expect.any(String),
       expect.objectContaining({ domain: ".example.com" }),
     );
   });
+
+  it("does NOT call setCookie when serialised payload exceeds 3500 bytes", () => {
+    setHostname("localhost");
+    // 500 keys of ~18 chars each → ~9 KB serialised, well above the 3500-byte guard
+    const bigKeys = Array.from(
+      { length: 500 },
+      (_, i) => `products.perm${String(i).padStart(3, "0")}`,
+    );
+    writePermCache(bigKeys);
+
+    expect(mockSetCookie).not.toHaveBeenCalled();
+  });
 });
 
-describe("clearNavPermCache", () => {
+describe("clearPermCache", () => {
   afterEach(() => {
     vi.clearAllMocks();
   });
 
   it("calls deleteCookie once with base options when domain is undefined", () => {
     setHostname("localhost");
-    clearNavPermCache();
+    clearPermCache();
 
     expect(mockDeleteCookie).toHaveBeenCalledTimes(1);
     expect(mockDeleteCookie).toHaveBeenCalledWith(
-      "candystore-nav-perm",
+      "candystore-perm",
       expect.objectContaining({ path: "/" }),
     );
   });
 
   it("calls deleteCookie twice when domain is present (double-delete pattern)", () => {
     setHostname("store.example.com");
-    clearNavPermCache();
+    clearPermCache();
 
     expect(mockDeleteCookie).toHaveBeenCalledTimes(2);
     expect(mockDeleteCookie).toHaveBeenNthCalledWith(
       1,
-      "candystore-nav-perm",
+      "candystore-perm",
       expect.objectContaining({ domain: ".example.com" }),
     );
-    expect(mockDeleteCookie).toHaveBeenNthCalledWith(2, "candystore-nav-perm", {
+    expect(mockDeleteCookie).toHaveBeenNthCalledWith(2, "candystore-perm", {
       path: "/",
     });
   });

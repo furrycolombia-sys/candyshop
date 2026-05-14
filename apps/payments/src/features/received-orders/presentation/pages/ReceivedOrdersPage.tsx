@@ -7,12 +7,8 @@ import { ReceivedOrdersPageContent } from "@/features/received-orders/presentati
 import { AccessDeniedState } from "@/shared/presentation/components/AccessDeniedState";
 
 export function ReceivedOrdersPage() {
-  const { isLoading, hasPermission } = useCurrentUserPermissions();
+  const { hasPermission } = useCurrentUserPermissions();
   const t = useTranslations("common");
-
-  if (isLoading) {
-    return null;
-  }
 
   if (!hasPermission(["orders.read", "orders.update"])) {
     return (

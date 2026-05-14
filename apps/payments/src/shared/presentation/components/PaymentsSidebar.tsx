@@ -45,7 +45,6 @@ export function PaymentsSidebar() {
         appPath={appPath}
         collapsed={isCollapsed}
         grantedKeys={grantedKeys}
-        isLoading={isLoading}
       />
     </aside>
   );
