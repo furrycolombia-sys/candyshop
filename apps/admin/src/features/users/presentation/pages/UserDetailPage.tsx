@@ -13,10 +13,9 @@ interface UserDetailPageProps {
 }
 
 export function UserDetailPage({ userId }: UserDetailPageProps) {
-  const { isLoading, hasPermission } = useCurrentUserPermissions();
+  const { hasPermission } = useCurrentUserPermissions();
   const t = useTranslations("common");
 
-  if (isLoading) return null;
   if (!hasPermission("user_permissions.read")) {
     return (
       <AccessDeniedState

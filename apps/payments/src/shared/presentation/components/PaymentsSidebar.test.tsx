@@ -15,7 +15,6 @@ vi.mock("auth/client", () => ({
     required.every((key) => grantedKeys.includes(key)),
   useCurrentUserPermissions: () => ({
     grantedKeys: mockGrantedPermissions,
-    isLoading: false,
   }),
 }));
 

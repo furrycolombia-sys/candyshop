@@ -9,7 +9,6 @@ let mockGrantedPermissions = new Set([
 
 vi.mock("auth/client", () => ({
   useCurrentUserPermissions: () => ({
-    isLoading: false,
     hasPermission: (permission: string | string[]) =>
       Array.isArray(permission)
         ? permission.every((key) => mockGrantedPermissions.has(key))

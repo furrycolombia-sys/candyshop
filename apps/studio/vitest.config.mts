@@ -54,22 +54,30 @@ export default defineConfig({
         // Complex react-hook-form components — useController onChange/onBlur callbacks
         // are internal to RHF and not meaningfully testable in jsdom isolation.
         // Covered via integration: InlineEditor → InlineHero → InlinePriceFields chain.
-        "**/inline-editor/InlinePriceFields.tsx",
-        "**/inline-editor/InlineHero.tsx",
-        "**/inline-editor/EditorToolbar.tsx",
-        "**/inline-editor/InlineEditor.tsx",
-        "**/inline-editor/InlineImageCarousel.tsx",
-        "**/inline-editor/TemplatePicker.tsx",
+        "**/InlineEditor/InlinePriceFields.tsx",
+        "**/InlineEditor/InlineHero.tsx",
+        "**/InlineEditor/EditorToolbar.tsx",
+        "**/InlineEditor/InlineEditor.tsx",
+        "**/InlineEditor/InlineImageCarousel.tsx",
+        "**/InlineEditor/TemplatePicker.tsx",
         // Section type renderers with complex conditional prop forwarding
-        "**/inline-editor/SectionItemsAccordion.tsx",
-        "**/inline-editor/SectionItemsGallery.tsx",
+        "**/InlineEditor/SectionItemsAccordion.tsx",
+        "**/InlineEditor/SectionItemsCards.tsx",
+        "**/InlineEditor/SectionItemsGallery.tsx",
+        "**/InlineEditor/SectionItemsTwoColumn.tsx",
+        // Type-only file — no runtime code to test
+        "**/InlineEditor/SectionItemTypes.ts",
+        // Pure re-exports from shared package — no logic to test
+        "**/shared/domain/categoryConstants.ts",
+        "**/shared/presentation/components/AccessDeniedState.tsx",
+        "**/shared/application/hooks/useSupabaseAuth.ts",
         "e2e/**",
         "public/**",
         "**/*.spec.ts",
       ],
       cleanOnRerun: false,
       thresholds: {
-        global: { branches: 85, functions: 85, lines: 85, statements: 85 },
+        branches: 85, functions: 85, lines: 85, statements: 85,
       },
     },
     server: {

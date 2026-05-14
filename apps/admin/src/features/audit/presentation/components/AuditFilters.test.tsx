@@ -6,10 +6,12 @@ vi.mock("next-intl", () => ({
   useTranslations: () => (key: string) => key,
 }));
 
+const mockUseAuditTableNames = vi.fn(() => ({
+  data: ["users", "orders", "products"],
+}));
+
 vi.mock("@/features/audit/application/hooks/useAuditLog", () => ({
-  useAuditTableNames: () => ({
-    data: ["users", "orders", "products"],
-  }),
+  useAuditTableNames: () => mockUseAuditTableNames(),
 }));
 
 vi.mock("shared", async (importOriginal) => {
@@ -29,6 +31,18 @@ describe("AuditFilters", () => {
     onTableChange: vi.fn(),
     onActionChange: vi.fn(),
   };
+
+  it("renders only the 'allTables' option when tableNames is undefined", () => {
+    mockUseAuditTableNames.mockReturnValueOnce({
+      data: undefined as unknown as string[],
+    });
+    render(<AuditFilters {...defaultProps} />);
+
+    const select = screen.getByTestId("audit-filter-table");
+    const options = select.querySelectorAll("option");
+    expect(options).toHaveLength(1);
+    expect(options[0]).toHaveTextContent("allTables");
+  });
 
   it("renders the table dropdown with options", () => {
     render(<AuditFilters {...defaultProps} />);

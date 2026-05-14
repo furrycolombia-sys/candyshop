@@ -51,6 +51,7 @@ function renderBlockContent(block: DisplayBlock, locale: string) {
             sandbox="allow-scripts allow-same-origin"
             allowFullScreen
             title="Video" // eslint-disable-line i18next/no-literal-string -- HTML accessibility attribute on iframe, not user-facing text
+            {...tid(`display-block-${block.id}-iframe`)}
           />
         </div>
       );

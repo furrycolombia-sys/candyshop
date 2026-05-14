@@ -121,4 +121,29 @@ describe("SectionBlock", () => {
     fireEvent.click(screen.getByRole("button", { name: "removeSection" }));
     expect(onRemove).toHaveBeenCalledTimes(1);
   });
+
+  it("calls onUpdate when name_es changes", () => {
+    const onUpdate = vi.fn();
+    render(<SectionBlock {...defaultProps} onUpdate={onUpdate} />);
+
+    const inputs = screen.getAllByRole("textbox");
+    fireEvent.change(inputs[1], { target: { value: "Nuevo Nombre" } });
+    expect(onUpdate).toHaveBeenCalledWith({ name_es: "Nuevo Nombre" });
+  });
+
+  it("calls onUpdateItem when ItemRow Update button is clicked", () => {
+    const onUpdateItem = vi.fn();
+    render(<SectionBlock {...defaultProps} onUpdateItem={onUpdateItem} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Update" }));
+    expect(onUpdateItem).toHaveBeenCalledWith(0, { title_en: "x" });
+  });
+
+  it("calls onRemoveItem when ItemRow Remove button is clicked", () => {
+    const onRemoveItem = vi.fn();
+    render(<SectionBlock {...defaultProps} onRemoveItem={onRemoveItem} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Remove" }));
+    expect(onRemoveItem).toHaveBeenCalledWith(0);
+  });
 });

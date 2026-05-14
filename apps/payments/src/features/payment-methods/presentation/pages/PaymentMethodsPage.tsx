@@ -8,10 +8,9 @@ import { PaymentMethodsPageContent } from "@/features/payment-methods/presentati
 import { AccessDeniedState } from "@/shared/presentation/components/AccessDeniedState";
 
 export function PaymentMethodsPage() {
-  const { isLoading, hasPermission } = useCurrentUserPermissions();
+  const { hasPermission } = useCurrentUserPermissions();
   const t = useTranslations("common");
 
-  if (isLoading) return null;
   if (!hasPermission("seller_payment_methods.read")) {
     return (
       <AccessDeniedState

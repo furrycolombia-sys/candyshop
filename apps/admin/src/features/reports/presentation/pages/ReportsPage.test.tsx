@@ -288,4 +288,121 @@ describe("ReportsPage", () => {
     fireEvent.click(screen.getByTestId("trigger-filter-change"));
     expect(mockSetFilters).toHaveBeenCalled();
   });
+
+  it("includes string filters in export URL when set", async () => {
+    const mockBlob = new Blob(["xlsx-data"], {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
+    const mockFetch = vi.fn().mockResolvedValue({
+      ok: true,
+      blob: () => Promise.resolve(mockBlob),
+    });
+    vi.stubGlobal("fetch", mockFetch);
+    globalThis.URL.createObjectURL = vi.fn().mockReturnValue("blob:mock");
+    globalThis.URL.revokeObjectURL = vi.fn();
+
+    vi.mocked(useReportOrders).mockReturnValue({
+      orders: [
+        {
+          id: "o1",
+          created_at: "2026-01-01T00:00:00Z",
+          payment_status: "approved",
+          total: 100,
+          currency: "USD",
+          transfer_number: null,
+          receipt_url: null,
+          buyer_id: "b1",
+          buyer_email: "b@example.com",
+          buyer_display_name: null,
+          seller_id: null,
+          seller_email: null,
+          seller_display_name: null,
+          items: [],
+        },
+      ],
+      total: 1,
+      isLoading: false,
+      isError: false,
+      filters: {
+        dateFrom: "2026-01-01",
+        dateTo: "2026-12-31",
+        status: "approved",
+        sellerId: "s1",
+        buyerId: "b1",
+        productId: "p1",
+        currency: "USD",
+        amountMin: null,
+        amountMax: null,
+      },
+      setFilters: mockSetFilters,
+    });
+    render(<ReportsPage />);
+    fireEvent.click(screen.getByTestId("reports-export-button"));
+    await screen.findByTestId("reports-export-button");
+    const calledUrl: string = mockFetch.mock.calls[0][0] as string;
+    expect(calledUrl).toContain("dateFrom=2026-01-01");
+    expect(calledUrl).toContain("dateTo=2026-12-31");
+    expect(calledUrl).toContain("status=approved");
+    expect(calledUrl).toContain("sellerId=s1");
+    expect(calledUrl).toContain("buyerId=b1");
+    expect(calledUrl).toContain("productId=p1");
+    expect(calledUrl).toContain("currency=USD");
+    vi.unstubAllGlobals();
+  });
+
+  it("includes amountMin and amountMax in export URL when set", async () => {
+    const mockBlob = new Blob(["xlsx-data"], {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
+    const mockFetch = vi.fn().mockResolvedValue({
+      ok: true,
+      blob: () => Promise.resolve(mockBlob),
+    });
+    vi.stubGlobal("fetch", mockFetch);
+    globalThis.URL.createObjectURL = vi.fn().mockReturnValue("blob:mock");
+    globalThis.URL.revokeObjectURL = vi.fn();
+
+    vi.mocked(useReportOrders).mockReturnValue({
+      orders: [
+        {
+          id: "o1",
+          created_at: "2026-01-01T00:00:00Z",
+          payment_status: "approved",
+          total: 100,
+          currency: "USD",
+          transfer_number: null,
+          receipt_url: null,
+          buyer_id: "b1",
+          buyer_email: "b@example.com",
+          buyer_display_name: null,
+          seller_id: null,
+          seller_email: null,
+          seller_display_name: null,
+          items: [],
+        },
+      ],
+      total: 1,
+      isLoading: false,
+      isError: false,
+      filters: {
+        dateFrom: null,
+        dateTo: null,
+        status: null,
+        sellerId: null,
+        buyerId: null,
+        productId: null,
+        currency: null,
+        amountMin: 10,
+        amountMax: 500,
+      },
+      setFilters: mockSetFilters,
+    });
+    render(<ReportsPage />);
+    fireEvent.click(screen.getByTestId("reports-export-button"));
+    await screen.findByTestId("reports-export-button");
+    const calledUrl: string = mockFetch.mock.calls[0][0] as string;
+    expect(calledUrl).toContain("amountMin=10");
+    expect(calledUrl).toContain("amountMax=500");
+    vi.unstubAllGlobals();
+  });
 });

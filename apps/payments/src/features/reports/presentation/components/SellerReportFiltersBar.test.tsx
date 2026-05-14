@@ -132,4 +132,158 @@ describe("SellerReportFiltersBar", () => {
     });
     expect(onFiltersChange).toHaveBeenCalledWith({ dateFrom: "2024-01-01" });
   });
+
+  it("calls onFiltersChange with null when date-from is cleared", () => {
+    render(
+      <SellerReportFiltersBar
+        filters={{ ...emptyFilters, dateFrom: "2024-01-01" }}
+        onFiltersChange={onFiltersChange}
+        currencies={[]}
+      />,
+    );
+    fireEvent.change(screen.getByTestId("seller-reports-filter-date-from"), {
+      target: { value: "" },
+    });
+    expect(onFiltersChange).toHaveBeenCalledWith({ dateFrom: null });
+  });
+
+  it("calls onFiltersChange when date-to changes", () => {
+    render(
+      <SellerReportFiltersBar
+        filters={emptyFilters}
+        onFiltersChange={onFiltersChange}
+        currencies={[]}
+      />,
+    );
+    fireEvent.change(screen.getByTestId("seller-reports-filter-date-to"), {
+      target: { value: "2024-12-31" },
+    });
+    expect(onFiltersChange).toHaveBeenCalledWith({ dateTo: "2024-12-31" });
+  });
+
+  it("calls onFiltersChange with null when date-to is cleared", () => {
+    render(
+      <SellerReportFiltersBar
+        filters={{ ...emptyFilters, dateTo: "2024-12-31" }}
+        onFiltersChange={onFiltersChange}
+        currencies={[]}
+      />,
+    );
+    fireEvent.change(screen.getByTestId("seller-reports-filter-date-to"), {
+      target: { value: "" },
+    });
+    expect(onFiltersChange).toHaveBeenCalledWith({ dateTo: null });
+  });
+
+  it("calls onFiltersChange when status changes to a value", () => {
+    render(
+      <SellerReportFiltersBar
+        filters={emptyFilters}
+        onFiltersChange={onFiltersChange}
+        currencies={[]}
+      />,
+    );
+    fireEvent.change(screen.getByTestId("seller-reports-filter-status"), {
+      target: { value: "approved" },
+    });
+    expect(onFiltersChange).toHaveBeenCalledWith({ status: "approved" });
+  });
+
+  it("calls onFiltersChange with null when status is reset to empty", () => {
+    render(
+      <SellerReportFiltersBar
+        filters={{ ...emptyFilters, status: "approved" }}
+        onFiltersChange={onFiltersChange}
+        currencies={[]}
+      />,
+    );
+    fireEvent.change(screen.getByTestId("seller-reports-filter-status"), {
+      target: { value: "" },
+    });
+    expect(onFiltersChange).toHaveBeenCalledWith({ status: null });
+  });
+
+  it("calls onFiltersChange when currency changes", () => {
+    render(
+      <SellerReportFiltersBar
+        filters={emptyFilters}
+        onFiltersChange={onFiltersChange}
+        currencies={["USD", "EUR"]}
+      />,
+    );
+    fireEvent.change(screen.getByTestId("seller-reports-filter-currency"), {
+      target: { value: "USD" },
+    });
+    expect(onFiltersChange).toHaveBeenCalledWith({ currency: "USD" });
+  });
+
+  it("calls onFiltersChange with null when currency is reset to empty", () => {
+    render(
+      <SellerReportFiltersBar
+        filters={{ ...emptyFilters, currency: "USD" }}
+        onFiltersChange={onFiltersChange}
+        currencies={["USD", "EUR"]}
+      />,
+    );
+    fireEvent.change(screen.getByTestId("seller-reports-filter-currency"), {
+      target: { value: "" },
+    });
+    expect(onFiltersChange).toHaveBeenCalledWith({ currency: null });
+  });
+
+  it("calls onFiltersChange when amount-max changes", () => {
+    render(
+      <SellerReportFiltersBar
+        filters={emptyFilters}
+        onFiltersChange={onFiltersChange}
+        currencies={[]}
+      />,
+    );
+    fireEvent.change(screen.getByTestId("seller-reports-filter-amount-max"), {
+      target: { value: "5000" },
+    });
+    expect(onFiltersChange).toHaveBeenCalledWith({ amountMax: 5000 });
+  });
+
+  it("calls onFiltersChange with null when amount-max is cleared", () => {
+    render(
+      <SellerReportFiltersBar
+        filters={{ ...emptyFilters, amountMax: 5000 }}
+        onFiltersChange={onFiltersChange}
+        currencies={[]}
+      />,
+    );
+    fireEvent.change(screen.getByTestId("seller-reports-filter-amount-max"), {
+      target: { value: "" },
+    });
+    expect(onFiltersChange).toHaveBeenCalledWith({ amountMax: null });
+  });
+
+  it("calls onFiltersChange when amount-min changes", () => {
+    render(
+      <SellerReportFiltersBar
+        filters={emptyFilters}
+        onFiltersChange={onFiltersChange}
+        currencies={[]}
+      />,
+    );
+    fireEvent.change(screen.getByTestId("seller-reports-filter-amount-min"), {
+      target: { value: "100" },
+    });
+    expect(onFiltersChange).toHaveBeenCalledWith({ amountMin: 100 });
+  });
+
+  it("calls onFiltersChange with null when amount-min is cleared", () => {
+    render(
+      <SellerReportFiltersBar
+        filters={{ ...emptyFilters, amountMin: 100 }}
+        onFiltersChange={onFiltersChange}
+        currencies={[]}
+      />,
+    );
+    fireEvent.change(screen.getByTestId("seller-reports-filter-amount-min"), {
+      target: { value: "" },
+    });
+    expect(onFiltersChange).toHaveBeenCalledWith({ amountMin: null });
+  });
 });

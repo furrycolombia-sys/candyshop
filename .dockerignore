@@ -96,3 +96,23 @@ orval.config.ts
 turbo.json
 *.config.mjs
 *.config.js
+
+# ── Source files re-included for docker/ci/Dockerfile ─────────────────────────
+# Rules above optimize context for docker/prod/Dockerfile (pre-built artifacts).
+# These negations re-include source that docker/ci/Dockerfile builds from source.
+# "Last matching rule wins" — these override the exclusions above.
+!packages
+!packages/**
+packages/*/node_modules
+packages/*/node_modules/**
+!apps/*/src
+!apps/*/src/**
+!package.json
+!pnpm-lock.yaml
+!pnpm-workspace.yaml
+!**/tsconfig.json
+!**/tsconfig.base.json
+!apps/*/*.config.mjs
+!apps/*/*.config.js
+!packages/*/*.config.mjs
+!packages/*/*.config.js

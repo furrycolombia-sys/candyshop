@@ -156,3 +156,97 @@ describe("createProductFormSchema", () => {
     }
   });
 });
+
+const baseProduct = {
+  name_en: "Test Product",
+  type: "merch" as const,
+  category: "merch" as const,
+  price: 10_000,
+  currency: "COP",
+};
+
+const validItem = { title_en: "Item Title", title_es: "" };
+const validSection = {
+  name_en: "Section Name",
+  name_es: "",
+  items: [validItem],
+};
+
+describe("createProductFormSchema — section validation", () => {
+  const schema = createProductFormSchema(mockT);
+
+  it("accepts a product with a valid section", () => {
+    const result = schema.safeParse({
+      ...baseProduct,
+      sections: [validSection],
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects a section with no name (both name_en and name_es empty)", () => {
+    const result = schema.safeParse({
+      ...baseProduct,
+      sections: [{ name_en: "", name_es: "", items: [validItem] }],
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("accepts a section with only name_es set", () => {
+    const result = schema.safeParse({
+      ...baseProduct,
+      sections: [{ name_en: "", name_es: "Nombre", items: [validItem] }],
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects a section with no items", () => {
+    const result = schema.safeParse({
+      ...baseProduct,
+      sections: [{ name_en: "Section", name_es: "", items: [] }],
+    });
+    expect(result.success).toBe(false);
+  });
+});
+
+describe("createProductFormSchema — section item validation", () => {
+  const schema = createProductFormSchema(mockT);
+
+  it("rejects a section item with no title (both title_en and title_es empty)", () => {
+    const result = schema.safeParse({
+      ...baseProduct,
+      sections: [
+        {
+          ...validSection,
+          items: [{ title_en: "", title_es: "" }],
+        },
+      ],
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("accepts a section item with only title_es set", () => {
+    const result = schema.safeParse({
+      ...baseProduct,
+      sections: [
+        {
+          ...validSection,
+          items: [{ title_en: "", title_es: "Título en español" }],
+        },
+      ],
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("accepts a section item with only title_en set", () => {
+    const result = schema.safeParse({
+      ...baseProduct,
+      sections: [
+        {
+          ...validSection,
+          items: [{ title_en: "English title", title_es: "" }],
+        },
+      ],
+    });
+    expect(result.success).toBe(true);
+  });
+});

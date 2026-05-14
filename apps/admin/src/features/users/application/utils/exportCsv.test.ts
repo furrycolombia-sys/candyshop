@@ -54,6 +54,55 @@ describe("export-excel", () => {
     });
   });
 
+  it("shows empty string for display_name when null", () => {
+    const mockUsers: UserProfileSummary[] = [
+      {
+        id: "2",
+        email: "noname@example.com",
+        display_name: null,
+        last_seen_at: null,
+        display_avatar_url: null,
+        avatar_url: null,
+      },
+    ];
+
+    const content = exportUsersToExcel(mockUsers, {}, []);
+
+    expect(content).toContain(
+      '<Data ss:Type="String">noname@example.com</Data>',
+    );
+    // display_name is null → empty string cell
+    expect(content).toContain('<Data ss:Type="String"></Data>');
+    // last_seen_at is null → "Never"
+    expect(content).toContain('<Data ss:Type="String">Never</Data>');
+  });
+
+  it("uses empty permissions array for user not in permissionsByUserId", () => {
+    const mockUsers: UserProfileSummary[] = [
+      {
+        id: "3",
+        email: "unknown@example.com",
+        display_name: "Unknown",
+        last_seen_at: null,
+        display_avatar_url: null,
+        avatar_url: null,
+      },
+    ];
+
+    // Pass empty map — user id "3" is not in the map
+    const content = exportUsersToExcel(mockUsers, {}, []);
+
+    // Should still render the row without crashing; all permission cells = No
+    expect(content).toContain(
+      '<Data ss:Type="String">unknown@example.com</Data>',
+    );
+    // All three permission columns should be No
+    const noMatches = (
+      content.match(/<Data ss:Type="String">No<\/Data>/g) ?? []
+    ).length;
+    expect(noMatches).toBeGreaterThanOrEqual(3);
+  });
+
   describe("downloadExcel", () => {
     it("should create a link and trigger download", () => {
       const mockLink = {

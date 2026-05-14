@@ -23,7 +23,7 @@ interface ProductDelegatesPageProps {
 }
 
 export function ProductDelegatesPage({ productId }: ProductDelegatesPageProps) {
-  const { isLoading: permLoading, hasPermission } = useCurrentUserPermissions();
+  const { hasPermission } = useCurrentUserPermissions();
   const { user } = useSupabaseAuth();
   const t = useTranslations("sellerAdmins");
   const tCommon = useTranslations("common");
@@ -54,7 +54,7 @@ export function ProductDelegatesPage({ productId }: ProductDelegatesPageProps) {
     [sellerId, productId, removeMutation],
   );
 
-  if (permLoading || delegatesLoading || productLoading) return null;
+  if (delegatesLoading || productLoading) return null;
 
   if (!hasPermission(SELLER_ADMINS_READ_PERMISSION)) {
     return (

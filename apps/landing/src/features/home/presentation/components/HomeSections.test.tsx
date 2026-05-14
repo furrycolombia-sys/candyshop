@@ -40,7 +40,10 @@ vi.mock("@/shared/infrastructure/config", () => ({
 
 import { CtaSection } from "./CtaSection";
 import { FeaturesSection } from "./FeaturesSection";
+import { HeroSection } from "./HeroSection";
 import { RolesSection } from "./RolesSection";
+
+import { LandingPage } from "@/features/home/presentation/pages/LandingPage";
 
 describe("HomeSections", () => {
   it("renders the CTA links", () => {
@@ -71,5 +74,21 @@ describe("HomeSections", () => {
     // Artists card is "coming soon" — no link, only the fans card links to the store
     expect(screen.getAllByRole("link")).toHaveLength(1);
     expect(screen.getAllByRole("link")[0]).toHaveAttribute("href", "/store");
+  });
+
+  it("renders hero section with heading and CTA link", () => {
+    render(<HeroSection />);
+
+    expect(screen.getByTestId("hero-section")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 1 })).toBeInTheDocument();
+    expect(screen.getByTestId("hero-cta")).toHaveAttribute("href", "/store");
+  });
+
+  it("renders landing page with all sections", () => {
+    render(<LandingPage />);
+
+    expect(screen.getByRole("main")).toBeInTheDocument();
+    expect(screen.getByTestId("hero-section")).toBeInTheDocument();
+    expect(screen.getByTestId("cta-section")).toBeInTheDocument();
   });
 });

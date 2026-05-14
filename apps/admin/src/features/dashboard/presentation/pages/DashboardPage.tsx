@@ -8,10 +8,9 @@ import { ADMIN_APP_ACCESS_KEYS } from "@/shared/domain/constants";
 import { AccessDeniedState } from "@/shared/presentation/components/AccessDeniedState";
 
 export function DashboardPage() {
-  const { grantedKeys, isLoading, hasPermission } = useCurrentUserPermissions();
+  const { grantedKeys, hasPermission } = useCurrentUserPermissions();
   const t = useTranslations("common");
 
-  if (isLoading) return null;
   if (!matchesPermissions(grantedKeys, [...ADMIN_APP_ACCESS_KEYS], "any")) {
     return (
       <AccessDeniedState

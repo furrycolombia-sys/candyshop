@@ -3,16 +3,13 @@
 import { createBrowserSupabaseClient } from "api/supabase";
 import { useEffect, useMemo, useRef, useState } from "react";
 
+import {
+  clearPermCache,
+  readPermCache,
+  writePermCache,
+} from "./permCachePersistence";
+import { useInitialGrantedKeys } from "./PermissionsContext";
 import { useSupabaseAuth } from "./useSupabaseAuth";
-
-type PermissionRow = {
-  expires_at: string | null;
-  resource_permissions: {
-    permissions: {
-      key: string;
-    };
-  };
-};
 
 export type PermissionRequirementMode = "all" | "any";
 
@@ -44,29 +41,40 @@ export function matchesPermissions(
 export function useCurrentUserPermissions() {
   const { user, isAuthenticated, isLoading: authLoading } = useSupabaseAuth();
   const supabase = useMemo(() => createBrowserSupabaseClient(), []);
-  const [grantedKeys, setGrantedKeys] = useState<string[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const loadedUserIdRef = useRef<string | null>(null);
+  // Server layouts pass the cookie value via PermissionsProvider so SSR
+  // and client hydration both start with the same granted keys — no flicker.
+  const initialGrantedKeys = useInitialGrantedKeys();
+  const [grantedKeys, setGrantedKeys] = useState<string[]>(
+    () => readPermCache() ?? initialGrantedKeys,
+  );
   const userId = user?.id ?? null;
+  // Track whether we have ever confirmed a live user session. Without this
+  // guard, a transient userId=null during component mount (e.g. getUser()
+  // network call still in-flight) would call clearPermCache() and wipe the
+  // cookie that SSR just seeded, causing a flicker on the next navigation.
+  const hadUserIdRef = useRef(false);
+  // isPermLoading tracks whether the DB fetch is in-flight. Starts true so
+  // consumers (e.g. PaymentsSidebar) can wait for data-loading="false" before
+  // asserting on permission-gated elements.
+  const [isPermLoading, setIsPermLoading] = useState(true);
 
   useEffect(() => {
+    if (authLoading) return;
+
     let isActive = true;
 
     async function loadPermissions() {
-      if (authLoading) return;
-
       if (!userId) {
-        if (isActive) {
-          setGrantedKeys([]);
-          loadedUserIdRef.current = null;
-          setIsLoading(false);
+        // Only clear the cookie if we previously had a confirmed user session.
+        // This prevents wiping the SSR-seeded cookie on a transient null that
+        // occurs at mount before the auth state has fully resolved.
+        if (hadUserIdRef.current) {
+          clearPermCache();
         }
+        if (isActive) setIsPermLoading(false);
         return;
       }
-
-      // Always show loading state while fetching to prevent stale permissions
-      // from briefly appearing after a session change or page navigation.
-      setIsLoading(true);
+      hadUserIdRef.current = true;
 
       const [{ data, error }, { data: delegateData }] = await Promise.all([
         supabase
@@ -84,16 +92,17 @@ export function useCurrentUserPermissions() {
 
       if (!isActive) return;
 
+      // If user_permissions fails we have no safe baseline — abort without caching.
       if (error) {
-        setGrantedKeys([]);
-        loadedUserIdRef.current = userId;
-        setIsLoading(false);
+        setIsPermLoading(false);
         return;
       }
+      // seller_admins is best-effort; a failure leaves delegateData null and
+      // the loop below falls back to [] so user_permissions still takes effect.
 
       const now = Date.now();
       const uniqueKeys = new Set(
-        ((data ?? []) as PermissionRow[])
+        (data ?? [])
           .filter((row) => !row.expires_at || Date.parse(row.expires_at) > now)
           .map((row) => row.resource_permissions.permissions.key),
       );
@@ -104,12 +113,21 @@ export function useCurrentUserPermissions() {
         }
       }
 
-      setGrantedKeys([...uniqueKeys]);
-      loadedUserIdRef.current = userId;
-      setIsLoading(false);
+      const keys = [...uniqueKeys].sort();
+      writePermCache(keys);
+      // Bail out when nothing changed so the nav doesn't re-render unnecessarily.
+      setGrantedKeys((prev) => {
+        const prevSorted = [...prev].sort();
+        if (prevSorted.length !== keys.length) return keys;
+        for (let i = 0; i < keys.length; i++) {
+          if (prevSorted[i] !== keys[i]) return keys;
+        }
+        return prev;
+      });
+      setIsPermLoading(false);
     }
 
-    loadPermissions();
+    void loadPermissions();
 
     return () => {
       isActive = false;
@@ -118,8 +136,8 @@ export function useCurrentUserPermissions() {
 
   return {
     grantedKeys,
-    isLoading: authLoading || isLoading,
     isAuthenticated,
+    isLoading: authLoading || isPermLoading,
     hasPermission: (
       required: string | readonly string[],
       mode: PermissionRequirementMode = "all",

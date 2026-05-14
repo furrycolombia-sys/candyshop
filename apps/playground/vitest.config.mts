@@ -49,9 +49,7 @@ export default defineConfig({
         "**/*.spec.ts",
       ],
       cleanOnRerun: false,
-      thresholds: {
-        global: { branches: 85, functions: 85, lines: 85, statements: 85 },
-      },
+      // No thresholds — playground is a sandbox (passWithNoTests); see CLAUDE.md
     },
     testTimeout: 10_000,
     hookTimeout: 10_000,

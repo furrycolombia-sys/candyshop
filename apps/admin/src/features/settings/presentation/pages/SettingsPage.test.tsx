@@ -9,13 +9,16 @@ vi.mock("shared", () => ({
   tid: (id: string) => ({ "data-testid": id }),
 }));
 
+vi.mock("@/shared/presentation/components/AccessDeniedState", () => ({
+  AccessDeniedState: () => <div data-testid="access-denied">Denied</div>,
+}));
+
 const mockHasPermission = vi.fn((permission: string) =>
   ["payment_settings.read", "payment_settings.update"].includes(permission),
 );
 
 vi.mock("auth/client", () => ({
   useCurrentUserPermissions: () => ({
-    isLoading: false,
     hasPermission: mockHasPermission,
   }),
 }));
@@ -140,5 +143,11 @@ describe("SettingsPage", () => {
     render(<SettingsPage />);
     expect(screen.queryByTestId("settings-loading")).not.toBeInTheDocument();
     expect(screen.queryByTestId("settings-error")).not.toBeInTheDocument();
+  });
+
+  it("shows access denied state when payment_settings.read permission is not granted", () => {
+    mockHasPermission.mockReturnValue(false);
+    render(<SettingsPage />);
+    expect(screen.getByTestId("access-denied")).toBeInTheDocument();
   });
 });

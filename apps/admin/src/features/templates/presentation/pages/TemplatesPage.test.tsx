@@ -11,7 +11,6 @@ vi.mock("shared", () => ({
 
 vi.mock("auth/client", () => ({
   useCurrentUserPermissions: () => ({
-    isLoading: false,
     hasPermission: () => true,
   }),
 }));

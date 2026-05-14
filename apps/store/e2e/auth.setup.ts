@@ -104,6 +104,10 @@ setup("authenticate", async ({ context, page }) => {
   await page.goto(`${STORE_URL}/en`);
   await context.storageState({ path: AUTH_FILE });
 
+  // Write the user's ID so permission-granting tests can look it up.
+  const USER_FILE = path.join(path.dirname(AUTH_FILE), "user.json");
+  fs.writeFileSync(USER_FILE, JSON.stringify({ id: user.user!.id, email }));
+
   // NOTE: Do NOT delete the test user here.
   // The Supabase browser client calls getUser() (a real network request) to
   // validate the session on every page load. If the user is deleted before
