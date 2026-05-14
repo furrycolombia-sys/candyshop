@@ -14,7 +14,7 @@ export function PaymentsSidebar() {
   const t = useTranslations("sidebar");
   const pathname = usePathname();
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const { grantedKeys, isLoading } = useCurrentUserPermissions();
+  const { grantedKeys } = useCurrentUserPermissions();
 
   const appPath = pathname.replace(/^\/[a-z]{2}/, "") || "/";
 
@@ -24,7 +24,6 @@ export function PaymentsSidebar() {
         "relative hidden shrink-0 flex-col border-r-3 border-foreground bg-background transition-all duration-300 ease-in-out lg:flex",
         isCollapsed ? "w-sidebar-collapsed" : "w-60",
       )}
-      data-loading={isLoading}
       {...tid("payments-sidebar")}
     >
       <button
@@ -45,7 +44,6 @@ export function PaymentsSidebar() {
         appPath={appPath}
         collapsed={isCollapsed}
         grantedKeys={grantedKeys}
-        isLoading={isLoading}
       />
     </aside>
   );

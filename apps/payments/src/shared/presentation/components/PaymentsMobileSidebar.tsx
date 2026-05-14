@@ -13,7 +13,7 @@ import { PaymentsSidebarNav } from "@/shared/presentation/components/PaymentsSid
 export function PaymentsMobileSidebar() {
   const t = useTranslations("sidebar");
   const pathname = usePathname();
-  const { grantedKeys, isLoading } = useCurrentUserPermissions();
+  const { grantedKeys } = useCurrentUserPermissions();
   const [isOpen, setIsOpen] = useState(false);
 
   const appPath = pathname.replace(/^\/[a-z]{2}/, "") || "/";
@@ -46,7 +46,6 @@ export function PaymentsMobileSidebar() {
           <PaymentsSidebarNav
             appPath={appPath}
             grantedKeys={grantedKeys}
-            isLoading={isLoading}
             onNavigate={() => setIsOpen(false)}
           />
         </SheetContent>

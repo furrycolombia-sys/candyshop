@@ -23,7 +23,7 @@ vi.mock("ui", () => ({
     <button
       type="button"
       role="switch"
-      aria-checked={checked}
+      aria-checked={String(checked) as "true" | "false"}
       onClick={() => onCheckedChange(!checked)}
     />
   ),
@@ -169,6 +169,92 @@ describe("PaymentMethodEditor", () => {
       expect.objectContaining({
         id: "pm-1",
         patch: expect.objectContaining({ name_en: "New Name" }),
+      }),
+      expect.any(Object),
+    );
+  });
+
+  it("updates nameEs when ES name input changes", () => {
+    render(<PaymentMethodEditor method={mockMethod} />, {
+      wrapper: createWrapper(),
+    });
+    const input = screen.getByTestId(
+      "payment-method-name-es",
+    ) as HTMLInputElement;
+    fireEvent.change(input, { target: { value: "Nuevo Nombre" } });
+    expect(input.value).toBe("Nuevo Nombre");
+  });
+
+  it("toggles requiresReceipt when its checkbox is clicked", () => {
+    render(<PaymentMethodEditor method={mockMethod} />, {
+      wrapper: createWrapper(),
+    });
+    const checkbox = screen.getByTestId(
+      "payment-method-requires-receipt",
+    ) as HTMLInputElement;
+    expect(checkbox).not.toBeChecked();
+    fireEvent.click(checkbox);
+    expect(checkbox).toBeChecked();
+  });
+
+  it("toggles requiresTransferNumber when its checkbox is clicked", () => {
+    render(<PaymentMethodEditor method={mockMethod} />, {
+      wrapper: createWrapper(),
+    });
+    const checkbox = screen.getByTestId(
+      "payment-method-requires-transfer-number",
+    ) as HTMLInputElement;
+    expect(checkbox).not.toBeChecked();
+    fireEvent.click(checkbox);
+    expect(checkbox).toBeChecked();
+  });
+
+  it("defaults nameEs to empty string when method.name_es is null", () => {
+    const methodWithNullEs: SellerPaymentMethod = {
+      ...mockMethod,
+      name_es: null,
+    };
+    render(<PaymentMethodEditor method={methodWithNullEs} />, {
+      wrapper: createWrapper(),
+    });
+    const input = screen.getByTestId(
+      "payment-method-name-es",
+    ) as HTMLInputElement;
+    expect(input.value).toBe("");
+  });
+
+  it("includes updated nameEs in the save payload", () => {
+    render(<PaymentMethodEditor method={mockMethod} />, {
+      wrapper: createWrapper(),
+    });
+    const input = screen.getByTestId("payment-method-name-es");
+    fireEvent.change(input, { target: { value: "Transferencia Actualizada" } });
+    fireEvent.click(screen.getByTestId("payment-method-save"));
+    expect(mockUpdateMutate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        patch: expect.objectContaining({
+          name_es: "Transferencia Actualizada",
+        }),
+      }),
+      expect.any(Object),
+    );
+  });
+
+  it("includes requiresReceipt and requiresTransferNumber when toggled and saved", () => {
+    render(<PaymentMethodEditor method={mockMethod} />, {
+      wrapper: createWrapper(),
+    });
+    fireEvent.click(screen.getByTestId("payment-method-requires-receipt"));
+    fireEvent.click(
+      screen.getByTestId("payment-method-requires-transfer-number"),
+    );
+    fireEvent.click(screen.getByTestId("payment-method-save"));
+    expect(mockUpdateMutate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        patch: expect.objectContaining({
+          requires_receipt: true,
+          requires_transfer_number: true,
+        }),
       }),
       expect.any(Object),
     );

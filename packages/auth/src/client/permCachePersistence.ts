@@ -1,7 +1,12 @@
 import { deleteCookie, getCookie, setCookie } from "cookies-next";
 
-const NAV_PERM_COOKIE_KEY = "candystore-nav-perm";
-const NAV_PERM_MAX_AGE = 3600;
+import {
+  permCacheSchema,
+  PERM_COOKIE_KEY,
+  PERM_COOKIE_MAX_BYTES,
+} from "../constants";
+
+const PERM_MAX_AGE = 3600;
 const MINIMUM_DOMAIN_SEGMENTS = 2;
 const DOMAIN_SUFFIX_SEGMENT_OFFSET = -2;
 
@@ -12,7 +17,7 @@ function getSharedCookieDomain(hostname: string): string | undefined {
   return `.${parts.slice(DOMAIN_SUFFIX_SEGMENT_OFFSET).join(".")}`;
 }
 
-function getNavPermCookieOptions() {
+function getPermCookieOptions() {
   const isSecure =
     globalThis.window !== undefined &&
     globalThis.location.protocol === "https:";
@@ -29,34 +34,38 @@ function getNavPermCookieOptions() {
   };
 }
 
-export function readNavPermCache(): string[] | null {
+export function readPermCache(): string[] | null {
   try {
-    const raw = getCookie(NAV_PERM_COOKIE_KEY);
+    const raw = getCookie(PERM_COOKIE_KEY);
     if (raw === undefined || raw === null) return null;
-    const parsed = JSON.parse(String(raw));
-    if (!Array.isArray(parsed)) return null;
-    if (!parsed.every((item) => typeof item === "string")) return null;
-    return parsed as string[];
+    const result = permCacheSchema.safeParse(JSON.parse(String(raw)));
+    return result.success ? result.data : null;
   } catch {
     return null;
   }
 }
 
-export function writeNavPermCache(keys: string[]): void {
-  const options = getNavPermCookieOptions();
-  if (options.domain) {
-    deleteCookie(NAV_PERM_COOKIE_KEY, { path: "/" });
+export function writePermCache(keys: string[]): void {
+  const serialised = JSON.stringify(keys);
+  if (serialised.length > PERM_COOKIE_MAX_BYTES) {
+    // Exceeding the limit would silently truncate or be rejected by the browser;
+    // skip the write so we fall back to a fresh DB fetch on next navigation.
+    return;
   }
-  setCookie(NAV_PERM_COOKIE_KEY, JSON.stringify(keys), {
+  const options = getPermCookieOptions();
+  if (options.domain) {
+    deleteCookie(PERM_COOKIE_KEY, { path: "/" });
+  }
+  setCookie(PERM_COOKIE_KEY, serialised, {
     ...options,
-    maxAge: NAV_PERM_MAX_AGE,
+    maxAge: PERM_MAX_AGE,
   });
 }
 
-export function clearNavPermCache(): void {
-  const options = getNavPermCookieOptions();
-  deleteCookie(NAV_PERM_COOKIE_KEY, options);
+export function clearPermCache(): void {
+  const options = getPermCookieOptions();
+  deleteCookie(PERM_COOKIE_KEY, options);
   if (options.domain !== undefined) {
-    deleteCookie(NAV_PERM_COOKIE_KEY, { path: "/" });
+    deleteCookie(PERM_COOKIE_KEY, { path: "/" });
   }
 }

@@ -50,6 +50,7 @@ export function FileInput({
   return (
     <input
       id={id}
+      data-testid={id}
       type="file"
       accept="image/*,.pdf"
       disabled={disabled}

@@ -109,7 +109,6 @@ export interface PaymentsSidebarNavProps {
   appPath: string;
   collapsed?: boolean;
   grantedKeys: string[];
-  isLoading: boolean;
   onNavigate?: () => void;
 }
 
@@ -117,16 +116,13 @@ export function PaymentsSidebarNav({
   appPath,
   collapsed = false,
   grantedKeys,
-  isLoading,
   onNavigate,
 }: PaymentsSidebarNavProps) {
   const t = useTranslations("sidebar");
   const visibleSections = NAV_SECTIONS.map((section) => ({
     ...section,
     items: section.items.filter((item) =>
-      isLoading
-        ? false
-        : matchesPermissions(grantedKeys, item.required, item.mode),
+      matchesPermissions(grantedKeys, item.required, item.mode),
     ),
   })).filter((section) => section.items.length > 0);
 

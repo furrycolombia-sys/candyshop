@@ -11,13 +11,12 @@ import { useSupabaseAuth } from "@/shared/application/hooks/useSupabaseAuth";
 import { AccessDeniedState } from "@/shared/presentation/components/AccessDeniedState";
 
 export function ProductListPage() {
-  const { isLoading, hasPermission } = useCurrentUserPermissions();
+  const { hasPermission } = useCurrentUserPermissions();
   const t = useTranslations("common");
   const { user } = useSupabaseAuth();
   const { data: delegateCounts } = useDelegateCountsByProduct(user?.id);
   const { data: pendingCount } = usePendingOrderCount();
 
-  if (isLoading) return null;
   if (!hasPermission("products.read")) {
     return (
       <AccessDeniedState

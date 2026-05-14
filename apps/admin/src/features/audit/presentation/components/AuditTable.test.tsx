@@ -222,4 +222,48 @@ describe("AuditTable", () => {
 
     expect(screen.queryByTestId("detail-1")).not.toBeInTheDocument();
   });
+
+  it("shows summaryMore for UPDATE with more than 3 changed fields", () => {
+    const entry = makeEntry({
+      action_type: "UPDATE",
+      changed_fields: {
+        field1: "a",
+        field2: "b",
+        field3: "c",
+        field4: "d",
+      },
+    });
+    render(<AuditTable {...defaultProps} entries={[entry]} />);
+    expect(screen.getByText(/summaryMore/)).toBeInTheDocument();
+  });
+
+  it("shows summaryDeleted for DELETE entry with a name in row_data", () => {
+    const entry = makeEntry({
+      action_type: "DELETE",
+      row_data: { name_en: "Deleted Widget" },
+      changed_fields: null,
+    });
+    render(<AuditTable {...defaultProps} entries={[entry]} />);
+    expect(screen.getByText(/summaryDeleted/)).toBeInTheDocument();
+  });
+
+  it("shows em dash when no summary applies (INSERT without name)", () => {
+    const entry = makeEntry({
+      action_type: "INSERT",
+      row_data: {},
+      changed_fields: null,
+    });
+    render(<AuditTable {...defaultProps} entries={[entry]} />);
+    expect(screen.getByText("—")).toBeInTheDocument();
+  });
+
+  it("falls back to truncated user_id when user_display_name is null", () => {
+    const entry = makeEntry({
+      user_id: "abcdef12-0000-0000-0000-000000000000",
+      user_display_name: null,
+    });
+    render(<AuditTable {...defaultProps} entries={[entry]} />);
+    // UUID_PREVIEW_LENGTH is 8 — expect to see the first 8 chars of the UUID
+    expect(screen.getByText("abcdef12")).toBeInTheDocument();
+  });
 });

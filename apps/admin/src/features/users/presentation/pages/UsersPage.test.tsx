@@ -21,19 +21,8 @@ vi.mock("next-intl", () => ({
 }));
 
 describe("UsersPage", () => {
-  it("renders nothing while loading", () => {
-    vi.mocked(useCurrentUserPermissions).mockReturnValue({
-      isLoading: true,
-      hasPermission: vi.fn(),
-    } as unknown as ReturnType<typeof useCurrentUserPermissions>);
-
-    const { container } = render(<UsersPage />);
-    expect(container).toBeEmptyDOMElement();
-  });
-
   it("renders access denied if no permission", () => {
     vi.mocked(useCurrentUserPermissions).mockReturnValue({
-      isLoading: false,
       hasPermission: vi.fn().mockReturnValue(false),
     } as unknown as ReturnType<typeof useCurrentUserPermissions>);
 
@@ -44,7 +33,6 @@ describe("UsersPage", () => {
 
   it("renders content if user has permission", () => {
     vi.mocked(useCurrentUserPermissions).mockReturnValue({
-      isLoading: false,
       hasPermission: vi
         .fn()
         .mockImplementation((p) => p === "user_permissions.read"),

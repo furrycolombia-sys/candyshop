@@ -1,5 +1,7 @@
 import { TallyFeedbackButton } from "@monorepo/app-components";
 import { getServerUserEmail } from "api/supabase/server";
+import { PermissionsProvider } from "auth/client";
+import { readPermCacheServer } from "auth/server";
 import type { Metadata } from "next";
 import { NextIntlClientProvider } from "next-intl";
 import {
@@ -44,21 +46,26 @@ export default async function LocaleLayout({
 
   const messages = await getMessages();
 
-  const userEmail = await getServerUserEmail();
+  const [userEmail, initialGrantedKeys] = await Promise.all([
+    getServerUserEmail(),
+    readPermCacheServer(),
+  ]);
 
   return (
     <ThemeProvider>
       <NextIntlClientProvider messages={messages}>
-        <Providers>
-          <AppTopNavigation
-            currentApp="landing"
-            urls={appUrls}
-            locales={routing.locales}
-            userEmail={userEmail}
-          />
-          {children}
-          <TallyFeedbackButton />
-        </Providers>
+        <PermissionsProvider initialGrantedKeys={initialGrantedKeys}>
+          <Providers>
+            <AppTopNavigation
+              currentApp="landing"
+              urls={appUrls}
+              locales={routing.locales}
+              userEmail={userEmail}
+            />
+            {children}
+            <TallyFeedbackButton />
+          </Providers>
+        </PermissionsProvider>
       </NextIntlClientProvider>
     </ThemeProvider>
   );

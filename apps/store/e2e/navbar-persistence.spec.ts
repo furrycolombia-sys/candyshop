@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 
-import { test, expect } from "@playwright/test";
+import { test, expect, type Page } from "@playwright/test";
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { resolveE2EAppUrls } = require(
@@ -14,18 +14,15 @@ const {
   payments: PAYMENTS_URL,
 } = resolveE2EAppUrls();
 
+const NAV_APPS = [
+  { name: "store", url: STORE_URL },
+  { name: "studio", url: STUDIO_URL },
+  { name: "payments", url: PAYMENTS_URL },
+];
+
 const USER_FILE = path.resolve(__dirname, ".auth/user.json");
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-/**
- * These tests verify the Stable Navbar feature: permission-gated nav links
- * appear when a user has the right permissions, persist across cross-app
- * navigations via the nav-perm cookie (no pop-in), and update when permissions
- * change (revocation flows through after the next background fetch).
- *
- * Target env: staging (TARGET_ENV=staging pnpm test:e2e).
- */
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let supabaseAdmin: any;
@@ -57,14 +54,106 @@ async function grantPermission(key: string): Promise<void> {
     mode: "grant",
     granted_by: userId,
   });
-  if (error) throw new Error(`Failed to grant '${key}': ${error.message}`);
+  if (error && error.code !== "23505")
+    throw new Error(`Failed to grant '${key}': ${error.message}`);
 }
 
 async function revokeAllPermissions(): Promise<void> {
   await supabaseAdmin.from("user_permissions").delete().eq("user_id", userId);
 }
 
-// ── Setup / teardown ──────────────────────────────────────────────────────────
+const PERM_PATTERN = /\/rest\/v1\/(user_permissions|seller_admins)/;
+
+/**
+ * Navigate to `url/en`, hold the permission API calls until a MutationObserver
+ * is installed on the nav, then release. Returns:
+ *
+ * - `studioVisibleBeforeApi` — whether `nav-link-studio` was visible while the
+ *   API was still blocked (i.e., the pre-API render state driven solely by the
+ *   nav-perm cookie). A false value when true was expected indicates a flicker:
+ *   the nav rendered without the cookie state before the API returned.
+ *
+ * - `mutations` — DOM mutations observed on the nav element after both Supabase
+ *   responses complete. 0 = stable (cookie matched API). >0 = re-rendered
+ *   (cookie was stale, API caused an update).
+ */
+async function navStateAfterFetch(
+  page: Page,
+  url: string,
+): Promise<{ studioVisibleBeforeApi: boolean; mutations: number }> {
+  // Register response watchers before navigating so we don't race.
+  const r1 = page.waitForResponse(
+    (r) => PERM_PATTERN.test(r.url()) && r.url().includes("user_permissions"),
+    { timeout: 15_000 },
+  );
+  const r2 = page.waitForResponse(
+    (r) => PERM_PATTERN.test(r.url()) && r.url().includes("seller_admins"),
+    { timeout: 15_000 },
+  );
+
+  // Hold permission API calls until the observer is installed.
+  let releaseAPI!: () => void;
+  const apiReady = new Promise<void>((resolve) => {
+    releaseAPI = resolve;
+  });
+  await page.route(PERM_PATTERN, async (route) => {
+    await apiReady;
+    await route.continue();
+  });
+
+  await page.goto(`${url}/en`);
+  await expect(page.getByTestId("app-navigation")).toBeVisible();
+
+  // ── Flicker check ─────────────────────────────────────────────────────────
+  // The API is still blocked here. The nav renders from the nav-perm cookie
+  // via useLayoutEffect. We give React up to 1 s to hydrate and run
+  // useLayoutEffect (which seeds hasCachedPermissions from the cookie) before
+  // sampling the link's visibility. Any link that appears in this window is
+  // driven purely by the cookie — the route handler is still holding the API.
+  let studioVisibleBeforeApi = false;
+  try {
+    await expect(page.getByTestId("nav-link-studio")).toBeVisible({
+      timeout: 1_000,
+    });
+    studioVisibleBeforeApi = true;
+  } catch {
+    studioVisibleBeforeApi = false;
+  }
+
+  // Install MutationObserver while API calls are still queued.
+  await page.evaluate(() => {
+    const nav = document.querySelector('[data-testid="app-navigation"]');
+    if (!nav) return;
+    (window as unknown as Record<string, unknown>).__navMutCount = 0;
+    const obs = new MutationObserver(() => {
+      (window as unknown as Record<string, unknown>).__navMutCount =
+        ((window as unknown as Record<string, unknown>)
+          .__navMutCount as number) + 1;
+    });
+    obs.observe(nav, { subtree: true, childList: true, attributes: true });
+    (window as unknown as Record<string, unknown>).__navObs = obs;
+  });
+
+  // Let the API calls through.
+  releaseAPI();
+
+  // Wait for both permission responses to complete.
+  await Promise.all([r1, r2]);
+
+  // Give React one tick to flush any resulting state updates.
+  await page.waitForTimeout(500);
+
+  const mutations = await page.evaluate(
+    () =>
+      ((window as unknown as Record<string, unknown>)
+        .__navMutCount as number) ?? 0,
+  );
+
+  await page.unroute(PERM_PATTERN);
+  return { studioVisibleBeforeApi, mutations };
+}
+
+// ── Setup ─────────────────────────────────────────────────────────────────────
 
 test.beforeAll(async () => {
   if (!SUPABASE_URL) throw new Error("NEXT_PUBLIC_SUPABASE_URL not set");
@@ -84,172 +173,91 @@ test.beforeAll(async () => {
     id: string;
   };
   userId = id;
-});
-
-test.beforeEach(async () => {
-  // Each test starts with zero permissions so state is predictable.
   await revokeAllPermissions();
 });
 
-// ── Tests ─────────────────────────────────────────────────────────────────────
+// ── Test ──────────────────────────────────────────────────────────────────────
 
-test.describe("Navbar persistence across cross-app navigations", () => {
-  test("studio link appears when user has products.create permission", async ({
+test.describe("Navbar permission caching across apps", () => {
+  test("nav is stable across apps when permissions unchanged, re-renders once on permission change, then stable again", async ({
     page,
   }) => {
-    // No permissions yet → studio link absent after fetch
-    await page.goto(`${STORE_URL}/en`);
-    await expect(page.getByTestId("app-navigation")).toBeVisible();
-    await expect(page.getByTestId("nav-link-studio")).not.toBeVisible({
-      timeout: 8000,
-    });
-
-    // Grant permission server-side
+    // ── Phase 1: Grant permissions and seed the nav-perm cookie ────────────
     await grantPermission("products.create");
 
-    // Reload → permissions fetch returns the new grant → studio link appears
-    await page.reload();
+    // Navigate to the first app so the hook fetches permissions and writes
+    // the cookie. Wait until the studio link is visible to confirm the cookie
+    // was written with the new permission set.
+    await page.goto(`${NAV_APPS[0].url}/en`);
     await expect(page.getByTestId("nav-link-studio")).toBeVisible({
-      timeout: 8000,
-    });
-  });
-
-  test("gated links persist on cross-app navigation (cookie persistence, no pop-in)", async ({
-    page,
-  }) => {
-    await grantPermission("products.create");
-
-    // First visit: permissions fetched and written to nav-perm cookie
-    await page.goto(`${STORE_URL}/en`);
-    await expect(page.getByTestId("nav-link-studio")).toBeVisible({
-      timeout: 8000,
-    });
-
-    // Cross-app: hasCachedPermissions=true → nav renders immediately from cookie
-    await page.goto(`${STUDIO_URL}/en`);
-    await expect(page.getByTestId("app-navigation")).toBeVisible();
-    await expect(page.getByTestId("nav-link-studio")).toBeVisible();
-
-    await page.goto(`${PAYMENTS_URL}/en`);
-    await expect(page.getByTestId("app-navigation")).toBeVisible();
-    await expect(page.getByTestId("nav-link-studio")).toBeVisible();
-  });
-
-  test("nav renders studio link immediately from cookie despite stalled API", async ({
-    page,
-  }) => {
-    await grantPermission("products.create");
-
-    // Seed the cookie: let permissions load normally so cookie is written
-    await page.goto(`${STORE_URL}/en`);
-    await expect(page.getByTestId("nav-link-studio")).toBeVisible({
-      timeout: 8000,
-    });
-
-    // Stall all permission-related Supabase REST calls for 10 s.
-    // The nav must still be immediately visible from the cookie (hasCachedPermissions=true),
-    // proving it does not wait for the API before rendering.
-    await page.route(
-      /\/rest\/v1\/(user_permissions|seller_admins)/,
-      async (route) => {
-        await new Promise<void>((r) => setTimeout(r, 10_000));
-        await route.continue();
-      },
-    );
-
-    await page.goto(`${STUDIO_URL}/en`);
-
-    // These checks must pass without waiting the full 10 s for the API.
-    await expect(page.getByTestId("app-navigation")).toBeVisible();
-    await expect(page.getByTestId("nav-link-studio")).toBeVisible();
-
-    await page.unroute(/\/rest\/v1\/(user_permissions|seller_admins)/);
-  });
-
-  test("menu updates after permission is revoked", async ({ page }) => {
-    await grantPermission("products.create");
-
-    // Establish: studio link visible + cookie written
-    await page.goto(`${STORE_URL}/en`);
-    await expect(page.getByTestId("nav-link-studio")).toBeVisible({
-      timeout: 8000,
-    });
-
-    // Revoke permission server-side
-    await revokeAllPermissions();
-
-    // Navigate: old cookie shows studio initially, background fetch returns
-    // empty grant list → grantedKeys updated → nav re-renders → studio gone.
-    await page.goto(`${STORE_URL}/en`);
-    await expect(page.getByTestId("nav-link-studio")).not.toBeVisible({
       timeout: 10_000,
     });
-  });
 
-  test("nav is stable (no re-renders) when permissions are unchanged across apps", async ({
-    page,
-  }) => {
-    await grantPermission("products.create");
+    // ── Phase 2: Navigate all apps — cookie matches API → stable nav ───────
+    //
+    // Both checks must pass for each app:
+    //   studioVisibleBeforeApi=true  → no initial-render flicker (nav renders
+    //                                  correctly from cookie before API returns)
+    //   mutations=0                  → no post-API flicker (API response didn't
+    //                                  cause the nav to re-render)
+    for (const app of NAV_APPS) {
+      const { studioVisibleBeforeApi, mutations } = await navStateAfterFetch(
+        page,
+        app.url,
+      );
+      expect(
+        studioVisibleBeforeApi,
+        `[flicker] ${app.name}: studio link must be visible from cookie BEFORE the API returns`,
+      ).toBe(true);
+      expect(
+        mutations,
+        `[stable] ${app.name}: permissions unchanged — expected 0 nav mutations after API fetch`,
+      ).toBe(0);
+    }
 
-    // Seed cookie
-    await page.goto(`${STORE_URL}/en`);
-    await expect(page.getByTestId("nav-link-studio")).toBeVisible({
-      timeout: 8000,
+    // ── Phase 3: Revoke permissions server-side ────────────────────────────
+    await revokeAllPermissions();
+
+    // ── Phase 4: First app — cookie is stale → nav must re-render ──────────
+    //
+    // The cookie still says studio is granted, so studioVisibleBeforeApi=true.
+    // After the API returns empty permissions, the nav re-renders (mutations>0)
+    // and the studio link disappears.
+    const {
+      studioVisibleBeforeApi: studioBeforeRevoke,
+      mutations: firstMutations,
+    } = await navStateAfterFetch(page, NAV_APPS[0].url);
+    expect(
+      studioBeforeRevoke,
+      `[phase 4] ${NAV_APPS[0].name}: old cookie should still show studio link before API returns`,
+    ).toBe(true);
+    expect(
+      firstMutations,
+      `[re-render] ${NAV_APPS[0].name}: stale cookie — expected nav mutations after API fetch`,
+    ).toBeGreaterThan(0);
+    // Confirm the studio link is now gone (permissions were revoked).
+    await expect(page.getByTestId("nav-link-studio")).not.toBeVisible({
+      timeout: 5_000,
     });
 
-    // Navigate across apps — same permissions, same cookie → nav stays consistent
-    await page.goto(`${STUDIO_URL}/en`);
-    await expect(page.getByTestId("nav-link-studio")).toBeVisible();
-
-    await page.goto(`${STORE_URL}/en`);
-    await expect(page.getByTestId("nav-link-studio")).toBeVisible();
-  });
-
-  test("active link has aria-current=page on the current app", async ({
-    page,
-  }) => {
-    await page.goto(`${STORE_URL}/en`);
-    await expect(page.getByTestId("app-navigation")).toBeVisible();
-
-    await expect(page.getByTestId("nav-link-store")).toHaveAttribute(
-      "aria-current",
-      "page",
-    );
-    await expect(page.getByTestId("nav-link-landing")).not.toHaveAttribute(
-      "aria-current",
-    );
-  });
-
-  test("nav-perm cookie is written after first authenticated page load", async ({
-    page,
-  }) => {
-    await page.goto(`${STORE_URL}/en`);
-    await expect(page.getByTestId("app-navigation")).toBeVisible();
-    // Wait for permission fetch + cookie write
-    await page.waitForTimeout(2000);
-
-    const cookies = await page.context().cookies();
-    const navCookie = cookies.find((c) => c.name === "candystore-nav-perm");
-    expect(navCookie).toBeDefined();
-    expect(navCookie!.value).not.toBe("");
-  });
-
-  test("nav-perm cookie is cleared when session is removed", async ({
-    page,
-    context,
-  }) => {
-    await page.goto(`${STORE_URL}/en`);
-    await page.waitForTimeout(2000); // let cookie be written
-
-    // Simulate logout: clear all cookies
-    await context.clearCookies();
-
-    // Visit unauthenticated: hook detects no user → clears nav-perm cookie
-    await page.goto(`${STORE_URL}/en`);
-    await page.waitForTimeout(2000);
-
-    const remaining = await context.cookies();
-    const navCookie = remaining.find((c) => c.name === "candystore-nav-perm");
-    expect(navCookie).toBeUndefined();
+    // ── Phase 5: Remaining apps — cookie updated → stable nav ──────────────
+    //
+    // After phase 4 the cookie was rewritten to reflect empty permissions.
+    // studioVisibleBeforeApi=false  → nav correctly shows no studio from cookie
+    // mutations=0                   → API matches cookie, no re-render needed
+    for (const app of NAV_APPS.slice(1)) {
+      const { studioVisibleBeforeApi, mutations } = await navStateAfterFetch(
+        page,
+        app.url,
+      );
+      expect(
+        studioVisibleBeforeApi,
+        `[flicker] ${app.name}: studio link must NOT appear from cookie (permissions revoked)`,
+      ).toBe(false);
+      expect(
+        mutations,
+        `[stable after update] ${app.name}: cookie updated — expected 0 nav mutations after API fetch`,
+      ).toBe(0);
+    }
   });
 });

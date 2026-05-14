@@ -169,3 +169,120 @@ describe("fetchAuditTableNames", () => {
     expect(capturedUrl).toContain("select=table_name");
   });
 });
+
+describe("fetchAuditLog — branch coverage", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.stubEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY", "test-anon-key");
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it("omits table_name param when tableName contains only non-word chars", async () => {
+    let capturedUrl = "";
+    server.use(
+      http.get(
+        `${SUPABASE_URL}/rest/v1/logged_actions_with_user`,
+        ({ request }) => {
+          capturedUrl = request.url;
+          return HttpResponse.json([]);
+        },
+      ),
+    );
+
+    const supabase = createMockSupabase("token");
+    await fetchAuditLog(supabase, { tableName: "---" });
+
+    expect(capturedUrl).not.toContain("table_name");
+  });
+
+  it("omits action_type param when actionType is not in AUDIT_ACTION_TYPES", async () => {
+    let capturedUrl = "";
+    server.use(
+      http.get(
+        `${SUPABASE_URL}/rest/v1/logged_actions_with_user`,
+        ({ request }) => {
+          capturedUrl = request.url;
+          return HttpResponse.json([]);
+        },
+      ),
+    );
+
+    const supabase = createMockSupabase("token");
+    await fetchAuditLog(supabase, { actionType: "INVALID_ACTION" });
+
+    expect(capturedUrl).not.toContain("action_type");
+  });
+});
+
+describe("insertAuditLog", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.stubEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY", "test-anon-key");
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  function createSessionSupabase(token?: string) {
+    return {
+      auth: {
+        getSession: vi.fn().mockResolvedValue({
+          data: {
+            session: token
+              ? { access_token: token, user: { id: "user-123" } }
+              : null,
+          },
+        }),
+      },
+    } as unknown as ReturnType<
+      typeof import("api/supabase").createBrowserSupabaseClient
+    >;
+  }
+
+  it("POSTs to logged_actions and resolves on success", async () => {
+    let capturedRequest: Request | null = null;
+    server.use(
+      http.post(`${SUPABASE_URL}/rest/v1/logged_actions`, ({ request }) => {
+        capturedRequest = request;
+        return new HttpResponse(null, { status: 201 });
+      }),
+    );
+
+    const supabase = createSessionSupabase("my-token");
+    const { insertAuditLog } = await import("./auditQueries");
+    await insertAuditLog(supabase, "INSERT", "products", { id: "1" });
+
+    expect(capturedRequest).not.toBeNull();
+    const body = await (capturedRequest as Request).json();
+    expect(body.action_type).toBe("INSERT");
+    expect(body.table_name).toBe("products");
+    expect(body.row_data).toEqual({ id: "1" });
+  });
+
+  it("throws Unauthenticated when session has no token", async () => {
+    const supabase = createSessionSupabase();
+    const { insertAuditLog } = await import("./auditQueries");
+    await expect(
+      insertAuditLog(supabase, "INSERT", "products"),
+    ).rejects.toThrow("Unauthenticated");
+  });
+
+  it("throws when the POST response is not ok", async () => {
+    server.use(
+      http.post(
+        `${SUPABASE_URL}/rest/v1/logged_actions`,
+        () => new HttpResponse(null, { status: 500 }),
+      ),
+    );
+
+    const supabase = createSessionSupabase("my-token");
+    const { insertAuditLog } = await import("./auditQueries");
+    await expect(
+      insertAuditLog(supabase, "INSERT", "products"),
+    ).rejects.toThrow("Audit insert failed: 500");
+  });
+});

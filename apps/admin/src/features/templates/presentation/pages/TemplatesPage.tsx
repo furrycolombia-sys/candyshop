@@ -7,10 +7,9 @@ import { TemplatesPageContent } from "@/features/templates/presentation/pages/Te
 import { AccessDeniedState } from "@/shared/presentation/components/AccessDeniedState";
 
 export function TemplatesPage() {
-  const { isLoading, hasPermission } = useCurrentUserPermissions();
+  const { hasPermission } = useCurrentUserPermissions();
   const t = useTranslations("common");
 
-  if (isLoading) return null;
   if (!hasPermission("templates.read")) {
     return (
       <AccessDeniedState

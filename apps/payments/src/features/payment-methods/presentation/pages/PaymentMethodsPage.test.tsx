@@ -15,7 +15,6 @@ vi.mock("next-intl", () => ({
 
 vi.mock("auth/client", () => ({
   useCurrentUserPermissions: () => ({
-    isLoading: false,
     hasPermission: (required: string | string[]) => {
       const requiredKeys = Array.isArray(required) ? required : [required];
       return requiredKeys.every((key) => mockGrantedPermissions.includes(key));

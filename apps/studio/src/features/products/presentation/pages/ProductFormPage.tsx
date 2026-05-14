@@ -20,17 +20,12 @@ interface ProductFormPageProps {
 
 export function ProductFormPage({ productId }: ProductFormPageProps) {
   const isEdit = !!productId;
-  const { isLoading: permissionsLoading, hasPermission } =
-    useCurrentUserPermissions();
+  const { hasPermission } = useCurrentUserPermissions();
   const t = useTranslations("common");
 
   const { data: product, isLoading } = useProductById(productId);
   const insertMutation = useInsertProduct();
   const updateMutation = useUpdateProduct(productId ?? "");
-
-  if (permissionsLoading) {
-    return null;
-  }
 
   if (
     (isEdit && !hasPermission("products.update")) ||

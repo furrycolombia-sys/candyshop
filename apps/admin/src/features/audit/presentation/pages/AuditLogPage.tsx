@@ -7,10 +7,9 @@ import { AuditLogPageContent } from "@/features/audit/presentation/pages/AuditLo
 import { AccessDeniedState } from "@/shared/presentation/components/AccessDeniedState";
 
 export function AuditLogPage() {
-  const { isLoading, hasPermission } = useCurrentUserPermissions();
+  const { hasPermission } = useCurrentUserPermissions();
   const t = useTranslations("common");
 
-  if (isLoading) return null;
   if (!hasPermission("audit.read")) {
     return (
       <AccessDeniedState

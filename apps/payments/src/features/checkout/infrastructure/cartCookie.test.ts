@@ -1,5 +1,5 @@
 // eslint-disable-next-line import/order -- vi.mock calls between imports require this ordering
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 vi.mock("cookies-next", () => ({
   getCookie: vi.fn(),
@@ -72,11 +72,28 @@ describe("readCartFromCookie", () => {
       quantity: 3,
     });
   });
+
+  it("returns the memoized snapshot when the raw cookie value has not changed", () => {
+    const items = [{ id: "p-cached", quantity: 7 }];
+    const rawJson = JSON.stringify(items);
+
+    // First call parses and caches
+    mockGetCookie.mockReturnValue(rawJson);
+    const first = readCartFromCookie();
+
+    // Second call with same raw value — should return the identical reference
+    const second = readCartFromCookie();
+    expect(second).toBe(first);
+  });
 });
 
 describe("clearCartCookie", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
   });
 
   it("deletes the cart cookie with path /", () => {
@@ -94,5 +111,74 @@ describe("clearCartCookie", () => {
 
     expect(listener).toHaveBeenCalledTimes(1);
     unsubscribe();
+  });
+
+  it("includes shared domain when hostname has multiple parts", () => {
+    vi.stubGlobal("location", { hostname: "payments.example.com" });
+
+    clearCartCookie();
+
+    expect(mockDeleteCookie).toHaveBeenCalledWith("candystore-cart", {
+      path: "/",
+      domain: ".example.com",
+    });
+  });
+
+  it("omits domain when hostname has fewer than two parts", () => {
+    vi.stubGlobal("location", { hostname: "singlepart" });
+
+    clearCartCookie();
+
+    expect(mockDeleteCookie).toHaveBeenCalledWith("candystore-cart", {
+      path: "/",
+    });
+  });
+
+  it("skips domain computation and does not dispatch event when window is undefined", () => {
+    vi.stubGlobal("window");
+
+    // Should not throw and deleteCookie is still called
+    clearCartCookie();
+
+    expect(mockDeleteCookie).toHaveBeenCalledWith("candystore-cart", {
+      path: "/",
+    });
+  });
+});
+
+describe("subscribeToCartCookie", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it("returns a callable no-op when window is not available", () => {
+    vi.stubGlobal("window");
+
+    const unsubscribe = subscribeToCartCookie(vi.fn());
+    expect(typeof unsubscribe).toBe("function");
+    expect(() => unsubscribe()).not.toThrow();
+  });
+
+  it("does not call onStoreChange when visibilityState is not visible", () => {
+    Object.defineProperty(document, "visibilityState", {
+      value: "hidden",
+      writable: true,
+      configurable: true,
+    });
+
+    const listener = vi.fn();
+    const unsubscribe = subscribeToCartCookie(listener);
+
+    document.dispatchEvent(new Event("visibilitychange"));
+
+    expect(listener).not.toHaveBeenCalled();
+    unsubscribe();
+
+    // Restore
+    Object.defineProperty(document, "visibilityState", {
+      value: "visible",
+      writable: true,
+      configurable: true,
+    });
   });
 });

@@ -44,8 +44,6 @@ describe("AdminSidebar", () => {
     overrides?: Partial<ReturnType<typeof useCurrentUserPermissions>>,
   ): ReturnType<typeof useCurrentUserPermissions> => ({
     grantedKeys,
-    hasCachedPermissions: false,
-    isLoading: false,
     isAuthenticated: true,
     hasPermission: (required, mode = "all") => {
       const requiredKeys = Array.isArray(required) ? required : [required];
@@ -96,9 +94,18 @@ describe("AdminSidebar", () => {
     expect(screen.queryByTestId("sidebar-templates")).not.toBeInTheDocument();
   });
 
-  it("handles loading state cleanly", () => {
+  it("shows items immediately when grantedKeys are seeded from cache", () => {
     vi.mocked(useCurrentUserPermissions).mockReturnValue(
-      createPermissionsState(["templates.read"], { isLoading: true }),
+      createPermissionsState(["templates.read"]),
+    );
+    render(<AdminSidebar />);
+
+    expect(screen.getByTestId("sidebar-templates")).toBeInTheDocument();
+  });
+
+  it("hides items when grantedKeys is empty", () => {
+    vi.mocked(useCurrentUserPermissions).mockReturnValue(
+      createPermissionsState([]),
     );
     render(<AdminSidebar />);
 

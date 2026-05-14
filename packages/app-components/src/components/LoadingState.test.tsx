@@ -46,4 +46,25 @@ describe("LoadingState", () => {
       "animate-spin",
     );
   });
+
+  it("applies sm icon size class when size='sm'", () => {
+    render(<LoadingState size="sm" />);
+    const el = screen.getByTestId("loading-state");
+    const svgEl = el.querySelector("svg");
+    expect(svgEl?.getAttribute("class")).toContain("size-4");
+  });
+
+  it("applies md icon size class when size='md'", () => {
+    render(<LoadingState size="md" />);
+    const el = screen.getByTestId("loading-state");
+    const svgEl = el.querySelector("svg");
+    expect(svgEl?.getAttribute("class")).toContain("size-6");
+  });
+
+  it("applies lg icon size class by default", () => {
+    render(<LoadingState />);
+    const el = screen.getByTestId("loading-state");
+    const svgEl = el.querySelector("svg");
+    expect(svgEl?.getAttribute("class")).toContain("size-8");
+  });
 });

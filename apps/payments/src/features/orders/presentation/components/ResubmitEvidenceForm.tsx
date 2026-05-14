@@ -166,6 +166,7 @@ export function ResubmitEvidenceForm({
           accept={ACCEPTED_RECEIPT_TYPES}
           onChange={handleFileChange}
           className="hidden"
+          {...tid(`resubmit-file-input-${orderId}`)}
         />
       </div>
 

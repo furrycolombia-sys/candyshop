@@ -67,7 +67,14 @@ export function DynamicFormField({
 
       {renderInput()}
 
-      {error && <p className="text-xs text-destructive">{error}</p>}
+      {error && (
+        <p
+          className="text-xs text-destructive"
+          {...tid(`dynamic-field-${field.id}-error`)}
+        >
+          {error}
+        </p>
+      )}
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, act } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 const mockSetParams = vi.fn();
@@ -71,9 +71,7 @@ describe("ProductFilters", () => {
     fireEvent.change(input, { target: { value: "test" } });
 
     // Advance past debounce
-    act(() => {
-      vi.advanceTimersByTime(400);
-    });
+    vi.advanceTimersByTime(400);
 
     expect(mockSetParams).toHaveBeenCalled();
   });

@@ -18,7 +18,7 @@ import { useSupabaseAuth } from "@/shared/application/hooks/useSupabaseAuth";
 import { AccessDeniedState } from "@/shared/presentation/components/AccessDeniedState";
 
 export function DelegateManagementPage() {
-  const { isLoading: permLoading, hasPermission } = useCurrentUserPermissions();
+  const { hasPermission } = useCurrentUserPermissions();
   const { user } = useSupabaseAuth();
   const t = useTranslations("sellerAdmins");
   const tCommon = useTranslations("common");
@@ -44,7 +44,7 @@ export function DelegateManagementPage() {
     [sellerId, removeMutation],
   );
 
-  if (permLoading || isLoading) return null;
+  if (isLoading) return null;
 
   if (!hasPermission(SELLER_ADMINS_READ_PERMISSION)) {
     return (

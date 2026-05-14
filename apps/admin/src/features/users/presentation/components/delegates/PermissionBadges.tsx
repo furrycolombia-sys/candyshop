@@ -1,11 +1,12 @@
 "use client";
 
 import { useTranslations } from "next-intl";
+import { tid } from "shared";
 
 export function PermissionBadges({ permissions }: { permissions: string[] }) {
   const t = useTranslations("users.delegates");
   return (
-    <div className="flex flex-wrap gap-1">
+    <div className="flex flex-wrap gap-1" {...tid("permission-badges")}>
       {permissions.map((perm) => (
         <span
           key={perm}

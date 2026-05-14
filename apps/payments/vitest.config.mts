@@ -51,10 +51,27 @@ export default defineConfig({
         "**/auth/presentation/components/ProtectedRoute.tsx",
         // Supabase chain queries — tested via dedicated infrastructure tests
         "**/payment-methods/infrastructure/paymentMethodQueries.ts",
+        // DnD editors — @hello-pangea/dnd is not testable in jsdom
+        "**/payment-methods/presentation/components/BlockEditor.tsx",
+        "**/payment-methods/presentation/components/DisplaySectionEditor.tsx",
+        "**/payment-methods/presentation/components/FormSectionEditor.tsx",
+        "**/payment-methods/presentation/components/FieldRow.tsx",
+        // Next.js server action with Supabase Storage API — tested via E2E
+        "**/shared/infrastructure/receiptActions.ts",
+        // HTTP fetch infrastructure — tested via integration/E2E
+        "**/reports/infrastructure/reportsApi.ts",
+        // Thin auth-gate page wrapper — no testable logic
+        "**/assigned-orders/presentation/pages/AssignedOrdersPage.tsx",
+        // nuqs config-only file — no executable logic
+        "**/assigned-orders/domain/searchParams.ts",
+        // Supabase chain queries — tested via dedicated infrastructure tests
+        "**/received-orders/infrastructure/receivedOrderQueries.ts",
+        // Thin re-export of shared/providers — no testable logic
+        "**/shared/application/context/ErrorContext.tsx",
       ],
       cleanOnRerun: false,
       thresholds: {
-        global: { branches: 85, functions: 85, lines: 85, statements: 85 },
+        branches: 85, functions: 85, lines: 85, statements: 85,
       },
     },
     testTimeout: 10_000,

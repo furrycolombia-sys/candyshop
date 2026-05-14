@@ -72,4 +72,20 @@ describe("ItemRow", () => {
     const iconInput = inputs[4];
     expect(iconInput).toHaveValue("");
   });
+
+  it("calls onUpdate when description_es changes", () => {
+    const onUpdate = vi.fn();
+    render(<ItemRow {...defaultProps} onUpdate={onUpdate} />);
+    const inputs = screen.getAllByRole("textbox");
+    fireEvent.change(inputs[3], { target: { value: "Nueva Desc" } });
+    expect(onUpdate).toHaveBeenCalledWith({ description_es: "Nueva Desc" });
+  });
+
+  it("calls onUpdate when icon changes", () => {
+    const onUpdate = vi.fn();
+    render(<ItemRow {...defaultProps} onUpdate={onUpdate} />);
+    const inputs = screen.getAllByRole("textbox");
+    fireEvent.change(inputs[4], { target: { value: "Heart" } });
+    expect(onUpdate).toHaveBeenCalledWith({ icon: "Heart" });
+  });
 });

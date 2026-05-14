@@ -4,20 +4,12 @@ import { createBrowserSupabaseClient } from "api/supabase";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import {
-  clearNavPermCache,
-  readNavPermCache,
-  writeNavPermCache,
-} from "./navPermCachePersistence";
+  clearPermCache,
+  readPermCache,
+  writePermCache,
+} from "./permCachePersistence";
+import { useInitialGrantedKeys } from "./PermissionsContext";
 import { useSupabaseAuth } from "./useSupabaseAuth";
-
-type PermissionRow = {
-  expires_at: string | null;
-  resource_permissions: {
-    permissions: {
-      key: string;
-    };
-  };
-};
 
 export type PermissionRequirementMode = "all" | "any";
 
@@ -49,33 +41,35 @@ export function matchesPermissions(
 export function useCurrentUserPermissions() {
   const { user, isAuthenticated, isLoading: authLoading } = useSupabaseAuth();
   const supabase = useMemo(() => createBrowserSupabaseClient(), []);
-  // Captured once on mount — true only when a valid cookie exists at page load.
-  const cachedRef = useRef(readNavPermCache());
-  const hasCachedPermissions = cachedRef.current !== null;
+  // Server layouts pass the cookie value via PermissionsProvider so SSR
+  // and client hydration both start with the same granted keys — no flicker.
+  const initialGrantedKeys = useInitialGrantedKeys();
   const [grantedKeys, setGrantedKeys] = useState<string[]>(
-    () => cachedRef.current ?? [],
+    () => readPermCache() ?? initialGrantedKeys,
   );
-  const [isLoading, setIsLoading] = useState(true);
   const userId = user?.id ?? null;
+  // Track whether we have ever confirmed a live user session. Without this
+  // guard, a transient userId=null during component mount (e.g. getUser()
+  // network call still in-flight) would call clearPermCache() and wipe the
+  // cookie that SSR just seeded, causing a flicker on the next navigation.
+  const hadUserIdRef = useRef(false);
 
   useEffect(() => {
+    if (authLoading) return;
+
     let isActive = true;
 
     async function loadPermissions() {
-      if (authLoading) return;
-
       if (!userId) {
-        if (isActive) {
-          clearNavPermCache();
-          setGrantedKeys([]);
-          setIsLoading(false);
+        // Only clear the cookie if we previously had a confirmed user session.
+        // This prevents wiping the SSR-seeded cookie on a transient null that
+        // occurs at mount before the auth state has fully resolved.
+        if (hadUserIdRef.current) {
+          clearPermCache();
         }
         return;
       }
-
-      // Always show loading state while fetching to prevent stale permissions
-      // from briefly appearing after a session change or page navigation.
-      setIsLoading(true);
+      hadUserIdRef.current = true;
 
       const [{ data, error }, { data: delegateData }] = await Promise.all([
         supabase
@@ -93,15 +87,14 @@ export function useCurrentUserPermissions() {
 
       if (!isActive) return;
 
-      if (error) {
-        setGrantedKeys([]);
-        setIsLoading(false);
-        return;
-      }
+      // If user_permissions fails we have no safe baseline — abort without caching.
+      if (error) return;
+      // seller_admins is best-effort; a failure leaves delegateData null and
+      // the loop below falls back to [] so user_permissions still takes effect.
 
       const now = Date.now();
       const uniqueKeys = new Set(
-        ((data ?? []) as PermissionRow[])
+        (data ?? [])
           .filter((row) => !row.expires_at || Date.parse(row.expires_at) > now)
           .map((row) => row.resource_permissions.permissions.key),
       );
@@ -112,13 +105,20 @@ export function useCurrentUserPermissions() {
         }
       }
 
-      const keys = [...uniqueKeys];
-      writeNavPermCache(keys);
-      setGrantedKeys(keys);
-      setIsLoading(false);
+      const keys = [...uniqueKeys].sort();
+      writePermCache(keys);
+      // Bail out when nothing changed so the nav doesn't re-render unnecessarily.
+      setGrantedKeys((prev) => {
+        const prevSorted = [...prev].sort();
+        if (prevSorted.length !== keys.length) return keys;
+        for (let i = 0; i < keys.length; i++) {
+          if (prevSorted[i] !== keys[i]) return keys;
+        }
+        return prev;
+      });
     }
 
-    loadPermissions();
+    void loadPermissions();
 
     return () => {
       isActive = false;
@@ -127,8 +127,6 @@ export function useCurrentUserPermissions() {
 
   return {
     grantedKeys,
-    hasCachedPermissions,
-    isLoading: authLoading || isLoading,
     isAuthenticated,
     hasPermission: (
       required: string | readonly string[],

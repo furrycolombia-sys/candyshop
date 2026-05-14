@@ -11,14 +11,15 @@ vi.mock("@/features/checkout/infrastructure/checkoutQueries", () => ({
   createOrder: vi.fn(),
 }));
 
-vi.mock("@/shared/infrastructure/receiptStorage", () => ({
-  uploadReceipt: vi.fn(),
+vi.mock("@/shared/infrastructure/receiptActions", () => ({
+  uploadCheckoutReceipt: vi.fn(),
 }));
 
 import { useSubmitPayment } from "./useSubmitPayment";
 
 import { createOrder } from "@/features/checkout/infrastructure/checkoutQueries";
 import { MY_ORDERS_QUERY_KEY } from "@/features/orders/domain/constants";
+import { uploadCheckoutReceipt } from "@/shared/infrastructure/receiptActions";
 
 function createWrapper() {
   const qc = new QueryClient({
@@ -108,5 +109,46 @@ describe("useSubmitPayment", () => {
     expect(invalidate).toHaveBeenCalledWith({
       queryKey: [MY_ORDERS_QUERY_KEY],
     });
+  });
+
+  it("uploads receipt and passes receiptUrl to createOrder", async () => {
+    vi.mocked(uploadCheckoutReceipt).mockResolvedValue({
+      ok: true,
+      path: "receipts/sess-1/r.png",
+    } as Awaited<ReturnType<typeof uploadCheckoutReceipt>>);
+    vi.mocked(createOrder).mockResolvedValue("order-5");
+
+    const { wrapper } = createWrapper();
+    const { result } = renderHook(() => useSubmitPayment(), { wrapper });
+
+    const file = new File(["data"], "r.png", { type: "image/png" });
+    await act(() =>
+      result.current.mutateAsync({ ...baseParams, receiptFile: file }),
+    );
+
+    expect(uploadCheckoutReceipt).toHaveBeenCalledWith("sess-1", file);
+    expect(createOrder).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ receiptUrl: "receipts/sess-1/r.png" }),
+    );
+  });
+
+  it("throws when receipt upload returns ok: false", async () => {
+    vi.mocked(uploadCheckoutReceipt).mockResolvedValue({
+      ok: false,
+      code: "upload_failed",
+    } as Awaited<ReturnType<typeof uploadCheckoutReceipt>>);
+
+    const { wrapper } = createWrapper();
+    const { result } = renderHook(() => useSubmitPayment(), { wrapper });
+
+    const file = new File(["data"], "r.png", { type: "image/png" });
+    await expect(
+      act(() =>
+        result.current.mutateAsync({ ...baseParams, receiptFile: file }),
+      ),
+    ).rejects.toThrow("upload_failed");
+
+    expect(createOrder).not.toHaveBeenCalled();
   });
 });
