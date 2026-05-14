@@ -1,0 +1,39 @@
+{
+  "recommendations": [
+    // Claude Code
+    "anthropic.claude-code",
+
+    // Git & GitHub
+    "eamodio.gitlens",
+    "mhutchie.git-graph",
+    "github.vscode-github-actions",
+
+    // Linting & Formatting
+    "dbaeumer.vscode-eslint",
+    "esbenp.prettier-vscode",
+    "stylelint.vscode-stylelint",
+
+    // TypeScript & CSS DX
+    "yoavbls.pretty-ts-errors",
+    "usernamehw.errorlens",
+    "wix.vscode-import-cost",
+    "clinyong.vscode-css-modules",
+    "styled-components.vscode-styled-components",
+    "syler.sass-indented",
+
+    // Docker & Dev Containers
+    "ms-azuretools.vscode-docker",
+    "ms-azuretools.vscode-containers",
+    "ms-vscode-remote.remote-containers",
+
+    // Env & Config
+    "mikestead.dotenv",
+    "ivory-lab.jenkinsfile-support",
+
+    // UI / Productivity
+    "vscode-icons-team.vscode-icons",
+    "jgclark.vscode-todo-highlight",
+    "dakara.dakara-foldplus",
+    "santacodes.santacodes-region-viewer"
+  ]
+}
