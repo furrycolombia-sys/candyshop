@@ -27,9 +27,10 @@ Initializes a new task by:
 2. **Setting up task documentation** folder with numbered artifacts
 3. **Fetching issue details** from GitHub
 4. **Automatically analyzing the codebase** to identify relevant files and patterns
-5. **Creating analysis artifact** (02-analysis.md) with findings
+5. **Creating analysis artifact** (02-analysis.md) with findings and design questions
+6. **Handing off to `/brainstorming`** — armed with codebase context to design before implementing
 
-This skill creates a structured workspace AND performs initial analysis so you're ready to implement immediately.
+This skill creates a structured workspace, performs initial analysis, and transitions directly into a design dialogue so decisions are made deliberately before any code is written.
 
 ---
 
@@ -381,11 +382,12 @@ Document the branch setup:
 
 ## Next Steps
 
-1. Analyze codebase → Creates `02-analysis.md`
-2. Create implementation plan → Creates `03-implementation-plan.md`
-3. Implement with TDD → Updates `04-implementation-log.md`
-4. Run tests → Creates `05-testing-results.md`
-5. Submit PR → `/submit-pr` (will target `{pr_target}`)
+1. Analyze codebase → Creates `02-analysis.md` (with Design Questions brief)
+2. Design session → `/brainstorming` creates spec in `docs/superpowers/specs/`
+3. Implementation plan → `/writing-plans` creates `03-implementation-plan.md`
+4. Implement with TDD → Updates `04-implementation-log.md`
+5. Run tests → Creates `05-testing-results.md`
+6. Submit PR → `/submit-pr` (will target `{pr_target}`)
 ```
 
 ### Step 9: Display Setup Summary
@@ -502,56 +504,108 @@ Create `.ai-context/task-outputs/GH-{number}/02-analysis.md`:
 ## Questions/Blockers
 
 - [ ] {Any clarifications needed}
+
+## Design Questions
+
+> Seed context for /brainstorming. These questions were surfaced by codebase analysis
+> and will drive the clarifying questions phase.
+
+### What we know (pre-answered by analysis)
+
+- Relevant files: [list key files from Relevant Files table above]
+- Existing patterns to follow: [list key patterns from Existing Patterns above]
+- Hard constraints: [migrations needed, breaking changes, DB schema impacts — or "None identified"]
+
+### Open questions for design dialogue
+
+- [ ] {Genuine unknown 1 surfaced during analysis — e.g., "Should this be a new hook or extend the existing one?"}
+- [ ] {Genuine unknown 2 — e.g., "Does this belong in the feature layer or shared?"}
+
+> If no real unknowns exist, this list may have 0–1 items. Brainstorming will move quickly to approach proposals.
+
+### Suggested design scope
+
+{1–2 sentences on what a complete implementation covers, derived from the issue requirements and analysis findings}
 ```
 
 ### Step 12: Display Analysis Summary
 
-After creating 02-analysis.md, show:
+After creating 02-analysis.md, show a brief handoff message:
 
 ```markdown
 ## Analysis Complete
 
-### Files Analyzed
+### Artifacts Created
 
-- {count} relevant files identified
-- {count} existing patterns documented
+| File                  | Status                                       |
+| --------------------- | -------------------------------------------- |
+| `00-task-overview.md` | ✅ Created                                   |
+| `01-setup.md`         | ✅ Created                                   |
+| `02-analysis.md`      | ✅ Created (includes Design Questions brief) |
 
 ### Key Findings
 
-- {Finding 1}
-- {Finding 2}
+- {count} relevant files identified
+- {count} existing patterns documented
+- {count} open design questions surfaced
 
-### Artifacts Created
-
-| File                  | Status     |
-| --------------------- | ---------- |
-| `00-task-overview.md` | ✅ Created |
-| `01-setup.md`         | ✅ Created |
-| `02-analysis.md`      | ✅ Created |
-
-### Ready for Implementation
-
-The analysis phase is complete. You can now:
-
-1. **Review the analysis** in `02-analysis.md`
-2. **Start implementation** - I'll create `03-implementation-plan.md` as we go
-3. **Ask questions** about specific patterns or approaches
-
-### Testing Requirements (TDD)
-
-Before implementing, write tests first:
-
-- [ ] Write failing unit tests for new components
-- [ ] Write failing unit tests for new hooks
-- [ ] Write failing unit tests for new utilities
-
-### Related Skills
-
-- `/run-tests` - Run unit tests with Vitest
-- `/run-e2e` - Run E2E tests with Playwright
-- `/submit-pr` - Create pull request to develop
-- `/checkpoint` - Save progress for later
+**Proceeding to design dialogue...**
 ```
+
+> **Do NOT add "Ready for Implementation" or Related Skills here.** The next step is brainstorming, not implementation.
+
+### Step 13: Hand off to brainstorming
+
+> **CRITICAL: This is the terminal step. Invoke brainstorming automatically — do NOT wait for the user to ask.**
+
+Invoke the brainstorming skill with pre-loaded context:
+
+```
+Skill('superpowers:brainstorming', args: `
+  Context pre-loaded from start-task for GH-{number}.
+
+  Before starting:
+  1. Read .ai-context/task-outputs/GH-{number}/02-analysis.md
+  2. Skip the "Explore project context" step — codebase analysis is already done
+  3. Open the dialogue using the "Design Questions" section of 02-analysis.md as your agenda
+
+  Start your first message with:
+  "I've reviewed the codebase analysis for GH-{number}. [Summarize what we know in 1-2 sentences.]
+   I want to understand [first open question from Design Questions]..."
+
+  Then continue the normal brainstorming flow:
+  - Clarifying questions (one at a time, using Design Questions as agenda)
+  - 2–3 approach proposals with trade-offs
+  - Design sections presented for approval
+  - Spec doc written to docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md
+  - GitHub issue comment posted with design decisions (if issue exists)
+  - writing-plans invoked as terminal step
+`)
+```
+
+**GitHub issue comment** (posted by brainstorming after spec approval, before writing-plans):
+
+```markdown
+## Design Decision — {YYYY-MM-DD}
+
+**Approach chosen:** {one-sentence summary of the selected approach}
+
+**Key decisions:**
+
+- {Decision 1}
+- {Decision 2}
+
+**Constraints identified:**
+
+- {Hard constraints surfaced during brainstorming — or "None"}
+
+**Spec:** `docs/superpowers/specs/{YYYY-MM-DD}-{topic}-design.md`
+**Implementation plan:** Will be created at `.ai-context/task-outputs/GH-{number}/03-implementation-plan.md`
+```
+
+Post via: `mcp__github__add_issue_comment({ owner, repo, issue_number: {number}, body: comment })`
+
+Only post if a GitHub issue exists (branch contains `GH-{number}` and issue was successfully fetched in Step 2). Skip silently if no issue.
 
 ---
 
@@ -624,6 +678,28 @@ Before implementing, write tests first:
 ## Questions/Blockers
 
 - [ ] Any clarifications needed
+
+## Design Questions
+
+> Seed context for /brainstorming. These questions were surfaced by codebase analysis
+> and will drive the clarifying questions phase.
+
+### What we know (pre-answered by analysis)
+
+- Relevant files: [list key files from Relevant Files table above]
+- Existing patterns to follow: [list key patterns from Existing Patterns above]
+- Hard constraints: [migrations needed, breaking changes, DB schema impacts — or "None identified"]
+
+### Open questions for design dialogue
+
+- [ ] {Genuine unknown 1 surfaced during analysis}
+- [ ] {Genuine unknown 2 — if any}
+
+> If no real unknowns exist, this list may have 0–1 items. Brainstorming will move quickly to approach proposals.
+
+### Suggested design scope
+
+{1–2 sentences on what a complete implementation covers, derived from the issue requirements and analysis findings}
 ```
 
 ### 03-implementation-plan.md (Created During Planning Phase)
@@ -927,6 +1003,7 @@ Options:
 10. **Document source branch choice** in 01-setup.md and 02-analysis.md for fix branches
 11. **ALWAYS proceed to Phase 2** - After creating 00 and 01, automatically analyze the codebase and create 02-analysis.md
 12. **Use Task tool with Explore agent** for complex codebase analysis to find relevant files and patterns
+13. **ALWAYS invoke brainstorming at Step 13** - Do NOT end at analysis. The brainstorming handoff is automatic and non-optional. The Design Questions section of 02-analysis.md is the brief; brainstorming reads it and skips its own context-gathering step.
 
 ### Title Formatting Function
 
