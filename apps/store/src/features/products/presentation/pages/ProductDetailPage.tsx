@@ -59,12 +59,12 @@ export function ProductDetailPage({ productId }: ProductDetailPageProps) {
       className="flex min-w-0 flex-1 flex-col overflow-x-hidden"
       {...tid("product-detail-page")}
     >
-      {/* Inline nav: back + cart — sits inside the hero background */}
+      {/* Inline nav: back link + seller — sits inside the hero background */}
       <div
         className="border-b-strong border-foreground"
         style={{ backgroundColor: theme.bgLight }}
       >
-        <div className="mx-auto flex w-full min-w-0 max-w-6xl items-center px-4 py-3">
+        <div className="mx-auto flex w-full min-w-0 max-w-6xl items-center justify-between gap-3 px-4 py-3">
           <Link
             href="/"
             className="font-display text-xs font-bold uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors"
@@ -72,12 +72,11 @@ export function ProductDetailPage({ productId }: ProductDetailPageProps) {
           >
             {t("detail.backToProducts")}
           </Link>
+          <SellerCard sellerId={product.seller_id} />
         </div>
       </div>
 
       <ProductSections product={product} />
-
-      <SellerCard sellerId={product.seller_id} />
 
       <MobileBarWithCart product={product} theme={theme} />
     </div>

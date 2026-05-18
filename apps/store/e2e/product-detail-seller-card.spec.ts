@@ -44,20 +44,15 @@ test.describe("Product detail — seller card", () => {
 
     await page.goto(`${STORE_URL}/en/products/${product.id}`);
 
-    await expect(page.getByTestId("seller-card")).toBeVisible({
-      timeout: 10_000,
-    });
-    await expect(page.getByTestId("seller-card-title")).toBeVisible();
+    const sellerLink = page.getByTestId("seller-card");
+    await expect(sellerLink).toBeVisible({ timeout: 10_000 });
+    await expect(sellerLink).toHaveAttribute(
+      "href",
+      new RegExp(`/profile/${product.seller_id as string}`),
+    );
 
     const sellerName = page.getByTestId("seller-name");
     await expect(sellerName).toBeVisible();
     await expect(sellerName).not.toBeEmpty();
-
-    const profileLink = page.getByTestId("seller-profile-link");
-    await expect(profileLink).toBeVisible();
-    await expect(profileLink).toHaveAttribute(
-      "href",
-      new RegExp(`/profile/${product.seller_id as string}`),
-    );
   });
 });
