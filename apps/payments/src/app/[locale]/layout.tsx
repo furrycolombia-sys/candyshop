@@ -1,3 +1,4 @@
+import { AppFooter } from "@monorepo/app-components";
 import { getServerUserEmail } from "api/supabase/server";
 import { PermissionsProvider } from "auth/client";
 import { readPermCacheServer } from "auth/server";
@@ -47,6 +48,9 @@ export default async function LocaleLayout({
   setRequestLocale(locale);
 
   const messages = await getMessages();
+  const tFooter = await getTranslations({ locale, namespace: "footer" });
+  const termsHref = `${appUrls.landing}/${locale}/legal/terms`;
+  const privacyHref = `${appUrls.landing}/${locale}/legal/privacy`;
 
   const [userEmail, initialGrantedKeys] = await Promise.all([
     getServerUserEmail(),
@@ -74,6 +78,13 @@ export default async function LocaleLayout({
                   </div>
                 </div>
               </ProtectedRoute>
+              <AppFooter
+                copyrightSuffix={tFooter("copyrightSuffix")}
+                termsLabel={tFooter("terms")}
+                privacyLabel={tFooter("privacy")}
+                termsHref={termsHref}
+                privacyHref={privacyHref}
+              />
             </div>
           </Providers>
         </PermissionsProvider>
