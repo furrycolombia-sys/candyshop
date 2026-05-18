@@ -8,10 +8,11 @@ import {
   getAuthorizedAdmin,
   INTERNAL_SERVER_ERROR_STATUS,
 } from "@/app/api/admin/_shared/adminRest";
+import { signReceiptPath } from "@/app/api/admin/_shared/receiptSignedUrls";
+import { buildAdminOrderFilters } from "@/app/api/admin/_shared/reportsFilters";
 
 const ADMIN_REPORTS = "admin.reports";
 const MAX_LIMIT = 10_000;
-const ISO_DATE_LENGTH = 10;
 const ORDERS_SELECT =
   "id,created_at,payment_status,total,currency,transfer_number,receipt_url,user_id,seller_id";
 const ITEMS_SELECT =
@@ -43,90 +44,6 @@ interface UserProfileRow {
   id: string;
   email: string;
   display_name: string | null;
-}
-
-const ISO_DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/;
-
-function isValidIsoDate(value: string): boolean {
-  return ISO_DATE_REGEX.test(value) && !Number.isNaN(Date.parse(value));
-}
-
-function isValidAmount(value: string): boolean {
-  const num = Number.parseFloat(value);
-  return !Number.isNaN(num) && num >= 0;
-}
-
-function addDateFilters(
-  filters: Record<string, string>,
-  dateFrom: string | null,
-  dateTo: string | null,
-): void {
-  const validFrom = dateFrom && isValidIsoDate(dateFrom) ? dateFrom : null;
-  const validTo = dateTo && isValidIsoDate(dateTo) ? dateTo : null;
-  dateFrom = validFrom;
-  dateTo = validTo;
-  if (dateFrom && dateTo) {
-    const end = new Date(dateTo);
-    end.setDate(end.getDate() + 1);
-    filters["created_at"] = `gte.${dateFrom}`;
-    filters["and"] =
-      `(created_at.lt.${end.toISOString().slice(0, ISO_DATE_LENGTH)})`;
-  } else if (dateFrom) {
-    filters["created_at"] = `gte.${dateFrom}`;
-  } else if (dateTo) {
-    const end = new Date(dateTo);
-    end.setDate(end.getDate() + 1);
-    filters["created_at"] = `lt.${end.toISOString().slice(0, ISO_DATE_LENGTH)}`;
-  }
-}
-
-function addAmountFilters(
-  filters: Record<string, string>,
-  amountMin: string | null,
-  amountMax: string | null,
-): void {
-  const validMin = amountMin && isValidAmount(amountMin) ? amountMin : null;
-  const validMax = amountMax && isValidAmount(amountMax) ? amountMax : null;
-  if (validMin && validMax) {
-    filters["total"] = `gte.${validMin}`;
-    const existing = filters["and"] ?? "";
-    filters["and"] = existing
-      ? `${existing},(total.lte.${validMax})`
-      : `(total.lte.${validMax})`;
-  } else if (validMin) {
-    filters["total"] = `gte.${validMin}`;
-  } else if (validMax) {
-    filters["total"] = `lte.${validMax}`;
-  }
-}
-
-function buildOrderFilters(
-  searchParams: URLSearchParams,
-): Record<string, string> {
-  const filters: Record<string, string> = {};
-
-  addDateFilters(
-    filters,
-    searchParams.get("dateFrom"),
-    searchParams.get("dateTo"),
-  );
-  addAmountFilters(
-    filters,
-    searchParams.get("amountMin"),
-    searchParams.get("amountMax"),
-  );
-
-  const status = searchParams.get("status");
-  const sellerId = searchParams.get("sellerId");
-  const buyerId = searchParams.get("buyerId");
-  const currency = searchParams.get("currency");
-
-  if (status) filters["payment_status"] = `eq.${status}`;
-  if (sellerId) filters["seller_id"] = `eq.${sellerId}`;
-  if (buyerId) filters["user_id"] = `eq.${buyerId}`;
-  if (currency) filters["currency"] = `eq.${currency}`;
-
-  return filters;
 }
 
 async function fetchOrderItems(
@@ -166,7 +83,7 @@ export async function GET(request: Request) {
 
   try {
     const { searchParams } = new URL(request.url);
-    const filters = buildOrderFilters(searchParams);
+    const filters = buildAdminOrderFilters(searchParams);
     const productId = searchParams.get("productId");
 
     const ordersResponse = await adminFetch(
@@ -207,36 +124,38 @@ export async function GET(request: Request) {
       itemsByOrder.set(item.order_id, existing);
     }
 
-    const result = orders.map((order) => {
-      const buyer = profileMap.get(order.user_id);
-      const seller = order.seller_id
-        ? profileMap.get(order.seller_id)
-        : undefined;
+    const result = await Promise.all(
+      orders.map(async (order) => {
+        const buyer = profileMap.get(order.user_id);
+        const seller = order.seller_id
+          ? profileMap.get(order.seller_id)
+          : undefined;
 
-      return {
-        id: order.id,
-        created_at: order.created_at,
-        payment_status: order.payment_status,
-        total: order.total,
-        currency: order.currency,
-        transfer_number: order.transfer_number,
-        receipt_url: order.receipt_url,
-        buyer_id: order.user_id,
-        buyer_email: buyer?.email ?? "",
-        buyer_display_name: buyer?.display_name ?? null,
-        seller_id: order.seller_id,
-        seller_email: seller?.email ?? null,
-        seller_display_name: seller?.display_name ?? null,
-        items: (itemsByOrder.get(order.id) ?? []).map((item) => ({
-          id: item.id,
-          product_id: item.product_id,
-          product_name: item.products?.name_en ?? "",
-          quantity: item.quantity,
-          unit_price: item.unit_price,
-          currency: item.currency,
-        })),
-      };
-    });
+        return {
+          id: order.id,
+          created_at: order.created_at,
+          payment_status: order.payment_status,
+          total: order.total,
+          currency: order.currency,
+          transfer_number: order.transfer_number,
+          receipt_url: await signReceiptPath(order.receipt_url),
+          buyer_id: order.user_id,
+          buyer_email: buyer?.email ?? "",
+          buyer_display_name: buyer?.display_name ?? null,
+          seller_id: order.seller_id,
+          seller_email: seller?.email ?? null,
+          seller_display_name: seller?.display_name ?? null,
+          items: (itemsByOrder.get(order.id) ?? []).map((item) => ({
+            id: item.id,
+            product_id: item.product_id,
+            product_name: item.products?.name_en ?? "",
+            quantity: item.quantity,
+            unit_price: item.unit_price,
+            currency: item.currency,
+          })),
+        };
+      }),
+    );
 
     return NextResponse.json({ orders: result, total: result.length });
   } catch {

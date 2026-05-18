@@ -118,7 +118,10 @@ export function SellerReportTable({ orders }: SellerReportTableProps) {
                   <span className="text-muted-foreground/40">—</span>
                 )}
               </td>
-              <td className="px-3 py-2 text-center text-xs">
+              <td
+                className="px-3 py-2 text-center text-xs"
+                {...tid(`seller-report-row-receipt-${order.id}`)}
+              >
                 {order.receipt_url ? (
                   <a
                     href={order.receipt_url}

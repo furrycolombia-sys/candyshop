@@ -10,7 +10,6 @@ import { SellerCard } from "./SellerCard";
 const mockUseSellerInfo = vi.fn();
 
 vi.mock("next-intl", () => ({
-  useTranslations: () => (key: string) => key,
   useLocale: () => "en",
 }));
 
@@ -73,7 +72,7 @@ describe("SellerCard", () => {
     expect(container).toBeEmptyDOMElement();
   });
 
-  it("renders seller card with name when data is available", () => {
+  it("renders seller name when data is available", () => {
     mockUseSellerInfo.mockReturnValue({
       data: makeSellerInfo(),
       isLoading: false,
@@ -104,38 +103,15 @@ describe("SellerCard", () => {
     expect(screen.getByTestId("avatar-fallback")).toHaveTextContent("J");
   });
 
-  it("renders a link to the seller profile", () => {
+  it("links to the seller profile in the auth app", () => {
     mockUseSellerInfo.mockReturnValue({
       data: makeSellerInfo(),
       isLoading: false,
     });
     render(<SellerCard sellerId="seller-1" />);
-    const link = screen.getByTestId("seller-profile-link");
-    expect(link).toHaveAttribute(
+    expect(screen.getByTestId("seller-card")).toHaveAttribute(
       "href",
       "https://auth.example.com/en/profile/seller-1",
-    );
-  });
-
-  it("renders view profile label from i18n", () => {
-    mockUseSellerInfo.mockReturnValue({
-      data: makeSellerInfo(),
-      isLoading: false,
-    });
-    render(<SellerCard sellerId="seller-1" />);
-    expect(screen.getByTestId("seller-profile-link")).toHaveTextContent(
-      "detail.viewProfile",
-    );
-  });
-
-  it("renders section title from i18n", () => {
-    mockUseSellerInfo.mockReturnValue({
-      data: makeSellerInfo(),
-      isLoading: false,
-    });
-    render(<SellerCard sellerId="seller-1" />);
-    expect(screen.getByTestId("seller-card-title")).toHaveTextContent(
-      "detail.seller",
     );
   });
 });

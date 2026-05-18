@@ -1,6 +1,6 @@
 "use client";
 
-import { useLocale, useTranslations } from "next-intl";
+import { useLocale } from "next-intl";
 import { appUrls, tid } from "shared";
 import { Avatar, AvatarFallback, AvatarImage } from "ui";
 
@@ -11,7 +11,6 @@ interface SellerCardProps {
 }
 
 export function SellerCard({ sellerId }: SellerCardProps) {
-  const t = useTranslations("products");
   const locale = useLocale();
   const { data, isLoading } = useSellerInfo(sellerId);
 
@@ -21,44 +20,25 @@ export function SellerCard({ sellerId }: SellerCardProps) {
   const initial = data.displayName.charAt(0).toUpperCase();
 
   return (
-    <section
-      className="mx-auto w-full max-w-6xl px-4 py-6"
+    <a
+      href={profileUrl}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="flex min-w-0 items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
       {...tid("seller-card")}
     >
-      <h2
-        className="font-display text-xs font-bold uppercase tracking-widest text-muted-foreground mb-4"
-        {...tid("seller-card-title")}
+      <Avatar className="size-6 shrink-0">
+        {data.avatarUrl ? (
+          <AvatarImage src={data.avatarUrl} alt={data.displayName} />
+        ) : null}
+        <AvatarFallback>{initial}</AvatarFallback>
+      </Avatar>
+      <span
+        className="font-display text-xs font-bold uppercase tracking-widest truncate"
+        {...tid("seller-name")}
       >
-        {t("detail.seller")}
-      </h2>
-
-      <div className="flex items-center gap-3">
-        <Avatar className="size-10">
-          {data.avatarUrl ? (
-            <AvatarImage src={data.avatarUrl} alt={data.displayName} />
-          ) : null}
-          <AvatarFallback>{initial}</AvatarFallback>
-        </Avatar>
-
-        <div className="flex min-w-0 flex-col gap-0.5">
-          <span
-            className="font-display text-sm/tight font-semibold truncate"
-            {...tid("seller-name")}
-          >
-            {data.displayName}
-          </span>
-
-          <a
-            href={profileUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="font-display text-xs font-bold uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors"
-            {...tid("seller-profile-link")}
-          >
-            {t("detail.viewProfile")}
-          </a>
-        </div>
-      </div>
-    </section>
+        {data.displayName}
+      </span>
+    </a>
   );
 }
