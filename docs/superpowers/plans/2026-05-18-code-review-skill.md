@@ -16,63 +16,63 @@
 
 ### New files (helpers — all under `scripts/code-review/`)
 
-| Path | Responsibility |
-| --- | --- |
-| `scripts/code-review/finding-id.mjs` | Stable sha256 ID for a finding (pure). |
-| `scripts/code-review/noresolve-parser.mjs` | Detects `#noresolve` markers in a comment thread (pure). |
-| `scripts/code-review/pr-comment-sync.mjs` | Diff between existing PR comments and new findings → `{add, update, resolve, defer}` (pure). |
-| `scripts/code-review/atomic-write.mjs` | `tmp` + rename atomic file write. |
-| `scripts/code-review/manifest.mjs` | Read/write the review manifest JSON. |
-| `scripts/code-review/cache.mjs` | Per-file-content-hash cache lookup + write. |
-| `scripts/code-review/compute-scope.mjs` | Given flags + repo state → file list, base SHA, head SHA. |
-| `scripts/code-review/run-scanners.mjs` | Wraps semgrep + Aikido invocations; merges output. |
-| `scripts/code-review/find-pr.mjs` | Returns PR number for current branch, or null. |
-| `scripts/code-review/estimate-all.mjs` | File count + token + duration + cost estimate for `--all` mode. |
-| `scripts/code-review/fetch-deferred.mjs` | Fetches all PR inline threads carrying `#noresolve`. |
+| Path                                       | Responsibility                                                                               |
+| ------------------------------------------ | -------------------------------------------------------------------------------------------- |
+| `scripts/code-review/finding-id.mjs`       | Stable sha256 ID for a finding (pure).                                                       |
+| `scripts/code-review/noresolve-parser.mjs` | Detects `#noresolve` markers in a comment thread (pure).                                     |
+| `scripts/code-review/pr-comment-sync.mjs`  | Diff between existing PR comments and new findings → `{add, update, resolve, defer}` (pure). |
+| `scripts/code-review/atomic-write.mjs`     | `tmp` + rename atomic file write.                                                            |
+| `scripts/code-review/manifest.mjs`         | Read/write the review manifest JSON.                                                         |
+| `scripts/code-review/cache.mjs`            | Per-file-content-hash cache lookup + write.                                                  |
+| `scripts/code-review/compute-scope.mjs`    | Given flags + repo state → file list, base SHA, head SHA.                                    |
+| `scripts/code-review/run-scanners.mjs`     | Wraps semgrep + Aikido invocations; merges output.                                           |
+| `scripts/code-review/find-pr.mjs`          | Returns PR number for current branch, or null.                                               |
+| `scripts/code-review/estimate-all.mjs`     | File count + token + duration + cost estimate for `--all` mode.                              |
+| `scripts/code-review/fetch-deferred.mjs`   | Fetches all PR inline threads carrying `#noresolve`.                                         |
 
 ### New files (helper tests)
 
-| Path | Tests |
-| --- | --- |
-| `scripts/__tests__/code-review/finding-id.test.mjs` | finding-id |
-| `scripts/__tests__/code-review/noresolve-parser.test.mjs` | noresolve-parser |
-| `scripts/__tests__/code-review/pr-comment-sync.test.mjs` | pr-comment-sync |
-| `scripts/__tests__/code-review/atomic-write.test.mjs` | atomic-write (integration via tmp dir) |
-| `scripts/__tests__/code-review/manifest.test.mjs` | manifest (integration via tmp dir) |
-| `scripts/__tests__/code-review/cache.test.mjs` | cache (integration via tmp dir) |
-| `scripts/__tests__/code-review/compute-scope.test.mjs` | compute-scope (integration via git fixture) |
+| Path                                                      | Tests                                       |
+| --------------------------------------------------------- | ------------------------------------------- |
+| `scripts/__tests__/code-review/finding-id.test.mjs`       | finding-id                                  |
+| `scripts/__tests__/code-review/noresolve-parser.test.mjs` | noresolve-parser                            |
+| `scripts/__tests__/code-review/pr-comment-sync.test.mjs`  | pr-comment-sync                             |
+| `scripts/__tests__/code-review/atomic-write.test.mjs`     | atomic-write (integration via tmp dir)      |
+| `scripts/__tests__/code-review/manifest.test.mjs`         | manifest (integration via tmp dir)          |
+| `scripts/__tests__/code-review/cache.test.mjs`            | cache (integration via tmp dir)             |
+| `scripts/__tests__/code-review/compute-scope.test.mjs`    | compute-scope (integration via git fixture) |
 
 ### New files (skill prose)
 
-| Path | Responsibility |
-| --- | --- |
-| `.claude/skills/code-review/SKILL.md` | Replaces existing. Top-level orchestrator instructions Claude follows. |
-| `.claude/skills/code-review/agents/index.md` | Registry of the 12 agents. |
-| `.claude/skills/code-review/agents/rules-drift.md` | New rules-drift agent prompt. |
-| `.claude/skills/code-review/agents/architecture.md` | Moved from full-review. |
-| `.claude/skills/code-review/agents/solid.md` | Moved from full-review. |
-| `.claude/skills/code-review/agents/dry.md` | Moved from full-review. |
-| `.claude/skills/code-review/agents/component-patterns.md` | Moved from full-review. |
-| `.claude/skills/code-review/agents/naming-conventions.md` | Moved from full-review. |
-| `.claude/skills/code-review/agents/bug-detection.md` | Moved from full-review. |
-| `.claude/skills/code-review/agents/tailwind.md` | Moved from full-review. |
-| `.claude/skills/code-review/agents/testing.md` | Moved from full-review. |
-| `.claude/skills/code-review/agents/performance.md` | Moved from full-review. |
-| `.claude/skills/code-review/agents/pattern-discovery.md` | Moved from full-review. |
-| `.claude/skills/code-review/agents/security.md` | Moved from full-review, updated for scanner triage. |
+| Path                                                      | Responsibility                                                         |
+| --------------------------------------------------------- | ---------------------------------------------------------------------- |
+| `.claude/skills/code-review/SKILL.md`                     | Replaces existing. Top-level orchestrator instructions Claude follows. |
+| `.claude/skills/code-review/agents/index.md`              | Registry of the 12 agents.                                             |
+| `.claude/skills/code-review/agents/rules-drift.md`        | New rules-drift agent prompt.                                          |
+| `.claude/skills/code-review/agents/architecture.md`       | Moved from full-review.                                                |
+| `.claude/skills/code-review/agents/solid.md`              | Moved from full-review.                                                |
+| `.claude/skills/code-review/agents/dry.md`                | Moved from full-review.                                                |
+| `.claude/skills/code-review/agents/component-patterns.md` | Moved from full-review.                                                |
+| `.claude/skills/code-review/agents/naming-conventions.md` | Moved from full-review.                                                |
+| `.claude/skills/code-review/agents/bug-detection.md`      | Moved from full-review.                                                |
+| `.claude/skills/code-review/agents/tailwind.md`           | Moved from full-review.                                                |
+| `.claude/skills/code-review/agents/testing.md`            | Moved from full-review.                                                |
+| `.claude/skills/code-review/agents/performance.md`        | Moved from full-review.                                                |
+| `.claude/skills/code-review/agents/pattern-discovery.md`  | Moved from full-review.                                                |
+| `.claude/skills/code-review/agents/security.md`           | Moved from full-review, updated for scanner triage.                    |
 
 ### New files (other)
 
-| Path | Responsibility |
-| --- | --- |
-| `.code-reviewignore` | Repo-root ignore list. |
+| Path                                | Responsibility                |
+| ----------------------------------- | ----------------------------- |
+| `.code-reviewignore`                | Repo-root ignore list.        |
 | `.ai-context/code-reviews/.gitkeep` | Persistence directory marker. |
 
 ### Modified files
 
-| Path | Change |
-| --- | --- |
-| `.claude/skills/full-review/SKILL.md` | Replaced with thin alias. |
+| Path                                      | Change                                            |
+| ----------------------------------------- | ------------------------------------------------- |
+| `.claude/skills/full-review/SKILL.md`     | Replaced with thin alias.                         |
 | `.claude/skills/fix-full-review/SKILL.md` | Updated to also read `.ai-context/code-reviews/`. |
 
 ---
@@ -82,6 +82,7 @@
 ### Task 1.1: Create skill directory + placeholder files
 
 **Files:**
+
 - Create: `.claude/skills/code-review/SKILL.md` (placeholder)
 - Create: `.claude/skills/code-review/agents/index.md` (placeholder)
 - Create: `.code-reviewignore`
@@ -155,6 +156,7 @@ git commit -m "feat(code-review): scaffold skill directory + ignore file [GH-XXX
 ### Task 2.1: `finding-id.mjs` — stable finding IDs
 
 **Files:**
+
 - Create: `scripts/code-review/finding-id.mjs`
 - Create: `scripts/__tests__/code-review/finding-id.test.mjs`
 
@@ -263,6 +265,7 @@ git commit -m "feat(code-review): add stable finding-id hashing [GH-XXX]"
 ### Task 2.2: `noresolve-parser.mjs` — detect `#noresolve` markers
 
 **Files:**
+
 - Create: `scripts/code-review/noresolve-parser.mjs`
 - Create: `scripts/__tests__/code-review/noresolve-parser.test.mjs`
 
@@ -270,13 +273,18 @@ git commit -m "feat(code-review): add stable finding-id hashing [GH-XXX]"
 
 Write `scripts/__tests__/code-review/noresolve-parser.test.mjs`:
 
-```javascript
+````javascript
 import { describe, expect, it } from "vitest";
-import { hasNoresolve, extractNoresolveReason } from "../../code-review/noresolve-parser.mjs";
+import {
+  hasNoresolve,
+  extractNoresolveReason,
+} from "../../code-review/noresolve-parser.mjs";
 
 describe("hasNoresolve", () => {
   it("returns true when a reply contains the marker", () => {
-    expect(hasNoresolve([{ body: "thanks" }, { body: "#noresolve fp" }])).toBe(true);
+    expect(hasNoresolve([{ body: "thanks" }, { body: "#noresolve fp" }])).toBe(
+      true,
+    );
   });
 
   it("returns false when no reply contains the marker", () => {
@@ -297,9 +305,7 @@ describe("hasNoresolve", () => {
 
   it("ignores noresolve inside a code fence", () => {
     expect(
-      hasNoresolve([
-        { body: "before\n```\n#noresolve\n```\nafter" },
-      ]),
+      hasNoresolve([{ body: "before\n```\n#noresolve\n```\nafter" }]),
     ).toBe(false);
   });
 });
@@ -307,7 +313,9 @@ describe("hasNoresolve", () => {
 describe("extractNoresolveReason", () => {
   it("returns the text after `#noresolve` on the same line", () => {
     expect(
-      extractNoresolveReason([{ body: "#noresolve  fp — auth wrapper guards this" }]),
+      extractNoresolveReason([
+        { body: "#noresolve  fp — auth wrapper guards this" },
+      ]),
     ).toBe("fp — auth wrapper guards this");
   });
 
@@ -319,7 +327,7 @@ describe("extractNoresolveReason", () => {
     expect(extractNoresolveReason([{ body: "#noresolve" }])).toBe("");
   });
 });
-```
+````
 
 - [ ] **Step 2: Run the tests to verify they fail.**
 
@@ -330,7 +338,7 @@ Expected: FAIL — module not found.
 
 Write `scripts/code-review/noresolve-parser.mjs`:
 
-```javascript
+````javascript
 const MARKER = /(^|[^`])#noresolve\b[ \t]*(.*)$/im;
 
 function stripFences(body) {
@@ -364,7 +372,7 @@ export function extractNoresolveReason(thread) {
   }
   return null;
 }
-```
+````
 
 - [ ] **Step 4: Run the tests to verify they pass.**
 
@@ -383,6 +391,7 @@ git commit -m "feat(code-review): add #noresolve marker parser [GH-XXX]"
 ### Task 2.3: `pr-comment-sync.mjs` — compute add/update/resolve sets
 
 **Files:**
+
 - Create: `scripts/code-review/pr-comment-sync.mjs`
 - Create: `scripts/__tests__/code-review/pr-comment-sync.test.mjs`
 
@@ -511,7 +520,10 @@ export function syncComments({ newFindings, existingComments }) {
 
   for (const f of newFindings) {
     if (existingById.has(f.id)) {
-      update.push({ commentId: existingById.get(f.id).commentId, body: f.body });
+      update.push({
+        commentId: existingById.get(f.id).commentId,
+        body: f.body,
+      });
     } else {
       add.push(f);
     }
@@ -549,6 +561,7 @@ git commit -m "feat(code-review): add PR comment sync logic [GH-XXX]"
 ### Task 3.1: `atomic-write.mjs` — tmp + rename
 
 **Files:**
+
 - Create: `scripts/code-review/atomic-write.mjs`
 - Create: `scripts/__tests__/code-review/atomic-write.test.mjs`
 
@@ -557,7 +570,13 @@ git commit -m "feat(code-review): add PR comment sync logic [GH-XXX]"
 Write `scripts/__tests__/code-review/atomic-write.test.mjs`:
 
 ```javascript
-import { mkdtempSync, readFileSync, existsSync, readdirSync, writeFileSync } from "node:fs";
+import {
+  mkdtempSync,
+  readFileSync,
+  existsSync,
+  readdirSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it, beforeEach } from "vitest";
@@ -651,6 +670,7 @@ git commit -m "feat(code-review): add atomic JSON writer [GH-XXX]"
 ### Task 3.2: `manifest.mjs` — review manifest read/write/update
 
 **Files:**
+
 - Create: `scripts/code-review/manifest.mjs`
 - Create: `scripts/__tests__/code-review/manifest.test.mjs`
 
@@ -844,6 +864,7 @@ git commit -m "feat(code-review): add review manifest + in-flight pointer [GH-XX
 ### Task 3.3: `cache.mjs` — per-file-content cache
 
 **Files:**
+
 - Create: `scripts/code-review/cache.mjs`
 - Create: `scripts/__tests__/code-review/cache.test.mjs`
 
@@ -856,7 +877,11 @@ import { mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { beforeEach, describe, expect, it } from "vitest";
-import { hashFileContent, readCache, writeCache } from "../../code-review/cache.mjs";
+import {
+  hashFileContent,
+  readCache,
+  writeCache,
+} from "../../code-review/cache.mjs";
 
 let root, file;
 
@@ -959,6 +984,7 @@ git commit -m "feat(code-review): add per-file content-hash cache [GH-XXX]"
 ### Task 4.1: `compute-scope.mjs` — base ref + file list
 
 **Files:**
+
 - Create: `scripts/code-review/compute-scope.mjs`
 - Create: `scripts/__tests__/code-review/compute-scope.test.mjs`
 
@@ -1022,7 +1048,9 @@ const RELEASE_PREFIX = "release/";
  * @returns {"origin/main" | "origin/develop"}
  */
 export function resolveBaseRef(branchName) {
-  return branchName.startsWith(RELEASE_PREFIX) ? "origin/main" : "origin/develop";
+  return branchName.startsWith(RELEASE_PREFIX)
+    ? "origin/main"
+    : "origin/develop";
 }
 
 function git(args, cwd) {
@@ -1075,10 +1103,16 @@ export function computeScope({ repoRoot, mode, baseOverride }) {
     raw = git(["diff", "--name-status", "--cached"], repoRoot);
   } else {
     // working_tree = committed + staged + unstaged + untracked
-    const committed = git(["diff", "--name-status", `${baseSha}..HEAD`], repoRoot);
+    const committed = git(
+      ["diff", "--name-status", `${baseSha}..HEAD`],
+      repoRoot,
+    );
     const staged = git(["diff", "--name-status", "--cached"], repoRoot);
     const unstaged = git(["diff", "--name-status"], repoRoot);
-    const untracked = git(["ls-files", "--others", "--exclude-standard"], repoRoot)
+    const untracked = git(
+      ["ls-files", "--others", "--exclude-standard"],
+      repoRoot,
+    )
       .split("\n")
       .filter(Boolean)
       .map((p) => `A\t${p}`)
@@ -1166,6 +1200,7 @@ git commit -m "feat(code-review): add scope resolver (base ref + file list) [GH-
 ### Task 5.1: `run-scanners.mjs` — semgrep wrapper
 
 **Files:**
+
 - Create: `scripts/code-review/run-scanners.mjs`
 - Create: `scripts/__tests__/code-review/run-scanners.test.mjs`
 
@@ -1214,22 +1249,30 @@ describe("parseSemgrepOutput", () => {
 
   it("maps WARNING severity to warning", () => {
     const input = {
-      results: [{
-        check_id: "x", path: "x.ts",
-        start: { line: 1 }, end: { line: 1 },
-        extra: { severity: "WARNING", message: "m" },
-      }],
+      results: [
+        {
+          check_id: "x",
+          path: "x.ts",
+          start: { line: 1 },
+          end: { line: 1 },
+          extra: { severity: "WARNING", message: "m" },
+        },
+      ],
     };
     expect(parseSemgrepOutput(input)[0].severity).toBe("warning");
   });
 
   it("maps INFO severity to suggestion", () => {
     const input = {
-      results: [{
-        check_id: "x", path: "x.ts",
-        start: { line: 1 }, end: { line: 1 },
-        extra: { severity: "INFO", message: "m" },
-      }],
+      results: [
+        {
+          check_id: "x",
+          path: "x.ts",
+          start: { line: 1 },
+          end: { line: 1 },
+          extra: { severity: "INFO", message: "m" },
+        },
+      ],
     };
     expect(parseSemgrepOutput(input)[0].severity).toBe("suggestion");
   });
@@ -1324,6 +1367,7 @@ git commit -m "feat(code-review): add semgrep runner + output parser [GH-XXX]"
 ### Task 5.2: Extend `run-scanners.mjs` with Aikido wrapper
 
 **Files:**
+
 - Modify: `scripts/code-review/run-scanners.mjs`
 - Modify: `scripts/__tests__/code-review/run-scanners.test.mjs`
 
@@ -1378,7 +1422,16 @@ describe("parseAikidoOutput", () => {
     ];
     for (const [in_, out] of cases) {
       const f = parseAikidoOutput({
-        issues: [{ id: "x", file_path: "f", line: 1, end_line: 1, severity: in_, title: "t" }],
+        issues: [
+          {
+            id: "x",
+            file_path: "f",
+            line: 1,
+            end_line: 1,
+            severity: in_,
+            title: "t",
+          },
+        ],
       });
       expect(f[0].severity).toBe(out);
     }
@@ -1442,6 +1495,7 @@ git commit -m "feat(code-review): add Aikido output parser [GH-XXX]"
 ### Task 6.1: `find-pr.mjs` — detect open PR for current branch
 
 **Files:**
+
 - Create: `scripts/code-review/find-pr.mjs`
 
 This helper wraps `gh pr view --json number`. Tested by an integration check (no network mock — the helper returns null when `gh` isn't authed or no PR exists, which is fine for tests in CI-free state).
@@ -1489,6 +1543,7 @@ git commit -m "feat(code-review): add open-PR detector helper [GH-XXX]"
 ### Task 6.2: `fetch-deferred.mjs` — fetch `#noresolve` threads
 
 **Files:**
+
 - Create: `scripts/code-review/fetch-deferred.mjs`
 
 - [ ] **Step 1: Implement the helper.**
@@ -1582,6 +1637,7 @@ git commit -m "feat(code-review): add deferred-finding fetcher [GH-XXX]"
 ### Task 7.1: `estimate-all.mjs` — file count + token + duration + cost
 
 **Files:**
+
 - Create: `scripts/code-review/estimate-all.mjs`
 - Create: `scripts/__tests__/code-review/estimate-all.test.mjs`
 
@@ -1603,14 +1659,38 @@ describe("estimateRun", () => {
       tokensPerSecond: 5000,
     });
     expect(e.tokens).toBe(100 * 1000 * 12);
-    expect(e.cost).toBeCloseTo((100 * 1000 * 12 / 1_000_000) * 3, 4);
+    expect(e.cost).toBeCloseTo(((100 * 1000 * 12) / 1_000_000) * 3, 4);
     expect(e.durationSeconds).toBe(Math.ceil(e.tokens / 5000));
   });
 
   it("formats tokens with a unit suffix", () => {
-    expect(estimateRun({ fileCount: 0, avgTokensPerFile: 0, agentCount: 0, pricePerMillionTokens: 0, tokensPerSecond: 1 }).tokensHuman).toBe("0");
-    expect(estimateRun({ fileCount: 1, avgTokensPerFile: 2000, agentCount: 1, pricePerMillionTokens: 0, tokensPerSecond: 1 }).tokensHuman).toBe("2K");
-    expect(estimateRun({ fileCount: 1, avgTokensPerFile: 2_500_000, agentCount: 1, pricePerMillionTokens: 0, tokensPerSecond: 1 }).tokensHuman).toBe("2.5M");
+    expect(
+      estimateRun({
+        fileCount: 0,
+        avgTokensPerFile: 0,
+        agentCount: 0,
+        pricePerMillionTokens: 0,
+        tokensPerSecond: 1,
+      }).tokensHuman,
+    ).toBe("0");
+    expect(
+      estimateRun({
+        fileCount: 1,
+        avgTokensPerFile: 2000,
+        agentCount: 1,
+        pricePerMillionTokens: 0,
+        tokensPerSecond: 1,
+      }).tokensHuman,
+    ).toBe("2K");
+    expect(
+      estimateRun({
+        fileCount: 1,
+        avgTokensPerFile: 2_500_000,
+        agentCount: 1,
+        pricePerMillionTokens: 0,
+        tokensPerSecond: 1,
+      }).tokensHuman,
+    ).toBe("2.5M");
   });
 });
 ```
@@ -1637,7 +1717,8 @@ export function estimateRun({
 }) {
   const tokens = fileCount * avgTokensPerFile * agentCount;
   const cost = (tokens / 1_000_000) * pricePerMillionTokens;
-  const durationSeconds = tokensPerSecond > 0 ? Math.ceil(tokens / tokensPerSecond) : 0;
+  const durationSeconds =
+    tokensPerSecond > 0 ? Math.ceil(tokens / tokensPerSecond) : 0;
   return {
     tokens,
     tokensHuman: formatTokens(tokens),
@@ -1687,6 +1768,7 @@ git commit -m "feat(code-review): add --all mode run estimator [GH-XXX]"
 ### Task 8.1: Move full-review agents into the new home
 
 **Files:**
+
 - Move: `.claude/skills/full-review/agents/architecture.md` → `.claude/skills/code-review/agents/architecture.md`
 - Move: `.claude/skills/full-review/agents/solid.md` → `.claude/skills/code-review/agents/solid.md`
 - Move: `.claude/skills/full-review/agents/dry.md` → `.claude/skills/code-review/agents/dry.md`
@@ -1733,6 +1815,7 @@ git commit -m "refactor(code-review): move 11 agents from full-review into code-
 ### Task 8.2: Add the new rules-drift agent
 
 **Files:**
+
 - Create: `.claude/skills/code-review/agents/rules-drift.md`
 
 - [ ] **Step 1: Write the agent doc.**
@@ -1759,6 +1842,7 @@ arrays, hardcoded URLs/ports/IDs where env vars or constants already exist.
 ## Inputs
 
 Per scoped file:
+
 - Full file content.
 - Diff hunks (changes only).
 - File path.
@@ -1770,10 +1854,10 @@ Per scoped file:
 Flag a string literal matching a known domain enum used in a place that
 should derive from an SSOT constant.
 
-| Literal pattern | Should derive from |
-| --- | --- |
-| `"approved" \| "pending" \| "rejected" \| "expired" \| "awaiting_payment" \| "pending_verification" \| "evidence_requested" \| "paid"` | `ORDER_STATUS_LIST` from `packages/shared/src/constants/orders.ts` |
-| ISO 4217 currency codes (`"USD"`, `"EUR"`, `"COP"`, etc.) | `POPULAR_CURRENCIES` from `packages/shared/src/utils/currencies.ts` |
+| Literal pattern                                                                                                                        | Should derive from                                                  |
+| -------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| `"approved" \| "pending" \| "rejected" \| "expired" \| "awaiting_payment" \| "pending_verification" \| "evidence_requested" \| "paid"` | `ORDER_STATUS_LIST` from `packages/shared/src/constants/orders.ts`  |
+| ISO 4217 currency codes (`"USD"`, `"EUR"`, `"COP"`, etc.)                                                                              | `POPULAR_CURRENCIES` from `packages/shared/src/utils/currencies.ts` |
 
 Special focus: API route allowlists (`new Set([...])`, `ALLOWED_X`,
 `VALID_X` constants) and switch/if comparisons using these values
@@ -1808,13 +1892,13 @@ a validated allowlist or the SSOT constant.
 
 ## Severity guidance
 
-| Pattern | Default severity |
-| --- | --- |
+| Pattern                                             | Default severity                                                |
+| --------------------------------------------------- | --------------------------------------------------------------- |
 | Status literal in allowlist that doesn't match SSOT | **Critical** (this is the exact bug class we ship-broke before) |
-| Currency literal with wrong case | **Critical** |
-| Hand-rolled type union for domain enum | **Warning** |
-| Hardcoded URL where env var exists | **Warning** |
-| Magic number in business logic | **Suggestion** |
+| Currency literal with wrong case                    | **Critical**                                                    |
+| Hand-rolled type union for domain enum              | **Warning**                                                     |
+| Hardcoded URL where env var exists                  | **Warning**                                                     |
+| Magic number in business logic                      | **Suggestion**                                                  |
 
 ## Output format
 
@@ -1844,6 +1928,7 @@ git commit -m "feat(code-review): add rules-drift agent spec [GH-XXX]"
 ### Task 8.3: Rewrite `agents/index.md` for the 12-agent set
 
 **Files:**
+
 - Modify: `.claude/skills/code-review/agents/index.md`
 
 - [ ] **Step 1: Replace the index content.**
@@ -1855,20 +1940,20 @@ Write `.claude/skills/code-review/agents/index.md`:
 
 The 12 agents that run on every `/code-review` invocation.
 
-| # | Agent | File | Rule source |
-| --- | --- | --- | --- |
-| 1 | architecture | [`architecture.md`](./architecture.md) | `.claude/rules/architecture.md` |
-| 2 | solid | [`solid.md`](./solid.md) | `.claude/rules/solid-principles.md` |
-| 3 | dry | [`dry.md`](./dry.md) | `.claude/rules/dry-principle.md` |
-| 4 | component-patterns | [`component-patterns.md`](./component-patterns.md) | `.claude/rules/component-patterns.md` |
-| 5 | naming-conventions | [`naming-conventions.md`](./naming-conventions.md) | `.claude/rules/naming-conventions.md` |
-| 6 | bug-detection | [`bug-detection.md`](./bug-detection.md) | `.claude/rules/code-review-standards.md#bug-detection-standards` |
-| 7 | tailwind | [`tailwind.md`](./tailwind.md) | `.claude/rules/tailwind.md`, `css-consistency.md` |
-| 8 | testing | [`testing.md`](./testing.md) | `.claude/rules/testing.md` |
-| 9 | performance | [`performance.md`](./performance.md) | `.claude/rules/code-review-standards.md#performance-standards` |
-| 10 | pattern-discovery | [`pattern-discovery.md`](./pattern-discovery.md) | undocumented-pattern detection |
-| 11 | security | [`security.md`](./security.md) | `.claude/rules/code-review-standards.md#security-standards` + scanner triage |
-| 12 | rules-drift | [`rules-drift.md`](./rules-drift.md) | `.claude/rules/single-source-of-truth.md`, `no-hardcoding.md` |
+| #   | Agent              | File                                               | Rule source                                                                  |
+| --- | ------------------ | -------------------------------------------------- | ---------------------------------------------------------------------------- |
+| 1   | architecture       | [`architecture.md`](./architecture.md)             | `.claude/rules/architecture.md`                                              |
+| 2   | solid              | [`solid.md`](./solid.md)                           | `.claude/rules/solid-principles.md`                                          |
+| 3   | dry                | [`dry.md`](./dry.md)                               | `.claude/rules/dry-principle.md`                                             |
+| 4   | component-patterns | [`component-patterns.md`](./component-patterns.md) | `.claude/rules/component-patterns.md`                                        |
+| 5   | naming-conventions | [`naming-conventions.md`](./naming-conventions.md) | `.claude/rules/naming-conventions.md`                                        |
+| 6   | bug-detection      | [`bug-detection.md`](./bug-detection.md)           | `.claude/rules/code-review-standards.md#bug-detection-standards`             |
+| 7   | tailwind           | [`tailwind.md`](./tailwind.md)                     | `.claude/rules/tailwind.md`, `css-consistency.md`                            |
+| 8   | testing            | [`testing.md`](./testing.md)                       | `.claude/rules/testing.md`                                                   |
+| 9   | performance        | [`performance.md`](./performance.md)               | `.claude/rules/code-review-standards.md#performance-standards`               |
+| 10  | pattern-discovery  | [`pattern-discovery.md`](./pattern-discovery.md)   | undocumented-pattern detection                                               |
+| 11  | security           | [`security.md`](./security.md)                     | `.claude/rules/code-review-standards.md#security-standards` + scanner triage |
+| 12  | rules-drift        | [`rules-drift.md`](./rules-drift.md)               | `.claude/rules/single-source-of-truth.md`, `no-hardcoding.md`                |
 
 ## Contract every agent follows
 
@@ -1882,17 +1967,17 @@ The 12 agents that run on every `/code-review` invocation.
 
 \`\`\`json
 {
-  "id": "<sha256 from finding-id.mjs>",
-  "agent": "solid",
-  "severity": "warning",
-  "file": "apps/admin/src/foo.ts",
-  "lineStart": 42,
-  "lineEnd": 58,
-  "ruleId": "SRP",
-  "ruleHref": ".claude/rules/solid-principles.md#single-responsibility",
-  "title": "Component handles 3 unrelated responsibilities",
-  "body": "Markdown body shown in the PR comment.",
-  "suggestedFix": "Optional — markdown with code block."
+"id": "<sha256 from finding-id.mjs>",
+"agent": "solid",
+"severity": "warning",
+"file": "apps/admin/src/foo.ts",
+"lineStart": 42,
+"lineEnd": 58,
+"ruleId": "SRP",
+"ruleHref": ".claude/rules/solid-principles.md#single-responsibility",
+"title": "Component handles 3 unrelated responsibilities",
+"body": "Markdown body shown in the PR comment.",
+"suggestedFix": "Optional — markdown with code block."
 }
 \`\`\`
 ```
@@ -1909,6 +1994,7 @@ git commit -m "docs(code-review): update agent index for 12-agent set [GH-XXX]"
 ### Task 8.4: Update `security.md` for scanner triage flow
 
 **Files:**
+
 - Modify: `.claude/skills/code-review/agents/security.md`
 
 - [ ] **Step 1: Read the existing security.md.**
@@ -1929,10 +2015,10 @@ the full file content for each flagged file.
 
 For each scanner finding, classify it into exactly one of:
 
-| Category | Output |
-| --- | --- |
-| `scanner-confirmed` | Real issue. Include in the report with `severity` mapped from the scanner. |
-| `scanner-but-fp` | False positive in this context (auth wrapper, framework guarantee, sandboxed input, etc.). Suppress from the report. Note the reason in the manifest. |
+| Category            | Output                                                                                                                                                |
+| ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `scanner-confirmed` | Real issue. Include in the report with `severity` mapped from the scanner.                                                                            |
+| `scanner-but-fp`    | False positive in this context (auth wrapper, framework guarantee, sandboxed input, etc.). Suppress from the report. Note the reason in the manifest. |
 
 After triage, the agent may also produce **`llm-found`** findings: context-dependent risks the scanners cannot detect (e.g., a response shape returning `password_hash` to the client, an admin route that reads `req.user` without verifying authorization, a logic bug that leaks PII via error messages). Be conservative — false positives are worse than misses at this layer because the scanners already give wide net coverage.
 
@@ -1953,6 +2039,7 @@ git commit -m "docs(code-review): add scanner triage flow to security agent [GH-
 ### Task 9.1: Write the full SKILL.md
 
 **Files:**
+
 - Modify: `.claude/skills/code-review/SKILL.md`
 
 This task replaces the Phase 1 placeholder with the full orchestrator instructions Claude follows at runtime.
@@ -1982,21 +2069,21 @@ Branch-scoped, 12-agent code review for this repo. Replaces the older
 
 ## Flags
 
-| Flag | Default | Effect |
-| --- | --- | --- |
-| (none) | — | Branch-scoped, working-tree mode, all 12 agents, scanners on, PR delivery if PR exists. |
-| `--all` | off | Whole-repo. Typed-phrase confirmation. |
-| `--base <ref>` | branch-name routed | Override base ref. |
-| `--committed-only` | off | Diff = HEAD vs base. |
-| `--staged` | off | Diff = `git diff --cached`. |
-| `--resume <id>` | auto-detect | Resume a specific run. |
-| `--fresh` | off | Ignore any in-flight run. |
-| `--agent <name>` | run all | Run a single agent. |
-| `--threshold <level>` | `warning` | Inline-comment severity threshold. |
-| `--no-security` | off | Skip the LLM security agent. |
-| `--no-scanners` | off | Skip semgrep + Aikido. |
-| `--issue` | off | Also create a GitHub issue. |
-| `--review-deferred` | off | Re-investigate only `#noresolve` comments. |
+| Flag                  | Default            | Effect                                                                                  |
+| --------------------- | ------------------ | --------------------------------------------------------------------------------------- |
+| (none)                | —                  | Branch-scoped, working-tree mode, all 12 agents, scanners on, PR delivery if PR exists. |
+| `--all`               | off                | Whole-repo. Typed-phrase confirmation.                                                  |
+| `--base <ref>`        | branch-name routed | Override base ref.                                                                      |
+| `--committed-only`    | off                | Diff = HEAD vs base.                                                                    |
+| `--staged`            | off                | Diff = `git diff --cached`.                                                             |
+| `--resume <id>`       | auto-detect        | Resume a specific run.                                                                  |
+| `--fresh`             | off                | Ignore any in-flight run.                                                               |
+| `--agent <name>`      | run all            | Run a single agent.                                                                     |
+| `--threshold <level>` | `warning`          | Inline-comment severity threshold.                                                      |
+| `--no-security`       | off                | Skip the LLM security agent.                                                            |
+| `--no-scanners`       | off                | Skip semgrep + Aikido.                                                                  |
+| `--issue`             | off                | Also create a GitHub issue.                                                             |
+| `--review-deferred`   | off                | Re-investigate only `#noresolve` comments.                                              |
 
 ## Execution flow
 
@@ -2021,6 +2108,7 @@ Scanners:    semgrep + aikido
 ```
 
 Filter the file list:
+
 - Drop files under `generated/` or `__generated__/` or with auto-generated headers.
 - Drop files matching `.code-reviewignore` patterns (use the `ignore` Node API or `git check-ignore` with a custom file).
 - Drop binary files.
@@ -2029,6 +2117,7 @@ Filter the file list:
 
 Read `.ai-context/code-reviews/.in-flight.json` via `manifest.readInFlight()`.
 If present and its `{base_sha, head_sha}` matches the current scope:
+
 1. Read the manifest at `.ai-context/code-reviews/<review_id>_manifest.json`.
 2. Count completed agents.
 3. Ask the user:
@@ -2142,6 +2231,7 @@ fixing one class of finding: `pnpm /code-review --agent security`.
 ## Cache behavior
 
 For each (file, agent) pair:
+
 1. Compute `hashFileContent(file)`.
 2. `readCache(root, hash, agent)`.
 3. If hit: reuse findings. If miss: agent runs, then `writeCache(root, hash, agent, findings)`.
@@ -2181,6 +2271,7 @@ git commit -m "feat(code-review): write orchestrator SKILL.md [GH-XXX]"
 ### Task 10.1: Replace `full-review/SKILL.md` with a deprecation alias
 
 **Files:**
+
 - Modify: `.claude/skills/full-review/SKILL.md`
 
 - [ ] **Step 1: Read the existing SKILL.md.**
@@ -2204,9 +2295,9 @@ This skill has been replaced by [`/code-review`](../code-review/SKILL.md).
 
 **Migration:**
 
-| Old invocation | New invocation |
-| --- | --- |
-| `/full-review` | `/code-review --all` |
+| Old invocation                  | New invocation                                                      |
+| ------------------------------- | ------------------------------------------------------------------- |
+| `/full-review`                  | `/code-review --all`                                                |
 | `/full-review src/features/foo` | `/code-review` (auto-scopes to branch diff) or `/code-review --all` |
 
 When invoked, this skill prints a deprecation note and forwards to
@@ -2231,6 +2322,7 @@ git commit -m "refactor(code-review): deprecate /full-review (now alias for /cod
 ### Task 10.2: Update `fix-full-review` to also read the new directory
 
 **Files:**
+
 - Modify: `.claude/skills/fix-full-review/SKILL.md`
 
 - [ ] **Step 1: Read the existing fix-full-review SKILL.md.**
@@ -2376,6 +2468,7 @@ git diff --cached --quiet || git commit -m "chore(code-review): smoke-test artif
 ### Task 12.1: Update related docs and CLAUDE.md cross-references
 
 **Files:**
+
 - Modify: `CLAUDE.md` (under the Skills index)
 
 - [ ] **Step 1: Read the existing CLAUDE.md Skills section.**
@@ -2433,6 +2526,7 @@ test -f .code-reviewignore && echo OK
 ```
 
 Expected:
+
 - 12 agent files + `index.md` under `agents/`.
 - 11 helper `.mjs` files under `scripts/code-review/`.
 - 7 test files under `scripts/__tests__/code-review/`.
@@ -2470,6 +2564,7 @@ This is the user's job — invoke `/submit-pr` from a fresh session, or `gh pr c
 **Placeholder scan:** no `TBD`/`TODO`/"implement later" patterns. Every step shows the code or content it produces. Every test shows the expected output. Every commit message is concrete.
 
 **Type/name consistency:**
+
 - `computeFindingId` consistently named across `finding-id.mjs`, tests, `pr-comment-sync.mjs`.
 - `writeJsonAtomic` consistently named across `atomic-write.mjs`, `manifest.mjs`, `cache.mjs`.
 - Finding shape (id, agent, severity, file, lineStart, lineEnd, ruleId, body) consistent across helpers and agents/index.md.

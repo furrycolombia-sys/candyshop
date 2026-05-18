@@ -13,7 +13,7 @@ The two existing review skills don't fit the day-to-day need:
 - **`/code-review`** is a fast single-pass checklist over a path the user types. It has no security scanning, no persistence, and no notion of "what changed on this branch."
 - **`/full-review`** is a 11-agent parallel review with persistence and auto-issue creation, but it runs over the whole repo every time — token-expensive, slow, and noisy with findings from code the developer isn't touching.
 
-Neither skill answers the most common question: *"Review what I'm about to ship on this branch."* That gap forces developers to either (a) skip review entirely, (b) run `/full-review` and ignore most of the output, or (c) hand-pick a path argument and miss cross-cutting concerns.
+Neither skill answers the most common question: _"Review what I'm about to ship on this branch."_ That gap forces developers to either (a) skip review entirely, (b) run `/full-review` and ignore most of the output, or (c) hand-pick a path argument and miss cross-cutting concerns.
 
 The new `/code-review` answers that question by default while remaining able to scale up to a full-repo audit on demand.
 
@@ -34,11 +34,11 @@ The new `/code-review` answers that question by default while remaining able to 
 
 `/code-review` replaces `/full-review` as the canonical review entry point.
 
-| Old skill | New behavior |
-| --- | --- |
-| `/code-review` | The new multi-agent skill specified in this document. |
-| `/full-review` | Thin alias that prints a deprecation note and forwards to `/code-review --all`. Retained so existing automations don't break. |
-| `/fix-full-review` | Updated to also accept reports from `.ai-context/code-reviews/` (in addition to the existing `.ai-context/reviews/`). |
+| Old skill          | New behavior                                                                                                                  |
+| ------------------ | ----------------------------------------------------------------------------------------------------------------------------- |
+| `/code-review`     | The new multi-agent skill specified in this document.                                                                         |
+| `/full-review`     | Thin alias that prints a deprecation note and forwards to `/code-review --all`. Retained so existing automations don't break. |
+| `/fix-full-review` | Updated to also accept reports from `.ai-context/code-reviews/` (in addition to the existing `.ai-context/reviews/`).         |
 
 The single-pass checklist semantics of the old `/code-review` are gone. Users who want a quick checklist for a single file can pass `--agent <name>` to run one specific agent.
 
@@ -56,11 +56,11 @@ Where:
 
 - **`base_ref`** is determined by branch-name routing:
 
-  | Current branch prefix | `base_ref` |
-  | --- | --- |
-  | `release/*` | `origin/main` |
-  | `feat/`, `chore/`, `refactor/`, `docs/`, `fix/` | `origin/develop` |
-  | anything else | `origin/develop` (with a warning) |
+  | Current branch prefix                           | `base_ref`                        |
+  | ----------------------------------------------- | --------------------------------- |
+  | `release/*`                                     | `origin/main`                     |
+  | `feat/`, `chore/`, `refactor/`, `docs/`, `fix/` | `origin/develop`                  |
+  | anything else                                   | `origin/develop` (with a warning) |
 
   Documented in `.claude/rules/git-workflow.md`. `fix/*` historically can target either; default to `origin/develop` and let `--base origin/main` override.
 
@@ -70,13 +70,13 @@ Where:
 
 ### Scope variants
 
-| Flag | What's reviewed |
-| --- | --- |
-| (default) | working tree vs `merge-base(HEAD, base_ref)` |
-| `--committed-only` | `HEAD` vs `merge-base(HEAD, base_ref)`. Ignores uncommitted edits. |
-| `--staged` | `git diff --cached` only. For pre-commit hooks. |
-| `--base <ref>` | Override `base_ref` (e.g., `--base origin/main`, `--base v2026.05.01`, `--base abc1234`). |
-| `--all` | Whole repo. Bypasses all diff logic. Requires typed-phrase confirmation. |
+| Flag               | What's reviewed                                                                           |
+| ------------------ | ----------------------------------------------------------------------------------------- |
+| (default)          | working tree vs `merge-base(HEAD, base_ref)`                                              |
+| `--committed-only` | `HEAD` vs `merge-base(HEAD, base_ref)`. Ignores uncommitted edits.                        |
+| `--staged`         | `git diff --cached` only. For pre-commit hooks.                                           |
+| `--base <ref>`     | Override `base_ref` (e.g., `--base origin/main`, `--base v2026.05.01`, `--base abc1234`). |
+| `--all`            | Whole repo. Bypasses all diff logic. Requires typed-phrase confirmation.                  |
 
 ### Filtering
 
@@ -112,20 +112,20 @@ This is the user's confirmation that the scope is what they expected. They can `
 
 All 12 agents run on every invocation (branch-scoped or `--all`). The branch-scoped surface keeps per-agent cost low; the 12-agent coverage maximizes the chance of catching the issue.
 
-| # | Agent | Source rules |
-| --- | --- | --- |
-| 1 | architecture | `.claude/rules/architecture.md` |
-| 2 | SOLID | `.claude/rules/solid-principles.md` |
-| 3 | DRY | `.claude/rules/dry-principle.md` |
-| 4 | component-patterns | `.claude/rules/component-patterns.md` |
-| 5 | naming-conventions | `.claude/rules/naming-conventions.md` |
-| 6 | bug-detection | `.claude/rules/code-review-standards.md#bug-detection-standards` |
-| 7 | tailwind / styling | `.claude/rules/tailwind.md`, `css-consistency.md` |
-| 8 | testing | `.claude/rules/testing.md` |
-| 9 | performance | `.claude/rules/code-review-standards.md#performance-standards` |
-| 10 | pattern-discovery | (no fixed rule — finds undocumented patterns / anti-patterns) |
-| 11 | security (LLM) | `.claude/rules/code-review-standards.md#security-standards` |
-| 12 | **rules-drift** (new) | This section |
+| #   | Agent                 | Source rules                                                     |
+| --- | --------------------- | ---------------------------------------------------------------- |
+| 1   | architecture          | `.claude/rules/architecture.md`                                  |
+| 2   | SOLID                 | `.claude/rules/solid-principles.md`                              |
+| 3   | DRY                   | `.claude/rules/dry-principle.md`                                 |
+| 4   | component-patterns    | `.claude/rules/component-patterns.md`                            |
+| 5   | naming-conventions    | `.claude/rules/naming-conventions.md`                            |
+| 6   | bug-detection         | `.claude/rules/code-review-standards.md#bug-detection-standards` |
+| 7   | tailwind / styling    | `.claude/rules/tailwind.md`, `css-consistency.md`                |
+| 8   | testing               | `.claude/rules/testing.md`                                       |
+| 9   | performance           | `.claude/rules/code-review-standards.md#performance-standards`   |
+| 10  | pattern-discovery     | (no fixed rule — finds undocumented patterns / anti-patterns)    |
+| 11  | security (LLM)        | `.claude/rules/code-review-standards.md#security-standards`      |
+| 12  | **rules-drift** (new) | This section                                                     |
 
 ### The new `rules-drift` agent
 
@@ -148,18 +148,18 @@ Each agent receives, for each file in scope:
 - **The diff hunks** (so the agent knows what changed).
 - **The file's path** and (where useful) the rename source.
 
-Each agent is instructed: *report findings only on lines that appear in the diff (added or modified). Do not flag pre-existing issues in unchanged hunks.* This keeps signal high — branch reviews aren't legacy audits.
+Each agent is instructed: _report findings only on lines that appear in the diff (added or modified). Do not flag pre-existing issues in unchanged hunks._ This keeps signal high — branch reviews aren't legacy audits.
 
 ### Severity levels
 
 Inherited from `.claude/rules/code-review-standards.md`:
 
-| Level | Used for inline PR comments? |
-| --- | --- |
-| **Critical** | Yes (default threshold) |
-| **Warning** | Yes |
+| Level          | Used for inline PR comments?      |
+| -------------- | --------------------------------- |
+| **Critical**   | Yes (default threshold)           |
+| **Warning**    | Yes                               |
 | **Suggestion** | No — appears in summary body only |
-| **Info** | No — appears in summary body only |
+| **Info**       | No — appears in summary body only |
 
 `--threshold <level>` overrides the inline-comment cutoff.
 
@@ -202,11 +202,11 @@ After scanners finish, the security agent receives:
 
 It produces three categories of findings:
 
-| Category | Source | Output |
-| --- | --- | --- |
-| `scanner-confirmed` | A scanner finding that the LLM judged as a real issue. | Inline finding with the scanner's rule ID + the LLM's explanation. |
-| `scanner-but-FP` | A scanner finding the LLM judged as a false positive. | Suppressed from the report. Logged in the manifest for audit. |
-| `llm-found` | A real risk the scanners couldn't catch (e.g., logic-level data exposure, broken authz, dangerous response shape). | Inline finding with the LLM's reasoning. |
+| Category            | Source                                                                                                             | Output                                                             |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------ |
+| `scanner-confirmed` | A scanner finding that the LLM judged as a real issue.                                                             | Inline finding with the scanner's rule ID + the LLM's explanation. |
+| `scanner-but-FP`    | A scanner finding the LLM judged as a false positive.                                                              | Suppressed from the report. Logged in the manifest for audit.      |
+| `llm-found`         | A real risk the scanners couldn't catch (e.g., logic-level data exposure, broken authz, dangerous response shape). | Inline finding with the LLM's reasoning.                           |
 
 ### 4.4 Critical-finding interrupt
 
@@ -323,13 +323,13 @@ Cache is shared across review runs (it's keyed on content, not run ID).
 
 ### Failure modes
 
-| Failure | Behavior |
-| --- | --- |
-| Single agent times out / crashes | No JSON written. Manifest marks it `failed`. Orchestrator finishes other agents and aggregates what's there. Report flags the missing agent. Resume re-runs only the missing agent. |
-| Scanner unavailable (no network, MCP down) | Logged warning. Skipped. LLM security agent runs without that input. Manifest records `scanner: skipped`. |
-| Orchestrator killed mid-run | Atomic writes mean no corruption. Re-invoking detects the in-flight pointer and resumes. |
-| Working tree changes during a run | Detected via `head_sha` recomputation. Manifest flags `head_sha_changed`. Findings still aggregated but flagged as possibly stale. |
-| No PR exists and `--issue` not set | File-only output. No GitHub API call. |
+| Failure                                    | Behavior                                                                                                                                                                            |
+| ------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Single agent times out / crashes           | No JSON written. Manifest marks it `failed`. Orchestrator finishes other agents and aggregates what's there. Report flags the missing agent. Resume re-runs only the missing agent. |
+| Scanner unavailable (no network, MCP down) | Logged warning. Skipped. LLM security agent runs without that input. Manifest records `scanner: skipped`.                                                                           |
+| Orchestrator killed mid-run                | Atomic writes mean no corruption. Re-invoking detects the in-flight pointer and resumes.                                                                                            |
+| Working tree changes during a run          | Detected via `head_sha` recomputation. Manifest flags `head_sha_changed`. Findings still aggregated but flagged as possibly stale.                                                  |
+| No PR exists and `--issue` not set         | File-only output. No GitHub API call.                                                                                                                                               |
 
 ---
 
@@ -348,33 +348,41 @@ Cache is shared across review runs (it's keyed on content, not run ID).
 **Status:** complete | partial (X/12 agents)
 
 ## Summary
-| Severity | Count |
-| --- | --- |
-| 🔴 Critical | X |
-| 🟠 Warning | X |
-| 🟡 Suggestion | X |
-| ℹ️ Info | X |
-| 🛡️ Security | X (scanner: X, llm: X) |
+
+| Severity      | Count                  |
+| ------------- | ---------------------- |
+| 🔴 Critical   | X                      |
+| 🟠 Warning    | X                      |
+| 🟡 Suggestion | X                      |
+| ℹ️ Info       | X                      |
+| 🛡️ Security   | X (scanner: X, llm: X) |
 
 ## Critical Findings
+
 [list]
 
 ## Warnings
+
 [list]
 
 ## Suggestions
+
 [list]
 
 ## Security Findings
+
 [list]
 
 ## Pattern Discovery
+
 [list]
 
 ## Rule-Drift Findings
+
 [list]
 
 ## Failed Agents
+
 [only present if status=partial]
 ```
 
@@ -406,11 +414,10 @@ If `gh pr view --json number` succeeds for the current branch, the orchestrator 
    The skill scans every existing inline thread for `#noresolve` before deciding to resolve. The marker prevents auto-resolution on **all future re-runs** until the reply is deleted/edited or the finding is fixed in code (which makes the finding's ID disappear naturally).
 
 5. **Re-reviewing deferred findings.** Sometimes deferred findings need a second look — the surrounding code changed, the dependency the deferral hinged on was upgraded, or it's been a while and we want to see if the situation still holds. The `--review-deferred` flag does exactly that:
-
    - Fetches all open inline comments on the PR carrying `#noresolve`.
    - Builds a focused review scope from those comments' files + line ranges.
    - Runs only the originating agents on that scope.
-   - Produces a `{review_id}_deferred-review.md` report listing each deferred finding with the agent's fresh verdict: *still valid* / *no longer applies* / *changed materially — see details*.
+   - Produces a `{review_id}_deferred-review.md` report listing each deferred finding with the agent's fresh verdict: _still valid_ / _no longer applies_ / _changed materially — see details_.
    - Does **not** modify the existing comments. The developer reads the report and decides whether to remove the `#noresolve` marker (which re-arms the comment for resolution on the next regular run) or leave it as is.
 
 ### File-only delivery
@@ -451,21 +458,21 @@ When the user passes `--all`:
 
 ## Section 8: Flag reference
 
-| Flag | Default | Effect |
-| --- | --- | --- |
-| (none) | — | Branch-scoped, working-tree mode, all 12 agents, scanners on, PR delivery if PR exists. |
-| `--all` | off | Whole-repo. Typed-phrase confirmation. |
-| `--base <ref>` | branch-name routed | Override base ref. |
-| `--committed-only` | off | Diff = HEAD vs base. |
-| `--staged` | off | Diff = `git diff --cached`. |
-| `--resume <id>` | auto-detect | Resume specific run. |
-| `--fresh` | off | Ignore any in-flight run. |
-| `--agent <name>` | run all | Run a single agent. |
-| `--threshold <level>` | `warning` | Inline-comment severity threshold. |
-| `--no-security` | off | Skip the LLM security agent. |
-| `--no-scanners` | off | Skip semgrep + aikido. |
-| `--issue` | off | Also create a GitHub issue. |
-| `--review-deferred` | off | Re-investigate only the inline comments carrying `#noresolve` on the open PR. |
+| Flag                  | Default            | Effect                                                                                  |
+| --------------------- | ------------------ | --------------------------------------------------------------------------------------- |
+| (none)                | —                  | Branch-scoped, working-tree mode, all 12 agents, scanners on, PR delivery if PR exists. |
+| `--all`               | off                | Whole-repo. Typed-phrase confirmation.                                                  |
+| `--base <ref>`        | branch-name routed | Override base ref.                                                                      |
+| `--committed-only`    | off                | Diff = HEAD vs base.                                                                    |
+| `--staged`            | off                | Diff = `git diff --cached`.                                                             |
+| `--resume <id>`       | auto-detect        | Resume specific run.                                                                    |
+| `--fresh`             | off                | Ignore any in-flight run.                                                               |
+| `--agent <name>`      | run all            | Run a single agent.                                                                     |
+| `--threshold <level>` | `warning`          | Inline-comment severity threshold.                                                      |
+| `--no-security`       | off                | Skip the LLM security agent.                                                            |
+| `--no-scanners`       | off                | Skip semgrep + aikido.                                                                  |
+| `--issue`             | off                | Also create a GitHub issue.                                                             |
+| `--review-deferred`   | off                | Re-investigate only the inline comments carrying `#noresolve` on the open PR.           |
 
 ---
 
