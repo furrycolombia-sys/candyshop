@@ -100,9 +100,15 @@ describe("getReceiptUrl", () => {
     expect(mockStorageFrom).not.toHaveBeenCalled();
   });
 
-  it("calls createSignedUrl and returns the signed url", async () => {
+  it("calls createSignedUrl and returns a URL rewritten to the public host", async () => {
+    // The SDK uses SUPABASE_URL_INTERNAL on the server (e.g. host.docker.internal),
+    // so getReceiptUrl rewrites the host to NEXT_PUBLIC_SUPABASE_URL — the only
+    // host the browser can resolve.
     mockCreateSignedUrl.mockResolvedValue({
-      data: { signedUrl: "https://example.com/signed/order-123/receipt.png" },
+      data: {
+        signedUrl:
+          "https://host.docker.internal:64321/storage/v1/object/sign/receipts/order-123/receipt.png?token=abc",
+      },
       error: null,
     });
 
@@ -113,7 +119,10 @@ describe("getReceiptUrl", () => {
       "order-123/receipt.png",
       expect.any(Number),
     );
-    expect(url).toBe("https://example.com/signed/order-123/receipt.png");
+    // vitest.config.mts pins NEXT_PUBLIC_SUPABASE_URL to http://localhost:54321
+    expect(url).toBe(
+      "http://localhost:54321/storage/v1/object/sign/receipts/order-123/receipt.png?token=abc",
+    );
   });
 
   it("returns null when createSignedUrl returns an error", async () => {

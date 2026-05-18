@@ -1,26 +1,28 @@
 /* eslint-disable i18next/no-literal-string -- route uses internal table names */
 import { createServerSupabaseClient } from "api/supabase/server";
 import { NextResponse } from "next/server";
+import { ORDER_STATUS_LIST } from "shared/constants/orders";
+import { POPULAR_CURRENCIES } from "shared/utils/currencies";
 
 import type { SellerReportOrder } from "@/features/reports/domain/types";
+import type { SupabaseClient } from "@/shared/domain/types";
 import {
   adminFetchJson,
   createRestPath,
 } from "@/shared/infrastructure/adminRestClient";
+import { getReceiptUrl } from "@/shared/infrastructure/receiptStorage";
 
 const JSON_CONTENT_TYPE = "application/json";
 
 const ISO_DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/;
 const UUID_REGEX =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-const ALLOWED_STATUSES = new Set([
-  "pending",
-  "paid",
-  "failed",
-  "refunded",
-  "cancelled",
-]);
-const ALLOWED_CURRENCIES = new Set(["usd", "cop", "eur", "gbp"]);
+// Single source of truth for the values UI shows in the status filter.
+const ALLOWED_STATUSES = new Set<string>(ORDER_STATUS_LIST);
+// public.currency_code enum values (mirrored in POPULAR_CURRENCIES).
+// The DB stores codes uppercase, so validation and the eq.* query must
+// also be uppercase — historically this filter silently matched nothing.
+const ALLOWED_CURRENCIES = new Set<string>(POPULAR_CURRENCIES);
 
 function isValidIsoDate(value: string): boolean {
   return ISO_DATE_REGEX.test(value) && !Number.isNaN(Date.parse(value));
@@ -114,9 +116,9 @@ function applyScalarFilters(
   }
   const currency = params.get("currency");
   if (currency) {
-    if (!ALLOWED_CURRENCIES.has(currency.toLowerCase()))
-      return "Invalid currency";
-    query["currency"] = `eq.${currency.toLowerCase()}`;
+    const normalized = currency.toUpperCase();
+    if (!ALLOWED_CURRENCIES.has(normalized)) return "Invalid currency";
+    query["currency"] = `eq.${normalized}`;
   }
   return null;
 }
@@ -144,11 +146,23 @@ function buildQuery(
   return { ok: true, query };
 }
 
-function mapOrder(
+async function mapOrder(
+  supabase: SupabaseClient,
   row: OrderRow,
   profileMap: Map<string, UserProfileRow>,
-): SellerReportOrder {
+): Promise<SellerReportOrder> {
   const profile = profileMap.get(row.user_id);
+  // receipt_url is a Supabase Storage path (e.g. "orderId/receipt.png"), not a
+  // URL. The receipts bucket is private, so the browser can't load the path
+  // directly — exchange it for a signed URL using the seller's session.
+  let signedReceiptUrl: string | null = null;
+  if (row.receipt_url) {
+    try {
+      signedReceiptUrl = await getReceiptUrl(supabase, row.receipt_url);
+    } catch {
+      signedReceiptUrl = null;
+    }
+  }
   return {
     id: row.id,
     created_at: row.created_at,
@@ -156,7 +170,7 @@ function mapOrder(
     total: row.total,
     currency: row.currency,
     transfer_number: row.transfer_number,
-    receipt_url: row.receipt_url,
+    receipt_url: signedReceiptUrl,
     buyer_id: row.user_id,
     buyer_email: profile?.email ?? "",
     buyer_display_name: profile?.display_name ?? null,
@@ -208,7 +222,9 @@ export async function GET(request: Request) {
       }
     }
 
-    const orders = rows.map((row) => mapOrder(row, profileMap));
+    const orders = await Promise.all(
+      rows.map((row) => mapOrder(sessionSupabase, row, profileMap)),
+    );
 
     return NextResponse.json({ orders, total: orders.length });
   } catch (error) {
