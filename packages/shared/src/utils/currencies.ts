@@ -54,3 +54,9 @@ export const POPULAR_CURRENCIES = [
 ] as const;
 
 export type CurrencyCode = (typeof POPULAR_CURRENCIES)[number];
+
+/** O(1) lookup over POPULAR_CURRENCIES. Shared so every route that
+ * validates a `currency` filter draws from the same canonical set. */
+export const POPULAR_CURRENCIES_SET: ReadonlySet<string> = new Set(
+  POPULAR_CURRENCIES,
+);

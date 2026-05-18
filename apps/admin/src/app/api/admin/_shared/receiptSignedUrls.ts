@@ -1,8 +1,9 @@
 /* eslint-disable i18next/no-literal-string -- server file: Supabase API paths and bucket names are SQL/REST identifiers, not user-facing text */
-
-const RECEIPTS_BUCKET = "receipts";
-const SECONDS_PER_HOUR = 3600;
-const SIGNED_URL_TTL_SECONDS = SECONDS_PER_HOUR;
+import {
+  RECEIPTS_BUCKET,
+  RECEIPT_URL_TTL_SECONDS,
+} from "shared/constants/receipts";
+import { toSafeReceiptPath } from "shared/utils/receiptPath";
 
 // Browser-accessible host. Must be used when building the URL returned to
 // the client; SUPABASE_URL_INTERNAL is only reachable from inside Docker.
@@ -13,18 +14,8 @@ const PUBLIC_SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const SIGNING_SUPABASE_URL =
   process.env["SUPABASE_URL_INTERNAL"] || PUBLIC_SUPABASE_URL;
 
-// Whitelist for receipt storage paths used across the project:
-// exactly one slash, both segments alphanumeric + hyphen + underscore,
-// second segment has a known image extension. Capture groups reconstruct
-// the path to break SAST taint chains.
-const SAFE_RECEIPT_PATH =
-  /^([a-zA-Z0-9_-]+)\/([a-zA-Z0-9_-]+)\.(jpg|png|webp)$/;
-
-function toSafeStoragePath(storagePath: string): string | null {
-  const match = SAFE_RECEIPT_PATH.exec(storagePath);
-  if (!match) return null;
-  return `${match[1]}/${match[2]}.${match[3]}`;
-}
+// Read service role at module load (matches the other URL constants).
+const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 interface SignedUrlResponse {
   signedURL?: string;
@@ -42,13 +33,11 @@ export async function signReceiptPath(
   storagePath: string | null,
 ): Promise<string | null> {
   if (!storagePath) return null;
-
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!serviceRoleKey || !SIGNING_SUPABASE_URL || !PUBLIC_SUPABASE_URL) {
+  if (!SERVICE_ROLE_KEY || !SIGNING_SUPABASE_URL || !PUBLIC_SUPABASE_URL) {
     return null;
   }
 
-  const safePath = toSafeStoragePath(storagePath);
+  const safePath = toSafeReceiptPath(storagePath);
   if (!safePath) return null;
 
   try {
@@ -57,11 +46,11 @@ export async function signReceiptPath(
       {
         method: "POST",
         headers: {
-          apikey: serviceRoleKey,
-          Authorization: `Bearer ${serviceRoleKey}`,
+          apikey: SERVICE_ROLE_KEY,
+          Authorization: `Bearer ${SERVICE_ROLE_KEY}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ expiresIn: SIGNED_URL_TTL_SECONDS }),
+        body: JSON.stringify({ expiresIn: RECEIPT_URL_TTL_SECONDS }),
         cache: "no-store",
       },
     );

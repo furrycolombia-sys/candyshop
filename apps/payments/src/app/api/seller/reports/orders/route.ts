@@ -1,8 +1,8 @@
 /* eslint-disable i18next/no-literal-string -- route uses internal table names */
 import { createServerSupabaseClient } from "api/supabase/server";
 import { NextResponse } from "next/server";
-import { ORDER_STATUS_LIST } from "shared/constants/orders";
-import { POPULAR_CURRENCIES } from "shared/utils/currencies";
+import { ORDER_STATUS_SET } from "shared/constants/orders";
+import { POPULAR_CURRENCIES_SET } from "shared/utils/currencies";
 
 import type { SellerReportOrder } from "@/features/reports/domain/types";
 import type { SupabaseClient } from "@/shared/domain/types";
@@ -17,13 +17,6 @@ const JSON_CONTENT_TYPE = "application/json";
 const ISO_DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/;
 const UUID_REGEX =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-// Single source of truth for the values UI shows in the status filter.
-const ALLOWED_STATUSES = new Set<string>(ORDER_STATUS_LIST);
-// public.currency_code enum values (mirrored in POPULAR_CURRENCIES).
-// The DB stores codes uppercase, so validation and the eq.* query must
-// also be uppercase — historically this filter silently matched nothing.
-const ALLOWED_CURRENCIES = new Set<string>(POPULAR_CURRENCIES);
-
 function isValidIsoDate(value: string): boolean {
   return ISO_DATE_REGEX.test(value) && !Number.isNaN(Date.parse(value));
 }
@@ -106,7 +99,7 @@ function applyScalarFilters(
 ): string | null {
   const status = params.get("status");
   if (status) {
-    if (!ALLOWED_STATUSES.has(status)) return "Invalid status";
+    if (!ORDER_STATUS_SET.has(status)) return "Invalid status";
     query["payment_status"] = `eq.${status}`;
   }
   const buyerId = params.get("buyerId");
@@ -117,7 +110,7 @@ function applyScalarFilters(
   const currency = params.get("currency");
   if (currency) {
     const normalized = currency.toUpperCase();
-    if (!ALLOWED_CURRENCIES.has(normalized)) return "Invalid currency";
+    if (!POPULAR_CURRENCIES_SET.has(normalized)) return "Invalid currency";
     query["currency"] = `eq.${normalized}`;
   }
   return null;
