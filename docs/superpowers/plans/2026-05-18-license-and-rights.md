@@ -16,36 +16,36 @@
 
 ### New files
 
-| Path | Responsibility |
-| --- | --- |
-| `packages/app-components/src/components/AppFooter.tsx` | Pure presentational footer. 5 props, no i18n inside. |
-| `packages/app-components/src/components/AppFooter.test.tsx` | Unit tests for the footer. |
-| `apps/landing/src/features/legal/presentation/pages/TermsPage.tsx` | Terms-of-Service feature page, pulls copy from `legal.terms` namespace. |
-| `apps/landing/src/features/legal/presentation/pages/TermsPage.test.tsx` | Unit tests for TermsPage. |
-| `apps/landing/src/features/legal/presentation/pages/PrivacyPage.tsx` | Privacy-Policy feature page, pulls copy from `legal.privacy` namespace. |
-| `apps/landing/src/features/legal/presentation/pages/PrivacyPage.test.tsx` | Unit tests for PrivacyPage. |
-| `apps/landing/src/features/legal/index.ts` | Public barrel export. |
-| `apps/landing/src/app/[locale]/legal/terms/page.tsx` | Thin Next route file. |
-| `apps/landing/src/app/[locale]/legal/privacy/page.tsx` | Thin Next route file. |
-| `apps/landing/e2e/legal-pages.spec.ts` | Playwright e2e covering both legal pages + footer link integration. |
+| Path                                                                      | Responsibility                                                          |
+| ------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| `packages/app-components/src/components/AppFooter.tsx`                    | Pure presentational footer. 5 props, no i18n inside.                    |
+| `packages/app-components/src/components/AppFooter.test.tsx`               | Unit tests for the footer.                                              |
+| `apps/landing/src/features/legal/presentation/pages/TermsPage.tsx`        | Terms-of-Service feature page, pulls copy from `legal.terms` namespace. |
+| `apps/landing/src/features/legal/presentation/pages/TermsPage.test.tsx`   | Unit tests for TermsPage.                                               |
+| `apps/landing/src/features/legal/presentation/pages/PrivacyPage.tsx`      | Privacy-Policy feature page, pulls copy from `legal.privacy` namespace. |
+| `apps/landing/src/features/legal/presentation/pages/PrivacyPage.test.tsx` | Unit tests for PrivacyPage.                                             |
+| `apps/landing/src/features/legal/index.ts`                                | Public barrel export.                                                   |
+| `apps/landing/src/app/[locale]/legal/terms/page.tsx`                      | Thin Next route file.                                                   |
+| `apps/landing/src/app/[locale]/legal/privacy/page.tsx`                    | Thin Next route file.                                                   |
+| `apps/landing/e2e/legal-pages.spec.ts`                                    | Playwright e2e covering both legal pages + footer link integration.     |
 
 ### Modified files
 
-| Path | Change |
-| --- | --- |
-| `packages/app-components/src/components/index.ts` | Export `AppFooter` + `AppFooterProps`. |
-| `apps/landing/src/app/[locale]/layout.tsx` | Render `<AppFooter />` at bottom. |
-| `apps/store/src/app/[locale]/layout.tsx` | Render `<AppFooter />` at bottom. |
-| `apps/payments/src/app/[locale]/layout.tsx` | Render `<AppFooter />` at bottom. |
-| `apps/auth/src/app/[locale]/layout.tsx` | Render `<AppFooter />` at bottom. |
-| `apps/landing/src/shared/infrastructure/i18n/messages/en.json` | Add `footer` + `legal` namespaces. |
-| `apps/landing/src/shared/infrastructure/i18n/messages/es.json` | Same. |
-| `apps/store/src/shared/infrastructure/i18n/messages/en.json` | Add `footer` namespace. |
-| `apps/store/src/shared/infrastructure/i18n/messages/es.json` | Same. |
-| `apps/payments/src/shared/infrastructure/i18n/messages/en.json` | Add `footer` namespace. |
-| `apps/payments/src/shared/infrastructure/i18n/messages/es.json` | Same. |
-| `apps/auth/src/shared/infrastructure/i18n/messages/en.json` | Add `footer` namespace. |
-| `apps/auth/src/shared/infrastructure/i18n/messages/es.json` | Same. |
+| Path                                                            | Change                                 |
+| --------------------------------------------------------------- | -------------------------------------- |
+| `packages/app-components/src/components/index.ts`               | Export `AppFooter` + `AppFooterProps`. |
+| `apps/landing/src/app/[locale]/layout.tsx`                      | Render `<AppFooter />` at bottom.      |
+| `apps/store/src/app/[locale]/layout.tsx`                        | Render `<AppFooter />` at bottom.      |
+| `apps/payments/src/app/[locale]/layout.tsx`                     | Render `<AppFooter />` at bottom.      |
+| `apps/auth/src/app/[locale]/layout.tsx`                         | Render `<AppFooter />` at bottom.      |
+| `apps/landing/src/shared/infrastructure/i18n/messages/en.json`  | Add `footer` + `legal` namespaces.     |
+| `apps/landing/src/shared/infrastructure/i18n/messages/es.json`  | Same.                                  |
+| `apps/store/src/shared/infrastructure/i18n/messages/en.json`    | Add `footer` namespace.                |
+| `apps/store/src/shared/infrastructure/i18n/messages/es.json`    | Same.                                  |
+| `apps/payments/src/shared/infrastructure/i18n/messages/en.json` | Add `footer` namespace.                |
+| `apps/payments/src/shared/infrastructure/i18n/messages/es.json` | Same.                                  |
+| `apps/auth/src/shared/infrastructure/i18n/messages/en.json`     | Add `footer` namespace.                |
+| `apps/auth/src/shared/infrastructure/i18n/messages/es.json`     | Same.                                  |
 
 ---
 
@@ -54,6 +54,7 @@
 ### Task 1.1: Tests for AppFooter
 
 **Files:**
+
 - Create: `packages/app-components/src/components/AppFooter.test.tsx`
 
 - [ ] **Step 1: Write the failing tests.**
@@ -62,14 +63,7 @@ Write `packages/app-components/src/components/AppFooter.test.tsx`:
 
 ```tsx
 import { render, screen } from "@testing-library/react";
-import {
-  afterEach,
-  beforeEach,
-  describe,
-  expect,
-  it,
-  vi,
-} from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { AppFooter } from "./AppFooter";
 
@@ -132,7 +126,9 @@ describe("AppFooter", () => {
       "© 2030 Furrycolombia. Todos los derechos reservados.",
     );
     expect(screen.getByRole("link", { name: "Términos" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Privacidad" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "Privacidad" }),
+    ).toBeInTheDocument();
   });
 });
 ```
@@ -147,6 +143,7 @@ Expected: FAIL — module `./AppFooter` not found.
 ### Task 1.2: Implement AppFooter
 
 **Files:**
+
 - Create: `packages/app-components/src/components/AppFooter.tsx`
 
 - [ ] **Step 1: Implement the component.**
@@ -191,7 +188,9 @@ export function AppFooter({
       {...tid("app-footer")}
     >
       <div className="mx-auto flex max-w-6xl flex-col items-center gap-2 md:flex-row md:justify-between">
-        <span>© {year} {copyrightSuffix}</span>
+        <span>
+          © {year} {copyrightSuffix}
+        </span>
         <span className="flex items-center gap-2">
           <a
             href={termsHref}
@@ -234,6 +233,7 @@ git commit -m "feat(app-components): add AppFooter component"
 ### Task 1.3: Export from app-components barrel
 
 **Files:**
+
 - Modify: `packages/app-components/src/components/index.ts`
 
 - [ ] **Step 1: Add the export.**
@@ -286,6 +286,7 @@ The same two-key payload is added to each app's English and Spanish locale files
 ### Task 2.1: Add footer i18n to `landing`
 
 **Files:**
+
 - Modify: `apps/landing/src/shared/infrastructure/i18n/messages/en.json`
 - Modify: `apps/landing/src/shared/infrastructure/i18n/messages/es.json`
 
@@ -338,6 +339,7 @@ git commit -m "feat(landing): add footer i18n namespace"
 ### Task 2.2: Add footer i18n to `store`
 
 **Files:**
+
 - Modify: `apps/store/src/shared/infrastructure/i18n/messages/en.json`
 - Modify: `apps/store/src/shared/infrastructure/i18n/messages/es.json`
 
@@ -379,6 +381,7 @@ git commit -m "feat(store): add footer i18n namespace"
 ### Task 2.3: Add footer i18n to `payments`
 
 **Files:**
+
 - Modify: `apps/payments/src/shared/infrastructure/i18n/messages/en.json`
 - Modify: `apps/payments/src/shared/infrastructure/i18n/messages/es.json`
 
@@ -418,6 +421,7 @@ git commit -m "feat(payments): add footer i18n namespace"
 ### Task 2.4: Add footer i18n to `auth`
 
 **Files:**
+
 - Modify: `apps/auth/src/shared/infrastructure/i18n/messages/en.json`
 - Modify: `apps/auth/src/shared/infrastructure/i18n/messages/es.json`
 
@@ -461,6 +465,7 @@ Each task touches one app's `[locale]/layout.tsx`. The change shape is identical
 ### Task 3.1: Render footer in `landing`
 
 **Files:**
+
 - Modify: `apps/landing/src/app/[locale]/layout.tsx`
 
 - [ ] **Step 1: Import `AppFooter` and `getTranslations`.**
@@ -531,6 +536,7 @@ git commit -m "feat(landing): render AppFooter in locale layout"
 ### Task 3.2: Render footer in `store`
 
 **Files:**
+
 - Modify: `apps/store/src/app/[locale]/layout.tsx`
 
 - [ ] **Step 1: Add `AppFooter` to the `@monorepo/app-components` import.**
@@ -584,6 +590,7 @@ git commit -m "feat(store): render AppFooter in locale layout"
 ### Task 3.3: Render footer in `payments`
 
 **Files:**
+
 - Modify: `apps/payments/src/app/[locale]/layout.tsx`
 
 - [ ] **Step 1: Add the `AppFooter` import.**
@@ -623,6 +630,7 @@ git commit -m "feat(payments): render AppFooter in locale layout"
 ### Task 3.4: Render footer in `auth`
 
 **Files:**
+
 - Modify: `apps/auth/src/app/[locale]/layout.tsx`
 
 - [ ] **Step 1: Add the `AppFooter` import.**
@@ -664,6 +672,7 @@ git commit -m "feat(auth): render AppFooter in locale layout"
 ### Task 4.1: Add legal i18n content to `landing` — English
 
 **Files:**
+
 - Modify: `apps/landing/src/shared/infrastructure/i18n/messages/en.json`
 
 - [ ] **Step 1: Add the `legal` namespace.**
@@ -789,6 +798,7 @@ git commit -m "feat(landing): add legal i18n namespace (en)"
 ### Task 4.2: Add legal i18n content to `landing` — Spanish
 
 **Files:**
+
 - Modify: `apps/landing/src/shared/infrastructure/i18n/messages/es.json`
 
 - [ ] **Step 1: Add the Spanish `legal` namespace.**
@@ -934,6 +944,7 @@ git commit -m "feat(landing): add legal i18n namespace (es)"
 ### Task 4.3: TermsPage component (with tests)
 
 **Files:**
+
 - Create: `apps/landing/src/features/legal/presentation/pages/TermsPage.tsx`
 - Create: `apps/landing/src/features/legal/presentation/pages/TermsPage.test.tsx`
 
@@ -946,10 +957,11 @@ import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 vi.mock("next-intl", () => ({
-  useTranslations: (namespace?: string) => (key: string, values?: Record<string, unknown>) => {
-    if (values) return `${namespace ?? ""}.${key}:${JSON.stringify(values)}`;
-    return `${namespace ?? ""}.${key}`;
-  },
+  useTranslations:
+    (namespace?: string) => (key: string, values?: Record<string, unknown>) => {
+      if (values) return `${namespace ?? ""}.${key}:${JSON.stringify(values)}`;
+      return `${namespace ?? ""}.${key}`;
+    },
 }));
 
 vi.mock("@/shared/infrastructure/config/tid", () => ({
@@ -966,9 +978,7 @@ describe("TermsPage", () => {
 
   it("renders the page title heading", () => {
     render(<TermsPage />);
-    expect(
-      screen.getByRole("heading", { level: 1 }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 1 })).toBeInTheDocument();
   });
 
   it("renders a last-updated line", () => {
@@ -1064,6 +1074,7 @@ git commit -m "feat(landing): add TermsPage feature component"
 ### Task 4.4: PrivacyPage component (with tests)
 
 **Files:**
+
 - Create: `apps/landing/src/features/legal/presentation/pages/PrivacyPage.tsx`
 - Create: `apps/landing/src/features/legal/presentation/pages/PrivacyPage.test.tsx`
 
@@ -1076,10 +1087,11 @@ import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 vi.mock("next-intl", () => ({
-  useTranslations: (namespace?: string) => (key: string, values?: Record<string, unknown>) => {
-    if (values) return `${namespace ?? ""}.${key}:${JSON.stringify(values)}`;
-    return `${namespace ?? ""}.${key}`;
-  },
+  useTranslations:
+    (namespace?: string) => (key: string, values?: Record<string, unknown>) => {
+      if (values) return `${namespace ?? ""}.${key}:${JSON.stringify(values)}`;
+      return `${namespace ?? ""}.${key}`;
+    },
 }));
 
 vi.mock("@/shared/infrastructure/config/tid", () => ({
@@ -1190,6 +1202,7 @@ git commit -m "feat(landing): add PrivacyPage feature component"
 ### Task 4.5: Feature barrel export
 
 **Files:**
+
 - Create: `apps/landing/src/features/legal/index.ts`
 
 - [ ] **Step 1: Write the barrel.**
@@ -1213,6 +1226,7 @@ git commit -m "feat(landing): export legal feature pages"
 ### Task 4.6: Next route wrappers (`/legal/terms` and `/legal/privacy`)
 
 **Files:**
+
 - Create: `apps/landing/src/app/[locale]/legal/terms/page.tsx`
 - Create: `apps/landing/src/app/[locale]/legal/privacy/page.tsx`
 
@@ -1282,6 +1296,7 @@ git commit -m "feat(landing): add /legal/terms and /legal/privacy route wrappers
 ### Task 5.1: `legal-pages.spec.ts`
 
 **Files:**
+
 - Create: `apps/landing/e2e/legal-pages.spec.ts`
 
 - [ ] **Step 1: Write the spec.**
@@ -1439,6 +1454,7 @@ If no tweaks needed, no commit. If tweaks needed, fix the underlying problem (do
 **Placeholder scan:** No `TBD` / `TODO` / "implement later" patterns. Every step contains the code or content it produces. Every test shows the expected output. Every commit message is concrete.
 
 **Type / name consistency:**
+
 - `AppFooterProps` consistently named across `AppFooter.tsx`, `AppFooter.test.tsx`, the barrel export, and every layout consumer.
 - Test-id values consistent: `app-footer` (footer), `legal-terms-page` (Terms page), `legal-privacy-page` (Privacy page), `legal-last-updated` (date line — shared name across both pages).
 - Section key arrays in `TermsPage.tsx` (10 keys) and `PrivacyPage.tsx` (9 keys) match the structure of the i18n payloads in Task 4.1 and Task 4.2.

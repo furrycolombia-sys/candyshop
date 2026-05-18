@@ -57,11 +57,11 @@ export interface AppFooterProps {
   /** Translated copyright line *without* the year. Year is auto-appended. */
   copyrightSuffix: string; // e.g. "Furrycolombia. Todos los derechos reservados."
   /** Translated label for the Terms link. */
-  termsLabel: string;      // e.g. "Términos"
+  termsLabel: string; // e.g. "Términos"
   /** Translated label for the Privacy link. */
-  privacyLabel: string;    // e.g. "Privacidad"
+  privacyLabel: string; // e.g. "Privacidad"
   /** Absolute URL to the Terms page on the landing app. */
-  termsHref: string;       // e.g. "https://store.furrycolombia.com/en/legal/terms"
+  termsHref: string; // e.g. "https://store.furrycolombia.com/en/legal/terms"
   /** Absolute URL to the Privacy page on the landing app. */
   privacyHref: string;
 }
@@ -86,15 +86,15 @@ Server-rendering the year would bake it into the page at deploy time and go stal
 
 ## Section 2: Apps that render the footer
 
-| App           | Footer? | Reason                                                              |
-| ------------- | ------- | ------------------------------------------------------------------- |
-| `landing`     | ✅      | Public root site                                                    |
-| `store`       | ✅      | Buyer-facing storefront                                             |
-| `payments`    | ✅      | Buyer + seller transaction surface                                  |
-| `auth`        | ✅      | Signup is where Terms/Privacy must be reachable                     |
-| `admin`       | ❌      | Internal staff tool                                                 |
-| `studio`      | ❌      | Internal seller tool, behind auth                                   |
-| `playground`  | ❌      | Internal sandbox                                                    |
+| App          | Footer? | Reason                                          |
+| ------------ | ------- | ----------------------------------------------- |
+| `landing`    | ✅      | Public root site                                |
+| `store`      | ✅      | Buyer-facing storefront                         |
+| `payments`   | ✅      | Buyer + seller transaction surface              |
+| `auth`       | ✅      | Signup is where Terms/Privacy must be reachable |
+| `admin`      | ❌      | Internal staff tool                             |
+| `studio`     | ❌      | Internal seller tool, behind auth               |
+| `playground` | ❌      | Internal sandbox                                |
 
 For each app in the ✅ set, modify `apps/<app>/src/app/[locale]/layout.tsx`:
 
@@ -159,7 +159,9 @@ A thin page that imports a feature component:
 ```tsx
 // app/[locale]/legal/terms/page.tsx
 import { TermsPage } from "@/features/legal/presentation/pages/TermsPage";
-export default function Page() { return <TermsPage />; }
+export default function Page() {
+  return <TermsPage />;
+}
 ```
 
 With the feature component at:
@@ -221,33 +223,33 @@ Same structure in both `en.json` and `es.json`.
 
 ### Content theses (Terms of Service)
 
-The implementation will draft full prose for each section based on these theses. All sections are written from the stance: *individual operator, marketplace-only, no money handling, user accountability.*
+The implementation will draft full prose for each section based on these theses. All sections are written from the stance: _individual operator, marketplace-only, no money handling, user accountability._
 
-| Section                         | Thesis                                                                                                                                                                                                                                                                       |
-| ------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Platform as tool**            | "Furrycolombia" is a software tool that records transactions agreed between independent users. The operator is not a seller, buyer, agent, escrow, or money-handler in any transaction recorded on the platform.                                                          |
-| **User responsibility**         | Each user is solely responsible for their account, their content, their conduct, their deliveries, their customer service, their taxes, and their compliance with applicable law.                                                                                          |
-| **No money handling**           | The platform does not collect, hold, transfer, or escrow funds. All payments occur directly between users via methods they agree on. The platform records the existence of a transaction; it does not process the payment.                                                |
-| **Dispute resolution**          | Disputes between buyers and sellers are between those parties. The platform may, at its discretion, suspend or terminate accounts for violations of these Terms but does not adjudicate disputes between users.                                                            |
-| **IP**                          | Users retain rights to content they post (product images, descriptions, reviews, etc.) and grant the platform a non-exclusive license to display that content on the platform for the purpose of operating the marketplace.                                                |
-| **Account termination**         | The platform may suspend or terminate any account at any time for cause (abuse, fraud, illegal content) or for any other reason consistent with these Terms.                                                                                                               |
-| **Limitation of liability**     | The platform is provided "as is" without warranty. The operator is not liable for transactions, goods, services, or conduct between users. To the extent permitted by Colombian law, the operator's aggregate liability is limited to nominal amounts.                    |
-| **Changes**                     | These Terms may change at any time. The "Last updated" date reflects the most recent change. Continued use of the platform after a change constitutes acceptance.                                                                                                          |
-| **Governing law**               | Colombian law. Disputes are heard in Colombian courts.                                                                                                                                                                                                                       |
+| Section                     | Thesis                                                                                                                                                                                                                                                 |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Platform as tool**        | "Furrycolombia" is a software tool that records transactions agreed between independent users. The operator is not a seller, buyer, agent, escrow, or money-handler in any transaction recorded on the platform.                                       |
+| **User responsibility**     | Each user is solely responsible for their account, their content, their conduct, their deliveries, their customer service, their taxes, and their compliance with applicable law.                                                                      |
+| **No money handling**       | The platform does not collect, hold, transfer, or escrow funds. All payments occur directly between users via methods they agree on. The platform records the existence of a transaction; it does not process the payment.                             |
+| **Dispute resolution**      | Disputes between buyers and sellers are between those parties. The platform may, at its discretion, suspend or terminate accounts for violations of these Terms but does not adjudicate disputes between users.                                        |
+| **IP**                      | Users retain rights to content they post (product images, descriptions, reviews, etc.) and grant the platform a non-exclusive license to display that content on the platform for the purpose of operating the marketplace.                            |
+| **Account termination**     | The platform may suspend or terminate any account at any time for cause (abuse, fraud, illegal content) or for any other reason consistent with these Terms.                                                                                           |
+| **Limitation of liability** | The platform is provided "as is" without warranty. The operator is not liable for transactions, goods, services, or conduct between users. To the extent permitted by Colombian law, the operator's aggregate liability is limited to nominal amounts. |
+| **Changes**                 | These Terms may change at any time. The "Last updated" date reflects the most recent change. Continued use of the platform after a change constitutes acceptance.                                                                                      |
+| **Governing law**           | Colombian law. Disputes are heard in Colombian courts.                                                                                                                                                                                                 |
 
 ### Content theses (Privacy Policy)
 
-| Section            | Thesis                                                                                                                                                                                                                                                                                                                                          |
-| ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Controller**     | The data controller is the project operator. Contact: `furrycolombia@gmail.com`. (Project is operated as an individual, not a registered legal entity.)                                                                                                                                                                                       |
-| **Data collected** | Email, display name, avatar image (if uploaded), seller payment-method details (when a user chooses to publish them as a seller), receipts (uploaded by buyers to prove payment for an order), orders and order history.                                                                                                                       |
-| **Purposes**       | To operate the marketplace, authenticate users, show the right users the right transactions, support fraud/abuse moderation, and respond to user requests.                                                                                                                                                                                    |
-| **Where stored**   | Application data in Supabase (managed Postgres + Storage). Edge caching via Cloudflare. Authentication is delegated to Supabase Auth.                                                                                                                                                                                                          |
-| **Who sees it**    | The user themselves; other users in the contexts they publish to (e.g., seller payment methods are visible to buyers checking out from that seller; receipts are visible to the receiving seller and that seller's delegates); platform admins for moderation. No third-party sharing for marketing.                                          |
-| **Retention**      | As long as the user's account is active. After account closure, data is retained for a reasonable period for fraud/audit purposes, then deleted.                                                                                                                                                                                              |
-| **Your rights**    | Under Ley 1581 (Colombia): access, correction, deletion, withdrawal of consent, complaint. Exercise any of these by emailing `furrycolombia@gmail.com`.                                                                                                                                                                                       |
-| **Contact**        | All data-related requests, complaints, or questions: `furrycolombia@gmail.com`.                                                                                                                                                                                                                                                                |
-| **Changes**        | This policy may change. The "Last updated" date reflects the most recent change. Material changes will be communicated via a notice on the policy page.                                                                                                                                                                                       |
+| Section            | Thesis                                                                                                                                                                                                                                                                                               |
+| ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Controller**     | The data controller is the project operator. Contact: `furrycolombia@gmail.com`. (Project is operated as an individual, not a registered legal entity.)                                                                                                                                              |
+| **Data collected** | Email, display name, avatar image (if uploaded), seller payment-method details (when a user chooses to publish them as a seller), receipts (uploaded by buyers to prove payment for an order), orders and order history.                                                                             |
+| **Purposes**       | To operate the marketplace, authenticate users, show the right users the right transactions, support fraud/abuse moderation, and respond to user requests.                                                                                                                                           |
+| **Where stored**   | Application data in Supabase (managed Postgres + Storage). Edge caching via Cloudflare. Authentication is delegated to Supabase Auth.                                                                                                                                                                |
+| **Who sees it**    | The user themselves; other users in the contexts they publish to (e.g., seller payment methods are visible to buyers checking out from that seller; receipts are visible to the receiving seller and that seller's delegates); platform admins for moderation. No third-party sharing for marketing. |
+| **Retention**      | As long as the user's account is active. After account closure, data is retained for a reasonable period for fraud/audit purposes, then deleted.                                                                                                                                                     |
+| **Your rights**    | Under Ley 1581 (Colombia): access, correction, deletion, withdrawal of consent, complaint. Exercise any of these by emailing `furrycolombia@gmail.com`.                                                                                                                                              |
+| **Contact**        | All data-related requests, complaints, or questions: `furrycolombia@gmail.com`.                                                                                                                                                                                                                      |
+| **Changes**        | This policy may change. The "Last updated" date reflects the most recent change. Material changes will be communicated via a notice on the policy page.                                                                                                                                              |
 
 ---
 
@@ -341,12 +343,12 @@ This is a one-line per-app smoke test included in the existing e2e spec for each
 
 ## Section 6: Failure modes
 
-| Failure                                               | Behavior                                                                                                                                                                            |
-| ----------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `appUrls.landing` not configured in an env            | Footer renders with an empty href on its links. Caught by the layout-level guard already present for other `appUrls` usages (existing code throws on missing config).               |
-| Translation key missing in an app's i18n              | next-intl logs a warning and renders the key path. Pre-merge i18n parity check (existing `lint:env`-style script) catches this if extended; otherwise tests catch the missing key. |
-| User navigates to `/legal/terms` on the wrong app     | The page is hosted only on `landing`; on other apps that route does not exist and Next returns 404. The footer always points to the landing URL, so this only happens if a user types or follows a non-footer link to `<store>/legal/terms`. Acceptable. |
-| User on a localized route hits the footer link        | The locale segment in the URL is constructed from the current locale, so the user lands on the matching language of the legal page.                                                |
+| Failure                                           | Behavior                                                                                                                                                                                                                                                 |
+| ------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `appUrls.landing` not configured in an env        | Footer renders with an empty href on its links. Caught by the layout-level guard already present for other `appUrls` usages (existing code throws on missing config).                                                                                    |
+| Translation key missing in an app's i18n          | next-intl logs a warning and renders the key path. Pre-merge i18n parity check (existing `lint:env`-style script) catches this if extended; otherwise tests catch the missing key.                                                                       |
+| User navigates to `/legal/terms` on the wrong app | The page is hosted only on `landing`; on other apps that route does not exist and Next returns 404. The footer always points to the landing URL, so this only happens if a user types or follows a non-footer link to `<store>/legal/terms`. Acceptable. |
+| User on a localized route hits the footer link    | The locale segment in the URL is constructed from the current locale, so the user lands on the matching language of the legal page.                                                                                                                      |
 
 ---
 
@@ -354,16 +356,16 @@ This is a one-line per-app smoke test included in the existing e2e spec for each
 
 These items were considered and intentionally excluded from v1. Each has a one-line rationale so a future spec author doesn't need to re-relitigate:
 
-| Item                              | Why skipped                                                                                                                                                              |
-| --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Cookie / consent banner           | The site sets only essential cookies (auth, theme). Colombia (Ley 1581) requires data-handling notice via Privacy Policy, not a per-cookie banner.                       |
-| Refund policy page                | The platform does not handle money; refunds, if any, occur off-platform between users. No surface to document.                                                           |
-| Acceptable Use Policy (separate page) | Relevant prohibitions are covered as clauses inside Terms. Promote to a separate page if/when user base grows.                                                       |
-| DMCA / copyright-takedown process | No documented infringement reports at current scale. Add when needed.                                                                                                    |
-| Aviso Legal (separate page)       | Operator is an individual without a registered legal entity; footer identity disclosure + Privacy Policy contact are sufficient for the current scale.                   |
-| Self-service account deletion     | Users contact `furrycolombia@gmail.com` to exercise Ley 1581 rights in v1. A self-service flow is a future feature.                                                      |
-| Versioning + re-acceptance flow   | "Last updated" date on each page is sufficient signal. Re-acceptance flow is overkill at current scale.                                                                  |
-| Footer on internal apps           | `admin`, `studio`, `playground` have no anonymous users; legal links there serve no purpose.                                                                             |
+| Item                                  | Why skipped                                                                                                                                            |
+| ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Cookie / consent banner               | The site sets only essential cookies (auth, theme). Colombia (Ley 1581) requires data-handling notice via Privacy Policy, not a per-cookie banner.     |
+| Refund policy page                    | The platform does not handle money; refunds, if any, occur off-platform between users. No surface to document.                                         |
+| Acceptable Use Policy (separate page) | Relevant prohibitions are covered as clauses inside Terms. Promote to a separate page if/when user base grows.                                         |
+| DMCA / copyright-takedown process     | No documented infringement reports at current scale. Add when needed.                                                                                  |
+| Aviso Legal (separate page)           | Operator is an individual without a registered legal entity; footer identity disclosure + Privacy Policy contact are sufficient for the current scale. |
+| Self-service account deletion         | Users contact `furrycolombia@gmail.com` to exercise Ley 1581 rights in v1. A self-service flow is a future feature.                                    |
+| Versioning + re-acceptance flow       | "Last updated" date on each page is sufficient signal. Re-acceptance flow is overkill at current scale.                                                |
+| Footer on internal apps               | `admin`, `studio`, `playground` have no anonymous users; legal links there serve no purpose.                                                           |
 
 ---
 
