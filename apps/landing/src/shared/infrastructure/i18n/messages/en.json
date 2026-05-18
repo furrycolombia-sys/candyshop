@@ -4,6 +4,101 @@
     "terms": "Terms",
     "privacy": "Privacy"
   },
+  "legal": {
+    "common": {
+      "lastUpdated": "Last updated: {date}"
+    },
+    "terms": {
+      "title": "Terms of Service",
+      "lastUpdatedDate": "2026-05-18",
+      "intro": "These terms describe how you may use Furrycolombia. Furrycolombia is a software tool that records transactions agreed between independent users. We are not a seller, buyer, agent, escrow, or money-handler in any transaction. By using the platform you agree to these terms.",
+      "sections": {
+        "platformAsTool": {
+          "heading": "1. The platform is a tool, not a party",
+          "body": "Furrycolombia provides a website and database that lets buyers and sellers record transactions they have agreed to between themselves. We do not sell anything ourselves. We are not a party to any transaction recorded on the platform. We do not guarantee the quality, legality, safety, or delivery of any product or service offered by users on the platform."
+        },
+        "userResponsibility": {
+          "heading": "2. You are responsible for your account and your conduct",
+          "body": "You are solely responsible for what you do on the platform. That includes the products or services you list, the content you post (text, images, reviews, messages), how you treat other users, how you fulfil orders, the customer service you provide, the taxes you owe, and your compliance with the laws that apply to you. If you act unlawfully or harm other users, that is your problem, not ours."
+        },
+        "noMoneyHandling": {
+          "heading": "3. We do not handle money",
+          "body": "The platform does not collect, hold, transfer, or escrow funds. All payments occur directly between users using the methods they choose (bank transfer, cash on delivery, any other arrangement you and the other user agree on). The platform records that a transaction took place. It does not process the payment."
+        },
+        "disputeResolution": {
+          "heading": "4. Disputes between users",
+          "body": "If you have a problem with another user — a product that did not arrive, a payment that was not received, a dispute about quality, anything else — the problem is between you and that user. The platform is not an arbitrator. We may, at our discretion, suspend or terminate accounts that violate these terms or harm other users, but we do not adjudicate disputes between users."
+        },
+        "ip": {
+          "heading": "5. Your content",
+          "body": "You keep ownership of what you post (product photos, descriptions, reviews, messages). When you post content on the platform you grant us a non-exclusive, royalty-free license to display that content on the platform so the platform can do its job. You can delete your content at any time."
+        },
+        "accountTermination": {
+          "heading": "6. Account suspension and termination",
+          "body": "We may suspend or terminate any account at any time, with or without notice, for any reason consistent with these terms — including abuse, fraud, illegal content, or repeated violation of the platform rules."
+        },
+        "limitationOfLiability": {
+          "heading": "7. The platform is provided \"as is\"",
+          "body": "We make no warranty that the platform will be uninterrupted, error-free, or fit for any particular purpose. We are not liable for any loss arising out of your use of the platform or out of any transaction recorded on the platform between you and another user. To the extent permitted by Colombian law, our aggregate liability is limited to a nominal amount."
+        },
+        "changes": {
+          "heading": "8. Changes to these terms",
+          "body": "We may change these terms at any time. The \"Last updated\" date at the top of this page reflects the most recent change. If you keep using the platform after a change, you accept the change."
+        },
+        "governingLaw": {
+          "heading": "9. Governing law",
+          "body": "These terms are governed by the laws of the Republic of Colombia. Any dispute that cannot be resolved between us will be heard by Colombian courts."
+        },
+        "contact": {
+          "heading": "10. Contact",
+          "body": "Questions about these terms: furrycolombia@gmail.com."
+        }
+      }
+    },
+    "privacy": {
+      "title": "Privacy Policy",
+      "lastUpdatedDate": "2026-05-18",
+      "intro": "This policy explains what personal data we collect on Furrycolombia, why we collect it, how long we keep it, and how to ask us about it. It applies to anyone who uses the platform.",
+      "sections": {
+        "controller": {
+          "heading": "1. Who is the controller of your data",
+          "body": "Furrycolombia is operated as an individual project, not a registered legal entity. For all data-related questions, requests, and complaints, contact: furrycolombia@gmail.com."
+        },
+        "dataCollected": {
+          "heading": "2. What data we collect",
+          "body": "We collect: your email address, your display name, your avatar image (if you upload one), your seller payment methods (when you choose to publish them as a seller so buyers can pay you), receipts you upload to prove payment for an order, and your order history. We also keep technical logs (timestamps, IP addresses, error logs) for security and abuse-prevention purposes."
+        },
+        "purposes": {
+          "heading": "3. Why we collect it",
+          "body": "We use this data to operate the marketplace: to authenticate you, to show your transactions to the right people, to let buyers and sellers find each other and record what they agreed, and to detect and prevent abuse or fraud. We also use it to respond to your questions or requests."
+        },
+        "whereStored": {
+          "heading": "4. Where it is stored",
+          "body": "Application data is stored in Supabase (a managed Postgres database and object storage). Static assets and traffic are routed through Cloudflare. Authentication is delegated to Supabase Auth. We rely on these providers to keep your data secure at rest and in transit."
+        },
+        "whoSeesIt": {
+          "heading": "5. Who can see your data",
+          "body": "You. The platform operator (us) for moderation and support. Other users in the contexts you publish to — for example, when you publish a seller payment method, buyers who check out from you can see it; when you upload a receipt for an order, the seller of that order can see it. We do not sell or share your data with third parties for marketing."
+        },
+        "retention": {
+          "heading": "6. How long we keep it",
+          "body": "As long as your account is active. After your account is closed, we keep your data for a reasonable period for fraud and audit reasons, then delete it."
+        },
+        "yourRights": {
+          "heading": "7. Your rights under Ley 1581",
+          "body": "Under Colombian data-protection law (Ley 1581) you have the right to access your data, correct it, ask us to delete it, withdraw consent for its processing, and file a complaint with the Superintendencia de Industria y Comercio. To exercise any of these rights, email furrycolombia@gmail.com."
+        },
+        "contact": {
+          "heading": "8. Contact",
+          "body": "For any privacy-related request or complaint: furrycolombia@gmail.com."
+        },
+        "changes": {
+          "heading": "9. Changes to this policy",
+          "body": "We may update this policy. The \"Last updated\" date at the top of this page reflects the most recent change. Material changes will be highlighted on this page."
+        }
+      }
+    }
+  },
   "meta": {
     "title": "Candy Shop — Where Furry Art Lives",
     "description": "A creative marketplace for furry artists, makers, and collectors"
