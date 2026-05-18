@@ -545,6 +545,8 @@ jobs:
           done
 
       - name: Purge Cloudflare cache
+        id: cf_purge
+        continue-on-error: true
         env:
           CF_API_TOKEN: ${{ secrets.PROD_CF_API_TOKEN }}
           CF_ZONE_ID: ${{ secrets.PROD_CF_ZONE_ID }}
@@ -558,15 +560,27 @@ jobs:
           BODY=$(printf '%s' "$RESPONSE" | head -n -1)
           echo "Cloudflare response ($HTTP_CODE): $BODY"
           if [ "$HTTP_CODE" != "200" ]; then
-            echo "Cloudflare purge failed with HTTP $HTTP_CODE"
+            # Non-fatal: the deploy already succeeded; cache will roll over
+            # naturally on its TTL. The job-level summary warns the operator
+            # (see "Warn on cache-purge failure" step below).
+            echo "::warning::Cloudflare purge failed with HTTP $HTTP_CODE — token may be missing the Zone.Cache Purge scope."
             exit 1
           fi
+
+      - name: Warn on cache-purge failure
+        if: steps.cf_purge.outcome == 'failure'
+        run: |
+          echo "::warning::Deploy succeeded but Cloudflare cache purge failed."
+          echo "Cached static assets will refresh on their natural TTL instead of immediately."
+          echo "To restore immediate purging, ensure PROD_CF_API_TOKEN has the"
+          echo "'Zone — Cache Purge — Purge' permission on the production zone."
 
       - name: Notify deploy complete
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           TELEGRAM_THREAD_ID: ${{ secrets.TELEGRAM_THREAD_ID }}
+          CF_PURGE_OUTCOME: ${{ steps.cf_purge.outcome }}
           RUN_URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           python3 - <<'EOF'
@@ -580,11 +594,17 @@ jobs:
 
           sha = os.environ.get("GITHUB_SHA", "")[:7]
           repo = os.environ.get("GITHUB_REPOSITORY", "")
+          cf_outcome = os.environ.get("CF_PURGE_OUTCOME", "")
+          cf_line = (
+              "Cloudflare cache purged ✓"
+              if cf_outcome == "success"
+              else "⚠️ Cloudflare cache purge failed (non-fatal — assets refresh on TTL)"
+          )
           text = (
               "✅ <b>GCP Deploy Complete</b>\n\n"
               f"Commit: <code>{html.escape(sha)}</code>\n"
               f"Triggered by: {html.escape(os.environ.get('GITHUB_ACTOR', ''))}\n"
-              f"Cloudflare cache purged ✓\n\n"
+              f"{cf_line}\n\n"
               f"🔗 {html.escape(os.environ.get('RUN_URL', ''))}\n\n"
               f"\U0001F4CD github.com/{html.escape(repo)}"
           )
