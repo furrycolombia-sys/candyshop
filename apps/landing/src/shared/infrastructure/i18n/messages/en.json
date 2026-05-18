@@ -1,4 +1,9 @@
 {
+  "footer": {
+    "copyrightSuffix": "Furrycolombia. All rights reserved.",
+    "terms": "Terms",
+    "privacy": "Privacy"
+  },
   "meta": {
     "title": "Candy Shop — Where Furry Art Lives",
     "description": "A creative marketplace for furry artists, makers, and collectors"
