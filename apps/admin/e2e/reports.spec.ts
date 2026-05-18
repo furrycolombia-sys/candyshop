@@ -31,12 +31,52 @@ const TEST_ORDER_ITEM = {
   currency: "COP",
 };
 
+// 1x1 transparent PNG so the uploaded receipt is a real image the
+// browser can render when the signed URL resolves.
+const ONE_PX_PNG_BASE64 =
+  "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=";
+const RECEIPT_FILENAME = "receipt-e2e.png";
+
 // ─── Helpers ─────────────────────────────────────────────────────
 
 function getAdminBaseUrl(): string {
   const url = process.env.NEXT_PUBLIC_ADMIN_URL;
   if (!url) throw new Error("NEXT_PUBLIC_ADMIN_URL is required.");
   return url;
+}
+
+async function uploadTestReceipt(
+  storagePath: string,
+  pngBase64: string,
+): Promise<void> {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!supabaseUrl || !serviceRoleKey) {
+    throw new Error(
+      "NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are required for e2e receipt upload.",
+    );
+  }
+
+  const response = await fetch(
+    `${supabaseUrl}/storage/v1/object/receipts/${storagePath}`,
+    {
+      method: "POST",
+      headers: {
+        apikey: serviceRoleKey,
+        Authorization: `Bearer ${serviceRoleKey}`,
+        "Content-Type": "image/png",
+        "x-upsert": "true",
+      },
+      body: Buffer.from(pngBase64, "base64"),
+    },
+  );
+
+  if (!response.ok) {
+    const body = await response.text();
+    throw new Error(
+      `Failed to upload e2e receipt file: ${response.status} ${body}`,
+    );
+  }
 }
 
 // ─── Test suite ───────────────────────────────────────────────────
@@ -46,6 +86,7 @@ test.describe.serial("Reports page", () => {
   let buyerUser: TestUser;
   let orderId: string;
   let productId: string;
+  let receiptStoragePath: string;
 
   test.beforeAll(async () => {
     adminUser = await createTestUser("admin-reports", [
@@ -85,6 +126,35 @@ test.describe.serial("Reports page", () => {
     });
     orderId = order.id as string;
 
+    // Upload a receipt image and attach its storage path to the order so
+    // the reports table can verify the API converts paths into signed URLs.
+    receiptStoragePath = `${orderId}/${RECEIPT_FILENAME}`;
+    await uploadTestReceipt(receiptStoragePath, ONE_PX_PNG_BASE64);
+
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!supabaseUrl || !serviceRoleKey) {
+      throw new Error(
+        "NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are required for e2e setup.",
+      );
+    }
+    const patchResponse = await fetch(
+      `${supabaseUrl}/rest/v1/orders?id=eq.${orderId}`,
+      {
+        method: "PATCH",
+        headers: {
+          apikey: serviceRoleKey,
+          Authorization: `Bearer ${serviceRoleKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ receipt_url: receiptStoragePath }),
+      },
+    );
+    if (!patchResponse.ok) {
+      const body = await patchResponse.text();
+      throw new Error(`Failed to set order receipt_url: ${body}`);
+    }
+
     // Create an order item
     await adminInsert("order_items", {
       order_id: orderId,
@@ -97,6 +167,12 @@ test.describe.serial("Reports page", () => {
     await adminDelete("order_items", `order_id=eq.${orderId}`).catch(() => {});
     await adminDelete("orders", `id=eq.${orderId}`).catch(() => {});
     await adminDelete("products", `id=eq.${productId}`).catch(() => {});
+    if (receiptStoragePath) {
+      await supabaseAdmin.storage
+        .from("receipts")
+        .remove([receiptStoragePath])
+        .catch(() => {});
+    }
     await supabaseAdmin.auth.admin.deleteUser(buyerUser.userId).catch(() => {});
     await supabaseAdmin.auth.admin.deleteUser(adminUser.userId).catch(() => {});
   });
@@ -267,6 +343,40 @@ test.describe.serial("Reports page", () => {
         hasText: TEST_ORDER.transfer_number,
       }),
     ).toBeVisible({ timeout: MUTATION_WAIT_MS });
+  });
+
+  test("receipt cell exposes a working signed URL for the picture", async ({
+    context,
+    page,
+  }) => {
+    await injectSession(context, adminUser);
+    await page.goto(`${getAdminBaseUrl()}/en/reports?status=approved`, {
+      waitUntil: "networkidle",
+    });
+
+    await expect(page.getByTestId("report-table")).toBeVisible({
+      timeout: ELEMENT_TIMEOUT_MS,
+    });
+
+    const receiptCell = page.getByTestId(`report-row-receipt-${orderId}`);
+    await expect(receiptCell).toBeVisible({ timeout: MUTATION_WAIT_MS });
+
+    const receiptLink = receiptCell.getByRole("link");
+    await expect(receiptLink).toBeVisible({ timeout: ELEMENT_TIMEOUT_MS });
+
+    const href = await receiptLink.getAttribute("href");
+    expect(href).toBeTruthy();
+    // The href must be a fully-qualified URL — not just the raw storage path —
+    // and must be a Supabase signed URL for the receipt object.
+    expect(href).toMatch(/^https?:\/\//);
+    expect(href).toContain(`/storage/v1/object/sign/receipts/${orderId}/`);
+    expect(href).toContain("token=");
+
+    // The signed URL must actually resolve to an image (the bug was that the
+    // raw storage path was rendered, producing a relative URL that 404'd).
+    const fetchedReceipt = await page.request.get(href as string);
+    expect(fetchedReceipt.ok()).toBe(true);
+    expect(fetchedReceipt.headers()["content-type"]).toContain("image");
   });
 
   test("status=pending filter hides the approved order", async ({

@@ -1,5 +1,7 @@
 /* eslint-disable i18next/no-literal-string */
 import { NextResponse } from "next/server";
+import { ORDER_STATUS_LIST } from "shared/constants/orders";
+import { POPULAR_CURRENCIES } from "shared/utils/currencies";
 
 import {
   adminFetch,
@@ -8,6 +10,10 @@ import {
   getAuthorizedAdmin,
   INTERNAL_SERVER_ERROR_STATUS,
 } from "@/app/api/admin/_shared/adminRest";
+import { signReceiptPath } from "@/app/api/admin/_shared/receiptSignedUrls";
+
+const ALLOWED_STATUSES = new Set<string>(ORDER_STATUS_LIST);
+const ALLOWED_CURRENCIES = new Set<string>(POPULAR_CURRENCIES);
 
 const ADMIN_REPORTS = "admin.reports";
 const MAX_LIMIT = 10_000;
@@ -121,10 +127,17 @@ function buildOrderFilters(
   const buyerId = searchParams.get("buyerId");
   const currency = searchParams.get("currency");
 
-  if (status) filters["payment_status"] = `eq.${status}`;
+  if (status && ALLOWED_STATUSES.has(status)) {
+    filters["payment_status"] = `eq.${status}`;
+  }
   if (sellerId) filters["seller_id"] = `eq.${sellerId}`;
   if (buyerId) filters["user_id"] = `eq.${buyerId}`;
-  if (currency) filters["currency"] = `eq.${currency}`;
+  if (currency) {
+    const normalized = currency.toUpperCase();
+    if (ALLOWED_CURRENCIES.has(normalized)) {
+      filters["currency"] = `eq.${normalized}`;
+    }
+  }
 
   return filters;
 }
@@ -207,36 +220,38 @@ export async function GET(request: Request) {
       itemsByOrder.set(item.order_id, existing);
     }
 
-    const result = orders.map((order) => {
-      const buyer = profileMap.get(order.user_id);
-      const seller = order.seller_id
-        ? profileMap.get(order.seller_id)
-        : undefined;
+    const result = await Promise.all(
+      orders.map(async (order) => {
+        const buyer = profileMap.get(order.user_id);
+        const seller = order.seller_id
+          ? profileMap.get(order.seller_id)
+          : undefined;
 
-      return {
-        id: order.id,
-        created_at: order.created_at,
-        payment_status: order.payment_status,
-        total: order.total,
-        currency: order.currency,
-        transfer_number: order.transfer_number,
-        receipt_url: order.receipt_url,
-        buyer_id: order.user_id,
-        buyer_email: buyer?.email ?? "",
-        buyer_display_name: buyer?.display_name ?? null,
-        seller_id: order.seller_id,
-        seller_email: seller?.email ?? null,
-        seller_display_name: seller?.display_name ?? null,
-        items: (itemsByOrder.get(order.id) ?? []).map((item) => ({
-          id: item.id,
-          product_id: item.product_id,
-          product_name: item.products?.name_en ?? "",
-          quantity: item.quantity,
-          unit_price: item.unit_price,
-          currency: item.currency,
-        })),
-      };
-    });
+        return {
+          id: order.id,
+          created_at: order.created_at,
+          payment_status: order.payment_status,
+          total: order.total,
+          currency: order.currency,
+          transfer_number: order.transfer_number,
+          receipt_url: await signReceiptPath(order.receipt_url),
+          buyer_id: order.user_id,
+          buyer_email: buyer?.email ?? "",
+          buyer_display_name: buyer?.display_name ?? null,
+          seller_id: order.seller_id,
+          seller_email: seller?.email ?? null,
+          seller_display_name: seller?.display_name ?? null,
+          items: (itemsByOrder.get(order.id) ?? []).map((item) => ({
+            id: item.id,
+            product_id: item.product_id,
+            product_name: item.products?.name_en ?? "",
+            quantity: item.quantity,
+            unit_price: item.unit_price,
+            currency: item.currency,
+          })),
+        };
+      }),
+    );
 
     return NextResponse.json({ orders: result, total: result.length });
   } catch {

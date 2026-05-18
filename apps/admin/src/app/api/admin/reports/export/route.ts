@@ -1,6 +1,8 @@
 /* eslint-disable i18next/no-literal-string */
 import ExcelJS from "exceljs";
 import { NextResponse } from "next/server";
+import { ORDER_STATUS_LIST } from "shared/constants/orders";
+import { POPULAR_CURRENCIES } from "shared/utils/currencies";
 
 import {
   buildSalesWorkbook,
@@ -17,6 +19,9 @@ import {
   getAuthorizedAdmin,
   INTERNAL_SERVER_ERROR_STATUS,
 } from "@/app/api/admin/_shared/adminRest";
+
+const ALLOWED_STATUSES = new Set<string>(ORDER_STATUS_LIST);
+const ALLOWED_CURRENCIES = new Set<string>(POPULAR_CURRENCIES);
 
 const ADMIN_REPORTS = "admin.reports";
 const MAX_LIMIT = 10_000;
@@ -97,10 +102,17 @@ function buildOrderFilters(
   const sellerId = searchParams.get("sellerId");
   const buyerId = searchParams.get("buyerId");
   const currency = searchParams.get("currency");
-  if (status) filters["payment_status"] = `eq.${status}`;
+  if (status && ALLOWED_STATUSES.has(status)) {
+    filters["payment_status"] = `eq.${status}`;
+  }
   if (sellerId) filters["seller_id"] = `eq.${sellerId}`;
   if (buyerId) filters["user_id"] = `eq.${buyerId}`;
-  if (currency) filters["currency"] = `eq.${currency}`;
+  if (currency) {
+    const normalized = currency.toUpperCase();
+    if (ALLOWED_CURRENCIES.has(normalized)) {
+      filters["currency"] = `eq.${normalized}`;
+    }
+  }
   return filters;
 }
 
