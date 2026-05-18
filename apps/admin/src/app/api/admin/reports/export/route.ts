@@ -17,6 +17,7 @@ import {
   getAuthorizedAdmin,
   INTERNAL_SERVER_ERROR_STATUS,
 } from "@/app/api/admin/_shared/adminRest";
+import { buildAdminOrderFilters } from "@/app/api/admin/_shared/reportsFilters";
 
 const ADMIN_REPORTS = "admin.reports";
 const MAX_LIMIT = 10_000;
@@ -25,84 +26,6 @@ const ORDERS_SELECT =
   "id,created_at,payment_status,total,currency,transfer_number,receipt_url,user_id,seller_id,buyer_info";
 const ITEMS_SELECT =
   "id,order_id,product_id,quantity,unit_price,currency,products(name_en)";
-
-const ISO_DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/;
-
-function isValidIsoDate(value: string): boolean {
-  return ISO_DATE_REGEX.test(value) && !Number.isNaN(Date.parse(value));
-}
-
-function isValidAmount(value: string): boolean {
-  const num = Number.parseFloat(value);
-  return !Number.isNaN(num) && num >= 0;
-}
-
-function addDateFilters(
-  filters: Record<string, string>,
-  dateFrom: string | null,
-  dateTo: string | null,
-): void {
-  const validFrom = dateFrom && isValidIsoDate(dateFrom) ? dateFrom : null;
-  const validTo = dateTo && isValidIsoDate(dateTo) ? dateTo : null;
-  if (validFrom && validTo) {
-    const end = new Date(validTo);
-    end.setDate(end.getDate() + 1);
-    filters["created_at"] = `gte.${validFrom}`;
-    filters["and"] =
-      `(created_at.lt.${end.toISOString().slice(0, ISO_DATE_LENGTH)})`;
-  } else if (validFrom) {
-    filters["created_at"] = `gte.${validFrom}`;
-  } else if (validTo) {
-    const end = new Date(validTo);
-    end.setDate(end.getDate() + 1);
-    filters["created_at"] = `lt.${end.toISOString().slice(0, ISO_DATE_LENGTH)}`;
-  }
-}
-
-function addAmountFilters(
-  filters: Record<string, string>,
-  amountMin: string | null,
-  amountMax: string | null,
-): void {
-  const validMin = amountMin && isValidAmount(amountMin) ? amountMin : null;
-  const validMax = amountMax && isValidAmount(amountMax) ? amountMax : null;
-  if (validMin && validMax) {
-    filters["total"] = `gte.${validMin}`;
-    const existing = filters["and"] ?? "";
-    filters["and"] = existing
-      ? `${existing},(total.lte.${validMax})`
-      : `(total.lte.${validMax})`;
-  } else if (validMin) {
-    filters["total"] = `gte.${validMin}`;
-  } else if (validMax) {
-    filters["total"] = `lte.${validMax}`;
-  }
-}
-
-function buildOrderFilters(
-  searchParams: URLSearchParams,
-): Record<string, string> {
-  const filters: Record<string, string> = {};
-  addDateFilters(
-    filters,
-    searchParams.get("dateFrom"),
-    searchParams.get("dateTo"),
-  );
-  addAmountFilters(
-    filters,
-    searchParams.get("amountMin"),
-    searchParams.get("amountMax"),
-  );
-  const status = searchParams.get("status");
-  const sellerId = searchParams.get("sellerId");
-  const buyerId = searchParams.get("buyerId");
-  const currency = searchParams.get("currency");
-  if (status) filters["payment_status"] = `eq.${status}`;
-  if (sellerId) filters["seller_id"] = `eq.${sellerId}`;
-  if (buyerId) filters["user_id"] = `eq.${buyerId}`;
-  if (currency) filters["currency"] = `eq.${currency}`;
-  return filters;
-}
 
 async function fetchOrderItems(
   orderIds: string[],
@@ -159,7 +82,7 @@ export async function GET(request: Request) {
 
   try {
     const { searchParams } = new URL(request.url);
-    const filters = buildOrderFilters(searchParams);
+    const filters = buildAdminOrderFilters(searchParams);
     const productId = searchParams.get("productId");
 
     const ordersResponse = await adminFetch(

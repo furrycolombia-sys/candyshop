@@ -1,10 +1,12 @@
 /* eslint-disable i18next/no-literal-string -- internal validation error messages, not user-facing */
 
-import type {
-  DisplayBlock,
-  DisplayBlockType,
-  FormField,
-  FormFieldType,
+import {
+  DISPLAY_BLOCK_TYPES,
+  FORM_FIELD_TYPES,
+  type DisplayBlock,
+  type DisplayBlockType,
+  type FormField,
+  type FormFieldType,
 } from "@/shared/domain/PaymentMethodTypes";
 
 // Re-export shared utils so existing internal imports keep working.
@@ -13,19 +15,10 @@ export {
   validateFileSize,
 } from "@/shared/domain/paymentMethodUtils";
 
-const VALID_BLOCK_TYPES: DisplayBlockType[] = [
-  "text",
-  "image",
-  "video",
-  "link",
-  "url",
-];
-const VALID_FIELD_TYPES: FormFieldType[] = [
-  "text",
-  "email",
-  "number",
-  "textarea",
-];
+// Derived from the SSOT type-defining arrays — the two stay exhaustive
+// together because the type IS the array.
+const VALID_BLOCK_TYPES: readonly DisplayBlockType[] = DISPLAY_BLOCK_TYPES;
+const VALID_FIELD_TYPES: readonly FormFieldType[] = FORM_FIELD_TYPES;
 
 // ─── ID Assignment ────────────────────────────────────────────────────────────
 

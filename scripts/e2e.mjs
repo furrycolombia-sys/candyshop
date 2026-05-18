@@ -54,7 +54,7 @@ if (args.includes("--help")) {
 Usage: node scripts/e2e.mjs [--env <name>] [--app <app>] [--headed] [--ui] [--include-ux] [--ux-only] [-- <playwright args>]
 
   --env <name>   Environment to load from .env.<name> (default: dev)
-  --app <app>    auth | store | admin   (default: auth)
+  --app <app>    auth | store | admin | payments   (default: auth)
   --headed       Headed browser
   --ui           Playwright UI mode (interactive test runner GUI)
   --include-ux   Include UX/interaction tests (tagged @ux) in the run.
@@ -87,8 +87,8 @@ const uxOnly = args.includes("--ux-only");
 const separatorIdx = args.indexOf("--");
 const passthroughArgs = separatorIdx !== -1 ? args.slice(separatorIdx + 1) : [];
 
-if (!["auth", "store", "admin"].includes(targetApp)) {
-  console.error("ERROR: --app must be auth, store, or admin");
+if (!["auth", "store", "admin", "payments"].includes(targetApp)) {
+  console.error("ERROR: --app must be auth, store, admin, or payments");
   process.exit(1);
 }
 
@@ -256,7 +256,7 @@ function portForApp(app) {
   } catch {
     /* fall through */
   }
-  return { auth: 5000, store: 5001, admin: 5002 }[app] ?? 5000;
+  return { auth: 5000, store: 5001, admin: 5002, payments: 5005 }[app] ?? 5000;
 }
 
 async function checkPort(port) {

@@ -1,6 +1,14 @@
 // ─── Display Block Types ──────────────────────────────────────────────────────
 
-export type DisplayBlockType = "text" | "image" | "video" | "link" | "url";
+/** Single source of truth — both the type union and runtime validators derive from this. */
+export const DISPLAY_BLOCK_TYPES = [
+  "text",
+  "image",
+  "video",
+  "link",
+  "url",
+] as const;
+export type DisplayBlockType = (typeof DISPLAY_BLOCK_TYPES)[number];
 
 interface DisplayBlockBase {
   id: string;
@@ -48,7 +56,14 @@ export type DisplayBlock =
 
 // ─── Form Field Types ─────────────────────────────────────────────────────────
 
-export type FormFieldType = "text" | "email" | "number" | "textarea";
+/** Single source of truth — both the type union and runtime validators derive from this. */
+export const FORM_FIELD_TYPES = [
+  "text",
+  "email",
+  "number",
+  "textarea",
+] as const;
+export type FormFieldType = (typeof FORM_FIELD_TYPES)[number];
 
 export interface FormField {
   id: string;

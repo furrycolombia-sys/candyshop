@@ -22,10 +22,11 @@ export const ACCEPTED_RECEIPT_MIME_TYPES = [
 /** String form used by file inputs */
 export const ACCEPTED_RECEIPT_TYPES = ACCEPTED_RECEIPT_MIME_TYPES.join(",");
 
-/** Supabase Storage bucket for receipts */
-export const RECEIPTS_BUCKET = "receipts";
-
-/** Signed receipt URLs stay valid for one hour */
-export const RECEIPT_URL_TTL_SECONDS = 60 * 60;
+/** Receipts bucket name and signed-URL TTL — re-exported from the shared
+ * package so admin and payments cannot drift apart. */
+export {
+  RECEIPTS_BUCKET,
+  RECEIPT_URL_TTL_SECONDS,
+} from "shared/constants/receipts";
 
 export { CART_COOKIE_KEY } from "shared";

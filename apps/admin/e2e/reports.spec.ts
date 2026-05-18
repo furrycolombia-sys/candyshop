@@ -14,6 +14,12 @@ import {
   supabaseAdmin,
   type TestUser,
 } from "../../auth/e2e/helpers/session";
+import {
+  RECEIPT_FILENAME,
+  patchOrderReceiptUrl,
+  uploadTestReceipt,
+  verifyReceiptLinkResolves,
+} from "../../auth/e2e/helpers/receiptFixtures";
 
 // ─── Test data ────────────────────────────────────────────────────
 
@@ -46,6 +52,7 @@ test.describe.serial("Reports page", () => {
   let buyerUser: TestUser;
   let orderId: string;
   let productId: string;
+  let receiptStoragePath: string;
 
   test.beforeAll(async () => {
     adminUser = await createTestUser("admin-reports", [
@@ -85,6 +92,12 @@ test.describe.serial("Reports page", () => {
     });
     orderId = order.id as string;
 
+    // Upload a receipt image and attach its storage path to the order so
+    // the reports table can verify the API converts paths into signed URLs.
+    receiptStoragePath = `${orderId}/${RECEIPT_FILENAME}`;
+    await uploadTestReceipt(receiptStoragePath);
+    await patchOrderReceiptUrl(orderId, receiptStoragePath);
+
     // Create an order item
     await adminInsert("order_items", {
       order_id: orderId,
@@ -97,6 +110,12 @@ test.describe.serial("Reports page", () => {
     await adminDelete("order_items", `order_id=eq.${orderId}`).catch(() => {});
     await adminDelete("orders", `id=eq.${orderId}`).catch(() => {});
     await adminDelete("products", `id=eq.${productId}`).catch(() => {});
+    if (receiptStoragePath) {
+      await supabaseAdmin.storage
+        .from("receipts")
+        .remove([receiptStoragePath])
+        .catch(() => {});
+    }
     await supabaseAdmin.auth.admin.deleteUser(buyerUser.userId).catch(() => {});
     await supabaseAdmin.auth.admin.deleteUser(adminUser.userId).catch(() => {});
   });
@@ -267,6 +286,25 @@ test.describe.serial("Reports page", () => {
         hasText: TEST_ORDER.transfer_number,
       }),
     ).toBeVisible({ timeout: MUTATION_WAIT_MS });
+  });
+
+  test("receipt cell exposes a working signed URL for the picture", async ({
+    context,
+    page,
+  }) => {
+    await injectSession(context, adminUser);
+    await page.goto(`${getAdminBaseUrl()}/en/reports?status=approved`, {
+      waitUntil: "networkidle",
+    });
+
+    await expect(page.getByTestId("report-table")).toBeVisible({
+      timeout: ELEMENT_TIMEOUT_MS,
+    });
+
+    await verifyReceiptLinkResolves(page, {
+      testIdPrefix: "report-row-receipt",
+      orderId,
+    });
   });
 
   test("status=pending filter hides the approved order", async ({

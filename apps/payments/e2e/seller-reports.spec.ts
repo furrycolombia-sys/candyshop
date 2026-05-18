@@ -15,6 +15,12 @@ import {
   supabaseAdmin,
   type TestUser,
 } from "../../auth/e2e/helpers/session";
+import {
+  RECEIPT_FILENAME,
+  patchOrderReceiptUrl,
+  uploadTestReceipt,
+  verifyReceiptLinkResolves,
+} from "../../auth/e2e/helpers/receiptFixtures";
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { resolveE2EAppUrls } = require(
@@ -49,6 +55,7 @@ test.describe.serial("Seller Reports page", () => {
   let buyerUser: TestUser;
   let orderId: string;
   let productId: string;
+  let receiptStoragePath: string;
 
   test.beforeAll(async () => {
     sellerUser = await createTestUser("seller-reports", SELLER_PERMISSIONS);
@@ -75,6 +82,12 @@ test.describe.serial("Seller Reports page", () => {
     });
     orderId = order.id as string;
 
+    // Upload a receipt image and attach its storage path to the order so
+    // the report can verify the API converts the path to a signed URL.
+    receiptStoragePath = `${orderId}/${RECEIPT_FILENAME}`;
+    await uploadTestReceipt(receiptStoragePath);
+    await patchOrderReceiptUrl(orderId, receiptStoragePath);
+
     await adminInsert("order_items", {
       order_id: orderId,
       product_id: productId,
@@ -86,6 +99,12 @@ test.describe.serial("Seller Reports page", () => {
     await adminDelete("order_items", `order_id=eq.${orderId}`).catch(() => {});
     await adminDelete("orders", `id=eq.${orderId}`).catch(() => {});
     await adminDelete("products", `id=eq.${productId}`).catch(() => {});
+    if (receiptStoragePath) {
+      await supabaseAdmin.storage
+        .from("receipts")
+        .remove([receiptStoragePath])
+        .catch(() => {});
+    }
     await supabaseAdmin.auth.admin.deleteUser(buyerUser.userId).catch(() => {});
     await supabaseAdmin.auth.admin
       .deleteUser(sellerUser.userId)
@@ -235,6 +254,25 @@ test.describe.serial("Seller Reports page", () => {
         .locator(`[data-testid^="seller-report-row-transfer-"]`)
         .filter({ hasText: TEST_ORDER.transfer_number }),
     ).toBeVisible({ timeout: MUTATION_WAIT_MS });
+  });
+
+  test("receipt cell exposes a working signed URL for the picture", async ({
+    context,
+    page,
+  }) => {
+    await injectSession(context, sellerUser);
+    await page.goto(`${getPaymentsBaseUrl()}/en/reports?status=approved`, {
+      waitUntil: "networkidle",
+    });
+
+    await expect(page.getByTestId("seller-report-table")).toBeVisible({
+      timeout: ELEMENT_TIMEOUT_MS,
+    });
+
+    await verifyReceiptLinkResolves(page, {
+      testIdPrefix: "seller-report-row-receipt",
+      orderId,
+    });
   });
 
   test("status=pending filter hides the approved seeded order", async ({

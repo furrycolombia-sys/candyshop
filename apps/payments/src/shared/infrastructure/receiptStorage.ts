@@ -30,6 +30,30 @@ export async function uploadReceipt(
 }
 
 /**
+ * The Supabase server client uses SUPABASE_URL_INTERNAL (e.g.
+ * `host.docker.internal:64321`) when present, so any signed URL it returns
+ * carries that internal host. Browsers can't resolve that — rewrite the
+ * host to NEXT_PUBLIC_SUPABASE_URL so the URL is reachable client-side.
+ */
+function rewriteToPublicHost(signedUrl: string): string {
+  const publicBase = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  if (!publicBase) return signedUrl;
+  try {
+    const url = new URL(signedUrl);
+    const publicUrl = new URL(publicBase);
+    // Rewrite hostname AND port (and protocol) — setting `host` alone can
+    // leave the original port in place when the public URL has no explicit
+    // port (e.g. https://supabase.example.com).
+    url.protocol = publicUrl.protocol;
+    url.hostname = publicUrl.hostname;
+    url.port = publicUrl.port;
+    return url.toString();
+  } catch {
+    return signedUrl;
+  }
+}
+
+/**
  * Generate a signed receipt URL using the caller's Supabase session.
  * Access is controlled by the receipts_read storage policy, which grants
  * access to both sellers (receipts.read permission) and their delegates
@@ -47,7 +71,7 @@ export async function getReceiptUrl(
     .createSignedUrl(safePath, RECEIPT_URL_TTL_SECONDS); // nosemgrep: AIK_supabase_sdk_storage_path_traversal
 
   if (error) return null;
-  return data.signedUrl;
+  return rewriteToPublicHost(data.signedUrl);
 }
 
 export async function deleteReceipt(
