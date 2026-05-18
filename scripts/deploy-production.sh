@@ -366,12 +366,26 @@ rm -f "$_CONTAINER_ENV"
 
 log "Container started (took $(_dur $_STEP_START))"
 
-# Keep only the 2 most recent images by creation time; prune older ones
+# Keep only the 2 most recent candyshop-prod images by creation time and
+# prune everything older. Then sweep dangling layers + stopped containers.
+#
+# Bug fixed 2026-05-18: `.CreatedAt` renders as "YYYY-MM-DD HH:MM:SS ZZZ TZ"
+# — multi-word — so awk's default whitespace splitter put a time string in
+# $2 instead of the image tag. `docker rmi 17:30:00` silently failed under
+# `|| true`, so NO images ever got pruned and the VM disk slowly filled.
+# Setting -F'\t' splits on the tab we emit in the format string, so $2 is
+# now the Repository:Tag we actually want to remove.
 docker images --format '{{.CreatedAt}}\t{{.Repository}}:{{.Tag}}' \
   | grep 'candyshop-prod' \
   | sort -rk1 \
-  | awk 'NR>2{print $2}' \
+  | awk -F'\t' 'NR>2{print $2}' \
   | xargs -r docker rmi 2>/dev/null || true
+
+# Sweep dangling layers freed by the rmi above, plus any stopped containers
+# left behind by past `docker rm -f`. Both are no-ops when there's nothing
+# to clean.
+docker image prune -f >/dev/null 2>&1 || true
+docker container prune -f >/dev/null 2>&1 || true
 
 # Clean up env file — secrets must not persist on disk
 rm -f "$ENV_FILE"
