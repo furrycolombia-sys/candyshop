@@ -191,19 +191,25 @@ _(Skip when `--skip-infra` is set)_
 
 #### Dev environment
 
-**2a. Supabase**
+**2a. Supabase (cached detection)**
 
-If `--clean` was requested, reset first:
+If `--clean` was requested, reset unconditionally — cached detection does not apply with `--clean`:
 
 ```bash
 node scripts/supabase-docker.mjs reset --env dev
 ```
 
-Otherwise check if local Supabase is already running by reading `SUPABASE_PORT` from `.env.dev` and testing that port. If not running:
+Otherwise, **probe before starting**. Read `SUPABASE_PORT` from `.env.dev` and TCP-probe it:
 
-```bash
-node scripts/supabase-docker.mjs start --env dev
+```powershell
+$port = (Get-Content .env.dev | Select-String '^SUPABASE_PORT=').ToString().Split('=')[1]
+Test-NetConnection -ComputerName 127.0.0.1 -Port $port -InformationLevel Quiet
 ```
+
+| Probe result | Action                                                                                 |
+| ------------ | -------------------------------------------------------------------------------------- |
+| Responds     | Skip Supabase start. Record `Supabase: ♻️ Reused (already running on port N)`.         |
+| No response  | Run `node scripts/supabase-docker.mjs start --env dev`. Record `Supabase: ✅ Started`. |
 
 **2b. Dev servers — always kill and restart**
 
