@@ -396,7 +396,7 @@ Creates: domain/, application/, infrastructure/, presentation/ structure.
 ```bash
 /run-tests           # All unit tests
 /run-tests [file]    # Specific file
-/run-e2e             # E2E tests
+/e2e-eval            # E2E tests
 ```
 
 ## Environment Setup

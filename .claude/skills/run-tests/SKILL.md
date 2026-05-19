@@ -85,7 +85,7 @@ pnpm test -- --coverage
 pnpm test -- --testNamePattern="should handle login"
 ```
 
-For E2E specific files, see [Run E2E](../run-e2e/SKILL.md).
+For E2E specific files, see [E2E Eval](../e2e-eval/SKILL.md).
 
 ### Step 4: Analyze Results
 
@@ -314,5 +314,5 @@ This skill supports Test-Driven Development:
 ## Related
 
 - [Testing Rules](../../rules/testing.md) - Testing best practices
-- [Run E2E](../run-e2e/SKILL.md) - E2E testing with Playwright
+- [E2E Eval](../e2e-eval/SKILL.md) - E2E testing with Playwright
 - [Start Task](../start-task/SKILL.md) - Task workflow with testing

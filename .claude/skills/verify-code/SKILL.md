@@ -304,5 +304,5 @@ Runs all checks but does not modify any files. Lists all failures for manual rev
 - [Build Checks Rule](../../rules/build-checks.md) — CI pipeline definition
 - [Testing Rules](../../rules/testing.md) — Test writing guidelines
 - [Run Tests Skill](../run-tests/SKILL.md) — `/run-tests` for unit tests only
-- [Run E2E Skill](../run-e2e/SKILL.md) — `/run-e2e` for Playwright only
+- [E2E Eval Skill](../e2e-eval/SKILL.md) — `/e2e-eval` for E2E runs
 - [Submit PR Skill](../submit-pr/SKILL.md) — `/submit-pr` runs CI after push

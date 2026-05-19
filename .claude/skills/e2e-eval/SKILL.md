@@ -762,7 +762,6 @@ node scripts/e2e.mjs --env {env} --app {app} -- --workers=1 --retries=2
 
 - [E2E Selectors](../../rules/e2e-selectors.md) — Selector guidelines
 - [Testing Rules](../../rules/testing.md) — When to change tests
-- [Run E2E Skill](../run-e2e/SKILL.md) — Simpler non-autonomous runner
 - `scripts/e2e.mjs` — Unified test runner
 - `scripts/supabase-docker.mjs` — Supabase control
 - `scripts/docker-build.mjs` — Docker image/container control
