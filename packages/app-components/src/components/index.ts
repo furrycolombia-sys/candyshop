@@ -3,6 +3,7 @@ export {
   type AppId,
   type AppNavigationProps,
 } from "./AppNavigation";
+export { AppFooter, type AppFooterProps } from "./AppFooter";
 export { LocaleSwitcher, type LocaleSwitcherProps } from "./LocaleSwitcher";
 export { ThemeToggle } from "./ThemeToggle";
 export { ErrorIndicator, type ErrorIndicatorProps } from "./ErrorIndicator";

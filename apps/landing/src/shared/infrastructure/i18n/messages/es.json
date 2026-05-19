@@ -1,4 +1,104 @@
 {
+  "footer": {
+    "copyrightSuffix": "Furrycolombia. Todos los derechos reservados.",
+    "terms": "Términos",
+    "privacy": "Privacidad"
+  },
+  "legal": {
+    "common": {
+      "lastUpdated": "Última actualización: {date}"
+    },
+    "terms": {
+      "title": "Términos del servicio",
+      "lastUpdatedDate": "2026-05-18",
+      "intro": "Estos términos describen cómo puedes usar Furrycolombia. Furrycolombia es una herramienta de software que registra transacciones acordadas entre usuarios independientes. No somos vendedores, compradores, agentes, custodios ni intermediarios de dinero en ninguna transacción. Al usar la plataforma aceptas estos términos.",
+      "sections": {
+        "platformAsTool": {
+          "heading": "1. La plataforma es una herramienta, no una parte",
+          "body": "Furrycolombia ofrece un sitio web y una base de datos que permite a compradores y vendedores registrar transacciones que acordaron entre ellos. Nosotros no vendemos nada. No somos parte de ninguna transacción registrada en la plataforma. No garantizamos la calidad, legalidad, seguridad ni entrega de ningún producto o servicio ofrecido por los usuarios."
+        },
+        "userResponsibility": {
+          "heading": "2. Tú eres responsable de tu cuenta y de tu conducta",
+          "body": "Tú eres el único responsable de lo que haces en la plataforma: los productos o servicios que publicas, el contenido que subes (texto, imágenes, reseñas, mensajes), cómo tratas a otros usuarios, cómo cumples con tus pedidos, el servicio al cliente que prestas, los impuestos que debes, y el cumplimiento de las leyes que se te aplican. Si actúas de forma ilegal o dañas a otros usuarios, ese es tu problema, no el nuestro."
+        },
+        "noMoneyHandling": {
+          "heading": "3. No manejamos dinero",
+          "body": "La plataforma no recauda, custodia, transfiere ni mantiene fondos en garantía. Todos los pagos ocurren directamente entre los usuarios usando los métodos que ellos elijan (transferencia bancaria, pago contra entrega, o cualquier otro arreglo que acuerden). La plataforma registra que una transacción ocurrió. No procesa el pago."
+        },
+        "disputeResolution": {
+          "heading": "4. Disputas entre usuarios",
+          "body": "Si tienes un problema con otro usuario — un producto que no llegó, un pago que no se recibió, una disputa sobre calidad, cualquier otra cosa — el problema es entre tú y ese usuario. La plataforma no es árbitro. Podemos, a nuestra discreción, suspender o cancelar cuentas que violen estos términos o dañen a otros usuarios, pero no resolvemos disputas entre usuarios."
+        },
+        "ip": {
+          "heading": "5. Tu contenido",
+          "body": "Conservas la propiedad de lo que publicas (fotos de productos, descripciones, reseñas, mensajes). Cuando publicas contenido en la plataforma nos otorgas una licencia no exclusiva y gratuita para mostrar ese contenido en la plataforma, para que la plataforma pueda hacer su trabajo. Puedes eliminar tu contenido en cualquier momento."
+        },
+        "accountTermination": {
+          "heading": "6. Suspensión y cancelación de cuentas",
+          "body": "Podemos suspender o cancelar cualquier cuenta en cualquier momento, con o sin previo aviso, por cualquier razón consistente con estos términos — incluyendo abuso, fraude, contenido ilegal, o violación reiterada de las reglas de la plataforma."
+        },
+        "limitationOfLiability": {
+          "heading": "7. La plataforma se ofrece \"tal cual\"",
+          "body": "No garantizamos que la plataforma sea ininterrumpida, libre de errores, ni apta para un propósito particular. No somos responsables de pérdidas derivadas del uso que hagas de la plataforma o de cualquier transacción registrada en la plataforma entre tú y otro usuario. En la medida permitida por la ley colombiana, nuestra responsabilidad agregada se limita a un monto nominal."
+        },
+        "changes": {
+          "heading": "8. Cambios a estos términos",
+          "body": "Podemos cambiar estos términos en cualquier momento. La fecha de \"Última actualización\" en la parte superior de esta página refleja el cambio más reciente. Si continúas usando la plataforma después de un cambio, aceptas el cambio."
+        },
+        "governingLaw": {
+          "heading": "9. Ley aplicable",
+          "body": "Estos términos se rigen por las leyes de la República de Colombia. Cualquier disputa que no podamos resolver será conocida por los tribunales colombianos."
+        },
+        "contact": {
+          "heading": "10. Contacto",
+          "body": "Preguntas sobre estos términos: furrycolombia@gmail.com."
+        }
+      }
+    },
+    "privacy": {
+      "title": "Política de privacidad",
+      "lastUpdatedDate": "2026-05-18",
+      "intro": "Esta política explica qué datos personales recogemos en Furrycolombia, para qué los recogemos, cuánto tiempo los conservamos y cómo contactarnos al respecto. Aplica a cualquier persona que use la plataforma.",
+      "sections": {
+        "controller": {
+          "heading": "1. Quién es el responsable de tus datos",
+          "body": "Furrycolombia se opera como un proyecto individual, no como una entidad legal registrada. Para todas las preguntas, solicitudes y reclamos relacionados con tus datos, escribe a: furrycolombia@gmail.com."
+        },
+        "dataCollected": {
+          "heading": "2. Qué datos recogemos",
+          "body": "Recogemos: tu dirección de correo, tu nombre de usuario, tu imagen de avatar (si la subes), tus métodos de pago como vendedor (cuando eliges publicarlos para que los compradores puedan pagarte), los comprobantes que subes para demostrar pago de un pedido, y tu historial de pedidos. También guardamos registros técnicos (marcas de tiempo, direcciones IP, errores) para seguridad y prevención de abuso."
+        },
+        "purposes": {
+          "heading": "3. Para qué los recogemos",
+          "body": "Usamos estos datos para operar el marketplace: autenticarte, mostrar tus transacciones a las personas correctas, permitir que compradores y vendedores se encuentren y registren lo que acordaron, y detectar y prevenir abusos o fraudes. También los usamos para responder a tus preguntas o solicitudes."
+        },
+        "whereStored": {
+          "heading": "4. Dónde se almacenan",
+          "body": "Los datos de la aplicación se almacenan en Supabase (base de datos Postgres administrada y almacenamiento de objetos). Los activos estáticos y el tráfico pasan por Cloudflare. La autenticación se delega a Supabase Auth. Confiamos en estos proveedores para mantener tus datos seguros en reposo y en tránsito."
+        },
+        "whoSeesIt": {
+          "heading": "5. Quién puede ver tus datos",
+          "body": "Tú. El operador de la plataforma (nosotros) para moderación y soporte. Otros usuarios en los contextos donde publicas — por ejemplo, cuando publicas un método de pago de vendedor, los compradores que te compren pueden verlo; cuando subes un comprobante para un pedido, el vendedor de ese pedido puede verlo. No vendemos ni compartimos tus datos con terceros con fines de mercadeo."
+        },
+        "retention": {
+          "heading": "6. Cuánto tiempo los conservamos",
+          "body": "Mientras tu cuenta esté activa. Después de que cierres tu cuenta, los conservamos por un periodo razonable por motivos de fraude y auditoría, y luego los eliminamos."
+        },
+        "yourRights": {
+          "heading": "7. Tus derechos bajo la Ley 1581",
+          "body": "Bajo la ley de protección de datos personales de Colombia (Ley 1581) tienes derecho a acceder a tus datos, corregirlos, pedirnos que los borremos, retirar tu consentimiento al tratamiento, y presentar una queja ante la Superintendencia de Industria y Comercio. Para ejercer cualquiera de estos derechos, escribe a furrycolombia@gmail.com."
+        },
+        "contact": {
+          "heading": "8. Contacto",
+          "body": "Para cualquier solicitud o reclamo de privacidad: furrycolombia@gmail.com."
+        },
+        "changes": {
+          "heading": "9. Cambios a esta política",
+          "body": "Podemos actualizar esta política. La fecha de \"Última actualización\" en la parte superior de esta página refleja el cambio más reciente. Los cambios materiales se destacarán en esta página."
+        }
+      }
+    }
+  },
   "meta": {
     "title": "Candy Shop — Dónde Vive el Arte Furry",
     "description": "Un mercado creativo para artistas, makers y coleccionistas furry"

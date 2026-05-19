@@ -309,7 +309,7 @@ Fix: Check file exists and is not too large (GitHub limit: 2GB per asset)
 | Skill          | Purpose                            | When to Use                |
 | -------------- | ---------------------------------- | -------------------------- |
 | `/start-task`  | Initialize task with branch + docs | Before implementation      |
-| `/run-e2e`     | Run automated E2E tests            | Before capturing evidences |
+| `/e2e-eval`    | Run automated E2E tests            | Before capturing evidences |
 | `/submit-pr`   | Create pull request                | After capturing evidences  |
 | `/code-review` | Review code quality                | Before or after evidences  |
 

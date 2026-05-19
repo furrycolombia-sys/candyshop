@@ -338,4 +338,4 @@ Before writing tests (unit or E2E), verify:
 
 - [Testing Rules](./testing.md) - General testing guidelines
 - [Component Patterns](./component-patterns.md) - Component structure
-- [Run E2E Skill](../skills/run-e2e/SKILL.md) - `/run-e2e`
+- [E2E Eval Skill](../skills/e2e-eval/SKILL.md) - `/e2e-eval`

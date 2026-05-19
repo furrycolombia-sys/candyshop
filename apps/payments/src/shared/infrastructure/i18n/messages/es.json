@@ -1,4 +1,9 @@
 {
+  "footer": {
+    "copyrightSuffix": "Furrycolombia. Todos los derechos reservados.",
+    "terms": "Términos",
+    "privacy": "Privacidad"
+  },
   "meta": {
     "title": "Candy Shop - Pagos",
     "description": "Procesamiento seguro de pagos para productos, servicios y boletos"
