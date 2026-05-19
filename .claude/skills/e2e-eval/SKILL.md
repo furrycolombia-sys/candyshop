@@ -30,18 +30,22 @@ Run e2e dev --fix
 
 ## Parameters
 
-| Parameter      | Values                                | Default            | Description                                                                                       |
-| -------------- | ------------------------------------- | ------------------ | ------------------------------------------------------------------------------------------------- |
-| `env`          | `dev` \| `staging`                    | `dev`              | Target environment                                                                                |
-| `--headed`     | flag                                  | off (headless)     | Show the browser window during tests                                                              |
-| `--app`        | `auth` \| `admin` \| `store` \| `all` | `all`              | Which app suite(s) to run                                                                         |
-| `--fix`        | flag                                  | off                | Auto-fix production code when tests fail                                                          |
-| `--no-ux`      | flag                                  | off                | Skip UX-tagged tests (drag-and-drop, animations, layout). UX tests run by default.                |
-| `--files`      | path(s) or pattern                    | all specs          | Restrict to specific test files or grep pattern                                                   |
-| `--skip-infra` | flag                                  | off                | Skip infrastructure startup (phases 1–2); assume services are already running                     |
-| `--clean`      | flag                                  | off                | Reset Supabase DB before running (re-applies all migrations from scratch)                         |
-| `--retries`    | integer                               | `1`                | Number of times to retry a failing test before classifying it as a real failure (flaky detection) |
-| `--timeout`    | milliseconds                          | Playwright default | Override per-test timeout for slow environments                                                   |
+| Parameter      | Values                                              | Default            | Description                                                                                                                                                                                                          |
+| -------------- | --------------------------------------------------- | ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `env`          | `dev` \| `staging`                                  | `dev`              | Target environment                                                                                                                                                                                                   |
+| `--headed`     | flag                                                | off (headless)     | Show the browser window during tests. Mutually exclusive with `--ci`.                                                                                                                                                |
+| `--ui`         | flag                                                | off                | Open Playwright UI mode after infra setup; skips analysis/report phases. Requires `--app <single>`. Mutually exclusive with `--fix`, `--retries`, `--replay`, `--ci`.                                                |
+| `--debug`      | spec path                                           | (none)             | Open Playwright inspector after infra setup; requires a spec path. Skips analysis/report phases. Requires `--app <single>`. Mutually exclusive with `--fix`, `--retries`, `--replay`, `--ui`, `--ci`.                |
+| `--app`        | `auth` \| `admin` \| `store` \| `payments` \| `all` | `all`              | Which app suite(s) to run                                                                                                                                                                                            |
+| `--fix`        | flag                                                | off                | Auto-fix production code when tests fail. Mutually exclusive with `--ui`, `--debug`.                                                                                                                                 |
+| `--no-ux`      | flag                                                | off                | Skip UX-tagged tests (drag-and-drop, animations, layout). UX tests run by default.                                                                                                                                   |
+| `--files`      | path(s) or pattern                                  | all specs          | Restrict to specific test files or grep pattern. Mutually exclusive with `--replay`.                                                                                                                                 |
+| `--skip-infra` | flag                                                | off                | Skip infrastructure startup (phases 1–2); assume services are already running                                                                                                                                        |
+| `--clean`      | flag                                                | off                | Reset Supabase DB before running (re-applies all migrations from scratch)                                                                                                                                            |
+| `--replay`     | flag                                                | off                | Re-run only the failures from the most recent `.ai-context/reports/e2e-eval-*.md`. Mutually exclusive with `--ui`, `--debug`, `--files`, `--ci`.                                                                     |
+| `--retries`    | integer                                             | `1`                | Number of times to retry a failing test before classifying it as a real failure (flaky detection). Mutually exclusive with `--ui`, `--debug`, `--ci`.                                                                |
+| `--ci`         | flag                                                | off                | Match GitHub Actions runtime config: `workers=1`, `retries=2`, headless. Disables skill-level flaky-detection retry (Playwright retries instead). Mutually exclusive with `--headed`, `--ui`, `--debug`, `--replay`. |
+| `--timeout`    | milliseconds                                        | Playwright default | Override per-test timeout for slow environments                                                                                                                                                                      |
 
 **UX tests are included by default.** Pass `--no-ux` to skip them (e.g. for a fast smoke run). Do not require the user to opt-in — if they didn't say "skip ux" or "no ux", run them.
 
@@ -55,9 +59,10 @@ Google OAuth tests are always skipped automatically (they require live Google cr
 
 ```
 apps/
-  auth/    e2e/  ← playwright.config.ts  (port 5000 dev)
-  admin/   e2e/  ← playwright.config.ts  (port 5002 dev)
-  store/   e2e/  ← playwright.config.ts  (port 5001 dev)
+  auth/     e2e/  ← playwright.config.ts  (port 5000 dev)
+  store/    e2e/  ← playwright.config.ts  (port 5001 dev)
+  admin/    e2e/  ← playwright.config.ts  (port 5002 dev)
+  payments/ e2e/  ← playwright.config.ts  (port 5005 dev)
 scripts/
   e2e.mjs                  ← unified runner (use this)
   supabase-docker.mjs      ← supabase start/stop/reset
@@ -71,22 +76,24 @@ scripts/
 Always use `node scripts/e2e.mjs`. Never call Playwright directly.
 
 ```bash
-# Supported --app values: auth | store | admin
-node scripts/e2e.mjs --env {dev|staging} --app {auth|store|admin} [--headed] [-- playwright_passthrough_args]
+# Supported --app values: auth | store | admin | payments
+node scripts/e2e.mjs --env {dev|staging} --app {auth|store|admin|payments} [--headed] [-- playwright_passthrough_args]
 
 # Examples
 node scripts/e2e.mjs --env dev --app auth
 node scripts/e2e.mjs --env staging --app admin -- apps/admin/e2e/reports.spec.ts
 node scripts/e2e.mjs --env staging --app auth --headed -- --grep "permission-management"
+node scripts/e2e.mjs --env staging --app payments -- apps/payments/e2e/seller-reports.spec.ts
 ```
 
 ### App → spec files mapping
 
-| --app   | Spec files                         |
-| ------- | ---------------------------------- |
-| `auth`  | `apps/auth/e2e/*.spec.ts`          |
-| `admin` | `apps/admin/e2e/*.spec.ts`         |
-| `store` | (store has no e2e specs currently) |
+| --app      | Spec files                    |
+| ---------- | ----------------------------- |
+| `auth`     | `apps/auth/e2e/*.spec.ts`     |
+| `store`    | `apps/store/e2e/*.spec.ts`    |
+| `admin`    | `apps/admin/e2e/*.spec.ts`    |
+| `payments` | `apps/payments/e2e/*.spec.ts` |
 
 ### Infrastructure per environment
 
@@ -131,13 +138,15 @@ Work through each phase in order. Skip phases 1–2 when `--skip-infra` is set.
 
 Before touching any infrastructure, verify all required environment variables are present. Read the appropriate `.env.{env}` file and check for:
 
-| Variable                    | Required for     |
-| --------------------------- | ---------------- |
-| `NEXT_PUBLIC_SUPABASE_URL`  | All environments |
-| `SUPABASE_SERVICE_ROLE_KEY` | All environments |
-| `NEXT_PUBLIC_ADMIN_URL`     | Admin app tests  |
-| `NEXT_PUBLIC_AUTH_URL`      | Auth app tests   |
-| `SUPABASE_PORT`             | Dev environment  |
+| Variable                    | Required for       |
+| --------------------------- | ------------------ |
+| `NEXT_PUBLIC_SUPABASE_URL`  | All environments   |
+| `SUPABASE_SERVICE_ROLE_KEY` | All environments   |
+| `NEXT_PUBLIC_AUTH_URL`      | Auth app tests     |
+| `NEXT_PUBLIC_STORE_URL`     | Store app tests    |
+| `NEXT_PUBLIC_ADMIN_URL`     | Admin app tests    |
+| `NEXT_PUBLIC_PAYMENTS_URL`  | Payments app tests |
+| `SUPABASE_PORT`             | Dev environment    |
 
 If any required variable is missing, **exit immediately** with a clear error naming the missing variable and which `.env.*` file to check. Do not proceed to Phase 1.
 
@@ -149,18 +158,22 @@ _(Skip when `--skip-infra` is set)_
 
 **1a. Playwright browsers**
 
-Check that Playwright browsers are installed for each app you will test. Run:
+Check that Playwright browsers are installed for each app you will test. Run for each app in the run (auth, store, admin, payments):
 
 ```bash
 pnpm --dir apps/auth exec playwright --version
+pnpm --dir apps/store exec playwright --version
 pnpm --dir apps/admin exec playwright --version
+pnpm --dir apps/payments exec playwright --version
 ```
 
-If the command fails or shows "Please run `playwright install`", install for each app:
+If any command fails or shows "Please run `playwright install`", install for that app:
 
 ```bash
 pnpm --dir apps/auth exec playwright install --with-deps chromium
+pnpm --dir apps/store exec playwright install --with-deps chromium
 pnpm --dir apps/admin exec playwright install --with-deps chromium
+pnpm --dir apps/payments exec playwright install --with-deps chromium
 ```
 
 **1b. Docker (staging only)**
@@ -189,19 +202,25 @@ _(Skip when `--skip-infra` is set)_
 
 #### Dev environment
 
-**2a. Supabase**
+**2a. Supabase (cached detection)**
 
-If `--clean` was requested, reset first:
+If `--clean` was requested, reset unconditionally — cached detection does not apply with `--clean`:
 
 ```bash
 node scripts/supabase-docker.mjs reset --env dev
 ```
 
-Otherwise check if local Supabase is already running by reading `SUPABASE_PORT` from `.env.dev` and testing that port. If not running:
+Otherwise, **probe before starting**. Read `SUPABASE_PORT` from `.env.dev` and TCP-probe it:
 
-```bash
-node scripts/supabase-docker.mjs start --env dev
+```powershell
+$port = (Get-Content .env.dev | Select-String '^SUPABASE_PORT=').ToString().Split('=')[1]
+Test-NetConnection -ComputerName 127.0.0.1 -Port $port -InformationLevel Quiet
 ```
+
+| Probe result | Action                                                                                 |
+| ------------ | -------------------------------------------------------------------------------------- |
+| Responds     | Skip Supabase start. Record `Supabase: ♻️ Reused (already running on port N)`.         |
+| No response  | Run `node scripts/supabase-docker.mjs start --env dev`. Record `Supabase: ✅ Started`. |
 
 **2b. Dev servers — always kill and restart**
 
@@ -272,50 +291,74 @@ A 200 or 3xx is healthy. A 500 on a valid route means the server is broken — *
 
 #### Staging environment
 
-Execute in this exact order:
+Execute in this exact order. **Each step probes first, then starts only if not responding.** `--skip-infra` bypasses all probes; `--clean` forces a Supabase reset regardless of probe result.
 
-**2a. Stop any existing tunnel**
+**2a. Cloudflare tunnel — pre-check**
 
-```bash
-pnpm tunnel:stop --env staging
-```
-
-**2b. Start Supabase Docker**
-
-If `--clean` was requested, reset first:
+Probe the tunnel URL (from `NEXT_PUBLIC_STORE_URL` or equivalent in `.env.staging`):
 
 ```bash
-node scripts/supabase-docker.mjs reset --env staging
+curl -sI {tunnel_url} --max-time 5 | head -1
 ```
 
-Then start:
+| Probe result | Action                                                                                       |
+| ------------ | -------------------------------------------------------------------------------------------- |
+| 2xx/3xx      | Tunnel is up — leave it alone for now (we'll re-confirm in 2d). Skip the `tunnel:stop` step. |
+| No response  | Stop any zombie tunnel state: `pnpm tunnel:stop --env staging`.                              |
 
-```bash
-node scripts/supabase-docker.mjs start --env staging
-```
+**2b. Start Supabase Docker (cached)**
 
-If start fails with a schema/migration error (e.g., "column not found in schema cache") and `--clean` was NOT requested, run a full reset then retry:
+If `--clean` was requested, reset unconditionally:
 
 ```bash
 node scripts/supabase-docker.mjs reset --env staging
+```
+
+Otherwise probe port 64321:
+
+```bash
+nc -z 127.0.0.1 64321
+```
+
+| Probe result | Action                                                                                     |
+| ------------ | ------------------------------------------------------------------------------------------ |
+| Responds     | Skip start. Record `Supabase: ♻️ Reused (already running on port 64321)`.                  |
+| No response  | Run `node scripts/supabase-docker.mjs start --env staging`. Record `Supabase: ✅ Started`. |
+
+If start fails with a schema/migration error (e.g. "column not found in schema cache") and `--clean` was NOT requested, run a full reset then retry:
+
+```bash
+node scripts/supabase-docker.mjs reset --env staging
 node scripts/supabase-docker.mjs start --env staging
 ```
 
-**2c. Build and start Docker container**
+**2c. Build and start Docker container (cached)**
+
+Probe `http://localhost:7542/`:
 
 ```bash
-pnpm docker:build --env staging --up
+curl -s -o /dev/null -w "%{http_code}" http://localhost:7542/ --max-time 5
 ```
 
-This rebuilds the image (using cached layers when code hasn't changed) and restarts the container on port 7542.
+| Probe result                | Action                                                                                          |
+| --------------------------- | ----------------------------------------------------------------------------------------------- |
+| 2xx / 3xx / 4xx             | Container is responding (4xx is fine — the server is up). Record `Docker container: ♻️ Reused`. |
+| No response / 5xx / timeout | Run `pnpm docker:build --env staging --up`. Record `Docker container: ✅ Built+started`.        |
 
-**2d. Start Cloudflare tunnel**
+**2d. Start Cloudflare tunnel (cached, re-probe)**
+
+Re-probe the tunnel URL:
 
 ```bash
-pnpm tunnel --env staging
+curl -sI {tunnel_url} --max-time 5 | head -1
 ```
 
-Wait until port 7542 responds (the script does this internally). If it times out, check Docker container logs:
+| Probe result | Action                                                                  |
+| ------------ | ----------------------------------------------------------------------- |
+| 2xx/3xx      | Skip start. Record `Cloudflare tunnel: ♻️ Reused (active)`.             |
+| No response  | Run `pnpm tunnel --env staging`. Record `Cloudflare tunnel: ✅ Active`. |
+
+Wait until port 7542 responds (the tunnel script does this internally). If it times out, check Docker container logs:
 
 ```bash
 docker logs candyshop-staging --tail 50
@@ -515,16 +558,16 @@ Save a timestamped markdown report to `.ai-context/reports/`:
 
 ## Infrastructure
 
-| Service             | Status                                                           |
-| ------------------- | ---------------------------------------------------------------- |
-| Supabase            | ✅ Started / ✅ Already running / ⏭️ Skipped (--skip-infra)      |
-| Docker container    | ✅ Built + started (staging) / ⏭️ N/A (dev)                      |
-| Cloudflare tunnel   | ✅ Active (staging) / ⏭️ N/A (dev)                               |
-| Playwright browsers | ✅ Installed                                                     |
-| DB reset            | ✅ Done (--clean) / ⏭️ Skipped                                   |
-| Dev server (dev)    | ✅ Killed + restarted clean / ⏭️ N/A (staging)                   |
-| Dev server log      | ✅ Clean startup / ⚠️ Errors captured at `C:\Temp\devserver.log` |
-| UX tests            | ✅ Included (default) / ⏭️ Skipped (--no-ux)                     |
+| Service             | Status                                                               |
+| ------------------- | -------------------------------------------------------------------- |
+| Supabase            | ♻️ Reused (already running) / ✅ Started / ⏭️ Skipped (--skip-infra) |
+| Docker container    | ♻️ Reused (already running) / ✅ Built+started / ⏭️ N/A (dev)        |
+| Cloudflare tunnel   | ♻️ Reused (active) / ✅ Active / ⏭️ N/A (dev)                        |
+| Playwright browsers | ✅ Installed                                                         |
+| DB reset            | ✅ Done (--clean) / ⏭️ Skipped                                       |
+| Dev server (dev)    | ✅ Killed + restarted clean / ⏭️ N/A (staging)                       |
+| Dev server log      | ✅ Clean startup / ⚠️ Errors captured at `C:\Temp\devserver.log`     |
+| UX tests            | ✅ Included (default) / ⏭️ Skipped (--no-ux)                         |
 
 ---
 
@@ -600,6 +643,115 @@ Save a timestamped markdown report to `.ai-context/reports/`:
 
 ---
 
+## Interactive Modes
+
+`--ui` and `--debug` provide interactive debugging on top of e2e-eval's autonomous infrastructure setup. Both modes run Phases 0–2 normally (env preflight, browser/Docker/tunnel checks, infrastructure start) then hand off control to Playwright. They skip Phases 3–6 (no failure analysis, no fix, no report).
+
+### `--ui` (Playwright UI mode)
+
+```bash
+/e2e-eval --app auth --ui
+/e2e-eval --env staging --app admin --ui
+```
+
+After Phase 2, invoke:
+
+```bash
+node scripts/e2e.mjs --env {env} --app {app} --ui
+```
+
+Wait for the Playwright UI process to exit; propagate its exit code.
+
+**Requirements:**
+
+- Must specify a single app via `--app`. `--app all` is rejected with: `--ui requires a single --app (auth, admin, store, or payments)`.
+- Mutually exclusive with `--fix`, `--retries`, `--replay`, `--ci`. Combining them is rejected with: `--ui cannot be combined with {flag}`.
+
+### `--debug <spec>` (Playwright inspector)
+
+```bash
+/e2e-eval --app admin --debug apps/admin/e2e/reports.spec.ts
+```
+
+After Phase 2, invoke:
+
+```bash
+node scripts/e2e.mjs --env {env} --app {app} -- --debug {spec}
+```
+
+Wait for the inspector to exit; propagate exit code.
+
+**Requirements:**
+
+- Spec path argument is required. If omitted, reject with: `--debug requires a spec file path`.
+- Must specify a single app via `--app`. `--app all` is rejected.
+- Mutually exclusive with `--fix`, `--retries`, `--replay`, `--ui`, `--ci`.
+
+---
+
+## Replay Mode
+
+`--replay` re-runs only the failing tests from the most recent report, with full Phases 0–2 setup and Phases 4–6 analysis/fix/report.
+
+### Behavior
+
+1. Locate the newest report file matching `.ai-context/reports/e2e-eval-*.md` by filename timestamp.
+2. If no report file exists at all → exit with: `No previous reports found in .ai-context/reports/`.
+3. Parse the "Failed Tests" section. For each `### {Test name} — {file}:{line}` heading:
+   - Extract `{app}` from the file path: `apps/{app}/e2e/...` → `{app}` is the second path segment.
+   - Extract `{spec_file}:{line}` as the runner argument.
+4. If no failures in the newest report → exit with: `No failures to replay (last report: {path})`.
+5. Group failures by app, preserving auth-before-admin order.
+6. Run Phases 0–2 normally (with cached detection).
+7. For each app group, invoke:
+
+```bash
+node scripts/e2e.mjs --env {env} --app {app} -- {spec1}:{line1} {spec2}:{line2}
+```
+
+8. Continue with Phases 4–6 (analysis, fix if `--fix` was also passed, report).
+9. In the new report, add this line directly under the existing `**Retries per failure:**` line:
+
+```markdown
+**Replay of:** .ai-context/reports/e2e-eval-{source_timestamp}.md
+```
+
+### Edge cases
+
+| Situation                                             | Action                                                                          |
+| ----------------------------------------------------- | ------------------------------------------------------------------------------- |
+| Test file no longer exists at referenced path         | Log `Skipping {spec}:{line} — file no longer exists` and continue with the rest |
+| Newest report mixes apps                              | Group and run sequentially (auth before admin)                                  |
+| Replay run produces new failures not in source report | Treat normally — they appear in the new report under "Failed Tests"             |
+| `--replay --fix` combination                          | Allowed: replay failures, fix each one, regression-check                        |
+
+---
+
+## CI Parity Mode
+
+`--ci` reproduces how GitHub Actions runs the suite. Use it to debug failures that only manifest in CI.
+
+### Behavior
+
+- Force headless. If `--headed` was also passed, reject with: `--ci cannot be combined with --headed`.
+- Pass through to `e2e.mjs` as: `-- --workers=1 --retries=2`.
+- Disable the skill's flaky-detection retry loop. Treat Playwright's `retries=2` as the only retry mechanism; ignore the skill's `--retries` flag if also set.
+- All other phases (0–6) run normally.
+
+### Invocation
+
+```bash
+node scripts/e2e.mjs --env {env} --app {app} -- --workers=1 --retries=2
+```
+
+### Use cases
+
+- A test passes locally but fails in CI → run `/e2e-eval --ci --files <spec>` to reproduce locally.
+- Suspect a parallelism-related race → `--ci` forces single-worker.
+- Suspect flakiness only in CI → `--ci` uses Playwright's retry instead of skill-level retry, matching CI behavior exactly.
+
+---
+
 ## Rules
 
 1. **Never skip Phase 0** — env var validation runs even with `--skip-infra`.
@@ -619,7 +771,6 @@ Save a timestamped markdown report to `.ai-context/reports/`:
 
 - [E2E Selectors](../../rules/e2e-selectors.md) — Selector guidelines
 - [Testing Rules](../../rules/testing.md) — When to change tests
-- [Run E2E Skill](../run-e2e/SKILL.md) — Simpler non-autonomous runner
 - `scripts/e2e.mjs` — Unified test runner
 - `scripts/supabase-docker.mjs` — Supabase control
 - `scripts/docker-build.mjs` — Docker image/container control

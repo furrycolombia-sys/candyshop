@@ -788,5 +788,5 @@ beforeEach(() => {
 
 - [E2E Selectors](./e2e-selectors.md) - Stable selectors for E2E tests
 - [Run Tests Skill](../skills/run-tests/SKILL.md) - `/run-tests`
-- [Run E2E Skill](../skills/run-e2e/SKILL.md) - `/run-e2e`
+- [E2E Eval Skill](../skills/e2e-eval/SKILL.md) - `/e2e-eval`
 - [Start Task Skill](../skills/start-task/SKILL.md) - Includes testing checklist
