@@ -280,50 +280,74 @@ A 200 or 3xx is healthy. A 500 on a valid route means the server is broken — *
 
 #### Staging environment
 
-Execute in this exact order:
+Execute in this exact order. **Each step probes first, then starts only if not responding.** `--skip-infra` bypasses all probes; `--clean` forces a Supabase reset regardless of probe result.
 
-**2a. Stop any existing tunnel**
+**2a. Cloudflare tunnel — pre-check**
 
-```bash
-pnpm tunnel:stop --env staging
-```
-
-**2b. Start Supabase Docker**
-
-If `--clean` was requested, reset first:
+Probe the tunnel URL (from `NEXT_PUBLIC_STORE_URL` or equivalent in `.env.staging`):
 
 ```bash
-node scripts/supabase-docker.mjs reset --env staging
+curl -sI {tunnel_url} --max-time 5 | head -1
 ```
 
-Then start:
+| Probe result | Action                                                                                       |
+| ------------ | -------------------------------------------------------------------------------------------- |
+| 2xx/3xx      | Tunnel is up — leave it alone for now (we'll re-confirm in 2d). Skip the `tunnel:stop` step. |
+| No response  | Stop any zombie tunnel state: `pnpm tunnel:stop --env staging`.                              |
 
-```bash
-node scripts/supabase-docker.mjs start --env staging
-```
+**2b. Start Supabase Docker (cached)**
 
-If start fails with a schema/migration error (e.g., "column not found in schema cache") and `--clean` was NOT requested, run a full reset then retry:
+If `--clean` was requested, reset unconditionally:
 
 ```bash
 node scripts/supabase-docker.mjs reset --env staging
+```
+
+Otherwise probe port 64321:
+
+```bash
+nc -z 127.0.0.1 64321
+```
+
+| Probe result | Action                                                                                     |
+| ------------ | ------------------------------------------------------------------------------------------ |
+| Responds     | Skip start. Record `Supabase: ♻️ Reused (already running on port 64321)`.                  |
+| No response  | Run `node scripts/supabase-docker.mjs start --env staging`. Record `Supabase: ✅ Started`. |
+
+If start fails with a schema/migration error (e.g. "column not found in schema cache") and `--clean` was NOT requested, run a full reset then retry:
+
+```bash
+node scripts/supabase-docker.mjs reset --env staging
 node scripts/supabase-docker.mjs start --env staging
 ```
 
-**2c. Build and start Docker container**
+**2c. Build and start Docker container (cached)**
+
+Probe `http://localhost:7542/`:
 
 ```bash
-pnpm docker:build --env staging --up
+curl -s -o /dev/null -w "%{http_code}" http://localhost:7542/ --max-time 5
 ```
 
-This rebuilds the image (using cached layers when code hasn't changed) and restarts the container on port 7542.
+| Probe result                | Action                                                                                          |
+| --------------------------- | ----------------------------------------------------------------------------------------------- |
+| 2xx / 3xx / 4xx             | Container is responding (4xx is fine — the server is up). Record `Docker container: ♻️ Reused`. |
+| No response / 5xx / timeout | Run `pnpm docker:build --env staging --up`. Record `Docker container: ✅ Built+started`.        |
 
-**2d. Start Cloudflare tunnel**
+**2d. Start Cloudflare tunnel (cached, re-probe)**
+
+Re-probe the tunnel URL:
 
 ```bash
-pnpm tunnel --env staging
+curl -sI {tunnel_url} --max-time 5 | head -1
 ```
 
-Wait until port 7542 responds (the script does this internally). If it times out, check Docker container logs:
+| Probe result | Action                                                                  |
+| ------------ | ----------------------------------------------------------------------- |
+| 2xx/3xx      | Skip start. Record `Cloudflare tunnel: ♻️ Reused (active)`.             |
+| No response  | Run `pnpm tunnel --env staging`. Record `Cloudflare tunnel: ✅ Active`. |
+
+Wait until port 7542 responds (the tunnel script does this internally). If it times out, check Docker container logs:
 
 ```bash
 docker logs candyshop-staging --tail 50
