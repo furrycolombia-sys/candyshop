@@ -547,16 +547,16 @@ Save a timestamped markdown report to `.ai-context/reports/`:
 
 ## Infrastructure
 
-| Service             | Status                                                           |
-| ------------------- | ---------------------------------------------------------------- |
-| Supabase            | ✅ Started / ✅ Already running / ⏭️ Skipped (--skip-infra)      |
-| Docker container    | ✅ Built + started (staging) / ⏭️ N/A (dev)                      |
-| Cloudflare tunnel   | ✅ Active (staging) / ⏭️ N/A (dev)                               |
-| Playwright browsers | ✅ Installed                                                     |
-| DB reset            | ✅ Done (--clean) / ⏭️ Skipped                                   |
-| Dev server (dev)    | ✅ Killed + restarted clean / ⏭️ N/A (staging)                   |
-| Dev server log      | ✅ Clean startup / ⚠️ Errors captured at `C:\Temp\devserver.log` |
-| UX tests            | ✅ Included (default) / ⏭️ Skipped (--no-ux)                     |
+| Service             | Status                                                               |
+| ------------------- | -------------------------------------------------------------------- |
+| Supabase            | ♻️ Reused (already running) / ✅ Started / ⏭️ Skipped (--skip-infra) |
+| Docker container    | ♻️ Reused (already running) / ✅ Built+started / ⏭️ N/A (dev)        |
+| Cloudflare tunnel   | ♻️ Reused (active) / ✅ Active / ⏭️ N/A (dev)                        |
+| Playwright browsers | ✅ Installed                                                         |
+| DB reset            | ✅ Done (--clean) / ⏭️ Skipped                                       |
+| Dev server (dev)    | ✅ Killed + restarted clean / ⏭️ N/A (staging)                       |
+| Dev server log      | ✅ Clean startup / ⚠️ Errors captured at `C:\Temp\devserver.log`     |
+| UX tests            | ✅ Included (default) / ⏭️ Skipped (--no-ux)                         |
 
 ---
 
