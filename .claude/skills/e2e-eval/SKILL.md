@@ -42,6 +42,7 @@ Run e2e dev --fix
 | `--files`      | path(s) or pattern                    | all specs          | Restrict to specific test files or grep pattern                                                   |
 | `--skip-infra` | flag                                  | off                | Skip infrastructure startup (phases 1–2); assume services are already running                     |
 | `--clean`      | flag                                  | off                | Reset Supabase DB before running (re-applies all migrations from scratch)                         |
+| `--replay` | flag | off | Re-run only the failures from the most recent `.ai-context/reports/e2e-eval-*.md`. Mutually exclusive with `--ui`, `--debug`, `--files`, `--ci`. |
 | `--retries`    | integer                               | `1`                | Number of times to retry a failing test before classifying it as a real failure (flaky detection) |
 | `--timeout`    | milliseconds                          | Playwright default | Override per-test timeout for slow environments                                                   |
 
@@ -675,6 +676,44 @@ Wait for the inspector to exit; propagate exit code.
 - Spec path argument is required. If omitted, reject with: `--debug requires a spec file path`.
 - Must specify a single app via `--app`. `--app all` is rejected.
 - Mutually exclusive with `--fix`, `--retries`, `--replay`, `--ui`, `--ci`.
+
+---
+
+## Replay Mode
+
+`--replay` re-runs only the failing tests from the most recent report, with full Phases 0–2 setup and Phases 4–6 analysis/fix/report.
+
+### Behavior
+
+1. Locate the newest report file matching `.ai-context/reports/e2e-eval-*.md` by filename timestamp.
+2. If no report file exists at all → exit with: `No previous reports found in .ai-context/reports/`.
+3. Parse the "Failed Tests" section. For each `### {Test name} — {file}:{line}` heading:
+   - Extract `{app}` from the file path: `apps/{app}/e2e/...` → `{app}` is the second path segment.
+   - Extract `{spec_file}:{line}` as the runner argument.
+4. If no failures in the newest report → exit with: `No failures to replay (last report: {path})`.
+5. Group failures by app, preserving auth-before-admin order.
+6. Run Phases 0–2 normally (with cached detection).
+7. For each app group, invoke:
+
+```bash
+node scripts/e2e.mjs --env {env} --app {app} -- {spec1}:{line1} {spec2}:{line2}
+```
+
+8. Continue with Phases 4–6 (analysis, fix if `--fix` was also passed, report).
+9. In the new report, add this line directly under the existing `**Retries per failure:**` line:
+
+```markdown
+**Replay of:** .ai-context/reports/e2e-eval-{source_timestamp}.md
+```
+
+### Edge cases
+
+| Situation                                             | Action                                                                          |
+| ----------------------------------------------------- | ------------------------------------------------------------------------------- |
+| Test file no longer exists at referenced path         | Log `Skipping {spec}:{line} — file no longer exists` and continue with the rest |
+| Newest report mixes apps                              | Group and run sequentially (auth before admin)                                  |
+| Replay run produces new failures not in source report | Treat normally — they appear in the new report under "Failed Tests"             |
+| `--replay --fix` combination                          | Allowed: replay failures, fix each one, regression-check                       |
 
 ---
 
