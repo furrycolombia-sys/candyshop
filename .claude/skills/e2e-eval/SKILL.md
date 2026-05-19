@@ -34,6 +34,8 @@ Run e2e dev --fix
 | -------------- | ------------------------------------- | ------------------ | ------------------------------------------------------------------------------------------------- |
 | `env`          | `dev` \| `staging`                    | `dev`              | Target environment                                                                                |
 | `--headed`     | flag                                  | off (headless)     | Show the browser window during tests                                                              |
+| `--ui` | flag | off | Open Playwright UI mode after infra setup; skips analysis/report phases. Requires `--app <single>`. Mutually exclusive with `--fix`, `--retries`, `--replay`, `--ci`. |
+| `--debug` | spec path | (none) | Open Playwright inspector after infra setup; requires a spec path. Skips analysis/report phases. Requires `--app <single>`. Mutually exclusive with `--fix`, `--retries`, `--replay`, `--ui`, `--ci`. |
 | `--app`        | `auth` \| `admin` \| `store` \| `all` | `all`              | Which app suite(s) to run                                                                         |
 | `--fix`        | flag                                  | off                | Auto-fix production code when tests fail                                                          |
 | `--no-ux`      | flag                                  | off                | Skip UX-tagged tests (drag-and-drop, animations, layout). UX tests run by default.                |
@@ -597,6 +599,52 @@ Save a timestamped markdown report to `.ai-context/reports/`:
 
 {Any patterns, recurring issues, flaky tests worth stabilizing, or infrastructure improvements worth noting}
 ```
+
+---
+
+## Interactive Modes
+
+`--ui` and `--debug` provide interactive debugging on top of e2e-eval's autonomous infrastructure setup. Both modes run Phases 0–2 normally (env preflight, browser/Docker/tunnel checks, infrastructure start) then hand off control to Playwright. They skip Phases 3–6 (no failure analysis, no fix, no report).
+
+### `--ui` (Playwright UI mode)
+
+```bash
+/e2e-eval --app auth --ui
+/e2e-eval --env staging --app admin --ui
+```
+
+After Phase 2, invoke:
+
+```bash
+node scripts/e2e.mjs --env {env} --app {app} --ui
+```
+
+Wait for the Playwright UI process to exit; propagate its exit code.
+
+**Requirements:**
+
+- Must specify a single app via `--app`. `--app all` is rejected with: `--ui requires a single --app (auth, admin, store, or payments)`.
+- Mutually exclusive with `--fix`, `--retries`, `--replay`, `--ci`. Combining them is rejected with: `--ui cannot be combined with {flag}`.
+
+### `--debug <spec>` (Playwright inspector)
+
+```bash
+/e2e-eval --app admin --debug apps/admin/e2e/reports.spec.ts
+```
+
+After Phase 2, invoke:
+
+```bash
+node scripts/e2e.mjs --env {env} --app {app} -- --debug {spec}
+```
+
+Wait for the inspector to exit; propagate exit code.
+
+**Requirements:**
+
+- Spec path argument is required. If omitted, reject with: `--debug requires a spec file path`.
+- Must specify a single app via `--app`. `--app all` is rejected.
+- Mutually exclusive with `--fix`, `--retries`, `--replay`, `--ui`, `--ci`.
 
 ---
 
