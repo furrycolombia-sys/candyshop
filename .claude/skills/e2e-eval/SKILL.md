@@ -30,22 +30,22 @@ Run e2e dev --fix
 
 ## Parameters
 
-| Parameter      | Values                                | Default            | Description                                                                                       |
-| -------------- | ------------------------------------- | ------------------ | ------------------------------------------------------------------------------------------------- |
-| `env`          | `dev` \| `staging`                    | `dev`              | Target environment                                                                                |
-| `--headed`     | flag                                  | off (headless)     | Show the browser window during tests                                                              |
-| `--ui` | flag | off | Open Playwright UI mode after infra setup; skips analysis/report phases. Requires `--app <single>`. Mutually exclusive with `--fix`, `--retries`, `--replay`, `--ci`. |
-| `--debug` | spec path | (none) | Open Playwright inspector after infra setup; requires a spec path. Skips analysis/report phases. Requires `--app <single>`. Mutually exclusive with `--fix`, `--retries`, `--replay`, `--ui`, `--ci`. |
-| `--app`        | `auth` \| `admin` \| `store` \| `all` | `all`              | Which app suite(s) to run                                                                         |
-| `--fix`        | flag                                  | off                | Auto-fix production code when tests fail                                                          |
-| `--no-ux`      | flag                                  | off                | Skip UX-tagged tests (drag-and-drop, animations, layout). UX tests run by default.                |
-| `--files`      | path(s) or pattern                    | all specs          | Restrict to specific test files or grep pattern                                                   |
-| `--skip-infra` | flag                                  | off                | Skip infrastructure startup (phases 1–2); assume services are already running                     |
-| `--clean`      | flag                                  | off                | Reset Supabase DB before running (re-applies all migrations from scratch)                         |
-| `--replay` | flag | off | Re-run only the failures from the most recent `.ai-context/reports/e2e-eval-*.md`. Mutually exclusive with `--ui`, `--debug`, `--files`, `--ci`. |
-| `--retries`    | integer                               | `1`                | Number of times to retry a failing test before classifying it as a real failure (flaky detection) |
-| `--ci` | flag | off | Match GitHub Actions runtime config: `workers=1`, `retries=2`, headless. Disables skill-level flaky-detection retry (Playwright retries instead). Mutually exclusive with `--headed`, `--ui`, `--debug`, `--replay`. |
-| `--timeout`    | milliseconds                          | Playwright default | Override per-test timeout for slow environments                                                   |
+| Parameter      | Values                                | Default            | Description                                                                                                                                                                                                          |
+| -------------- | ------------------------------------- | ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `env`          | `dev` \| `staging`                    | `dev`              | Target environment                                                                                                                                                                                                   |
+| `--headed`     | flag                                  | off (headless)     | Show the browser window during tests                                                                                                                                                                                 |
+| `--ui`         | flag                                  | off                | Open Playwright UI mode after infra setup; skips analysis/report phases. Requires `--app <single>`. Mutually exclusive with `--fix`, `--retries`, `--replay`, `--ci`.                                                |
+| `--debug`      | spec path                             | (none)             | Open Playwright inspector after infra setup; requires a spec path. Skips analysis/report phases. Requires `--app <single>`. Mutually exclusive with `--fix`, `--retries`, `--replay`, `--ui`, `--ci`.                |
+| `--app`        | `auth` \| `admin` \| `store` \| `all` | `all`              | Which app suite(s) to run                                                                                                                                                                                            |
+| `--fix`        | flag                                  | off                | Auto-fix production code when tests fail                                                                                                                                                                             |
+| `--no-ux`      | flag                                  | off                | Skip UX-tagged tests (drag-and-drop, animations, layout). UX tests run by default.                                                                                                                                   |
+| `--files`      | path(s) or pattern                    | all specs          | Restrict to specific test files or grep pattern                                                                                                                                                                      |
+| `--skip-infra` | flag                                  | off                | Skip infrastructure startup (phases 1–2); assume services are already running                                                                                                                                        |
+| `--clean`      | flag                                  | off                | Reset Supabase DB before running (re-applies all migrations from scratch)                                                                                                                                            |
+| `--replay`     | flag                                  | off                | Re-run only the failures from the most recent `.ai-context/reports/e2e-eval-*.md`. Mutually exclusive with `--ui`, `--debug`, `--files`, `--ci`.                                                                     |
+| `--retries`    | integer                               | `1`                | Number of times to retry a failing test before classifying it as a real failure (flaky detection)                                                                                                                    |
+| `--ci`         | flag                                  | off                | Match GitHub Actions runtime config: `workers=1`, `retries=2`, headless. Disables skill-level flaky-detection retry (Playwright retries instead). Mutually exclusive with `--headed`, `--ui`, `--debug`, `--replay`. |
+| `--timeout`    | milliseconds                          | Playwright default | Override per-test timeout for slow environments                                                                                                                                                                      |
 
 **UX tests are included by default.** Pass `--no-ux` to skip them (e.g. for a fast smoke run). Do not require the user to opt-in — if they didn't say "skip ux" or "no ux", run them.
 
@@ -714,7 +714,7 @@ node scripts/e2e.mjs --env {env} --app {app} -- {spec1}:{line1} {spec2}:{line2}
 | Test file no longer exists at referenced path         | Log `Skipping {spec}:{line} — file no longer exists` and continue with the rest |
 | Newest report mixes apps                              | Group and run sequentially (auth before admin)                                  |
 | Replay run produces new failures not in source report | Treat normally — they appear in the new report under "Failed Tests"             |
-| `--replay --fix` combination                          | Allowed: replay failures, fix each one, regression-check                       |
+| `--replay --fix` combination                          | Allowed: replay failures, fix each one, regression-check                        |
 
 ---
 

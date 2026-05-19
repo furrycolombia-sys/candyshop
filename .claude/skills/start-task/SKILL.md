@@ -78,15 +78,15 @@ This skill creates a structured documentation folder for each task:
 
 ### Artifact Lifecycle
 
-| #   | Artifact                 | Created By               | Contains                                                           |
-| --- | ------------------------ | ------------------------ | ------------------------------------------------------------------ |
-| 00  | `task-overview.md`       | `/start-task`            | Issue details, acceptance criteria, images                         |
-| 01  | `setup.md`               | `/start-task`            | Branch info, environment, quick links                              |
-| 02  | `analysis.md`            | `/start-task`            | **Automatically created** - Relevant files, patterns, requirements |
-| 03  | `implementation-plan.md` | Planning phase           | **Testing Plan (TDD)** + Implementation steps                      |
-| 04  | `implementation-log.md`  | Implementation           | Changes, decisions, commits, quality checks                        |
+| #   | Artifact                 | Created By                | Contains                                                           |
+| --- | ------------------------ | ------------------------- | ------------------------------------------------------------------ |
+| 00  | `task-overview.md`       | `/start-task`             | Issue details, acceptance criteria, images                         |
+| 01  | `setup.md`               | `/start-task`             | Branch info, environment, quick links                              |
+| 02  | `analysis.md`            | `/start-task`             | **Automatically created** - Relevant files, patterns, requirements |
+| 03  | `implementation-plan.md` | Planning phase            | **Testing Plan (TDD)** + Implementation steps                      |
+| 04  | `implementation-log.md`  | Implementation            | Changes, decisions, commits, quality checks                        |
 | 05  | `testing-results.md`     | `/run-tests`, `/e2e-eval` | Test results, coverage, manual testing                             |
-| 06  | `review-notes.md`        | PR review                | Review comments, responses                                         |
+| 06  | `review-notes.md`        | PR review                 | Review comments, responses                                         |
 
 **Benefits:**
 
@@ -1087,7 +1087,7 @@ Start working on issue 88 as a chore
 | Skill                                              | Purpose                     | When to Use                      |
 | -------------------------------------------------- | --------------------------- | -------------------------------- |
 | [Run Tests](../run-tests/SKILL.md)                 | Unit testing with Vitest    | After writing/modifying code     |
-| [E2E Eval](../e2e-eval/SKILL.md)                    | E2E testing with Playwright | Before submitting PR             |
+| [E2E Eval](../e2e-eval/SKILL.md)                   | E2E testing with Playwright | Before submitting PR             |
 | [Submit PR](../submit-pr/SKILL.md)                 | Create pull request         | When implementation complete     |
 | [Commit Push](../commit-push/SKILL.md)             | Commit and push changes     | During implementation            |
 | [Checkpoint](../checkpoint/SKILL.md)               | Save progress               | End of session or context switch |
