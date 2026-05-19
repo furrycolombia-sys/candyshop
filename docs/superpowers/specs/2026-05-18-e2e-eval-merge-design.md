@@ -77,20 +77,20 @@ Currently Phase 2 always starts services from scratch (with manual `--skip-infra
 
 ### Dev environment
 
-| Service          | Probe                                                | If responding                                                  |
-| ---------------- | ---------------------------------------------------- | -------------------------------------------------------------- |
-| Supabase         | TCP probe on `SUPABASE_PORT` from `.env.dev`         | Skip Supabase start; log "Supabase already running on port N"  |
-| Dev server (apps)| n/a                                                  | **Always kill + restart** (preserves Turbopack-staleness fix)  |
+| Service           | Probe                                        | If responding                                                 |
+| ----------------- | -------------------------------------------- | ------------------------------------------------------------- |
+| Supabase          | TCP probe on `SUPABASE_PORT` from `.env.dev` | Skip Supabase start; log "Supabase already running on port N" |
+| Dev server (apps) | n/a                                          | **Always kill + restart** (preserves Turbopack-staleness fix) |
 
 The "always kill and restart dev server" policy is preserved as-is. Cached detection in dev applies only to Supabase, because the existing skill explicitly documents that a long-running dev server can accumulate Turbopack module state and cause silent SSR failures. Caching it would re-introduce that footgun.
 
 ### Staging environment
 
-| Service           | Probe                                                | If responding                          |
-| ----------------- | ---------------------------------------------------- | -------------------------------------- |
-| Supabase          | TCP probe on port 64321                              | Skip Supabase start                    |
-| Docker container  | HTTP probe on `http://localhost:7542/`               | Skip `docker:build --up`               |
-| Cloudflare tunnel | HTTPS probe on tunnel URL from `.env.staging`        | Skip tunnel start                      |
+| Service           | Probe                                         | If responding            |
+| ----------------- | --------------------------------------------- | ------------------------ |
+| Supabase          | TCP probe on port 64321                       | Skip Supabase start      |
+| Docker container  | HTTP probe on `http://localhost:7542/`        | Skip `docker:build --up` |
+| Cloudflare tunnel | HTTPS probe on tunnel URL from `.env.staging` | Skip tunnel start        |
 
 All three independently cached. If a probe fails, that service is started normally.
 
@@ -170,19 +170,19 @@ Match the GitHub Actions runtime config to reproduce CI-only failures locally.
 
 **Cross-reference updates** (replace `/run-e2e` with `/e2e-eval`, fix the link target):
 
-| File                                      | Line | Change                                                          |
-| ----------------------------------------- | ---- | --------------------------------------------------------------- |
-| `.claude/rules/e2e-selectors.md`          | 341  | `Run E2E Skill` link → `E2E Eval Skill`, point at `e2e-eval/`   |
-| `.claude/rules/testing.md`                | 791  | Same                                                            |
-| `.claude/skills/capture-evidences/SKILL.md` | 312 | Table entry `/run-e2e` → `/e2e-eval`                            |
-| `.claude/skills/run-tests/SKILL.md`       | 88   | "For E2E specific files, see..." link target                    |
-| `.claude/skills/run-tests/SKILL.md`       | 317  | Related-section link                                            |
-| `.claude/skills/verify-code/SKILL.md`     | 307  | Related-section link                                            |
-| `.claude/skills/e2e-eval/SKILL.md`        | 622  | Remove the self-link to deleted `/run-e2e`                      |
-| `.claude/skills/generate-setup-guide/SKILL.md` | 399 | Setup-guide command list                                      |
-| `.claude/skills/start-task/SKILL.md`      | 88   | Phase table entry                                               |
-| `.claude/skills/start-task/SKILL.md`      | 838  | Final checklist item                                            |
-| `.claude/skills/start-task/SKILL.md`      | 1090 | Related-skills table                                            |
+| File                                           | Line | Change                                                        |
+| ---------------------------------------------- | ---- | ------------------------------------------------------------- |
+| `.claude/rules/e2e-selectors.md`               | 341  | `Run E2E Skill` link → `E2E Eval Skill`, point at `e2e-eval/` |
+| `.claude/rules/testing.md`                     | 791  | Same                                                          |
+| `.claude/skills/capture-evidences/SKILL.md`    | 312  | Table entry `/run-e2e` → `/e2e-eval`                          |
+| `.claude/skills/run-tests/SKILL.md`            | 88   | "For E2E specific files, see..." link target                  |
+| `.claude/skills/run-tests/SKILL.md`            | 317  | Related-section link                                          |
+| `.claude/skills/verify-code/SKILL.md`          | 307  | Related-section link                                          |
+| `.claude/skills/e2e-eval/SKILL.md`             | 622  | Remove the self-link to deleted `/run-e2e`                    |
+| `.claude/skills/generate-setup-guide/SKILL.md` | 399  | Setup-guide command list                                      |
+| `.claude/skills/start-task/SKILL.md`           | 88   | Phase table entry                                             |
+| `.claude/skills/start-task/SKILL.md`           | 838  | Final checklist item                                          |
+| `.claude/skills/start-task/SKILL.md`           | 1090 | Related-skills table                                          |
 
 `CLAUDE.md` does not reference `/run-e2e` — no change needed there.
 
@@ -201,13 +201,13 @@ Historical plan `docs/superpowers/plans/2026-05-14-start-task-brainstorming-inte
 
 ## Implementation impact
 
-| File                                | Change                                                                                                                                                                                            |
-| ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `.claude/skills/e2e-eval/SKILL.md`  | Add `--ui`, `--debug`, `--replay`, `--ci` flags. Add cached-infra detection to Phase 2. Add report-format updates. Add mutex docs. Remove the "Related → /run-e2e" link.                          |
-| `.claude/skills/run-e2e/SKILL.md`   | Delete                                                                                                                                                                                            |
-| `.claude/skills/run-e2e/`           | Remove directory                                                                                                                                                                                  |
-| 9 cross-referencing files           | See table above                                                                                                                                                                                   |
-| `scripts/e2e.mjs`                   | Verify `--`-forward of `--ui`, `--debug`, `--workers`, `--retries` works correctly. Confirm interactive-mode stdio is wired through (no buffering). If broken, fix it as a 1–2 line runner tweak. |
+| File                               | Change                                                                                                                                                                                            |
+| ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `.claude/skills/e2e-eval/SKILL.md` | Add `--ui`, `--debug`, `--replay`, `--ci` flags. Add cached-infra detection to Phase 2. Add report-format updates. Add mutex docs. Remove the "Related → /run-e2e" link.                          |
+| `.claude/skills/run-e2e/SKILL.md`  | Delete                                                                                                                                                                                            |
+| `.claude/skills/run-e2e/`          | Remove directory                                                                                                                                                                                  |
+| 9 cross-referencing files          | See table above                                                                                                                                                                                   |
+| `scripts/e2e.mjs`                  | Verify `--`-forward of `--ui`, `--debug`, `--workers`, `--retries` works correctly. Confirm interactive-mode stdio is wired through (no buffering). If broken, fix it as a 1–2 line runner tweak. |
 
 ---
 

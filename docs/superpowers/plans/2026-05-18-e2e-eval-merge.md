@@ -16,23 +16,23 @@
 
 **Files modified (10):**
 
-| Path                                              | Purpose                                                                                     |
-| ------------------------------------------------- | ------------------------------------------------------------------------------------------- |
-| `.claude/skills/e2e-eval/SKILL.md`                | Primary: new flags, cached-infra logic, report-format update, mutex docs, drop self-link    |
-| `.claude/rules/e2e-selectors.md`                  | Replace one `/run-e2e` reference                                                            |
-| `.claude/rules/testing.md`                        | Replace one `/run-e2e` reference                                                            |
-| `.claude/skills/capture-evidences/SKILL.md`       | Replace one `/run-e2e` reference                                                            |
-| `.claude/skills/run-tests/SKILL.md`               | Replace two `/run-e2e` references                                                           |
-| `.claude/skills/verify-code/SKILL.md`             | Replace one `/run-e2e` reference                                                            |
-| `.claude/skills/generate-setup-guide/SKILL.md`    | Replace one `/run-e2e` reference                                                            |
-| `.claude/skills/start-task/SKILL.md`              | Replace three `/run-e2e` references                                                         |
+| Path                                           | Purpose                                                                                  |
+| ---------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| `.claude/skills/e2e-eval/SKILL.md`             | Primary: new flags, cached-infra logic, report-format update, mutex docs, drop self-link |
+| `.claude/rules/e2e-selectors.md`               | Replace one `/run-e2e` reference                                                         |
+| `.claude/rules/testing.md`                     | Replace one `/run-e2e` reference                                                         |
+| `.claude/skills/capture-evidences/SKILL.md`    | Replace one `/run-e2e` reference                                                         |
+| `.claude/skills/run-tests/SKILL.md`            | Replace two `/run-e2e` references                                                        |
+| `.claude/skills/verify-code/SKILL.md`          | Replace one `/run-e2e` reference                                                         |
+| `.claude/skills/generate-setup-guide/SKILL.md` | Replace one `/run-e2e` reference                                                         |
+| `.claude/skills/start-task/SKILL.md`           | Replace three `/run-e2e` references                                                      |
 
 **Files deleted:**
 
-| Path                                  | Reason                                  |
-| ------------------------------------- | --------------------------------------- |
-| `.claude/skills/run-e2e/SKILL.md`     | Skill merged into `/e2e-eval`           |
-| `.claude/skills/run-e2e/` (directory) | Empty after SKILL.md is removed         |
+| Path                                  | Reason                          |
+| ------------------------------------- | ------------------------------- |
+| `.claude/skills/run-e2e/SKILL.md`     | Skill merged into `/e2e-eval`   |
+| `.claude/skills/run-e2e/` (directory) | Empty after SKILL.md is removed |
 
 **Files NOT touched:**
 
@@ -100,8 +100,8 @@ If any of Steps 1–3 reveal that the runner does NOT support a required flag pa
 Find the Parameters table (the one that already documents `--headed`, `--app`, `--fix`, etc., around line 33). Insert these two rows immediately after the `--headed` row:
 
 ```markdown
-| `--ui`         | flag                                  | off                | Open Playwright UI mode after infra setup; skips analysis/report phases. Requires `--app <single>`. Mutually exclusive with `--fix`, `--retries`, `--replay`, `--ci`. |
-| `--debug`      | spec path                             | (none)             | Open Playwright inspector after infra setup; requires a spec path. Skips analysis/report phases. Requires `--app <single>`. Mutually exclusive with `--fix`, `--retries`, `--replay`, `--ui`, `--ci`. |
+| `--ui` | flag | off | Open Playwright UI mode after infra setup; skips analysis/report phases. Requires `--app <single>`. Mutually exclusive with `--fix`, `--retries`, `--replay`, `--ci`. |
+| `--debug` | spec path | (none) | Open Playwright inspector after infra setup; requires a spec path. Skips analysis/report phases. Requires `--app <single>`. Mutually exclusive with `--fix`, `--retries`, `--replay`, `--ui`, `--ci`. |
 ```
 
 - [ ] **Step 2: Insert a new "Interactive Modes" section immediately before the `## Rules` heading**
@@ -199,9 +199,9 @@ $port = (Get-Content .env.dev | Select-String '^SUPABASE_PORT=').ToString().Spli
 Test-NetConnection -ComputerName 127.0.0.1 -Port $port -InformationLevel Quiet
 ```
 
-| Probe result | Action                                                                              |
-| ------------ | ----------------------------------------------------------------------------------- |
-| Responds     | Skip Supabase start. Record `Supabase: ♻️ Reused (already running on port N)`.      |
+| Probe result | Action                                                                                 |
+| ------------ | -------------------------------------------------------------------------------------- |
+| Responds     | Skip Supabase start. Record `Supabase: ♻️ Reused (already running on port N)`.         |
 | No response  | Run `node scripts/supabase-docker.mjs start --env dev`. Record `Supabase: ✅ Started`. |
 ````
 
@@ -239,10 +239,10 @@ Probe the tunnel URL (from `NEXT_PUBLIC_STORE_URL` or equivalent in `.env.stagin
 curl -sI {tunnel_url} --max-time 5 | head -1
 ```
 
-| Probe result | Action                                                                                     |
-| ------------ | ------------------------------------------------------------------------------------------ |
+| Probe result | Action                                                                                       |
+| ------------ | -------------------------------------------------------------------------------------------- |
 | 2xx/3xx      | Tunnel is up — leave it alone for now (we'll re-confirm in 2d). Skip the `tunnel:stop` step. |
-| No response  | Stop any zombie tunnel state: `pnpm tunnel:stop --env staging`.                            |
+| No response  | Stop any zombie tunnel state: `pnpm tunnel:stop --env staging`.                              |
 
 **2b. Start Supabase Docker (cached)**
 
@@ -258,9 +258,9 @@ Otherwise probe port 64321:
 nc -z 127.0.0.1 64321
 ```
 
-| Probe result | Action                                                                                  |
-| ------------ | --------------------------------------------------------------------------------------- |
-| Responds     | Skip start. Record `Supabase: ♻️ Reused (already running on port 64321)`.               |
+| Probe result | Action                                                                                     |
+| ------------ | ------------------------------------------------------------------------------------------ |
+| Responds     | Skip start. Record `Supabase: ♻️ Reused (already running on port 64321)`.                  |
 | No response  | Run `node scripts/supabase-docker.mjs start --env staging`. Record `Supabase: ✅ Started`. |
 
 If start fails with a schema/migration error (e.g. "column not found in schema cache") and `--clean` was NOT requested, run a full reset then retry:
@@ -278,10 +278,10 @@ Probe `http://localhost:7542/`:
 curl -s -o /dev/null -w "%{http_code}" http://localhost:7542/ --max-time 5
 ```
 
-| Probe result                | Action                                                                                |
-| --------------------------- | ------------------------------------------------------------------------------------- |
+| Probe result                | Action                                                                                          |
+| --------------------------- | ----------------------------------------------------------------------------------------------- |
 | 2xx / 3xx / 4xx             | Container is responding (4xx is fine — the server is up). Record `Docker container: ♻️ Reused`. |
-| No response / 5xx / timeout | Run `pnpm docker:build --env staging --up`. Record `Docker container: ✅ Built+started`.  |
+| No response / 5xx / timeout | Run `pnpm docker:build --env staging --up`. Record `Docker container: ✅ Built+started`.        |
 
 **2d. Start Cloudflare tunnel (cached, re-probe)**
 
@@ -291,9 +291,9 @@ Re-probe the tunnel URL:
 curl -sI {tunnel_url} --max-time 5 | head -1
 ```
 
-| Probe result | Action                                                            |
-| ------------ | ----------------------------------------------------------------- |
-| 2xx/3xx      | Skip start. Record `Cloudflare tunnel: ♻️ Reused (active)`.       |
+| Probe result | Action                                                                  |
+| ------------ | ----------------------------------------------------------------------- |
+| 2xx/3xx      | Skip start. Record `Cloudflare tunnel: ♻️ Reused (active)`.             |
 | No response  | Run `pnpm tunnel --env staging`. Record `Cloudflare tunnel: ✅ Active`. |
 
 Wait until port 7542 responds (the tunnel script does this internally). If it times out, check Docker container logs:
@@ -332,16 +332,16 @@ git commit -m "feat(e2e-eval): cache staging infra (Supabase, Docker, tunnel)"
 Find the table that starts with `| Service             | Status` under PHASE 6's report-format example. Replace the entire table with:
 
 ```markdown
-| Service             | Status                                                                          |
-| ------------------- | ------------------------------------------------------------------------------- |
-| Supabase            | ♻️ Reused (already running) / ✅ Started / ⏭️ Skipped (--skip-infra)            |
-| Docker container    | ♻️ Reused (already running) / ✅ Built+started / ⏭️ N/A (dev)                   |
-| Cloudflare tunnel   | ♻️ Reused (active) / ✅ Active / ⏭️ N/A (dev)                                   |
-| Playwright browsers | ✅ Installed                                                                    |
-| DB reset            | ✅ Done (--clean) / ⏭️ Skipped                                                  |
-| Dev server (dev)    | ✅ Killed + restarted clean / ⏭️ N/A (staging)                                  |
-| Dev server log      | ✅ Clean startup / ⚠️ Errors captured at `C:\Temp\devserver.log`                |
-| UX tests            | ✅ Included (default) / ⏭️ Skipped (--no-ux)                                    |
+| Service             | Status                                                               |
+| ------------------- | -------------------------------------------------------------------- |
+| Supabase            | ♻️ Reused (already running) / ✅ Started / ⏭️ Skipped (--skip-infra) |
+| Docker container    | ♻️ Reused (already running) / ✅ Built+started / ⏭️ N/A (dev)        |
+| Cloudflare tunnel   | ♻️ Reused (active) / ✅ Active / ⏭️ N/A (dev)                        |
+| Playwright browsers | ✅ Installed                                                         |
+| DB reset            | ✅ Done (--clean) / ⏭️ Skipped                                       |
+| Dev server (dev)    | ✅ Killed + restarted clean / ⏭️ N/A (staging)                       |
+| Dev server log      | ✅ Clean startup / ⚠️ Errors captured at `C:\Temp\devserver.log`     |
+| UX tests            | ✅ Included (default) / ⏭️ Skipped (--no-ux)                         |
 ```
 
 - [ ] **Step 2: Commit**
@@ -364,7 +364,7 @@ git commit -m "feat(e2e-eval): report 'Reused' status for cached infra services"
 Insert after the `--clean` row in the Parameters table:
 
 ```markdown
-| `--replay`     | flag                                  | off                | Re-run only the failures from the most recent `.ai-context/reports/e2e-eval-*.md`. Mutually exclusive with `--ui`, `--debug`, `--files`, `--ci`. |
+| `--replay` | flag | off | Re-run only the failures from the most recent `.ai-context/reports/e2e-eval-*.md`. Mutually exclusive with `--ui`, `--debug`, `--files`, `--ci`. |
 ```
 
 - [ ] **Step 2: Add a new "Replay Mode" section after "Interactive Modes" and before `## Rules`**
@@ -401,12 +401,12 @@ node scripts/e2e.mjs --env {env} --app {app} -- {spec1}:{line1} {spec2}:{line2}
 
 ### Edge cases
 
-| Situation                                              | Action                                                                                   |
-| ------------------------------------------------------ | ---------------------------------------------------------------------------------------- |
-| Test file no longer exists at referenced path          | Log `Skipping {spec}:{line} — file no longer exists` and continue with the rest          |
-| Newest report mixes apps                               | Group and run sequentially (auth before admin)                                           |
-| Replay run produces new failures not in source report  | Treat normally — they appear in the new report under "Failed Tests"                      |
-| `--replay --fix` combination                           | Allowed: replay failures, fix each one, regression-check                                 |
+| Situation                                             | Action                                                                          |
+| ----------------------------------------------------- | ------------------------------------------------------------------------------- |
+| Test file no longer exists at referenced path         | Log `Skipping {spec}:{line} — file no longer exists` and continue with the rest |
+| Newest report mixes apps                              | Group and run sequentially (auth before admin)                                  |
+| Replay run produces new failures not in source report | Treat normally — they appear in the new report under "Failed Tests"             |
+| `--replay --fix` combination                          | Allowed: replay failures, fix each one, regression-check                        |
 ````
 
 - [ ] **Step 3: Commit**
@@ -429,7 +429,7 @@ git commit -m "feat(e2e-eval): add --replay flag for re-running last report's fa
 Insert after the `--retries` row:
 
 ```markdown
-| `--ci`         | flag                                  | off                | Match GitHub Actions runtime config: `workers=1`, `retries=2`, headless. Disables skill-level flaky-detection retry (Playwright retries instead). Mutually exclusive with `--headed`, `--ui`, `--debug`, `--replay`. |
+| `--ci` | flag | off | Match GitHub Actions runtime config: `workers=1`, `retries=2`, headless. Disables skill-level flaky-detection retry (Playwright retries instead). Mutually exclusive with `--headed`, `--ui`, `--debug`, `--replay`. |
 ```
 
 - [ ] **Step 2: Add a new "CI Parity Mode" section after "Replay Mode" and before `## Rules`**
@@ -516,13 +516,13 @@ With:
 Replace:
 
 ```markdown
-| `/run-e2e`     | Run automated E2E tests            | Before capturing evidences |
+| `/run-e2e` | Run automated E2E tests | Before capturing evidences |
 ```
 
 With:
 
 ```markdown
-| `/e2e-eval`    | Run automated E2E tests            | Before capturing evidences |
+| `/e2e-eval` | Run automated E2E tests | Before capturing evidences |
 ```
 
 - [ ] **Step 4: `.claude/skills/run-tests/SKILL.md` lines 88 and 317**
@@ -580,13 +580,13 @@ Delete the entire line. Verify no double blank line remains.
 Replace:
 
 ```markdown
-/run-e2e             # E2E tests
+/run-e2e # E2E tests
 ```
 
 With:
 
 ```markdown
-/e2e-eval            # E2E tests
+/e2e-eval # E2E tests
 ```
 
 - [ ] **Step 8: `.claude/skills/start-task/SKILL.md` lines 88, 838, 1090**
@@ -594,13 +594,13 @@ With:
 Line 88 — replace:
 
 ```markdown
-| 05  | `testing-results.md`     | `/run-tests`, `/run-e2e` | Test results, coverage, manual testing                             |
+| 05 | `testing-results.md` | `/run-tests`, `/run-e2e` | Test results, coverage, manual testing |
 ```
 
 With:
 
 ```markdown
-| 05  | `testing-results.md`     | `/run-tests`, `/e2e-eval` | Test results, coverage, manual testing                            |
+| 05 | `testing-results.md` | `/run-tests`, `/e2e-eval` | Test results, coverage, manual testing |
 ```
 
 Line 838 — replace:
@@ -618,13 +618,13 @@ With:
 Line 1090 — replace:
 
 ```markdown
-| [Run E2E](../run-e2e/SKILL.md)                     | E2E testing with Playwright | Before submitting PR             |
+| [Run E2E](../run-e2e/SKILL.md) | E2E testing with Playwright | Before submitting PR |
 ```
 
 With:
 
 ```markdown
-| [E2E Eval](../e2e-eval/SKILL.md)                   | E2E testing with Playwright | Before submitting PR             |
+| [E2E Eval](../e2e-eval/SKILL.md) | E2E testing with Playwright | Before submitting PR |
 ```
 
 - [ ] **Step 9: Sanity grep**
