@@ -44,6 +44,7 @@ Run e2e dev --fix
 | `--clean`      | flag                                  | off                | Reset Supabase DB before running (re-applies all migrations from scratch)                         |
 | `--replay` | flag | off | Re-run only the failures from the most recent `.ai-context/reports/e2e-eval-*.md`. Mutually exclusive with `--ui`, `--debug`, `--files`, `--ci`. |
 | `--retries`    | integer                               | `1`                | Number of times to retry a failing test before classifying it as a real failure (flaky detection) |
+| `--ci` | flag | off | Match GitHub Actions runtime config: `workers=1`, `retries=2`, headless. Disables skill-level flaky-detection retry (Playwright retries instead). Mutually exclusive with `--headed`, `--ui`, `--debug`, `--replay`. |
 | `--timeout`    | milliseconds                          | Playwright default | Override per-test timeout for slow environments                                                   |
 
 **UX tests are included by default.** Pass `--no-ux` to skip them (e.g. for a fast smoke run). Do not require the user to opt-in — if they didn't say "skip ux" or "no ux", run them.
@@ -714,6 +715,31 @@ node scripts/e2e.mjs --env {env} --app {app} -- {spec1}:{line1} {spec2}:{line2}
 | Newest report mixes apps                              | Group and run sequentially (auth before admin)                                  |
 | Replay run produces new failures not in source report | Treat normally — they appear in the new report under "Failed Tests"             |
 | `--replay --fix` combination                          | Allowed: replay failures, fix each one, regression-check                       |
+
+---
+
+## CI Parity Mode
+
+`--ci` reproduces how GitHub Actions runs the suite. Use it to debug failures that only manifest in CI.
+
+### Behavior
+
+- Force headless. If `--headed` was also passed, reject with: `--ci cannot be combined with --headed`.
+- Pass through to `e2e.mjs` as: `-- --workers=1 --retries=2`.
+- Disable the skill's flaky-detection retry loop. Treat Playwright's `retries=2` as the only retry mechanism; ignore the skill's `--retries` flag if also set.
+- All other phases (0–6) run normally.
+
+### Invocation
+
+```bash
+node scripts/e2e.mjs --env {env} --app {app} -- --workers=1 --retries=2
+```
+
+### Use cases
+
+- A test passes locally but fails in CI → run `/e2e-eval --ci --files <spec>` to reproduce locally.
+- Suspect a parallelism-related race → `--ci` forces single-worker.
+- Suspect flakiness only in CI → `--ci` uses Playwright's retry instead of skill-level retry, matching CI behavior exactly.
 
 ---
 
