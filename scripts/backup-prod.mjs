@@ -43,6 +43,8 @@ const rootDir = resolve(__dirname, "..");
 const PROJECT_ID = "olafyajipvsltohagiah";
 const SUPABASE_URL = "https://olafyajipvsltohagiah.supabase.co";
 const API_BASE = `https://api.supabase.com/v1/projects/${PROJECT_ID}/database/query`;
+const POSTGRES_HOST = "aws-0-us-east-2.pooler.supabase.com";
+const POSTGRES_USER = `postgres.${PROJECT_ID}`;
 const STORAGE_BUCKET = "receipts";
 const PAGE_SIZE = 1000;
 const STORAGE_LIST_LIMIT = 100;
@@ -108,9 +110,9 @@ function queryPostgres(sql) {
       {
         env: {
           ...process.env,
-          PGHOST: `db.${PROJECT_ID}.supabase.co`,
+          PGHOST: POSTGRES_HOST,
           PGPORT: "5432",
-          PGUSER: "postgres",
+          PGUSER: POSTGRES_USER,
           PGPASSWORD: password,
           PGDATABASE: "postgres",
           PGSSLMODE: "require",
