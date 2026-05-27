@@ -6,8 +6,8 @@
 
 | Branch    | Purpose               | Protection                            |
 | --------- | --------------------- | ------------------------------------- |
-| `main`    | Production-ready code | Require PR + approval, no direct push |
-| `develop` | Integration branch    | Require PR, no force push             |
+| `main`    | Production-ready code | Require PR + checks, no direct push   |
+| `develop` | Integration branch    | Require PR + checks, no force push    |
 
 ### Working Branches
 
@@ -332,11 +332,11 @@ PR title: chore(release): v2026.04.22.1 [GH-152]
 3. Branch name pattern: `main`
 4. Enable:
    - [x] **Require a pull request before merging**
-     - [x] Require approvals: `1`
+     - [x] Require approvals: `0` in a solo repo, or `1+` if you have other reviewers
      - [x] Dismiss stale PR approvals when new commits are pushed
    - [x] **Require status checks to pass before merging**
      - [x] Require branches to be up to date before merging
-     - Add required check: `Branch Target` (validates only release/fix can target main)
+     - Add required checks: `Branch Target`, `Quality Checks`, `Unit Tests`, `Docker Build`
    - [x] **Do not allow bypassing the above settings** (enforce on admins)
    - [ ] **Allow force pushes** (NEVER enable this)
    - [ ] **Allow deletions** (NEVER enable this)
@@ -346,9 +346,9 @@ PR title: chore(release): v2026.04.22.1 [GH-152]
 
 | Setting                | Value           |
 | ---------------------- | --------------- |
-| Required approvals     | 1               |
+| Required approvals     | 0               |
 | Dismiss stale reviews  | Yes             |
-| Required status checks | `Branch Target` |
+| Required status checks | `Branch Target`, `Quality Checks`, `Unit Tests`, `Docker Build` |
 | Require up-to-date     | Yes             |
 | Enforce on admins      | Yes             |
 | Force pushes           | Disabled        |
@@ -358,7 +358,13 @@ PR title: chore(release): v2026.04.22.1 [GH-152]
 
 1. Add another rule for `develop`
 2. Enable:
-   - [x] **Require a pull request before merging** (optional, for stricter flow)
+   - [x] **Require a pull request before merging**
+     - [x] Require approvals: `0`
+     - [x] Dismiss stale PR approvals when new commits are pushed
+   - [x] **Require status checks to pass before merging**
+     - [x] Require branches to be up to date before merging
+     - Add required checks: `Branch Target`, `Quality Checks`, `Unit Tests`, `Docker Build`
+   - [x] **Do not allow bypassing the above settings** (enforce on admins)
    - [ ] **Allow force pushes** (leave unchecked)
    - [ ] **Allow deletions** (leave unchecked)
 3. Click **Create**
