@@ -17,7 +17,7 @@
  * Usage:
  *   pnpm sync-secrets
  */
-import { randomBytes } from "node:crypto";
+import { createDecipheriv, pbkdf2Sync, randomBytes } from "node:crypto";
 import {
   existsSync,
   readFileSync,
@@ -33,7 +33,6 @@ import { fileURLToPath } from "node:url";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const rootDir = resolve(__dirname, "..");
 const secretsPath = resolve(rootDir, ".secrets");
-const isWindows = process.platform === "win32";
 
 const WORKFLOW_FILE = "sync-secrets.yml";
 const ARTIFACT_NAME = "secrets-encrypted";
@@ -58,14 +57,6 @@ function gh(args, opts = {}) {
     ...opts,
   });
   return result;
-}
-
-function openssl(args) {
-  const bin = isWindows ? "openssl.exe" : "openssl";
-  return spawnSync(bin, args, {
-    cwd: rootDir,
-    encoding: "utf8",
-  });
 }
 
 // ── Prerequisite checks ─────────────────────────────────────────
@@ -221,27 +212,30 @@ function decryptAndWrite(encryptedPath, passphrase, downloadDir) {
   log("Decrypting secrets...");
   const decryptedPath = resolve(rootDir, ".secrets-decrypted.tmp");
 
-  const result = openssl([
-    "aes-256-cbc",
-    "-d",
-    "-pbkdf2",
-    "-in",
-    encryptedPath,
-    "-out",
-    decryptedPath,
-    "-pass",
-    `pass:${passphrase}`,
-  ]);
+  try {
+    const encrypted = readFileSync(encryptedPath);
+    const magic = encrypted.subarray(0, 8).toString("ascii");
+    if (magic !== "Salted__") {
+      throw new Error("encrypted artifact is not in OpenSSL salted format");
+    }
 
-  // Clean up download dir regardless
-  rmSync(downloadDir, { recursive: true, force: true });
-
-  if (result.status !== 0) {
+    const salt = encrypted.subarray(8, 16);
+    const ciphertext = encrypted.subarray(16);
+    const keyAndIv = pbkdf2Sync(passphrase, salt, 10_000, 48, "sha256");
+    const key = keyAndIv.subarray(0, 32);
+    const iv = keyAndIv.subarray(32, 48);
+    const decipher = createDecipheriv("aes-256-cbc", key, iv);
+    const decrypted = Buffer.concat([decipher.update(ciphertext), decipher.final()]);
+    writeFileSync(decryptedPath, decrypted);
+  } catch (err) {
+    rmSync(downloadDir, { recursive: true, force: true });
     if (existsSync(decryptedPath)) unlinkSync(decryptedPath);
     fail(
-      "Failed to decrypt secrets artifact. The workflow may have used a different passphrase.",
+      `Failed to decrypt secrets artifact: ${err.message}`,
     );
   }
+
+  rmSync(downloadDir, { recursive: true, force: true });
 
   // Move decrypted file to .secrets
   const content = readFileSync(decryptedPath, "utf-8");

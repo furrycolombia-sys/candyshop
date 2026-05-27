@@ -51,15 +51,19 @@ const STORAGE_LIST_LIMIT = 100;
 
 function parseSecrets() {
   const path = resolve(rootDir, ".secrets");
-  if (!existsSync(path)) throw new Error(".secrets file not found");
-  const vars = {};
-  for (const line of readFileSync(path, "utf-8").split("\n")) {
-    const trimmed = line.trim();
-    if (!trimmed || trimmed.startsWith("#")) continue;
-    const eq = trimmed.indexOf("=");
-    if (eq === -1) continue;
-    vars[trimmed.slice(0, eq).trim()] = trimmed.slice(eq + 1).trim();
+  const vars = { ...process.env };
+
+  if (existsSync(path)) {
+    for (const line of readFileSync(path, "utf-8").split("\n")) {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed.startsWith("#")) continue;
+      const eq = trimmed.indexOf("=");
+      if (eq === -1) continue;
+      const key = trimmed.slice(0, eq).trim();
+      if (!vars[key]) vars[key] = trimmed.slice(eq + 1).trim();
+    }
   }
+
   return vars;
 }
 
@@ -70,7 +74,65 @@ const safePSArg = (s) => s.replace(/'/g, "''");
 
 // ─── Management API query ─────────────────────────────────────────────────────
 
+let useDirectPostgres = false;
+let directPostgresNoticeShown = false;
+
+function queryPostgres(sql) {
+  const password = secrets.PROD_SUPABASE_DB_PASSWORD;
+  if (!password) {
+    throw new Error(
+      "PROD_SUPABASE_DB_PASSWORD not found in environment or .secrets; cannot use direct Postgres fallback",
+    );
+  }
+
+  if (!directPostgresNoticeShown) {
+    console.log("  ℹ️  Supabase Management API unavailable — using direct Postgres fallback");
+    directPostgresNoticeShown = true;
+  }
+
+  const querySql = sql.trim().replace(/;\s*$/, "");
+  const jsonSql = `SELECT COALESCE(json_agg(_backup_query), '[]'::json) FROM (${querySql}) AS _backup_query`;
+
+  try {
+    const stdout = execFileSync(
+      "psql",
+      [
+        "--no-psqlrc",
+        "--tuples-only",
+        "--no-align",
+        "--set",
+        "ON_ERROR_STOP=1",
+        "--command",
+        jsonSql,
+      ],
+      {
+        env: {
+          ...process.env,
+          PGHOST: `db.${PROJECT_ID}.supabase.co`,
+          PGPORT: "5432",
+          PGUSER: "postgres",
+          PGPASSWORD: password,
+          PGDATABASE: "postgres",
+          PGSSLMODE: "require",
+        },
+        encoding: "utf8",
+        maxBuffer: 512 * 1024 * 1024,
+      },
+    );
+    return JSON.parse(stdout.trim() || "[]");
+  } catch (err) {
+    if (err.code === "ENOENT") {
+      throw new Error("psql not found; install postgresql-client for direct Postgres backups");
+    }
+    throw err;
+  }
+}
+
 async function query(pat, sql) {
+  if (useDirectPostgres) {
+    return queryPostgres(sql);
+  }
+
   const res = await fetch(API_BASE, {
     method: "POST",
     headers: {
@@ -81,6 +143,16 @@ async function query(pat, sql) {
   });
   const body = await res.json();
   if (!res.ok) {
+    if (res.status === 401) {
+      if (secrets.PROD_SUPABASE_DB_PASSWORD) {
+        useDirectPostgres = true;
+        return queryPostgres(sql);
+      }
+      throw new Error(
+        "Supabase Management API rejected PROD_SUPABASE_ACCESS_TOKEN (401 Unauthorized), " +
+        "and PROD_SUPABASE_DB_PASSWORD is unavailable for direct Postgres fallback.",
+      );
+    }
     throw new Error(`Query failed (${res.status}): ${JSON.stringify(body)}`);
   }
   return body;
@@ -707,8 +779,8 @@ async function restore(pat, serviceKey, backupPath) {
 const secrets = parseSecrets();
 const pat = secrets.PROD_SUPABASE_ACCESS_TOKEN;
 const serviceKey = secrets.PROD_SUPABASE_SERVICE_ROLE_KEY;
-if (!pat) throw new Error("PROD_SUPABASE_ACCESS_TOKEN not found in .secrets");
-if (!serviceKey) throw new Error("PROD_SUPABASE_SERVICE_ROLE_KEY not found in .secrets");
+if (!pat) throw new Error("PROD_SUPABASE_ACCESS_TOKEN not found in environment or .secrets");
+if (!serviceKey) throw new Error("PROD_SUPABASE_SERVICE_ROLE_KEY not found in environment or .secrets");
 
 const restoreIdx = process.argv.indexOf("--restore");
 try {
