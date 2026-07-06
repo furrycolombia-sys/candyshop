@@ -135,4 +135,53 @@ describe("fetchDelegatedReportOrders", () => {
     expect(res.orders[0].buyer_email).toBe("buyer@example.com");
     expect(res.orders[0].receipt_url).toBe("https://signed/receipt.png");
   });
+
+  it("only includes items for products granted reports.read, even when the same seller has another delegation row without it", async () => {
+    const supabase = makeSupabase({
+      seller_admins: [
+        { seller_id: "s1", product_id: "p1", permissions: ["reports.read"] },
+        { seller_id: "s1", product_id: "p2", permissions: ["orders.approve"] },
+      ],
+      orders: [
+        {
+          id: "o1",
+          seller_id: "s1",
+          user_id: "b1",
+          created_at: "2026-01-01T00:00:00Z",
+          payment_status: "approved",
+          total: 30,
+          currency: "USD",
+          transfer_number: "T1",
+          receipt_url: null,
+          order_items: [
+            {
+              id: "i1",
+              product_id: "p1",
+              quantity: 1,
+              unit_price: 10,
+              currency: "USD",
+              products: { name_en: "Delegated" },
+            },
+            {
+              id: "i2",
+              product_id: "p2",
+              quantity: 2,
+              unit_price: 10,
+              currency: "USD",
+              products: { name_en: "Not Delegated" },
+            },
+          ],
+        },
+      ],
+      user_profiles: [
+        { id: "b1", email: "buyer@example.com", display_name: "Buyer One" },
+      ],
+    });
+
+    const res = await fetchDelegatedReportOrders(supabase, NO_FILTERS);
+
+    expect(res.orders).toHaveLength(1);
+    expect(res.orders[0].items).toHaveLength(1);
+    expect(res.orders[0].items[0].product_id).toBe("p1");
+  });
 });

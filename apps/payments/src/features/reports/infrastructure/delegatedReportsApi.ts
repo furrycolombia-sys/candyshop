@@ -51,6 +51,11 @@ type OrderRow = {
 
 type ProfileRow = { id: string; email: string; display_name: string | null };
 
+/** Re-throw a Supabase query error instead of silently treating it as empty data. */
+function throwIfError(error: unknown): void {
+  if (error) throw error;
+}
+
 /**
  * Map (seller_id -> set of delegated product_ids) for delegations that grant
  * reports.read. Only these products may appear in the delegate's report.
@@ -124,10 +129,12 @@ export async function fetchDelegatedReportOrders(
   } = await supabase.auth.getUser();
   if (!user) return { orders: [], total: 0 };
 
-  const { data: delegations } = await supabase
+  const { data: delegations, error: delegationsError } = await supabase
     .from("seller_admins")
     .select("seller_id, product_id, permissions")
     .eq("admin_user_id", user.id);
+
+  throwIfError(delegationsError);
 
   const productMap = buildDelegatedProductMap(
     (delegations ?? []) as DelegationRow[],
@@ -155,15 +162,19 @@ export async function fetchDelegatedReportOrders(
   if (filters.amountMin != null) query = query.gte("total", filters.amountMin);
   if (filters.amountMax != null) query = query.lte("total", filters.amountMax);
 
-  const { data: orderData } = await query;
+  const { data: orderData, error: ordersError } = await query;
+  throwIfError(ordersError);
+
   const rows = (orderData ?? []) as OrderRow[];
   if (rows.length === 0) return { orders: [], total: 0 };
 
   const buyerIds = [...new Set(rows.map((r) => r.user_id))];
-  const { data: profiles } = await supabase
+  const { data: profiles, error: profilesError } = await supabase
     .from("user_profiles")
     .select("id, email, display_name")
     .in("id", buyerIds);
+
+  throwIfError(profilesError);
 
   const profileMap = new Map<string, ProfileRow>();
   for (const p of (profiles ?? []) as ProfileRow[]) profileMap.set(p.id, p);
