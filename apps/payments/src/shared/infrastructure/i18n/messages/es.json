@@ -35,7 +35,7 @@
   "sidebar": {
     "buyer": "Comprador",
     "seller": "Vendedor",
-    "delegate": "Asignado",
+    "delegate": "Delegado",
     "menu": "Menu de Pagos",
     "checkout": "Pagar",
     "myPurchases": "Mis Compras",
@@ -43,6 +43,7 @@
     "sales": "Ventas",
     "assigned": "Items Asignados",
     "reports": "Mis Reportes",
+    "delegatedReports": "Reportes Delegados",
     "collapse": "Colapsar barra lateral",
     "expand": "Expandir barra lateral"
   },

@@ -35,7 +35,7 @@
   "sidebar": {
     "buyer": "Buyer",
     "seller": "Seller",
-    "delegate": "Assigned",
+    "delegate": "Delegated",
     "menu": "Payments Menu",
     "checkout": "Checkout",
     "myPurchases": "My Purchases",
@@ -43,6 +43,7 @@
     "sales": "Sales",
     "assigned": "Assigned Items",
     "reports": "My Reports",
+    "delegatedReports": "Delegated Reports",
     "collapse": "Collapse sidebar",
     "expand": "Expand sidebar"
   },
