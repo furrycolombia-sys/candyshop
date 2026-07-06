@@ -305,6 +305,15 @@
       "noReceipt": "—"
     }
   },
+  "delegatedReports": {
+    "title": "Reportes Delegados",
+    "subtitle": "Ventas de los productos delegados a ti",
+    "loading": "Cargando…",
+    "error": "No se pudo cargar el reporte",
+    "totalOrders": "{count} órdenes",
+    "exportExcel": "Exportar Excel",
+    "exporting": "Exportando…"
+  },
   "common": {
     "loading": "Cargando...",
     "accessDenied": "Acceso denegado",

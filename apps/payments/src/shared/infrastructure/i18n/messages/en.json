@@ -305,6 +305,15 @@
       "noReceipt": "—"
     }
   },
+  "delegatedReports": {
+    "title": "Delegated Reports",
+    "subtitle": "Sales for products delegated to you",
+    "loading": "Loading…",
+    "error": "Failed to load report",
+    "totalOrders": "{count} orders",
+    "exportExcel": "Export Excel",
+    "exporting": "Exporting…"
+  },
   "common": {
     "loading": "Loading...",
     "accessDenied": "Access denied",
