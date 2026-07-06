@@ -4,11 +4,11 @@ import { useQuery } from "@tanstack/react-query";
 import { useQueryStates } from "nuqs";
 import { useSupabase } from "shared";
 
+import { DELEGATED_REPORTS_QUERY_KEY } from "@/features/reports/domain/constants";
 import { sellerReportsSearchParams } from "@/features/reports/domain/searchParams";
 import type { SellerReportFilters } from "@/features/reports/domain/types";
 import { fetchDelegatedReportOrders } from "@/features/reports/infrastructure/delegatedReportsApi";
 
-const DELEGATED_REPORTS_QUERY_KEY = "delegated-reports";
 const STALE_TIME_MS = 30_000;
 
 export function useDelegatedReports() {
