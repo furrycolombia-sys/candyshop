@@ -213,7 +213,7 @@ test.describe.serial("Delegated Reports page", () => {
     const downloadPromise = page.waitForEvent("download");
     await exportButton.click();
     const download = await downloadPromise;
-    expect(download.suggestedFilename()).toMatch(/\.xls$/i);
+    expect(download.suggestedFilename()).toMatch(/^my-sales-report.*\.xls$/i);
   });
 
   test("delegate without reports.read sees no menu and no report page", async ({

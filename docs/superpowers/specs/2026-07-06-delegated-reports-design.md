@@ -44,9 +44,9 @@ This is the existing `seller_admins` delegation model (the assigned-orders appro
 
 Two new delegatable capability keys, registered exactly like `orders.approve` is today:
 
-| Key | Grants |
-| --- | --- |
-| `reports.read` | Reveals the Delegated Reports menu + page |
+| Key              | Grants                                          |
+| ---------------- | ----------------------------------------------- |
+| `reports.read`   | Reveals the Delegated Reports menu + page       |
 | `reports.export` | Renders the export button on the delegated page |
 
 Registered in:
@@ -86,13 +86,13 @@ Owner path is untouched: `/reports` keeps using `/api/seller/reports/orders`. Th
 
 ## Reuse summary
 
-| Reused unchanged | New |
-| --- | --- |
-| `SellerReportTable`, `SellerReportFiltersBar` | `DelegatedReportsPage` (thin shell) |
-| `exportSellerOrdersToExcel`, `downloadExcel`, `buildExportFilename` | `useDelegatedReports` hook |
-| `SellerReportOrder` / filter domain types | `fetchDelegatedReportOrders` |
-| `orders_delegate_read` + receipt RLS | nav item + 2 permission keys + catalog migration |
-| `AccessDeniedState`, `useCurrentUserPermissions` | i18n keys |
+| Reused unchanged                                                    | New                                              |
+| ------------------------------------------------------------------- | ------------------------------------------------ |
+| `SellerReportTable`, `SellerReportFiltersBar`                       | `DelegatedReportsPage` (thin shell)              |
+| `exportSellerOrdersToExcel`, `downloadExcel`, `buildExportFilename` | `useDelegatedReports` hook                       |
+| `SellerReportOrder` / filter domain types                           | `fetchDelegatedReportOrders`                     |
+| `orders_delegate_read` + receipt RLS                                | nav item + 2 permission keys + catalog migration |
+| `AccessDeniedState`, `useCurrentUserPermissions`                    | i18n keys                                        |
 
 ---
 
@@ -101,12 +101,14 @@ Owner path is untouched: `/reports` keeps using `/api/seller/reports/orders`. Th
 Write failing Vitest tests first, then implement.
 
 **Unit (Vitest):**
+
 - `PaymentsSidebarNav`: shows `delegatedReports` iff `grantedKeys` includes `reports.read`; hidden otherwise. (extend existing sidebar test)
 - `fetchDelegatedReportOrders`: given `seller_admins` across two sellers, returns only delegated products' line items; drops orders with no delegated items; applies filters; empty when no delegations. (mock Supabase client)
 - `DelegatedReportsPage`: renders `AccessDeniedState` without `reports.read`; export button hidden without `reports.export`, visible with it; loading/error/empty states.
 - Export reuse: assert `exportSellerOrdersToExcel` output over delegated orders matches the seller format (no shape change).
 
 **E2E (Playwright, `apps/payments/e2e/delegated-reports.spec.ts`)**, mirroring `seller-reports.spec.ts` + `apps/auth/e2e/delegated-admin-flow.spec.ts`:
+
 - Delegate with `reports.read` sees the Delegated Reports menu, opens the page, sees rows for the delegated product only (not the seller's other products).
 - Delegate with `reports.export` downloads a `.xls`; assert the download event/filename.
 - Delegate without the permissions: no menu item, page shows access denied.

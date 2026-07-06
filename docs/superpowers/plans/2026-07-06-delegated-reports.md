@@ -26,9 +26,11 @@
 Register the two new keys in the Supabase `permissions` + `resource_permissions` catalog so they appear in the admin permission editor and are recognized platform-wide. Mirrors `supabase/migrations/20260421000000_admin_reports_permission.sql`.
 
 **Files:**
+
 - Create: `supabase/migrations/20260706000000_delegate_reports_permissions.sql`
 
 **Interfaces:**
+
 - Produces: catalog rows for keys `reports.read` and `reports.export` (referenced by later tasks as delegatable keys).
 
 - [ ] **Step 1: Write the migration**
@@ -88,9 +90,11 @@ Expected: reset completes without error and the new migration is listed among ap
 - [ ] **Step 3: Verify the keys exist**
 
 Run (via Supabase SQL editor or `pnpm supabase` psql):
+
 ```sql
 select key, depends_on from public.permissions where key in ('reports.read','reports.export');
 ```
+
 Expected: two rows — `reports.read | orders.read` and `reports.export | reports.read`.
 
 - [ ] **Step 4: Commit** (only if the user has authorized committing)
@@ -107,6 +111,7 @@ git commit -m "feat(db): add reports.read/reports.export delegate permissions [G
 Extend the delegate permission set so a seller can grant these when delegating a product, and add them to the admin permission-group editor. The studio `AddDelegateForm` renders one checkbox per `DELEGATE_PERMISSIONS` entry and derives its label from `permissions.<key with dots as underscores>`, so adding the constant + i18n labels wires the UI automatically.
 
 **Files:**
+
 - Modify: `apps/studio/src/features/seller-admins/domain/types.ts` (extend `DelegatePermission` union)
 - Modify: `apps/studio/src/features/seller-admins/domain/constants.ts` (extend `DELEGATE_PERMISSIONS`)
 - Modify: `apps/studio/src/shared/infrastructure/i18n/messages/en.json` (`sellerAdmins.permissions.*`)
@@ -115,6 +120,7 @@ Extend the delegate permission set so a seller can grant these when delegating a
 - Test: `apps/studio/src/features/seller-admins/domain/validation.test.ts` (create)
 
 **Interfaces:**
+
 - Consumes: keys `reports.read`, `reports.export` from Task 1.
 - Produces: `DelegatePermission` now includes `"reports.read" | "reports.export"`; `DELEGATE_PERMISSIONS` array contains all four keys.
 
@@ -240,10 +246,12 @@ git commit -m "feat(delegates): make reports.read/reports.export delegatable [GH
 The only new logic. Reads the caller's `seller_admins` delegations that grant `reports.read`, pulls those sellers' orders via the existing RLS, keeps only delegated products' line items, and maps into the identical `SellerReportOrder` shape. Mirrors `fetchAssignedOrders`.
 
 **Files:**
+
 - Create: `apps/payments/src/features/reports/infrastructure/delegatedReportsApi.ts`
 - Test: `apps/payments/src/features/reports/infrastructure/delegatedReportsApi.test.ts`
 
 **Interfaces:**
+
 - Consumes: `SellerReportFilters`, `SellerReportOrder`, `SellerReportOrdersResponse` from `@/features/reports/domain/types`; `SupabaseClient` from `@/shared/domain/types`; `getReceiptUrl` from `@/shared/infrastructure/receiptStorage`.
 - Produces: `fetchDelegatedReportOrders(supabase: SupabaseClient, filters: SellerReportFilters): Promise<SellerReportOrdersResponse>`.
 
@@ -331,8 +339,22 @@ describe("fetchDelegatedReportOrders", () => {
           transfer_number: "T1",
           receipt_url: "o1/receipt.png",
           order_items: [
-            { id: "i1", product_id: "p1", quantity: 1, unit_price: 10, currency: "USD", products: { name_en: "Delegated" } },
-            { id: "i2", product_id: "p2", quantity: 2, unit_price: 10, currency: "USD", products: { name_en: "Other" } },
+            {
+              id: "i1",
+              product_id: "p1",
+              quantity: 1,
+              unit_price: 10,
+              currency: "USD",
+              products: { name_en: "Delegated" },
+            },
+            {
+              id: "i2",
+              product_id: "p2",
+              quantity: 2,
+              unit_price: 10,
+              currency: "USD",
+              products: { name_en: "Other" },
+            },
           ],
         },
         {
@@ -346,11 +368,20 @@ describe("fetchDelegatedReportOrders", () => {
           transfer_number: null,
           receipt_url: null,
           order_items: [
-            { id: "i3", product_id: "p2", quantity: 2, unit_price: 10, currency: "USD", products: { name_en: "Other" } },
+            {
+              id: "i3",
+              product_id: "p2",
+              quantity: 2,
+              unit_price: 10,
+              currency: "USD",
+              products: { name_en: "Other" },
+            },
           ],
         },
       ],
-      user_profiles: [{ id: "b1", email: "buyer@example.com", display_name: "Buyer One" }],
+      user_profiles: [
+        { id: "b1", email: "buyer@example.com", display_name: "Buyer One" },
+      ],
     });
 
     const res = await fetchDelegatedReportOrders(supabase, NO_FILTERS);
@@ -516,10 +547,12 @@ export async function fetchDelegatedReportOrders(
     .order("created_at", { ascending: false });
 
   if (filters.dateFrom) query = query.gte("created_at", filters.dateFrom);
-  if (filters.dateTo) query = query.lte("created_at", `${filters.dateTo}${END_OF_DAY}`);
+  if (filters.dateTo)
+    query = query.lte("created_at", `${filters.dateTo}${END_OF_DAY}`);
   if (filters.status) query = query.eq("payment_status", filters.status);
   if (filters.buyerId) query = query.eq("user_id", filters.buyerId);
-  if (filters.currency) query = query.eq("currency", filters.currency.toUpperCase());
+  if (filters.currency)
+    query = query.eq("currency", filters.currency.toUpperCase());
   if (filters.amountMin != null) query = query.gte("total", filters.amountMin);
   if (filters.amountMax != null) query = query.lte("total", filters.amountMax);
 
@@ -571,10 +604,12 @@ git commit -m "feat(reports): add delegated report data source [GH-000]"
 Mirrors `useSellerReports` but fetches through `fetchDelegatedReportOrders` with the client Supabase instance. Same nuqs filter state, same return shape, so the page can reuse the seller report children.
 
 **Files:**
+
 - Create: `apps/payments/src/features/reports/application/hooks/useDelegatedReports.ts`
 - Test: `apps/payments/src/features/reports/application/hooks/useDelegatedReports.test.tsx`
 
 **Interfaces:**
+
 - Consumes: `fetchDelegatedReportOrders` (Task 3); `useSupabase` from `shared`; `sellerReportsSearchParams` and `SELLER_REPORTS_QUERY_KEY`-style key.
 - Produces: `useDelegatedReports(): { orders, total, isLoading, isError, filters, setFilters }` (same shape as `useSellerReports`).
 
@@ -729,6 +764,7 @@ git commit -m "feat(reports): add useDelegatedReports hook [GH-000]"
 Thin page composing the SAME children as `SellerReportsPage` (`SellerReportFiltersBar`, `SellerReportTable`, `exportSellerOrdersToExcel`). Gated on `reports.read` via `useCurrentUserPermissions` + `AccessDeniedState` (same as `AssignedOrdersPage`); export button renders only with `reports.export`.
 
 **Files:**
+
 - Create: `apps/payments/src/features/reports/presentation/pages/DelegatedReportsPage.tsx`
 - Create: `apps/payments/src/features/reports/presentation/pages/DelegatedReportsPage.test.tsx`
 - Modify: `apps/payments/src/features/reports/index.ts` (export `DelegatedReportsPage`)
@@ -737,6 +773,7 @@ Thin page composing the SAME children as `SellerReportsPage` (`SellerReportFilte
 - Modify: `apps/payments/src/shared/infrastructure/i18n/messages/es.json` (`delegatedReports.*`)
 
 **Interfaces:**
+
 - Consumes: `useDelegatedReports` (Task 4); `useCurrentUserPermissions` from `auth/client`; `SellerReportFiltersBar`, `SellerReportTable`, `exportSellerOrdersToExcel`, `downloadExcel`, `buildExportFilename` from the reports feature; `AccessDeniedState` from `@/shared/presentation/components/AccessDeniedState`.
 - Produces: `DelegatedReportsPage` React component.
 
@@ -1020,12 +1057,14 @@ git commit -m "feat(reports): add delegated reports page and route [GH-000]"
 Add the `delegatedReports` item to the existing `delegate` section, gated on `reports.read` (mode `any`), and relabel the section so SELLER (your stuff) vs DELEGATE (someone else's) reads clearly.
 
 **Files:**
+
 - Modify: `apps/payments/src/shared/presentation/components/PaymentsSidebarNav.tsx`
 - Modify: `apps/payments/src/shared/infrastructure/i18n/messages/en.json` (`sidebar.delegate`, `sidebar.delegatedReports`)
 - Modify: `apps/payments/src/shared/infrastructure/i18n/messages/es.json` (same keys)
 - Test: `apps/payments/src/shared/presentation/components/PaymentsSidebar.test.tsx` (extend)
 
 **Interfaces:**
+
 - Consumes: key `reports.read` from Task 1; `matchesPermissions` from `auth/client`.
 - Produces: sidebar renders `sidebar-delegatedReports` link when `reports.read` is granted.
 
@@ -1094,9 +1133,11 @@ git commit -m "feat(nav): add delegated reports to DELEGATE section [GH-000]"
 End-to-end coverage in the payments app, mirroring `apps/payments/e2e/seller-reports.spec.ts` and `apps/auth/e2e/delegated-admin-flow.spec.ts`. Reuse those files' seeding/login helpers verbatim — do not invent new auth flows.
 
 **Files:**
+
 - Create: `apps/payments/e2e/delegated-reports.spec.ts`
 
 **Interfaces:**
+
 - Consumes: the running payments app and the shared e2e helpers from `apps/auth/e2e/helpers/session` (`createTestUser`, `injectSession`, `adminInsert`, `adminDelete`, `supabaseAdmin`, `SELLER_PERMISSIONS`, `TestUser`) and `apps/auth/e2e/helpers/constants` (`ELEMENT_TIMEOUT_MS`, `MUTATION_WAIT_MS`), plus `resolveE2EAppUrls` from `scripts/app-url-resolver.js` — all used verbatim by `seller-reports.spec.ts`.
 - Note: the delegated page reuses `SellerReportTable`, so its rows expose the same `seller-report-row-transfer-*` test-ids and `seller-report-table` container; the export reuses `buildExportFilename` (`my-sales-report-*.xls`).
 
@@ -1159,7 +1200,10 @@ test.describe.serial("Delegated Reports page", () => {
   let delegationId: string;
 
   test.beforeAll(async () => {
-    sellerUser = await createTestUser("delegated-reports-seller", SELLER_PERMISSIONS);
+    sellerUser = await createTestUser(
+      "delegated-reports-seller",
+      SELLER_PERMISSIONS,
+    );
     delegateUser = await createTestUser("delegated-reports-delegate", []);
     buyerUser = await createTestUser("delegated-reports-buyer", []);
 
@@ -1231,18 +1275,31 @@ test.describe.serial("Delegated Reports page", () => {
 
   test.afterAll(async () => {
     await adminDelete("seller_admins", `id=eq.${delegationId}`).catch(() => {});
-    await adminDelete("order_items", `order_id=eq.${delegatedOrderId}`).catch(() => {});
-    await adminDelete("order_items", `order_id=eq.${otherOrderId}`).catch(() => {});
+    await adminDelete("order_items", `order_id=eq.${delegatedOrderId}`).catch(
+      () => {},
+    );
+    await adminDelete("order_items", `order_id=eq.${otherOrderId}`).catch(
+      () => {},
+    );
     await adminDelete("orders", `id=eq.${delegatedOrderId}`).catch(() => {});
     await adminDelete("orders", `id=eq.${otherOrderId}`).catch(() => {});
-    await adminDelete("products", `id=eq.${delegatedProductId}`).catch(() => {});
+    await adminDelete("products", `id=eq.${delegatedProductId}`).catch(
+      () => {},
+    );
     await adminDelete("products", `id=eq.${otherProductId}`).catch(() => {});
     await supabaseAdmin.auth.admin.deleteUser(buyerUser.userId).catch(() => {});
-    await supabaseAdmin.auth.admin.deleteUser(delegateUser.userId).catch(() => {});
-    await supabaseAdmin.auth.admin.deleteUser(sellerUser.userId).catch(() => {});
+    await supabaseAdmin.auth.admin
+      .deleteUser(delegateUser.userId)
+      .catch(() => {});
+    await supabaseAdmin.auth.admin
+      .deleteUser(sellerUser.userId)
+      .catch(() => {});
   });
 
-  test("delegate sees the Delegated Reports menu and page", async ({ context, page }) => {
+  test("delegate sees the Delegated Reports menu and page", async ({
+    context,
+    page,
+  }) => {
     await injectSession(context, delegateUser);
     await page.goto(`${getPaymentsBaseUrl()}/en/delegated-reports`, {
       waitUntil: "networkidle",
@@ -1255,11 +1312,17 @@ test.describe.serial("Delegated Reports page", () => {
     });
   });
 
-  test("shows only delegated product orders, not other products", async ({ context, page }) => {
+  test("shows only delegated product orders, not other products", async ({
+    context,
+    page,
+  }) => {
     await injectSession(context, delegateUser);
-    await page.goto(`${getPaymentsBaseUrl()}/en/delegated-reports?status=approved`, {
-      waitUntil: "networkidle",
-    });
+    await page.goto(
+      `${getPaymentsBaseUrl()}/en/delegated-reports?status=approved`,
+      {
+        waitUntil: "networkidle",
+      },
+    );
     await expect(page.getByTestId("seller-report-table")).toBeVisible({
       timeout: ELEMENT_TIMEOUT_MS,
     });
@@ -1277,11 +1340,17 @@ test.describe.serial("Delegated Reports page", () => {
     ).not.toBeVisible();
   });
 
-  test("delegate with reports.export can download the XLS", async ({ context, page }) => {
+  test("delegate with reports.export can download the XLS", async ({
+    context,
+    page,
+  }) => {
     await injectSession(context, delegateUser);
-    await page.goto(`${getPaymentsBaseUrl()}/en/delegated-reports?status=approved`, {
-      waitUntil: "networkidle",
-    });
+    await page.goto(
+      `${getPaymentsBaseUrl()}/en/delegated-reports?status=approved`,
+      {
+        waitUntil: "networkidle",
+      },
+    );
     await expect(page.getByTestId("seller-report-table")).toBeVisible({
       timeout: ELEMENT_TIMEOUT_MS,
     });
@@ -1295,8 +1364,14 @@ test.describe.serial("Delegated Reports page", () => {
     expect(download.suggestedFilename()).toMatch(/\.xls$/i);
   });
 
-  test("delegate without reports.read sees no menu and no report page", async ({ context, page }) => {
-    const noReportDelegate = await createTestUser("delegated-reports-noperm", []);
+  test("delegate without reports.read sees no menu and no report page", async ({
+    context,
+    page,
+  }) => {
+    const noReportDelegate = await createTestUser(
+      "delegated-reports-noperm",
+      [],
+    );
     const noReportDelegation = await adminInsert("seller_admins", {
       seller_id: sellerUser.userId,
       admin_user_id: noReportDelegate.userId,
@@ -1312,7 +1387,10 @@ test.describe.serial("Delegated Reports page", () => {
       await expect(page.getByTestId("sidebar-delegatedReports")).toHaveCount(0);
       await expect(page.getByTestId("delegated-reports-page")).toHaveCount(0);
     } finally {
-      await adminDelete("seller_admins", `id=eq.${noReportDelegation.id}`).catch(() => {});
+      await adminDelete(
+        "seller_admins",
+        `id=eq.${noReportDelegation.id}`,
+      ).catch(() => {});
       await supabaseAdmin.auth.admin
         .deleteUser(noReportDelegate.userId)
         .catch(() => {});
@@ -1342,6 +1420,7 @@ git commit -m "test(e2e): cover delegated reports flow [GH-000]"
 - [ ] **Step 1: Format + lint + typecheck + unit tests + build**
 
 Run, in order:
+
 ```bash
 pnpm format
 pnpm lint
@@ -1349,6 +1428,7 @@ pnpm typecheck
 pnpm test
 pnpm build
 ```
+
 Expected: all pass. Fix any failures before finishing.
 
 - [ ] **Step 2: Confirm i18n key parity**
@@ -1370,4 +1450,7 @@ git commit -m "chore: format and lint fixes for delegated reports [GH-000]"
 - **`pnpm test --filter <app>`** scopes Vitest to one app; if the repo's runner differs, fall back to `pnpm test -- <file>` from the app directory.
 - **Do not touch** `SellerReportsPage`, `exportSellerOrdersToExcel.ts`, or the `/api/seller/reports/orders` route — the owner flow must stay byte-for-byte unchanged.
 - **Branch/PR:** create work on a `feat/GH-XXX_Delegated-Reports` branch per the repo git-workflow; target `develop`. Do not create the branch or PR without the user asking.
+
+```
+
 ```

@@ -4,10 +4,10 @@
 
 ### Protected Branches
 
-| Branch    | Purpose               | Protection                            |
-| --------- | --------------------- | ------------------------------------- |
-| `main`    | Production-ready code | Require PR + checks, no direct push   |
-| `develop` | Integration branch    | Require PR + checks, no force push    |
+| Branch    | Purpose               | Protection                          |
+| --------- | --------------------- | ----------------------------------- |
+| `main`    | Production-ready code | Require PR + checks, no direct push |
+| `develop` | Integration branch    | Require PR + checks, no force push  |
 
 ### Working Branches
 
@@ -344,15 +344,15 @@ PR title: chore(release): v2026.04.22.1 [GH-152]
 
 #### Current `main` Protection (Configured)
 
-| Setting                | Value           |
-| ---------------------- | --------------- |
-| Required approvals     | 0               |
-| Dismiss stale reviews  | Yes             |
+| Setting                | Value                                                           |
+| ---------------------- | --------------------------------------------------------------- |
+| Required approvals     | 0                                                               |
+| Dismiss stale reviews  | Yes                                                             |
 | Required status checks | `Branch Target`, `Quality Checks`, `Unit Tests`, `Docker Build` |
-| Require up-to-date     | Yes             |
-| Enforce on admins      | Yes             |
-| Force pushes           | Disabled        |
-| Deletions              | Disabled        |
+| Require up-to-date     | Yes                                                             |
+| Enforce on admins      | Yes                                                             |
+| Force pushes           | Disabled                                                        |
+| Deletions              | Disabled                                                        |
 
 #### Protect `develop` Branch
 
