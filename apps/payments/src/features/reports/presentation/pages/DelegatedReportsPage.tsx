@@ -8,12 +8,12 @@ import { tid } from "shared";
 
 import { useDelegatedReports } from "@/features/reports/application/hooks/useDelegatedReports";
 import {
-  buildExportFilename,
+  buildDelegatedExportFilename,
   downloadExcel,
-  exportSellerOrdersToExcel,
-} from "@/features/reports/application/utils/exportSellerOrdersToExcel";
+  exportDelegatedOrdersToExcel,
+} from "@/features/reports/application/utils/exportDelegatedOrdersToExcel";
+import { DelegatedReportTable } from "@/features/reports/presentation/components/DelegatedReportTable";
 import { SellerReportFiltersBar } from "@/features/reports/presentation/components/SellerReportFiltersBar";
-import { SellerReportTable } from "@/features/reports/presentation/components/SellerReportTable";
 import { AccessDeniedState } from "@/shared/presentation/components/AccessDeniedState";
 
 const READ_PERMISSION = ["reports.read"] as const;
@@ -38,12 +38,12 @@ export function DelegatedReportsPage() {
     if (isExporting) return;
     setIsExporting(true);
     try {
-      const content = exportSellerOrdersToExcel(orders, filters);
-      downloadExcel(content, buildExportFilename());
+      const content = exportDelegatedOrdersToExcel(orders);
+      downloadExcel(content, buildDelegatedExportFilename());
     } finally {
       setIsExporting(false);
     }
-  }, [filters, isExporting, orders]);
+  }, [isExporting, orders]);
 
   if (!hasPermission([...READ_PERMISSION])) {
     return (
@@ -77,7 +77,7 @@ export function DelegatedReportsPage() {
         >
           {t("totalOrders", { count: total })}
         </p>
-        <SellerReportTable orders={orders} />
+        <DelegatedReportTable orders={orders} />
       </>
     );
   }

@@ -313,7 +313,20 @@
     "error": "Failed to load report",
     "totalOrders": "{count} orders",
     "exportExcel": "Export Excel",
-    "exporting": "Exporting…"
+    "exporting": "Exporting…",
+    "noResults": "No orders match the selected filters",
+    "table": {
+      "orderId": "Order ID",
+      "date": "Date",
+      "status": "Status",
+      "buyerEmail": "Buyer Email",
+      "buyerName": "Buyer Name",
+      "product": "Product",
+      "qty": "Qty",
+      "unitPrice": "Unit Price",
+      "currency": "Currency",
+      "subtotal": "Delegated Subtotal"
+    }
   },
   "common": {
     "loading": "Loading...",

@@ -2,20 +2,23 @@
 import type { Database } from "api/supabase/types";
 
 import type {
+  DelegatedReportOrder,
+  DelegatedReportOrdersResponse,
   SellerReportFilters,
-  SellerReportOrder,
-  SellerReportOrdersResponse,
 } from "@/features/reports/domain/types";
 import type { SupabaseClient } from "@/shared/domain/types";
-import { getReceiptUrl } from "@/shared/infrastructure/receiptStorage";
 
 const REPORTS_READ = "reports.read";
 
 // Single string literal (not concatenated) so Postgrest's generic select-type
 // inference can parse it; string concatenation via `+` widens to `string`
 // and breaks the type-level column extraction.
+//
+// Deliberately excludes `total`, `transfer_number`, and `receipt_url`: a
+// delegate must never see order-level totals or buyer payment artifacts for
+// products outside their delegation.
 const ORDER_SELECT =
-  "id,seller_id,user_id,created_at,payment_status,total,currency,transfer_number,receipt_url,order_items(id,product_id,quantity,unit_price,currency,products(name_en))";
+  "id,seller_id,user_id,created_at,payment_status,currency,order_items(id,product_id,quantity,unit_price,currency,products(name_en))";
 
 type CurrencyCode = Database["public"]["Enums"]["currency_code"];
 
@@ -42,10 +45,7 @@ type OrderRow = {
   user_id: string;
   created_at: string;
   payment_status: string;
-  total: number;
   currency: string;
-  transfer_number: string | null;
-  receipt_url: string | null;
   order_items: ItemRow[];
 };
 
@@ -73,7 +73,7 @@ function buildDelegatedProductMap(
   return map;
 }
 
-function mapItem(item: ItemRow): SellerReportOrder["items"][number] {
+function mapItem(item: ItemRow): DelegatedReportOrder["items"][number] {
   return {
     id: item.id,
     product_id: item.product_id,
@@ -84,35 +84,29 @@ function mapItem(item: ItemRow): SellerReportOrder["items"][number] {
   };
 }
 
-async function mapOrder(
-  supabase: SupabaseClient,
+function mapOrder(
   row: OrderRow,
   delegatedProductIds: Set<string>,
   profileMap: Map<string, ProfileRow>,
-): Promise<SellerReportOrder | null> {
+): DelegatedReportOrder | null {
   const items = row.order_items
     .filter((item) => delegatedProductIds.has(item.product_id))
     .map((item) => mapItem(item));
   if (items.length === 0) return null;
 
-  let signedReceiptUrl: string | null = null;
-  if (row.receipt_url) {
-    try {
-      signedReceiptUrl = await getReceiptUrl(supabase, row.receipt_url);
-    } catch {
-      signedReceiptUrl = null;
-    }
-  }
+  const delegatedSubtotal = items.reduce(
+    (sum, item) => sum + item.unit_price * item.quantity,
+    0,
+  );
 
   const profile = profileMap.get(row.user_id);
   return {
     id: row.id,
     created_at: row.created_at,
-    payment_status: row.payment_status as SellerReportOrder["payment_status"],
-    total: row.total,
+    payment_status:
+      row.payment_status as DelegatedReportOrder["payment_status"],
+    delegated_subtotal: delegatedSubtotal,
     currency: row.currency,
-    transfer_number: row.transfer_number,
-    receipt_url: signedReceiptUrl,
     buyer_id: row.user_id,
     buyer_email: profile?.email ?? "",
     buyer_display_name: profile?.display_name ?? null,
@@ -123,7 +117,7 @@ async function mapOrder(
 export async function fetchDelegatedReportOrders(
   supabase: SupabaseClient,
   filters: SellerReportFilters,
-): Promise<SellerReportOrdersResponse> {
+): Promise<DelegatedReportOrdersResponse> {
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -159,8 +153,6 @@ export async function fetchDelegatedReportOrders(
       "currency",
       filters.currency.toUpperCase() as CurrencyCode,
     );
-  if (filters.amountMin != null) query = query.gte("total", filters.amountMin);
-  if (filters.amountMax != null) query = query.lte("total", filters.amountMax);
 
   const { data: orderData, error: ordersError } = await query;
   throwIfError(ordersError);
@@ -179,17 +171,33 @@ export async function fetchDelegatedReportOrders(
   const profileMap = new Map<string, ProfileRow>();
   for (const p of (profiles ?? []) as ProfileRow[]) profileMap.set(p.id, p);
 
-  const mapped = await Promise.all(
-    rows.map((row) =>
-      mapOrder(
-        supabase,
-        row,
-        productMap.get(row.seller_id) ?? new Set<string>(),
-        profileMap,
-      ),
+  const mapped = rows.map((row) =>
+    mapOrder(
+      row,
+      productMap.get(row.seller_id) ?? new Set<string>(),
+      profileMap,
     ),
   );
-  const orders = mapped.filter((o): o is SellerReportOrder => o !== null);
+  const withDelegatedItems = mapped.filter(
+    (o): o is DelegatedReportOrder => o !== null,
+  );
+
+  // Amount filters apply to the delegated subtotal (what the delegate can
+  // actually see), not the order's full total, so they must run app-side
+  // after the subtotal is computed.
+  const orders = withDelegatedItems.filter((order) => {
+    if (
+      filters.amountMin != null &&
+      order.delegated_subtotal < filters.amountMin
+    )
+      return false;
+    if (
+      filters.amountMax != null &&
+      order.delegated_subtotal > filters.amountMax
+    )
+      return false;
+    return true;
+  });
 
   return { orders, total: orders.length };
 }

@@ -313,7 +313,20 @@
     "error": "No se pudo cargar el reporte",
     "totalOrders": "{count} órdenes",
     "exportExcel": "Exportar Excel",
-    "exporting": "Exportando…"
+    "exporting": "Exportando…",
+    "noResults": "Ninguna orden coincide con los filtros seleccionados",
+    "table": {
+      "orderId": "ID de orden",
+      "date": "Fecha",
+      "status": "Estado",
+      "buyerEmail": "Correo del comprador",
+      "buyerName": "Nombre del comprador",
+      "product": "Producto",
+      "qty": "Cant.",
+      "unitPrice": "Precio unitario",
+      "currency": "Moneda",
+      "subtotal": "Subtotal delegado"
+    }
   },
   "common": {
     "loading": "Cargando...",

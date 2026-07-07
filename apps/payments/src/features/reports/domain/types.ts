@@ -39,3 +39,20 @@ export interface SellerReportOrdersResponse {
   orders: SellerReportOrder[];
   total: number;
 }
+
+export interface DelegatedReportOrder {
+  id: string;
+  created_at: string;
+  payment_status: OrderStatus;
+  delegated_subtotal: number;
+  currency: string;
+  buyer_id: string;
+  buyer_email: string;
+  buyer_display_name: string | null;
+  items: SellerReportOrderItem[];
+}
+
+export interface DelegatedReportOrdersResponse {
+  orders: DelegatedReportOrder[];
+  total: number;
+}

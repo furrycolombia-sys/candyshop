@@ -31,9 +31,12 @@ vi.mock(
   }),
 );
 
-vi.mock("@/features/reports/presentation/components/SellerReportTable", () => ({
-  SellerReportTable: () => <div data-testid="report-table" />,
-}));
+vi.mock(
+  "@/features/reports/presentation/components/DelegatedReportTable",
+  () => ({
+    DelegatedReportTable: () => <div data-testid="delegated-report-table" />,
+  }),
+);
 
 vi.mock("@/shared/presentation/components/AccessDeniedState", () => ({
   AccessDeniedState: () => <div data-testid="access-denied" />,
@@ -55,7 +58,7 @@ describe("DelegatedReportsPage", () => {
       keys.includes("reports.read"),
     );
     render(<DelegatedReportsPage />);
-    expect(screen.getByTestId("report-table")).toBeInTheDocument();
+    expect(screen.getByTestId("delegated-report-table")).toBeInTheDocument();
     expect(
       screen.queryByTestId("delegated-reports-export-button"),
     ).not.toBeInTheDocument();
