@@ -121,3 +121,39 @@ Write failing Vitest tests first, then implement.
 - New migration applies via the standard flow (add to `supabase/migrations/`).
 - `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm build`, then E2E.
 - i18n keys synchronized across payments `en.json`/`es.json` (`pnpm lint:env` unaffected; these are message files).
+
+---
+
+## Revision 2026-07-07 — Fully product-scoped (supersedes "reuse the exact owner report")
+
+Live E2E against real RLS revealed the original "reuse the owner report verbatim"
+design leaked data about non-delegated products, and that the delegate could not
+even read line items. Two changes were made, and security was chosen over reuse
+where they conflicted:
+
+1. **New RLS policy `order_items_delegate_read`** (`supabase/migrations/20260706010000_*`):
+   the existing `order_items_read` only grants the order's buyer or seller — a delegate
+   is neither, so the report rendered empty. The new policy is **product-scoped**
+   (`sa.product_id = order_items.product_id`): a delegate reads only the line items for
+   products delegated to them. `orders_delegate_read` stays seller-level because the
+   approve/decline flow shares it and needs whole-order visibility; a single order row
+   cannot be RLS-scoped per product.
+
+2. **The report is product-scoped end-to-end, not "the same as the owner's".** The
+   delegate no longer sees the order-level `total`, the buyer's whole-order `receipt_url`,
+   or `transfer_number` (all of which span non-delegated products). Instead:
+   - A dedicated `DelegatedReportOrder` domain type with **no** `receipt_url`/`transfer_number`
+     fields and an explicit `delegated_subtotal` (Σ of the delegate's line items).
+   - `fetchDelegatedReportOrders` computes `delegated_subtotal`, resolves no receipt, and
+     applies amount filters app-side against the subtotal.
+   - Dedicated `DelegatedReportTable` + `exportDelegatedOrdersToExcel` (filename
+     `delegated-report-*.xls`) that never render/emit receipt or transfer columns. The
+     owner's `SellerReportTable`/`exportSellerOrdersToExcel`/`SellerReportsPage` remain
+     byte-for-byte unchanged.
+   - Buyer name/email is intentionally kept (legitimately the delegate's product buyer).
+
+   Net: item rows are product-scoped by RLS **and** app code; aggregates are recomputed
+   from delegated items only; whole-order payment artifacts (receipt, transfer, total)
+   are never exposed to a delegate. Verified by unit tests (subtotal = 50000 for an order
+   whose real total is 80000) and a live headed E2E (delegated row shown, non-delegated
+   row on the same order absent, no transfer/receipt).
