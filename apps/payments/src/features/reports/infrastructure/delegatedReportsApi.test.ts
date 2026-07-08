@@ -269,4 +269,99 @@ describe("fetchDelegatedReportOrders", () => {
     expect(included.orders).toHaveLength(1);
     expect(included.orders[0].delegated_subtotal).toBe(50_000);
   });
+
+  it("returns empty when there is no authenticated user", async () => {
+    const supabase = {
+      auth: { getUser: vi.fn(async () => ({ data: { user: null } })) },
+      from: vi.fn(),
+    } as never;
+    const res = await fetchDelegatedReportOrders(supabase, NO_FILTERS);
+    expect(res).toEqual({ orders: [], total: 0 });
+  });
+
+  it("applies date, status, buyer, and currency filters at the query level", async () => {
+    const supabase = makeSupabase({
+      seller_admins: [
+        { seller_id: "s1", product_id: "p1", permissions: ["reports.read"] },
+      ],
+      orders: [
+        {
+          id: "o1",
+          seller_id: "s1",
+          user_id: "b1",
+          created_at: "2026-06-15T00:00:00Z",
+          payment_status: "approved",
+          total: 100,
+          currency: "USD",
+          order_items: [
+            {
+              id: "i1",
+              product_id: "p1",
+              quantity: 1,
+              unit_price: 25_000,
+              currency: "USD",
+              products: { name_en: "Delegated" },
+            },
+          ],
+        },
+      ],
+      user_profiles: [
+        { id: "b1", email: "buyer@example.com", display_name: "Buyer One" },
+      ],
+    });
+
+    const res = await fetchDelegatedReportOrders(supabase, {
+      dateFrom: "2026-01-01",
+      dateTo: "2026-12-31",
+      status: "approved",
+      buyerId: "b1",
+      currency: "usd",
+      amountMin: null,
+      amountMax: null,
+    });
+
+    expect(res.orders).toHaveLength(1);
+    expect(res.orders[0].delegated_subtotal).toBe(25_000);
+  });
+
+  it("falls back gracefully when product name, buyer profile, or permissions are missing", async () => {
+    const supabase = makeSupabase({
+      seller_admins: [
+        { seller_id: "s1", product_id: "p1", permissions: ["reports.read"] },
+        // permissions null → must be skipped via the `?? []` fallback
+        { seller_id: "s2", product_id: "p9", permissions: null },
+      ],
+      orders: [
+        {
+          id: "o1",
+          seller_id: "s1",
+          user_id: "bX",
+          created_at: "2026-01-01T00:00:00Z",
+          payment_status: "approved",
+          total: 100,
+          currency: "USD",
+          order_items: [
+            {
+              id: "i1",
+              product_id: "p1",
+              quantity: 1,
+              unit_price: 10,
+              currency: "USD",
+              // products null → product_name falls back to product_id
+              products: null,
+            },
+          ],
+        },
+      ],
+      // no profile for bX → buyer_email "" and buyer_display_name null
+      user_profiles: [],
+    });
+
+    const res = await fetchDelegatedReportOrders(supabase, NO_FILTERS);
+
+    expect(res.orders).toHaveLength(1);
+    expect(res.orders[0].items[0].product_name).toBe("p1");
+    expect(res.orders[0].buyer_email).toBe("");
+    expect(res.orders[0].buyer_display_name).toBeNull();
+  });
 });
