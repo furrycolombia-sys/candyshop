@@ -35,6 +35,9 @@ export default defineConfig({
     extraHTTPHeaders,
     trace: "on-first-retry",
     screenshot: "only-on-failure",
+    // Record a video per test when E2E_VIDEO is set (e.g. E2E_VIDEO=1). Off by
+    // default so normal/CI runs stay fast. Videos land in test-results/<test>/video.webm.
+    video: process.env.E2E_VIDEO ? "on" : "off",
     navigationTimeout: 45_000,
   },
   projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],

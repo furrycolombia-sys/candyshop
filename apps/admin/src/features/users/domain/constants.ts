@@ -105,6 +105,11 @@ export const PERMISSION_GROUPS: PermissionGroup[] = [
     labelKey: "adminReports",
     permissions: ["admin.reports"],
   },
+  {
+    key: "reports",
+    labelKey: "reports",
+    permissions: ["reports.read", "reports.export"],
+  },
 ];
 
 export const ALL_PERMISSION_KEYS: string[] = PERMISSION_GROUPS.flatMap(

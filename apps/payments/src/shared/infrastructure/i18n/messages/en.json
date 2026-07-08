@@ -35,7 +35,7 @@
   "sidebar": {
     "buyer": "Buyer",
     "seller": "Seller",
-    "delegate": "Assigned",
+    "delegate": "Delegated",
     "menu": "Payments Menu",
     "checkout": "Checkout",
     "myPurchases": "My Purchases",
@@ -43,6 +43,7 @@
     "sales": "Sales",
     "assigned": "Assigned Items",
     "reports": "My Reports",
+    "delegatedReports": "Delegated Reports",
     "collapse": "Collapse sidebar",
     "expand": "Expand sidebar"
   },
@@ -303,6 +304,28 @@
       "receipt": "Receipt",
       "hasReceipt": "View",
       "noReceipt": "—"
+    }
+  },
+  "delegatedReports": {
+    "title": "Delegated Reports",
+    "subtitle": "Sales for products delegated to you",
+    "loading": "Loading…",
+    "error": "Failed to load report",
+    "totalOrders": "{count} orders",
+    "exportExcel": "Export Excel",
+    "exporting": "Exporting…",
+    "noResults": "No orders match the selected filters",
+    "table": {
+      "orderId": "Order ID",
+      "date": "Date",
+      "status": "Status",
+      "buyerEmail": "Buyer Email",
+      "buyerName": "Buyer Name",
+      "product": "Product",
+      "qty": "Qty",
+      "unitPrice": "Unit Price",
+      "currency": "Currency",
+      "subtotal": "Delegated Subtotal"
     }
   },
   "common": {

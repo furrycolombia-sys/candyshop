@@ -8,6 +8,7 @@ const mockGrantedPermissions = [
   "seller_payment_methods.read",
   "orders.update",
   "receipts.read",
+  "reports.read",
 ];
 
 vi.mock("auth/client", () => ({
@@ -103,5 +104,10 @@ describe("PaymentsSidebar", () => {
     expect(
       screen.getByTestId("payments-mobile-sidebar-trigger"),
     ).toBeInTheDocument();
+  });
+
+  it("renders delegated reports link when reports.read is granted", () => {
+    render(<PaymentsSidebar />);
+    expect(screen.getByTestId("sidebar-delegatedReports")).toBeInTheDocument();
   });
 });

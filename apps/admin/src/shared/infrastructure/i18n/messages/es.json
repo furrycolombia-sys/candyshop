@@ -202,7 +202,8 @@
       "checkins": "Check-ins",
       "events": "Eventos",
       "sellerAdmins": "Gestion de Delegados",
-      "adminReports": "Reportes de Ventas"
+      "adminReports": "Reportes de Ventas",
+      "reports": "Reportes Delegados"
     },
     "lastSeen": {
       "justNow": "justo ahora",
@@ -308,6 +309,10 @@
       "read": "Ver Delegados",
       "update": "Editar Delegados",
       "delete": "Eliminar Delegados"
+    },
+    "reports": {
+      "read": "Ver Reportes Delegados",
+      "export": "Exportar Reportes Delegados"
     }
   },
   "permissionHints": {
@@ -382,6 +387,10 @@
       "read": "Permitir al usuario ver sus delegados de productos",
       "update": "Permitir al usuario editar permisos de delegados",
       "delete": "Permitir al usuario eliminar delegados de sus productos"
+    },
+    "reports": {
+      "read": "Ver el reporte de ventas de los productos delegados",
+      "export": "Exportar el reporte de ventas delegado a Excel"
     }
   },
   "reports": {

@@ -300,7 +300,9 @@
     "navigation": "Navegación del estudio",
     "permissions": {
       "orders_approve": "Aprobar Órdenes",
-      "orders_request_proof": "Solicitar Prueba"
+      "orders_request_proof": "Solicitar Prueba",
+      "reports_read": "Ver Reportes",
+      "reports_export": "Exportar Reportes"
     }
   }
 }

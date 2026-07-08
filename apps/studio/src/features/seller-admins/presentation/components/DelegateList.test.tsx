@@ -78,4 +78,19 @@ describe("DelegateList", () => {
     render(<DelegateList delegates={[mockDelegate]} onRemove={vi.fn()} />);
     expect(screen.getByText("permissions.orders_approve")).toBeInTheDocument();
   });
+
+  it("renders the avatar image when the delegate has an avatar_url", () => {
+    const withAvatar: DelegateWithProfile = {
+      ...mockDelegate,
+      admin_profile: {
+        ...mockDelegate.admin_profile,
+        avatar_url: "https://example.com/avatar.png",
+      },
+    };
+    render(<DelegateList delegates={[withAvatar]} onRemove={vi.fn()} />);
+    expect(screen.getByRole("img")).toHaveAttribute(
+      "src",
+      "https://example.com/avatar.png",
+    );
+  });
 });

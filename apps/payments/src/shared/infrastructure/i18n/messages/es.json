@@ -35,7 +35,7 @@
   "sidebar": {
     "buyer": "Comprador",
     "seller": "Vendedor",
-    "delegate": "Asignado",
+    "delegate": "Delegado",
     "menu": "Menu de Pagos",
     "checkout": "Pagar",
     "myPurchases": "Mis Compras",
@@ -43,6 +43,7 @@
     "sales": "Ventas",
     "assigned": "Items Asignados",
     "reports": "Mis Reportes",
+    "delegatedReports": "Reportes Delegados",
     "collapse": "Colapsar barra lateral",
     "expand": "Expandir barra lateral"
   },
@@ -303,6 +304,28 @@
       "receipt": "Comprobante",
       "hasReceipt": "Ver",
       "noReceipt": "—"
+    }
+  },
+  "delegatedReports": {
+    "title": "Reportes Delegados",
+    "subtitle": "Ventas de los productos delegados a ti",
+    "loading": "Cargando…",
+    "error": "No se pudo cargar el reporte",
+    "totalOrders": "{count} órdenes",
+    "exportExcel": "Exportar Excel",
+    "exporting": "Exportando…",
+    "noResults": "Ninguna orden coincide con los filtros seleccionados",
+    "table": {
+      "orderId": "ID de orden",
+      "date": "Fecha",
+      "status": "Estado",
+      "buyerEmail": "Correo del comprador",
+      "buyerName": "Nombre del comprador",
+      "product": "Producto",
+      "qty": "Cant.",
+      "unitPrice": "Precio unitario",
+      "currency": "Moneda",
+      "subtotal": "Subtotal delegado"
     }
   },
   "common": {
