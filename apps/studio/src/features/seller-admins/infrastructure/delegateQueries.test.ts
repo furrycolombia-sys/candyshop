@@ -132,6 +132,13 @@ describe("fetchDelegates", () => {
 
     expect(result).toEqual([]);
   });
+
+  it("returns empty array when supabase returns null data", async () => {
+    const supabase = createMockSupabase({ data: null });
+    const result = await fetchDelegates(supabase, "seller-1", "product-1");
+
+    expect(result).toEqual([]);
+  });
 });
 
 /* ------------------------------------------------------------------ */
@@ -164,6 +171,13 @@ describe("fetchDelegateCountsByProduct", () => {
 
   it("returns empty object when no delegates exist", async () => {
     const supabase = createMockSupabase({ data: [] });
+    const result = await fetchDelegateCountsByProduct(supabase, "seller-1");
+
+    expect(result).toEqual({});
+  });
+
+  it("returns empty object when supabase returns null data", async () => {
+    const supabase = createMockSupabase({ data: null });
     const result = await fetchDelegateCountsByProduct(supabase, "seller-1");
 
     expect(result).toEqual({});
@@ -230,6 +244,13 @@ describe("searchUsers", () => {
     await searchUsers(supabase, "test", "id");
 
     expect(supabase._chain.limit).toHaveBeenCalledWith(10);
+  });
+
+  it("returns empty array when supabase returns null data", async () => {
+    const supabase = createMockSupabase({ data: null });
+    const result = await searchUsers(supabase, "test", "id");
+
+    expect(result).toEqual([]);
   });
 
   it("throws on supabase error", async () => {

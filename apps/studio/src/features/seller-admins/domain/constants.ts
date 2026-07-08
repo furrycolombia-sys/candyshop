@@ -4,6 +4,8 @@ import type { DelegatePermission } from "./types";
 export const DELEGATE_PERMISSIONS: DelegatePermission[] = [
   "orders.approve",
   "orders.request_proof",
+  "reports.read",
+  "reports.export",
 ];
 
 /** TanStack Query key for the seller-admins list */

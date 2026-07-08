@@ -4,7 +4,11 @@ import type { Tables } from "api/supabase/types";
 export type SellerAdminRow = Tables<"seller_admins">;
 
 /** Permission keys that can be delegated to admin users */
-export type DelegatePermission = "orders.approve" | "orders.request_proof";
+export type DelegatePermission =
+  | "orders.approve"
+  | "orders.request_proof"
+  | "reports.read"
+  | "reports.export";
 
 /** A seller-admin delegation row from the `seller_admins` table */
 export interface SellerAdmin {

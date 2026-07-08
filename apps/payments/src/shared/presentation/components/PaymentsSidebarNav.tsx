@@ -46,6 +46,7 @@ const ASSIGNED_PERMISSIONS = [
   "orders.approve",
   "orders.request_proof",
 ] as const;
+const DELEGATED_REPORTS_PERMISSIONS = ["reports.read"] as const;
 
 const NAV_SECTIONS: readonly NavSection[] = [
   {
@@ -96,6 +97,13 @@ const NAV_SECTIONS: readonly NavSection[] = [
         href: "/assigned",
         icon: UserCheck,
         required: ASSIGNED_PERMISSIONS,
+        mode: "any" as const,
+      },
+      {
+        key: "delegatedReports" as const,
+        href: "/delegated-reports",
+        icon: BarChart3,
+        required: DELEGATED_REPORTS_PERMISSIONS,
         mode: "any" as const,
       },
     ],
