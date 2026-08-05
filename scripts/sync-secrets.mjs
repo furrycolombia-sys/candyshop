@@ -4,11 +4,12 @@
  *
  * Flow:
  *   1. Generate a random one-time passphrase
- *   2. Trigger the sync-secrets.yml workflow via `gh workflow run`
- *   3. Poll for workflow completion (120s timeout)
- *   4. Download the encrypted artifact
- *   5. Decrypt with the passphrase and write .secrets
- *   6. Clean up the encrypted artifact
+ *   2. Snapshot the workflow's existing run IDs
+ *   3. Trigger the sync-secrets.yml workflow via `gh workflow run`
+ *   4. Poll until a run outside that snapshot completes (120s timeout)
+ *   5. Download the encrypted artifact
+ *   6. Decrypt with the passphrase and write .secrets
+ *   7. Clean up the encrypted artifact
  *
  * Prerequisites:
  *   - `gh` CLI installed and authenticated (`gh auth status`)
@@ -98,6 +99,41 @@ function getCurrentBranch() {
   return result.stdout?.trim() || "main";
 }
 
+function listRuns() {
+  const result = gh([
+    "run",
+    "list",
+    "--workflow",
+    WORKFLOW_FILE,
+    "--limit",
+    "20",
+    "--json",
+    "databaseId,status,conclusion",
+  ]);
+  if (result.status !== 0 || !result.stdout.trim()) return null;
+  try {
+    const runs = JSON.parse(result.stdout.trim());
+    return Array.isArray(runs) ? runs : null;
+  } catch {
+    return null; // transient, the caller retries on the next poll
+  }
+}
+
+// Snapshot the runs that already exist, so the one we are about to dispatch can
+// be told apart from them. Fail rather than guess: without a baseline the poll
+// below would fall back to "newest run", which is the bug this prevents.
+function existingRunIds() {
+  const runs = listRuns();
+  if (runs === null) {
+    fail(
+      `Could not list runs for ${WORKFLOW_FILE}. ` +
+        "Check access at: gh run list --workflow " +
+        WORKFLOW_FILE,
+    );
+  }
+  return new Set(runs.map((run) => run.databaseId));
+}
+
 function triggerWorkflow(passphrase) {
   log("Triggering sync-secrets workflow...");
   const branch = getCurrentBranch();
@@ -120,57 +156,46 @@ function sleep(ms) {
   return new Promise((r) => setTimeout(r, ms));
 }
 
-async function waitForRun() {
+async function waitForRun(knownRunIds) {
   log("Waiting for workflow to complete...");
   const startedAt = Date.now();
 
-  // Give GitHub a moment to register the run
-  await sleep(3_000);
-
   while (Date.now() - startedAt < TIMEOUT_MS) {
-    const result = gh([
-      "run",
-      "list",
-      "--workflow",
-      WORKFLOW_FILE,
-      "--limit",
-      "1",
-      "--json",
-      "databaseId,status,conclusion",
-    ]);
+    // Only a run that did not exist before the dispatch can be ours. Taking the
+    // most recent run instead is a race: until GitHub registers the new run,
+    // the newest is the *previous* sync's — already completed and successful,
+    // so it is accepted immediately and its artifact downloaded. That artifact
+    // was encrypted with a different one-time passphrase, so the run appears to
+    // succeed and then dies at decrypt with "bad decrypt", which reads like a
+    // corrupt artifact rather than the wrong run.
+    const runs = listRuns();
+    const run = runs?.find(
+      (candidate) => !knownRunIds.has(candidate.databaseId),
+    );
 
-    if (result.status === 0 && result.stdout.trim()) {
-      try {
-        const runs = JSON.parse(result.stdout.trim());
-        if (runs.length > 0) {
-          const run = runs[0];
-          if (run.status === "completed") {
-            if (run.conclusion === "success") {
-              log(`Workflow completed successfully (run ${run.databaseId}).`);
-              return run.databaseId;
-            }
-            fail(
-              `Workflow failed with conclusion: ${run.conclusion}. ` +
-                `Check the run at: gh run view ${run.databaseId}`,
-            );
-          }
-          // Still in progress
-          const elapsed = Math.round((Date.now() - startedAt) / 1000);
-          process.stdout.write(
-            `\r[sync-secrets] Workflow ${run.status}... (${elapsed}s)`,
-          );
-        }
-      } catch {
-        // JSON parse error, retry
+    if (run?.status === "completed") {
+      if (run.conclusion === "success") {
+        log(`Workflow completed successfully (run ${run.databaseId}).`);
+        return run.databaseId;
       }
+      fail(
+        `Workflow failed with conclusion: ${run.conclusion}. ` +
+          `Check the run at: gh run view ${run.databaseId}`,
+      );
     }
+
+    // Still in progress
+    const elapsed = Math.round((Date.now() - startedAt) / 1000);
+    process.stdout.write(
+      `\r[sync-secrets] Workflow ${run?.status ?? "registering"}... (${elapsed}s)`,
+    );
 
     await sleep(POLL_INTERVAL_MS);
   }
 
   fail(
-    `Secrets workflow timed out after ${TIMEOUT_MS / 1000}s. ` +
-      `Check the workflow runs at: gh run list --workflow ${WORKFLOW_FILE}`,
+    `Secrets workflow timed out after ${TIMEOUT_MS / 1000}s without a new run ` +
+      `completing. Check the workflow runs at: gh run list --workflow ${WORKFLOW_FILE}`,
   );
 }
 
@@ -262,11 +287,14 @@ async function main() {
   // Generate one-time passphrase
   const passphrase = randomBytes(32).toString("hex");
 
+  // Snapshot the runs that exist before dispatch
+  const knownRunIds = existingRunIds();
+
   // Trigger workflow
   triggerWorkflow(passphrase);
 
   // Wait for completion
-  const runId = await waitForRun();
+  const runId = await waitForRun(knownRunIds);
 
   // Download and decrypt
   const { encryptedPath, downloadDir } = downloadArtifact(runId);
