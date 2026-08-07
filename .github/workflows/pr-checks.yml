@@ -203,6 +203,17 @@ jobs:
       - name: Run secretlint
         run: pnpm run secretlint
 
+      # Guards .github/workflows/sync-secrets.yml, which produces the only
+      # backup of secrets GitHub stores write-only. Both bugs it has had failed
+      # silently — the sync reported success while omitting secrets — so it is
+      # gated here rather than left to be noticed during a restore.
+      #
+      # Scoped to this one file on purpose: vitest.config.scripts.js also picks
+      # up scripts/__tests__/load-env.test.js, which is currently failing for an
+      # unrelated reason (vite dynamic import). Widen this once that is fixed.
+      - name: Run workflow config tests
+        run: pnpm run test:workflows
+
   # ============================================
   # Accessibility Check (on store/package changes)
   # ============================================
