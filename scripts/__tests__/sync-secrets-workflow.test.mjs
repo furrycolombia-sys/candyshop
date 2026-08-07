@@ -32,8 +32,47 @@ const repoRoot = resolve(fileURLToPath(import.meta.url), "../../..");
 const workflowPath = join(repoRoot, ".github/workflows/sync-secrets.yml");
 const workflow = readFileSync(workflowPath, "utf8");
 
-const hasBash =
-  spawnSync("bash", ["-c", "echo ok"], { encoding: "utf8" }).status === 0;
+/** Windows temp dirs can refuse deletion; that is not a test failure. */
+function cleanup(dir) {
+  try {
+    rmSync(dir, { recursive: true, force: true });
+  } catch {
+    /* EPERM on Windows — the OS reclaims temp itself */
+  }
+}
+
+/**
+ * Whether bash can actually run the extracted script.
+ *
+ * `bash` alone is not enough to check: on Windows PATH it is usually WSL's
+ * C:\WINDOWS\system32\bash.exe, which runs fine but cannot read Windows temp
+ * paths — the exec tests would then fail for reasons that have nothing to do
+ * with the workflow. Probe for a bash that can read a file where the tests
+ * actually write, and skip honestly when there is not one. CI is Linux, so
+ * these never skip where it counts.
+ */
+function bashUsable() {
+  let dir;
+  try {
+    dir = mkdtempSync(join(tmpdir(), "bash-probe-"));
+    const probe = join(dir, "probe");
+    writeFileSync(probe, "ok\n");
+    const res = spawnSync(
+      "bash",
+      ["-c", `cat "${probe.replace(/\\/g, "/")}"`],
+      {
+        encoding: "utf8",
+      },
+    );
+    return res.status === 0 && res.stdout.trim() === "ok";
+  } catch {
+    return false;
+  } finally {
+    if (dir) cleanup(dir);
+  }
+}
+
+const hasBash = bashUsable();
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Extraction — no YAML dependency, so this test adds no packages
@@ -69,7 +108,7 @@ function runWith(vars) {
   try {
     const script = join(dir, "step.sh");
     writeFileSync(script, runScript(workflow));
-    const res = spawnSync("bash", ["-e", script], {
+    const res = spawnSync("bash", ["-e", script.replace(/\\/g, "/")], {
       cwd: dir,
       encoding: "utf8",
       env: { PATH: process.env.PATH, ...vars },
@@ -82,7 +121,7 @@ function runWith(vars) {
     }
     return { ...res, output };
   } finally {
-    rmSync(dir, { recursive: true, force: true });
+    cleanup(dir);
   }
 }
 
@@ -124,6 +163,13 @@ describe("sync-secrets workflow: static shape", () => {
     // Not an inventory — a floor. A large silent drop is the failure mode that
     // went unnoticed for months.
     expect(envEntries(workflow).length).toBeGreaterThanOrEqual(50);
+  });
+
+  it.runIf(process.env.CI)("does not skip the exec tests in CI", () => {
+    // The exec block skips where bash cannot reach the temp dir (Windows, where
+    // `bash` is usually WSL's). That is fine locally and must never happen on
+    // CI, or the gate silently degrades to static checks only.
+    expect(hasBash).toBe(true);
   });
 
   it("keeps the credentials whose loss would be unrecoverable", () => {
