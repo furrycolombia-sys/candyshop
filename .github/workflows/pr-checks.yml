@@ -147,6 +147,13 @@ jobs:
               - 'packages/**'
               - 'package.json'
               - 'pnpm-lock.yaml'
+              # Not app code, but changing either can break production without
+              # touching apps/ at all — and docs-only skips the Security Audit
+              # job, which is where secretlint, semgrep and the sync-secrets
+              # workflow test run. A PR editing only .github/workflows/
+              # sync-secrets.yml was classified docs-only and skipped all four.
+              - 'scripts/**'
+              - '.github/workflows/**'
 
       - name: Check if docs-only
         id: check
