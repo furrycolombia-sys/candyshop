@@ -292,7 +292,7 @@ pnpm staging:public:stop     # stop
 Defined in `docker/compose.staging.yml`. First start applies all migrations and seeds the DB automatically. To reset:
 
 ```bash
-docker volume rm candyshop-staging_db-data
+docker volume rm libra-staging_db-data
 ```
 
 ### Expose dev to the internet

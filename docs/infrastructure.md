@@ -16,7 +16,7 @@ GitHub push → main
         ├─ 1. Build   — pnpm build (7 Next.js apps, standalone)
         │
         ├─ 2. Docker  — docker build + push → GHCR
-        │               (ghcr.io/furrycolombia-sys/candyshop-prod:sha + :latest)
+        │               (ghcr.io/vaoan/libra-prod:sha + :latest)
         │
         ├─ 3. Deploy  — SSH → GCP VM (candyshop-prod, us-central1-a)
         │                   └─ deploy-production.sh (nohup, survives SSH drop)
@@ -100,9 +100,9 @@ build (20 min timeout)
 1. **Sets up SSH** — writes private key and nginx-style SSH config targeting `ssh.furrycolombia.com` → GCP VM
 2. **Creates ControlMaster** — persistent connection so all SSH calls share one TCP session
 3. **Copies deploy script** — `scp scripts/deploy-production.sh` fresh from repo on every run (guarantees script changes take effect immediately)
-4. **Writes env file** — 24 secrets piped over SSH to `/tmp/.candyshop-build.env` (umask 077)
+4. **Writes env file** — 24 secrets piped over SSH to `/tmp/.libra-build.env` (umask 077)
 5. **Launches deploy** — `nohup bash /tmp/deploy-production.sh` relaunches itself detached from the SSH session so a connection drop doesn't abort it
-6. **Polls for completion** — checks `/tmp/deploy-candyshop.done` every 15s for up to 80 polls (20 min window); tails `/tmp/deploy-candyshop.log` to CI output
+6. **Polls for completion** — checks `/tmp/deploy-libra.done` every 15s for up to 80 polls (20 min window); tails `/tmp/deploy-libra.log` to CI output
 
 #### `purge-cloudflare-cache` job
 
@@ -288,7 +288,7 @@ A template is committed at `scripts/server/docker-prod.env.example`.
 | URL           | `https://deploy.furrycolombia.com/deploy`   |
 | Health        | `https://deploy.furrycolombia.com/health`   |
 | Port          | 9091                                        |
-| PM2 name      | candyshop-webhook                           |
+| PM2 name      | libra-webhook                               |
 | Script        | `/home/furrycolombia/webhook-deploy.mjs`    |
 | Deploy script | `/home/furrycolombia/deploy.sh`             |
 | Secret        | Stored in GitHub webhook settings + PM2 env |
@@ -357,31 +357,31 @@ Google credentials are also registered in Google Cloud Console with the Supabase
 
 ## Hestia CP
 
-| Property   | Value                                                       |
-| ---------- | ----------------------------------------------------------- |
-| Admin URL  | `https://server.furrycolombia.com:8083`                     |
-| Admin user | useradmin                                                   |
-| Domain     | store.furrycolombia.com (custom `candyshop` nginx template) |
-| Template   | Proxies to `127.0.0.1:9090` (Docker container)              |
+| Property   | Value                                                   |
+| ---------- | ------------------------------------------------------- |
+| Admin URL  | `https://server.furrycolombia.com:8083`                 |
+| Admin user | useradmin                                               |
+| Domain     | store.furrycolombia.com (custom `libra` nginx template) |
+| Template   | Proxies to `127.0.0.1:9090` (Docker container)          |
 
 ## File Locations on Server
 
-| Path                                       | Purpose                                              |
-| ------------------------------------------ | ---------------------------------------------------- |
-| `/home/furrycolombia/candyshop/`           | Git repo clone                                       |
-| `/home/furrycolombia/.env.prod`            | Docker env file (secrets, chmod 600)                 |
-| `/home/furrycolombia/deploy.sh`            | Deploy script (called by webhook)                    |
-| `/home/furrycolombia/webhook-deploy.mjs`   | Webhook receiver                                     |
-| `/home/furrycolombia/candyshop-nginx.conf` | Standalone nginx config (unused, Docker has its own) |
-| `/home/furrycolombia/candyshop-proxy.inc`  | Nginx proxy headers (unused, Docker has its own)     |
-| `/etc/cloudflared/config.yml`              | Cloudflare tunnel config                             |
-| `/etc/cloudflared/af85209b-*.json`         | Tunnel credentials                                   |
+| Path                                     | Purpose                                              |
+| ---------------------------------------- | ---------------------------------------------------- |
+| `/home/furrycolombia/libra/`             | Git repo clone                                       |
+| `/home/furrycolombia/.env.prod`          | Docker env file (secrets, chmod 600)                 |
+| `/home/furrycolombia/deploy.sh`          | Deploy script (called by webhook)                    |
+| `/home/furrycolombia/webhook-deploy.mjs` | Webhook receiver                                     |
+| `/home/furrycolombia/libra-nginx.conf`   | Standalone nginx config (unused, Docker has its own) |
+| `/home/furrycolombia/libra-proxy.inc`    | Nginx proxy headers (unused, Docker has its own)     |
+| `/etc/cloudflared/config.yml`            | Cloudflare tunnel config                             |
+| `/etc/cloudflared/af85209b-*.json`       | Tunnel credentials                                   |
 
 ## PM2 Processes
 
-| Name              | Script                                   | Purpose                 |
-| ----------------- | ---------------------------------------- | ----------------------- |
-| candyshop-webhook | `/home/furrycolombia/webhook-deploy.mjs` | GitHub webhook receiver |
+| Name          | Script                                   | Purpose                 |
+| ------------- | ---------------------------------------- | ----------------------- |
+| libra-webhook | `/home/furrycolombia/webhook-deploy.mjs` | GitHub webhook receiver |
 
 The 7 Next.js apps run inside the Docker container (managed by supervisord), not PM2.
 
@@ -471,7 +471,7 @@ sudo cloudflared service install
 ### 6. Clone repo and create env file
 
 ```bash
-git clone --branch main --depth 1 https://github.com/furrycolombia-sys/candyshop.git ~/candyshop
+git clone --branch main --depth 1 https://github.com/vaoan/libra.git ~/libra
 
 # Create env file OUTSIDE the repo (won't be wiped by git clean)
 cat > ~/.env.prod << 'EOF'
@@ -499,7 +499,7 @@ chmod 600 ~/.env.prod
 ### 7. Build and start the container
 
 ```bash
-cd ~/candyshop
+cd ~/libra
 docker compose -f docker/compose.yml --env-file ~/.env.prod build --no-cache
 docker compose -f docker/compose.yml --env-file ~/.env.prod up -d
 ```
@@ -510,7 +510,7 @@ docker compose -f docker/compose.yml --env-file ~/.env.prod up -d
 # Upload webhook-deploy.mjs and deploy.sh to ~/
 # Then start with PM2:
 WEBHOOK_SECRET=<secret> DEPLOY_SCRIPT=/home/furrycolombia/deploy.sh \
-  pm2 start ~/webhook-deploy.mjs --name candyshop-webhook
+  pm2 start ~/webhook-deploy.mjs --name libra-webhook
 pm2 save
 ```
 
@@ -547,20 +547,20 @@ docker ps
 docker logs candyshop-prod -f
 
 # Restart
-docker compose -f ~/candyshop/docker/compose.yml --env-file ~/.env.prod restart
+docker compose -f ~/libra/docker/compose.yml --env-file ~/.env.prod restart
 
 # Rebuild and restart (no cache)
-docker compose -f ~/candyshop/docker/compose.yml --env-file ~/.env.prod up -d --build --no-cache
+docker compose -f ~/libra/docker/compose.yml --env-file ~/.env.prod up -d --build --no-cache
 
 # Stop
-docker compose -f ~/candyshop/docker/compose.yml --env-file ~/.env.prod down
+docker compose -f ~/libra/docker/compose.yml --env-file ~/.env.prod down
 ```
 
 ### Webhook
 
 ```bash
-pm2 logs candyshop-webhook
-pm2 restart candyshop-webhook
+pm2 logs libra-webhook
+pm2 restart libra-webhook
 curl https://deploy.furrycolombia.com/health
 ```
 
@@ -590,7 +590,7 @@ To run E2E tests against the live site (with test IDs enabled):
 ```bash
 # Add to .env.prod temporarily
 echo "NEXT_PUBLIC_ENABLE_TEST_IDS=true" >> ~/.env.prod
-docker compose -f ~/candyshop/docker/compose.yml --env-file ~/.env.prod up -d --build
+docker compose -f ~/libra/docker/compose.yml --env-file ~/.env.prod up -d --build
 ```
 
 2. Run tests locally:
@@ -604,7 +604,7 @@ pnpm --filter store exec playwright test --reporter=list
 
 ```bash
 sed -i '/ENABLE_TEST_IDS/d' ~/.env.prod
-docker compose -f ~/candyshop/docker/compose.yml --env-file ~/.env.prod up -d --build --no-cache
+docker compose -f ~/libra/docker/compose.yml --env-file ~/.env.prod up -d --build --no-cache
 ```
 
 Production deploys via webhook never include test IDs.
@@ -627,7 +627,7 @@ Production deploys via webhook never include test IDs.
 | Deploy hangs / `Broken pipe` during build | Cloudflare Access timeout — deploy script handles this via `nohup + poll`; do not change                |
 | Auth redirect to localhost                | Check Supabase Site URL setting in dashboard                                                            |
 | OAuth provider error                      | Check provider is enabled in Supabase dashboard                                                         |
-| Webhook not triggering                    | `pm2 logs candyshop-webhook`                                                                            |
+| Webhook not triggering                    | `pm2 logs libra-webhook`                                                                                |
 | Build fails (disk)                        | `df -h` and `docker system prune` on server                                                             |
 
 ---

@@ -361,7 +361,7 @@ curl -sI {tunnel_url} --max-time 5 | head -1
 Wait until port 7542 responds (the tunnel script does this internally). If it times out, check Docker container logs:
 
 ```bash
-docker logs candyshop-staging --tail 50
+docker logs libra-staging --tail 50
 ```
 
 ---

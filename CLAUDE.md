@@ -22,7 +22,7 @@ This is a **pnpm workspace monorepo** — a store and payment platform for selli
 ### Structure
 
 ```
-candyshop/
+libra/
 ├── apps/                          # Applications
 │   ├── store/                     # Main storefront (REFERENCE STANDARD)
 │   ├── landing/                   # Public landing page

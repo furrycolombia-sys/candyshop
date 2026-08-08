@@ -330,9 +330,9 @@ Bus Departure — checked in by @volunteer at 8:06 AM
 
 ## QR Code System
 
-- **Master QR** per order item — encodes URL: `candyshop.furrycolombia.com/verify/{order_item_qr}`
+- **Master QR** per order item — encodes URL: `libra.furrycolombia.com/verify/{order_item_qr}`
   - Resolves to full entitlement checklist for staff
-- **Individual QR** per entitlement — encodes URL: `candyshop.furrycolombia.com/verify/{check_in_qr}`
+- **Individual QR** per entitlement — encodes URL: `libra.furrycolombia.com/verify/{check_in_qr}`
   - Resolves to single entitlement for third-party verification
 - **Transfer QR** — encodes the transfer link for physical gifting
 - On ticket transfer, all QR codes regenerate (old ones return "invalid")
