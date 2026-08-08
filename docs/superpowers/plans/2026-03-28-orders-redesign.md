@@ -556,7 +556,7 @@ git commit -m "test(e2e): update Phase 6 for checkbox-based approval confirmatio
 - [ ] **Step 1: Run unit tests**
 
 ```bash
-cd /z/Github/candystore && pnpm test
+cd /z/Github/libra && pnpm test
 ```
 
 - [ ] **Step 2: Run lint and typecheck**

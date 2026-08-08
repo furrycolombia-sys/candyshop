@@ -168,7 +168,7 @@ drop function if exists audit.get_user_email(uuid);
 
 - [ ] **Step 2: Apply migration locally**
 
-Run: `cd Z:/Github/candystore && npx supabase db reset --local`
+Run: `cd Z:/Github/libra && npx supabase db reset --local`
 Expected: All migrations apply successfully, seed data loads.
 
 - [ ] **Step 3: Verify the trigger works**

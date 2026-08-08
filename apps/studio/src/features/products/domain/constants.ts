@@ -34,7 +34,7 @@ export interface BadgeTone {
 
 const BADGE_TINT = 15;
 const DEFAULT_BADGE_FOREGROUND = "--foreground";
-const LEMON_BADGE_FOREGROUND = "--candy-text-on-lemon";
+const LEMON_BADGE_FOREGROUND = "--libra-text-on-lemon";
 
 /* eslint-disable i18next/no-literal-string -- CSS value helper, not user-facing copy */
 function badgeTone(
@@ -49,7 +49,7 @@ function badgeTone(
 /* eslint-enable i18next/no-literal-string */
 
 /**
- * Category color mapping using candy CSS variables.
+ * Category color mapping using libra CSS variables.
  * Used for badge accents in the product table.
  */
 export const CATEGORY_COLOR_MAP: Record<ProductCategory, BadgeTone> = {

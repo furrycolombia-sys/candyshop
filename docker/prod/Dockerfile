@@ -1,5 +1,5 @@
 # =============================================================================
-# Candyshop — Production runner (pre-built artifacts)
+# Libra — Production runner (pre-built artifacts)
 # Copies standalone .next/ dirs that were built by CI and rsynced to the server.
 # Used by deploy-production.sh — never builds from source on the server.
 # Build context: monorepo root (after CI has rsynced apps/*/.next/)

@@ -161,7 +161,7 @@ function generateConfig() {
 
   let template = readFileSync(templatePath, "utf-8");
 
-  const projectId = `candystore-${targetEnv}`;
+  const projectId = `libra-${targetEnv}`;
   template = template.replace("{{PROJECT_ID}}", projectId);
 
   for (const [key, value] of Object.entries(ports)) {
@@ -232,7 +232,7 @@ function runSupabase(subcommand) {
 
 if (command === "restart" || command === "start") {
   // Clean up any orphaned containers before start/restart
-  const projectId = `candystore-${targetEnv}`;
+  const projectId = `libra-${targetEnv}`;
   const orphans = getSupabaseContainers(projectId);
   if (orphans.length > 0) {
     console.log(

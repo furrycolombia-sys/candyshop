@@ -40,7 +40,7 @@ const TELEGRAM_TOKEN           = process.env.TELEGRAM_BOT_TOKEN          ?? "";
 const TELEGRAM_CHAT            = process.env.TELEGRAM_CHAT_ID             ?? "";
 const TELEGRAM_THREAD          = process.env.TELEGRAM_THREAD_ID           ?? "";
 const TELEGRAM_CRITICAL_THREAD = process.env.TELEGRAM_CRITICAL_THREAD_ID ?? TELEGRAM_THREAD;
-const CONTAINER_NAME           = process.env.CONTAINER_NAME ?? "candyshop-prod";
+const CONTAINER_NAME           = process.env.CONTAINER_NAME ?? "libra-prod";
 
 function htmlEscape(str) {
   return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");

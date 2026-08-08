@@ -247,7 +247,7 @@ foreach ($port in $ports) {
 # Redirect both stdout and stderr to a log file
 $proc = Start-Process -FilePath "cmd.exe" `
     -ArgumentList "/c pnpm dev > C:\Temp\devserver.log 2>&1" `
-    -WorkingDirectory "Z:\Github\candystore" `
+    -WorkingDirectory "Z:\Github\libra" `
     -WindowStyle Hidden -PassThru
 Write-Host "Dev server started, PID $($proc.Id)"
 ```

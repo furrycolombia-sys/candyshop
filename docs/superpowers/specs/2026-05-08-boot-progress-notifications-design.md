@@ -89,7 +89,7 @@ Elapsed: 21s
 
 ```
 ❌ studio failed to start after 120s
-   Check: docker logs candyshop-prod
+   Check: docker logs libra-prod
 ```
 
 Progress bar uses Unicode block characters: `█` (filled) and `░` (empty), 16 chars wide.

@@ -385,7 +385,7 @@ jobs:
       - name: Pull and tag pre-built app image
         run: |
           docker pull ${{ needs.docker-build.outputs.image }}
-          docker tag ${{ needs.docker-build.outputs.image }} candyshop-ci
+          docker tag ${{ needs.docker-build.outputs.image }} libra-ci
 
       - name: Get Playwright version
         id: playwright-version

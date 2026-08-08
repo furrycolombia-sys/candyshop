@@ -27,10 +27,10 @@ curl -sf https://store.furrycolombia.com/health
 
 # 2. Is the container running?
 ssh furrycolombia@192.168.2.71
-docker ps --filter name=candyshop-prod
+docker ps --filter name=libra-prod
 
 # 3. What does the container say?
-docker logs candyshop-prod --tail 50
+docker logs libra-prod --tail 50
 
 # 4. Is Cloudflare tunnel up?
 sudo systemctl status cloudflared
@@ -106,10 +106,10 @@ Run these on the server after SSH-ing in:
 docker ps -a --filter name=libra
 
 # Live logs
-docker logs candyshop-prod -f
+docker logs libra-prod -f
 
 # Last 100 lines of logs
-docker logs candyshop-prod --tail 100
+docker logs libra-prod --tail 100
 
 # Is port 9090 actually open?
 curl -sf http://localhost:9090/health
@@ -120,11 +120,11 @@ df -h
 docker system df
 
 # What's inside the running container?
-docker exec candyshop-prod ls /app/apps/store/.next/standalone/
-docker exec candyshop-prod ls /app/apps/store/.next/standalone/node_modules/next/
+docker exec libra-prod ls /app/apps/store/.next/standalone/
+docker exec libra-prod ls /app/apps/store/.next/standalone/node_modules/next/
 
 # Check if next module is real or broken symlink
-docker exec candyshop-prod ls -la /app/apps/store/.next/standalone/node_modules/ | head -20
+docker exec libra-prod ls -la /app/apps/store/.next/standalone/node_modules/ | head -20
 
 # PM2 health watcher
 pm2 status
@@ -149,7 +149,7 @@ If the container is stopped but the image is still there:
 
 ```bash
 ssh furrycolombia@192.168.2.71
-docker start candyshop-prod
+docker start libra-prod
 sleep 30
 curl -sf http://localhost:9090/health
 ```
@@ -169,16 +169,16 @@ for APP in store admin auth landing payments studio playground; do
 done
 
 # Build the image (uses docker/prod/Dockerfile + pre-built .next/ dirs)
-docker build -f docker/prod/Dockerfile -t candyshop-prod:emergency .
+docker build -f docker/prod/Dockerfile -t libra-prod:emergency .
 
 # Stop old container and start new one
-docker rm -f candyshop-prod 2>/dev/null || true
+docker rm -f libra-prod 2>/dev/null || true
 docker run -d \
-  --name candyshop-prod \
+  --name libra-prod \
   --restart unless-stopped \
   -p 9090:80 \
   --env-file ~/.env.prod \
-  candyshop-prod:emergency
+  libra-prod:emergency
 
 sleep 60
 curl -sf http://localhost:9090/health && echo "HEALTHY"
@@ -202,15 +202,15 @@ Docker keeps the 2 most recent images:
 
 ```bash
 ssh furrycolombia@192.168.2.71
-docker images | grep candyshop-prod
+docker images | grep libra-prod
 
 # Find the previous image tag (not the current one)
 PREV_TAG=$(docker images --format '{{.Repository}}:{{.Tag}}' \
-  | grep '^candyshop-prod:' | sort -r | sed -n '2p')
+  | grep '^libra-prod:' | sort -r | sed -n '2p')
 
-docker rm -f candyshop-prod 2>/dev/null || true
+docker rm -f libra-prod 2>/dev/null || true
 docker run -d \
-  --name candyshop-prod \
+  --name libra-prod \
   --restart unless-stopped \
   -p 9090:80 \
   --env-file ~/.env.prod \
@@ -414,7 +414,7 @@ push to main              │   GitHub Actions          │
                     └──────────────────┬──────────────────┘
                                        │
                     ┌──────────────────▼──────────────────┐
-                    │  Cloudflare Tunnel (candyshop-prod)   │
+                    │  Cloudflare Tunnel (libra-prod)   │
                     │  store.furrycolombia.com → :9090      │
                     │  deploy.furrycolombia.com → :9091     │
                     │  ssh.furrycolombia.com → :22          │

@@ -372,7 +372,7 @@ Create `apps/studio/src/shared/infrastructure/i18n/messages/en.json` and `es.jso
 ```json
 {
   "meta": {
-    "title": "Candy Shop - Studio",
+    "title": "Libra - Studio",
     "description": "Manage your products"
   },
   "nav": { "products": "Products", "newProduct": "New Product" },

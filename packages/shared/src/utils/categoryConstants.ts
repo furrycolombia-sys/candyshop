@@ -15,8 +15,8 @@ export interface CategoryTheme {
 
 const TINT_LIGHT = 15;
 const TINT_SUBTLE = 5;
-const DEFAULT_CATEGORY_FOREGROUND = "--candy-text";
-const LEMON_CATEGORY_FOREGROUND = "--candy-text-on-lemon";
+const DEFAULT_CATEGORY_FOREGROUND = "--libra-text";
+const LEMON_CATEGORY_FOREGROUND = "--libra-text-on-lemon";
 
 function tintedColor(accent: string, percent: number): string {
   return `color-mix(in srgb, var(${accent}) ${String(percent)}%, transparent)`;

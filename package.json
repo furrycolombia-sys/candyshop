@@ -1,5 +1,5 @@
 {
-  "name": "candyshop",
+  "name": "libra",
   "version": "2026.04.22.2",
   "private": true,
   "scripts": {
@@ -47,7 +47,7 @@
     "docker:teardown": "node scripts/docker-teardown.mjs",
     "supabase:docker": "node scripts/supabase-docker.mjs",
     "backup:prod": "node scripts/backup-prod.mjs",
-    "supabase:start": "docker rm -f supabase_vector_candystore 2>nul & node scripts/supabase-cmd.mjs start",
+    "supabase:start": "docker rm -f supabase_vector_libra 2>nul & node scripts/supabase-cmd.mjs start",
     "supabase:stop": "node scripts/supabase-cmd.mjs stop",
     "supabase:reset": "node scripts/supabase-cmd.mjs db reset",
     "prepare": "husky",

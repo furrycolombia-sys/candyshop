@@ -17,7 +17,7 @@
 
 ## Quick Links
 
-- [GitHub Issue](https://github.com/furrycolombia-sys/candyshop/issues/188)
+- [GitHub Issue](https://github.com/furrycolombia-sys/libra/issues/188)
 - [ci.yml](.github/workflows/ci.yml)
 - [deploy-production.yml](.github/workflows/deploy-production.yml)
 - [deploy-production.sh](scripts/deploy-production.sh)

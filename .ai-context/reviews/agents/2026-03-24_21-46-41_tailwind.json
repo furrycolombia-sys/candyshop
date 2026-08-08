@@ -49,7 +49,7 @@
       "severity": "info",
       "file": "apps/store/src/features/products/presentation/components/product-detail/AuthorAvatar.tsx",
       "line": 10,
-      "title": "Hardcoded candy color `bg-(--lilac)` for all author avatars",
+      "title": "Hardcoded libra color `bg-(--lilac)` for all author avatars",
       "description": "The AuthorAvatar component always uses `bg-(--lilac)` regardless of the product category or review context. While not a bug, it could be more consistent if it used the section's category theme color like other components do.",
       "rule": "single-source-of-truth.md - Semantic color usage",
       "fix": "Consider accepting a `theme` prop and using `theme.bg` for consistency with the rest of the product detail page. Low priority since the current approach is intentional design."

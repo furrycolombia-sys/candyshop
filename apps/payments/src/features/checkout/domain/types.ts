@@ -2,7 +2,7 @@
  * Checkout feature domain types.
  *
  * CartItem is the enriched checkout shape after resolving product IDs from
- * the "candystore-cart" cookie ({id, quantity}) against the backend.
+ * the "libra-cart" cookie ({id, quantity}) against the backend.
  */
 
 export interface CartItem {

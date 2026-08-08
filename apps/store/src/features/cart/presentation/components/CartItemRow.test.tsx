@@ -18,7 +18,7 @@ vi.mock("@/shared/domain/categoryConstants", () => ({
     badgeBg: "var(--pink)",
     rowEven: "color-mix(in srgb, var(--pink) 5%, transparent)",
     rowOdd: "color-mix(in srgb, var(--pink) 15%, transparent)",
-    foreground: "var(--candy-text)",
+    foreground: "var(--libra-text)",
     accent: "--pink",
   }),
 }));

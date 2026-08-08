@@ -36,13 +36,13 @@
 
 ## ◆ What Is This?
 
-**Candystore** is a production-grade, full-stack multi-seller marketplace built as a **pnpm monorepo** with seven Next.js 16 applications sharing a unified Supabase backend.
+**Libra** is a production-grade, full-stack multi-seller marketplace built as a **pnpm monorepo** with seven Next.js 16 applications sharing a unified Supabase backend.
 
 It handles the complete commerce lifecycle — product discovery, cart management, multi-seller checkout, payment method selection, order fulfillment, seller analytics, and operator administration — all from a single codebase.
 
 ### Why it exists
 
-Most e-commerce solutions are either locked-in SaaS platforms or over-engineered enterprise systems. Candystore is purpose-built for **community marketplaces**: conventions, events, clubs, and collectives where multiple independent sellers operate inside a single storefront, each with their own products, payment configurations, and order management — while the platform operator maintains granular control via a flexible permission system.
+Most e-commerce solutions are either locked-in SaaS platforms or over-engineered enterprise systems. Libra is purpose-built for **community marketplaces**: conventions, events, clubs, and collectives where multiple independent sellers operate inside a single storefront, each with their own products, payment configurations, and order management — while the platform operator maintains granular control via a flexible permission system.
 
 ---
 

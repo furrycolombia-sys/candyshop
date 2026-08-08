@@ -1,8 +1,8 @@
 -- =============================================================================
--- Core Schema: Candy Shop MVP
+-- Core Schema: Libra MVP
 -- =============================================================================
 -- Events, products, orders, check-ins, permissions, transfers
--- See: docs/superpowers/specs/2026-03-18-candy-shop-mvp-design.md
+-- See: docs/superpowers/specs/2026-03-18-libra-mvp-design.md
 -- =============================================================================
 
 -- -----------------------------------------------------------------------------

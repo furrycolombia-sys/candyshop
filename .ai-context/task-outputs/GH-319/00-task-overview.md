@@ -2,14 +2,14 @@
 
 ## Issue Details
 
-| Field        | Value                                                             |
-| ------------ | ----------------------------------------------------------------- |
-| **Issue**    | [#319](https://github.com/furrycolombia-sys/candyshop/issues/319) |
-| **Title**    | feat(store): show seller/creator info on product pages            |
-| **Type**     | feat                                                              |
-| **Labels**   | enhancement                                                       |
-| **Assignee** | —                                                                 |
-| **Created**  | 2026-05-14                                                        |
+| Field        | Value                                                         |
+| ------------ | ------------------------------------------------------------- |
+| **Issue**    | [#319](https://github.com/furrycolombia-sys/libra/issues/319) |
+| **Title**    | feat(store): show seller/creator info on product pages        |
+| **Type**     | feat                                                          |
+| **Labels**   | enhancement                                                   |
+| **Assignee** | —                                                             |
+| **Created**  | 2026-05-14                                                    |
 
 ## Description
 

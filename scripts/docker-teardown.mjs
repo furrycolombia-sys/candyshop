@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Stops and removes the candyshop Docker container and image for a given env.
+ * Stops and removes the libra Docker container and image for a given env.
  *
  * Usage:
  *   node scripts/docker-teardown.mjs [--env <name>] [--help]

@@ -15,7 +15,7 @@ vi.mock("shared", () => ({
 }));
 
 vi.mock("shared/constants/cart", () => ({
-  CART_COOKIE_KEY: "candystore-cart",
+  CART_COOKIE_KEY: "libra-cart",
 }));
 
 vi.mock("shared/constants/time", () => ({
@@ -130,7 +130,7 @@ describe("persistCartCookie", () => {
       string,
       unknown,
     ];
-    expect(key).toBe("candystore-cart");
+    expect(key).toBe("libra-cart");
     const parsed = JSON.parse(value) as { id: string; quantity: number }[];
     expect(parsed).toEqual([
       { id: "p1", quantity: 2 },
@@ -148,7 +148,7 @@ describe("persistCartCookie", () => {
 
     persistCartCookie([]);
 
-    expect(mockDeleteCookie).toHaveBeenCalledWith("candystore-cart", {
+    expect(mockDeleteCookie).toHaveBeenCalledWith("libra-cart", {
       path: "/",
     });
     expect(mockSetCookie).toHaveBeenCalledOnce();
@@ -194,8 +194,8 @@ describe("removeCartCookie", () => {
 
     expect(mockDeleteCookie).toHaveBeenCalledTimes(2);
     const calls = mockDeleteCookie.mock.calls as [string, unknown][];
-    expect(calls[0][0]).toBe("candystore-cart");
-    expect(calls[1]).toEqual(["candystore-cart", { path: "/" }]);
+    expect(calls[0][0]).toBe("libra-cart");
+    expect(calls[1]).toEqual(["libra-cart", { path: "/" }]);
   });
 
   it("calls deleteCookie only once when no domain", () => {

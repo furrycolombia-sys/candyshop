@@ -329,7 +329,7 @@ The payments app needs to read the store's cart cookie. Create a shared utility:
 apps/payments/src/shared/application/hooks/useCartFromCookie.ts
 ```
 
-This reads the `candystore-cart` cookie (same format as the store's CartContext), parses it, and groups items by `seller_id`. It also fetches seller profiles for display names.
+This reads the `libra-cart` cookie (same format as the store's CartContext), parses it, and groups items by `seller_id`. It also fetches seller profiles for display names.
 
 ---
 

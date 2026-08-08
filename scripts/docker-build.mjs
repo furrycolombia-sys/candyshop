@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Builds the candyshop Docker image for any named environment and optionally
+ * Builds the libra Docker image for any named environment and optionally
  * starts the container via docker compose.
  *
  * Usage:

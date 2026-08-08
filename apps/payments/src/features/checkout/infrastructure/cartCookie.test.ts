@@ -98,7 +98,7 @@ describe("clearCartCookie", () => {
 
   it("deletes the cart cookie with path /", () => {
     clearCartCookie();
-    expect(mockDeleteCookie).toHaveBeenCalledWith("candystore-cart", {
+    expect(mockDeleteCookie).toHaveBeenCalledWith("libra-cart", {
       path: "/",
     });
   });
@@ -118,7 +118,7 @@ describe("clearCartCookie", () => {
 
     clearCartCookie();
 
-    expect(mockDeleteCookie).toHaveBeenCalledWith("candystore-cart", {
+    expect(mockDeleteCookie).toHaveBeenCalledWith("libra-cart", {
       path: "/",
       domain: ".example.com",
     });
@@ -129,7 +129,7 @@ describe("clearCartCookie", () => {
 
     clearCartCookie();
 
-    expect(mockDeleteCookie).toHaveBeenCalledWith("candystore-cart", {
+    expect(mockDeleteCookie).toHaveBeenCalledWith("libra-cart", {
       path: "/",
     });
   });
@@ -140,7 +140,7 @@ describe("clearCartCookie", () => {
     // Should not throw and deleteCookie is still called
     clearCartCookie();
 
-    expect(mockDeleteCookie).toHaveBeenCalledWith("candystore-cart", {
+    expect(mockDeleteCookie).toHaveBeenCalledWith("libra-cart", {
       path: "/",
     });
   });

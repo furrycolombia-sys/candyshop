@@ -6,7 +6,7 @@ export {
 } from "@/shared/domain/constants";
 
 /** Session storage key used to persist checkout completion across page refreshes */
-export const CHECKOUT_COMPLETED_SESSION_KEY = "candystore-checkout-completed";
+export const CHECKOUT_COMPLETED_SESSION_KEY = "libra-checkout-completed";
 
 /** Sentinel value stored in session storage when checkout is completed */
 export const CHECKOUT_COMPLETED_VALUE = "1";

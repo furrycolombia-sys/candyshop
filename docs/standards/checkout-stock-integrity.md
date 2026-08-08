@@ -61,36 +61,36 @@ orders the system should not accept.
 
 ### Store
 
-- Cart capping: [CartContext.tsx](/Z:/Github/candystore/apps/store/src/features/cart/application/CartContext.tsx)
-- Add-to-cart limit handling: [useAddToCart.ts](/Z:/Github/candystore/apps/store/src/shared/application/hooks/useAddToCart.ts)
-- Cart quantity controls: [CartItemRow.tsx](/Z:/Github/candystore/apps/store/src/features/cart/presentation/components/CartItemRow.tsx)
+- Cart capping: [CartContext.tsx](/Z:/Github/libra/apps/store/src/features/cart/application/CartContext.tsx)
+- Add-to-cart limit handling: [useAddToCart.ts](/Z:/Github/libra/apps/store/src/shared/application/hooks/useAddToCart.ts)
+- Cart quantity controls: [CartItemRow.tsx](/Z:/Github/libra/apps/store/src/features/cart/presentation/components/CartItemRow.tsx)
 
 ### Payments
 
-- Validated checkout route: [route.ts](/Z:/Github/candystore/apps/payments/src/app/api/checkout/payment-methods/route.ts)
-- Client hook using the route: [useSellerPaymentMethods.ts](/Z:/Github/candystore/apps/payments/src/features/checkout/application/hooks/useSellerPaymentMethods.ts)
-- Checkout card behavior: [SellerCheckoutCard.tsx](/Z:/Github/candystore/apps/payments/src/features/checkout/presentation/components/SellerCheckoutCard.tsx)
-- Checkout warning-only state: [SellerCheckoutContent.tsx](/Z:/Github/candystore/apps/payments/src/features/checkout/presentation/components/SellerCheckoutContent.tsx)
+- Validated checkout route: [route.ts](/Z:/Github/libra/apps/payments/src/app/api/checkout/payment-methods/route.ts)
+- Client hook using the route: [useSellerPaymentMethods.ts](/Z:/Github/libra/apps/payments/src/features/checkout/application/hooks/useSellerPaymentMethods.ts)
+- Checkout card behavior: [SellerCheckoutCard.tsx](/Z:/Github/libra/apps/payments/src/features/checkout/presentation/components/SellerCheckoutCard.tsx)
+- Checkout warning-only state: [SellerCheckoutContent.tsx](/Z:/Github/libra/apps/payments/src/features/checkout/presentation/components/SellerCheckoutContent.tsx)
 
 ### Database
 
-- RLS lock-down migration: [20260410120000_lock_checkout_payment_method_reads.sql](/Z:/Github/candystore/supabase/migrations/20260410120000_lock_checkout_payment_method_reads.sql)
+- RLS lock-down migration: [20260410120000_lock_checkout_payment_method_reads.sql](/Z:/Github/libra/supabase/migrations/20260410120000_lock_checkout_payment_method_reads.sql)
 
 ## Verification
 
 ### Unit and route tests
 
 - Store:
-  - [CartContext.test.tsx](/Z:/Github/candystore/apps/store/src/features/cart/application/CartContext.test.tsx)
-  - [useAddToCart.test.ts](/Z:/Github/candystore/apps/store/src/shared/application/hooks/useAddToCart.test.ts)
-  - [CartItemRow.test.tsx](/Z:/Github/candystore/apps/store/src/features/cart/presentation/components/CartItemRow.test.tsx)
-  - [ProductCard.test.tsx](/Z:/Github/candystore/apps/store/src/features/products/presentation/components/ProductCard.test.tsx)
-  - [HeroSection.test.tsx](/Z:/Github/candystore/apps/store/src/features/products/presentation/components/product-detail/HeroSection.test.tsx)
+  - [CartContext.test.tsx](/Z:/Github/libra/apps/store/src/features/cart/application/CartContext.test.tsx)
+  - [useAddToCart.test.ts](/Z:/Github/libra/apps/store/src/shared/application/hooks/useAddToCart.test.ts)
+  - [CartItemRow.test.tsx](/Z:/Github/libra/apps/store/src/features/cart/presentation/components/CartItemRow.test.tsx)
+  - [ProductCard.test.tsx](/Z:/Github/libra/apps/store/src/features/products/presentation/components/ProductCard.test.tsx)
+  - [HeroSection.test.tsx](/Z:/Github/libra/apps/store/src/features/products/presentation/components/product-detail/HeroSection.test.tsx)
 - Payments:
-  - [route.test.ts](/Z:/Github/candystore/apps/payments/src/app/api/checkout/payment-methods/route.test.ts)
-  - [useSellerPaymentMethods.test.tsx](/Z:/Github/candystore/apps/payments/src/features/checkout/application/hooks/useSellerPaymentMethods.test.tsx)
-  - [SellerCheckoutCard.test.tsx](/Z:/Github/candystore/apps/payments/src/features/checkout/presentation/components/SellerCheckoutCard.test.tsx)
-  - [SellerCheckoutContent.test.tsx](/Z:/Github/candystore/apps/payments/src/features/checkout/presentation/components/SellerCheckoutContent.test.tsx)
+  - [route.test.ts](/Z:/Github/libra/apps/payments/src/app/api/checkout/payment-methods/route.test.ts)
+  - [useSellerPaymentMethods.test.tsx](/Z:/Github/libra/apps/payments/src/features/checkout/application/hooks/useSellerPaymentMethods.test.tsx)
+  - [SellerCheckoutCard.test.tsx](/Z:/Github/libra/apps/payments/src/features/checkout/presentation/components/SellerCheckoutCard.test.tsx)
+  - [SellerCheckoutContent.test.tsx](/Z:/Github/libra/apps/payments/src/features/checkout/presentation/components/SellerCheckoutContent.test.tsx)
 
 Commands:
 
@@ -104,7 +104,7 @@ pnpm --filter payments typecheck
 ### Playwright
 
 - Tampered/stale overstock checkout flow:
-  - [checkout-stock-integrity.spec.ts](/Z:/Github/candystore/apps/auth/e2e/checkout-stock-integrity.spec.ts)
+  - [checkout-stock-integrity.spec.ts](/Z:/Github/libra/apps/auth/e2e/checkout-stock-integrity.spec.ts)
 
 Command:
 

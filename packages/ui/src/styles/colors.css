@@ -1,7 +1,7 @@
 /**
- * Shared Color Variables — Neobrutalist Candy Shop
+ * Shared Color Variables — Neobrutalist Libra
  *
- * Bubblegum candy colors for light (:root) and dark (.dark) modes.
+ * Bubblegum libra colors for light (:root) and dark (.dark) modes.
  * Single source of truth for ALL apps in the monorepo.
  */
 
@@ -32,15 +32,15 @@
   --input: oklch(0.145 0 0);
   --ring: oklch(0.62 0.22 350);
 
-  /* Candy palette — vivid fills (dark text passes WCAG 4.5:1+) */
+  /* Libra palette — vivid fills (dark text passes WCAG 4.5:1+) */
   --pink: oklch(0.65 0.22 350);
   --mint: oklch(0.76 0.16 162);
   --lilac: oklch(0.58 0.22 293);
   --lemon: oklch(0.91 0.17 97);
   --sky: oklch(0.6 0.13 240);
   --peach: oklch(0.69 0.19 42);
-  --candy-text: oklch(0.145 0 0);
-  --candy-text-on-lemon: oklch(0.145 0 0);
+  --libra-text: oklch(0.145 0 0);
+  --libra-text-on-lemon: oklch(0.145 0 0);
   --google-blue: oklch(0.6 0.18 262);
   --google-green: oklch(0.65 0.16 148);
   --google-yellow: oklch(0.82 0.17 83);
@@ -109,15 +109,15 @@
   --input: oklch(0.97 0 0);
   --ring: oklch(0.72 0.18 350);
 
-  /* Candy palette — deep fills for dark mode (white text passes WCAG 4.5:1+) */
+  /* Libra palette — deep fills for dark mode (white text passes WCAG 4.5:1+) */
   --pink: oklch(0.46 0.17 352);
   --mint: oklch(0.47 0.11 155);
   --lilac: oklch(0.41 0.14 293);
   --lemon: oklch(0.49 0.12 83);
   --sky: oklch(0.41 0.1 240);
   --peach: oklch(0.47 0.11 55);
-  --candy-text: oklch(0.97 0 0);
-  --candy-text-on-lemon: oklch(0.97 0 0);
+  --libra-text: oklch(0.97 0 0);
+  --libra-text-on-lemon: oklch(0.97 0 0);
   --google-blue: oklch(0.6 0.18 262);
   --google-green: oklch(0.65 0.16 148);
   --google-yellow: oklch(0.82 0.17 83);

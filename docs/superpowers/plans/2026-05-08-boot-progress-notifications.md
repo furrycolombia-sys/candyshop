@@ -186,7 +186,7 @@ async function runBootSequence(label) {
     .map((a) => a.name)
     .join(", ");
   await tgPost(
-    `❌ <b>${failed} failed to start after 180s</b>\n   Check: <code>docker logs candyshop-prod</code>`,
+    `❌ <b>${failed} failed to start after 180s</b>\n   Check: <code>docker logs libra-prod</code>`,
     CRITICAL_THREAD_ID,
   );
 }
@@ -379,7 +379,7 @@ async function main() {
     .map((a) => a.name)
     .join(", ");
   await tgCritical(
-    `❌ <b>${failed} failed to start after 120s</b>\n   Check: <code>docker logs candyshop-prod</code>`,
+    `❌ <b>${failed} failed to start after 120s</b>\n   Check: <code>docker logs libra-prod</code>`,
   );
   process.exit(1);
 }

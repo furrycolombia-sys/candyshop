@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 /** Cookie key used by the client and server permission caches */
-export const PERM_COOKIE_KEY = "candystore-perm";
+export const PERM_COOKIE_KEY = "libra-perm";
 
 /** Maximum serialised byte length before we skip writing the perm cookie (browser limit is 4 KB) */
 export const PERM_COOKIE_MAX_BYTES = 3500;

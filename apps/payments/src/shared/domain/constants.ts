@@ -7,7 +7,7 @@ export const FALLBACK_BUYER_NAME = "Buyer";
 /** Cookie key used by the store app to persist the cart */
 
 /** Browser event fired when the cart cookie changes inside the payments app */
-export const CART_COOKIE_CHANGED_EVENT = "candystore:cart-cookie-changed";
+export const CART_COOKIE_CHANGED_EVENT = "libra:cart-cookie-changed";
 
 /** Max receipt file size in bytes (5 MB) */
 export const MAX_RECEIPT_SIZE_BYTES = 5 * 1024 * 1024;

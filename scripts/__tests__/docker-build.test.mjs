@@ -315,7 +315,7 @@ describe("buildDockerArgs — example tests", () => {
 
 describe("Script decision logic — example tests", () => {
   const baseOpts = {
-    imageName: "candyshop:latest",
+    imageName: "libra:latest",
     buildArgValues: {},
     noCache: false,
     targetEnv: "prod",
@@ -569,7 +569,7 @@ describe("PBT — Property 3: compose never called after failed build", () => {
 
 describe("--tunnel flag — unit tests", () => {
   const baseOpts = {
-    imageName: "candyshop:latest",
+    imageName: "libra:latest",
     buildArgValues: {},
     noCache: false,
     targetEnv: "prod",
@@ -653,7 +653,7 @@ describe("PBT — Property 6: docker-build propagates launcher exit code exactly
     fc.assert(
       fc.property(fc.integer({ min: 1, max: 255 }), (launcherExitCode) => {
         const result = simulateScript({
-          imageName: "candyshop:latest",
+          imageName: "libra:latest",
           buildArgValues: {},
           noCache: false,
           up: true,

@@ -62,7 +62,7 @@ vi.mock(
 
 describe("CheckoutPage", () => {
   it("keeps the success state visible after checkout clears the cart", () => {
-    globalThis.sessionStorage.setItem("candystore-checkout-completed", "1");
+    globalThis.sessionStorage.setItem("libra-checkout-completed", "1");
 
     mockUseCartFromCookie.mockReturnValue({
       groups: [],
@@ -75,7 +75,7 @@ describe("CheckoutPage", () => {
     expect(screen.getByTestId("checkout-all-submitted")).toBeInTheDocument();
     expect(screen.queryByTestId("checkout-empty")).not.toBeInTheDocument();
 
-    globalThis.sessionStorage.removeItem("candystore-checkout-completed");
+    globalThis.sessionStorage.removeItem("libra-checkout-completed");
   });
 
   it("renders loading state with skeletons", () => {

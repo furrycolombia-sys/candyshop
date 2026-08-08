@@ -2,7 +2,7 @@
 
 ## Scope Reconciliation
 
-Issue [#26](https://github.com/furrycolombia-sys/candyshop/issues/26) was reviewed on branch `feat/GH-25_CRUD-Permissions`, but the current branch `chore/GH-26_Full-Project-Code-Review` is based on `develop`.
+Issue [#26](https://github.com/furrycolombia-sys/libra/issues/26) was reviewed on branch `feat/GH-25_CRUD-Permissions`, but the current branch `chore/GH-26_Full-Project-Code-Review` is based on `develop`.
 
 That means findings fall into three buckets:
 

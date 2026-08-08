@@ -64,10 +64,10 @@
     {
       "id": "DRY-003",
       "severity": "warning",
-      "title": "Cart cookie key `\"candystore-cart\"` defined twice across apps",
+      "title": "Cart cookie key `\"libra-cart\"` defined twice across apps",
       "file": "apps/store/src/features/cart/application/cartCookiePersistence.ts",
       "line": 5,
-      "description": "The cart cookie key string `\"candystore-cart\"` is defined as `COOKIE_KEY` in the store app and independently as `CART_COOKIE_KEY` in `apps/payments/src/shared/domain/constants.ts`. Both represent the same piece of knowledge (the shared cross-app cookie name). If the cookie name changes, it must be updated in two places.",
+      "description": "The cart cookie key string `\"libra-cart\"` is defined as `COOKIE_KEY` in the store app and independently as `CART_COOKIE_KEY` in `apps/payments/src/shared/domain/constants.ts`. Both represent the same piece of knowledge (the shared cross-app cookie name). If the cookie name changes, it must be updated in two places.",
       "duplicatedIn": ["apps/payments/src/shared/domain/constants.ts"],
       "rule": "dry-principle.md#extract-constants",
       "fix": "Define the canonical constant once — the best place is `packages/shared/src/constants/` since this value is genuinely cross-app. Export it as `CART_COOKIE_KEY` and import it in both the store's `cartCookiePersistence.ts` and the payments app's constants. The payments `shared/domain/constants.ts` already has the right name; the store should import from the shared package instead of redeclaring `COOKIE_KEY`."

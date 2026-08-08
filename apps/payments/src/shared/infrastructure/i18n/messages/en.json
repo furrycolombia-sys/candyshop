@@ -5,7 +5,7 @@
     "privacy": "Privacy"
   },
   "meta": {
-    "title": "Candy Shop - Payments",
+    "title": "Libra - Payments",
     "description": "Secure payment processing for products, services, and tickets"
   },
   "payments": {
@@ -23,7 +23,7 @@
     }
   },
   "nav": {
-    "brand": "Candy Shop",
+    "brand": "Libra",
     "landing": "Home",
     "store": "Store",
     "studio": "Studio",
