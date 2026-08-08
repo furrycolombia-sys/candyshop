@@ -11,7 +11,7 @@
 
 ## Quick Links
 
-- [GitHub Issue](https://github.com/furrycolombia-sys/candyshop/issues/2)
+- [GitHub Issue](https://github.com/furrycolombia-sys/libra/issues/2)
 - [Task Artifacts](./)
 - [Design Spec](../../../docs/superpowers/specs/2026-03-18-candy-shop-mvp-design.md)
 

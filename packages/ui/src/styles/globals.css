@@ -22,7 +22,7 @@
 /* Source scanning for shared packages */
 @source "../../../../packages/ui/src/**/*.{ts,tsx}";
 @source "../../../../packages/app-components/src/**/*.{ts,tsx}";
-@source "../../../../packages/ui/src/styles/candy-safelist.txt";
+@source "../../../../packages/ui/src/styles/libra-safelist.txt";
 
 /* Dark mode variant */
 @custom-variant dark (&:is(.dark *));

@@ -75,7 +75,7 @@ describe("writePermCache", () => {
     writePermCache(keys);
 
     expect(mockSetCookie).toHaveBeenCalledWith(
-      "candystore-perm",
+      "libra-perm",
       JSON.stringify(keys),
       expect.objectContaining({ maxAge: 3600 }),
     );
@@ -92,11 +92,11 @@ describe("writePermCache", () => {
     setHostname("store.example.com");
     writePermCache(["products.create"]);
 
-    expect(mockDeleteCookie).toHaveBeenCalledWith("candystore-perm", {
+    expect(mockDeleteCookie).toHaveBeenCalledWith("libra-perm", {
       path: "/",
     });
     expect(mockSetCookie).toHaveBeenCalledWith(
-      "candystore-perm",
+      "libra-perm",
       expect.any(String),
       expect.objectContaining({ domain: ".example.com" }),
     );
@@ -126,7 +126,7 @@ describe("clearPermCache", () => {
 
     expect(mockDeleteCookie).toHaveBeenCalledTimes(1);
     expect(mockDeleteCookie).toHaveBeenCalledWith(
-      "candystore-perm",
+      "libra-perm",
       expect.objectContaining({ path: "/" }),
     );
   });
@@ -138,10 +138,10 @@ describe("clearPermCache", () => {
     expect(mockDeleteCookie).toHaveBeenCalledTimes(2);
     expect(mockDeleteCookie).toHaveBeenNthCalledWith(
       1,
-      "candystore-perm",
+      "libra-perm",
       expect.objectContaining({ domain: ".example.com" }),
     );
-    expect(mockDeleteCookie).toHaveBeenNthCalledWith(2, "candystore-perm", {
+    expect(mockDeleteCookie).toHaveBeenNthCalledWith(2, "libra-perm", {
       path: "/",
     });
   });

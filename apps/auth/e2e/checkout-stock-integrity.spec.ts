@@ -83,7 +83,7 @@ test.describe.serial("Checkout stock integrity", () => {
 
     await context.addCookies([
       {
-        name: "candystore-cart",
+        name: "libra-cart",
         value: JSON.stringify([
           {
             id: productId,

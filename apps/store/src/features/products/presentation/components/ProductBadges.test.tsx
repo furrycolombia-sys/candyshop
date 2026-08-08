@@ -55,7 +55,7 @@ describe("ProductBadges", () => {
       <ProductBadges
         product={makeProduct()}
         categoryColor="var(--pink)"
-        categoryForeground="var(--candy-text)"
+        categoryForeground="var(--libra-text)"
         tCategories={identity}
         tTypes={identity}
         t={identity}
@@ -71,7 +71,7 @@ describe("ProductBadges", () => {
       <ProductBadges
         product={makeProduct({ type: "digital" })}
         categoryColor="var(--pink)"
-        categoryForeground="var(--candy-text)"
+        categoryForeground="var(--libra-text)"
         tCategories={identity}
         tTypes={identity}
         t={identity}
@@ -87,7 +87,7 @@ describe("ProductBadges", () => {
       <ProductBadges
         product={makeProduct({ refundable: true })}
         categoryColor="var(--pink)"
-        categoryForeground="var(--candy-text)"
+        categoryForeground="var(--libra-text)"
         tCategories={identity}
         tTypes={identity}
         t={identity}
@@ -101,7 +101,7 @@ describe("ProductBadges", () => {
       <ProductBadges
         product={makeProduct({ refundable: false })}
         categoryColor="var(--pink)"
-        categoryForeground="var(--candy-text)"
+        categoryForeground="var(--libra-text)"
         tCategories={identity}
         tTypes={identity}
         t={identity}
@@ -115,7 +115,7 @@ describe("ProductBadges", () => {
       <ProductBadges
         product={makeProduct({ refundable: null })}
         categoryColor="var(--pink)"
-        categoryForeground="var(--candy-text)"
+        categoryForeground="var(--libra-text)"
         tCategories={identity}
         tTypes={identity}
         t={identity}

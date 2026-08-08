@@ -43,7 +43,7 @@ The navbar must appear stable on every cross-app navigation. The existing permis
 ### `packages/shared/src/constants/nav.ts` (new)
 
 ```typescript
-export const NAV_PERM_COOKIE_KEY = "candystore-nav-perm";
+export const NAV_PERM_COOKIE_KEY = "libra-nav-perm";
 ```
 
 Exported from `packages/shared/src/constants/index.ts` alongside `CART_COOKIE_KEY`.

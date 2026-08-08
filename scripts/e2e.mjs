@@ -138,7 +138,7 @@ if (appsMode === "docker") {
   if (alreadyUp) {
     console.log(`✓ App already running on :${port}\n`);
   } else {
-    const imageName = process.env.SITE_PROD_IMAGE_NAME ?? "candyshop-ci";
+    const imageName = process.env.SITE_PROD_IMAGE_NAME ?? "libra-ci";
     const imageExists =
       spawnSync("docker", ["image", "inspect", imageName], {
         cwd: rootDir,

@@ -15,7 +15,7 @@ Clean — branched from develop at `53212f3` (0 ahead/behind at branch time).
 
 ## Quick Links
 
-- [GitHub Issue](https://github.com/furrycolombia-sys/candyshop/issues/319)
+- [GitHub Issue](https://github.com/furrycolombia-sys/libra/issues/319)
 - [Task Artifacts](./)
 
 ## Next Steps

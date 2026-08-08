@@ -34,7 +34,7 @@ const CHAT_ID            = process.env.TELEGRAM_CHAT_ID || '';
 const CRITICAL_THREAD_ID = process.env.TELEGRAM_CRITICAL_THREAD_ID
                         || process.env.TELEGRAM_THREAD_ID || '';
 const SERVER_HOSTNAME    = htmlEscape(process.env.SERVER_HOSTNAME || '');
-const CONTAINER_NAME     = htmlEscape(process.env.CONTAINER_NAME || 'candyshop-prod');
+const CONTAINER_NAME     = htmlEscape(process.env.CONTAINER_NAME || 'libra-prod');
 const TELEGRAM_SOURCE    = htmlEscape(process.env.SERVER_HOSTNAME || hostname());
 
 if (!BOOT_MSG_ID) process.exit(0);

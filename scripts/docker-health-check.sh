@@ -5,8 +5,8 @@
 
 set -euo pipefail
 
-IMAGE_NAME="candyshop-health-check"
-CONTAINER_NAME="candyshop-health-check-$$"
+IMAGE_NAME="libra-health-check"
+CONTAINER_NAME="libra-health-check-$$"
 
 cleanup() {
   if docker ps -aq -f name="^${CONTAINER_NAME}$" | grep -q .; then

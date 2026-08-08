@@ -10,7 +10,7 @@
 
 ## Global Constraints
 
-- Package manager is **pnpm**; run all commands from repo root `Z:\Github\candystore`.
+- Package manager is **pnpm**; run all commands from repo root `Z:\Github\libra`.
 - **Never commit** without explicit user permission (repo `commit-policy` / `git-safety`). The `- [ ] Commit` steps below are gated on the user asking; if they have not, skip the commit step and continue.
 - **Reuse, do not rebuild:** no new report columns, no "Seller" column, no changes to `apps/payments/src/features/reports/presentation/components/*`, no changes to the owner `/reports` page or `exportSellerOrdersToExcel.ts`. The only difference from the owner report is the data source.
 - **Permission keys (exact):** `reports.read` (see menu + page), `reports.export` (see export button). `reports.export` depends_on `reports.read`; `reports.read` depends_on `orders.read`.

@@ -212,7 +212,7 @@ jobs:
             printf 'TELEGRAM_THREAD_ID=%s\n'             "$TELEGRAM_THREAD_ID"
             printf 'TELEGRAM_CRITICAL_THREAD_ID=%s\n'   "$TELEGRAM_CRITICAL_THREAD_ID"
             printf 'NEXT_PUBLIC_APP_VERSION=%s\n'        "${{ steps.app_version.outputs.value }}"
-          } | ssh ${{ secrets.PROD_SERVER_HOST }} 'cat > /tmp/.candyshop-build.env && chmod 600 /tmp/.candyshop-build.env'
+          } | ssh ${{ secrets.PROD_SERVER_HOST }} 'cat > /tmp/.libra-build.env && chmod 600 /tmp/.libra-build.env'
 
       - name: Download store build artifacts
         uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
@@ -262,7 +262,7 @@ jobs:
             echo "Syncing .next for ${APP}..."
             rsync -az --delete --exclude=cache \
               "apps/${APP}/.next/" \
-              "${{ secrets.PROD_SERVER_HOST }}:/home/furrycolombia/candyshop/apps/${APP}/.next/"
+              "${{ secrets.PROD_SERVER_HOST }}:/home/furrycolombia/libra/apps/${APP}/.next/"
           done
 
       - name: Copy deploy script to server
@@ -276,12 +276,12 @@ jobs:
           DEPLOY_BRANCH: ${{ github.ref_name }}
         run: |
           ssh ${{ secrets.PROD_SERVER_HOST }} "
-            rm -f /tmp/deploy-candyshop.done /tmp/deploy-candyshop.log
+            rm -f /tmp/deploy-libra.done /tmp/deploy-libra.log
             REPO_URL='${DEPLOY_REPO_URL}' \
             BRANCH='${DEPLOY_BRANCH}' \
-            ENV_FILE='/tmp/.candyshop-build.env' \
+            ENV_FILE='/tmp/.libra-build.env' \
             DEPLOY_DETACHED=1 \
-            nohup bash /tmp/deploy-production.sh > /tmp/deploy-candyshop.log 2>&1 &
+            nohup bash /tmp/deploy-production.sh > /tmp/deploy-libra.log 2>&1 &
             disown
           "
           echo "Deploy process started on server — polling for result..."
@@ -292,9 +292,9 @@ jobs:
             sleep 15
             echo "--- log tail [poll $i/60] ---"
             ssh ${{ secrets.PROD_SERVER_HOST }} \
-              "tail -25 /tmp/deploy-candyshop.log 2>/dev/null" || true
+              "tail -25 /tmp/deploy-libra.log 2>/dev/null" || true
             RESULT=$(ssh ${{ secrets.PROD_SERVER_HOST }} \
-              "cat /tmp/deploy-candyshop.done 2>/dev/null || echo pending" || echo pending)
+              "cat /tmp/deploy-libra.done 2>/dev/null || echo pending" || echo pending)
             if [ "$RESULT" != "pending" ]; then
               echo "Deploy finished with exit code: $RESULT"
               [ "$RESULT" = "0" ] && exit 0 || exit 1
@@ -306,7 +306,7 @@ jobs:
       - name: Verify deployment
         run: |
           ssh ${{ secrets.PROD_SERVER_HOST }} \
-            'docker ps --filter name=candyshop-prod --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" 2>/dev/null || true'
+            'docker ps --filter name=libra-prod --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" 2>/dev/null || true'
 
       - name: Purge Cloudflare cache
         env:
@@ -323,5 +323,5 @@ jobs:
         if: always()
         run: |
           ssh ${{ secrets.PROD_SERVER_HOST }} \
-            'rm -f /tmp/.candyshop-build.env /tmp/deploy-production.sh' 2>/dev/null || true
+            'rm -f /tmp/.libra-build.env /tmp/deploy-production.sh' 2>/dev/null || true
           rm -f ~/.ssh/deploy_key

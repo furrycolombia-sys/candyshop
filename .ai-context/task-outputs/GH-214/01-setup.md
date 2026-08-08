@@ -11,7 +11,7 @@
 
 ## Quick Links
 
-- [GitHub Issue](https://github.com/furrycolombia-sys/candyshop/issues/214)
+- [GitHub Issue](https://github.com/furrycolombia-sys/libra/issues/214)
 - [Task Artifacts](./)
 
 ## Next Steps

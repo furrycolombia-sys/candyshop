@@ -18,7 +18,7 @@ GitHub push → main
         ├─ 2. Docker  — docker build + push → GHCR
         │               (ghcr.io/vaoan/libra-prod:sha + :latest)
         │
-        ├─ 3. Deploy  — SSH → GCP VM (candyshop-prod, us-central1-a)
+        ├─ 3. Deploy  — SSH → GCP VM (libra-prod, us-central1-a)
         │                   └─ deploy-production.sh (nohup, survives SSH drop)
         │                         ├─ Pre-pull :latest  (warm layer cache)
         │                         ├─ Pull :sha-xxxxx   (instant — layers cached)
@@ -32,8 +32,8 @@ GitHub push → main
         └─ 5. Release — GitHub Release auto-created on release/* merges
                         (Telegram notification on success or failure)
 
-GCP VM (candyshop-prod, us-central1-a, 35.238.125.109)
-  └─ candyshop-prod container (port 9090:80)
+GCP VM (libra-prod, us-central1-a, 35.238.125.109)
+  └─ libra-prod container (port 9090:80)
         ├─ Nginx :80 (inside container)
         │   ├─ /          → landing    :5004
         │   ├─ /store     → store      :5001
@@ -93,7 +93,7 @@ build (20 min timeout)
 - Logs in to GHCR with `GITHUB_TOKEN`
 - Pre-pulls `:latest` for layer cache (`--cache-from`)
 - Builds the Docker image (`docker/prod/Dockerfile`)
-- Pushes both `ghcr.io/…/candyshop-prod:sha-XXXXXXX` and `…:latest`
+- Pushes both `ghcr.io/…/libra-prod:sha-XXXXXXX` and `…:latest`
 
 #### `deploy` job (45 min timeout)
 
@@ -162,7 +162,7 @@ Three environments with clear separation: dev (local), e2e (Docker + isolated Su
 | Staging (fresh)  | `pnpm staging:fresh`                          | Rebuild Docker from scratch (no cache)                  |
 | Staging Stop     | `pnpm staging:stop`                           | Stop staging Docker container                           |
 | Prod Deploy      | `pnpm prod:deploy`                            | SSH deploy to production server via deploy.sh           |
-| Prod Logs        | `pnpm prod:logs`                              | Tail production Docker logs (candyshop-prod)            |
+| Prod Logs        | `pnpm prod:logs`                              | Tail production Docker logs (libra-prod)                |
 | Prod Status      | `pnpm prod:status`                            | Check production container status                       |
 
 ### Environment summary
@@ -194,7 +194,7 @@ Environment files:
 | Disk          | 915 GB                              |
 | Control Panel | Hestia CP (port 8083)               |
 | SSH user      | furrycolombia                       |
-| SSH auth      | ED25519 key (`candystore-deploy`)   |
+| SSH auth      | ED25519 key (`libra-deploy`)        |
 | SSH password  | Same as sudo password               |
 
 ## Software on Server
@@ -224,7 +224,7 @@ Environment files:
 
 | Property    | Value                                                                          |
 | ----------- | ------------------------------------------------------------------------------ |
-| Tunnel name | candyshop-prod                                                                 |
+| Tunnel name | libra-prod                                                                     |
 | Tunnel ID   | af85209b-fcfb-477a-9b95-81180f6901f2                                           |
 | Service     | systemd (`cloudflared.service`), auto-starts on boot                           |
 | Config      | `/etc/cloudflared/config.yml`                                                  |
@@ -248,8 +248,8 @@ ingress:
 
 | Property       | Value                                                     |
 | -------------- | --------------------------------------------------------- |
-| Container name | candyshop-prod                                            |
-| Image          | candyshop-prod:latest                                     |
+| Container name | libra-prod                                                |
+| Image          | libra-prod:latest                                         |
 | Port mapping   | 9090:80                                                   |
 | Compose file   | `docker/compose.yml`                                      |
 | Env file       | `/home/furrycolombia/.env.prod` (outside repo, chmod 600) |
@@ -260,10 +260,10 @@ The container runs Nginx + supervisord with 7 standalone Next.js servers inside.
 ### Production env file (`/home/furrycolombia/.env.prod`)
 
 ```env
-SITE_PROD_CONTAINER_NAME=candyshop-prod
-SITE_PROD_IMAGE_NAME=candyshop-prod
+SITE_PROD_CONTAINER_NAME=libra-prod
+SITE_PROD_IMAGE_NAME=libra-prod
 HOST_PORT=9090
-APP_INTERNAL_ORIGIN=http://candyshop-prod:8080
+APP_INTERNAL_ORIGIN=http://libra-prod:8080
 NEXT_PUBLIC_SUPABASE_URL=<supabase-url>
 NEXT_PUBLIC_SUPABASE_ANON_KEY=<supabase-anon-key>
 AUTH_PROVIDER_MODE=supabase
@@ -301,7 +301,7 @@ When you push to `main`, GitHub sends a POST to the webhook. The receiver verifi
 | Property  | Value                                                         |
 | --------- | ------------------------------------------------------------- |
 | Provider  | Supabase Cloud (free tier)                                    |
-| Project   | candyshop-prod                                                |
+| Project   | libra-prod                                                    |
 | Ref       | olafyajipvsltohagiah                                          |
 | Region    | South America (São Paulo)                                     |
 | URL       | `https://olafyajipvsltohagiah.supabase.co`                    |
@@ -403,7 +403,7 @@ sudo usermod -aG sudo furrycolombia
 From your local machine:
 
 ```bash
-ssh-keygen -t ed25519 -C "candystore-deploy"
+ssh-keygen -t ed25519 -C "libra-deploy"
 type %USERPROFILE%\.ssh\id_ed25519.pub | ssh furrycolombia@<SERVER_IP> "mkdir -p ~/.ssh && cat >> ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys && chmod 700 ~/.ssh"
 ```
 
@@ -438,12 +438,12 @@ sudo apt-get update && sudo apt-get install -y cloudflared
 cloudflared tunnel login
 
 # Create tunnel
-cloudflared tunnel create candyshop-prod
+cloudflared tunnel create libra-prod
 
 # Route DNS (ONLY these 3 subdomains)
-cloudflared tunnel route dns candyshop-prod store.furrycolombia.com
-cloudflared tunnel route dns candyshop-prod deploy.furrycolombia.com
-cloudflared tunnel route dns candyshop-prod ssh.furrycolombia.com
+cloudflared tunnel route dns libra-prod store.furrycolombia.com
+cloudflared tunnel route dns libra-prod deploy.furrycolombia.com
+cloudflared tunnel route dns libra-prod ssh.furrycolombia.com
 
 # Write config (replace <TUNNEL_ID>)
 sudo mkdir -p /etc/cloudflared
@@ -475,10 +475,10 @@ git clone --branch main --depth 1 https://github.com/vaoan/libra.git ~/libra
 
 # Create env file OUTSIDE the repo (won't be wiped by git clean)
 cat > ~/.env.prod << 'EOF'
-SITE_PROD_CONTAINER_NAME=candyshop-prod
-SITE_PROD_IMAGE_NAME=candyshop-prod
+SITE_PROD_CONTAINER_NAME=libra-prod
+SITE_PROD_IMAGE_NAME=libra-prod
 HOST_PORT=9090
-APP_INTERNAL_ORIGIN=http://candyshop-prod:8080
+APP_INTERNAL_ORIGIN=http://libra-prod:8080
 NEXT_PUBLIC_SUPABASE_URL=<supabase-url>
 NEXT_PUBLIC_SUPABASE_ANON_KEY=<supabase-anon-key>
 AUTH_PROVIDER_MODE=supabase
@@ -544,7 +544,7 @@ gh secret set PROD_SERVER_SSH_KEY < ~/.ssh/id_ed25519
 docker ps
 
 # View logs
-docker logs candyshop-prod -f
+docker logs libra-prod -f
 
 # Restart
 docker compose -f ~/libra/docker/compose.yml --env-file ~/.env.prod restart
@@ -617,7 +617,7 @@ Production deploys via webhook never include test IDs.
 | ----------------------------------------- | ------------------------------------------------------------------------------------------------------- |
 | Site down                                 | `docker ps` — is the container running?                                                                 |
 | 502 from Cloudflare                       | `curl localhost:9090/health` on the server                                                              |
-| Container crash loop                      | `docker logs candyshop-prod --tail 50`                                                                  |
+| Container crash loop                      | `docker logs libra-prod --tail 50`                                                                      |
 | `Cannot find module 'next'`               | pnpm symlinks stripped by ZIP artifact — check `.npmrc` has `node-linker=hoisted`                       |
 | `docker COPY: not found` (static/public)  | Empty dirs dropped by ZIP — CI must touch placeholder files in `.next/static` and `public/`             |
 | Routes 404 but container is running       | `.dockerignore` may have excluded `.next/` — see [incident playbook](./production-incident-playbook.md) |

@@ -10,7 +10,7 @@
 | **Labels**   | enhancement                                               |
 | **Assignee** | —                                                         |
 | **Created**  | 2026-04-24                                                |
-| **URL**      | https://github.com/furrycolombia-sys/candyshop/issues/188 |
+| **URL**      | https://github.com/furrycolombia-sys/libra/issues/188     |
 
 ## Description
 

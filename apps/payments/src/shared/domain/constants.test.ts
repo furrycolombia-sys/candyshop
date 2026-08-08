@@ -24,8 +24,8 @@ describe("shared domain constants", () => {
   });
 
   it("cart constants are stable", () => {
-    expect(CART_COOKIE_KEY).toBe("candystore-cart");
-    expect(CART_COOKIE_CHANGED_EVENT).toBe("candystore:cart-cookie-changed");
+    expect(CART_COOKIE_KEY).toBe("libra-cart");
+    expect(CART_COOKIE_CHANGED_EVENT).toBe("libra:cart-cookie-changed");
   });
 
   it("receipt constants are centralized", () => {

@@ -11,7 +11,7 @@
 
 ## Quick Links
 
-- [GitHub Issue](https://github.com/furrycolombia-sys/candyshop/issues/14)
+- [GitHub Issue](https://github.com/furrycolombia-sys/libra/issues/14)
 - [Design Spec](../../../docs/superpowers/specs/2026-03-25-product-templates-design.md)
 - [Task Artifacts](./)
 

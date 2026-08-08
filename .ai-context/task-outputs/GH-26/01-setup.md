@@ -11,7 +11,7 @@
 
 ## Quick Links
 
-- [GitHub Issue](https://github.com/furrycolombia-sys/candyshop/issues/26)
+- [GitHub Issue](https://github.com/furrycolombia-sys/libra/issues/26)
 - [Full Report](.ai-context/reports/full-code-review_2026-03-30.md)
 - [Task Artifacts](./)
 

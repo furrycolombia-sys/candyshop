@@ -88,7 +88,7 @@ const mockTheme = {
   badgeBg: "var(--mint)",
   rowEven: "color-mix(in srgb, var(--mint) 5%, transparent)",
   rowOdd: "color-mix(in srgb, var(--mint) 15%, transparent)",
-  foreground: "var(--candy-text)",
+  foreground: "var(--libra-text)",
   accent: "--mint",
 };
 

@@ -7,8 +7,8 @@ import { tid } from "shared";
 
 import { appUrls } from "@/shared/infrastructure/config";
 
-const DEFAULT_CANDY_TEXT = "var(--candy-text)";
-const LEMON_CANDY_TEXT = "var(--candy-text-on-lemon)";
+const DEFAULT_LIBRA_TEXT = "var(--libra-text)";
+const LEMON_CANDY_TEXT = "var(--libra-text-on-lemon)";
 const PINK_BG = "var(--pink)";
 
 export function RolesSection() {
@@ -31,7 +31,7 @@ export function RolesSection() {
             role="group"
             aria-labelledby="artists-heading"
             className="shadow-brutal-lg flex flex-col border-strong border-foreground p-8 lg:p-10"
-            style={{ backgroundColor: PINK_BG, color: DEFAULT_CANDY_TEXT }}
+            style={{ backgroundColor: PINK_BG, color: DEFAULT_LIBRA_TEXT }}
             {...tid("role-artists")}
           >
             <p className="mb-3 text-xs font-bold uppercase tracking-section">
@@ -64,7 +64,7 @@ export function RolesSection() {
             className="shadow-brutal-lg flex flex-col border-strong border-foreground p-8 lg:p-10"
             style={{
               backgroundColor: "var(--mint)",
-              color: DEFAULT_CANDY_TEXT,
+              color: DEFAULT_LIBRA_TEXT,
             }}
             {...tid("role-fans")}
           >
@@ -85,9 +85,9 @@ export function RolesSection() {
               className="button-brutal button-press-sm shadow-brutal-sm mt-auto inline-flex self-start px-6 py-3 text-sm font-extrabold"
               style={{
                 backgroundColor: PINK_BG,
-                color: DEFAULT_CANDY_TEXT,
-                borderColor: DEFAULT_CANDY_TEXT,
-                outlineColor: DEFAULT_CANDY_TEXT,
+                color: DEFAULT_LIBRA_TEXT,
+                borderColor: DEFAULT_LIBRA_TEXT,
+                outlineColor: DEFAULT_LIBRA_TEXT,
               }}
             >
               {t("fans.cta")}

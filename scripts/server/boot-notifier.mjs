@@ -145,7 +145,7 @@ async function runBootSequence(label) {
 
   const failed = appStatus.filter(a => a.readyAt === null).map(a => a.name).join(', ');
   await tgPost(
-    `❌ <b>${failed} failed to start after 180s</b>  •  <code>${SERVER_HOSTNAME}</code>\n   Check: <code>docker logs candyshop-prod</code>`,
+    `❌ <b>${failed} failed to start after 180s</b>  •  <code>${SERVER_HOSTNAME}</code>\n   Check: <code>docker logs libra-prod</code>`,
     CRITICAL_THREAD_ID
   );
 }

@@ -180,7 +180,7 @@ describe("CheckoutPageContent", () => {
   });
 
   it("renders completed checkout state when session flag is set", () => {
-    sessionStorage.setItem("candystore-checkout-completed", "1");
+    sessionStorage.setItem("libra-checkout-completed", "1");
 
     mockUseCartFromCookie.mockReturnValue({
       groups: [

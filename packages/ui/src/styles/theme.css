@@ -72,8 +72,8 @@
   --color-lemon: var(--lemon);
   --color-sky: var(--sky);
   --color-peach: var(--peach);
-  --color-candy-text: var(--candy-text);
-  --color-candy-text-on-lemon: var(--candy-text-on-lemon);
+  --color-libra-text: var(--libra-text);
+  --color-libra-text-on-lemon: var(--libra-text-on-lemon);
 
   /* Typography — Syne is the project font */
   --font-sans: var(--font-dm-sans);

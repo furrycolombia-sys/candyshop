@@ -13,7 +13,7 @@ import {
 
 describe("checkout domain constants", () => {
   it("CART_COOKIE_KEY is a non-empty string", () => {
-    expect(CART_COOKIE_KEY).toBe("candystore-cart");
+    expect(CART_COOKIE_KEY).toBe("libra-cart");
   });
 
   it("MAX_RECEIPT_SIZE_BYTES is 5 MB", () => {

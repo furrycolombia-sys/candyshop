@@ -685,7 +685,7 @@ async function backup(pat, serviceKey) {
   }
 
   // ── Move to archive drive if available ──
-  const archiveDir = "P:\\FurryColombia\\CandyShop";
+  const archiveDir = "P:\\FurryColombia\\Libra";
   let finalPath = zipPath;
   if (existsSync(archiveDir)) {
     const dest = join(archiveDir, zipName);
@@ -694,7 +694,7 @@ async function backup(pat, serviceKey) {
     finalPath = dest;
     console.log(`  Moved to ${dest}`);
   } else {
-    console.log(`  P:\\FurryColombia\\CandyShop not found — zip kept locally at ${zipPath}`);
+    console.log(`  P:\\FurryColombia\\Libra not found — zip kept locally at ${zipPath}`);
   }
 
   console.log(`\n✅ Backup complete: ${finalPath}`);

@@ -65,7 +65,7 @@
   "patterns": [
     {
       "pattern": "Dynamic CSS variables for themed components",
-      "description": "Several components (store/landing/studio) use inline `style={{ backgroundColor: 'var(--pink)', color: 'var(--candy-text)' }}` for per-product/per-category theming. This is the correct pattern when runtime values come from CSS variables rather than hardcoded hex colors. No violations found.",
+      "description": "Several components (store/landing/studio) use inline `style={{ backgroundColor: 'var(--pink)', color: 'var(--libra-text)' }}` for per-product/per-category theming. This is the correct pattern when runtime values come from CSS variables rather than hardcoded hex colors. No violations found.",
       "assessment": "Correct usage — CSS variable strings inline are intentional per the project rules."
     },
     {

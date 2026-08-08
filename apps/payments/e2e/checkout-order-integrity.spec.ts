@@ -69,7 +69,7 @@ async function injectCartCookie(
 
   await context.addCookies([
     {
-      name: "candystore-cart",
+      name: "libra-cart",
       value: JSON.stringify([
         {
           id: productId,
