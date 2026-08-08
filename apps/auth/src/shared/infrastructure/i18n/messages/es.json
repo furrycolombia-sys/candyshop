@@ -5,8 +5,8 @@
     "privacy": "Privacidad"
   },
   "meta": {
-    "title": "Candy Shop - Iniciar Sesion",
-    "description": "Inicia sesion en tu cuenta de Candy Shop"
+    "title": "Libra - Iniciar Sesion",
+    "description": "Inicia sesion en tu cuenta de Libra"
   },
   "auth": {
     "login": {
@@ -52,7 +52,7 @@
     }
   },
   "nav": {
-    "brand": "Candy Shop",
+    "brand": "Libra",
     "landing": "Inicio",
     "store": "Tienda",
     "studio": "Estudio",

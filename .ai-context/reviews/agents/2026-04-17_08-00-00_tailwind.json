@@ -36,7 +36,7 @@
         "apps/studio/src/features/products/presentation/components/inline-editor/InlineImageCarousel.tsx"
       ],
       "description": "Multiple product detail and inline-editor components use `style={{ backgroundColor: theme.bg }}`, `style={{ color: theme.text }}`, `style={{ borderColor: theme.border }}` etc. These reference dynamic CSS variable strings from `categoryConstants.ts` (e.g. `var(--pink)`, `color-mix(in srgb, var(--pink) 15%, transparent)`). Since the values are runtime-dynamic (depend on product category), inline styles are the only correct approach here — Tailwind JIT cannot generate arbitrary dynamic values. This is an accepted pattern, not a bug. Noting for awareness.",
-      "note": "This is intentional and correct. Dynamic per-category theming requires inline styles. The CSS variable references use the project's semantic candy color system. No action required.",
+      "note": "This is intentional and correct. Dynamic per-category theming requires inline styles. The CSS variable references use the project's semantic libra color system. No action required.",
       "rule": "Inline styles are acceptable when the color value is truly dynamic and cannot be resolved at build time."
     },
     {
@@ -47,8 +47,8 @@
         "apps/landing/src/features/home/presentation/components/RolesSection.tsx",
         "apps/landing/src/features/home/presentation/components/FeaturesSection.tsx"
       ],
-      "description": "Role cards and category feature cards use `style={{ backgroundColor: cardBg, color: cardText }}` where the values are CSS variable strings from a constant array (e.g. `var(--pink)`, `var(--mint)`, `var(--lemon)`). The values are from a fixed constant list, not truly runtime-dynamic. Since Tailwind cannot know which `bg-pink`, `bg-mint` etc. will be rendered for each card in the list, inline styles using CSS variables are an acceptable approach here. However, these could potentially be refactored using Tailwind's `bg-[var(--pink)]` arbitrary value syntax or a small set of predefined CSS classes per candy color.",
-      "suggestion": "Consider using CSS classes like `bg-pink`, `bg-mint`, etc. if these candy color tokens are mapped in the Tailwind theme (they are: `--color-pink: var(--pink)` in packages/ui/src/styles/theme.css). This would allow: `className=\"bg-pink text-libra-text\"` directly instead of inline styles, which is cleaner and more consistent with the Tailwind utility-first approach.",
+      "description": "Role cards and category feature cards use `style={{ backgroundColor: cardBg, color: cardText }}` where the values are CSS variable strings from a constant array (e.g. `var(--pink)`, `var(--mint)`, `var(--lemon)`). The values are from a fixed constant list, not truly runtime-dynamic. Since Tailwind cannot know which `bg-pink`, `bg-mint` etc. will be rendered for each card in the list, inline styles using CSS variables are an acceptable approach here. However, these could potentially be refactored using Tailwind's `bg-[var(--pink)]` arbitrary value syntax or a small set of predefined CSS classes per libra color.",
+      "suggestion": "Consider using CSS classes like `bg-pink`, `bg-mint`, etc. if these libra color tokens are mapped in the Tailwind theme (they are: `--color-pink: var(--pink)` in packages/ui/src/styles/theme.css). This would allow: `className=\"bg-pink text-libra-text\"` directly instead of inline styles, which is cleaner and more consistent with the Tailwind utility-first approach.",
       "rule": "Prefer Tailwind utility classes over inline styles when the color is in the theme."
     },
     {

@@ -13,7 +13,7 @@
 
 - [GitHub Issue](https://github.com/furrycolombia-sys/libra/issues/2)
 - [Task Artifacts](./)
-- [Design Spec](../../../docs/superpowers/specs/2026-03-18-candy-shop-mvp-design.md)
+- [Design Spec](../../../docs/superpowers/specs/2026-03-18-libra-mvp-design.md)
 
 ## Next Steps
 

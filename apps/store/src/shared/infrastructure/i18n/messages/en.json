@@ -5,7 +5,7 @@
     "privacy": "Privacy"
   },
   "meta": {
-    "title": "Candy Shop",
+    "title": "Libra",
     "description": "Your favorite store for products, services, and tickets"
   },
   "store": {
@@ -13,7 +13,7 @@
     "subtitle": "Browse products, services, tickets, and more"
   },
   "nav": {
-    "brand": "Candy Shop",
+    "brand": "Libra",
     "landing": "Home",
     "store": "Store",
     "studio": "Studio",

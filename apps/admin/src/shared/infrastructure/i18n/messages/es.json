@@ -1,6 +1,6 @@
 {
   "meta": {
-    "title": "Candy Shop - Admin",
+    "title": "Libra - Admin",
     "description": "Gestión de inventario, órdenes, promos y cupones"
   },
   "admin": {
@@ -8,7 +8,7 @@
     "subtitle": "Operaciones y monitoreo del back-office"
   },
   "nav": {
-    "brand": "Candy Shop",
+    "brand": "Libra",
     "landing": "Inicio",
     "store": "Tienda",
     "studio": "Estudio",

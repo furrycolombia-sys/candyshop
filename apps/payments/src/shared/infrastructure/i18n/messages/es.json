@@ -5,7 +5,7 @@
     "privacy": "Privacidad"
   },
   "meta": {
-    "title": "Candy Shop - Pagos",
+    "title": "Libra - Pagos",
     "description": "Procesamiento seguro de pagos para productos, servicios y boletos"
   },
   "payments": {
@@ -23,7 +23,7 @@
     }
   },
   "nav": {
-    "brand": "Candy Shop",
+    "brand": "Libra",
     "landing": "Inicio",
     "store": "Tienda",
     "studio": "Estudio",

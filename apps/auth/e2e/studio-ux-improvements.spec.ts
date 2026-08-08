@@ -113,7 +113,7 @@ test.describe.serial("Studio UX Improvements", { tag: "@ux" }, () => {
       "https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=400",
     );
     const altInput = page.getByTestId("image-edit-alt");
-    await altInput.fill("Candy image 1");
+    await altInput.fill("Libra image 1");
     await page.getByTestId("image-edit-done").click();
     await snap(page, "first-image-added");
 
@@ -127,7 +127,7 @@ test.describe.serial("Studio UX Improvements", { tag: "@ux" }, () => {
       "https://images.unsplash.com/photo-1582058091505-f87a2e55a40f?w=400",
     );
     const altInput2 = page.getByTestId("image-edit-alt");
-    await altInput2.fill("Candy image 2");
+    await altInput2.fill("Libra image 2");
     await page.getByTestId("image-edit-done").click();
     await snap(page, "second-image-added");
 

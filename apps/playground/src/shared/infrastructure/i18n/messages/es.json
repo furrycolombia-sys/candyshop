@@ -1,6 +1,6 @@
 {
   "meta": {
-    "title": "Candy Shop - Zona de Pruebas",
+    "title": "Libra - Zona de Pruebas",
     "description": "Experimenta con componentes y funcionalidades"
   },
   "playground": {
@@ -8,7 +8,7 @@
     "subtitle": "Experimenta con componentes y funcionalidades"
   },
   "nav": {
-    "brand": "Candy Shop",
+    "brand": "Libra",
     "landing": "Inicio",
     "store": "Tienda",
     "studio": "Estudio",

@@ -40,7 +40,7 @@ As a developer, I need the Supabase project configured with the core database sc
 
 ## Technical Notes
 
-- See full schema in `docs/superpowers/specs/2026-03-18-candy-shop-mvp-design.md`
+- See full schema in `docs/superpowers/specs/2026-03-18-libra-mvp-design.md`
 - `check_in_audit` must be INSERT-only (no UPDATE/DELETE even for admins)
 - `metadata` on `order_items` is jsonb for event-specific fields
 - All tables use uuid primary keys

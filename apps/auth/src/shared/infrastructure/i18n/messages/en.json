@@ -5,8 +5,8 @@
     "privacy": "Privacy"
   },
   "meta": {
-    "title": "Candy Shop - Sign In",
-    "description": "Sign in to your Candy Shop account"
+    "title": "Libra - Sign In",
+    "description": "Sign in to your Libra account"
   },
   "auth": {
     "login": {
@@ -52,7 +52,7 @@
     }
   },
   "nav": {
-    "brand": "Candy Shop",
+    "brand": "Libra",
     "landing": "Home",
     "store": "Store",
     "studio": "Studio",

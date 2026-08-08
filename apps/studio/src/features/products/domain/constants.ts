@@ -49,7 +49,7 @@ function badgeTone(
 /* eslint-enable i18next/no-literal-string */
 
 /**
- * Category color mapping using candy CSS variables.
+ * Category color mapping using libra CSS variables.
  * Used for badge accents in the product table.
  */
 export const CATEGORY_COLOR_MAP: Record<ProductCategory, BadgeTone> = {

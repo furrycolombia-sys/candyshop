@@ -1,5 +1,5 @@
 <!--
-  Candy color safelist — Tailwind v4 JIT scans this file to generate utilities
+  Libra color safelist — Tailwind v4 JIT scans this file to generate utilities
   for libra palette colors composed dynamically (e.g. buildTheme("mint") → "bg-mint").
   Without this, dynamic class names are invisible to the scanner.
   Referenced from each app's globals.css via @source.

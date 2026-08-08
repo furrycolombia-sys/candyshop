@@ -1,4 +1,4 @@
-# Candy Shop MVP — Moonfest 2026 Ticketing
+# Libra MVP — Moonfest 2026 Ticketing
 
 **Date:** 2026-03-18
 **Status:** Draft
@@ -8,7 +8,7 @@
 
 ## Overview
 
-Candy Shop is Furry Colombia's e-commerce platform. The MVP focuses on ticket sales for Moonfest 2026, a four-day furry convention. The platform replaces the originally planned Conspace integration with a custom-built ticketing system.
+Libra is Furry Colombia's e-commerce platform. The MVP focuses on ticket sales for Moonfest 2026, a four-day furry convention. The platform replaces the originally planned Conspace integration with a custom-built ticketing system.
 
 ### Business Model
 
@@ -44,7 +44,7 @@ Furry community in Colombia and LATAM, with some international attendees. Biling
 
 ### Attendee: Purchase Ticket
 
-1. Visits Candy Shop homepage (`/[locale]`) — Furry Colombia branded store
+1. Visits Libra homepage (`/[locale]`) — Furry Colombia branded store
 2. Finds Moonfest event card → clicks into event page (`/[locale]/events/moonfest`)
 3. Sees event details, pricing ($300,000 COP), process explanation, marketing content
 4. Clicks "Buy Ticket" → signs in with Google / Facebook / Bluesky

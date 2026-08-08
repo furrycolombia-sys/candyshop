@@ -8,7 +8,7 @@ import { tid } from "shared";
 import { appUrls } from "@/shared/infrastructure/config";
 
 const DEFAULT_LIBRA_TEXT = "var(--libra-text)";
-const LEMON_CANDY_TEXT = "var(--libra-text-on-lemon)";
+const LEMON_LIBRA_TEXT = "var(--libra-text-on-lemon)";
 const PINK_BG = "var(--pink)";
 
 export function RolesSection() {
@@ -50,7 +50,7 @@ export function RolesSection() {
               className="shadow-brutal-sm mt-auto inline-flex self-start border-strong border-foreground px-6 py-3 text-sm font-extrabold uppercase tracking-wider opacity-70"
               style={{
                 backgroundColor: "var(--lemon)",
-                color: LEMON_CANDY_TEXT,
+                color: LEMON_LIBRA_TEXT,
               }}
             >
               {t("artists.comingSoon")}
