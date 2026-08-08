@@ -50,12 +50,12 @@ APPS_MODE=local|docker          # how apps run
 SUPABASE_MODE=local|docker|cloud # how Supabase runs
 
 # ─── Container identity ───────────────────────────────────────────
-SITE_PROD_IMAGE_NAME=candyshop-staging
-SITE_PROD_CONTAINER_NAME=candyshop-staging
+SITE_PROD_IMAGE_NAME=libra-staging
+SITE_PROD_CONTAINER_NAME=libra-staging
 
 # ─── App origins ──────────────────────────────────────────────────
 HOST_PORT=3000   # host port for Docker container
-APP_INTERNAL_ORIGIN=http://candyshop-staging:8080  # internal nginx address
+APP_INTERNAL_ORIGIN=http://libra-staging:8080  # internal nginx address
 
 # ─── Supabase ─────────────────────────────────────────────────────
 NEXT_PUBLIC_SUPABASE_URL=http://localhost:3030   # or https://... for cloud

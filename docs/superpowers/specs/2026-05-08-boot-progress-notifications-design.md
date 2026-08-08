@@ -140,9 +140,9 @@ Progress bar uses Unicode block characters: `█` (filled) and `░` (empty), 16
 **deploy-production.sh additions:**
 
 ```bash
-pm2 delete candyshop-boot-notifier 2>/dev/null || true
+pm2 delete libra-boot-notifier 2>/dev/null || true
 WATCHER_NGINX_PORT=$HOST_PORT pm2 start "$DEPLOY_DIR/scripts/server/boot-notifier.mjs" \
-  --name candyshop-boot-notifier
+  --name libra-boot-notifier
 pm2 save
 ```
 
