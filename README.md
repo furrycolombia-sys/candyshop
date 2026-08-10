@@ -479,9 +479,9 @@ Push to main
 > that is gone. `deploy-gcp.yml` also fired on push to `main`, which would have
 > turned each release into a failing run.
 >
-> `docs/infrastructure.md` still records how the environment was built and is
-> the starting point if something is hosted again; the workflows are in git
-> history.
+> **Current state and how to bring it back: [docs/production-status.md](docs/production-status.md).**
+> `docs/infrastructure.md` still records how the environment was built; the
+> deleted workflows are in git history.
 
 ### Production architecture
 

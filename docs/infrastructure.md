@@ -20,6 +20,10 @@
 > reason and are inert — nothing invokes them.
 >
 > Deleted workflows are recoverable from git history.
+>
+> **For the current state and how to bring production back, see
+> [production-status.md](./production-status.md)** — it records why it went
+> down, which domain is which, and the one credential still missing.
 
 > Everything needed to reproduce the production environment from scratch — whether migrating servers, recovering from failure, or moving to cloud.
 
