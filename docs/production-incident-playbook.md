@@ -9,6 +9,8 @@
 > Kept because the diagnostics and the April 2026 post-mortem are still worth
 > having the day something is hosted again. Every host and container name below
 > is historical.
+>
+> Current state and restore path: [production-status.md](./production-status.md).
 
 > **Quick reference for production outages.** This document captures what went wrong in April 2026, how we fixed it, and what to do if it happens again.
 
