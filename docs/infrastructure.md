@@ -1,5 +1,26 @@
 # Infrastructure & Deployment Guide
 
+> ## ⛔ Decommissioned as of 2026-08-09 — nothing described below is running
+>
+> **There is no production host.** GCP billing is switched off deliberately and
+> permanently (paying anything is a hard stop), so the VM at `35.238.125.109`
+> is gone and `store.furrycolombia.com` returns Cloudflare 530. The LAN box at
+> `192.168.2.71` that the fallback path used no longer exists either.
+>
+> The three deploy workflows — `deploy-gcp.yml`, `deploy-local.yml` and
+> `deploy-production.yml` — were deleted, because each pointed at one of those
+> two dead hosts and `deploy-gcp.yml` fired on every push to `main`, which would
+> have produced a failing deploy at the next release.
+>
+> **This document is kept as a blueprint, not a description of reality.** It
+> still records how the thing was built, which is what you would want when
+> standing something up again. Read every hostname, IP and container name here
+> as "what it was", not "what it is". The server-side files in
+> `scripts/server/` and `scripts/deploy-production.sh` are kept for the same
+> reason and are inert — nothing invokes them.
+>
+> Deleted workflows are recoverable from git history.
+
 > Everything needed to reproduce the production environment from scratch — whether migrating servers, recovering from failure, or moving to cloud.
 
 > **Production is down right now?** → [Production Incident Playbook](./production-incident-playbook.md)

@@ -470,14 +470,18 @@ Pull Request
        └── e2e-tests     Playwright against pre-built Docker image
 
 Push to main
-  └── deploy-production.yml
-       ├── Build         pnpm build --standalone
-       ├── Upload        .next/ artifacts per app
-       ├── Deploy        rsync → production server via Cloudflare Access SSH
-       ├── Docker        Rebuild from pre-built artifacts (no npm install)
-       ├── Health        supervisord + nginx process verification
-       └── Notify        Telegram alert on success/failure
+  └── (nothing — see below)
 ```
+
+> **There is no deploy pipeline right now.** The three deploy workflows were
+> deleted on 2026-08-09: GCP billing is off permanently, and the LAN box the
+> fallback path used no longer exists, so every one of them pointed at a host
+> that is gone. `deploy-gcp.yml` also fired on push to `main`, which would have
+> turned each release into a failing run.
+>
+> `docs/infrastructure.md` still records how the environment was built and is
+> the starting point if something is hosted again; the workflows are in git
+> history.
 
 ### Production architecture
 
