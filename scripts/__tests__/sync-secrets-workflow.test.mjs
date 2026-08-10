@@ -173,15 +173,23 @@ describe("sync-secrets workflow: static shape", () => {
   });
 
   it("keeps the credentials whose loss would be unrecoverable", () => {
+    // GCP_PROD_SERVER_SSH_KEY was on this list until 2026-08-09. The GCP
+    // project is gone (free trial ended, billing is a hard stop), so its
+    // credentials were deleted deliberately — this guard caught that change,
+    // which is what it is for. Do not add names back without a live host.
     const names = new Set(envEntries(workflow).map((e) => e.secret));
     for (const critical of [
       "PROD_SERVER_SSH_KEY",
-      "GCP_PROD_SERVER_SSH_KEY",
       "WEBHOOK_SECRET",
       "PROD_SUPABASE_SERVICE_ROLE_KEY",
     ]) {
       expect(names.has(critical), `${critical} missing from env:`).toBe(true);
     }
+  });
+
+  it("no longer carries credentials for the decommissioned GCP host", () => {
+    const names = envEntries(workflow).map((e) => e.secret);
+    expect(names.filter((n) => n.startsWith("GCP_"))).toEqual([]);
   });
 });
 
