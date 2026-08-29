@@ -70,3 +70,30 @@ begin
   update public.user_profiles set identity_sub = null where id = v_profile;
   raise notice 'current_user_id: OK';
 end $$;
+
+do $$
+declare
+  v_count integer;
+begin
+  -- No public table may reference auth.users any more.
+  select count(*) into v_count
+  from pg_constraint
+  where contype = 'f'
+    and connamespace = 'public'::regnamespace
+    and confrelid = 'auth.users'::regclass;
+
+  assert v_count = 0,
+    format('FAIL: %s public foreign keys still reference auth.users', v_count);
+
+  -- And the user columns must reference user_profiles instead.
+  select count(*) into v_count
+  from pg_constraint
+  where contype = 'f'
+    and connamespace = 'public'::regnamespace
+    and confrelid = 'public.user_profiles'::regclass;
+
+  assert v_count = 13,
+    format('FAIL: expected 13 FKs to user_profiles (11 repointed + 2 on seller_admins), found %s', v_count);
+
+  raise notice 'foreign keys: OK';
+end $$;
