@@ -30,6 +30,29 @@ export async function createServerSupabaseClient() {
 }
 
 /**
+ * Creates a Supabase client authenticated as `service_role`, bypassing Row
+ * Level Security entirely.
+ *
+ * Only for server-side code that must read or write columns RLS
+ * intentionally hides from every authenticated caller — e.g. `identity_sub`,
+ * which even the profile's own owner cannot read or write directly (see
+ * supabase/migrations/20260829150000_protect_identity_sub.sql and
+ * .../20260829160000_protect_identity_sub_select.sql). `resolveProfile`'s
+ * `ProfileStore` needs exactly this: claiming and creating a profile happen
+ * before the caller has an identity `current_user_id()` can resolve.
+ *
+ * Never send this client, or any value derived from it, to a browser.
+ */
+export function createServiceRoleSupabaseClient() {
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!serviceRoleKey) {
+    throw new Error("SUPABASE_SERVICE_ROLE_KEY is required");
+  }
+
+  return createClient<Database>(SUPABASE_REST_URL, serviceRoleKey);
+}
+
+/**
  * Get the authenticated user's email from Clerk.
  * Returns null if not signed in or Clerk is unavailable.
  */
