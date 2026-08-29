@@ -36,15 +36,28 @@ import { execSync, execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { hostname }   from "node:os";
 
+import {
+  buildTruncateStatement,
+  topologicalTableOrder,
+} from "./lib/restore-order.mjs";
+import { isRowReturningStatement } from "./lib/sql-statement.mjs";
+
 const TELEGRAM_SOURCE = process.env.SERVER_HOSTNAME || hostname();
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const rootDir = resolve(__dirname, "..");
-const PROJECT_ID = "olafyajipvsltohagiah";
-const SUPABASE_URL = "https://olafyajipvsltohagiah.supabase.co";
-const API_BASE = `https://api.supabase.com/v1/projects/${PROJECT_ID}/database/query`;
-const POSTGRES_HOST = "aws-1-us-east-2.pooler.supabase.com";
-const POSTGRES_USER = `postgres.${PROJECT_ID}`;
+// Overridable so a restore can target a rebuilt project instead of the one the
+// backup came from. The defaults are the original production project, which no
+// longer exists — a restore must set these.
+const PROJECT_ID = process.env.SUPABASE_PROJECT_ID || "olafyajipvsltohagiah";
+const SUPABASE_URL =
+  process.env.SUPABASE_URL || `https://${PROJECT_ID}.supabase.co`;
+const API_BASE =
+  process.env.SUPABASE_API_BASE ||
+  `https://api.supabase.com/v1/projects/${PROJECT_ID}/database/query`;
+const POSTGRES_HOST =
+  process.env.SUPABASE_DB_HOST || "aws-1-us-east-2.pooler.supabase.com";
+const POSTGRES_USER = process.env.SUPABASE_DB_USER || `postgres.${PROJECT_ID}`;
 const STORAGE_BUCKET = "receipts";
 const PAGE_SIZE = 1000;
 const STORAGE_LIST_LIMIT = 100;
@@ -93,7 +106,12 @@ function queryPostgres(sql) {
   }
 
   const querySql = sql.trim().replace(/;\s*$/, "");
-  const jsonSql = `SELECT COALESCE(json_agg(_backup_query), '[]'::json) FROM (${querySql}) AS _backup_query`;
+  // Only a row-returning statement can be wrapped for JSON output. A TRUNCATE
+  // (the restore empties every table before inserting) is run as-is.
+  const returnsRows = isRowReturningStatement(querySql);
+  const jsonSql = returnsRows
+    ? `SELECT COALESCE(json_agg(_backup_query), '[]'::json) FROM (${querySql}) AS _backup_query`
+    : querySql;
 
   try {
     const stdout = execFileSync(
@@ -111,7 +129,7 @@ function queryPostgres(sql) {
         env: {
           ...process.env,
           PGHOST: POSTGRES_HOST,
-          PGPORT: "5432",
+          PGPORT: process.env.SUPABASE_DB_PORT || "5432",
           PGUSER: POSTGRES_USER,
           PGPASSWORD: password,
           PGDATABASE: "postgres",
@@ -121,6 +139,9 @@ function queryPostgres(sql) {
         maxBuffer: 512 * 1024 * 1024,
       },
     );
+    // A statement that returns no rows prints a command tag ("TRUNCATE TABLE"),
+    // which is not JSON and carries nothing the caller needs.
+    if (!returnsRows) return [];
     return JSON.parse(stdout.trim() || "[]");
   } catch (err) {
     if (err.code === "ENOENT") {
@@ -411,6 +432,27 @@ async function uploadToTelegram(tg, zipPath, manifest) {
  * deterministic across runs even when PostgreSQL returns rows in different
  * physical orders (heap scan order varies after autovacuum, replication, etc.).
  */
+/**
+ * Reads `[child, parent]` foreign-key pairs between public tables.
+ *
+ * Read from the live schema rather than hardcoded, so adding a table or
+ * repointing a constraint cannot silently leave the restore order stale.
+ */
+async function fetchForeignKeyEdges(pat) {
+  const rows = await query(
+    pat,
+    `SELECT tc.table_name AS child, ccu.table_name AS parent
+     FROM information_schema.table_constraints tc
+     JOIN information_schema.constraint_column_usage ccu
+       ON tc.constraint_name = ccu.constraint_name
+       AND tc.table_schema  = ccu.table_schema
+     WHERE tc.constraint_type = 'FOREIGN KEY'
+       AND tc.table_schema    = 'public'
+       AND ccu.table_schema   = 'public'`,
+  );
+  return rows.map(({ child, parent }) => [child, parent]);
+}
+
 async function fetchPrimaryKeys(pat) {
   const rows = await query(
     pat,
@@ -478,8 +520,8 @@ async function restoreTable(pat, serviceKey, table, rows) {
     return;
   }
   assertSafeIdentifier(table);
-  // DDL via Management API (no user data in query)
-  await query(pat, `TRUNCATE "${table}" RESTART IDENTITY CASCADE`);
+  // Tables are emptied once, up front, by the caller. Truncating here would
+  // cascade away children already restored.
   // Inserts via PostgREST — data sent as JSON, no SQL string construction
   for (let i = 0; i < rows.length; i += 200) {
     const batch = rows.slice(i, i + 200);
@@ -741,7 +783,19 @@ async function restore(pat, serviceKey, backupPath) {
 
   // Restore DB
   console.log("── Restoring database ────────────────────────");
-  for (const table of Object.keys(manifest.tables)) {
+
+  // The manifest lists tables alphabetically, which is not a valid insert
+  // order: a child row cannot reference a parent that has not been inserted.
+  const manifestTables = Object.keys(manifest.tables);
+  const edges = await fetchForeignKeyEdges(pat);
+  const restoreOrder = topologicalTableOrder(manifestTables, edges);
+  console.log(`  Insert order: ${restoreOrder.join(", ")}\n`);
+
+  // Empty everything in one statement before inserting anything, so no
+  // truncation can cascade away rows restored earlier in the run.
+  await query(pat, buildTruncateStatement(restoreOrder));
+
+  for (const table of restoreOrder) {
     assertSafeIdentifier(table);
     // Regex extraction breaks the taint chain from the manifest-sourced `table`
     // variable before it reaches the filesystem sink.
