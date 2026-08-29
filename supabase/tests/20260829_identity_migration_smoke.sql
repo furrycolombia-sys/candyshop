@@ -160,3 +160,60 @@ begin
 
   raise notice 'foreign keys: OK';
 end $$;
+
+do $$
+declare
+  v_count integer;
+  v_offenders text;
+begin
+  select count(*), string_agg(tablename || '.' || policyname, ', ')
+  into v_count, v_offenders
+  from pg_policies
+  where schemaname = 'public'
+    and (coalesce(qual, '') || coalesce(with_check, '')) like '%auth.uid()%';
+
+  assert v_count = 0,
+    format('FAIL: %s policies still call auth.uid(): %s', v_count, v_offenders);
+
+  -- And the replacement is actually in use.
+  select count(*) into v_count
+  from pg_policies
+  where schemaname = 'public'
+    and (coalesce(qual, '') || coalesce(with_check, '')) like '%current_user_id()%';
+
+  assert v_count = 43,
+    format('FAIL: expected 43 policies on current_user_id(), found %s', v_count);
+
+  raise notice 'rls policies: OK';
+end $$;
+
+do $$
+declare
+  v_visible integer;
+  v_profile uuid;
+begin
+  select o.user_id into v_profile from public.orders o limit 1;
+
+  -- Guard: if no rows in orders (empty database), skip this test block
+  if v_profile is null then
+    raise notice 'rls denial: skipped (no rows)';
+    return;
+  end if;
+
+  -- Claimed caller sees their own orders.
+  update public.user_profiles set identity_sub = 'user_smoketest' where id = v_profile;
+  perform set_config('request.jwt.claims', '{"sub":"user_smoketest"}', true);
+  perform set_config('role', 'authenticated', true);
+  select count(*) into v_visible from public.orders;
+  assert v_visible > 0, 'FAIL: a claimed caller sees none of their own orders';
+
+  -- Unknown caller sees nothing. NULL must deny, not match.
+  perform set_config('request.jwt.claims', '{"sub":"user_nobody"}', true);
+  select count(*) into v_visible from public.orders;
+  assert v_visible = 0,
+    format('FAIL: unresolved caller saw %s orders — NULL is matching rows', v_visible);
+
+  perform set_config('role', 'postgres', true);
+  update public.user_profiles set identity_sub = null where id = v_profile;
+  raise notice 'rls denial: OK';
+end $$;
