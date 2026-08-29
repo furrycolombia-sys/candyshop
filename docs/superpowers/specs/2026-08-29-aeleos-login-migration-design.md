@@ -112,15 +112,19 @@ Additive migrations on top of the existing 38. **No history rewriting** — dev
 and CI keep working and the diff stays reviewable.
 
 1. **Add `identity_sub`** to `user_profiles`, nullable, with a unique index.
-2. **Repoint every foreign key** to `auth.users(id)` so it targets
-   `user_profiles(id)`. Eight carry data today — `orders.user_id`,
-   `orders.seller_id`, `products.seller_id`, `seller_admins.seller_id`,
-   `seller_admins.admin_user_id`, `seller_payment_methods.seller_id`,
-   `user_permissions.user_id`, `user_permissions.granted_by` — and four are on
-   tables that are empty in the backup: `check_ins.checked_in_by`,
-   `check_in_audit.performed_by`, `ticket_transfers.from_user_id` and
-   `.to_user_id`. Twelve in total. Values are untouched; only the constraint
-   target changes.
+2. **Repoint the 11 foreign keys** that still target `auth.users(id)` so they
+   target `user_profiles(id)`, verified against the applied schema:
+   `orders_user_id_fkey`, `orders_seller_id_fkey`, `products_seller_id_fkey`,
+   `product_reviews_user_id_fkey`, `seller_payment_methods_seller_id_fkey`,
+   `user_permissions_user_id_fkey`, `user_permissions_granted_by_fkey`,
+   `check_ins_checked_in_by_fkey`, `check_in_audit_performed_by_fkey`,
+   `ticket_transfers_from_user_id_fkey`, `ticket_transfers_to_user_id_fkey`.
+   Values are untouched; only the constraint target changes.
+
+   `seller_admins` is **already** repointed — `seller_admins_seller_id_fkey`
+   and `seller_admins_admin_user_id_fkey` reference `user_profiles` today. It is
+   the precedent to copy, not work to redo.
+
 3. **Add `current_user_id()`** and rewrite every RLS policy that calls
    `auth.uid()` to call it instead.
 4. **Drop `sync_user_profile`** and its trigger on `auth.users` — that table
