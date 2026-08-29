@@ -372,3 +372,78 @@ begin
 
   raise notice 'identity_sub read protection: OK';
 end $$;
+
+do $$
+declare
+  v_profile public.user_profiles;
+  v_perm_count integer;
+  v_expected_keys text[] := array[
+    'orders.create',
+    'orders.read',
+    'product_reviews.create',
+    'product_reviews.delete',
+    'product_reviews.read',
+    'product_reviews.update',
+    'products.read',
+    'receipts.create',
+    'receipts.delete'
+  ];
+  v_actual_keys text[];
+  v_anon_can boolean;
+  v_authenticated_can boolean;
+  v_service_role_can boolean;
+begin
+  -- create_profile_with_default_permissions() must exist and be usable only
+  -- by service_role: it accepts an arbitrary identity_sub, so anon/
+  -- authenticated must never be able to mint a profile for any sub they
+  -- choose. Supabase's ALTER DEFAULT PRIVILEGES auto-grants EXECUTE on every
+  -- new public-schema function to anon/authenticated/service_role in
+  -- addition to the implicit PUBLIC grant, so both must be checked.
+  select has_function_privilege('anon', 'public.create_profile_with_default_permissions(text,text,text,text)', 'execute'),
+         has_function_privilege('authenticated', 'public.create_profile_with_default_permissions(text,text,text,text)', 'execute'),
+         has_function_privilege('service_role', 'public.create_profile_with_default_permissions(text,text,text,text)', 'execute')
+    into v_anon_can, v_authenticated_can, v_service_role_can;
+
+  assert v_anon_can = false, 'FAIL: anon can execute create_profile_with_default_permissions';
+  assert v_authenticated_can = false, 'FAIL: authenticated can execute create_profile_with_default_permissions';
+  assert v_service_role_can = true, 'FAIL: service_role cannot execute create_profile_with_default_permissions';
+
+  -- Calling it inserts the profile AND grants the exact default buyer
+  -- permission set, in one call — this is what stands in for the
+  -- on_auth_user_default_permissions trigger, which can never fire again now
+  -- that auth.users is permanently empty. See task-8-brief.md.
+  select * into v_profile
+  from public.create_profile_with_default_permissions(
+    'smoketest_create_profile@example.com',
+    'user_smoketest_create_profile',
+    'Smoke Test',
+    null
+  );
+
+  assert v_profile.id is not null, 'FAIL: create_profile_with_default_permissions returned no id';
+  assert v_profile.identity_sub = 'user_smoketest_create_profile',
+    'FAIL: created profile has the wrong identity_sub';
+
+  select count(*) into v_perm_count
+  from public.user_permissions
+  where user_id = v_profile.id;
+
+  assert v_perm_count = 9,
+    format('FAIL: expected 9 default buyer permissions granted, found %s', v_perm_count);
+
+  select array_agg(p.key order by p.key) into v_actual_keys
+  from public.user_permissions up
+  join public.resource_permissions rp on rp.id = up.resource_permission_id
+  join public.permissions p on p.id = rp.permission_id
+  where up.user_id = v_profile.id;
+
+  assert v_actual_keys = v_expected_keys,
+    format('FAIL: granted permission keys do not match. actual=%s expected=%s',
+      v_actual_keys, v_expected_keys);
+
+  -- Clean up: deleting the profile cascades to user_permissions
+  -- (user_permissions_user_id_fkey ... ON DELETE CASCADE).
+  delete from public.user_profiles where id = v_profile.id;
+
+  raise notice 'create_profile_with_default_permissions: OK';
+end $$;
