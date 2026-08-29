@@ -187,4 +187,30 @@ describe("createSupabaseProfileStore", () => {
       createSupabaseProfileStore({ rpc } as never).create(IDENTITY),
     ).rejects.toThrow(/Profile creation failed/);
   });
+
+  it("lowercases the email before creating a profile, so a later findByEmail lookup (which always lowercases) can find it", async () => {
+    // user_profiles_email_idx is a case-sensitive unique index. If create()
+    // stores the email as-is while findByEmail always looks it up lowercased,
+    // "Rev.Probe@Example.COM" and "rev.probe@example.com" can coexist as two
+    // rows for the same person — the exact duplicate-profile bug this guards
+    // against.
+    const rpc = vi.fn().mockResolvedValue({
+      data: {
+        id: "new-id",
+        email: "rev.probe@example.com",
+        identity_sub: "user_2abc",
+      },
+      error: null,
+    });
+
+    await createSupabaseProfileStore({ rpc } as never).create({
+      ...IDENTITY,
+      email: "Rev.Probe@Example.COM",
+    });
+
+    expect(rpc).toHaveBeenCalledWith(
+      "create_profile_with_default_permissions",
+      expect.objectContaining({ p_email: "rev.probe@example.com" }),
+    );
+  });
 });

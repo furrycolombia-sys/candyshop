@@ -23,7 +23,8 @@ export type ResolveResult =
   | { status: "matched"; profile: UserProfile }
   | { status: "claimed"; profile: UserProfile }
   | { status: "created"; profile: UserProfile }
-  | { status: "conflict"; email: string };
+  | { status: "conflict"; email: string }
+  | { status: "email_required" };
 
 /**
  * Resolves a Clerk identity to a local profile, claiming a restored one if this
@@ -56,6 +57,14 @@ export async function resolveProfile(
       // Someone else already claimed this profile. Refuse rather than reassign.
       return { status: "conflict", email };
     }
+  }
+
+  // user_profiles.email is NOT NULL. A phone-only or no-email-scope Clerk
+  // identity cannot be turned into a profile — return a typed result the
+  // caller can act on instead of letting the database's NOT NULL constraint
+  // surface as an opaque "Profile creation failed" throw.
+  if (!identity.email) {
+    return { status: "email_required" };
   }
 
   return { status: "created", profile: await store.create(identity) };

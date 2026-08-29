@@ -64,10 +64,19 @@ export function createSupabaseProfileStore(
       // database function call — one PostgREST round trip, one transaction —
       // so a person can never end up with a profile but no permissions. See
       // supabase/migrations/20260829170000_profile_create_with_permissions.sql.
+      // Lowercase to agree with findByEmail, which always looks up the
+      // lowercased address. user_profiles_email_idx is case-sensitive, so
+      // writing the raw case here would let "Rev@x.com" and "rev@x.com"
+      // coexist as two profiles for the same person (see also the
+      // case-insensitive unique index on lower(email) added in
+      // 20260829180000_email_case_insensitive_unique.sql, which is the
+      // defense-in-depth backstop if some other write path skips this).
+      const email = identity.email ? identity.email.toLowerCase() : null;
+
       const { data, error } = await client.rpc(
         "create_profile_with_default_permissions",
         {
-          p_email: identity.email,
+          p_email: email,
           p_identity_sub: identity.sub,
           p_display_name: identity.displayName,
           p_avatar_url: identity.avatarUrl,

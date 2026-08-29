@@ -106,13 +106,75 @@ describe("resolveProfile", () => {
   });
 
   it("is a no-op the second time, so it can be re-run after a Clerk promotion", async () => {
-    const claimed = { ...PROFILE, identity_sub: "user_2abc" };
-    const store = makeStore({ findBySub: vi.fn().mockResolvedValue(claimed) });
+    // A stateful fake, not a fixed stub: call 1 must find the profile
+    // UNCLAIMED and actually claim it, mutating state, so call 2 can only
+    // pass by matching on the sub that claim() persisted. A store whose
+    // claim() silently failed to persist identity_sub would still find the
+    // profile unclaimed on call 2 and re-claim it — this is the property a
+    // stub that "always returns claimed" can never catch.
+    let profile: UserProfile = { ...PROFILE };
+    const store: ProfileStore = {
+      findBySub: vi.fn(async (sub) =>
+        profile.identity_sub === sub ? profile : null,
+      ),
+      findByEmail: vi.fn(async (email) =>
+        profile.email === email ? profile : null,
+      ),
+      claim: vi.fn(async (id, sub) => {
+        profile = { ...profile, id, identity_sub: sub };
+        return profile;
+      }),
+      create: vi.fn(async () => {
+        throw new Error("create must not be called: the profile exists");
+      }),
+    };
 
     const first = await resolveProfile(IDENTITY, store);
     const second = await resolveProfile(IDENTITY, store);
 
-    expect(first).toEqual(second);
-    expect(store.claim).not.toHaveBeenCalled();
+    expect(first).toEqual({ status: "claimed", profile });
+    expect(second).toEqual({ status: "matched", profile });
+    expect(store.claim).toHaveBeenCalledTimes(1);
+  });
+
+  it("returns a typed result instead of crashing when the identity has no email at all", async () => {
+    // user_profiles.email is NOT NULL. A phone-only or no-email-scope Clerk
+    // identity must get a result the caller can act on, not an opaque
+    // "Profile creation failed: null value in column email..." from the
+    // database's NOT NULL constraint.
+    const store = makeStore();
+
+    const result = await resolveProfile(
+      { ...IDENTITY, email: null, emailVerified: false },
+      store,
+    );
+
+    expect(result).toEqual({ status: "email_required" });
+    expect(store.create).not.toHaveBeenCalled();
+    expect(store.findByEmail).not.toHaveBeenCalled();
+  });
+
+  it("propagates a real duplicate-key failure instead of silently mislabelling it as created", async () => {
+    // In production, an unverified email that collides with an existing
+    // profile's email reaches store.create(), which hits
+    // user_profiles_email_lower_idx (see
+    // 20260829180000_email_case_insensitive_unique.sql) and rejects with a
+    // duplicate-key error. This is fail-closed — nobody's data is exposed —
+    // but it must surface as a rejected promise, not get swallowed into a
+    // false "created" result.
+    const store = makeStore({
+      findByEmail: vi.fn().mockResolvedValue(PROFILE),
+      create: vi
+        .fn()
+        .mockRejectedValue(
+          new Error(
+            'Profile creation failed: duplicate key value violates unique constraint "user_profiles_email_lower_idx"',
+          ),
+        ),
+    });
+
+    await expect(
+      resolveProfile({ ...IDENTITY, emailVerified: false }, store),
+    ).rejects.toThrow(/user_profiles_email_lower_idx/);
   });
 });
