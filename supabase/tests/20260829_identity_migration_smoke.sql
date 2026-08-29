@@ -237,3 +237,50 @@ begin
 
   raise notice 'auth.users coupling: OK';
 end $$;
+
+do $$
+declare
+  v_count integer;
+begin
+  -- authenticated/anon must not hold UPDATE on identity_sub at the column
+  -- level, and must not hold table-wide UPDATE either (a table-wide grant
+  -- covers every column regardless of any column-level revoke, so both must
+  -- be checked for this to be a real assertion).
+  select count(*) into v_count
+  from information_schema.column_privileges
+  where table_schema = 'public'
+    and table_name   = 'user_profiles'
+    and column_name  = 'identity_sub'
+    and privilege_type = 'UPDATE'
+    and grantee in ('anon', 'authenticated');
+
+  assert v_count = 0,
+    format('FAIL: %s client role(s) still hold column UPDATE on identity_sub', v_count);
+
+  -- A table-level UPDATE grant, if present, implies every column including
+  -- identity_sub — so this must be absent, not just the column-level grant.
+  select count(*) into v_count
+  from information_schema.role_table_grants
+  where table_schema = 'public'
+    and table_name   = 'user_profiles'
+    and privilege_type = 'UPDATE'
+    and grantee in ('anon', 'authenticated');
+
+  assert v_count = 0,
+    format('FAIL: %s client role(s) still hold table-wide UPDATE on user_profiles (would include identity_sub)', v_count);
+
+  -- The client must still be able to edit its own display fields: a
+  -- column-level UPDATE grant for the profile form's editable columns.
+  select count(distinct grantee) into v_count
+  from information_schema.column_privileges
+  where table_schema = 'public'
+    and table_name   = 'user_profiles'
+    and column_name  in ('display_name', 'display_email', 'display_avatar_url')
+    and privilege_type = 'UPDATE'
+    and grantee in ('anon', 'authenticated');
+
+  assert v_count = 2,
+    format('FAIL: expected anon and authenticated to both hold UPDATE on the editable display columns, found %s grantee(s)', v_count);
+
+  raise notice 'identity_sub write protection: OK';
+end $$;
