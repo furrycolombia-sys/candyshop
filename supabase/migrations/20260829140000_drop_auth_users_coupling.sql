@@ -12,3 +12,7 @@ drop function if exists public.sync_user_profile();
 
 -- Keyed on auth.uid() = id, which cannot hold under Third-Party Auth.
 drop policy if exists profiles_insert on public.user_profiles;
+
+-- profiles_update is deliberately kept — it is now the only policy governing
+-- client writes to a profile row (see 20260829150000_protect_identity_sub.sql
+-- for the column-level grants that constrain what it lets a client change).

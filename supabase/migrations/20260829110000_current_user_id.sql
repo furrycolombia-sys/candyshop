@@ -6,7 +6,11 @@
 -- under Third-Party Auth — it fails the cast.
 --
 -- SECURITY DEFINER because the lookup must not itself be gated by RLS on
--- user_profiles. search_path is pinned, matching 20260422200000.
+-- user_profiles. search_path is pinned to 'public' — not '' as in
+-- 20260422200000 — since every identifier in the body below is already
+-- schema-qualified (public.user_profiles, auth.jwt()); the pin only hardens
+-- name resolution against search-path injection, it does not change what
+-- the query resolves to.
 --
 -- Returns NULL for an unknown or absent identity. Every caller must treat NULL
 -- as "deny", never as "match".
