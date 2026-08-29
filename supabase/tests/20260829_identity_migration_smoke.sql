@@ -284,3 +284,91 @@ begin
 
   raise notice 'identity_sub write protection: OK';
 end $$;
+
+do $$
+declare
+  v_count integer;
+  v_actual_anon text[];
+  v_actual_authenticated text[];
+  v_expected_readable text[] := array[
+    'avatar_url',
+    'created_at',
+    'display_avatar_url',
+    'display_email',
+    'display_name',
+    'email',
+    'first_seen_at',
+    'id',
+    'last_seen_at',
+    'provider',
+    'updated_at'
+  ];
+begin
+  -- authenticated/anon must not hold SELECT on identity_sub at the column
+  -- level, and must not hold table-wide SELECT either (a table-wide grant
+  -- covers every column regardless of any column-level revoke, so both must
+  -- be checked for this to be a real assertion — same shape as the UPDATE
+  -- check above).
+  select count(*) into v_count
+  from information_schema.column_privileges
+  where table_schema = 'public'
+    and table_name   = 'user_profiles'
+    and column_name  = 'identity_sub'
+    and privilege_type = 'SELECT'
+    and grantee in ('anon', 'authenticated');
+
+  assert v_count = 0,
+    format('FAIL: %s client role(s) still hold column SELECT on identity_sub', v_count);
+
+  -- A table-level SELECT grant, if present, implies every column including
+  -- identity_sub — so this must be absent, not just the column-level grant.
+  select count(*) into v_count
+  from information_schema.role_table_grants
+  where table_schema = 'public'
+    and table_name   = 'user_profiles'
+    and privilege_type = 'SELECT'
+    and grantee in ('anon', 'authenticated');
+
+  assert v_count = 0,
+    format('FAIL: %s client role(s) still hold table-wide SELECT on user_profiles (would include identity_sub)', v_count);
+
+  -- The rest of the profile (display name, avatar, etc.) must still be
+  -- readable — checked as an exact set, not just a count, so dropping one
+  -- legitimate column while adding a spurious one still fails.
+  select array_agg(column_name order by column_name) into v_actual_anon
+  from information_schema.column_privileges
+  where table_schema = 'public'
+    and table_name   = 'user_profiles'
+    and privilege_type = 'SELECT'
+    and grantee = 'anon';
+
+  assert v_actual_anon = v_expected_readable,
+    format('FAIL: anon SELECT columns on user_profiles do not match. actual=%s expected=%s',
+      v_actual_anon, v_expected_readable);
+
+  select array_agg(column_name order by column_name) into v_actual_authenticated
+  from information_schema.column_privileges
+  where table_schema = 'public'
+    and table_name   = 'user_profiles'
+    and privilege_type = 'SELECT'
+    and grantee = 'authenticated';
+
+  assert v_actual_authenticated = v_expected_readable,
+    format('FAIL: authenticated SELECT columns on user_profiles do not match. actual=%s expected=%s',
+      v_actual_authenticated, v_expected_readable);
+
+  -- service_role must retain unrestricted access, including identity_sub —
+  -- the server still needs to write and read it via resolveProfile.
+  select count(*) into v_count
+  from information_schema.column_privileges
+  where table_schema = 'public'
+    and table_name   = 'user_profiles'
+    and column_name  = 'identity_sub'
+    and privilege_type = 'SELECT'
+    and grantee = 'service_role';
+
+  assert v_count = 1,
+    'FAIL: service_role lost SELECT on identity_sub';
+
+  raise notice 'identity_sub read protection: OK';
+end $$;
