@@ -350,7 +350,9 @@ alter table public.orders add constraint orders_user_id_fkey
 
 alter table public.orders drop constraint if exists orders_seller_id_fkey;
 alter table public.orders add constraint orders_seller_id_fkey
-  foreign key (seller_id) references public.user_profiles(id) on delete cascade;
+  foreign key (seller_id) references public.user_profiles(id);
+-- NOTE: the live schema has NO ACTION (confdeltype='a') for this constraint,
+-- not CASCADE — omit the ON DELETE clause to preserve it exactly.
 
 -- products
 alter table public.products drop constraint if exists products_seller_id_fkey;
@@ -648,8 +650,7 @@ Create `supabase/migrations/20260829140000_drop_auth_users_coupling.sql`:
 -- with the service role.
 -- =============================================================================
 
-drop trigger if exists on_auth_user_created on auth.users;
-drop trigger if exists on_auth_user_updated on auth.users;
+drop trigger if exists on_auth_user_change on auth.users;
 drop function if exists public.sync_user_profile();
 
 -- Keyed on auth.uid() = id, which cannot hold under Third-Party Auth.
@@ -943,6 +944,22 @@ git commit -m "feat(db): trust Clerk as a third-party auth provider [GH-000]"
 `ProfileStore` is injected so the logic is testable without a database, per
 `.claude/rules/solid-principles.md` (dependency inversion). Task 8 supplies the
 Supabase-backed implementation.
+
+> **Requirement — default buyer permissions on `create`.** `auth.users` is now
+> permanently empty (the production auth schema is gone), so
+> `on_auth_user_default_permissions` — the trigger that used to call
+> `grant_default_buyer_permissions` after every `auth.users` insert — can never
+> fire again. The `"created"` branch of `resolveProfile` is the only place a
+> brand-new person's profile now comes into existence, so the Supabase-backed
+> `ProfileStore.create()` implementation MUST also call
+> `grant_default_buyer_permissions(new_profile.id, new_profile.id, ...)` (or
+> insert the equivalent `user_permissions` rows) in the same transaction as the
+> profile insert. Without this, a new signup can neither place nor read an
+> order — every buyer policy gates on `has_permission(current_user_id(), …)`.
+> The 196 restored profiles are unaffected; their `user_permissions` rows came
+> through the backup, not through this trigger. See
+> [Risks](../specs/2026-08-29-aeleos-login-migration-design.md#risks) in the
+> design spec.
 
 - [ ] **Step 1: Write the failing tests**
 

@@ -257,6 +257,25 @@ locally against real Clerk tokens with no cloud project.
 5. **The backup is one file.** Until it is restored into a live project it is
    the only copy of the business. The backup workflow is `disabled_manually` and
    points at a dead project; it needs re-pointing once the new project exists.
+6. **Critical — default buyer permissions can never be granted by trigger
+   again.** `on_auth_user_default_permissions` (from migration
+   `20260408203000_default_buyer_permissions.sql`) is still attached to
+   `auth.users` and is the only caller of `grant_default_buyer_permissions` —
+   no application code invokes that function directly. Verified against the
+   live database: the trigger is present and enabled, `auth.users` has 0 rows,
+   and no app code calls `grant_default_buyer_permissions` or
+   `handle_auth_user_default_permissions`. Because `auth.users` is now
+   permanently empty under Third-Party Auth, the insert that would fire this
+   trigger can never happen again — **no new signup will ever receive default
+   buyer permissions** unless something else grants them. The 196 restored
+   users are unaffected (their 1,799 `user_permissions` rows came through the
+   backup, not the trigger); the first genuinely new signup (user 197) would be
+   able to neither place nor read an order, since every buyer policy gates on
+   `has_permission(current_user_id(), …)`. This is not fixed by this schema
+   migration — it is a requirement on Task 8 (`resolveProfile`) in the
+   [plan](../plans/2026-08-29-aeleos-login-migration.md#task-8-resolve-or-claim-a-profile-from-a-clerk-identity):
+   the server must grant default buyer permissions itself when it creates a
+   brand-new profile.
 
 ---
 
