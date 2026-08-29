@@ -74,6 +74,23 @@ end $$;
 do $$
 declare
   v_count integer;
+  v_actual_names text[];
+  v_expected_names text[] := array[
+    'check_in_audit_performed_by_fkey',
+    'check_ins_checked_in_by_fkey',
+    'orders_seller_id_fkey',
+    'orders_user_id_fkey',
+    'product_reviews_user_id_fkey',
+    'products_seller_id_fkey',
+    'seller_admins_admin_user_id_fkey',
+    'seller_admins_seller_id_fkey',
+    'seller_payment_methods_seller_id_fkey',
+    'ticket_transfers_from_user_id_fkey',
+    'ticket_transfers_to_user_id_fkey',
+    'user_permissions_granted_by_fkey',
+    'user_permissions_user_id_fkey'
+  ];
+  v_deltype_mismatches text;
 begin
   -- No public table may reference auth.users any more.
   select count(*) into v_count
@@ -94,6 +111,52 @@ begin
 
   assert v_count = 13,
     format('FAIL: expected 13 FKs to user_profiles (11 repointed + 2 on seller_admins), found %s', v_count);
+
+  -- The exact SET of constraint names must match, not just the count.
+  -- A count alone still passes if one FK is dropped and a spurious one is
+  -- added elsewhere.
+  select array_agg(conname order by conname) into v_actual_names
+  from pg_constraint
+  where contype = 'f'
+    and connamespace = 'public'::regnamespace
+    and confrelid = 'public.user_profiles'::regclass;
+
+  assert v_actual_names = v_expected_names,
+    format('FAIL: FK name set on user_profiles does not match. actual=%s expected=%s',
+      v_actual_names, v_expected_names);
+
+  -- Pin ON DELETE behaviour for each of the 11 repointed constraints, verified
+  -- against the live schema (see task-3-report.md), so a migration that
+  -- repoints the table but writes the wrong delete clause (e.g. CASCADE where
+  -- NO ACTION is required, as orders_seller_id_fkey nearly was) fails loudly
+  -- instead of silently changing deletion semantics for real customer data.
+  select string_agg(
+    format('%s (expected=%s actual=%s)', t.conname, t.expected, coalesce(c.confdeltype::text, 'MISSING')),
+    ', '
+  )
+  into v_deltype_mismatches
+  from (
+    values
+      ('orders_user_id_fkey', 'c'),
+      ('orders_seller_id_fkey', 'a'),
+      ('products_seller_id_fkey', 'n'),
+      ('product_reviews_user_id_fkey', 'c'),
+      ('seller_payment_methods_seller_id_fkey', 'c'),
+      ('user_permissions_user_id_fkey', 'c'),
+      ('user_permissions_granted_by_fkey', 'a'),
+      ('check_ins_checked_in_by_fkey', 'a'),
+      ('check_in_audit_performed_by_fkey', 'a'),
+      ('ticket_transfers_from_user_id_fkey', 'a'),
+      ('ticket_transfers_to_user_id_fkey', 'a')
+  ) as t(conname, expected)
+  left join pg_constraint c
+    on c.conname = t.conname
+    and c.connamespace = 'public'::regnamespace
+    and c.contype = 'f'
+  where c.confdeltype::text is distinct from t.expected;
+
+  assert v_deltype_mismatches is null,
+    format('FAIL: ON DELETE behaviour mismatch on: %s', v_deltype_mismatches);
 
   raise notice 'foreign keys: OK';
 end $$;
