@@ -181,8 +181,8 @@ begin
   where schemaname = 'public'
     and (coalesce(qual, '') || coalesce(with_check, '')) like '%current_user_id()%';
 
-  assert v_count = 43,
-    format('FAIL: expected 43 policies on current_user_id(), found %s', v_count);
+  assert v_count = 42,
+    format('FAIL: expected 42 policies on current_user_id() (43 - 1 profiles_insert dropped in Task 5), found %s', v_count);
 
   raise notice 'rls policies: OK';
 end $$;
@@ -216,4 +216,24 @@ begin
   perform set_config('role', 'postgres', true);
   update public.user_profiles set identity_sub = null where id = v_profile;
   raise notice 'rls denial: OK';
+end $$;
+
+do $$
+declare
+  v_count integer;
+begin
+  select count(*) into v_count
+  from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+  where n.nspname = 'public' and p.proname = 'sync_user_profile';
+
+  assert v_count = 0, 'FAIL: sync_user_profile still exists';
+
+  select count(*) into v_count
+  from pg_policies
+  where schemaname = 'public' and tablename = 'user_profiles'
+    and policyname = 'profiles_insert';
+
+  assert v_count = 0, 'FAIL: profiles_insert policy still exists';
+
+  raise notice 'auth.users coupling: OK';
 end $$;
