@@ -1,28 +1,13 @@
 import fs from "node:fs";
 import path from "node:path";
 
+import { clerk, clerkSetup } from "@clerk/testing/playwright";
 import { test as setup } from "@playwright/test";
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { resolveE2EAppUrls } = require(
   path.resolve(__dirname, "../../../scripts/app-url-resolver.js"),
 );
-
-/**
- * Encode a string as base64url (URL-safe base64, no padding).
- * @supabase/ssr uses base64url encoding for cookie values — standard btoa()
- * produces base64 with +/= chars that @supabase/ssr's stringFromBase64URL
- * will reject as invalid characters.
- */
-function toBase64URL(str: string): string {
-  return Buffer.from(str)
-    .toString("base64")
-    .replace(/\+/g, "-")
-    .replace(/\//g, "_")
-    .replace(/=+$/, "");
-}
-
-const SESSION_EXPIRY_SECONDS = 3600;
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 if (!SUPABASE_URL)
@@ -34,85 +19,91 @@ if (!SERVICE_ROLE_KEY)
   throw new Error(
     "SUPABASE_SERVICE_ROLE_KEY is not set. Ensure the correct .env.* file is loaded.",
   );
+const CLERK_SECRET_KEY = process.env.CLERK_SECRET_KEY;
+if (!CLERK_SECRET_KEY)
+  throw new Error(
+    "CLERK_SECRET_KEY is not set. Ensure the correct .env.* file is loaded.",
+  );
 
 const AUTH_FILE = "e2e/.auth/session.json";
-const { store: STORE_URL } = resolveE2EAppUrls();
-const storeHost = new URL(STORE_URL);
-const isLocalhost =
-  storeHost.hostname === "localhost" || storeHost.hostname === "127.0.0.1";
+const USER_FILE = path.join(path.dirname(AUTH_FILE), "user.json");
+const { store: STORE_URL, auth: AUTH_URL } = resolveE2EAppUrls();
 
-setup("authenticate", async ({ context, page }) => {
-  if (SERVICE_ROLE_KEY.split(".").length !== 3) {
-    throw new Error(
-      "[auth.setup] SUPABASE_SERVICE_ROLE_KEY is not configured. Start Supabase with `pnpm supabase start`.",
-    );
-  }
+setup("authenticate", async ({ page }) => {
+  // Fetches a Clerk Testing Token so the sign-in below bypasses Clerk's bot
+  // detection — required for any automated (non-human) sign-in.
+  await clerkSetup();
 
-  // Must match SUPABASE_COOKIE_KEY in packages/api/src/supabase/config.ts
-  // which uses deriveProjectRef: 127.0.0.1 → "127.0.0.1", localhost → "localhost"
-  const refHostname = new URL(SUPABASE_URL).hostname;
-  const projectRef =
-    refHostname === "localhost" || refHostname === "127.0.0.1"
-      ? refHostname
-      : refHostname.split(".")[0];
-  const cookieBase = `sb-${projectRef}-auth-token`;
+  // A Clerk dev-instance test email (`+clerk_test` subaddress): no real inbox,
+  // no verification email actually sent, unique per run.
+  const email = `e2e-${Date.now()}+clerk_test@example.com`;
+
+  const { createClerkClient } = await import("@clerk/backend");
+  const clerkClient = createClerkClient({ secretKey: CLERK_SECRET_KEY });
+  // Backend-API-created users are verified by default (Clerk's own default —
+  // see docs/reference/backend/user/create-user), which is required for
+  // resolveProfile()'s emailVerified gate below.
+  const clerkUser = await clerkClient.users.createUser({
+    emailAddress: [email],
+    skipPasswordRequirement: true,
+  });
+
+  // Any unprotected page that loads Clerk's client JS.
+  await page.goto(`${AUTH_URL}/en/login`);
+
+  // Real, unmocked Clerk sign-in: @clerk/testing's `emailAddress` mode looks
+  // the user up via the Backend API, mints a genuine Sign-in Token, and
+  // consumes it client-side via the `ticket` strategy — this is a real
+  // session with a real Clerk-issued JWT, not a mock. It is the documented
+  // way to drive sign-in for an app (like this one) whose UI only exposes
+  // OAuth buttons, which cannot be automated without a real Google/Discord
+  // account.
+  await clerk.signIn({ page, emailAddress: email });
+
+  // Runs the app's own `resolveProfile()` against the now-active Clerk
+  // session — this is what creates the linked `user_profiles` row and grants
+  // default buyer permissions (the `created` arm; see
+  // packages/auth/src/server/resolveProfile.ts). Without this, every
+  // permission-gated page and ProtectedRoute check in the suite would fail:
+  // there is no DB trigger provisioning profiles anymore (Task 8 removed the
+  // `auth.users`-keyed one).
+  await page.goto(`${AUTH_URL}/en/callback`, { waitUntil: "networkidle" });
 
   const { createClient } = await import("@supabase/supabase-js");
   const supabaseAdmin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
     auth: { autoRefreshToken: false, persistSession: false },
   });
+  const { data: profile, error } = await supabaseAdmin
+    .from("user_profiles")
+    .select("id")
+    .eq("identity_sub", clerkUser.id)
+    .single();
+  if (error || !profile)
+    throw new Error(
+      `Failed to find the profile resolveProfile() should have created for ${clerkUser.id}: ${error?.message}`,
+    );
 
-  const email = `e2e-${Date.now()}@test.invalid`;
-  const password = `test-${Date.now()}`;
-
-  const { data: user, error: createError } =
-    await supabaseAdmin.auth.admin.createUser({
-      email,
-      password,
-      email_confirm: true,
-    });
-  if (createError)
-    throw new Error(`Failed to create test user: ${createError.message}`);
-
-  const { data: session, error: signInError } =
-    await supabaseAdmin.auth.signInWithPassword({ email, password });
-  if (signInError)
-    throw new Error(`Failed to sign in test user: ${signInError.message}`);
-
-  await context.addCookies([
-    {
-      name: `${cookieBase}.0`,
-      value: `base64-${toBase64URL(
-        JSON.stringify({
-          access_token: session.session!.access_token,
-          refresh_token: session.session!.refresh_token,
-          token_type: "bearer",
-          expires_in: SESSION_EXPIRY_SECONDS,
-          expires_at: Math.floor(Date.now() / 1000) + SESSION_EXPIRY_SECONDS,
-          user: user.user,
-        }),
-      )}`,
-      domain: storeHost.hostname,
-      path: "/",
-      httpOnly: false,
-      secure: !isLocalhost,
-      sameSite: "Lax",
-    },
-  ]);
-
+  // Clerk's session cookie is set without an explicit cookie domain, so it is
+  // shared across every app on `localhost` regardless of port — no manual
+  // cookie plumbing needed here, unlike the old Supabase-cookie approach.
   fs.mkdirSync(path.dirname(AUTH_FILE), { recursive: true });
   await page.goto(`${STORE_URL}/en`);
-  await context.storageState({ path: AUTH_FILE });
+  await page.context().storageState({ path: AUTH_FILE });
 
-  // Write the user's ID so permission-granting tests can look it up.
-  const USER_FILE = path.join(path.dirname(AUTH_FILE), "user.json");
-  fs.writeFileSync(USER_FILE, JSON.stringify({ id: user.user!.id, email }));
+  // Write the user's profile ID so permission-granting tests can look it up.
+  const USER_FILE_DIR = path.dirname(USER_FILE);
+  fs.mkdirSync(USER_FILE_DIR, { recursive: true });
+  fs.writeFileSync(
+    USER_FILE,
+    JSON.stringify({ id: profile.id, email, clerkUserId: clerkUser.id }),
+  );
 
-  // NOTE: Do NOT delete the test user here.
-  // The Supabase browser client calls getUser() (a real network request) to
-  // validate the session on every page load. If the user is deleted before
-  // tests run, getUser() fails → session is cleared → ProtectedRoute redirects
-  // to login, breaking all authenticated tests.
-  // The user is safe to leave: in CI, the Docker Supabase instance is destroyed
-  // after the job. Locally, run `pnpm supabase:reset` to clean up.
+  // NOTE: Do NOT delete the Clerk user or the profile here.
+  // Clerk's client validates the session against its own API on every page
+  // load — deleting the user out from under an active session would break
+  // every authenticated test that runs afterward. Both are safe to leave:
+  // in CI the Docker Supabase instance and any throwaway Clerk dev-instance
+  // users are gone once the job ends. Locally, run `pnpm supabase:reset`
+  // (the profile) and delete the Clerk user via the Clerk dashboard/API if
+  // instance hygiene matters.
 });
