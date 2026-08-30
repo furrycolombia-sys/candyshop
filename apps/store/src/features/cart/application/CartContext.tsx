@@ -94,11 +94,15 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       } catch {
         // Ignore invalid stored data
       } finally {
-        if (!isActive) return;
-        requestAnimationFrame(() => {
-          if (!isActive) return;
-          mountedRef.current = true;
-        });
+        // Guarded with a conditional rather than an early `return`: a return
+        // inside `finally` discards any exception propagating out of the
+        // try/catch, which would silently swallow a real failure here.
+        if (isActive) {
+          requestAnimationFrame(() => {
+            if (!isActive) return;
+            mountedRef.current = true;
+          });
+        }
       }
     }
 
