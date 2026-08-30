@@ -79,7 +79,7 @@ describe("[locale]/callback GET", () => {
     },
   );
 
-  it("falls back to the profile page when next targets a disallowed origin", async () => {
+  it("falls back to the person's own profile page when next targets a disallowed origin", async () => {
     currentUserMock.mockResolvedValue(makeUser());
     resolveProfileMock.mockResolvedValue({
       status: "matched",
@@ -95,10 +95,37 @@ describe("[locale]/callback GET", () => {
     );
 
     expect(response.status).toBe(307);
+    // NOT "/en/profile" — apps/auth has no route at that bare path (only
+    // "/[locale]/profile/[id]"), so that used to 404 every ordinary sign-in.
     expect(response.headers.get("location")).toBe(
-      "http://localhost:5000/en/profile",
+      "http://localhost:5000/en/profile/p1",
     );
   });
+
+  it.each(["matched", "claimed", "created"] as const)(
+    "with no `next` param at all, lands on the real per-id profile route for a %s profile — not the bare path that 404s",
+    async (status) => {
+      currentUserMock.mockResolvedValue(makeUser());
+      resolveProfileMock.mockResolvedValue({
+        status,
+        profile: {
+          id: "p1",
+          email: "buyer@example.com",
+          identity_sub: "user_2abc",
+        },
+      });
+
+      // No `?next=` at all — this is what an ordinary sign-in from the login
+      // page's default button produces (SocialLoginButtons no longer guesses
+      // a `next` value it can't back up with a real id).
+      const response = await callGet("http://localhost:5000/en/callback");
+
+      expect(response.status).toBe(307);
+      expect(response.headers.get("location")).toBe(
+        "http://localhost:5000/en/profile/p1",
+      );
+    },
+  );
 
   it("renders a contact-support error and logs the email on conflict, without redirecting", async () => {
     const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});

@@ -95,13 +95,6 @@ export async function GET(
   const { locale } = await params;
   const { searchParams, origin } = new URL(request.url);
 
-  const destination = resolveSafeRedirectTarget({
-    value: searchParams.get("next"),
-    fallback: `/${locale}/profile`,
-    requestOrigin: origin,
-    allowedOrigins: ALLOWED_REDIRECT_ORIGINS,
-  });
-
   const user = await currentUser();
   if (!user) {
     // No Clerk session — the flow was interrupted or hit directly. Send the
@@ -127,6 +120,17 @@ export async function GET(
     case "matched":
     case "claimed":
     case "created": {
+      // The fallback (no explicit `?next=`, the ordinary case) must be a real
+      // route: `/${locale}/profile` alone 404s — the app only has
+      // `/${locale}/profile/[id]`. We now have the signed-in person's own
+      // profile id, so send them there instead of guessing at a path that
+      // doesn't exist.
+      const destination = resolveSafeRedirectTarget({
+        value: searchParams.get("next"),
+        fallback: `/${locale}/profile/${result.profile.id}`,
+        requestOrigin: origin,
+        allowedOrigins: ALLOWED_REDIRECT_ORIGINS,
+      });
       return NextResponse.redirect(new URL(destination, origin));
     }
 

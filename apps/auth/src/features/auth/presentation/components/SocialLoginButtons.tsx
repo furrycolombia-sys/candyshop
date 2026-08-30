@@ -50,7 +50,13 @@ export function SocialLoginButtons() {
   const { isLoaded, signIn } = useSignIn();
   const [error, setError] = useState<string | null>(null);
 
-  const returnTo = searchParams.get("returnTo") ?? `/${locale}/profile`;
+  // No default guess here: the callback route knows the signed-in person's
+  // real profile id and picks a real destination itself (see
+  // apps/auth/src/app/[locale]/callback/route.ts) when `next` is absent.
+  // A hardcoded `/${locale}/profile` guess here 404s — that route requires
+  // an id (`/${locale}/profile/[id]`), which doesn't exist until sign-in
+  // resolves.
+  const returnTo = searchParams.get("returnTo");
 
   const handleSignIn = async (strategy: `oauth_${Provider}`) => {
     if (!isLoaded || !signIn) return;
@@ -58,10 +64,13 @@ export function SocialLoginButtons() {
     setError(null);
 
     try {
+      const callbackUrl = returnTo
+        ? `/${locale}/callback?next=${encodeURIComponent(returnTo)}`
+        : `/${locale}/callback`;
       await signIn.authenticateWithRedirect({
         strategy,
         redirectUrl: `/${locale}/sso-callback`,
-        redirectUrlComplete: `/${locale}/callback?next=${encodeURIComponent(returnTo)}`,
+        redirectUrlComplete: callbackUrl,
       });
     } catch (error_) {
       // authenticateWithRedirect only rejects when the request never made it

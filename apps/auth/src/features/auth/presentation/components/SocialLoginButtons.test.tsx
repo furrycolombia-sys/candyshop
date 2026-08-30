@@ -27,9 +27,11 @@ vi.mock("shared", () => ({
   tid: (id: string) => ({ "data-testid": id }),
 }));
 
+const returnToParamMock = vi.fn((): string | null => null);
+
 vi.mock("next/navigation", () => ({
   useSearchParams: () => ({
-    get: () => null,
+    get: (key: string) => (key === "returnTo" ? returnToParamMock() : null),
   }),
 }));
 
@@ -71,7 +73,27 @@ describe("SocialLoginButtons", () => {
     );
   });
 
-  it("points the OAuth flow at the sso-callback page and the final callback route", async () => {
+  it("points the OAuth flow at the sso-callback page and the final callback route, with no guessed `next` when returnTo is absent", async () => {
+    const user = userEvent.setup();
+    render(<SocialLoginButtons />);
+
+    await user.click(screen.getByTestId("login-google"));
+
+    // No `next` param here: "/en/profile" alone 404s (the real route is
+    // "/en/profile/[id]"), and this component has no id to guess with. The
+    // callback route picks the person's real profile once it knows who
+    // signed in — see callback/route.test.ts.
+    expect(authenticateWithRedirect).toHaveBeenCalledWith(
+      expect.objectContaining({
+        redirectUrl: "/en/sso-callback",
+        redirectUrlComplete: "/en/callback",
+      }),
+    );
+  });
+
+  it("passes an explicit returnTo through as `next` unchanged", async () => {
+    returnToParamMock.mockReturnValueOnce("/en/checkout");
+
     const user = userEvent.setup();
     render(<SocialLoginButtons />);
 
@@ -79,8 +101,7 @@ describe("SocialLoginButtons", () => {
 
     expect(authenticateWithRedirect).toHaveBeenCalledWith(
       expect.objectContaining({
-        redirectUrl: "/en/sso-callback",
-        redirectUrlComplete: `/en/callback?next=${encodeURIComponent("/en/profile")}`,
+        redirectUrlComplete: `/en/callback?next=${encodeURIComponent("/en/checkout")}`,
       }),
     );
   });
