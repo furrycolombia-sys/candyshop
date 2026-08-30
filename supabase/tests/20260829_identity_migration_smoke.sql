@@ -161,15 +161,19 @@ begin
   raise notice 'foreign keys: OK';
 end $$;
 
+-- Every schema this project owns (i.e. that our migrations create objects
+-- in). 'auth' is deliberately excluded: it is Supabase-internal and owns the
+-- real auth.uid() function definition, which legitimately calls itself.
 do $$
 declare
+  v_owned_schemas text[] := array['public', 'storage', 'audit'];
   v_count integer;
   v_offenders text;
 begin
-  select count(*), string_agg(tablename || '.' || policyname, ', ')
+  select count(*), string_agg(schemaname || '.' || tablename || '.' || policyname, ', ')
   into v_count, v_offenders
   from pg_policies
-  where schemaname = 'public'
+  where schemaname = any (v_owned_schemas)
     and (coalesce(qual, '') || coalesce(with_check, '')) like '%auth.uid()%';
 
   assert v_count = 0,
@@ -184,7 +188,46 @@ begin
   assert v_count = 42,
     format('FAIL: expected 42 policies on current_user_id() (43 - 1 profiles_insert dropped in Task 5), found %s', v_count);
 
+  select count(*) into v_count
+  from pg_policies
+  where schemaname = 'storage'
+    and (coalesce(qual, '') || coalesce(with_check, '')) like '%current_user_id()%';
+
+  assert v_count = 3,
+    format('FAIL: expected 3 storage policies on current_user_id() (receipts_read/upload/delete), found %s', v_count);
+
+  select count(*) into v_count
+  from pg_policies
+  where schemaname = 'audit'
+    and (coalesce(qual, '') || coalesce(with_check, '')) like '%current_user_id()%';
+
+  assert v_count = 1,
+    format('FAIL: expected 1 audit policy on current_user_id() (audit_read), found %s', v_count);
+
   raise notice 'rls policies: OK';
+end $$;
+
+-- Same blind spot, but for functions: a policy-only assertion would still
+-- miss a SECURITY DEFINER helper (is_receipt_delegate, is_order_delegate,
+-- audit.log_changes, ...) that calls auth.uid() internally.
+do $$
+declare
+  v_owned_schemas text[] := array['public', 'storage', 'audit'];
+  v_count integer;
+  v_offenders text;
+begin
+  select count(*), string_agg(n.nspname || '.' || p.proname, ', ')
+  into v_count, v_offenders
+  from pg_proc p
+  join pg_namespace n on n.oid = p.pronamespace
+  where p.prokind = 'f'
+    and n.nspname = any (v_owned_schemas)
+    and pg_get_functiondef(p.oid) like '%auth.uid()%';
+
+  assert v_count = 0,
+    format('FAIL: %s functions still call auth.uid(): %s', v_count, v_offenders);
+
+  raise notice 'rls functions: OK';
 end $$;
 
 do $$
@@ -446,4 +489,44 @@ begin
   delete from public.user_profiles where id = v_profile.id;
 
   raise notice 'create_profile_with_default_permissions: OK';
+end $$;
+
+do $$
+declare
+  v_order record;
+  v_logged_user_id uuid;
+  v_event_id bigint;
+begin
+  select id, user_id, seller_note into v_order from public.orders limit 1;
+
+  if v_order.id is null then
+    raise notice 'audit attribution: skipped (no rows)';
+    return;
+  end if;
+
+  -- A resolvable caller performs an audited write ...
+  update public.user_profiles set identity_sub = 'user_audit_smoketest' where id = v_order.user_id;
+  perform set_config('request.jwt.claims', '{"sub":"user_audit_smoketest"}', true);
+  update public.orders set seller_note = coalesce(seller_note, '') || ' ' where id = v_order.id;
+
+  -- ... and the audit trail must attribute it, not silently drop to NULL
+  -- (see Finding 3: audit.log_changes() used to swallow the auth.uid() cast
+  -- error and always write user_id = NULL).
+  select event_id, user_id into v_event_id, v_logged_user_id
+  from audit.logged_actions
+  where table_name = 'orders' and action_type = 'UPDATE'
+  order by action_timestamp desc
+  limit 1;
+
+  assert v_logged_user_id is not null,
+    'FAIL: audit.log_changes() recorded user_id = NULL for a resolvable caller';
+
+  assert v_logged_user_id = v_order.user_id,
+    format('FAIL: audit row attributed to %s, expected %s', v_logged_user_id, v_order.user_id);
+
+  -- Clean up: restore state and remove the row this test generated.
+  delete from audit.logged_actions where event_id = v_event_id;
+  update public.user_profiles set identity_sub = null where id = v_order.user_id;
+
+  raise notice 'audit attribution: OK';
 end $$;
