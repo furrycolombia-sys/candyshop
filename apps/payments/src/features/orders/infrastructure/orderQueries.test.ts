@@ -101,9 +101,9 @@ describe("fetchMyOrders", () => {
     );
 
     expect(result).toHaveLength(1);
-    expect(result[0].seller_name).toBe("Seller One");
-    expect(result[0].items).toHaveLength(1);
-    expect(result[0].receipt_url).toBe(
+    expect(result[0]!.seller_name).toBe("Seller One");
+    expect(result[0]!.items).toHaveLength(1);
+    expect(result[0]!.receipt_url).toBe(
       "https://example.com/order-1/receipt.png",
     );
   });

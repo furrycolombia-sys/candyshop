@@ -24,5 +24,8 @@ export interface OrderWithItems {
 export interface CheckoutGroup {
   checkoutSessionId: string | null;
   createdAt: string;
+  /** Id of the group's first order. Used as a render key when the group has no
+   * checkout session id, so callers need not index into `orders` to find one. */
+  firstOrderId: string;
   orders: OrderWithItems[];
 }

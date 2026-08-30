@@ -97,13 +97,13 @@ describe("useCartFromCookie", () => {
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
     expect(result.current.groups).toHaveLength(1);
-    expect(result.current.groups[0].sellerId).toBe("s1");
-    expect(result.current.groups[0].sellerName).toBe("Seller One");
-    expect(result.current.groups[0].items).toHaveLength(2);
-    expect(result.current.groups[0].items[0].quantity).toBe(2);
-    expect(result.current.groups[0].items[1].quantity).toBe(1);
-    expect(result.current.groups[0].subtotal).toBe(25_000);
-    expect(result.current.groups[0].currency).toBe("COP");
+    expect(result.current.groups[0]!.sellerId).toBe("s1");
+    expect(result.current.groups[0]!.sellerName).toBe("Seller One");
+    expect(result.current.groups[0]!.items).toHaveLength(2);
+    expect(result.current.groups[0]!.items[0]!.quantity).toBe(2);
+    expect(result.current.groups[0]!.items[1]!.quantity).toBe(1);
+    expect(result.current.groups[0]!.subtotal).toBe(25_000);
+    expect(result.current.groups[0]!.currency).toBe("COP");
   });
 
   it("subscribes to cart cookie changes", () => {

@@ -118,7 +118,7 @@ describe("useSavePaymentMethod", () => {
       result.current.save();
     });
 
-    const patch = mutateMock.mock.calls[0][0].patch;
+    const patch = mutateMock.mock.calls[0]![0]!.patch;
     expect(patch.name_es).toBeUndefined();
   });
 
