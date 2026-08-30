@@ -1,0 +1,43 @@
+-- =============================================================================
+-- Fix: audit.logged_actions_with_user bypassed audit.logged_actions RLS
+-- =============================================================================
+-- public.logged_actions_with_user was switched to SECURITY INVOKER in
+-- 20260422100000_audit_view_security_invoker.sql, but that only controls how
+-- Postgres checks privileges for THIS view's own underlying relation, which is
+-- audit.logged_actions_with_user (a nested view). That inner view
+-- (defined in 20260325600000_user_profiles.sql) was never given
+-- security_invoker, so by default Postgres still executes its query with the
+-- privileges of the view's owner (postgres) rather than the caller. postgres
+-- has BYPASSRLS, so every SELECT against audit.logged_actions made through
+-- this path ran unfiltered — the `audit_read` policy
+-- (has_permission(current_user_id(), 'audit.read')) was never evaluated.
+--
+-- Net effect: any signed-in (authenticated) caller, including one with no
+-- matching user_profiles row (current_user_id() IS NULL) and no permissions
+-- at all, could read every row of every audited table's history via
+-- GET /rest/v1/logged_actions_with_user. anon was correctly denied (no grant
+-- on the public proxy view), so this was authenticated-only exposure — but
+-- audit rows record who did what across every audited table, so no signed-in
+-- customer should be able to read them.
+--
+-- Fix: set security_invoker = true on audit.logged_actions_with_user too, so
+-- the whole view chain runs as the calling role and audit_read is evaluated
+-- against the *actual* caller, not the view owner. This is the same pattern
+-- already used for the public proxy and is the standard Postgres 15+ fix for
+-- definer-by-default views (Postgres version here is 17, so it's supported).
+--
+-- Table-level SELECT on audit.logged_actions was never actually granted to
+-- authenticated: the blanket `grant select on all tables in schema audit to
+-- authenticated` in 20260325400000_audit_system.sql ran before this table
+-- existed (it's created later in the same file), so it silently didn't apply.
+-- Under the old SECURITY DEFINER-by-default view, that didn't matter — the
+-- view owner's own privileges were used. Under SECURITY INVOKER it does
+-- matter: without a real grant, an admin with audit.read would get
+-- "permission denied for table logged_actions" instead of their rows. Grant
+-- SELECT explicitly; the audit_read RLS policy remains the actual gate on
+-- which rows come back — this only fixes table-level ACL, not row access.
+-- =============================================================================
+
+grant select on audit.logged_actions to authenticated;
+
+alter view audit.logged_actions_with_user set (security_invoker = true);
