@@ -53,9 +53,12 @@ const securityHeaders = [
     key: "Permissions-Policy",
     value: "camera=(), microphone=(), geolocation=()",
   },
+  // https://challenges.cloudflare.com is Clerk's Turnstile bot-protection
+  // challenge origin (distinct from clerkOrigin, Clerk's own frontend API) —
+  // required in script-src and frame-src whenever Clerk's bot protection is on.
   {
     key: "Content-Security-Policy",
-    value: `default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://static.cloudflareinsights.com ${clerkOrigin}; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src ${cspConnectSrc} https://cloudflareinsights.com; frame-src ${clerkOrigin}; worker-src blob:; frame-ancestors 'none'; object-src 'none';`,
+    value: `default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://static.cloudflareinsights.com ${clerkOrigin} https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src ${cspConnectSrc} https://cloudflareinsights.com; frame-src ${clerkOrigin} https://challenges.cloudflare.com; worker-src blob:; frame-ancestors 'none'; object-src 'none';`,
   },
 ];
 
