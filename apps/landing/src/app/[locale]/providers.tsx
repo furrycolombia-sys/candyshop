@@ -1,7 +1,6 @@
 "use client";
 
 import { captureException } from "@sentry/nextjs";
-import { AuthSessionBootstrap } from "auth";
 import { Suspense, type ReactNode } from "react";
 import { ApiAuthBootstrap } from "shared";
 
@@ -17,7 +16,6 @@ export function Providers({ children }: ProvidersProps) {
   return (
     <Suspense>
       <QueryProvider onQueryError={captureException}>
-        <AuthSessionBootstrap authHostUrl={authHostUrl} />
         <ApiAuthBootstrap authHostUrl={authHostUrl} />
         {children}
       </QueryProvider>

@@ -11,7 +11,6 @@ vi.mock("api", () => ({
 vi.mock("auth", () => ({
   AUTH_COOKIE_NAMES: { accessToken: "sb-access-token" },
   AUTH_REFRESH_ENDPOINT: "/auth/v1/token?grant_type=refresh_token",
-  getAccessTokenFromCookie: vi.fn(() => "mock-token"),
   TOKEN_TTL_SECONDS: { access: 3600 },
 }));
 

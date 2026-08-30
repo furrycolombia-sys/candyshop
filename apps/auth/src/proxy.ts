@@ -14,13 +14,16 @@ import { routing } from "@/shared/infrastructure/i18n";
  * `createServerSupabaseClient`, `getServerUserEmail`, and the callback
  * route's profile resolution) work instead of throwing. See
  * task-9-report.md, "The bigger sequencing gap: clerkMiddleware() is nowhere
- * yet" for why this was previously missing.
+ * yet" for why this was previously missing, and task-11-report.md for the
+ * rest of the apps, which carried the same gap.
  *
- * Only this app's proxy is changed here — the other apps still call
- * `updateSupabaseSession()` and are Task 11's problem per this task's brief.
+ * No `extraBypassPrefixes` needed: the old `/auth/callback` and `/callback`
+ * routes were the pre-Clerk OAuth code-exchange handlers
+ * (`api/supabase/callback`'s `handleOAuthCallback`), deleted in Task 11.
+ * Clerk's callback lives at `/{locale}/callback` and `/{locale}/sso-callback`
+ * instead — already locale-prefixed, so the intl middleware handles them
+ * like any other route.
  */
-const intlProxy = createIntlProxy(routing, {
-  extraBypassPrefixes: ["/auth/callback", "/callback"],
-});
+const intlProxy = createIntlProxy(routing);
 
 export default clerkMiddleware((_auth, request) => intlProxy(request));
