@@ -27,7 +27,8 @@ export function useSellerProfiles(sellerIds: string[]) {
 
       const map: Record<string, string> = {};
       for (const profile of data ?? []) {
-        map[profile.id] = profile.display_name ?? profile.email.split("@")[0];
+        map[profile.id] =
+          profile.display_name ?? profile.email.split("@")[0] ?? profile.email;
       }
       return map;
     },
