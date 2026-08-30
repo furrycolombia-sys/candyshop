@@ -42,7 +42,7 @@ e.g. `https://t.me/c/3953034526/4` → Reviews & Feedback
 1. Create the forum topic in the Telegram supergroup.
 2. Open the topic — the URL will show `https://t.me/c/{group_id}/{thread_id}`.
 3. Add `TELEGRAM_<NAME>_THREAD_ID=<id>` to `.secrets`.
-4. Add the matching `TELEGRAM_<NAME>_THREAD_ID: ${{ secrets.TELEGRAM_<NAME>_THREAD_ID }}` to `sync-secrets.yml` (env block **and** written file output).
+4. Add the matching `TELEGRAM_<NAME>_THREAD_ID: ${{ secrets.TELEGRAM_<NAME>_THREAD_ID }}` to the `env:` block in `sync-secrets.yml` — that single list is the only place to add it; the workflow derives its output file from it automatically via a `compgen -e | grep '^S_'` loop.
 5. Publish the secret to GitHub with `gh secret set TELEGRAM_<NAME>_THREAD_ID --repo vaoan/libra`, piping the value via stdin so it never lands in shell history or a process list — e.g. `echo -n "<id>" | gh secret set TELEGRAM_<NAME>_THREAD_ID --repo vaoan/libra`. **Do not run `pnpm sync-secrets` for this** — that command pulls the OTHER way: it triggers the sync-secrets workflow, downloads an encrypted artifact, and _overwrites_ the local `.secrets` file with what's already on GitHub. Running it here would clobber the value you just added in step 3, not publish it.
 6. Reference the variable in the workflow that needs it.
 
