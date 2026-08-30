@@ -45,7 +45,11 @@ export function UserProfilePage({ userId }: UserProfilePageProps) {
     );
   }
 
-  const displayName = profile.display_name ?? profile.email.split("@")[0];
+  // split() always yields at least one element, but an indexed access is
+  // `string | undefined` under noUncheckedIndexedAccess — fall back to the
+  // full address rather than rendering nothing.
+  const displayName =
+    profile.display_name ?? profile.email.split("@")[0] ?? profile.email;
   const avatarUrl = profile.display_avatar_url ?? profile.avatar_url;
   const contactEmail = profile.display_email ?? profile.email;
   const memberSince = new Date(profile.first_seen_at).toLocaleDateString(

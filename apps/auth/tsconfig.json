@@ -1,23 +1,60 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "plugins": [{ "name": "next" }],
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
     "paths": {
-      "@/*": ["./src/*"],
-      "ui": ["../../packages/ui/src"],
-      "ui/*": ["../../packages/ui/src/*"],
-      "@ui/*": ["../../packages/ui/src/*"],
-      "shared": ["../../packages/shared/src"],
-      "shared/*": ["../../packages/shared/src/*"],
-      "@shared/*": ["../../packages/shared/src/*"],
-      "api": ["../../packages/api/src"],
-      "api/*": ["../../packages/api/src/*"],
-      "@api/*": ["../../packages/api/src/*"],
-      "auth": ["../../packages/auth/src"],
-      "auth/*": ["../../packages/auth/src/*"]
+      "@/*": [
+        "./src/*"
+      ],
+      "ui": [
+        "../../packages/ui/src"
+      ],
+      "ui/*": [
+        "../../packages/ui/src/*"
+      ],
+      "@ui/*": [
+        "../../packages/ui/src/*"
+      ],
+      "shared": [
+        "../../packages/shared/src"
+      ],
+      "shared/*": [
+        "../../packages/shared/src/*"
+      ],
+      "@shared/*": [
+        "../../packages/shared/src/*"
+      ],
+      "api": [
+        "../../packages/api/src"
+      ],
+      "api/*": [
+        "../../packages/api/src/*"
+      ],
+      "@api/*": [
+        "../../packages/api/src/*"
+      ],
+      "auth": [
+        "../../packages/auth/src"
+      ],
+      "auth/*": [
+        "../../packages/auth/src/*"
+      ]
     },
-    "noEmit": true
+    "noEmit": true,
+    "noUncheckedIndexedAccess": true
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
-  "exclude": ["node_modules", "e2e"]
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "e2e"
+  ]
 }

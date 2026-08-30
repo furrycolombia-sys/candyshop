@@ -5,9 +5,18 @@
     "rootDir": "./src",
     "baseUrl": ".",
     "paths": {
-      "@api/*": ["./src/*"]
-    }
+      "@api/*": [
+        "./src/*"
+      ]
+    },
+    "noUncheckedIndexedAccess": true
   },
-  "include": ["src/**/*.ts", "src/**/*.tsx"],
-  "exclude": ["node_modules", "dist"]
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
 }

@@ -5,11 +5,24 @@
     "rootDir": "./src",
     "baseUrl": ".",
     "paths": {
-      "@app-components/*": ["./src/*"],
-      "@shared/*": ["../shared/src/*"],
-      "@ui/*": ["../ui/src/*"]
-    }
+      "@app-components/*": [
+        "./src/*"
+      ],
+      "@shared/*": [
+        "../shared/src/*"
+      ],
+      "@ui/*": [
+        "../ui/src/*"
+      ]
+    },
+    "noUncheckedIndexedAccess": true
   },
-  "include": ["src/**/*.ts", "src/**/*.tsx"],
-  "exclude": ["node_modules", "dist"]
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
 }
