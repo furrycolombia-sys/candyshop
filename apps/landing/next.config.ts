@@ -19,12 +19,22 @@ const supabaseSocketOrigin = (() => {
   const socketProtocol = parsed.protocol === "https:" ? "wss:" : "ws:";
   return `${socketProtocol}//${parsed.host}`;
 })();
+const clerkOrigin = (() => {
+  const domain = process.env.NEXT_PUBLIC_CLERK_DOMAIN;
+  if (!domain) return "";
+  try {
+    return new URL(`https://${domain}`).origin;
+  } catch {
+    return "";
+  }
+})();
 const cspConnectSrc = [
   "'self'",
   "https://*.supabase.co",
   "wss://*.supabase.co",
   supabaseOrigin,
   supabaseSocketOrigin,
+  clerkOrigin,
 ]
   .filter(Boolean)
   .join(" ");
@@ -45,7 +55,7 @@ const securityHeaders = [
   },
   {
     key: "Content-Security-Policy",
-    value: `default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://static.cloudflareinsights.com https://tally.so; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src ${cspConnectSrc} https://cloudflareinsights.com https://*.tally.so; worker-src blob:; frame-src https://tally.so; frame-ancestors 'none'; object-src 'none';`,
+    value: `default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://static.cloudflareinsights.com https://tally.so ${clerkOrigin}; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src ${cspConnectSrc} https://cloudflareinsights.com https://*.tally.so; worker-src blob:; frame-src https://tally.so ${clerkOrigin}; frame-ancestors 'none'; object-src 'none';`,
   },
 ];
 
