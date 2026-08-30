@@ -1,43 +1,104 @@
 {
   "workspaces": {
-    "apps/store": {
-      "entry": ["src/app/**/*.{ts,tsx}"],
-      "project": ["src/**/*.{ts,tsx,js,jsx}"],
-      "ignore": ["**/*.test.*", "**/*.spec.*", "src/mocks/**", "src/test/**"]
-    },
-    "apps/landing": {
-      "entry": ["src/app/**/*.{ts,tsx}"],
-      "project": ["src/**/*.{ts,tsx,js,jsx}"],
-      "ignore": ["**/*.test.*", "**/*.spec.*"]
-    },
-    "apps/payments": {
-      "entry": ["src/app/**/*.{ts,tsx}"],
-      "project": ["src/**/*.{ts,tsx,js,jsx}"],
-      "ignore": ["**/*.test.*", "**/*.spec.*", "src/mocks/**", "src/test/**"]
+    ".": {
+      "entry": [
+        "scripts/**/*.mjs",
+        "docker/**/*.mjs",
+        "docker/ci/playwright.config.ts",
+        ".claude/tools/*.mjs"
+      ]
     },
     "apps/admin": {
-      "entry": ["src/app/**/*.{ts,tsx}"],
+      "entry": [
+        "src/app/**/*.{ts,tsx}",
+        "src/shared/infrastructure/i18n/request.ts",
+        "src/features/*/index.ts",
+        "src/features/*/*/index.ts",
+        "src/shared/domain/index.ts"
+      ],
       "project": ["src/**/*.{ts,tsx,js,jsx}"],
       "ignore": ["**/*.test.*", "**/*.spec.*"]
     },
     "apps/auth": {
-      "entry": ["src/app/**/*.{ts,tsx}"],
+      "entry": [
+        "src/app/**/*.{ts,tsx}",
+        "src/shared/infrastructure/i18n/request.ts",
+        "src/features/*/index.ts",
+        "src/features/*/*/index.ts",
+        "src/shared/domain/index.ts"
+      ],
       "project": ["src/**/*.{ts,tsx,js,jsx}"],
       "ignore": ["**/*.test.*", "**/*.spec.*"]
+    },
+    "apps/landing": {
+      "entry": [
+        "src/app/**/*.{ts,tsx}",
+        "src/shared/infrastructure/i18n/request.ts",
+        "src/features/*/index.ts",
+        "src/features/*/*/index.ts",
+        "src/shared/domain/index.ts"
+      ],
+      "project": ["src/**/*.{ts,tsx,js,jsx}"],
+      "ignore": ["**/*.test.*", "**/*.spec.*"]
+    },
+    "apps/payments": {
+      "entry": [
+        "src/app/**/*.{ts,tsx}",
+        "src/shared/infrastructure/i18n/request.ts",
+        "src/features/*/index.ts",
+        "src/features/*/*/index.ts",
+        "src/shared/domain/index.ts"
+      ],
+      "project": ["src/**/*.{ts,tsx,js,jsx}"],
+      "ignore": ["**/*.test.*", "**/*.spec.*", "src/mocks/**", "src/test/**"]
     },
     "apps/playground": {
-      "entry": ["src/app/**/*.{ts,tsx}"],
+      "entry": [
+        "src/app/**/*.{ts,tsx}",
+        "src/shared/infrastructure/i18n/request.ts",
+        "src/features/*/index.ts",
+        "src/features/*/*/index.ts",
+        "src/shared/domain/index.ts"
+      ],
       "project": ["src/**/*.{ts,tsx,js,jsx}"],
       "ignore": ["**/*.test.*", "**/*.spec.*"]
     },
-    "packages/ui": {
-      "project": ["src/**/*.{ts,tsx}"]
+    "apps/store": {
+      "entry": [
+        "src/app/**/*.{ts,tsx}",
+        "src/shared/infrastructure/i18n/request.ts",
+        "src/features/*/index.ts",
+        "src/features/*/*/index.ts",
+        "src/shared/domain/index.ts"
+      ],
+      "project": ["src/**/*.{ts,tsx,js,jsx}"],
+      "ignore": ["**/*.test.*", "**/*.spec.*", "src/mocks/**", "src/test/**"]
+    },
+    "apps/studio": {
+      "entry": [
+        "src/app/**/*.{ts,tsx}",
+        "src/shared/infrastructure/i18n/request.ts",
+        "src/features/*/index.ts",
+        "src/features/*/*/index.ts",
+        "src/shared/domain/index.ts"
+      ],
+      "project": ["src/**/*.{ts,tsx,js,jsx}"],
+      "ignore": ["**/*.test.*", "**/*.spec.*", "src/mocks/**", "src/test/**"]
     },
     "packages/api": {
       "project": ["src/**/*.{ts,tsx}"],
       "ignore": ["src/generated/**", "src/types/generated/**"]
     },
+    "packages/app-components": {
+      "project": ["src/**/*.{ts,tsx}"]
+    },
+    "packages/auth": {
+      "project": ["src/**/*.{ts,tsx}"]
+    },
     "packages/shared": {
+      "project": ["src/**/*.{ts,tsx}"]
+    },
+    "packages/ui": {
       "project": ["src/**/*.{ts,tsx}"]
     }
   },
