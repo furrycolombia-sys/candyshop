@@ -49,11 +49,45 @@ const playwrightConfig = {
     "playwright/no-conditional-in-test": "warn", // 31
     "playwright/no-useless-not": "warn", // 19 (auto-fixable, safe)
     "playwright/prefer-web-first-assertions": "warn", // 15 (auto-fix is NOT safe here)
-    "playwright/expect-expect": "warn", // 11 — tests that assert nothing
+    // expect-expect is an ERROR, not a warning: a test that asserts nothing
+    // passes no matter how the product behaves, so it is the one defect a test
+    // suite cannot detect on its own. It reported 11 violations before this
+    // configuration and all 11 were false: 3 were Playwright setup/teardown
+    // projects (excluded below) and 8 were tests whose assertions live in a
+    // helper the rule cannot see through. Each helper named here was checked to
+    // contain real assertions. With the rule reading correctly it reports zero,
+    // so it can block CI and a genuinely assertion-free test gets caught.
+    "playwright/expect-expect": [
+      "error",
+      {
+        assertFunctionNames: [
+          "expectVisible",
+          "expectHidden",
+          "expectAuthenticatedAcrossApps",
+          "createProduct",
+          "createPaymentMethod",
+          "setPermissions",
+        ],
+      },
+    ],
     "playwright/no-conditional-expect": "warn", // 5
     "playwright/no-skipped-test": "warn", // 5
     "playwright/no-force-option": "warn", // 4
     "playwright/consistent-spacing-between-blocks": "warn", // 1
+  },
+};
+
+// Playwright "setup" and "teardown" projects use test() to run fixture work
+// (seeding a session, cleaning up users). They legitimately assert nothing, so
+// expect-expect does not apply to them.
+const playwrightSetupConfig = {
+  files: [
+    "apps/*/e2e/**/*.setup.ts",
+    "apps/*/e2e/**/*.teardown.ts",
+    "apps/*/e2e/**/setup-*.ts",
+  ],
+  rules: {
+    "playwright/expect-expect": "off",
   },
 };
 
@@ -1678,6 +1712,7 @@ const eslintConfig = defineConfig([
     },
   },
   playwrightConfig,
+  playwrightSetupConfig,
 ]);
 
 export default eslintConfig;
