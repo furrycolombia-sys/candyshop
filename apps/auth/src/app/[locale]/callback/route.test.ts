@@ -133,6 +133,91 @@ describe("[locale]/callback GET", () => {
     expect(body.length).toBeGreaterThan(0);
   });
 
+  it("maps a verified Clerk email onto ClerkIdentity.emailVerified: true", async () => {
+    currentUserMock.mockResolvedValue(
+      makeUser({
+        primaryEmailAddress: {
+          emailAddress: "buyer@example.com",
+          verification: { status: "verified" },
+        },
+      }),
+    );
+    resolveProfileMock.mockResolvedValue({
+      status: "matched",
+      profile: {
+        id: "p1",
+        email: "buyer@example.com",
+        identity_sub: "user_2abc",
+      },
+    });
+
+    await callGet("http://localhost:5000/en/callback");
+
+    expect(resolveProfileMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        sub: "user_2abc",
+        email: "buyer@example.com",
+        emailVerified: true,
+      }),
+      expect.anything(),
+    );
+  });
+
+  it("maps an UNVERIFIED Clerk email onto ClerkIdentity.emailVerified: false — this is the sole gate stopping an unverified address from claiming a restored profile", async () => {
+    currentUserMock.mockResolvedValue(
+      makeUser({
+        primaryEmailAddress: {
+          emailAddress: "buyer@example.com",
+          verification: { status: "unverified" },
+        },
+      }),
+    );
+    resolveProfileMock.mockResolvedValue({
+      status: "created",
+      profile: {
+        id: "p1",
+        email: "buyer@example.com",
+        identity_sub: "user_2abc",
+      },
+    });
+
+    await callGet("http://localhost:5000/en/callback");
+
+    expect(resolveProfileMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        email: "buyer@example.com",
+        emailVerified: false,
+      }),
+      expect.anything(),
+    );
+  });
+
+  it("maps a missing verification record onto ClerkIdentity.emailVerified: false (not truthy-by-default)", async () => {
+    currentUserMock.mockResolvedValue(
+      makeUser({
+        primaryEmailAddress: {
+          emailAddress: "buyer@example.com",
+          verification: null,
+        },
+      }),
+    );
+    resolveProfileMock.mockResolvedValue({
+      status: "created",
+      profile: {
+        id: "p1",
+        email: "buyer@example.com",
+        identity_sub: "user_2abc",
+      },
+    });
+
+    await callGet("http://localhost:5000/en/callback");
+
+    expect(resolveProfileMock).toHaveBeenCalledWith(
+      expect.objectContaining({ emailVerified: false }),
+      expect.anything(),
+    );
+  });
+
   it("redirects to login when Clerk has no session for this request", async () => {
     currentUserMock.mockResolvedValue(null);
 
