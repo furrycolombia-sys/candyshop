@@ -98,12 +98,17 @@ setup("authenticate", async ({ page }) => {
     JSON.stringify({ id: profile.id, email, clerkUserId: clerkUser.id }),
   );
 
-  // NOTE: Do NOT delete the Clerk user or the profile here.
+  // NOTE: Do NOT delete the Clerk user or the profile HERE, in this file.
   // Clerk's client validates the session against its own API on every page
   // load — deleting the user out from under an active session would break
-  // every authenticated test that runs afterward. Both are safe to leave:
-  // in CI the Docker Supabase instance and any throwaway Clerk dev-instance
-  // users are gone once the job ends. Locally, run `pnpm supabase:reset`
-  // (the profile) and delete the Clerk user via the Clerk dashboard/API if
-  // instance hygiene matters.
+  // every authenticated test that runs afterward.
+  //
+  // The Supabase profile is fine to leave: it lives in the Docker stack,
+  // which is genuinely ephemeral (gone on the next `pnpm supabase:reset`, or
+  // never persisted at all in CI). The Clerk user is NOT — the dev instance
+  // is a shared external service, so it outlives every local reset and every
+  // CI job. Deletion happens in `auth.teardown.ts`, wired as this project's
+  // `teardown` in playwright.config.ts, which Playwright runs after every
+  // dependent test finishes (pass or fail) rather than immediately after
+  // this file, so it never touches a session still in use.
 });
