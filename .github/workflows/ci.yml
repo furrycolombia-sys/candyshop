@@ -3,6 +3,11 @@ name: CI
 on:
   pull_request:
     branches: [main, develop]
+  # Also run on the merged result. Without this, CI only ever saw the PR head:
+  # two PRs that each passed alone could break develop together, and nobody
+  # would find out until the next pull request opened.
+  push:
+    branches: [main, develop]
 
 permissions:
   contents: read
