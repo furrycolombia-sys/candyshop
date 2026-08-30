@@ -340,6 +340,8 @@ jobs:
             NEXT_PUBLIC_STUDIO_URL=http://localhost:5050/studio
             NEXT_PUBLIC_BUILD_HASH=ci
             NEXT_PUBLIC_ENABLE_TEST_IDS=true
+            NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=${{ secrets.CLERK_PUBLISHABLE_KEY }}
+            NEXT_PUBLIC_CLERK_DOMAIN=${{ secrets.CLERK_DOMAIN }}
 
   # ============================================
   # E2E Tests (Playwright)
