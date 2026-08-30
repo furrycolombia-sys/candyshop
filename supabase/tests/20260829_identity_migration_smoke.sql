@@ -549,3 +549,85 @@ begin
 
   raise notice 'audit attribution: OK';
 end $$;
+
+-- =============================================================================
+-- Audit view definer leak: public/audit.logged_actions_with_user must enforce
+-- audit.logged_actions RLS for the actual caller, not the view owner
+-- =============================================================================
+-- Before 20260830100000_audit_view_definer_leak.sql, audit.logged_actions_with_user
+-- had no security_invoker, so Postgres ran its query as the view's owner
+-- (postgres, BYPASSRLS) regardless of who queried it. The audit_read policy
+-- (has_permission(current_user_id(), 'audit.read')) was never evaluated on
+-- this path: any signed-in caller with no matching profile and no
+-- permissions at all could read every audit row. This block proves the two
+-- non-privileged cases now see nothing, and that a caller who genuinely has
+-- audit.read still sees rows (the admin audit viewer must keep working).
+do $$
+declare
+  v_visible integer;
+  v_watermark bigint;
+  v_no_perm_profile_id uuid;
+  v_admin_profile_id uuid;
+  v_resource_permission_id uuid;
+begin
+  select coalesce(max(event_id), 0) into v_watermark from audit.logged_actions;
+
+  -- Case 1: authenticated caller who resolves to a real profile, but that
+  -- profile holds no audit.read grant.
+  insert into public.user_profiles (id, email, identity_sub, first_seen_at, last_seen_at)
+  values (gen_random_uuid(), 'smoketest_audit_view_no_perm@example.com', 'user_smoketest_audit_view_no_perm', now(), now())
+  returning id into v_no_perm_profile_id;
+
+  perform set_config('request.jwt.claims', '{"sub":"user_smoketest_audit_view_no_perm"}', true);
+  perform set_config('role', 'authenticated', true);
+  select count(*) into v_visible from public.logged_actions_with_user;
+  perform set_config('role', 'postgres', true);
+
+  assert v_visible = 0,
+    format('FAIL: authenticated caller without audit.read saw %s audit rows', v_visible);
+
+  -- Case 2: authenticated caller whose sub matches no profile at all
+  -- (current_user_id() IS NULL) -- the exact case that was fully exposed.
+  perform set_config('request.jwt.claims', '{"sub":"user_smoketest_audit_view_nobody"}', true);
+  perform set_config('role', 'authenticated', true);
+  select count(*) into v_visible from public.logged_actions_with_user;
+  perform set_config('role', 'postgres', true);
+
+  assert v_visible = 0,
+    format('FAIL: unresolved authenticated caller (current_user_id() IS NULL) saw %s audit rows', v_visible);
+
+  -- Case 3 (control): a caller who genuinely holds audit.read must still see
+  -- rows. A fix that starves the admin audit viewer is a failure, not a
+  -- success.
+  select rp.id into v_resource_permission_id
+  from public.resource_permissions rp
+  join public.permissions p on p.id = rp.permission_id
+  where p.key = 'audit.read' and rp.resource_type = 'global';
+
+  assert v_resource_permission_id is not null,
+    'FAIL: no global audit.read resource_permission row to test against';
+
+  insert into public.user_profiles (id, email, identity_sub, first_seen_at, last_seen_at)
+  values (gen_random_uuid(), 'smoketest_audit_view_admin@example.com', 'user_smoketest_audit_view_admin', now(), now())
+  returning id into v_admin_profile_id;
+
+  insert into public.user_permissions (user_id, resource_permission_id, mode, granted_by)
+  values (v_admin_profile_id, v_resource_permission_id, 'grant', v_admin_profile_id);
+
+  perform set_config('request.jwt.claims', '{"sub":"user_smoketest_audit_view_admin"}', true);
+  perform set_config('role', 'authenticated', true);
+  select count(*) into v_visible from public.logged_actions_with_user;
+  perform set_config('role', 'postgres', true);
+
+  assert v_visible > 0,
+    'FAIL: a caller with audit.read saw zero rows through the audit view (admin viewer broken)';
+
+  -- Clean up: remove every row this block created, including the audit rows
+  -- these very inserts generated (user_profiles and user_permissions are
+  -- both audited tables), so the database is left exactly as found.
+  delete from public.user_permissions where user_id = v_admin_profile_id;
+  delete from public.user_profiles where id in (v_no_perm_profile_id, v_admin_profile_id);
+  delete from audit.logged_actions where event_id > v_watermark;
+
+  raise notice 'audit view definer leak: OK';
+end $$;
