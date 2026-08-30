@@ -1,8 +1,20 @@
 /**
  * CJS shim for load-root-env — delegates to load-env.mjs.
  *
- * Playwright configs and app-url-resolver.js use require() so they need a CJS
- * entry point. This shim bridges them to the ESM load-env.mjs loader.
+ * Playwright configs and app-url-resolver.js use require() so they need a
+ * synchronous CJS entry point, while load-env.mjs is an ESM module. This
+ * works as a real delegation (not a duplicate reimplementation) because
+ * Node's synchronous `require(esm)` support — stable and unflagged since
+ * Node 22.12 — lets CJS `require()` an ESM file directly and get back its
+ * exports immediately, with no `await import()` needed. Every consumer
+ * here runs on Node 24 (see .nvmrc / CI's NODE_VERSION), well past that
+ * floor.
+ *
+ * Do NOT re-implement env-file parsing or $secret: resolution here — call
+ * straight into loadEnv() so this file and load-env.mjs cannot drift, the
+ * way this shim's own hand-duplicated copy previously did (it silently
+ * resolved a missing CI secret to "" instead of throwing, unlike
+ * load-env.mjs's strict CI branch).
  *
  * Usage (existing callers):
  *   const { loadRootEnv } = require('./load-root-env.cjs');
@@ -10,93 +22,17 @@
  */
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const { existsSync, readFileSync } = require("node:fs");
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const { resolve, dirname } = require("node:path");
-
-const rootDir = resolve(__dirname, "..");
-
-function parseEnvFile(filePath) {
-  if (!existsSync(filePath)) return {};
-  const vars = {};
-  for (const line of readFileSync(filePath, "utf-8").split("\n")) {
-    const trimmed = line.trim();
-    if (!trimmed || trimmed.startsWith("#")) continue;
-    const eq = trimmed.indexOf("=");
-    if (eq === -1) continue;
-    const key = trimmed.slice(0, eq).trim();
-    const val = trimmed
-      .slice(eq + 1)
-      .trim()
-      .replace(/^["']|["']$/g, "");
-    vars[key] = val;
-  }
-  return vars;
-}
-
-const SECRET_RE = /(?<!\$)\$secret:([A-Z][A-Z0-9_]*)/g;
-
-function resolveSecrets(vars, secrets) {
-  for (const [key, val] of Object.entries(vars)) {
-    if (!val.includes("$secret:")) continue;
-    vars[key] = val.replace(SECRET_RE, (_, name) => {
-      if (!(name in secrets))
-        throw new Error(`Missing secret: "${name}". Run pnpm sync-secrets.`);
-      return secrets[name];
-    });
-  }
-  return vars;
-}
+const { loadEnv } = require("./load-env.mjs");
 
 /**
  * Load .env.<targetEnv> into process.env, resolving $secret: references.
+ * Thin adapter over loadEnv() — see load-env.mjs for the full contract
+ * (CI-secret strictness, allowed env names, ENV_DEBUG snapshot behavior).
  *
  * @param {{ targetEnv?: string }} [opts]
  */
 function loadRootEnv(opts) {
-  const env = (opts && opts.targetEnv) || process.env.TARGET_ENV || "dev";
-  const envFile = resolve(rootDir, `.env.${env}`);
-
-  if (!existsSync(envFile)) {
-    throw new Error(`Env file not found: .env.${env}`);
-  }
-
-  const vars = parseEnvFile(envFile);
-
-  const hasSecretRefs = Object.values(vars).some((v) => v.includes("$secret:"));
-  if (hasSecretRefs) {
-    if (process.env.CI === "true") {
-      for (const [key, val] of Object.entries(vars)) {
-        if (val.includes("$secret:")) {
-          const match = val.match(/\$secret:([A-Z][A-Z0-9_]*)/);
-          vars[key] = match ? (process.env[match[1]] ?? "") : "";
-        }
-      }
-    } else {
-      const secretsFile = resolve(rootDir, ".secrets");
-      if (!existsSync(secretsFile)) {
-        throw new Error("Missing .secrets file. Run pnpm sync-secrets.");
-      }
-      resolveSecrets(vars, parseEnvFile(secretsFile));
-    }
-  }
-
-  for (const [key, val] of Object.entries(vars)) {
-    if (!(key in process.env)) {
-      process.env[key] = val;
-    }
-  }
-
-  process.env.TARGET_ENV = env;
-
-  if (vars.ENV_DEBUG === "true") {
-    const snapshot = {
-      ...vars,
-      TARGET_ENV: env,
-      NODE_ENV: process.env.NODE_ENV ?? "",
-    };
-    process.env.NEXT_PUBLIC_ENV_DEBUG = JSON.stringify(snapshot);
-  }
+  loadEnv(opts && opts.targetEnv);
 }
 
 module.exports = { loadRootEnv };

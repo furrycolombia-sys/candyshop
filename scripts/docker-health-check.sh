@@ -20,13 +20,18 @@ trap cleanup EXIT
 # Always run loadEnv to fill in any missing vars (e.g. app URLs not set by CI).
 # loadEnv only writes vars NOT already in process.env, so CI vars always win.
 # In CI, all NEXT_PUBLIC_* vars are pre-set via workflow env — skip the loader.
+#
+# CLERK_SECRET_KEY is exported alongside the NEXT_PUBLIC_* vars even though it
+# is not a build arg (it must never be baked into the client bundle) — it is a
+# runtime secret the container's Clerk middleware reads from its environment,
+# so it needs to reach the `docker run -e` call below instead.
 if [ -z "${CI:-}" ] && [ -f ".env.dev" ]; then
   echo "Loading env from .env.dev..."
   eval "$(node --input-type=module <<'EOF'
 import { loadEnv } from './scripts/load-env.mjs';
 loadEnv('dev');
 for (const [k, v] of Object.entries(process.env)) {
-  if (k.startsWith('NEXT_PUBLIC_')) {
+  if (k.startsWith('NEXT_PUBLIC_') || k === 'CLERK_SECRET_KEY') {
     process.stdout.write(`export ${k}=${JSON.stringify(v)}\n`);
   }
 }
@@ -35,25 +40,14 @@ EOF
 fi
 
 # ── 1. Build ──────────────────────────────────────────────────────────────────
-# Build args are generated dynamically from the exported env vars — same keys
-# as docker-build.mjs uses, all sourced from the env loader above.
+# Build args are read from scripts/lib/docker-build-args.mjs — the single
+# source of truth also imported by docker-build.mjs — applied to the env vars
+# exported above. Do NOT restate this list here; import it, or it will drift
+# (as it did before: this script's own hardcoded copy was missing the Clerk
+# keys and every app crashed at boot with "Missing publishableKey").
 BUILD_ARGS=$(node --input-type=module <<'EOF'
-const keys = [
-  'NEXT_PUBLIC_SUPABASE_URL',
-  'NEXT_PUBLIC_SUPABASE_ANON_KEY',
-  'NEXT_PUBLIC_AUTH_URL',
-  'NEXT_PUBLIC_AUTH_HOST_URL',
-  'NEXT_PUBLIC_STORE_URL',
-  'NEXT_PUBLIC_ADMIN_URL',
-  'NEXT_PUBLIC_PLAYGROUND_URL',
-  'NEXT_PUBLIC_LANDING_URL',
-  'NEXT_PUBLIC_PAYMENTS_URL',
-  'NEXT_PUBLIC_STUDIO_URL',
-  'NEXT_PUBLIC_BUILD_HASH',
-  'NEXT_PUBLIC_ENABLE_TEST_IDS',
-  'NEXT_PUBLIC_ENV_DEBUG',
-];
-for (const k of keys) {
+import { BUILD_ARG_KEYS } from './scripts/lib/docker-build-args.mjs';
+for (const k of BUILD_ARG_KEYS) {
   process.stdout.write(`--build-arg ${k}=${process.env[k] ?? ''}\n`);
 }
 EOF
@@ -84,9 +78,12 @@ PORT=$(node -e "
 echo "Using port $PORT for health check."
 
 # ── 3. Run container ──────────────────────────────────────────────────────────
+# CLERK_SECRET_KEY is passed as a runtime -e var, not a --build-arg: it must
+# not be baked into the built bundle, only be available to the server process.
 docker run -d \
   --name "$CONTAINER_NAME" \
   -p "${PORT}:8080" \
+  -e "CLERK_SECRET_KEY=${CLERK_SECRET_KEY:-}" \
   "$IMAGE_NAME" > /dev/null
 
 # ── 4. Wait for /health endpoint (max 60s) ────────────────────────────────────
