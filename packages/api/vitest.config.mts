@@ -19,6 +19,12 @@ export default defineConfig({
       provider: "v8",
       reporter: ["text"],
       exclude: ["node_modules/", "**/*.d.ts", "**/*.config.*", "**/index.ts"],
+      // This package had no thresholds and no `test:coverage` script, so its
+      // coverage was never measured or enforced. Floors pinned to the first real
+      // measurement so regressions fail; raise them as coverage improves.
+      thresholds: {
+        branches: 75, functions: 60, lines: 80, statements: 75,
+      },
       cleanOnRerun: false,
     },
   },
