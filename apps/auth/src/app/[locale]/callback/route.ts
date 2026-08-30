@@ -38,6 +38,25 @@ const ALLOWED_REDIRECT_ORIGINS = [
   process.env.NEXT_PUBLIC_LANDING_URL,
 ].filter((value): value is string => value !== undefined);
 
+/**
+ * This app's own declared, trusted external URL (e.g.
+ * `http://127.0.0.1:5050/auth` behind the Docker/CI nginx, `http://localhost:5000`
+ * in local dev). Every absolute redirect below is built from this instead of
+ * `new URL(request.url).origin`: behind nginx, Next.js's standalone server
+ * constructs `request.url` from its own bind address (`HOSTNAME`/`PORT` in
+ * `docker/prod/supervisord.conf` — `0.0.0.0:5000` for this app), not the
+ * `Host`/`X-Forwarded-Host` header nginx actually forwards. A redirect built
+ * from it lands on `http://0.0.0.0:5000/...` — Chromium refuses to navigate
+ * to `0.0.0.0` at all (`net::ERR_ADDRESS_INVALID`), and even where it
+ * doesn't, nothing external listens on the container's internal port
+ * (`net::ERR_CONNECTION_REFUSED`) — which is what made
+ * `apps/store/e2e/auth.setup.ts`'s post-sign-in navigation fail. It also
+ * drops this app's `/auth` basePath, since an already-absolute URL bypasses
+ * Next's automatic basePath prefixing. `NEXT_PUBLIC_AUTH_URL` carries both
+ * the real external host and the basePath correctly in every environment.
+ */
+const AUTH_URL = process.env.NEXT_PUBLIC_AUTH_URL;
+
 type CurrentUser = NonNullable<Awaited<ReturnType<typeof currentUser>>>;
 
 function toClerkIdentity(user: CurrentUser): ClerkIdentity {
@@ -93,13 +112,17 @@ export async function GET(
   { params }: { params: Promise<{ locale: string }> },
 ) {
   const { locale } = await params;
-  const { searchParams, origin } = new URL(request.url);
+  const { searchParams, origin: requestOrigin } = new URL(request.url);
+  // See the AUTH_URL comment above: prefer this app's own declared URL over
+  // the request's own (possibly internal, proxy-blind) origin.
+  const authBase = AUTH_URL ?? requestOrigin;
+  const siteOrigin = AUTH_URL ? new URL(AUTH_URL).origin : requestOrigin;
 
   const user = await currentUser();
   if (!user) {
     // No Clerk session — the flow was interrupted or hit directly. Send the
     // person back to sign in rather than guessing at an identity.
-    return NextResponse.redirect(new URL(`/${locale}/login`, origin));
+    return NextResponse.redirect(`${authBase}/${locale}/login`);
   }
 
   const store = createSupabaseProfileStore(createServiceRoleSupabaseClient());
@@ -127,11 +150,11 @@ export async function GET(
       // doesn't exist.
       const destination = resolveSafeRedirectTarget({
         value: searchParams.get("next"),
-        fallback: `/${locale}/profile/${result.profile.id}`,
-        requestOrigin: origin,
+        fallback: `${authBase}/${locale}/profile/${result.profile.id}`,
+        requestOrigin: siteOrigin,
         allowedOrigins: ALLOWED_REDIRECT_ORIGINS,
       });
-      return NextResponse.redirect(new URL(destination, origin));
+      return NextResponse.redirect(destination);
     }
 
     case "conflict": {

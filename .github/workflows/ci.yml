@@ -455,6 +455,28 @@ jobs:
             node scripts/e2e.mjs --env ci --app "${E2E_APP}"
           done
 
+      - name: Capture app container logs (on failure)
+        # A container-side crash (e.g. a crash-looping supervisord program)
+        # shows up to Playwright only as a generic connection error, with
+        # nothing in the CI step output explaining why. Dump the app
+        # container's own logs so that reason is visible without a local
+        # repro next time.
+        if: failure()
+        run: |
+          set -uo pipefail
+          docker ps -a > docker-ps.log 2>&1 || true
+          docker logs libra-ci > libra-ci-container.log 2>&1 || echo "no libra-ci container found" > libra-ci-container.log
+
+      - name: Upload app container logs
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        if: failure()
+        with:
+          name: libra-ci-container-logs
+          path: |
+            libra-ci-container.log
+            docker-ps.log
+          retention-days: 7
+
       - name: Upload store Playwright report
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         if: always() && (needs.changes.outputs.store == 'true' || needs.changes.outputs.packages == 'true' || needs.changes.outputs.tooling == 'true')
