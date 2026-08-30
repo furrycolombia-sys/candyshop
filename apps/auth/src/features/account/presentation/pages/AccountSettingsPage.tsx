@@ -1,6 +1,6 @@
 "use client";
 
-import { useSupabaseAuth } from "auth/client";
+import { useCurrentUser } from "auth/client";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { tid } from "shared";
@@ -15,7 +15,7 @@ export function AccountSettingsPage() {
   const t = useTranslations("auth.accountSettings");
   const tAuth = useTranslations("auth");
   const locale = useLocale();
-  const { user, signOut } = useSupabaseAuth();
+  const { user, signOut } = useCurrentUser();
   const router = useRouter();
   const { data: profile, isLoading, isError } = useProfile(user?.id);
   const updateMutation = useUpdateProfile(user?.id ?? "");

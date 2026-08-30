@@ -7,13 +7,13 @@ import { usePendingOrderCount } from "@/features/orders/application/hooks/usePen
 import { ProductListPageContent } from "@/features/products/presentation/pages/ProductListPageContent";
 import { useDelegateCountsByProduct } from "@/features/seller-admins/application/hooks/useDelegateCountsByProduct";
 import { SELLER_ADMINS_READ_PERMISSION } from "@/features/seller-admins/domain/constants";
-import { useSupabaseAuth } from "@/shared/application/hooks/useSupabaseAuth";
+import { useCurrentUser } from "@/shared/application/hooks/useCurrentUser";
 import { AccessDeniedState } from "@/shared/presentation/components/AccessDeniedState";
 
 export function ProductListPage() {
   const { hasPermission } = useCurrentUserPermissions();
   const t = useTranslations("common");
-  const { user } = useSupabaseAuth();
+  const { user } = useCurrentUser();
   const { data: delegateCounts } = useDelegateCountsByProduct(user?.id);
   const { data: pendingCount } = usePendingOrderCount();
 

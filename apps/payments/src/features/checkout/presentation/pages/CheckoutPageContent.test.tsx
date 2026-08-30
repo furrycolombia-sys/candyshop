@@ -22,7 +22,7 @@ vi.mock("lucide-react", () => ({
 }));
 
 vi.mock("auth/client", () => ({
-  useSupabaseAuth: () => ({ user: { id: "user-1" } }),
+  useCurrentUser: () => ({ user: { id: "user-1" } }),
 }));
 
 vi.mock("@/shared/infrastructure/config", () => ({

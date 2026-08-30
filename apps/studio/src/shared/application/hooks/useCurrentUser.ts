@@ -1,1 +1,1 @@
-export { useSupabaseAuth } from "auth/client";
+export { useCurrentUser } from "auth/client";

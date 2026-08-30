@@ -21,7 +21,7 @@ vi.mock("ui", () => ({
 }));
 
 vi.mock("auth/client", () => ({
-  useSupabaseAuth: () => ({
+  useCurrentUser: () => ({
     user: { id: "user-1", email: "test@example.com" },
     signOut: vi.fn(),
   }),

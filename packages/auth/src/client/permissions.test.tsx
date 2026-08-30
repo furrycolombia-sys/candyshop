@@ -10,7 +10,7 @@ import {
   writePermCache,
 } from "./permCachePersistence";
 import { matchesPermissions, useCurrentUserPermissions } from "./permissions";
-import { useSupabaseAuth } from "./useSupabaseAuth";
+import { useCurrentUser } from "./useCurrentUser";
 
 vi.mock("./permCachePersistence", () => ({
   readPermCache: vi.fn().mockReturnValue(null),
@@ -18,9 +18,9 @@ vi.mock("./permCachePersistence", () => ({
   clearPermCache: vi.fn(),
 }));
 
-vi.mock("./useSupabaseAuth", () => ({
-  useSupabaseAuth: vi.fn().mockReturnValue({
-    user: { id: "user-1" },
+vi.mock("./useCurrentUser", () => ({
+  useCurrentUser: vi.fn().mockReturnValue({
+    user: { id: "user-1", email: "user-1@example.com" },
     isAuthenticated: true,
     isLoading: false,
   }),
@@ -33,7 +33,7 @@ vi.mock("api/supabase", () => ({
 const mockReadCache = vi.mocked(readPermCache);
 const mockWriteCache = vi.mocked(writePermCache);
 const mockClearCache = vi.mocked(clearPermCache);
-const mockUseSupabaseAuth = vi.mocked(useSupabaseAuth);
+const mockUseCurrentUser = vi.mocked(useCurrentUser);
 const mockCreateClient = vi.mocked(createBrowserSupabaseClient);
 
 type PermRow = {
@@ -74,12 +74,10 @@ function makeSupabase(
 
 beforeEach(() => {
   vi.clearAllMocks();
-  mockUseSupabaseAuth.mockReturnValue({
-    user: { id: "user-1" } as ReturnType<typeof useSupabaseAuth>["user"],
+  mockUseCurrentUser.mockReturnValue({
+    user: { id: "user-1", email: "user-1@example.com" },
     isAuthenticated: true,
     isLoading: false,
-    session: null,
-    signInWithProvider: vi.fn(),
     signOut: vi.fn(),
   });
 });
@@ -185,12 +183,10 @@ describe("useCurrentUserPermissions — cache clear on logout", () => {
       >,
     );
 
-    mockUseSupabaseAuth.mockReturnValue({
+    mockUseCurrentUser.mockReturnValue({
       user: null,
       isAuthenticated: false,
       isLoading: false,
-      session: null,
-      signInWithProvider: vi.fn(),
       signOut: vi.fn(),
     });
 
@@ -223,12 +219,10 @@ describe("useCurrentUserPermissions — cache clear on logout", () => {
     await waitFor(() => expect(mockWriteCache).toHaveBeenCalled());
 
     // Now simulate logout: userId becomes null.
-    mockUseSupabaseAuth.mockReturnValue({
+    mockUseCurrentUser.mockReturnValue({
       user: null,
       isAuthenticated: false,
       isLoading: false,
-      session: null,
-      signInWithProvider: vi.fn(),
       signOut: vi.fn(),
     });
     rerender();

@@ -5,7 +5,7 @@ const mockHasPermission = vi.fn(() => true);
 const mockAddMutate = vi.fn();
 const mockRemoveMutate = vi.fn();
 const mockUseDelegates = vi.fn(() => ({ data: [], isLoading: false }));
-const mockUseSupabaseAuth = vi.fn(() => ({
+const mockUseCurrentUser = vi.fn(() => ({
   user: { id: "seller-1" } as { id: string } | null,
 }));
 
@@ -23,8 +23,8 @@ vi.mock("auth/client", () => ({
   }),
 }));
 
-vi.mock("@/shared/application/hooks/useSupabaseAuth", () => ({
-  useSupabaseAuth: () => mockUseSupabaseAuth(),
+vi.mock("@/shared/application/hooks/useCurrentUser", () => ({
+  useCurrentUser: () => mockUseCurrentUser(),
 }));
 
 vi.mock("@/features/seller-admins/application/hooks/useDelegates", () => ({
@@ -92,7 +92,7 @@ describe("DelegateManagementPage", () => {
     vi.clearAllMocks();
     mockHasPermission.mockReturnValue(true);
     mockUseDelegates.mockReturnValue({ data: [], isLoading: false });
-    mockUseSupabaseAuth.mockReturnValue({ user: { id: "seller-1" } });
+    mockUseCurrentUser.mockReturnValue({ user: { id: "seller-1" } });
   });
 
   it("renders the page with title", () => {
@@ -134,7 +134,7 @@ describe("DelegateManagementPage", () => {
   });
 
   it("handleAdd does nothing when sellerId is undefined", () => {
-    mockUseSupabaseAuth.mockReturnValue({ user: null });
+    mockUseCurrentUser.mockReturnValue({ user: null });
     render(<DelegateManagementPage />);
     fireEvent.click(screen.getByTestId("trigger-add"));
     expect(mockAddMutate).not.toHaveBeenCalled();
@@ -151,7 +151,7 @@ describe("DelegateManagementPage", () => {
   });
 
   it("handleRemove does nothing when sellerId is undefined", () => {
-    mockUseSupabaseAuth.mockReturnValue({ user: null });
+    mockUseCurrentUser.mockReturnValue({ user: null });
     render(<DelegateManagementPage />);
     fireEvent.click(screen.getByTestId("trigger-remove"));
     expect(mockRemoveMutate).not.toHaveBeenCalled();

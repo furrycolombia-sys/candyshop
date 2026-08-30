@@ -1,9 +1,8 @@
 "use client";
 
-import type { SupabaseClient } from "@supabase/supabase-js";
 import { type ReactNode, useEffect, useRef } from "react";
 
-import { useAuth } from "./useAuth";
+import { useCurrentUser } from "./useCurrentUser";
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -11,8 +10,6 @@ interface ProtectedRouteProps {
   authUrl: string;
   /** Current locale for the redirect URL */
   locale: string;
-  /** Supabase client instance */
-  supabaseClient: SupabaseClient;
   /** Content to show while checking auth. Defaults to empty. */
   fallback?: ReactNode;
 }
@@ -22,15 +19,20 @@ interface ProtectedRouteProps {
  *
  * Redirects to the auth app's login page if the user is not signed in.
  * Shows a fallback while checking auth state to prevent flash of content.
+ *
+ * Used to check `useAuth({ supabaseClient })` — a Supabase Auth session that
+ * no longer exists under Third-Party Auth, so this component redirected
+ * every signed-in visitor straight back to login on every app that wraps
+ * pages in `<ProtectedRoute>` (store, admin, payments, studio). Replaced
+ * with `useCurrentUser()`, which resolves sign-in state from Clerk.
  */
 export function ProtectedRoute({
   children,
   authUrl,
   locale,
-  supabaseClient,
   fallback = null,
 }: ProtectedRouteProps) {
-  const { isAuthenticated, isLoading } = useAuth({ supabaseClient });
+  const { isAuthenticated, isLoading } = useCurrentUser();
   const hasRedirectedRef = useRef(false);
 
   useEffect(() => {
