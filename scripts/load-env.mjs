@@ -134,9 +134,9 @@ export function loadEnv(targetEnv) {
               continue;
             }
             throw new Error(
-              `Missing secret in CI: "${name}". Add it to the env: block of ` +
-                `the job that loads .env.${env} in .github/workflows/ci.yml ` +
-                `(the GitHub repo secret must already exist).`,
+              `Missing secret in CI: "${name}" (referenced by .env.${env}). ` +
+                `The workflow job running this must pass ${name} through its ` +
+                `env: block (the GitHub repo secret must already exist).`,
             );
           }
           vars[key] = resolved;
