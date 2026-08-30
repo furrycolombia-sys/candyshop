@@ -116,6 +116,19 @@ jobs:
       - name: Check formatting
         run: pnpm run format:check
 
+      # These four are configured in package.json but ran in no workflow — only
+      # in the husky precommit hook, which any `--no-verify` commit bypasses.
+      # They pass today, so they are enforced here. cspell (70 issues), knip and
+      # jscpd do not pass yet and are tracked in
+      # .superpowers/sdd/aeleos-parity/plan-notes.md rather than enabled broken.
+      - name: Repo hygiene (workspace + structure checks)
+        run: |
+          set -euo pipefail
+          pnpm run sherif
+          pnpm run syncpack:lint
+          pnpm exec ls-lint
+          pnpm exec madge --circular --extensions ts,tsx,js,jsx             apps/store/src apps/studio/src apps/landing/src apps/payments/src             apps/admin/src apps/auth/src apps/playground/src             packages/ui/src packages/shared/src packages/api/src             packages/app-components/src packages/auth/src
+
       - name: Lint (scoped)
         run: |
           set -euo pipefail
