@@ -10,6 +10,7 @@ import {
   adminDelete,
   adminInsert,
   createTestUser,
+  deleteTestUser,
   injectSession,
   supabaseAdmin,
   type TestUser,
@@ -116,8 +117,8 @@ test.describe.serial("Reports page", () => {
         .remove([receiptStoragePath])
         .catch(() => {});
     }
-    await supabaseAdmin.auth.admin.deleteUser(buyerUser.userId).catch(() => {});
-    await supabaseAdmin.auth.admin.deleteUser(adminUser.userId).catch(() => {});
+    await deleteTestUser(buyerUser).catch(() => {});
+    await deleteTestUser(adminUser).catch(() => {});
   });
 
   // ─── Page structure ─────────────────────────────────────────────
@@ -398,9 +399,7 @@ test.describe.serial("Reports page", () => {
         expect(response?.status()).not.toBe(200);
       }
     } finally {
-      await supabaseAdmin.auth.admin
-        .deleteUser(limitedUser.userId)
-        .catch(() => {});
+      await deleteTestUser(limitedUser).catch(() => {});
     }
   });
 });

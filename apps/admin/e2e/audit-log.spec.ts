@@ -7,8 +7,8 @@ import {
 import {
   ADMIN_PERMISSIONS,
   createTestUser,
+  deleteTestUser,
   injectSession,
-  supabaseAdmin,
   type TestUser,
 } from "../../auth/e2e/helpers/session";
 
@@ -30,7 +30,7 @@ test.describe.serial("Audit Log page", () => {
   });
 
   test.afterAll(async () => {
-    await supabaseAdmin.auth.admin.deleteUser(adminUser.userId).catch(() => {});
+    await deleteTestUser(adminUser).catch(() => {});
   });
 
   // ─── Page structure ──────────────────────────────────────────────
@@ -155,9 +155,7 @@ test.describe.serial("Audit Log page", () => {
         timeout: ELEMENT_TIMEOUT_MS,
       });
     } finally {
-      await supabaseAdmin.auth.admin
-        .deleteUser(limitedUser.userId)
-        .catch(() => {});
+      await deleteTestUser(limitedUser).catch(() => {});
     }
   });
 });

@@ -11,6 +11,7 @@ import {
   adminDelete,
   adminInsert,
   createTestUser,
+  deleteTestUser,
   injectSession,
   supabaseAdmin,
   type TestUser,
@@ -105,10 +106,8 @@ test.describe.serial("Seller Reports page", () => {
         .remove([receiptStoragePath])
         .catch(() => {});
     }
-    await supabaseAdmin.auth.admin.deleteUser(buyerUser.userId).catch(() => {});
-    await supabaseAdmin.auth.admin
-      .deleteUser(sellerUser.userId)
-      .catch(() => {});
+    await deleteTestUser(buyerUser).catch(() => {});
+    await deleteTestUser(sellerUser).catch(() => {});
   });
 
   // ─── Page structure ──────────────────────────────────────────────
@@ -316,9 +315,7 @@ test.describe.serial("Seller Reports page", () => {
           .filter({ hasText: TEST_ORDER.transfer_number }),
       ).not.toBeVisible();
     } finally {
-      await supabaseAdmin.auth.admin
-        .deleteUser(otherSeller.userId)
-        .catch(() => {});
+      await deleteTestUser(otherSeller).catch(() => {});
     }
   });
 
