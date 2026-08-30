@@ -15,6 +15,7 @@
     "test:e2e:ui": "playwright test --ui"
   },
   "dependencies": {
+    "@clerk/nextjs": "^7.8.3",
     "@monorepo/app-components": "workspace:*",
     "@sentry/nextjs": "^10.50.0",
     "@tanstack/react-query": "^5.100.5",

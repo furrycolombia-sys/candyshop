@@ -148,6 +148,9 @@ importers:
 
   apps/admin:
     dependencies:
+      '@clerk/nextjs':
+        specifier: ^7.8.3
+        version: 7.8.3(next@16.2.4(@babel/core@7.29.0)(@opentelemetry/api@1.9.1)(@playwright/test@1.59.1)(react-dom@19.2.5(react@19.2.5))(react@19.2.5))(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
       '@monorepo/app-components':
         specifier: workspace:*
         version: link:../../packages/app-components
@@ -372,6 +375,9 @@ importers:
 
   apps/landing:
     dependencies:
+      '@clerk/nextjs':
+        specifier: ^7.8.3
+        version: 7.8.3(next@16.2.4(@babel/core@7.29.0)(@opentelemetry/api@1.9.1)(@playwright/test@1.59.1)(react-dom@19.2.5(react@19.2.5))(react@19.2.5))(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
       '@monorepo/app-components':
         specifier: workspace:*
         version: link:../../packages/app-components
@@ -466,6 +472,9 @@ importers:
 
   apps/payments:
     dependencies:
+      '@clerk/nextjs':
+        specifier: ^7.8.3
+        version: 7.8.3(next@16.2.4(@babel/core@7.29.0)(@opentelemetry/api@1.9.1)(@playwright/test@1.59.1)(react-dom@19.2.5(react@19.2.5))(react@19.2.5))(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
       '@hello-pangea/dnd':
         specifier: ^18.0.1
         version: 18.0.1(@types/react@19.2.14)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
@@ -581,6 +590,9 @@ importers:
 
   apps/playground:
     dependencies:
+      '@clerk/nextjs':
+        specifier: ^7.8.3
+        version: 7.8.3(next@16.2.4(@babel/core@7.29.0)(@opentelemetry/api@1.9.1)(@playwright/test@1.59.1)(react-dom@19.2.5(react@19.2.5))(react@19.2.5))(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
       '@monorepo/app-components':
         specifier: workspace:*
         version: link:../../packages/app-components
@@ -681,6 +693,9 @@ importers:
 
   apps/store:
     dependencies:
+      '@clerk/nextjs':
+        specifier: ^7.8.3
+        version: 7.8.3(next@16.2.4(@babel/core@7.29.0)(@opentelemetry/api@1.9.1)(@playwright/test@1.59.1)(react-dom@19.2.5(react@19.2.5))(react@19.2.5))(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
       '@monorepo/app-components':
         specifier: workspace:*
         version: link:../../packages/app-components
@@ -799,6 +814,9 @@ importers:
 
   apps/studio:
     dependencies:
+      '@clerk/nextjs':
+        specifier: ^7.8.3
+        version: 7.8.3(next@16.2.4(@babel/core@7.29.0)(@opentelemetry/api@1.9.1)(@playwright/test@1.59.1)(react-dom@19.2.5(react@19.2.5))(react@19.2.5))(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
       '@hello-pangea/dnd':
         specifier: ^18.0.1
         version: 18.0.1(@types/react@19.2.14)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
@@ -1046,6 +1064,9 @@ importers:
         specifier: ^4.3.6
         version: 4.3.6
     devDependencies:
+      '@clerk/nextjs':
+        specifier: ^7.8.3
+        version: 7.8.3(next@16.2.4(@babel/core@7.29.0)(@opentelemetry/api@1.9.1)(@playwright/test@1.59.1)(react-dom@19.2.5(react@19.2.5))(react@19.2.5))(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
       '@supabase/supabase-js':
         specifier: ^2.105.0
         version: 2.105.0
