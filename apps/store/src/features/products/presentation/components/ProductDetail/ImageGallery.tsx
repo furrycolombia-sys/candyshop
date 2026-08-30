@@ -49,8 +49,6 @@ export function ImageGallery({ product, theme }: ImageGalleryProps) {
     () => getProductImages(product.images),
     [product.images],
   );
-  const hasImages = images.length > 0;
-
   const activeImage = images[activeIndex];
 
   const thumbInactive =
@@ -63,7 +61,9 @@ export function ImageGallery({ product, theme }: ImageGalleryProps) {
   );
 
   // Placeholder for products with no images
-  if (!hasImages) {
+  // No active image means there are no images at all, or the selected index is
+  // stale after a product change -- both render the same empty state.
+  if (!activeImage) {
     return (
       <div
         className="w-full max-w-full shrink-0 lg:w-3/5"

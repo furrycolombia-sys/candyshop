@@ -125,7 +125,7 @@ describe("persistCartCookie", () => {
     persistCartCookie(items);
 
     expect(mockSetCookie).toHaveBeenCalledOnce();
-    const [key, value] = mockSetCookie.mock.calls[0] as [
+    const [key, value] = mockSetCookie.mock.calls[0]! as [
       string,
       string,
       unknown,
@@ -161,7 +161,7 @@ describe("persistCartCookie", () => {
 
   it("includes maxAge in setCookie options", () => {
     persistCartCookie([]);
-    const options = mockSetCookie.mock.calls[0][2] as Record<string, unknown>;
+    const options = mockSetCookie.mock.calls[0]![2] as Record<string, unknown>;
     expect(options.maxAge).toBe(COOKIE_MAX_AGE_S);
   });
 });
@@ -194,7 +194,7 @@ describe("removeCartCookie", () => {
 
     expect(mockDeleteCookie).toHaveBeenCalledTimes(2);
     const calls = mockDeleteCookie.mock.calls as [string, unknown][];
-    expect(calls[0][0]).toBe("libra-cart");
+    expect(calls[0]![0]).toBe("libra-cart");
     expect(calls[1]).toEqual(["libra-cart", { path: "/" }]);
   });
 

@@ -141,6 +141,11 @@ async function navStateAfterFetch(
   await Promise.all([r1, r2]);
 
   // Give React one tick to flush any resulting state updates.
+  // This measures that NOTHING happens: the navbar must not re-render when the
+  // permission responses resolve. A negative assertion has no positive event to
+  // await, and waiting only until the mutation counter goes quiet would stop
+  // watching before late flicker -- so a fixed settle window is the right tool.
+  // eslint-disable-next-line playwright/no-wait-for-timeout -- see above
   await page.waitForTimeout(500);
 
   const mutations = await page.evaluate(
@@ -188,7 +193,7 @@ test.describe("Navbar permission caching across apps", () => {
     // Navigate to the first app so the hook fetches permissions and writes
     // the cookie. Wait until the studio link is visible to confirm the cookie
     // was written with the new permission set.
-    await page.goto(`${NAV_APPS[0].url}/en`);
+    await page.goto(`${NAV_APPS[0]!.url}/en`);
     await expect(page.getByTestId("nav-link-studio")).toBeVisible({
       timeout: 10_000,
     });
@@ -226,14 +231,14 @@ test.describe("Navbar permission caching across apps", () => {
     const {
       studioVisibleBeforeApi: studioBeforeRevoke,
       mutations: firstMutations,
-    } = await navStateAfterFetch(page, NAV_APPS[0].url);
+    } = await navStateAfterFetch(page, NAV_APPS[0]!.url);
     expect(
       studioBeforeRevoke,
-      `[phase 4] ${NAV_APPS[0].name}: old cookie should still show studio link before API returns`,
+      `[phase 4] ${NAV_APPS[0]!.name}: old cookie should still show studio link before API returns`,
     ).toBe(true);
     expect(
       firstMutations,
-      `[re-render] ${NAV_APPS[0].name}: stale cookie — expected nav mutations after API fetch`,
+      `[re-render] ${NAV_APPS[0]!.name}: stale cookie — expected nav mutations after API fetch`,
     ).toBeGreaterThan(0);
     // Confirm the studio link is now gone (permissions were revoked).
     await expect(page.getByTestId("nav-link-studio")).not.toBeVisible({
