@@ -7,8 +7,7 @@
     "types": ["vitest/globals", "node"],
     "paths": {
       "@auth/*": ["./src/*"]
-    },
-    "noUncheckedIndexedAccess": true
+    }
   },
   "include": ["src/**/*.ts", "src/**/*.tsx"],
   "exclude": ["node_modules", "dist"]

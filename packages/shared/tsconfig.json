@@ -6,8 +6,7 @@
     "baseUrl": ".",
     "paths": {
       "@shared/*": ["./src/*"]
-    },
-    "noUncheckedIndexedAccess": true
+    }
   },
   "include": ["src/**/*.ts", "src/**/*.tsx"],
   "exclude": ["node_modules", "dist"]
