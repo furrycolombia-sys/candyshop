@@ -437,6 +437,7 @@ jobs:
               auth-app) E2E_APP="auth"  ;;
               store)    E2E_APP="store" ;;
               admin)    E2E_APP="admin" ;;
+              payments) E2E_APP="payments" ;;
               *)        echo "No E2E suite for ${APP}, skipping."; continue ;;
             esac
             echo "Running E2E for ${E2E_APP} (env=ci)"
