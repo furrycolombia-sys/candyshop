@@ -4,10 +4,6 @@ import { renderHook, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-vi.mock("@/shared/application/hooks/useSupabase", () => ({
-  useSupabase: vi.fn(),
-}));
-
 vi.mock("@/features/dashboard/infrastructure/recentActivityQueries", () => ({
   fetchRecentActivity: vi.fn(),
 }));
@@ -15,7 +11,6 @@ vi.mock("@/features/dashboard/infrastructure/recentActivityQueries", () => ({
 import { useRecentActivity } from "./useRecentActivity";
 
 import { fetchRecentActivity } from "@/features/dashboard/infrastructure/recentActivityQueries";
-import { useSupabase } from "@/shared/application/hooks/useSupabase";
 
 function createWrapper() {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
@@ -24,12 +19,9 @@ function createWrapper() {
   );
 }
 
-const mockSupabase = {} as ReturnType<typeof useSupabase>;
-
 describe("useRecentActivity", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(useSupabase).mockReturnValue(mockSupabase);
   });
 
   it("fetches and returns recent activity", async () => {
@@ -55,7 +47,7 @@ describe("useRecentActivity", () => {
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
-    expect(fetchRecentActivity).toHaveBeenCalledWith(mockSupabase);
+    expect(fetchRecentActivity).toHaveBeenCalledWith();
     expect(result.current.data).toEqual(mockActivity);
   });
 

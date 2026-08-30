@@ -5,9 +5,7 @@ import { fetchPendingOrderCount } from "./pendingOrderCount";
 describe("fetchPendingOrderCount", () => {
   it("returns 0 when user is not authenticated", async () => {
     const supabase = {
-      auth: {
-        getUser: vi.fn().mockResolvedValue({ data: { user: null } }),
-      },
+      rpc: vi.fn().mockResolvedValue({ data: null, error: null }),
       from: vi.fn(),
     };
 
@@ -19,11 +17,7 @@ describe("fetchPendingOrderCount", () => {
 
   it("returns count when query succeeds", async () => {
     const supabase = {
-      auth: {
-        getUser: vi.fn().mockResolvedValue({
-          data: { user: { id: "user-1" } },
-        }),
-      },
+      rpc: vi.fn().mockResolvedValue({ data: "user-1", error: null }),
       from: vi.fn().mockReturnValue({
         select: vi.fn().mockReturnValue({
           eq: vi.fn().mockReturnValue({
@@ -40,11 +34,7 @@ describe("fetchPendingOrderCount", () => {
 
   it("returns 0 when query errors", async () => {
     const supabase = {
-      auth: {
-        getUser: vi.fn().mockResolvedValue({
-          data: { user: { id: "user-1" } },
-        }),
-      },
+      rpc: vi.fn().mockResolvedValue({ data: "user-1", error: null }),
       from: vi.fn().mockReturnValue({
         select: vi.fn().mockReturnValue({
           eq: vi.fn().mockReturnValue({
@@ -64,11 +54,7 @@ describe("fetchPendingOrderCount", () => {
 
   it("returns 0 when count is null", async () => {
     const supabase = {
-      auth: {
-        getUser: vi.fn().mockResolvedValue({
-          data: { user: { id: "user-1" } },
-        }),
-      },
+      rpc: vi.fn().mockResolvedValue({ data: "user-1", error: null }),
       from: vi.fn().mockReturnValue({
         select: vi.fn().mockReturnValue({
           eq: vi.fn().mockReturnValue({
@@ -90,11 +76,7 @@ describe("fetchPendingOrderCount", () => {
     const fromFn = vi.fn().mockReturnValue({ select: selectFn });
 
     const supabase = {
-      auth: {
-        getUser: vi.fn().mockResolvedValue({
-          data: { user: { id: "seller-1" } },
-        }),
-      },
+      rpc: vi.fn().mockResolvedValue({ data: "seller-1", error: null }),
       from: fromFn,
     };
 

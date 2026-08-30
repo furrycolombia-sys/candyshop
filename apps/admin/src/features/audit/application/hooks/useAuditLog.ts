@@ -26,11 +26,9 @@ export function useAuditLog({
   offset,
   enabled = true,
 }: UseAuditLogOptions) {
-  const supabase = useSupabase();
-
   const { data, isLoading, isError } = useQuery({
     queryKey: [AUDIT_QUERY_KEY, filters, offset],
-    queryFn: () => fetchAuditLog(supabase, filters, offset),
+    queryFn: () => fetchAuditLog(filters, offset),
     staleTime: STALE_TIME_MS,
     enabled,
   });
@@ -39,11 +37,9 @@ export function useAuditLog({
 }
 
 export function useAuditTableNames() {
-  const supabase = useSupabase();
-
   return useQuery({
     queryKey: [TABLE_NAMES_KEY],
-    queryFn: () => fetchAuditTableNames(supabase),
+    queryFn: () => fetchAuditTableNames(),
     staleTime: STALE_TIME_MS,
   });
 }

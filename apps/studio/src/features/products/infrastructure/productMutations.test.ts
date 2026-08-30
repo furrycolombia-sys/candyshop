@@ -25,9 +25,7 @@ function createMockSupabase(
 
   return {
     from: vi.fn().mockReturnValue(chain),
-    auth: {
-      getUser: vi.fn().mockResolvedValue({ data: { user: { id: userId } } }),
-    },
+    rpc: vi.fn().mockResolvedValue({ data: userId, error: null }),
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } as any;
 }
@@ -72,6 +70,16 @@ describe("insertProduct", () => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       insertProduct(supabase, { name_en: "X" } as any),
     ).rejects.toThrow("insert fail");
+  });
+
+  it("throws Unauthenticated when there is no signed-in profile", async () => {
+    const supabase = createMockSupabase({ id: "new-1" });
+    supabase.rpc = vi.fn().mockResolvedValue({ data: null, error: null });
+
+    await expect(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      insertProduct(supabase, { name_en: "X" } as any),
+    ).rejects.toThrow("Unauthenticated");
   });
 });
 

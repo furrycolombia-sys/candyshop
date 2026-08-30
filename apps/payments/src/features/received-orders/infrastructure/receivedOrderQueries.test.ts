@@ -27,7 +27,6 @@ function createMockSupabase() {
 
   return {
     from: vi.fn(() => chain),
-    auth: { getUser: vi.fn() },
     rpc: vi.fn(),
     _chain: chain,
   };
@@ -45,8 +44,9 @@ describe("fetchReceivedOrders", () => {
   });
 
   it("returns empty array when no user is authenticated", async () => {
-    supabase.auth.getUser.mockResolvedValue({
-      data: { user: null },
+    supabase.rpc.mockResolvedValue({
+      data: null,
+      error: null,
     });
 
     const result = await fetchReceivedOrders(
@@ -57,8 +57,9 @@ describe("fetchReceivedOrders", () => {
   });
 
   it("returns orders with buyer names", async () => {
-    supabase.auth.getUser.mockResolvedValue({
-      data: { user: { id: "seller-1" } },
+    supabase.rpc.mockResolvedValue({
+      data: "seller-1",
+      error: null,
     });
 
     // Orders query (no filter so it goes through order())
@@ -129,11 +130,7 @@ describe("fetchReceivedOrders", () => {
     };
     const sb = {
       from: vi.fn(() => queryChain),
-      auth: {
-        getUser: vi.fn().mockResolvedValue({
-          data: { user: { id: "seller-1" } },
-        }),
-      },
+      rpc: vi.fn().mockResolvedValue({ data: "seller-1", error: null }),
     };
 
     await fetchReceivedOrders(
@@ -145,8 +142,9 @@ describe("fetchReceivedOrders", () => {
   });
 
   it("throws on query error", async () => {
-    supabase.auth.getUser.mockResolvedValue({
-      data: { user: { id: "seller-1" } },
+    supabase.rpc.mockResolvedValue({
+      data: "seller-1",
+      error: null,
     });
 
     supabase._chain.order.mockResolvedValue({
@@ -232,8 +230,9 @@ describe("fetchPendingOrderCount", () => {
   });
 
   it("returns 0 when no user is authenticated", async () => {
-    supabase.auth.getUser.mockResolvedValue({
-      data: { user: null },
+    supabase.rpc.mockResolvedValue({
+      data: null,
+      error: null,
     });
 
     const result = await fetchPendingOrderCount(
@@ -244,8 +243,9 @@ describe("fetchPendingOrderCount", () => {
   });
 
   it("returns count from query", async () => {
-    supabase.auth.getUser.mockResolvedValue({
-      data: { user: { id: "seller-1" } },
+    supabase.rpc.mockResolvedValue({
+      data: "seller-1",
+      error: null,
     });
 
     supabase._chain.in.mockResolvedValue({
@@ -261,8 +261,9 @@ describe("fetchPendingOrderCount", () => {
   });
 
   it("returns 0 on error", async () => {
-    supabase.auth.getUser.mockResolvedValue({
-      data: { user: { id: "seller-1" } },
+    supabase.rpc.mockResolvedValue({
+      data: "seller-1",
+      error: null,
     });
 
     supabase._chain.in.mockResolvedValue({

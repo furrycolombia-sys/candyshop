@@ -1,4 +1,5 @@
 /* eslint-disable i18next/no-literal-string -- route uses internal table names */
+import { getCurrentUserId } from "api/supabase";
 import { createServerSupabaseClient } from "api/supabase/server";
 import { NextResponse } from "next/server";
 import { ORDER_STATUS_SET } from "shared/constants/orders";
@@ -181,16 +182,14 @@ async function mapOrder(
 export async function GET(request: Request) {
   try {
     const sessionSupabase = await createServerSupabaseClient();
-    const {
-      data: { user },
-    } = await sessionSupabase.auth.getUser();
+    const userId = await getCurrentUserId(sessionSupabase);
 
-    if (!user) {
+    if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const { searchParams } = new URL(request.url);
-    const queryResult = buildQuery(user.id, searchParams);
+    const queryResult = buildQuery(userId, searchParams);
     if (!queryResult.ok) {
       return NextResponse.json({ error: queryResult.error }, { status: 400 });
     }

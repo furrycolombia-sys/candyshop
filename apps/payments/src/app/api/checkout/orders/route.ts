@@ -1,4 +1,5 @@
 /* eslint-disable i18next/no-literal-string -- route uses internal table names and API keys */
+import { getCurrentUserId } from "api/supabase";
 import { createServerSupabaseClient } from "api/supabase/server";
 import { NextResponse } from "next/server";
 
@@ -223,11 +224,9 @@ function validateCartItems(
 export async function POST(request: Request) {
   try {
     const sessionSupabase = await createServerSupabaseClient();
-    const {
-      data: { user },
-    } = await sessionSupabase.auth.getUser();
+    const userId = await getCurrentUserId(sessionSupabase);
 
-    if (!user) {
+    if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -275,7 +274,7 @@ export async function POST(request: Request) {
     }
 
     const orderId = await insertOrder({
-      userId: user.id,
+      userId,
       sellerId: method.seller_id,
       paymentMethodId,
       total: cartValidation.total,

@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { getCurrentUserId } from "api/supabase";
 import type { Database } from "api/supabase/types";
 
 type SupabaseDB = SupabaseClient<Database>;
@@ -32,13 +33,11 @@ async function getNextSortOrder(supabase: SupabaseDB): Promise<number> {
 /** Insert a new product (auto-assigns sort_order and seller_id) */
 export async function insertProduct(supabase: SupabaseDB, data: ProductInsert) {
   const sortOrder = await getNextSortOrder(supabase);
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) throw new Error("Unauthenticated");
+  const userId = await getCurrentUserId(supabase);
+  if (!userId) throw new Error("Unauthenticated");
   const { data: product, error } = await supabase
     .from("products")
-    .insert({ ...data, sort_order: sortOrder, seller_id: user.id })
+    .insert({ ...data, sort_order: sortOrder, seller_id: userId })
     .select()
     .single();
 

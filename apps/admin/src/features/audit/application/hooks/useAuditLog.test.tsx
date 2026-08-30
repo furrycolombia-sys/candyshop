@@ -4,10 +4,6 @@ import { renderHook, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-vi.mock("api/supabase", () => ({
-  createBrowserSupabaseClient: vi.fn(() => ({ auth: {} })),
-}));
-
 vi.mock("@/features/audit/infrastructure/auditQueries", () => ({
   fetchAuditLog: vi.fn(),
   fetchAuditTableNames: vi.fn(),
@@ -71,7 +67,7 @@ describe("useAuditLog", () => {
     });
 
     await waitFor(() => expect(result.current.isLoading).toBe(false));
-    expect(fetchAuditLog).toHaveBeenCalledWith(expect.anything(), filters, 50);
+    expect(fetchAuditLog).toHaveBeenCalledWith(filters, 50);
   });
 
   it("sets isError on failure", async () => {

@@ -32,26 +32,30 @@ declare global {
 let browserClient: SupabaseClient<Database> | null = null;
 
 /**
- * Resolves the Clerk session token for the `accessToken` client option.
+ * Resolves the current Clerk session token.
  *
- * supabase-js falls back to the anon key whenever this returns `null`
- * (`fetchWithAuth`: `const accessToken = (await getAccessToken()) ?? supabaseKey`
- * in `@supabase/supabase-js`'s `lib/fetch.ts`) — so a `null` here silently
- * downgrades every RLS-protected read to "public", which comes back empty
- * rather than erroring. An empty result reads to a customer as "you have no
- * orders", not "something broke".
+ * Used as the `accessToken` client option below, and — exported — as a
+ * standalone getter for the handful of call sites that bypass supabase-js
+ * entirely with a manual `fetch()` (e.g.
+ * `apps/admin/src/shared/infrastructure/auditRestClient.ts` and
+ * `apps/admin/src/features/audit/infrastructure/auditQueries.ts`'s
+ * `insertAuditLog`, which need the raw bearer token for a request against a
+ * schema/view supabase-js's query builder cannot reach). Both uses have the
+ * same failure mode: a `null` here either falls back to the anon key
+ * (supabase-js: `fetchWithAuth`: `const accessToken = (await
+ * getAccessToken()) ?? supabaseKey` in `@supabase/supabase-js`'s
+ * `lib/fetch.ts`) or must be treated as "unauthenticated" by the caller —
+ * either way, silently downgrading every RLS-protected read to "public",
+ * which comes back empty rather than erroring. An empty result reads to a
+ * customer as "you have no orders", not "something broke".
  *
  * A `null` token can mean three different things, and only one of them is
  * worth a `console.warn`:
  *
- * 1. `globalThis.Clerk` is `undefined` — this app has no `<ClerkProvider>`
- *    wired in at all. As of this writing that's `store`, `admin`,
- *    `payments`, and `studio` — every one of them calls this same
- *    `createBrowserSupabaseClient()` (confirmed by grepping for
- *    `ClerkProvider` across every app's src directory: only `apps/auth` has it).
- *    Anonymous is the *only* state those apps can ever be in here — this is
- *    permanent, not a race, and warning here would log on literally every
- *    anonymous request, forever, in four apps. Silent.
+ * 1. `globalThis.Clerk` is `undefined` — `<ClerkProvider>` hasn't rendered
+ *    yet. Every app now wires up `<ClerkProvider>` (confirmed by grepping
+ *    for it across every app's src directory — see task-11-report.md), so
+ *    this is a startup race, not a permanent state.
  * 2. `globalThis.Clerk` exists but `loaded` isn't `true` yet — the app DOES
  *    have `<ClerkProvider>`, the Clerk JS SDK's script has started
  *    executing and assigned itself to the global, but its own async
@@ -68,7 +72,7 @@ let browserClient: SupabaseClient<Database> | null = null;
  * observable via `console.warn` instead of indistinguishable from case 1 or
  * 3, which was the actual gap this closes.
  */
-async function getSupabaseAccessToken(): Promise<string | null> {
+export async function getSupabaseAccessToken(): Promise<string | null> {
   const clerk = globalThis.Clerk;
 
   if (clerk === undefined) {

@@ -1,4 +1,5 @@
 /* eslint-disable i18next/no-literal-string -- route uses internal table names and API keys */
+import { getCurrentUserId } from "api/supabase";
 import { createServerSupabaseClient } from "api/supabase/server";
 import { NextResponse } from "next/server";
 
@@ -176,11 +177,9 @@ async function validateStock(
 export async function POST(request: Request) {
   try {
     const sessionSupabase = await createServerSupabaseClient();
-    const {
-      data: { user },
-    } = await sessionSupabase.auth.getUser();
+    const userId = await getCurrentUserId(sessionSupabase);
 
-    if (!user) {
+    if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -199,7 +198,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
     }
 
-    const permissions = await fetchGrantedPermissions(user.id);
+    const permissions = await fetchGrantedPermissions(userId);
     if (!hasRequiredPermissions(permissions)) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }

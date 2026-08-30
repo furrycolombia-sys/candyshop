@@ -1,4 +1,5 @@
 /* eslint-disable i18next/no-literal-string */
+import { getCurrentUserId } from "api/supabase";
 import { createServerSupabaseClient } from "api/supabase/server";
 
 // Dynamic key access prevents Turbopack from inlining at build time.
@@ -130,14 +131,12 @@ export async function getAuthorizedAdmin(
   requiredKeys: string[],
 ): Promise<string | null> {
   const sessionSupabase = await createServerSupabaseClient();
-  const {
-    data: { user },
-  } = await sessionSupabase.auth.getUser();
+  const userId = await getCurrentUserId(sessionSupabase);
 
-  if (!user) return null;
+  if (!userId) return null;
 
-  const grantedKeys = await fetchGrantedPermissionKeys(user.id);
+  const grantedKeys = await fetchGrantedPermissionKeys(userId);
   const authorized = requiredKeys.every((key) => grantedKeys.includes(key));
 
-  return authorized ? user.id : null;
+  return authorized ? userId : null;
 }
