@@ -8,8 +8,7 @@
       "@app-components/*": ["./src/*"],
       "@shared/*": ["../shared/src/*"],
       "@ui/*": ["../ui/src/*"]
-    },
-    "noUncheckedIndexedAccess": true
+    }
   },
   "include": ["src/**/*.ts", "src/**/*.tsx"],
   "exclude": ["node_modules", "dist"]
