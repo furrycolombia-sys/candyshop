@@ -77,7 +77,7 @@ describe("updatePaymentSetting", () => {
     await updatePaymentSetting(supabase, "timeout_awaiting_payment_hours", 48);
 
     const fromResult = (supabase.from as ReturnType<typeof vi.fn>).mock
-      .results[0].value;
+      .results[0]!.value;
     expect(fromResult.upsert).toHaveBeenCalledWith(
       expect.objectContaining({
         key: "timeout_awaiting_payment_hours",

@@ -173,7 +173,7 @@ describe("UsersPageContent", () => {
   it("passes users from useUsers to UserTable", () => {
     render(<UsersPageContent />);
     expect(capturedUsers).toHaveLength(2);
-    expect(capturedUsers[0].id).toBe("u1");
+    expect(capturedUsers[0]!.id).toBe("u1");
   });
 
   it("passes isLoading=false to UserTable when data is ready", () => {

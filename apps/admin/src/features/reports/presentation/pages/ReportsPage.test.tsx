@@ -339,7 +339,7 @@ describe("ReportsPage", () => {
     render(<ReportsPage />);
     fireEvent.click(screen.getByTestId("reports-export-button"));
     await screen.findByTestId("reports-export-button");
-    const calledUrl: string = mockFetch.mock.calls[0][0] as string;
+    const calledUrl: string = mockFetch.mock.calls[0]![0] as string;
     expect(calledUrl).toContain("dateFrom=2026-01-01");
     expect(calledUrl).toContain("dateTo=2026-12-31");
     expect(calledUrl).toContain("status=approved");
@@ -400,7 +400,7 @@ describe("ReportsPage", () => {
     render(<ReportsPage />);
     fireEvent.click(screen.getByTestId("reports-export-button"));
     await screen.findByTestId("reports-export-button");
-    const calledUrl: string = mockFetch.mock.calls[0][0] as string;
+    const calledUrl: string = mockFetch.mock.calls[0]![0] as string;
     expect(calledUrl).toContain("amountMin=10");
     expect(calledUrl).toContain("amountMax=500");
     vi.unstubAllGlobals();

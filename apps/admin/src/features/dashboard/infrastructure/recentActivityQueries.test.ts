@@ -23,7 +23,7 @@ describe("fetchRecentActivity", () => {
 
   it("passes select param with expected fields", async () => {
     await fetchRecentActivity();
-    const params = mockAuditRestQuery.mock.calls[0][1] as URLSearchParams;
+    const params = mockAuditRestQuery.mock.calls[0]![1] as URLSearchParams;
     expect(params.get("select")).toContain("event_id");
     expect(params.get("select")).toContain("action_timestamp");
     expect(params.get("select")).toContain("user_email");
@@ -31,13 +31,13 @@ describe("fetchRecentActivity", () => {
 
   it("passes order param for descending timestamp", async () => {
     await fetchRecentActivity();
-    const params = mockAuditRestQuery.mock.calls[0][1] as URLSearchParams;
+    const params = mockAuditRestQuery.mock.calls[0]![1] as URLSearchParams;
     expect(params.get("order")).toBe("action_timestamp.desc");
   });
 
   it("passes limit of 5", async () => {
     await fetchRecentActivity();
-    const params = mockAuditRestQuery.mock.calls[0][1] as URLSearchParams;
+    const params = mockAuditRestQuery.mock.calls[0]![1] as URLSearchParams;
     expect(params.get("limit")).toBe("5");
   });
 

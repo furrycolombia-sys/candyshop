@@ -48,7 +48,7 @@ describe("PermissionGroupCard", () => {
     render(<PermissionGroupCard {...defaultProps} onToggle={onToggle} />);
     const checkboxes = screen.getAllByRole("checkbox");
     // Click unchecked "orders.edit" → should grant it
-    fireEvent.click(checkboxes[1]);
+    fireEvent.click(checkboxes[1]!);
     expect(onToggle).toHaveBeenCalledWith("orders.edit", true);
   });
 
@@ -57,7 +57,7 @@ describe("PermissionGroupCard", () => {
     render(<PermissionGroupCard {...defaultProps} onToggle={onToggle} />);
     const checkboxes = screen.getAllByRole("checkbox");
     // Click checked "orders.view" → should revoke it
-    fireEvent.click(checkboxes[0]);
+    fireEvent.click(checkboxes[0]!);
     expect(onToggle).toHaveBeenCalledWith("orders.view", false);
   });
 

@@ -12,5 +12,5 @@ export function getInitials(name: string | null, email: string): string {
       .slice(0, MAX_INITIALS_LENGTH);
   }
   if (!email) return "?";
-  return email[0].toUpperCase();
+  return email.charAt(0).toUpperCase();
 }

@@ -100,7 +100,7 @@ describe("TemplateEditor", () => {
 
     fireEvent.click(screen.getByTestId("template-save"));
     expect(onSave).toHaveBeenCalledTimes(1);
-    expect(onSave.mock.calls[0][0].name_en).toBe("My Template");
+    expect(onSave.mock.calls[0]![0]!.name_en).toBe("My Template");
   });
 
   it("calls onCancel when cancel button is clicked", () => {
@@ -148,10 +148,10 @@ describe("TemplateEditor", () => {
     });
 
     fireEvent.click(screen.getByTestId("template-save"));
-    const saved = onSave.mock.calls[0][0] as {
+    const saved = onSave.mock.calls[0]![0] as {
       sections: Array<{ name_en: string }>;
     };
-    expect(saved.sections[0].name_en).toBe("Updated Section");
+    expect(saved.sections[0]!.name_en).toBe("Updated Section");
   });
 
   it("removeSection removes the section via onRemove callback", () => {
@@ -178,10 +178,10 @@ describe("TemplateEditor", () => {
     });
 
     fireEvent.click(screen.getByTestId("template-save"));
-    const saved = onSave.mock.calls[0][0] as {
+    const saved = onSave.mock.calls[0]![0] as {
       sections: Array<{ items: Array<{ title_en: string }> }>;
     };
-    expect(saved.sections[0].items).toHaveLength(1);
+    expect(saved.sections[0]!.items).toHaveLength(1);
   });
 
   it("updateItem updates an item in the section via onUpdateItem callback", () => {
@@ -197,10 +197,10 @@ describe("TemplateEditor", () => {
     });
 
     fireEvent.click(screen.getByTestId("template-save"));
-    const saved = onSave.mock.calls[0][0] as {
+    const saved = onSave.mock.calls[0]![0] as {
       sections: Array<{ items: Array<{ title_en: string }> }>;
     };
-    expect(saved.sections[0].items[0].title_en).toBe("My Item");
+    expect(saved.sections[0]!.items[0]!.title_en).toBe("My Item");
   });
 
   it("removeItem removes an item from the section via onRemoveItem callback", () => {
@@ -216,9 +216,9 @@ describe("TemplateEditor", () => {
     });
 
     fireEvent.click(screen.getByTestId("template-save"));
-    const saved = onSave.mock.calls[0][0] as {
+    const saved = onSave.mock.calls[0]![0] as {
       sections: Array<{ items: unknown[] }>;
     };
-    expect(saved.sections[0].items).toHaveLength(0);
+    expect(saved.sections[0]!.items).toHaveLength(0);
   });
 });

@@ -40,7 +40,7 @@ describe("AppTopNavigation", () => {
 
   it("passes permissionState with grantedKeys and isAuthenticated from hook", () => {
     render(<AppTopNavigation {...defaultProps} />);
-    const call = mockAppNavigation.mock.calls[0][0] as {
+    const call = mockAppNavigation.mock.calls[0]![0] as {
       permissionState: { grantedKeys: string[]; isAuthenticated: boolean };
     };
     expect(call.permissionState.grantedKeys).toEqual(mockGrantedKeys);
@@ -49,7 +49,7 @@ describe("AppTopNavigation", () => {
 
   it("passes through all original props to AppNavigation", () => {
     render(<AppTopNavigation {...defaultProps} />);
-    const call = mockAppNavigation.mock.calls[0][0] as Record<string, unknown>;
+    const call = mockAppNavigation.mock.calls[0]![0] as Record<string, unknown>;
     expect(call.currentApp).toBe("admin");
     expect(call.userEmail).toBe("user@example.com");
   });
