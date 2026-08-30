@@ -1,7 +1,11 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "plugins": [{ "name": "next" }],
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
     "paths": {
       "@/*": ["./src/*"],
       "ui": ["../../packages/ui/src"],
@@ -16,7 +20,8 @@
       "auth": ["../../packages/auth/src"],
       "auth/*": ["../../packages/auth/src/*"]
     },
-    "noEmit": true
+    "noEmit": true,
+    "noUncheckedIndexedAccess": true
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
   "exclude": ["node_modules", "e2e"]
