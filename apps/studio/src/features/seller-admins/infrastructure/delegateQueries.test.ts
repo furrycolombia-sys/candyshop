@@ -30,7 +30,7 @@ function createMockSupabase(overrides: {
 
   const chainable = Object.assign(resolved, chain);
   for (const key of Object.keys(chain)) {
-    chain[key].mockReturnValue(chainable);
+    chain[key]?.mockReturnValue(chainable);
   }
 
   const from = vi.fn().mockReturnValue(chainable);

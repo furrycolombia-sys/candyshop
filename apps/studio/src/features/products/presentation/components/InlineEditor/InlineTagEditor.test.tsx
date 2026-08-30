@@ -62,7 +62,7 @@ describe("InlineTagEditor", () => {
   it("removes a tag when remove button is clicked", () => {
     render(<Wrapper initialTags="alpha, beta" />);
     const removeButtons = screen.getAllByLabelText("removeTag");
-    fireEvent.click(removeButtons[0]);
+    fireEvent.click(removeButtons[0]!);
     expect(screen.queryByText(/#alpha/)).not.toBeInTheDocument();
     expect(screen.getByText(/#beta/)).toBeInTheDocument();
   });

@@ -86,20 +86,20 @@ describe("InlineImageCarousel", () => {
   it("renders empty state when no images", () => {
     render(<Wrapper />);
     expect(
-      screen.getAllByTestId("image-gallery-main-empty")[0],
+      screen.getAllByTestId("image-gallery-main-empty")[0]!,
     ).toBeInTheDocument();
   });
 
   it("renders add thumbnail button", () => {
     render(<Wrapper />);
-    expect(screen.getAllByTestId("image-thumb-add")[0]).toBeInTheDocument();
+    expect(screen.getAllByTestId("image-thumb-add")[0]!).toBeInTheDocument();
   });
 
   it("adds an image when add button is clicked", () => {
     render(<Wrapper />);
-    fireEvent.click(screen.getAllByTestId("image-thumb-add")[0]);
+    fireEvent.click(screen.getAllByTestId("image-thumb-add")[0]!);
     // After adding, the main image should appear
-    expect(screen.getAllByTestId("image-gallery-main")[0]).toBeInTheDocument();
+    expect(screen.getAllByTestId("image-gallery-main")[0]!).toBeInTheDocument();
   });
 
   it("renders images when provided", () => {
@@ -111,9 +111,9 @@ describe("InlineImageCarousel", () => {
         ]}
       />,
     );
-    expect(screen.getAllByTestId("image-gallery-main")[0]).toBeInTheDocument();
+    expect(screen.getAllByTestId("image-gallery-main")[0]!).toBeInTheDocument();
     expect(
-      screen.getAllByTestId("image-gallery-thumbs")[0],
+      screen.getAllByTestId("image-gallery-thumbs")[0]!,
     ).toBeInTheDocument();
   });
 
@@ -121,7 +121,7 @@ describe("InlineImageCarousel", () => {
     render(
       <Wrapper images={[{ url: "https://example.com/img.jpg", alt: "Img" }]} />,
     );
-    expect(screen.getAllByTestId("image-edit-bar")[0]).toBeInTheDocument();
+    expect(screen.getAllByTestId("image-edit-bar")[0]!).toBeInTheDocument();
   });
 
   it("renders set-as-cover buttons on each thumbnail", () => {
@@ -141,8 +141,12 @@ describe("InlineImageCarousel", () => {
         ]}
       />,
     );
-    expect(screen.getAllByTestId("image-thumb-cover-0")[0]).toBeInTheDocument();
-    expect(screen.getAllByTestId("image-thumb-cover-1")[0]).toBeInTheDocument();
+    expect(
+      screen.getAllByTestId("image-thumb-cover-0")[0]!,
+    ).toBeInTheDocument();
+    expect(
+      screen.getAllByTestId("image-thumb-cover-1")[0]!,
+    ).toBeInTheDocument();
   });
 
   it("clicking set-as-cover updates the cover image", () => {
@@ -166,7 +170,7 @@ describe("InlineImageCarousel", () => {
     );
 
     // Click "Set as cover" on the second image
-    const coverBtn = screen.getAllByTestId("image-thumb-cover-1")[0];
+    const coverBtn = screen.getAllByTestId("image-thumb-cover-1")[0]!;
     fireEvent.click(coverBtn);
 
     // After clicking, the second image's cover button should reflect filled state
