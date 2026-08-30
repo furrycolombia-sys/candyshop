@@ -93,4 +93,32 @@ describe("ProtectedRoute", () => {
 
     expect(container.textContent).toBe("");
   });
+
+  it("does not render children and does not redirect when the profile lookup errors", async () => {
+    // Clerk confirms a session exists (isAuthenticated stays false only
+    // because the local profile id couldn't be resolved), but the
+    // current_user_id() lookup failed even after useCurrentUser's own
+    // retry. This is NOT "signed out" and must not be treated as such.
+    mockUseCurrentUser.mockReturnValue({
+      isAuthenticated: false,
+      isLoading: false,
+      hasProfileLookupError: true,
+    });
+
+    const { container, queryByText } = render(
+      <ProtectedRoute authUrl={AUTH_URL} locale={LOCALE}>
+        <p>Secret</p>
+      </ProtectedRoute>,
+    );
+
+    // Give any redirect effect a chance to fire before asserting it didn't.
+    await new Promise((resolve) => setTimeout(resolve, 20));
+
+    expect(queryByText("Secret")).toBeNull();
+    expect(globalThis.location.replace).not.toHaveBeenCalled();
+    // A blank fallback would strand the person with no explanation and no
+    // way forward - this must render something, not silently render nothing
+    // the way the signed-out state above does.
+    expect(container.textContent).not.toBe("");
+  });
 });

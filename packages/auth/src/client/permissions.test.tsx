@@ -23,6 +23,7 @@ vi.mock("./useCurrentUser", () => ({
     user: { id: "user-1", email: "user-1@example.com" },
     isAuthenticated: true,
     isLoading: false,
+    hasProfileLookupError: false,
   }),
 }));
 
@@ -78,6 +79,7 @@ beforeEach(() => {
     user: { id: "user-1", email: "user-1@example.com" },
     isAuthenticated: true,
     isLoading: false,
+    hasProfileLookupError: false,
     signOut: vi.fn(),
   });
 });
@@ -187,6 +189,7 @@ describe("useCurrentUserPermissions — cache clear on logout", () => {
       user: null,
       isAuthenticated: false,
       isLoading: false,
+      hasProfileLookupError: false,
       signOut: vi.fn(),
     });
 
@@ -223,6 +226,7 @@ describe("useCurrentUserPermissions — cache clear on logout", () => {
       user: null,
       isAuthenticated: false,
       isLoading: false,
+      hasProfileLookupError: false,
       signOut: vi.fn(),
     });
     rerender();

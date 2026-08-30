@@ -3,7 +3,8 @@ export { createBrowserSupabaseClient } from "./browser";
 
 // Resolves the caller's local user_profiles.id from either client — see
 // currentUserId.ts for why this replaces supabase.auth.getUser().
-export { getCurrentUserId } from "./currentUserId";
+export { getCurrentUserId, getCurrentUserIdResult } from "./currentUserId";
+export type { CurrentUserIdResult } from "./currentUserId";
 
 // Server-only exports (createServerSupabaseClient, createServiceRoleSupabaseClient)
 // must be imported directly from "api/supabase/server" to avoid pulling
