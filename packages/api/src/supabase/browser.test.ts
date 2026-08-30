@@ -54,14 +54,29 @@ describe("createBrowserSupabaseClient — accessToken", () => {
     expect(warnSpy).not.toHaveBeenCalled();
   });
 
-  it("warns and returns null when Clerk has not been loaded onto the page yet", async () => {
+  it("returns null WITHOUT warning when Clerk is entirely absent — apps with no <ClerkProvider> (store, admin, payments, studio) must not log on every anonymous request", async () => {
     const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
     globalThis.Clerk = undefined;
 
     const token = await getAccessTokenFn()();
 
     expect(token).toBeNull();
-    expect(warnSpy).toHaveBeenCalledTimes(1);
+    expect(warnSpy).not.toHaveBeenCalled();
+  });
+
+  it("never warns across many consecutive requests when Clerk is entirely absent — this was the log-spam bug (every anonymous request, forever, in four apps)", async () => {
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    globalThis.Clerk = undefined;
+
+    const accessToken = getAccessTokenFn();
+    const tokens = await Promise.all([
+      accessToken(),
+      accessToken(),
+      accessToken(),
+    ]);
+
+    expect(tokens).toEqual([null, null, null]);
+    expect(warnSpy).not.toHaveBeenCalled();
   });
 
   it("warns and returns null when Clerk exists but has not finished hydrating (loaded: false)", async () => {
