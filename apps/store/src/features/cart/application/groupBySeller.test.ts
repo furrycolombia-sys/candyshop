@@ -74,9 +74,9 @@ describe("groupCartBySeller", () => {
     const result = groupCartBySeller(items);
 
     expect(result).toHaveLength(1);
-    expect(result[0].sellerId).toBe("seller-a");
-    expect(result[0].items).toHaveLength(2);
-    expect(result[0].subtotal).toBe(10 * 2 + 5 * 1);
+    expect(result[0]!.sellerId).toBe("seller-a");
+    expect(result[0]!.items).toHaveLength(2);
+    expect(result[0]!.subtotal).toBe(10 * 2 + 5 * 1);
   });
 
   it("groups items by different sellers", () => {
@@ -126,9 +126,9 @@ describe("groupCartBySeller", () => {
     const result = groupCartBySeller(items);
 
     expect(result).toHaveLength(1);
-    expect(result[0].sellerId).toBe("unknown");
-    expect(result[0].items).toHaveLength(2);
-    expect(result[0].subtotal).toBe(10 * 1 + 15 * 2);
+    expect(result[0]!.sellerId).toBe("unknown");
+    expect(result[0]!.items).toHaveLength(2);
+    expect(result[0]!.subtotal).toBe(10 * 1 + 15 * 2);
   });
 
   it("mixes known sellers with unknown seller_id", () => {
@@ -166,7 +166,7 @@ describe("groupCartBySeller", () => {
 
     const result = groupCartBySeller(items);
 
-    expect(result[0].subtotal).toBeCloseTo(29.97, 2);
+    expect(result[0]!.subtotal).toBeCloseTo(29.97, 2);
   });
 
   it("handles single item cart", () => {
@@ -182,9 +182,9 @@ describe("groupCartBySeller", () => {
     const result = groupCartBySeller(items);
 
     expect(result).toHaveLength(1);
-    expect(result[0].sellerId).toBe("seller-x");
-    expect(result[0].items).toHaveLength(1);
-    expect(result[0].subtotal).toBe(42);
+    expect(result[0]!.sellerId).toBe("seller-x");
+    expect(result[0]!.items).toHaveLength(1);
+    expect(result[0]!.subtotal).toBe(42);
   });
 
   it("preserves item order within each group", () => {
@@ -201,7 +201,7 @@ describe("groupCartBySeller", () => {
 
     const result = groupCartBySeller(items);
 
-    expect(result[0].items.map((i) => i.id)).toEqual([
+    expect(result[0]!.items.map((i) => i.id)).toEqual([
       "first",
       "second",
       "third",

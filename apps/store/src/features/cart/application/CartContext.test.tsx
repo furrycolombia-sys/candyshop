@@ -94,8 +94,8 @@ describe("CartContext", () => {
       });
 
       expect(result.current.items).toHaveLength(1);
-      expect(result.current.items[0].id).toBe("p1");
-      expect(result.current.items[0].quantity).toBe(1);
+      expect(result.current.items[0]!.id).toBe("p1");
+      expect(result.current.items[0]!.quantity).toBe(1);
     });
 
     it("adds item with explicit quantity", () => {
@@ -106,7 +106,7 @@ describe("CartContext", () => {
         result.current.addItem({ ...product, quantity: 3 });
       });
 
-      expect(result.current.items[0].quantity).toBe(3);
+      expect(result.current.items[0]!.quantity).toBe(3);
     });
 
     it("increments quantity for existing item", () => {
@@ -122,7 +122,7 @@ describe("CartContext", () => {
       });
 
       expect(result.current.items).toHaveLength(1);
-      expect(result.current.items[0].quantity).toBe(2);
+      expect(result.current.items[0]!.quantity).toBe(2);
     });
 
     it("increments by explicit quantity for existing item", () => {
@@ -137,7 +137,7 @@ describe("CartContext", () => {
         result.current.addItem({ ...product, quantity: 3 });
       });
 
-      expect(result.current.items[0].quantity).toBe(5);
+      expect(result.current.items[0]!.quantity).toBe(5);
     });
 
     it("caps added quantity at max_quantity", () => {
@@ -156,7 +156,7 @@ describe("CartContext", () => {
         result.current.addItem(product);
       });
 
-      expect(result.current.items[0].quantity).toBe(2);
+      expect(result.current.items[0]!.quantity).toBe(2);
     });
 
     it("keeps different products separate", () => {
@@ -188,7 +188,7 @@ describe("CartContext", () => {
       });
 
       expect(result.current.items).toHaveLength(1);
-      expect(result.current.items[0].id).toBe("p2");
+      expect(result.current.items[0]!.id).toBe("p2");
     });
 
     it("does nothing when removing non-existent item", () => {
@@ -218,7 +218,7 @@ describe("CartContext", () => {
         result.current.updateQuantity("p1", 5);
       });
 
-      expect(result.current.items[0].quantity).toBe(5);
+      expect(result.current.items[0]!.quantity).toBe(5);
     });
 
     it("caps updated quantity at max_quantity", () => {
@@ -234,7 +234,7 @@ describe("CartContext", () => {
         result.current.updateQuantity("p1", 5);
       });
 
-      expect(result.current.items[0].quantity).toBe(3);
+      expect(result.current.items[0]!.quantity).toBe(3);
     });
 
     it("removes item when quantity set to 0", () => {

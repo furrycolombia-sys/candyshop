@@ -294,7 +294,7 @@ describe.each([
 
     assertSameProducts(input, result);
     assertNoOrphans(result, cols);
-    expect(result[0].id).toBe("F1");
+    expect(result[0]!.id).toBe("F1");
   });
 
   it("handles consecutive featured items", () => {
