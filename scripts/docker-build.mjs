@@ -21,6 +21,7 @@ import { execSync, spawnSync } from "node:child_process";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { loadEnv } from "./load-env.mjs";
+import { BUILD_ARG_KEYS } from "./lib/docker-build-args.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const rootDir = resolve(__dirname, "..");
@@ -102,22 +103,8 @@ if (Number.isNaN(hostPort)) {
 }
 
 // ── Build args — all sourced from process.env ─────────────────────────────────
-
-const BUILD_ARG_KEYS = [
-  "NEXT_PUBLIC_SUPABASE_URL",
-  "NEXT_PUBLIC_SUPABASE_ANON_KEY",
-  "NEXT_PUBLIC_AUTH_URL",
-  "NEXT_PUBLIC_AUTH_HOST_URL",
-  "NEXT_PUBLIC_STORE_URL",
-  "NEXT_PUBLIC_ADMIN_URL",
-  "NEXT_PUBLIC_PLAYGROUND_URL",
-  "NEXT_PUBLIC_LANDING_URL",
-  "NEXT_PUBLIC_PAYMENTS_URL",
-  "NEXT_PUBLIC_STUDIO_URL",
-  "NEXT_PUBLIC_BUILD_HASH",
-  "NEXT_PUBLIC_ENABLE_TEST_IDS",
-  "NEXT_PUBLIC_ENV_DEBUG",
-];
+// BUILD_ARG_KEYS lives in ./lib/docker-build-args.mjs — the single source of
+// truth also consumed by scripts/docker-health-check.sh and the test suite.
 
 const buildArgFlags = BUILD_ARG_KEYS.flatMap((key) => [
   "--build-arg",

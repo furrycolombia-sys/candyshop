@@ -9,6 +9,7 @@ import {
   adminQuery,
   adminInsert,
   createTestUser,
+  deleteTestUser,
   injectSession,
   supabaseAdmin,
   type TestUser,
@@ -163,8 +164,8 @@ test.describe.serial("admin users export with receipts backup", () => {
   test.afterAll(async () => {
     await adminDelete("orders", `id=eq.${orderId}`).catch(() => {});
     await supabaseAdmin.storage.from("receipts").remove([storagePath]);
-    await supabaseAdmin.auth.admin.deleteUser(adminUser.userId);
-    await supabaseAdmin.auth.admin.deleteUser(buyerUser.userId);
+    await deleteTestUser(adminUser);
+    await deleteTestUser(buyerUser);
   });
 
   test("downloads excel export with receipt file backup row", async ({

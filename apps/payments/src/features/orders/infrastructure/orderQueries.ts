@@ -1,4 +1,6 @@
 /* eslint-disable i18next/no-literal-string -- infrastructure file: Supabase table/column names are SQL identifiers, not user-facing text */
+import { getCurrentUserId } from "api/supabase";
+
 import type { OrderWithItems } from "@/features/orders/domain/types";
 import { FALLBACK_SELLER_NAME } from "@/shared/domain/constants";
 import type { OrderRow, SupabaseClient } from "@/shared/domain/types";
@@ -12,17 +14,14 @@ interface BuyerOrderRow extends OrderRow {
 export async function fetchMyOrders(
   supabase: SupabaseClient,
 ): Promise<OrderWithItems[]> {
-  const {
-    data: { user },
-    error: authError,
-  } = await supabase.auth.getUser();
+  const userId = await getCurrentUserId(supabase);
 
-  if (authError || !user) throw authError ?? new Error("Not authenticated");
+  if (!userId) throw new Error("Not authenticated");
 
   const { data, error } = await supabase
     .from("orders")
     .select("*, order_items(*)")
-    .eq("user_id", user.id)
+    .eq("user_id", userId)
     .order("created_at", { ascending: false });
 
   if (error) throw error;

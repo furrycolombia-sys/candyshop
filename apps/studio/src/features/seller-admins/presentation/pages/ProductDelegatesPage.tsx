@@ -15,7 +15,7 @@ import { SELLER_ADMINS_READ_PERMISSION } from "@/features/seller-admins/domain/c
 import type { DelegatePermission } from "@/features/seller-admins/domain/types";
 import { AddDelegateForm } from "@/features/seller-admins/presentation/components/AddDelegateForm";
 import { DelegateList } from "@/features/seller-admins/presentation/components/DelegateList";
-import { useSupabaseAuth } from "@/shared/application/hooks/useSupabaseAuth";
+import { useCurrentUser } from "@/shared/application/hooks/useCurrentUser";
 import { AccessDeniedState } from "@/shared/presentation/components/AccessDeniedState";
 
 interface ProductDelegatesPageProps {
@@ -24,7 +24,7 @@ interface ProductDelegatesPageProps {
 
 export function ProductDelegatesPage({ productId }: ProductDelegatesPageProps) {
   const { hasPermission } = useCurrentUserPermissions();
-  const { user } = useSupabaseAuth();
+  const { user } = useCurrentUser();
   const t = useTranslations("sellerAdmins");
   const tCommon = useTranslations("common");
 

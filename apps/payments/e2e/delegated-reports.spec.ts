@@ -10,8 +10,8 @@ import {
   adminDelete,
   adminInsert,
   createTestUser,
+  deleteTestUser,
   injectSession,
-  supabaseAdmin,
   type TestUser,
 } from "../../auth/e2e/helpers/session";
 
@@ -126,13 +126,9 @@ test.describe.serial("Delegated Reports page", () => {
       () => {},
     );
     await adminDelete("products", `id=eq.${otherProductId}`).catch(() => {});
-    await supabaseAdmin.auth.admin.deleteUser(buyerUser.userId).catch(() => {});
-    await supabaseAdmin.auth.admin
-      .deleteUser(delegateUser.userId)
-      .catch(() => {});
-    await supabaseAdmin.auth.admin
-      .deleteUser(sellerUser.userId)
-      .catch(() => {});
+    await deleteTestUser(buyerUser).catch(() => {});
+    await deleteTestUser(delegateUser).catch(() => {});
+    await deleteTestUser(sellerUser).catch(() => {});
   });
 
   // ─── Menu + page ─────────────────────────────────────────────────
@@ -262,9 +258,7 @@ test.describe.serial("Delegated Reports page", () => {
         "seller_admins",
         `id=eq.${noReportDelegation.id}`,
       ).catch(() => {});
-      await supabaseAdmin.auth.admin
-        .deleteUser(noReportDelegate.userId)
-        .catch(() => {});
+      await deleteTestUser(noReportDelegate).catch(() => {});
     }
   });
 });

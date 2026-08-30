@@ -39,9 +39,9 @@ import {
   adminDelete,
   adminInsert,
   createTestUser,
+  deleteTestUser,
   injectSession,
   SELLER_PERMISSIONS,
-  supabaseAdmin,
   type TestUser,
 } from "./helpers/session";
 import { createSnapHelper } from "./helpers/snap";
@@ -209,7 +209,7 @@ test.describe.serial(
         await adminDelete("products", `seller_id=eq.${seller.userId}`);
       } catch {}
       try {
-        await supabaseAdmin.auth.admin.deleteUser(seller.userId);
+        await deleteTestUser(seller);
       } catch {}
     });
 

@@ -11,7 +11,7 @@ const mockUseProductById = vi.fn(() => ({
   isLoading: false,
 }));
 const mockUseDelegates = vi.fn(() => ({ data: [], isLoading: false }));
-const mockUseSupabaseAuth = vi.fn(() => ({
+const mockUseCurrentUser = vi.fn(() => ({
   user: { id: "seller-1" } as { id: string } | null,
 }));
 
@@ -29,8 +29,8 @@ vi.mock("auth/client", () => ({
   }),
 }));
 
-vi.mock("@/shared/application/hooks/useSupabaseAuth", () => ({
-  useSupabaseAuth: () => mockUseSupabaseAuth(),
+vi.mock("@/shared/application/hooks/useCurrentUser", () => ({
+  useCurrentUser: () => mockUseCurrentUser(),
 }));
 
 vi.mock("@/features/products/application/hooks/useProductForm", () => ({
@@ -108,7 +108,7 @@ describe("ProductDelegatesPage", () => {
       isLoading: false,
     });
     mockUseDelegates.mockReturnValue({ data: [], isLoading: false });
-    mockUseSupabaseAuth.mockReturnValue({ user: { id: "seller-1" } });
+    mockUseCurrentUser.mockReturnValue({ user: { id: "seller-1" } });
   });
 
   it("renders the page with product name in header", () => {
@@ -171,7 +171,7 @@ describe("ProductDelegatesPage", () => {
   });
 
   it("handleAdd does nothing when sellerId is undefined", () => {
-    mockUseSupabaseAuth.mockReturnValue({ user: null });
+    mockUseCurrentUser.mockReturnValue({ user: null });
     render(<ProductDelegatesPage productId="product-1" />);
     fireEvent.click(screen.getByTestId("trigger-add"));
     expect(mockAddMutate).not.toHaveBeenCalled();
@@ -188,7 +188,7 @@ describe("ProductDelegatesPage", () => {
   });
 
   it("handleRemove does nothing when sellerId is undefined", () => {
-    mockUseSupabaseAuth.mockReturnValue({ user: null });
+    mockUseCurrentUser.mockReturnValue({ user: null });
     render(<ProductDelegatesPage productId="product-1" />);
     fireEvent.click(screen.getByTestId("trigger-remove"));
     expect(mockRemoveMutate).not.toHaveBeenCalled();

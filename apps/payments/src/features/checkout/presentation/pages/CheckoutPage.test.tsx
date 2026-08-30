@@ -28,7 +28,7 @@ vi.mock("auth/client", () => ({
   useCurrentUserPermissions: () => ({
     hasPermission: () => true,
   }),
-  useSupabaseAuth: () => ({
+  useCurrentUser: () => ({
     user: { id: "user-1" },
     isAuthenticated: true,
     isLoading: false,

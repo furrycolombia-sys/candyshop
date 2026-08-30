@@ -9,7 +9,7 @@ import {
   writePermCache,
 } from "./permCachePersistence";
 import { useInitialGrantedKeys } from "./PermissionsContext";
-import { useSupabaseAuth } from "./useSupabaseAuth";
+import { useCurrentUser } from "./useCurrentUser";
 
 export type PermissionRequirementMode = "all" | "any";
 
@@ -39,7 +39,7 @@ export function matchesPermissions(
 }
 
 export function useCurrentUserPermissions() {
-  const { user, isAuthenticated, isLoading: authLoading } = useSupabaseAuth();
+  const { user, isAuthenticated, isLoading: authLoading } = useCurrentUser();
   const supabase = useMemo(() => createBrowserSupabaseClient(), []);
   // Server layouts pass the cookie value via PermissionsProvider so SSR
   // and client hydration both start with the same granted keys — no flicker.

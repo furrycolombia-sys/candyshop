@@ -5,36 +5,27 @@ vi.mock("@/shared/infrastructure/config/environment", () => ({
   supabaseUrl: "http://127.0.0.1:54321",
 }));
 
+const mockGetSupabaseAccessToken = vi.fn();
+vi.mock("api/supabase/browser", () => ({
+  getSupabaseAccessToken: () => mockGetSupabaseAccessToken(),
+}));
+
+const mockGetCurrentUserId = vi.fn();
+vi.mock("api/supabase", () => ({
+  getCurrentUserId: (...args: unknown[]) => mockGetCurrentUserId(...args),
+}));
+
 const SUPABASE_URL = "http://127.0.0.1:54321";
 
 import { fetchAuditLog, fetchAuditTableNames } from "./auditQueries";
 
 import { server } from "@/mocks/server";
 
-// Fake supabase client with auth.getUser + auth.getSession
-function createMockSupabase(token?: string) {
-  return {
-    auth: {
-      getUser: vi.fn().mockResolvedValue({
-        data: {
-          user: token ? { id: "user-123" } : null,
-        },
-      }),
-      getSession: vi.fn().mockResolvedValue({
-        data: {
-          session: token ? { access_token: token } : null,
-        },
-      }),
-    },
-  } as unknown as ReturnType<
-    typeof import("api/supabase").createBrowserSupabaseClient
-  >;
-}
-
 describe("fetchAuditLog", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.stubEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY", "test-anon-key");
+    mockGetSupabaseAccessToken.mockResolvedValue("user-token");
   });
 
   afterEach(() => {
@@ -49,8 +40,7 @@ describe("fetchAuditLog", () => {
       ),
     );
 
-    const supabase = createMockSupabase("user-token");
-    const result = await fetchAuditLog(supabase);
+    const result = await fetchAuditLog();
 
     expect(result).toEqual(mockData);
   });
@@ -67,8 +57,7 @@ describe("fetchAuditLog", () => {
       ),
     );
 
-    const supabase = createMockSupabase("token");
-    await fetchAuditLog(supabase, { tableName: "users" });
+    await fetchAuditLog({ tableName: "users" });
 
     expect(capturedUrl).toContain("table_name=eq.users");
   });
@@ -85,8 +74,7 @@ describe("fetchAuditLog", () => {
       ),
     );
 
-    const supabase = createMockSupabase("token");
-    await fetchAuditLog(supabase, { actionType: "INSERT" });
+    await fetchAuditLog({ actionType: "INSERT" });
 
     expect(capturedUrl).toContain("action_type=eq.INSERT");
   });
@@ -103,8 +91,7 @@ describe("fetchAuditLog", () => {
       ),
     );
 
-    const supabase = createMockSupabase("token");
-    await fetchAuditLog(supabase, {}, 100);
+    await fetchAuditLog({}, 100);
 
     expect(capturedUrl).toContain("offset=100");
   });
@@ -117,10 +104,15 @@ describe("fetchAuditLog", () => {
       ),
     );
 
-    const supabase = createMockSupabase("token");
-    await expect(fetchAuditLog(supabase)).rejects.toThrow(
+    await expect(fetchAuditLog()).rejects.toThrow(
       "Audit REST query failed: 500",
     );
+  });
+
+  it("throws Unauthenticated when there is no Clerk session token", async () => {
+    mockGetSupabaseAccessToken.mockResolvedValue(null);
+
+    await expect(fetchAuditLog()).rejects.toThrow("Unauthenticated");
   });
 });
 
@@ -128,6 +120,7 @@ describe("fetchAuditTableNames", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.stubEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY", "test-anon-key");
+    mockGetSupabaseAccessToken.mockResolvedValue("token");
   });
 
   afterEach(() => {
@@ -145,8 +138,7 @@ describe("fetchAuditTableNames", () => {
       ),
     );
 
-    const supabase = createMockSupabase("token");
-    const result = await fetchAuditTableNames(supabase);
+    const result = await fetchAuditTableNames();
 
     expect(result).toEqual(["users", "orders"]);
   });
@@ -163,8 +155,7 @@ describe("fetchAuditTableNames", () => {
       ),
     );
 
-    const supabase = createMockSupabase("token");
-    await fetchAuditTableNames(supabase);
+    await fetchAuditTableNames();
 
     expect(capturedUrl).toContain("select=table_name");
   });
@@ -174,6 +165,7 @@ describe("fetchAuditLog — branch coverage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.stubEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY", "test-anon-key");
+    mockGetSupabaseAccessToken.mockResolvedValue("token");
   });
 
   afterEach(() => {
@@ -192,8 +184,7 @@ describe("fetchAuditLog — branch coverage", () => {
       ),
     );
 
-    const supabase = createMockSupabase("token");
-    await fetchAuditLog(supabase, { tableName: "---" });
+    await fetchAuditLog({ tableName: "---" });
 
     expect(capturedUrl).not.toContain("table_name");
   });
@@ -210,8 +201,7 @@ describe("fetchAuditLog — branch coverage", () => {
       ),
     );
 
-    const supabase = createMockSupabase("token");
-    await fetchAuditLog(supabase, { actionType: "INVALID_ACTION" });
+    await fetchAuditLog({ actionType: "INVALID_ACTION" });
 
     expect(capturedUrl).not.toContain("action_type");
   });
@@ -227,23 +217,17 @@ describe("insertAuditLog", () => {
     vi.unstubAllEnvs();
   });
 
-  function createSessionSupabase(token?: string) {
-    return {
-      auth: {
-        getSession: vi.fn().mockResolvedValue({
-          data: {
-            session: token
-              ? { access_token: token, user: { id: "user-123" } }
-              : null,
-          },
-        }),
-      },
-    } as unknown as ReturnType<
-      typeof import("api/supabase").createBrowserSupabaseClient
-    >;
-  }
+  // insertAuditLog still takes a Supabase client — it needs it to resolve
+  // the caller's local user_profiles.id via getCurrentUserId (mocked above),
+  // separately from the Clerk bearer token used for the raw fetch() itself.
+  const fakeSupabase = {} as Parameters<
+    typeof import("./auditQueries").insertAuditLog
+  >[0];
 
   it("POSTs to logged_actions and resolves on success", async () => {
+    mockGetSupabaseAccessToken.mockResolvedValue("my-token");
+    mockGetCurrentUserId.mockResolvedValue("user-123");
+
     let capturedRequest: Request | null = null;
     server.use(
       http.post(`${SUPABASE_URL}/rest/v1/logged_actions`, ({ request }) => {
@@ -252,26 +236,30 @@ describe("insertAuditLog", () => {
       }),
     );
 
-    const supabase = createSessionSupabase("my-token");
     const { insertAuditLog } = await import("./auditQueries");
-    await insertAuditLog(supabase, "INSERT", "products", { id: "1" });
+    await insertAuditLog(fakeSupabase, "INSERT", "products", { id: "1" });
 
     expect(capturedRequest).not.toBeNull();
     const body = await (capturedRequest as unknown as Request).json();
     expect(body.action_type).toBe("INSERT");
     expect(body.table_name).toBe("products");
     expect(body.row_data).toEqual({ id: "1" });
+    expect(body.user_id).toBe("user-123");
   });
 
-  it("throws Unauthenticated when session has no token", async () => {
-    const supabase = createSessionSupabase();
+  it("throws Unauthenticated when there is no Clerk session token", async () => {
+    mockGetSupabaseAccessToken.mockResolvedValue(null);
+
     const { insertAuditLog } = await import("./auditQueries");
     await expect(
-      insertAuditLog(supabase, "INSERT", "products"),
+      insertAuditLog(fakeSupabase, "INSERT", "products"),
     ).rejects.toThrow("Unauthenticated");
   });
 
   it("throws when the POST response is not ok", async () => {
+    mockGetSupabaseAccessToken.mockResolvedValue("my-token");
+    mockGetCurrentUserId.mockResolvedValue("user-123");
+
     server.use(
       http.post(
         `${SUPABASE_URL}/rest/v1/logged_actions`,
@@ -279,10 +267,9 @@ describe("insertAuditLog", () => {
       ),
     );
 
-    const supabase = createSessionSupabase("my-token");
     const { insertAuditLog } = await import("./auditQueries");
     await expect(
-      insertAuditLog(supabase, "INSERT", "products"),
+      insertAuditLog(fakeSupabase, "INSERT", "products"),
     ).rejects.toThrow("Audit insert failed: 500");
   });
 });

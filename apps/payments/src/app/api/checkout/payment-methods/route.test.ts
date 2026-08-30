@@ -25,15 +25,26 @@ async function loadRouteModule() {
   const supabaseModule = await import("api/supabase/server");
 
   vi.mocked(supabaseModule.createServerSupabaseClient).mockResolvedValue({
-    auth: {
-      getUser: vi.fn().mockResolvedValue({
-        data: {
-          user: {
-            id: BUYER_ID,
-          },
-        },
-      }),
-    },
+    rpc: vi.fn().mockResolvedValue({ data: BUYER_ID, error: null }),
+  } as unknown as Awaited<
+    ReturnType<typeof supabaseModule.createServerSupabaseClient>
+  >);
+
+  return {
+    POST: routeModule.POST,
+  };
+}
+
+async function loadRouteModuleSignedOut() {
+  process.env.NEXT_PUBLIC_SUPABASE_URL = "https://supabase.test";
+  process.env.SUPABASE_SERVICE_ROLE_KEY = "service-role";
+  vi.resetModules();
+
+  const routeModule = await import("./route");
+  const supabaseModule = await import("api/supabase/server");
+
+  vi.mocked(supabaseModule.createServerSupabaseClient).mockResolvedValue({
+    rpc: vi.fn().mockResolvedValue({ data: null, error: null }),
   } as unknown as Awaited<
     ReturnType<typeof supabaseModule.createServerSupabaseClient>
   >);
@@ -202,6 +213,20 @@ describe("POST /api/checkout/payment-methods", () => {
     );
 
     expect(response.status).toBe(403);
+  });
+
+  it("rejects requests with no signed-in Clerk session", async () => {
+    const { POST } = await loadRouteModuleSignedOut();
+
+    const response = await POST(
+      makeRequest({
+        sellerId: SELLER_ID,
+        items: [{ id: PRODUCT_ID, quantity: 1 }],
+      }),
+    );
+
+    expect(response.status).toBe(401);
+    expect(fetch).not.toHaveBeenCalled();
   });
 
   it("rejects invalid payloads", async () => {

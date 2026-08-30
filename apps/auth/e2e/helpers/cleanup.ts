@@ -1,4 +1,22 @@
-import { adminDelete, adminQuery, supabaseAdmin } from "./session";
+import { adminDelete, adminQuery, deleteClerkUserBySub } from "./session";
+
+/**
+ * Delete a `user_profiles` row and, if it was still linked to a Clerk
+ * identity, that Clerk user too. `user_profiles` has no FK to any identity
+ * table anymore (see supabase/migrations/20260829140000_drop_auth_users_coupling.sql),
+ * so nothing deletes it automatically — this must be explicit.
+ */
+async function deleteProfile(userId: string): Promise<void> {
+  const rows = await adminQuery(
+    "user_profiles",
+    `id=eq.${userId}&select=identity_sub`,
+  );
+  const identitySub = rows[0]?.identity_sub as string | null | undefined;
+
+  await adminDelete("user_profiles", `id=eq.${userId}`);
+
+  if (identitySub) await deleteClerkUserBySub(identitySub);
+}
 
 /**
  * Delete all test data created during the E2E test.
@@ -20,8 +38,8 @@ export async function cleanupTestData(
       await adminDelete("orders", `user_id=eq.${buyerUserId}`);
       // 5. Delete buyer permissions
       await adminDelete("user_permissions", `user_id=eq.${buyerUserId}`);
-      // 6. Delete buyer user
-      await supabaseAdmin.auth.admin.deleteUser(buyerUserId);
+      // 6. Delete buyer profile + Clerk user
+      await deleteProfile(buyerUserId);
     }
 
     if (sellerUserId) {
@@ -34,14 +52,12 @@ export async function cleanupTestData(
       await adminDelete("products", `seller_id=eq.${sellerUserId}`);
       // 5. Delete seller permissions
       await adminDelete("user_permissions", `user_id=eq.${sellerUserId}`);
-      // 6. Delete seller user
-      await supabaseAdmin.auth.admin.deleteUser(sellerUserId);
+      // 6. Delete seller profile + Clerk user
+      await deleteProfile(sellerUserId);
     }
   } catch (error) {
     console.error("[E2E cleanup] Error during cleanup:", error);
-    if (sellerUserId)
-      await supabaseAdmin.auth.admin.deleteUser(sellerUserId).catch(() => {});
-    if (buyerUserId)
-      await supabaseAdmin.auth.admin.deleteUser(buyerUserId).catch(() => {});
+    if (sellerUserId) await deleteProfile(sellerUserId).catch(() => {});
+    if (buyerUserId) await deleteProfile(buyerUserId).catch(() => {});
   }
 }

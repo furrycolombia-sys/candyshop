@@ -1,4 +1,5 @@
 /* eslint-disable i18next/no-literal-string -- infrastructure: Supabase identifiers, not user-facing text */
+import { getCurrentUserId } from "api/supabase";
 import type { Database } from "api/supabase/types";
 
 import type {
@@ -118,15 +119,13 @@ export async function fetchDelegatedReportOrders(
   supabase: SupabaseClient,
   filters: SellerReportFilters,
 ): Promise<DelegatedReportOrdersResponse> {
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return { orders: [], total: 0 };
+  const userId = await getCurrentUserId(supabase);
+  if (!userId) return { orders: [], total: 0 };
 
   const { data: delegations, error: delegationsError } = await supabase
     .from("seller_admins")
     .select("seller_id, product_id, permissions")
-    .eq("admin_user_id", user.id);
+    .eq("admin_user_id", userId);
 
   throwIfError(delegationsError);
 

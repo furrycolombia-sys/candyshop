@@ -58,8 +58,8 @@ vi.mock("@/features/products/application/hooks/useProducts", () => ({
   }),
 }));
 
-vi.mock("@/shared/application/hooks/useSupabaseAuth", () => ({
-  useSupabaseAuth: () => ({ user: { id: "seller-1" } }),
+vi.mock("@/shared/application/hooks/useCurrentUser", () => ({
+  useCurrentUser: () => ({ user: { id: "seller-1" } }),
 }));
 
 vi.mock(

@@ -10,14 +10,17 @@
     "./types/generated": "./src/rest/types/generated/index.ts",
     "./graphql/generated": "./src/graphql/generated/index.ts",
     "./supabase": "./src/supabase/index.ts",
+    "./supabase/browser": "./src/supabase/browser.ts",
     "./supabase/server": "./src/supabase/server.ts",
-    "./supabase/proxy": "./src/supabase/proxy.ts",
     "./supabase/types": "./src/supabase/types.ts"
   },
   "scripts": {
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
+    "@clerk/nextjs": "^7.8.3",
     "@supabase/ssr": "^0.10.2",
     "@supabase/supabase-js": "^2.105.0",
     "@tanstack/react-query": "^5.100.5",
@@ -27,7 +30,8 @@
     "@types/node": "^25.6.0",
     "@types/react": "^19.2.14",
     "next": "16.2.4",
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.5"
   },
   "peerDependencies": {
     "next": "16.2.4",

@@ -4,8 +4,8 @@ import { ELEMENT_TIMEOUT_MS } from "../../../auth/e2e/helpers/constants";
 import {
   ADMIN_PERMISSIONS,
   createTestUser,
+  deleteTestUser,
   injectSession,
-  supabaseAdmin,
   type TestUser,
 } from "../../../auth/e2e/helpers/session";
 
@@ -20,7 +20,7 @@ test.describe("Users Page", () => {
   });
 
   test.afterAll(async () => {
-    await supabaseAdmin.auth.admin.deleteUser(adminUser.userId);
+    await deleteTestUser(adminUser);
   });
 
   test("should display users table and export button", async ({

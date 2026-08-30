@@ -350,16 +350,15 @@ pnpm lint:env
 
 ### Supabase keys
 
-| Key                                   | Purpose                                        |
-| ------------------------------------- | ---------------------------------------------- |
-| `SUPABASE_PORT`                       | Base port — all other ports derived from this  |
-| `NEXT_PUBLIC_SUPABASE_URL`            | Supabase API URL seen by the browser           |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY`       | Public anon key (baked into Docker build)      |
-| `SUPABASE_SERVICE_ROLE_KEY`           | Server-side admin key (never baked into build) |
-| `STAGING_JWT_SECRET`                  | JWT signing secret for self-hosted Supabase    |
-| `STAGING_POSTGRES_PASSWORD`           | Postgres password for self-hosted Supabase     |
-| `SUPABASE_AUTH_SITE_URL`              | Auth callback base URL                         |
-| `SUPABASE_AUTH_EXTERNAL_REDIRECT_URI` | OAuth provider redirect URI                    |
+| Key                             | Purpose                                        |
+| ------------------------------- | ---------------------------------------------- |
+| `SUPABASE_PORT`                 | Base port — all other ports derived from this  |
+| `NEXT_PUBLIC_SUPABASE_URL`      | Supabase API URL seen by the browser           |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Public anon key (baked into Docker build)      |
+| `SUPABASE_SERVICE_ROLE_KEY`     | Server-side admin key (never baked into build) |
+| `STAGING_JWT_SECRET`            | JWT signing secret for self-hosted Supabase    |
+| `STAGING_POSTGRES_PASSWORD`     | Postgres password for self-hosted Supabase     |
+| `SUPABASE_AUTH_SITE_URL`        | Auth callback base URL                         |
 
 ### Cloudflare tunnel keys
 

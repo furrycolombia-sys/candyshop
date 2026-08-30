@@ -1,8 +1,6 @@
 "use client";
 
-import { createBrowserSupabaseClient } from "api/supabase";
 import type { ReactNode } from "react";
-import { useMemo } from "react";
 
 import { ProtectedRoute } from "./ProtectedRoute";
 
@@ -17,14 +15,8 @@ export function BrowserProtectedRoute({
   locale,
   children,
 }: BrowserProtectedRouteProps) {
-  const supabaseClient = useMemo(() => createBrowserSupabaseClient(), []);
-
   return (
-    <ProtectedRoute
-      authUrl={authUrl}
-      locale={locale}
-      supabaseClient={supabaseClient}
-    >
+    <ProtectedRoute authUrl={authUrl} locale={locale}>
       {children}
     </ProtectedRoute>
   );

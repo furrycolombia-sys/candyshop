@@ -22,6 +22,7 @@
 
 import { describe, it, expect } from "vitest";
 import fc from "fast-check";
+import { BUILD_ARG_KEYS } from "../lib/docker-build-args.mjs";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Pure functions extracted from scripts/docker-build.mjs
@@ -51,21 +52,6 @@ function parseCliArgs(argv) {
     help: args.includes("--help"),
   };
 }
-
-const BUILD_ARG_KEYS = [
-  "NEXT_PUBLIC_SUPABASE_URL",
-  "NEXT_PUBLIC_SUPABASE_ANON_KEY",
-  "NEXT_PUBLIC_AUTH_URL",
-  "NEXT_PUBLIC_AUTH_HOST_URL",
-  "NEXT_PUBLIC_STORE_URL",
-  "NEXT_PUBLIC_ADMIN_URL",
-  "NEXT_PUBLIC_PLAYGROUND_URL",
-  "NEXT_PUBLIC_LANDING_URL",
-  "NEXT_PUBLIC_PAYMENTS_URL",
-  "NEXT_PUBLIC_STUDIO_URL",
-  "NEXT_PUBLIC_BUILD_HASH",
-  "NEXT_PUBLIC_ENABLE_TEST_IDS",
-];
 
 /**
  * Builds the docker build argument array.
@@ -265,7 +251,7 @@ describe("buildDockerArgs — example tests", () => {
     expect(args[tIdx + 1]).toBe("myimage:1.0");
   });
 
-  it("includes all 13 --build-arg flags", () => {
+  it(`includes all ${BUILD_ARG_KEYS.length} --build-arg flags`, () => {
     const values = Object.fromEntries(
       BUILD_ARG_KEYS.map((k) => [k, `val-${k}`]),
     );
@@ -488,7 +474,7 @@ describe("PBT — buildDockerArgs properties", () => {
 
   // Feature: docker-builder, Property 2: all build args are sourced from env
   // Validates: Requirements 2.2
-  it("Property 2: all 13 build-arg keys appear as --build-arg KEY=VALUE", () => {
+  it("Property 2: all build-arg keys appear as --build-arg KEY=VALUE", () => {
     const arbitraryValues = fc.record(
       Object.fromEntries(
         BUILD_ARG_KEYS.map((k) => [k, fc.string({ maxLength: 100 })]),

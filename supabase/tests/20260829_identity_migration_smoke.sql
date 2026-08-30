@@ -1,0 +1,551 @@
+-- =============================================================================
+-- Smoke Test: AeleOS identity migration
+-- =============================================================================
+-- Run against the local DB:
+--   docker exec -i supabase_db_libra-dev psql -U postgres -d postgres \
+--     -f - < supabase/tests/20260829_identity_migration_smoke.sql
+-- =============================================================================
+
+do $$
+declare
+  v_count integer;
+begin
+  -- 1. identity_sub exists, is text, and is nullable
+  select count(*) into v_count
+  from information_schema.columns
+  where table_schema = 'public'
+    and table_name   = 'user_profiles'
+    and column_name  = 'identity_sub'
+    and data_type    = 'text'
+    and is_nullable  = 'YES';
+
+  assert v_count = 1,
+    'FAIL: user_profiles.identity_sub missing, wrong type, or NOT NULL';
+
+  -- 2. It is unique, so two Clerk accounts cannot claim one profile
+  select count(*) into v_count
+  from pg_indexes
+  where schemaname = 'public'
+    and tablename  = 'user_profiles'
+    and indexdef like '%UNIQUE%identity_sub%';
+
+  assert v_count = 1,
+    'FAIL: no unique index on user_profiles.identity_sub';
+
+  raise notice 'identity_sub: OK';
+end $$;
+
+do $$
+declare
+  v_id uuid;
+  v_profile uuid;
+begin
+  -- A caller whose sub matches a claimed profile resolves to that profile.
+  select id into v_profile from public.user_profiles limit 1;
+
+  -- Guard: if no rows in user_profiles (empty database), skip this test block
+  if v_profile is null then
+    raise notice 'current_user_id: skipped (no rows)';
+    return;
+  end if;
+
+  update public.user_profiles set identity_sub = 'user_smoketest' where id = v_profile;
+
+  perform set_config('request.jwt.claims', '{"sub":"user_smoketest"}', true);
+  select public.current_user_id() into v_id;
+  assert v_id = v_profile,
+    format('FAIL: current_user_id() returned %s, expected %s', v_id, v_profile);
+
+  -- An unknown sub resolves to NULL. This is the case that must never match.
+  perform set_config('request.jwt.claims', '{"sub":"user_nobody"}', true);
+  select public.current_user_id() into v_id;
+  assert v_id is null,
+    format('FAIL: unknown sub resolved to %s, expected NULL', v_id);
+
+  -- No JWT at all also resolves to NULL.
+  perform set_config('request.jwt.claims', '', true);
+  select public.current_user_id() into v_id;
+  assert v_id is null, 'FAIL: absent JWT did not resolve to NULL';
+
+  update public.user_profiles set identity_sub = null where id = v_profile;
+  raise notice 'current_user_id: OK';
+end $$;
+
+do $$
+declare
+  v_count integer;
+  v_actual_names text[];
+  v_expected_names text[] := array[
+    'check_in_audit_performed_by_fkey',
+    'check_ins_checked_in_by_fkey',
+    'orders_seller_id_fkey',
+    'orders_user_id_fkey',
+    'product_reviews_user_id_fkey',
+    'products_seller_id_fkey',
+    'seller_admins_admin_user_id_fkey',
+    'seller_admins_seller_id_fkey',
+    'seller_payment_methods_seller_id_fkey',
+    'ticket_transfers_from_user_id_fkey',
+    'ticket_transfers_to_user_id_fkey',
+    'user_permissions_granted_by_fkey',
+    'user_permissions_user_id_fkey'
+  ];
+  v_deltype_mismatches text;
+begin
+  -- No public table may reference auth.users any more.
+  select count(*) into v_count
+  from pg_constraint
+  where contype = 'f'
+    and connamespace = 'public'::regnamespace
+    and confrelid = 'auth.users'::regclass;
+
+  assert v_count = 0,
+    format('FAIL: %s public foreign keys still reference auth.users', v_count);
+
+  -- And the user columns must reference user_profiles instead.
+  select count(*) into v_count
+  from pg_constraint
+  where contype = 'f'
+    and connamespace = 'public'::regnamespace
+    and confrelid = 'public.user_profiles'::regclass;
+
+  assert v_count = 13,
+    format('FAIL: expected 13 FKs to user_profiles (11 repointed + 2 on seller_admins), found %s', v_count);
+
+  -- The exact SET of constraint names must match, not just the count.
+  -- A count alone still passes if one FK is dropped and a spurious one is
+  -- added elsewhere.
+  select array_agg(conname order by conname) into v_actual_names
+  from pg_constraint
+  where contype = 'f'
+    and connamespace = 'public'::regnamespace
+    and confrelid = 'public.user_profiles'::regclass;
+
+  assert v_actual_names = v_expected_names,
+    format('FAIL: FK name set on user_profiles does not match. actual=%s expected=%s',
+      v_actual_names, v_expected_names);
+
+  -- Pin ON DELETE behaviour for each of the 11 repointed constraints, verified
+  -- against the live schema (see task-3-report.md), so a migration that
+  -- repoints the table but writes the wrong delete clause (e.g. CASCADE where
+  -- NO ACTION is required, as orders_seller_id_fkey nearly was) fails loudly
+  -- instead of silently changing deletion semantics for real customer data.
+  select string_agg(
+    format('%s (expected=%s actual=%s)', t.conname, t.expected, coalesce(c.confdeltype::text, 'MISSING')),
+    ', '
+  )
+  into v_deltype_mismatches
+  from (
+    values
+      ('orders_user_id_fkey', 'c'),
+      ('orders_seller_id_fkey', 'a'),
+      ('products_seller_id_fkey', 'n'),
+      ('product_reviews_user_id_fkey', 'c'),
+      ('seller_payment_methods_seller_id_fkey', 'c'),
+      ('user_permissions_user_id_fkey', 'c'),
+      ('user_permissions_granted_by_fkey', 'a'),
+      ('check_ins_checked_in_by_fkey', 'a'),
+      ('check_in_audit_performed_by_fkey', 'a'),
+      ('ticket_transfers_from_user_id_fkey', 'a'),
+      ('ticket_transfers_to_user_id_fkey', 'a')
+  ) as t(conname, expected)
+  left join pg_constraint c
+    on c.conname = t.conname
+    and c.connamespace = 'public'::regnamespace
+    and c.contype = 'f'
+  where c.confdeltype::text is distinct from t.expected;
+
+  assert v_deltype_mismatches is null,
+    format('FAIL: ON DELETE behaviour mismatch on: %s', v_deltype_mismatches);
+
+  raise notice 'foreign keys: OK';
+end $$;
+
+-- Every schema this project owns (i.e. that our migrations create objects
+-- in). 'auth' is deliberately excluded: it is Supabase-internal and owns the
+-- real auth.uid() function definition, which legitimately calls itself.
+do $$
+declare
+  v_owned_schemas text[] := array['public', 'storage', 'audit'];
+  v_count integer;
+  v_offenders text;
+begin
+  select count(*), string_agg(schemaname || '.' || tablename || '.' || policyname, ', ')
+  into v_count, v_offenders
+  from pg_policies
+  where schemaname = any (v_owned_schemas)
+    and (coalesce(qual, '') || coalesce(with_check, '')) like '%auth.uid()%';
+
+  assert v_count = 0,
+    format('FAIL: %s policies still call auth.uid(): %s', v_count, v_offenders);
+
+  -- And the replacement is actually in use.
+  select count(*) into v_count
+  from pg_policies
+  where schemaname = 'public'
+    and (coalesce(qual, '') || coalesce(with_check, '')) like '%current_user_id()%';
+
+  assert v_count = 42,
+    format('FAIL: expected 42 policies on current_user_id() (43 - 1 profiles_insert dropped in Task 5), found %s', v_count);
+
+  select count(*) into v_count
+  from pg_policies
+  where schemaname = 'storage'
+    and (coalesce(qual, '') || coalesce(with_check, '')) like '%current_user_id()%';
+
+  assert v_count = 3,
+    format('FAIL: expected 3 storage policies on current_user_id() (receipts_read/upload/delete), found %s', v_count);
+
+  select count(*) into v_count
+  from pg_policies
+  where schemaname = 'audit'
+    and (coalesce(qual, '') || coalesce(with_check, '')) like '%current_user_id()%';
+
+  assert v_count = 1,
+    format('FAIL: expected 1 audit policy on current_user_id() (audit_read), found %s', v_count);
+
+  raise notice 'rls policies: OK';
+end $$;
+
+-- Same blind spot, but for functions: a policy-only assertion would still
+-- miss a SECURITY DEFINER helper (is_receipt_delegate, is_order_delegate,
+-- audit.log_changes, ...) that calls auth.uid() internally.
+do $$
+declare
+  v_owned_schemas text[] := array['public', 'storage', 'audit'];
+  v_count integer;
+  v_offenders text;
+begin
+  select count(*), string_agg(n.nspname || '.' || p.proname, ', ')
+  into v_count, v_offenders
+  from pg_proc p
+  join pg_namespace n on n.oid = p.pronamespace
+  where p.prokind = 'f'
+    and n.nspname = any (v_owned_schemas)
+    and pg_get_functiondef(p.oid) like '%auth.uid()%';
+
+  assert v_count = 0,
+    format('FAIL: %s functions still call auth.uid(): %s', v_count, v_offenders);
+
+  raise notice 'rls functions: OK';
+end $$;
+
+do $$
+declare
+  v_visible integer;
+  v_profile uuid;
+begin
+  select o.user_id into v_profile from public.orders o limit 1;
+
+  -- Guard: if no rows in orders (empty database), skip this test block
+  if v_profile is null then
+    raise notice 'rls denial: skipped (no rows)';
+    return;
+  end if;
+
+  -- Claimed caller sees their own orders.
+  update public.user_profiles set identity_sub = 'user_smoketest' where id = v_profile;
+  perform set_config('request.jwt.claims', '{"sub":"user_smoketest"}', true);
+  perform set_config('role', 'authenticated', true);
+  select count(*) into v_visible from public.orders;
+  assert v_visible > 0, 'FAIL: a claimed caller sees none of their own orders';
+
+  -- Unknown caller sees nothing. NULL must deny, not match.
+  perform set_config('request.jwt.claims', '{"sub":"user_nobody"}', true);
+  select count(*) into v_visible from public.orders;
+  assert v_visible = 0,
+    format('FAIL: unresolved caller saw %s orders — NULL is matching rows', v_visible);
+
+  perform set_config('role', 'postgres', true);
+  update public.user_profiles set identity_sub = null where id = v_profile;
+  raise notice 'rls denial: OK';
+end $$;
+
+do $$
+declare
+  v_count integer;
+begin
+  select count(*) into v_count
+  from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+  where n.nspname = 'public' and p.proname = 'sync_user_profile';
+
+  assert v_count = 0, 'FAIL: sync_user_profile still exists';
+
+  select count(*) into v_count
+  from pg_policies
+  where schemaname = 'public' and tablename = 'user_profiles'
+    and policyname = 'profiles_insert';
+
+  assert v_count = 0, 'FAIL: profiles_insert policy still exists';
+
+  raise notice 'auth.users coupling: OK';
+end $$;
+
+do $$
+declare
+  v_count integer;
+begin
+  -- authenticated/anon must not hold UPDATE on identity_sub at the column
+  -- level, and must not hold table-wide UPDATE either (a table-wide grant
+  -- covers every column regardless of any column-level revoke, so both must
+  -- be checked for this to be a real assertion).
+  select count(*) into v_count
+  from information_schema.column_privileges
+  where table_schema = 'public'
+    and table_name   = 'user_profiles'
+    and column_name  = 'identity_sub'
+    and privilege_type = 'UPDATE'
+    and grantee in ('anon', 'authenticated');
+
+  assert v_count = 0,
+    format('FAIL: %s client role(s) still hold column UPDATE on identity_sub', v_count);
+
+  -- A table-level UPDATE grant, if present, implies every column including
+  -- identity_sub — so this must be absent, not just the column-level grant.
+  select count(*) into v_count
+  from information_schema.role_table_grants
+  where table_schema = 'public'
+    and table_name   = 'user_profiles'
+    and privilege_type = 'UPDATE'
+    and grantee in ('anon', 'authenticated');
+
+  assert v_count = 0,
+    format('FAIL: %s client role(s) still hold table-wide UPDATE on user_profiles (would include identity_sub)', v_count);
+
+  -- The client must still be able to edit its own display fields: a
+  -- column-level UPDATE grant for the profile form's editable columns.
+  select count(distinct grantee) into v_count
+  from information_schema.column_privileges
+  where table_schema = 'public'
+    and table_name   = 'user_profiles'
+    and column_name  in ('display_name', 'display_email', 'display_avatar_url')
+    and privilege_type = 'UPDATE'
+    and grantee in ('anon', 'authenticated');
+
+  assert v_count = 2,
+    format('FAIL: expected anon and authenticated to both hold UPDATE on the editable display columns, found %s grantee(s)', v_count);
+
+  raise notice 'identity_sub write protection: OK';
+end $$;
+
+do $$
+declare
+  v_count integer;
+  v_actual_anon text[];
+  v_actual_authenticated text[];
+  v_expected_readable text[] := array[
+    'avatar_url',
+    'created_at',
+    'display_avatar_url',
+    'display_email',
+    'display_name',
+    'email',
+    'first_seen_at',
+    'id',
+    'last_seen_at',
+    'provider',
+    'updated_at'
+  ];
+begin
+  -- authenticated/anon must not hold SELECT on identity_sub at the column
+  -- level, and must not hold table-wide SELECT either (a table-wide grant
+  -- covers every column regardless of any column-level revoke, so both must
+  -- be checked for this to be a real assertion — same shape as the UPDATE
+  -- check above).
+  select count(*) into v_count
+  from information_schema.column_privileges
+  where table_schema = 'public'
+    and table_name   = 'user_profiles'
+    and column_name  = 'identity_sub'
+    and privilege_type = 'SELECT'
+    and grantee in ('anon', 'authenticated');
+
+  assert v_count = 0,
+    format('FAIL: %s client role(s) still hold column SELECT on identity_sub', v_count);
+
+  -- A table-level SELECT grant, if present, implies every column including
+  -- identity_sub — so this must be absent, not just the column-level grant.
+  select count(*) into v_count
+  from information_schema.role_table_grants
+  where table_schema = 'public'
+    and table_name   = 'user_profiles'
+    and privilege_type = 'SELECT'
+    and grantee in ('anon', 'authenticated');
+
+  assert v_count = 0,
+    format('FAIL: %s client role(s) still hold table-wide SELECT on user_profiles (would include identity_sub)', v_count);
+
+  -- The rest of the profile (display name, avatar, etc.) must still be
+  -- readable — checked as an exact set, not just a count, so dropping one
+  -- legitimate column while adding a spurious one still fails.
+  select array_agg(column_name order by column_name) into v_actual_anon
+  from information_schema.column_privileges
+  where table_schema = 'public'
+    and table_name   = 'user_profiles'
+    and privilege_type = 'SELECT'
+    and grantee = 'anon';
+
+  assert v_actual_anon = v_expected_readable,
+    format('FAIL: anon SELECT columns on user_profiles do not match. actual=%s expected=%s',
+      v_actual_anon, v_expected_readable);
+
+  select array_agg(column_name order by column_name) into v_actual_authenticated
+  from information_schema.column_privileges
+  where table_schema = 'public'
+    and table_name   = 'user_profiles'
+    and privilege_type = 'SELECT'
+    and grantee = 'authenticated';
+
+  assert v_actual_authenticated = v_expected_readable,
+    format('FAIL: authenticated SELECT columns on user_profiles do not match. actual=%s expected=%s',
+      v_actual_authenticated, v_expected_readable);
+
+  -- service_role must retain unrestricted access, including identity_sub —
+  -- the server still needs to write and read it via resolveProfile.
+  select count(*) into v_count
+  from information_schema.column_privileges
+  where table_schema = 'public'
+    and table_name   = 'user_profiles'
+    and column_name  = 'identity_sub'
+    and privilege_type = 'SELECT'
+    and grantee = 'service_role';
+
+  assert v_count = 1,
+    'FAIL: service_role lost SELECT on identity_sub';
+
+  raise notice 'identity_sub read protection: OK';
+end $$;
+
+do $$
+declare
+  v_profile public.user_profiles;
+  v_perm_count integer;
+  v_expected_keys text[] := array[
+    'orders.create',
+    'orders.read',
+    'product_reviews.create',
+    'product_reviews.delete',
+    'product_reviews.read',
+    'product_reviews.update',
+    'products.read',
+    'receipts.create',
+    'receipts.delete'
+  ];
+  v_actual_keys text[];
+  v_anon_can boolean;
+  v_authenticated_can boolean;
+  v_service_role_can boolean;
+begin
+  -- create_profile_with_default_permissions() must exist and be usable only
+  -- by service_role: it accepts an arbitrary identity_sub, so anon/
+  -- authenticated must never be able to mint a profile for any sub they
+  -- choose. Supabase's ALTER DEFAULT PRIVILEGES auto-grants EXECUTE on every
+  -- new public-schema function to anon/authenticated/service_role in
+  -- addition to the implicit PUBLIC grant, so both must be checked.
+  select has_function_privilege('anon', 'public.create_profile_with_default_permissions(text,text,text,text)', 'execute'),
+         has_function_privilege('authenticated', 'public.create_profile_with_default_permissions(text,text,text,text)', 'execute'),
+         has_function_privilege('service_role', 'public.create_profile_with_default_permissions(text,text,text,text)', 'execute')
+    into v_anon_can, v_authenticated_can, v_service_role_can;
+
+  assert v_anon_can = false, 'FAIL: anon can execute create_profile_with_default_permissions';
+  assert v_authenticated_can = false, 'FAIL: authenticated can execute create_profile_with_default_permissions';
+  assert v_service_role_can = true, 'FAIL: service_role cannot execute create_profile_with_default_permissions';
+
+  -- Calling it inserts the profile AND grants the exact default buyer
+  -- permission set, in one call — this is what stands in for the
+  -- on_auth_user_default_permissions trigger, which can never fire again now
+  -- that auth.users is permanently empty. See task-8-brief.md.
+  select * into v_profile
+  from public.create_profile_with_default_permissions(
+    'smoketest_create_profile@example.com',
+    'user_smoketest_create_profile',
+    'Smoke Test',
+    null
+  );
+
+  assert v_profile.id is not null, 'FAIL: create_profile_with_default_permissions returned no id';
+  assert v_profile.identity_sub = 'user_smoketest_create_profile',
+    'FAIL: created profile has the wrong identity_sub';
+
+  select count(*) into v_perm_count
+  from public.user_permissions
+  where user_id = v_profile.id;
+
+  assert v_perm_count = 9,
+    format('FAIL: expected 9 default buyer permissions granted, found %s', v_perm_count);
+
+  select array_agg(p.key order by p.key) into v_actual_keys
+  from public.user_permissions up
+  join public.resource_permissions rp on rp.id = up.resource_permission_id
+  join public.permissions p on p.id = rp.permission_id
+  where up.user_id = v_profile.id;
+
+  assert v_actual_keys = v_expected_keys,
+    format('FAIL: granted permission keys do not match. actual=%s expected=%s',
+      v_actual_keys, v_expected_keys);
+
+  -- Clean up: deleting the profile cascades to user_permissions
+  -- (user_permissions_user_id_fkey ... ON DELETE CASCADE).
+  delete from public.user_profiles where id = v_profile.id;
+
+  raise notice 'create_profile_with_default_permissions: OK';
+end $$;
+
+do $$
+declare
+  v_order record;
+  v_logged_user_id uuid;
+  v_event_id bigint;
+  v_prior_identity_sub text;
+  v_watermark bigint;
+begin
+  select id, user_id, seller_note into v_order from public.orders limit 1;
+
+  if v_order.id is null then
+    raise notice 'audit attribution: skipped (no rows)';
+    return;
+  end if;
+
+  -- Capture everything this block is about to touch, so it can be restored
+  -- exactly, not assumed. NULL is not a safe default: for identity_sub in
+  -- particular, restoring the wrong value would deny a real caller (NULL
+  -- denies, per the rls denial test above).
+  select identity_sub into v_prior_identity_sub
+  from public.user_profiles where id = v_order.user_id;
+
+  select coalesce(max(event_id), 0) into v_watermark from audit.logged_actions;
+
+  -- A resolvable caller performs an audited write ...
+  update public.user_profiles set identity_sub = 'user_audit_smoketest' where id = v_order.user_id;
+  perform set_config('request.jwt.claims', '{"sub":"user_audit_smoketest"}', true);
+  update public.orders set seller_note = coalesce(v_order.seller_note, '') || ' ' where id = v_order.id;
+
+  -- ... and the audit trail must attribute it, not silently drop to NULL
+  -- (see Finding 3: audit.log_changes() used to swallow the auth.uid() cast
+  -- error and always write user_id = NULL). Scope the lookup to rows created
+  -- by this block (event_id > watermark) rather than "most recent", so a
+  -- concurrent writer elsewhere can't produce a false pass.
+  select event_id, user_id into v_event_id, v_logged_user_id
+  from audit.logged_actions
+  where event_id > v_watermark
+    and table_name = 'orders' and action_type = 'UPDATE'
+  order by event_id desc
+  limit 1;
+
+  assert v_logged_user_id is not null,
+    'FAIL: audit.log_changes() recorded user_id = NULL for a resolvable caller';
+
+  assert v_logged_user_id = v_order.user_id,
+    format('FAIL: audit row attributed to %s, expected %s', v_logged_user_id, v_order.user_id);
+
+  -- Clean up: restore every value this block touched to exactly what it
+  -- found (not an assumed default), and remove every audit row this block
+  -- generated — the orders UPDATE, and the user_profiles UPDATE(s) above and
+  -- below — not just the one row a narrower cleanup would remember. This
+  -- block must leave the database byte-identical to how it found it.
+  update public.orders set seller_note = v_order.seller_note where id = v_order.id;
+  update public.user_profiles set identity_sub = v_prior_identity_sub where id = v_order.user_id;
+  delete from audit.logged_actions where event_id > v_watermark;
+
+  raise notice 'audit attribution: OK';
+end $$;

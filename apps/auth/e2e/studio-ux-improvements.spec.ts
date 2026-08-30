@@ -67,10 +67,8 @@ test.describe.serial("Studio UX Improvements", { tag: "@ux" }, () => {
       await cleanupTestData(seller.userId, "").catch(() => {});
     }
     if (delegate) {
-      const { supabaseAdmin } = await import("./helpers/session");
-      await supabaseAdmin.auth.admin
-        .deleteUser(delegate.userId)
-        .catch(() => {});
+      const { deleteTestUser } = await import("./helpers/session");
+      await deleteTestUser(delegate).catch(() => {});
     }
   });
 

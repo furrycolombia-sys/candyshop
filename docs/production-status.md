@@ -1,8 +1,11 @@
 # Production status & restore path
 
-> **Current state: production is OFFLINE.** Last served 2026-08-07. This
-> document exists so nobody has to re-derive the situation from scratch.
-> Written 2026-08-09.
+> **Current state: production is OFFLINE, and so is its database.** Last
+> served 2026-08-07. This document exists so nobody has to re-derive the
+> situation from scratch. Written 2026-08-09, updated 2026-08-29 — see
+> [Database status (update, 2026-08-29)](#database-status-update-2026-08-29)
+> below; the sections after it were accurate as of 2026-08-09 but predate the
+> database loss.
 
 ## What happened
 
@@ -65,12 +68,59 @@ credentials died with the disk. It is not merely disconnected: listing tunnels
 in the production Cloudflare account returns **zero**. There is nothing to
 reattach and nothing to recover — a new tunnel has to be created.
 
+## Database status (update, 2026-08-29)
+
+The 2026-08-09 verification below ("the production Supabase project is
+alive") is **no longer true**. Both the production Supabase project
+(`olafyajipvsltohagiah`) and the dev one (`dsczudkhoolxjaxjeqdf`) are gone —
+`NXDOMAIN` on three resolvers, and both Personal Access Tokens get `401` on
+`/v1/projects`. Only the host restarting won't bring anything back; the
+database it would talk to no longer exists either.
+
+**The July 15 backup (`prod_2026-07-15T06-22-42`) is the database's final
+state.** The scheduled backup that ran 2026-08-09 logged
+`"DB content unchanged since last upload"` with row counts identical to the
+July file — so nothing was lost between the last real activity and the
+project's disappearance. That backup is complete and consistent: 17/17
+tables, 196 user profiles, 154/154 storage receipts, and zero orphaned
+foreign keys, confirmed by the full restore-and-verify rehearsal in
+`.superpowers/sdd/2026-08-29-aeleos-login-migration/task-12-report.md`.
+
+Restoring now is **not** "turn the old project back on" — there is no old
+project to turn on. It means:
+
+1. **Provisioning a brand-new Supabase project** (a new project ref, a new
+   Postgres instance with nothing in it).
+2. **Applying every migration in `supabase/migrations/`** to build the schema
+   from scratch, including the Clerk identity re-key done in this branch (see
+   `docs/superpowers/specs/2026-08-29-aeleos-login-migration-design.md`) —
+   the schema the backup restores into is not the schema production had in
+   July, and that is by design: the old schema FK'd every user row to
+   `auth.users`, which cannot exist again because those Clerk-less identities
+   are gone. The new schema keys on `user_profiles` instead, which is what
+   makes the backup restorable at all.
+3. **Restoring `prod_2026-07-15T06-22-42`** via `scripts/backup-prod.mjs
+--restore` into that fresh project, **before anyone signs in** — the
+   restore truncates `user_profiles`, so restoring over a live system would
+   wipe every `identity_sub` already claimed.
+4. **Pointing every app's env at the new project** (`NEXT_PUBLIC_SUPABASE_URL`,
+   keys, and Supabase's trusted-Clerk-domain config) and re-enabling
+   `backup-scheduled.yml`, which is currently `disabled_manually` because it
+   targets the dead project and can only fail as long as it stays pointed
+   there.
+
+None of this is blocked on Cloudflare, DNS, or the host below — it is a
+separate prerequisite that has to happen first, since the app has nothing to
+serve without a database.
+
 ## What is already in place
 
-Verified working 2026-08-09:
+Verified working 2026-08-09 (host/tunnel facts only — see the database update
+above for why the Supabase bullet no longer holds):
 
-- **The production Supabase project is alive** — `/auth/v1/health` answers
-  `401`, meaning up and requiring auth, not paused.
+- ~~The production Supabase project is alive — `/auth/v1/health` answers
+  `401`, meaning up and requiring auth, not paused.~~ **No longer true** — the
+  project is gone; see [Database status](#database-status-update-2026-08-29).
 - **The known-good image exists**: digest `c60338c1…`, the 2026-07-08 build.
   Present locally and in GHCR under both the old and new names.
 - **Docker and `cloudflared` are installed** on the workstation, and a
@@ -114,5 +164,12 @@ Once that token exists:
   renamed build changes the cart cookie, the checkout session key and the
   permission cache key, so deploying it drops existing carts. Bringing back the
   old image first is the lower-risk order.
-- **It talks to live production Supabase.** Serving traffic is normal use; the
-  standing rule against running anything _against_ that database still applies.
+- **It talks to live production Supabase** — or rather, it would have to: as of
+  2026-08-29 there is no live production Supabase project to talk to. This
+  runbook restores the _host_; see
+  [Database status](#database-status-update-2026-08-29) above for the
+  separate, and now necessary, prerequisite of standing up a new Supabase
+  project and restoring into it before this app can serve anything. The
+  2026-07-08 image also predates the Clerk-based login in this branch, so
+  whichever build gets deployed once the database exists again needs to match
+  whichever auth stack that new project is configured to trust.

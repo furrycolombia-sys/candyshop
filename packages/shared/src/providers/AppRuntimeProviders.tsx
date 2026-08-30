@@ -1,6 +1,5 @@
 "use client";
 
-import { AuthSessionBootstrap } from "auth";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import * as React from "react";
 import { Suspense, type ReactNode } from "react";
@@ -29,7 +28,6 @@ export function AppRuntimeProviders({
     : children;
   const mswChildren = (
     <>
-      <AuthSessionBootstrap authHostUrl={authHostUrl} />
       <ApiAuthBootstrap authHostUrl={authHostUrl} />
       {content}
     </>

@@ -20,9 +20,7 @@ function createMockSupabase() {
 
   return {
     from: vi.fn(() => chain),
-    auth: {
-      getUser: vi.fn(),
-    },
+    rpc: vi.fn(),
     _chain: chain,
   };
 }
@@ -34,9 +32,9 @@ describe("fetchMyOrders", () => {
     supabase = createMockSupabase();
   });
 
-  it("throws when not authenticated", async () => {
-    supabase.auth.getUser.mockResolvedValue({
-      data: { user: null },
+  it("throws when current_user_id() errors", async () => {
+    supabase.rpc.mockResolvedValue({
+      data: null,
       error: new Error("Not authenticated"),
     });
 
@@ -45,9 +43,9 @@ describe("fetchMyOrders", () => {
     ).rejects.toThrow("Not authenticated");
   });
 
-  it("throws when auth returns no user and no error", async () => {
-    supabase.auth.getUser.mockResolvedValue({
-      data: { user: null },
+  it("throws when current_user_id() resolves to no profile", async () => {
+    supabase.rpc.mockResolvedValue({
+      data: null,
       error: null,
     });
 
@@ -57,8 +55,8 @@ describe("fetchMyOrders", () => {
   });
 
   it("returns orders with seller names", async () => {
-    supabase.auth.getUser.mockResolvedValue({
-      data: { user: { id: "user-1" } },
+    supabase.rpc.mockResolvedValue({
+      data: "user-1",
       error: null,
     });
 
@@ -111,8 +109,8 @@ describe("fetchMyOrders", () => {
   });
 
   it("throws on query error", async () => {
-    supabase.auth.getUser.mockResolvedValue({
-      data: { user: { id: "user-1" } },
+    supabase.rpc.mockResolvedValue({
+      data: "user-1",
       error: null,
     });
 

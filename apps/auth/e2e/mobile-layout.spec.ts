@@ -7,8 +7,8 @@ import {
   adminInsert,
   createTestUser,
   SELLER_PERMISSIONS,
+  deleteTestUser,
   injectSession,
-  supabaseAdmin,
 } from "./helpers/session";
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -171,8 +171,8 @@ test(
         "user_permissions",
         `user_id=eq.${seller.userId}`,
       ).catch(() => {});
-      await supabaseAdmin.auth.admin.deleteUser(buyer.userId).catch(() => {});
-      await supabaseAdmin.auth.admin.deleteUser(seller.userId).catch(() => {});
+      await deleteTestUser(buyer).catch(() => {});
+      await deleteTestUser(seller).catch(() => {});
     }
   },
 );

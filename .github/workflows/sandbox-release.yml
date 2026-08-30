@@ -46,7 +46,19 @@ jobs:
       - name: Build
         run: pnpm build
         env:
+          # pnpm build -> scripts/build.mjs -> loadEnv('prod'), which under
+          # CI=true resolves .env.prod's $secret: references straight from
+          # this env: block. Names must match .env.prod's $secret: refs
+          # exactly (see PROD_SUPABASE_ANON_KEY etc. below).
           NEXT_PUBLIC_ENABLE_MOCKS: "true"
+          PROD_SUPABASE_ANON_KEY: ${{ secrets.PROD_SUPABASE_ANON_KEY }}
+          PROD_SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.PROD_SUPABASE_SERVICE_ROLE_KEY }}
+          CLERK_PUBLISHABLE_KEY: ${{ secrets.CLERK_PUBLISHABLE_KEY }}
+          CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
+          CLERK_DOMAIN: ${{ secrets.CLERK_DOMAIN }}
+          TALLY_FORM_ID: ${{ secrets.TALLY_FORM_ID }}
+          GOOGLE_TEST_EMAIL: ${{ secrets.GOOGLE_TEST_EMAIL }}
+          GOOGLE_TEST_PASSWORD: ${{ secrets.GOOGLE_TEST_PASSWORD }}
 
   promote:
     needs: [quality-checks]

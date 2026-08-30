@@ -13,7 +13,8 @@
       "title": "Iniciar sesion",
       "subtitle": "Elige tu metodo de inicio de sesion preferido",
       "google": "Continuar con Google",
-      "discord": "Continuar con Discord"
+      "discord": "Continuar con Discord",
+      "signInError": "El inicio de sesion no comenzo. Intenta de nuevo, o contacta a soporte si esto sigue pasando."
     },
     "signOut": "Cerrar sesion",
     "account": {

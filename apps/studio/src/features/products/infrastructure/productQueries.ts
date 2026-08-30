@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { getCurrentUserId } from "api/supabase";
 import type { Database } from "api/supabase/types";
 
 import type {
@@ -13,14 +14,12 @@ export async function fetchProducts(
   supabase: SupabaseDB,
   filters?: Partial<ProductFilters>,
 ) {
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return [];
+  const userId = await getCurrentUserId(supabase);
+  if (!userId) return [];
   let query = supabase
     .from("products")
     .select("*")
-    .eq("seller_id", user.id)
+    .eq("seller_id", userId)
     .order("sort_order", { ascending: true })
     .order("id", { ascending: true });
 

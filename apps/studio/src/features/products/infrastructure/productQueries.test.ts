@@ -12,11 +12,7 @@ describe("fetchProducts", () => {
     const mockData = [{ id: "1", name_en: "Product" }];
 
     const supabase = {
-      auth: {
-        getUser: vi
-          .fn()
-          .mockResolvedValue({ data: { user: { id: "user-1" } } }),
-      },
+      rpc: vi.fn().mockResolvedValue({ data: "user-1", error: null }),
       from: vi.fn().mockReturnValue({
         select: vi.fn().mockReturnValue({
           eq: vi.fn().mockReturnValue({
@@ -40,11 +36,7 @@ describe("fetchProducts", () => {
   it("throws on supabase error", async () => {
     const mockError = new Error("DB error");
     const supabase = {
-      auth: {
-        getUser: vi
-          .fn()
-          .mockResolvedValue({ data: { user: { id: "user-1" } } }),
-      },
+      rpc: vi.fn().mockResolvedValue({ data: "user-1", error: null }),
       from: vi.fn().mockReturnValue({
         select: vi.fn().mockReturnValue({
           eq: vi.fn().mockReturnValue({

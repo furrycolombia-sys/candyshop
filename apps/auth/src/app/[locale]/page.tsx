@@ -1,4 +1,4 @@
-import { createServerSupabaseClient } from "api/supabase/server";
+import { auth } from "@clerk/nextjs/server";
 import { setRequestLocale } from "next-intl/server";
 
 import { AccountSettingsPage } from "@/features/account";
@@ -12,14 +12,7 @@ export default async function AuthPage({
   const { locale } = await params;
   setRequestLocale(locale);
 
-  let isAuthenticated = false;
-  try {
-    const supabase = await createServerSupabaseClient();
-    const { data } = await supabase.auth.getUser();
-    isAuthenticated = !!data.user;
-  } catch {
-    // Supabase not available — show login
-  }
+  const { userId } = await auth();
 
-  return isAuthenticated ? <AccountSettingsPage /> : <LoginPage />;
+  return userId ? <AccountSettingsPage /> : <LoginPage />;
 }

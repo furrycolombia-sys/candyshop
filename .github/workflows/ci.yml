@@ -340,6 +340,9 @@ jobs:
             NEXT_PUBLIC_STUDIO_URL=http://localhost:5050/studio
             NEXT_PUBLIC_BUILD_HASH=ci
             NEXT_PUBLIC_ENABLE_TEST_IDS=true
+            NEXT_PUBLIC_ENV_DEBUG=false
+            NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=${{ secrets.CLERK_PUBLISHABLE_KEY }}
+            NEXT_PUBLIC_CLERK_DOMAIN=${{ secrets.CLERK_DOMAIN }}
 
   # ============================================
   # E2E Tests (Playwright)
@@ -415,10 +418,9 @@ jobs:
           CI_SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.CI_SUPABASE_SERVICE_ROLE_KEY }}
           CI_SUPABASE_JWT_SECRET: ${{ secrets.CI_SUPABASE_JWT_SECRET }}
           CI_SUPABASE_DB_PASSWORD: ${{ secrets.CI_SUPABASE_DB_PASSWORD }}
-          SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID: ${{ secrets.SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID }}
-          SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET: ${{ secrets.SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET }}
-          SUPABASE_AUTH_EXTERNAL_DISCORD_CLIENT_ID: ${{ secrets.SUPABASE_AUTH_EXTERNAL_DISCORD_CLIENT_ID }}
-          SUPABASE_AUTH_EXTERNAL_DISCORD_SECRET: ${{ secrets.SUPABASE_AUTH_EXTERNAL_DISCORD_SECRET }}
+          CLERK_PUBLISHABLE_KEY: ${{ secrets.CLERK_PUBLISHABLE_KEY }}
+          CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
+          CLERK_DOMAIN: ${{ secrets.CLERK_DOMAIN }}
           TALLY_FORM_ID: ${{ secrets.TALLY_FORM_ID }}
           GOOGLE_TEST_EMAIL: ${{ secrets.GOOGLE_TEST_EMAIL }}
           GOOGLE_TEST_PASSWORD: ${{ secrets.GOOGLE_TEST_PASSWORD }}
@@ -452,6 +454,28 @@ jobs:
             echo "Running E2E for ${E2E_APP} (env=ci)"
             node scripts/e2e.mjs --env ci --app "${E2E_APP}"
           done
+
+      - name: Capture app container logs (on failure)
+        # A container-side crash (e.g. a crash-looping supervisord program)
+        # shows up to Playwright only as a generic connection error, with
+        # nothing in the CI step output explaining why. Dump the app
+        # container's own logs so that reason is visible without a local
+        # repro next time.
+        if: failure()
+        run: |
+          set -uo pipefail
+          docker ps -a > docker-ps.log 2>&1 || true
+          docker logs libra-ci > libra-ci-container.log 2>&1 || echo "no libra-ci container found" > libra-ci-container.log
+
+      - name: Upload app container logs
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        if: failure()
+        with:
+          name: libra-ci-container-logs
+          path: |
+            libra-ci-container.log
+            docker-ps.log
+          retention-days: 7
 
       - name: Upload store Playwright report
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0

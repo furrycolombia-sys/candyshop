@@ -75,6 +75,15 @@ function readSecretsFile() {
 
 const SECRET_RE = /(?<!\$)\$secret:([A-Z][A-Z0-9_]*)/g;
 
+// Explicit opt-out for a $secret: reference that is allowed to resolve to an
+// empty string in CI. Empty by design: every current $secret: reference is
+// expected to have a real value (see .env.ci's Sentry comment — a value that
+// is legitimately optional is left blank directly in the env file instead of
+// using $secret:, e.g. NEXT_PUBLIC_SENTRY_DSN=). Add a name here only with a
+// comment explaining why that specific secret may be empty in CI; do not use
+// this to silence a missing-secret error you haven't investigated.
+const CI_OPTIONAL_SECRETS = new Set([]);
+
 function resolveSecrets(vars, secrets) {
   for (const [key, val] of Object.entries(vars)) {
     if (!val.includes("$secret:")) continue;
@@ -108,12 +117,29 @@ export function loadEnv(targetEnv) {
   const hasSecretRefs = Object.values(vars).some((v) => v.includes("$secret:"));
   if (hasSecretRefs) {
     if (process.env.CI === "true") {
-      // CI: secrets already in process.env — clear unresolved refs
+      // CI: secrets are injected into process.env by the workflow's `env:`
+      // block. A $secret:NAME reference that resolves to nothing here means
+      // the workflow forgot to pass NAME through — fail loudly and name the
+      // variable, instead of silently writing "" and letting the failure
+      // surface far away (e.g. a Playwright setup script erroring out over
+      // an env var whose name gives no hint that load-env is the culprit).
       for (const [key, val] of Object.entries(vars)) {
         if (val.includes("$secret:")) {
-          // Use the CI env var directly if available, otherwise empty string
           const match = val.match(/\$secret:([A-Z][A-Z0-9_]*)/);
-          vars[key] = match ? (process.env[match[1]] ?? "") : "";
+          const name = match?.[1];
+          const resolved = name ? process.env[name] : undefined;
+          if (!resolved) {
+            if (name && CI_OPTIONAL_SECRETS.has(name)) {
+              vars[key] = "";
+              continue;
+            }
+            throw new Error(
+              `Missing secret in CI: "${name}" (referenced by .env.${env}). ` +
+                `The workflow job running this must pass ${name} through its ` +
+                `env: block (the GitHub repo secret must already exist).`,
+            );
+          }
+          vars[key] = resolved;
         }
       }
     } else {

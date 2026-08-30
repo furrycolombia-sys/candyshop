@@ -1,7 +1,7 @@
 /* eslint-disable i18next/no-literal-string -- aria-labels and language code labels are UI chrome, not user-facing content */
 "use client";
 
-import { useSupabaseAuth } from "auth/client";
+import { useCurrentUser } from "auth/client";
 import {
   ChevronDown,
   ChevronRight,
@@ -30,7 +30,7 @@ export function PaymentMethodsPageContent({
   const t = useTranslations("paymentMethods");
   const tCommon = useTranslations("common");
   const locale = useLocale();
-  const { user } = useSupabaseAuth();
+  const { user } = useCurrentUser();
 
   const sellerId = user?.id ?? "";
   const {

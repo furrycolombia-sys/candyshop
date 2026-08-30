@@ -20,9 +20,7 @@ function makeSupabase(datasets: {
   orders: unknown[];
   user_profiles: unknown[];
 }) {
-  const auth = {
-    getUser: vi.fn(async () => ({ data: { user: { id: "delegate-1" } } })),
-  };
+  const rpc = vi.fn(async () => ({ data: "delegate-1", error: null }));
   function from(table: keyof typeof datasets) {
     const rows = datasets[table];
     const builder: Record<string, unknown> = {
@@ -38,7 +36,7 @@ function makeSupabase(datasets: {
     };
     return builder;
   }
-  return { auth, from: (t: keyof typeof datasets) => from(t) } as never;
+  return { rpc, from: (t: keyof typeof datasets) => from(t) } as never;
 }
 
 describe("fetchDelegatedReportOrders", () => {
@@ -272,7 +270,7 @@ describe("fetchDelegatedReportOrders", () => {
 
   it("returns empty when there is no authenticated user", async () => {
     const supabase = {
-      auth: { getUser: vi.fn(async () => ({ data: { user: null } })) },
+      rpc: vi.fn(async () => ({ data: null, error: null })),
       from: vi.fn(),
     } as never;
     const res = await fetchDelegatedReportOrders(supabase, NO_FILTERS);

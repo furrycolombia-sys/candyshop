@@ -174,6 +174,15 @@ function generateConfig() {
     process.env.SUPABASE_EDGE_RUNTIME_ENABLED ?? (process.env.CI ? "false" : "true");
   template = template.replaceAll("{{SUPABASE_EDGE_RUNTIME_ENABLED}}", edgeRuntimeEnabled);
 
+  template = template.replace(
+    "{{SUPABASE_CLERK_ENABLED}}",
+    process.env.SUPABASE_CLERK_ENABLED ?? "false",
+  );
+  template = template.replace(
+    "{{SUPABASE_CLERK_DOMAIN}}",
+    process.env.SUPABASE_CLERK_DOMAIN ?? "",
+  );
+
   writeFileSync(configPath, template, "utf-8");
   console.log(
     `✓ Generated config.toml (Project: ${projectId}, API: ${ports.SUPABASE_API_PORT}, Studio: ${ports.SUPABASE_STUDIO_PORT})`,

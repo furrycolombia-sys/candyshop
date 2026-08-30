@@ -20,7 +20,7 @@ vi.mock("auth/client", () => ({
       return requiredKeys.every((key) => mockGrantedPermissions.includes(key));
     },
   }),
-  useSupabaseAuth: () => ({ user: { id: "seller-1" } }),
+  useCurrentUser: () => ({ user: { id: "seller-1" } }),
 }));
 
 vi.mock("shared", () => ({

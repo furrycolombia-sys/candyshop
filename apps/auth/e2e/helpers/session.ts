@@ -1,23 +1,14 @@
 import path from "node:path";
 
+import { createClerkClient } from "@clerk/backend";
+import { clerk, clerkSetup } from "@clerk/testing/playwright";
 import type { BrowserContext } from "@playwright/test";
 import { createClient } from "@supabase/supabase-js";
-import { AUTH_COOKIE_NAMES, TOKEN_TTL_SECONDS } from "auth";
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports -- shared Node helper
 const { resolveE2EAppUrls } = require(
   path.resolve(__dirname, "../../../../scripts/app-url-resolver.js"),
 );
-
-/**
- * Encode a string as base64url (URL-safe base64, no padding).
- * @supabase/ssr uses base64url encoding for cookie values — standard btoa()
- * produces base64 with +/= chars that @supabase/ssr's stringFromBase64URL
- * will reject as invalid characters.
- */
-function toBase64URL(str: string): string {
-  return btoa(str).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
-}
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 if (!SUPABASE_URL)
@@ -26,6 +17,23 @@ if (!SUPABASE_URL)
   );
 const SUPABASE_URL_VALUE: string = SUPABASE_URL;
 
+const SUPABASE_ANON_KEY_ENV = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+if (!SUPABASE_ANON_KEY_ENV)
+  throw new Error(
+    "NEXT_PUBLIC_SUPABASE_ANON_KEY is not set. Ensure the correct .env.* file is loaded.",
+  );
+/**
+ * The project's anon key — the `apikey` header for requests that carry a
+ * user's own bearer token. Matches how `createServerSupabaseClient`
+ * (packages/api/src/supabase/server.ts) authenticates real requests under
+ * Third-Party Auth: `apikey` stays the anon key, `Authorization` carries the
+ * caller's own (Clerk) JWT. A Clerk JWT is not a valid `apikey` value on its
+ * own — it is signed by Clerk, not this project — so callers issuing raw
+ * PostgREST requests as a specific user (see delegated-reports-rls.spec.ts)
+ * must use this, not the user's token, for `apikey`.
+ */
+export const SUPABASE_ANON_KEY: string = SUPABASE_ANON_KEY_ENV;
+
 const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 if (!SERVICE_ROLE_KEY)
   throw new Error(
@@ -33,17 +41,25 @@ if (!SERVICE_ROLE_KEY)
   );
 const SERVICE_ROLE_KEY_VALUE: string = SERVICE_ROLE_KEY;
 
-const AUTH_URL = resolveE2EAppUrls().auth;
+const CLERK_SECRET_KEY = process.env.CLERK_SECRET_KEY;
+if (!CLERK_SECRET_KEY)
+  throw new Error(
+    "CLERK_SECRET_KEY is not set. Ensure the correct .env.* file is loaded.",
+  );
+const CLERK_SECRET_KEY_VALUE: string = CLERK_SECRET_KEY;
 
-export const hasAdminTestEnv = SERVICE_ROLE_KEY_VALUE.split(".").length === 3;
+const AUTH_URL: string = resolveE2EAppUrls().auth;
 
-/** Session token lifetime in seconds for injected cookies. */
-export const SESSION_EXPIRY_SECONDS = 3600;
+const clerkClient = createClerkClient({ secretKey: CLERK_SECRET_KEY_VALUE });
 
 /**
  * Derive the shared cookie domain from an app URL.
  * For localhost/127.0.0.1, returns the hostname as-is.
  * For production domains, returns the root domain with a leading dot.
+ *
+ * Unrelated to authentication — this is a plain hostname utility some specs
+ * use for their own app-level cookies (e.g. `libra-cart`), not for Clerk's
+ * session cookie, which is not something this file constructs anymore.
  */
 export function buildSharedCookieDomain(url: string): string {
   const host = new URL(url).hostname;
@@ -193,6 +209,9 @@ export const ADMIN_PERMISSIONS = [
 
 /**
  * Grant a list of permission keys to a user via admin REST API.
+ * `userId` is a `user_profiles.id` — every `user_permissions.user_id` FK now
+ * targets that table (see
+ * supabase/migrations/20260829120000_repoint_user_fks.sql).
  */
 export async function grantPermissions(
   userId: string,
@@ -236,133 +255,170 @@ export async function grantPermissions(
 // ─── Types ───────────────────────────────────────────────────────
 
 export interface TestUser {
+  /**
+   * `user_profiles.id` — the id every relevant FK (orders.user_id,
+   * products.seller_id, user_permissions.user_id, ...) targets under the
+   * repointed schema. NOT the Clerk user id.
+   */
   userId: string;
   email: string;
+  /** The Clerk user id (`user_xxxx`). Needed for sign-in and cleanup. */
+  clerkUserId: string;
+  /**
+   * A real Clerk session JWT for this user, minted server-side via the Clerk
+   * Backend API (no browser involved). Supabase's Third-Party Auth
+   * integration verifies it exactly like a browser-obtained one — see
+   * supabase/migrations/20260829110000_current_user_id.sql, which resolves
+   * the caller from `auth.jwt() ->> 'sub'` regardless of how that JWT was
+   * minted. Used by specs that drive PostgREST directly to assert RLS
+   * behavior without a browser (delegated-reports-rls.spec.ts).
+   */
   accessToken: string;
-  refreshToken: string;
+}
+
+let clerkSetupPromise: Promise<void> | null = null;
+/** Fetches the Clerk Testing Token once per worker process; safe to call
+ * repeatedly. Required before any `clerk.signIn`/`clerk.signOut` call — see
+ * @clerk/testing's internal use of `process.env.CLERK_FAPI` /
+ * `CLERK_TESTING_TOKEN`, both of which only `clerkSetup()` populates. */
+function ensureClerkSetup(): Promise<void> {
+  clerkSetupPromise ??= clerkSetup();
+  return clerkSetupPromise;
 }
 
 /**
- * Create a test user via Supabase admin API.
- * Returns user info + tokens (does NOT inject cookies).
+ * Delete a Clerk user by id. Best-effort: swallows and logs rather than
+ * throwing, since callers use this for cleanup where a failure must never
+ * prevent the rest of a teardown from running.
+ */
+export async function deleteClerkUserBySub(clerkUserId: string): Promise<void> {
+  try {
+    await clerkClient.users.deleteUser(clerkUserId);
+  } catch (error) {
+    console.warn(`[e2e] failed to delete Clerk user ${clerkUserId}:`, error);
+  }
+}
+
+/**
+ * Create a fully-provisioned test user: a real Clerk user, a linked
+ * `user_profiles` row, default buyer permissions, and any additional
+ * `permissions` requested.
+ *
+ * Profile creation calls the exact RPC `resolveProfile()`'s "created" branch
+ * uses in production (`create_profile_with_default_permissions` — see
+ * supabase/migrations/20260829170000_profile_create_with_permissions.sql)
+ * directly with the service-role client, instead of driving a browser
+ * through `/en/callback`. That RPC inserts the `user_profiles` row AND
+ * grants default buyer permissions atomically, replacing the
+ * `on_auth_user_default_permissions` trigger that used to fire on every
+ * `auth.users` insert (auth.users is now permanently empty). Without a
+ * resolvable profile, `current_user_id()` returns NULL and every RLS policy
+ * denies — see that migration's header for the full rationale.
+ *
+ * No browser page is involved, so this is safe to call from
+ * `test.beforeAll`, before any `context`/`page` fixture exists — exactly how
+ * every consumer of this function already calls it.
  */
 export async function createTestUser(
   label: string,
   permissions: string[] = [],
 ): Promise<TestUser> {
-  if (!hasAdminTestEnv) {
+  // A Clerk dev-instance test email (`+clerk_test` subaddress): no real
+  // inbox, no verification email actually sent, unique per run.
+  const email = `e2e-${label}-${Date.now()}+clerk_test@example.com`;
+
+  const clerkUser = await clerkClient.users.createUser({
+    emailAddress: [email],
+    skipPasswordRequirement: true,
+  });
+
+  const { data: profile, error } = await supabaseAdmin.rpc(
+    "create_profile_with_default_permissions",
+    {
+      p_email: email.toLowerCase(),
+      p_identity_sub: clerkUser.id,
+      p_display_name: null,
+      p_avatar_url: null,
+    },
+  );
+  if (error || !profile) {
     throw new Error(
-      "E2E admin setup is unavailable. Start local Supabase or configure a valid SUPABASE_SERVICE_ROLE_KEY.",
+      `Failed to create profile for ${label} user (Clerk id ${clerkUser.id}): ${error?.message}`,
     );
   }
-
-  const email = `e2e-${label}-${Date.now()}@test.invalid`;
-  const password = `test-${Date.now()}-${label}`;
-
-  const { data: user, error: createError } =
-    await supabaseAdmin.auth.admin.createUser({
-      email,
-      password,
-      email_confirm: true,
-    });
-
-  if (createError)
-    throw new Error(`Failed to create ${label} user: ${createError.message}`);
-
-  const { data: session, error: signInError } =
-    await supabaseAdmin.auth.signInWithPassword({ email, password });
-
-  if (signInError)
-    throw new Error(`Failed to sign in ${label} user: ${signInError.message}`);
-
-  const testUser: TestUser = {
-    userId: user.user!.id,
-    email,
-    accessToken: session.session!.access_token,
-    refreshToken: session.session!.refresh_token,
-  };
+  const profileId = (profile as { id: string }).id;
 
   if (permissions.length > 0) {
-    await grantPermissions(testUser.userId, permissions);
+    await grantPermissions(profileId, permissions);
   }
 
-  return testUser;
+  // A real backend session — see the `accessToken` doc comment on TestUser.
+  const session = await clerkClient.sessions.createSession({
+    userId: clerkUser.id,
+  });
+  const token = await clerkClient.sessions.getToken(session.id);
+
+  return {
+    userId: profileId,
+    email,
+    clerkUserId: clerkUser.id,
+    accessToken: token.jwt,
+  };
 }
 
 /**
- * Inject a user's session cookies into the browser context.
- * Call this to "switch" to a different user.
+ * Switch the browser context to a different signed-in Clerk user.
+ *
+ * Signs out whoever is currently active in `context` (if anyone) and drives
+ * a real, unmocked sign-in for `user` via @clerk/testing's ticket strategy —
+ * the same mechanism apps/store/e2e/auth.setup.ts uses. A forged/injected
+ * session cookie is not viable for Clerk: its client SDK validates the
+ * session against Clerk's own API on load, so nothing short of a real
+ * sign-in produces state `window.Clerk` (and therefore every
+ * `useAuth()`/`currentUser()` call downstream) recognizes.
+ *
+ * Reuses the context's existing page — Playwright's default `page` fixture —
+ * rather than opening a new one, so the caller's own `page` reference is the
+ * one left carrying the new session. Cookies are shared across the whole
+ * `context` regardless of which page set them, so any other page the caller
+ * later navigates also sees the new session.
  */
 export async function injectSession(
   context: BrowserContext,
   user: TestUser,
 ): Promise<void> {
-  // Derive project ref from SUPABASE_URL (already resolved from env file above).
-  // Must match SUPABASE_COOKIE_KEY in packages/api/src/supabase/config.ts
-  // which uses deriveProjectRef: 127.0.0.1 → "127.0.0.1", localhost → "localhost"
-  const refHostname = new URL(SUPABASE_URL_VALUE).hostname;
-  const projectRef =
-    refHostname === "localhost" || refHostname === "127.0.0.1"
-      ? refHostname
-      : refHostname.split(".")[0];
-  const cookieBase = `sb-${projectRef}-auth-token`;
-  const authHost = new URL(AUTH_URL).hostname;
-  const sharedDomain = buildSharedCookieDomain(AUTH_URL);
-  const isLocalhost = authHost === "localhost" || authHost === "127.0.0.1";
-  const targetDomains = Array.from(
-    new Set(
-      isLocalhost || sharedDomain === authHost
-        ? [authHost]
-        : [authHost, sharedDomain],
-    ),
-  );
-  const sessionPayload = JSON.stringify({
-    access_token: user.accessToken,
-    refresh_token: user.refreshToken,
-    token_type: "bearer",
-    expires_in: SESSION_EXPIRY_SECONDS,
-    expires_at: Math.floor(Date.now() / 1000) + SESSION_EXPIRY_SECONDS,
-    user: { id: user.userId, email: user.email },
+  await ensureClerkSetup();
+  const page = context.pages()[0] ?? (await context.newPage());
+
+  // An unprotected page that loads Clerk's client JS — required before
+  // clerk.signOut/signIn, both of which operate on `window.Clerk`.
+  await page.goto(`${AUTH_URL}/en/login`);
+
+  await clerk.signOut({ page }).catch(() => {
+    // Nobody was signed in yet in this context — fine, nothing to sign out.
   });
-  const encodedSession = `base64-${toBase64URL(sessionPayload)}`;
 
-  // Clear existing auth cookies first
-  const cookies = await context.cookies();
-  const hasAuthCookies = cookies.some((c) => c.name.startsWith("sb-"));
-  if (hasAuthCookies) {
-    await context.clearCookies();
-  }
+  await clerk.signIn({ page, emailAddress: user.email });
+}
 
-  const cookiesToInject = targetDomains.flatMap((domain) => [
-    {
-      name: cookieBase,
-      value: encodedSession,
-      domain,
-      path: "/",
-      httpOnly: false,
-      secure: !isLocalhost,
-      sameSite: "Lax" as const,
-    },
-    {
-      name: `${cookieBase}.0`,
-      value: encodedSession,
-      domain,
-      path: "/",
-      httpOnly: false,
-      secure: !isLocalhost,
-      sameSite: "Lax" as const,
-    },
-    {
-      name: AUTH_COOKIE_NAMES.accessToken,
-      value: user.accessToken,
-      domain,
-      path: "/",
-      httpOnly: false,
-      secure: !isLocalhost,
-      sameSite: "Lax" as const,
-      expires: Math.floor(Date.now() / 1000) + TOKEN_TTL_SECONDS.access,
-    },
-  ]);
-
-  await context.addCookies(cookiesToInject);
+/**
+ * Delete a test user's Clerk account and `user_profiles` row. The profile
+ * delete cascades to their permissions, orders, product reviews, and seller
+ * payment methods via the FKs repointed in
+ * 20260829120000_repoint_user_fks.sql (products.seller_id is SET NULL, not
+ * cascaded — callers that created products for a seller must still delete
+ * those explicitly before calling this, same as before).
+ *
+ * Best-effort: both halves are attempted independently so a failure on one
+ * side never skips the other — the Clerk dev instance is a shared external
+ * service that otherwise accumulates throwaway users forever.
+ */
+export async function deleteTestUser(user: TestUser): Promise<void> {
+  await adminDelete("user_profiles", `id=eq.${user.userId}`).catch((error) => {
+    console.warn(
+      `[e2e] failed to delete user_profiles row ${user.userId}:`,
+      error,
+    );
+  });
+  await deleteClerkUserBySub(user.clerkUserId);
 }

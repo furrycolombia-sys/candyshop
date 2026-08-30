@@ -5,8 +5,12 @@
  * SUPABASE_REST_URL: used by server-side code (API routes, SSR client).
  *   Uses SUPABASE_URL_INTERNAL (Docker networking) when set,
  *   otherwise uses NEXT_PUBLIC_SUPABASE_URL.
- * SUPABASE_COOKIE_KEY: the auth storage key that both client and server
- *   must agree on so cookies match. Always derived from the build-time URL.
+ *
+ * There used to be a SUPABASE_COOKIE_KEY here too — the auth storage key
+ * the old cookie-based Supabase Auth session needed so client and server
+ * cookies matched. Under Third-Party Auth (Clerk) there is no such session
+ * to store, so it had no remaining callers once `proxy.ts` and
+ * `callback.ts` (its only consumers) were deleted. See task-11-report.md.
  */
 
 const _publicUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -22,12 +26,3 @@ export const SUPABASE_REST_URL = _internalUrl || _publicUrl;
 const _anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 if (!_anonKey) throw new Error("NEXT_PUBLIC_SUPABASE_ANON_KEY is required");
 export const SUPABASE_ANON_KEY = _anonKey;
-
-/** Shared auth storage key so client and server cookies always match. */
-function deriveProjectRef(url: string): string {
-  const hostname = new URL(url).hostname;
-  return hostname === "localhost" || hostname === "127.0.0.1"
-    ? hostname
-    : hostname.split(".")[0];
-}
-export const SUPABASE_COOKIE_KEY = `sb-${deriveProjectRef(SUPABASE_URL)}-auth-token`;

@@ -13,6 +13,7 @@
     "test:e2e": "echo 'Run e2e from root: pnpm test:e2e'"
   },
   "dependencies": {
+    "@clerk/nextjs": "^7.8.3",
     "@hello-pangea/dnd": "^18.0.1",
     "@hookform/resolvers": "^5.2.2",
     "@monorepo/app-components": "workspace:*",

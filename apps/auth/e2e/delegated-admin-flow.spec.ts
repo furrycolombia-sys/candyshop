@@ -83,10 +83,8 @@ test.describe.serial("Delegated admin purchase flow", () => {
     }
     // Delete delegate user separately (cleanupTestData handles seller+buyer pair)
     if (delegate) {
-      const { supabaseAdmin } = await import("./helpers/session");
-      await supabaseAdmin.auth.admin
-        .deleteUser(delegate.userId)
-        .catch(() => {});
+      const { deleteTestUser } = await import("./helpers/session");
+      await deleteTestUser(delegate).catch(() => {});
     }
   });
 

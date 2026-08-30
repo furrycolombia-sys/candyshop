@@ -10,7 +10,7 @@ import type { UserSearchResult } from "@/features/seller-admins/application/hook
 import { DELEGATE_PERMISSIONS } from "@/features/seller-admins/domain/constants";
 import type { DelegatePermission } from "@/features/seller-admins/domain/types";
 import { getDisplayName } from "@/features/seller-admins/domain/utils";
-import { useSupabaseAuth } from "@/shared/application/hooks/useSupabaseAuth";
+import { useCurrentUser } from "@/shared/application/hooks/useCurrentUser";
 
 const MIN_SEARCH_LENGTH = 2;
 
@@ -22,7 +22,7 @@ interface AddDelegateFormProps {
 
 export function AddDelegateForm({ onAdd, isAdding }: AddDelegateFormProps) {
   const t = useTranslations("sellerAdmins");
-  const { user } = useSupabaseAuth();
+  const { user } = useCurrentUser();
   const { search } = useDelegateSearch(user?.id);
 
   const [query, setQuery] = useState("");
