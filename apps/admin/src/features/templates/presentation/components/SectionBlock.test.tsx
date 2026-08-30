@@ -77,7 +77,7 @@ describe("SectionBlock", () => {
     render(<SectionBlock {...defaultProps} onUpdate={onUpdate} />);
 
     const inputs = screen.getAllByRole("textbox");
-    fireEvent.change(inputs[0], { target: { value: "New Name" } });
+    fireEvent.change(inputs[0]!, { target: { value: "New Name" } });
     expect(onUpdate).toHaveBeenCalledWith({ name_en: "New Name" });
   });
 
@@ -127,7 +127,7 @@ describe("SectionBlock", () => {
     render(<SectionBlock {...defaultProps} onUpdate={onUpdate} />);
 
     const inputs = screen.getAllByRole("textbox");
-    fireEvent.change(inputs[1], { target: { value: "Nuevo Nombre" } });
+    fireEvent.change(inputs[1]!, { target: { value: "Nuevo Nombre" } });
     expect(onUpdate).toHaveBeenCalledWith({ name_es: "Nuevo Nombre" });
   });
 

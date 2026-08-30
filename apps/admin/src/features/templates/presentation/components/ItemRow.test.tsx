@@ -35,7 +35,7 @@ describe("ItemRow", () => {
     render(<ItemRow {...defaultProps} onUpdate={onUpdate} />);
 
     const inputs = screen.getAllByRole("textbox");
-    fireEvent.change(inputs[0], { target: { value: "New Title" } });
+    fireEvent.change(inputs[0]!, { target: { value: "New Title" } });
     expect(onUpdate).toHaveBeenCalledWith({ title_en: "New Title" });
   });
 
@@ -51,7 +51,7 @@ describe("ItemRow", () => {
     const onUpdate = vi.fn();
     render(<ItemRow {...defaultProps} onUpdate={onUpdate} />);
     const inputs = screen.getAllByRole("textbox");
-    fireEvent.change(inputs[1], { target: { value: "Nuevo" } });
+    fireEvent.change(inputs[1]!, { target: { value: "Nuevo" } });
     expect(onUpdate).toHaveBeenCalledWith({ title_es: "Nuevo" });
   });
 
@@ -59,7 +59,7 @@ describe("ItemRow", () => {
     const onUpdate = vi.fn();
     render(<ItemRow {...defaultProps} onUpdate={onUpdate} />);
     const inputs = screen.getAllByRole("textbox");
-    fireEvent.change(inputs[2], { target: { value: "New Desc" } });
+    fireEvent.change(inputs[2]!, { target: { value: "New Desc" } });
     expect(onUpdate).toHaveBeenCalledWith({ description_en: "New Desc" });
   });
 
@@ -77,7 +77,7 @@ describe("ItemRow", () => {
     const onUpdate = vi.fn();
     render(<ItemRow {...defaultProps} onUpdate={onUpdate} />);
     const inputs = screen.getAllByRole("textbox");
-    fireEvent.change(inputs[3], { target: { value: "Nueva Desc" } });
+    fireEvent.change(inputs[3]!, { target: { value: "Nueva Desc" } });
     expect(onUpdate).toHaveBeenCalledWith({ description_es: "Nueva Desc" });
   });
 
@@ -85,7 +85,7 @@ describe("ItemRow", () => {
     const onUpdate = vi.fn();
     render(<ItemRow {...defaultProps} onUpdate={onUpdate} />);
     const inputs = screen.getAllByRole("textbox");
-    fireEvent.change(inputs[4], { target: { value: "Heart" } });
+    fireEvent.change(inputs[4]!, { target: { value: "Heart" } });
     expect(onUpdate).toHaveBeenCalledWith({ icon: "Heart" });
   });
 });

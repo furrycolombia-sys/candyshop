@@ -64,7 +64,7 @@ describe("fetchReportOrders", () => {
       dateTo: "2024-01-31",
     });
 
-    const calledUrl = fetchMock.mock.calls[0][0] as string;
+    const calledUrl = fetchMock.mock.calls[0]![0] as string;
     expect(calledUrl).toContain("dateFrom=2024-01-01");
     expect(calledUrl).toContain("dateTo=2024-01-31");
   });
@@ -75,7 +75,7 @@ describe("fetchReportOrders", () => {
 
     await fetchReportOrders({ ...emptyFilters, status: "approved" });
 
-    expect(fetchMock.mock.calls[0][0]).toContain("status=approved");
+    expect(fetchMock.mock.calls[0]![0]).toContain("status=approved");
   });
 
   it("appends sellerId filter", async () => {
@@ -84,7 +84,7 @@ describe("fetchReportOrders", () => {
 
     await fetchReportOrders({ ...emptyFilters, sellerId: "seller-1" });
 
-    expect(fetchMock.mock.calls[0][0]).toContain("sellerId=seller-1");
+    expect(fetchMock.mock.calls[0]![0]).toContain("sellerId=seller-1");
   });
 
   it("appends buyerId filter", async () => {
@@ -93,7 +93,7 @@ describe("fetchReportOrders", () => {
 
     await fetchReportOrders({ ...emptyFilters, buyerId: "buyer-1" });
 
-    expect(fetchMock.mock.calls[0][0]).toContain("buyerId=buyer-1");
+    expect(fetchMock.mock.calls[0]![0]).toContain("buyerId=buyer-1");
   });
 
   it("appends productId filter", async () => {
@@ -102,7 +102,7 @@ describe("fetchReportOrders", () => {
 
     await fetchReportOrders({ ...emptyFilters, productId: "prod-1" });
 
-    expect(fetchMock.mock.calls[0][0]).toContain("productId=prod-1");
+    expect(fetchMock.mock.calls[0]![0]).toContain("productId=prod-1");
   });
 
   it("appends currency filter", async () => {
@@ -111,7 +111,7 @@ describe("fetchReportOrders", () => {
 
     await fetchReportOrders({ ...emptyFilters, currency: "USD" });
 
-    expect(fetchMock.mock.calls[0][0]).toContain("currency=USD");
+    expect(fetchMock.mock.calls[0]![0]).toContain("currency=USD");
   });
 
   it("appends amountMin filter including zero", async () => {
@@ -120,7 +120,7 @@ describe("fetchReportOrders", () => {
 
     await fetchReportOrders({ ...emptyFilters, amountMin: 0 });
 
-    expect(fetchMock.mock.calls[0][0]).toContain("amountMin=0");
+    expect(fetchMock.mock.calls[0]![0]).toContain("amountMin=0");
   });
 
   it("appends amountMax filter", async () => {
@@ -129,7 +129,7 @@ describe("fetchReportOrders", () => {
 
     await fetchReportOrders({ ...emptyFilters, amountMax: 500 });
 
-    expect(fetchMock.mock.calls[0][0]).toContain("amountMax=500");
+    expect(fetchMock.mock.calls[0]![0]).toContain("amountMax=500");
   });
 
   it("omits null filters from query string", async () => {
@@ -138,7 +138,7 @@ describe("fetchReportOrders", () => {
 
     await fetchReportOrders(emptyFilters);
 
-    const calledUrl = fetchMock.mock.calls[0][0] as string;
+    const calledUrl = fetchMock.mock.calls[0]![0] as string;
     expect(calledUrl).not.toContain("?");
   });
 
@@ -165,7 +165,7 @@ describe("fetchReportOrders", () => {
 
     await fetchReportOrders({ ...emptyFilters, status: "pending" });
 
-    const calledUrl = fetchMock.mock.calls[0][0] as string;
+    const calledUrl = fetchMock.mock.calls[0]![0] as string;
     expect(calledUrl).toContain("?");
     expect(calledUrl).toMatch(/\/api\/admin\/reports\/orders\?/);
   });

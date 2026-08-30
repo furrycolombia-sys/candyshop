@@ -86,7 +86,7 @@ describe("RemoveButton", () => {
     render(<RemoveButton rowId="r1" userId="u1" canDelete={true} />);
     fireEvent.click(screen.getByTestId("remove-delegate-r1"));
     fireEvent.click(screen.getByTestId("confirm-remove-delegate-r1"));
-    const { onSettled } = mockMutate.mock.calls[0][1] as {
+    const { onSettled } = mockMutate.mock.calls[0]![1] as {
       onSettled: () => void;
     };
     expect(typeof onSettled).toBe("function");

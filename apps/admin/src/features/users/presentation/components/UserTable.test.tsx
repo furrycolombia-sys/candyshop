@@ -116,7 +116,7 @@ describe("UserTable", () => {
       <UserTable {...defaultProps} onRoleFilterChange={onRoleFilterChange} />,
     );
     const selects = screen.getAllByRole("combobox");
-    fireEvent.change(selects[0], { target: { value: "buyer" } });
+    fireEvent.change(selects[0]!, { target: { value: "buyer" } });
     expect(onRoleFilterChange).toHaveBeenCalledWith("buyer");
   });
 
@@ -126,7 +126,7 @@ describe("UserTable", () => {
       <UserTable {...defaultProps} onItemFilterChange={onItemFilterChange} />,
     );
     const selects = screen.getAllByRole("combobox");
-    fireEvent.change(selects[1], { target: { value: "has_items" } });
+    fireEvent.change(selects[1]!, { target: { value: "has_items" } });
     expect(onItemFilterChange).toHaveBeenCalledWith("has_items");
   });
 
@@ -137,8 +137,8 @@ describe("UserTable", () => {
     );
     const checkboxes = screen.getAllByRole("checkbox");
     // First checkbox is the select-all header checkbox
-    fireEvent.click(checkboxes[0]);
-    const called = onSelectUsersChange.mock.calls[0][0] as Set<string>;
+    fireEvent.click(checkboxes[0]!);
+    const called = onSelectUsersChange.mock.calls[0]![0] as Set<string>;
     expect(called.has("1")).toBe(true);
     expect(called.has("2")).toBe(true);
   });
@@ -153,8 +153,8 @@ describe("UserTable", () => {
       />,
     );
     const checkboxes = screen.getAllByRole("checkbox");
-    fireEvent.click(checkboxes[0]);
-    const called = onSelectUsersChange.mock.calls[0][0] as Set<string>;
+    fireEvent.click(checkboxes[0]!);
+    const called = onSelectUsersChange.mock.calls[0]![0] as Set<string>;
     expect(called.size).toBe(0);
   });
 

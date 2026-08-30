@@ -45,7 +45,7 @@ vi.mock("@/features/users/application/utils", () => ({
   formatLastSeen: (ts: string | null) =>
     ts ? { key: "minutesAgo", params: { count: 5 } } : null,
   getInitials: (name: string | null, email: string) =>
-    name ? name[0].toUpperCase() : email[0].toUpperCase(),
+    name ? name[0]!.toUpperCase() : email[0]!.toUpperCase(),
 }));
 
 import { UserHeader } from "./UserHeader";
