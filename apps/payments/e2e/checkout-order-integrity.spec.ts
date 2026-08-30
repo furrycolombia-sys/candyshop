@@ -246,6 +246,6 @@ test.describe.serial("Checkout order creation integrity", () => {
       `user_id=eq.${buyer.userId}`,
     );
     expect(ordersAfter).toHaveLength(1);
-    expect(ordersAfter[0].payment_status).toBe("pending_verification");
+    expect(ordersAfter[0]!.payment_status).toBe("pending_verification");
   });
 });

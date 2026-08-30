@@ -136,7 +136,7 @@ describe("PaymentMethodTable", () => {
 
   it("falls back to name_en when name_es is not available", () => {
     const methodNoEs: SellerPaymentMethod = {
-      ...mockMethods[0],
+      ...mockMethods[0]!,
       id: "pm-2",
       name_en: "Cash",
       name_es: "",

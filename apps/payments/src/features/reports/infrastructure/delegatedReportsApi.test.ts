@@ -121,12 +121,12 @@ describe("fetchDelegatedReportOrders", () => {
 
     expect(res.total).toBe(1);
     expect(res.orders).toHaveLength(1);
-    const [order] = res.orders;
+    const order = res.orders[0]!;
     expect(order.id).toBe("o1");
     expect(order.delegated_subtotal).toBe(50_000);
     expect(order.items).toHaveLength(1);
-    expect(order.items[0].product_id).toBe("p1");
-    expect(order.items[0].product_name).toBe("Delegated");
+    expect(order.items[0]!.product_id).toBe("p1");
+    expect(order.items[0]!.product_name).toBe("Delegated");
     expect(order.buyer_email).toBe("buyer@example.com");
     expect("receipt_url" in order).toBe(false);
     expect("transfer_number" in order).toBe(false);
@@ -178,8 +178,8 @@ describe("fetchDelegatedReportOrders", () => {
     const res = await fetchDelegatedReportOrders(supabase, NO_FILTERS);
 
     expect(res.orders).toHaveLength(1);
-    expect(res.orders[0].items).toHaveLength(1);
-    expect(res.orders[0].items[0].product_id).toBe("p1");
+    expect(res.orders[0]!.items).toHaveLength(1);
+    expect(res.orders[0]!.items[0]!.product_id).toBe("p1");
   });
 
   it("drops orders with no delegated items", async () => {
@@ -265,7 +265,7 @@ describe("fetchDelegatedReportOrders", () => {
       amountMax: 60_000,
     });
     expect(included.orders).toHaveLength(1);
-    expect(included.orders[0].delegated_subtotal).toBe(50_000);
+    expect(included.orders[0]!.delegated_subtotal).toBe(50_000);
   });
 
   it("returns empty when there is no authenticated user", async () => {
@@ -319,7 +319,7 @@ describe("fetchDelegatedReportOrders", () => {
     });
 
     expect(res.orders).toHaveLength(1);
-    expect(res.orders[0].delegated_subtotal).toBe(25_000);
+    expect(res.orders[0]!.delegated_subtotal).toBe(25_000);
   });
 
   it("falls back gracefully when product name, buyer profile, or permissions are missing", async () => {
@@ -358,8 +358,8 @@ describe("fetchDelegatedReportOrders", () => {
     const res = await fetchDelegatedReportOrders(supabase, NO_FILTERS);
 
     expect(res.orders).toHaveLength(1);
-    expect(res.orders[0].items[0].product_name).toBe("p1");
-    expect(res.orders[0].buyer_email).toBe("");
-    expect(res.orders[0].buyer_display_name).toBeNull();
+    expect(res.orders[0]!.items[0]!.product_name).toBe("p1");
+    expect(res.orders[0]!.buyer_email).toBe("");
+    expect(res.orders[0]!.buyer_display_name).toBeNull();
   });
 });

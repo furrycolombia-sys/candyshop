@@ -50,7 +50,7 @@ export async function fetchMyOrders(
   );
 
   const urlByPath: Record<string, string | null> = Object.fromEntries(
-    receiptPaths.map((path, i) => [path, signedUrls[i]]),
+    receiptPaths.map((path, i) => [path, signedUrls[i] ?? null]),
   );
 
   return rows.map((row) => ({

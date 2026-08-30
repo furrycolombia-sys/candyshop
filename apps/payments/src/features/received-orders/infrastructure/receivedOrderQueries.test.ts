@@ -106,9 +106,9 @@ describe("fetchReceivedOrders", () => {
     );
 
     expect(result).toHaveLength(1);
-    expect(result[0].buyer_name).toBe("Buyer Bob");
-    expect(result[0].payment_status).toBe("pending_verification");
-    expect(result[0].receipt_url).toBe(
+    expect(result[0]!.buyer_name).toBe("Buyer Bob");
+    expect(result[0]!.payment_status).toBe("pending_verification");
+    expect(result[0]!.receipt_url).toBe(
       "https://example.com/order-1/receipt.png",
     );
   });

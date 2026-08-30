@@ -27,11 +27,21 @@ function groupByCheckoutSession(orders: OrderWithItems[]): CheckoutGroup[] {
     }
   }
 
-  return [...map.values()].map((groupOrders) => ({
-    checkoutSessionId: groupOrders[0].checkout_session_id,
-    createdAt: groupOrders[0].created_at,
-    orders: groupOrders,
-  }));
+  // flatMap rather than map: a group is always non-empty by construction, but
+  // that is not expressible to the type checker, and dropping an impossible
+  // empty group is safer than asserting it away.
+  return [...map.values()].flatMap((groupOrders) => {
+    const [first] = groupOrders;
+    if (!first) return [];
+    return [
+      {
+        checkoutSessionId: first.checkout_session_id,
+        createdAt: first.created_at,
+        firstOrderId: first.id,
+        orders: groupOrders,
+      },
+    ];
+  });
 }
 
 export function OrdersPageContent() {
@@ -104,7 +114,7 @@ export function OrdersPageContent() {
 
         {groups.map((group) => (
           <section
-            key={group.checkoutSessionId ?? group.orders[0].id}
+            key={group.checkoutSessionId ?? group.firstOrderId}
             className="space-y-3"
           >
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
