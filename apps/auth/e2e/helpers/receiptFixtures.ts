@@ -108,6 +108,9 @@ export async function verifyReceiptLinkResolves(
   );
   await expect(receiptCell).toBeVisible({ timeout: MUTATION_WAIT_MS });
 
+  // Scoped inside a testid-addressed cell, so the selector is already anchored
+  // to a stable element; the role lookup only picks the single link within it.
+  // eslint-disable-next-line no-restricted-syntax -- see above
   const receiptLink = receiptCell.getByRole("link");
   await expect(receiptLink).toBeVisible({ timeout: ELEMENT_TIMEOUT_MS });
 

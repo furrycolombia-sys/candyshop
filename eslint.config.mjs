@@ -14,6 +14,7 @@ import vitest from "@vitest/eslint-plugin";
 import tanstackQuery from "@tanstack/eslint-plugin-query";
 import unicorn from "eslint-plugin-unicorn";
 import betterTailwindcss from "eslint-plugin-better-tailwindcss";
+import playwright from "eslint-plugin-playwright";
 
 // Monorepo paths
 const APP_SRC = "apps/*/src";
@@ -21,6 +22,40 @@ const PKG_SRC = "packages/*/src";
 
 const sonarRules = sonarjs.configs.recommended.rules;
 const unicornRules = unicorn.configs["flat/recommended"].rules;
+
+// ── Playwright E2E specs ─────────────────────────────────────────────────────
+// These files were previously linted by nothing at all: `pnpm lint` only covers
+// apps/*/src, so 26 spec files had no rules applied. The recommended set is
+// enabled here, with the two high-count timing rules staged as warnings so the
+// ratchet is visible rather than deferred.
+const playwrightConfig = {
+  files: ["apps/*/e2e/**/*.ts", "apps/*/test/e2e/**/*.ts"],
+  ...playwright.configs["flat/recommended"],
+  rules: {
+    ...playwright.configs["flat/recommended"].rules,
+    // Staged, not disabled. Every rule not listed below is an error, because
+    // the suite is already clean against it — including missing-playwright-await,
+    // which catches an assertion that never runs.
+    //
+    // The rules below have real violations today and are warnings with their
+    // counts recorded, to be driven to zero and promoted to error one at a time.
+    // Counts measured 2026-08-30. NOTE: several of these are auto-fixable, but
+    // `eslint --fix` must NOT be run blindly over them — prefer-web-first-assertions
+    // rewrote `const href = await link.getAttribute("href")` into
+    // `const href = link`, silently turning a string into a Locator and breaking
+    // the three assertions below it. Typecheck caught it; review every hunk.
+    "playwright/no-networkidle": "warn", // 118 — waits on a heuristic, not a condition
+    "playwright/no-wait-for-timeout": "warn", // 96 — the main flakiness source
+    "playwright/no-conditional-in-test": "warn", // 31
+    "playwright/no-useless-not": "warn", // 19 (auto-fixable, safe)
+    "playwright/prefer-web-first-assertions": "warn", // 15 (auto-fix is NOT safe here)
+    "playwright/expect-expect": "warn", // 11 — tests that assert nothing
+    "playwright/no-conditional-expect": "warn", // 5
+    "playwright/no-skipped-test": "warn", // 5
+    "playwright/no-force-option": "warn", // 4
+    "playwright/consistent-spacing-between-blocks": "warn", // 1
+  },
+};
 
 const eslintConfig = defineConfig([
   // ESLint's own core correctness rules. These were never composed here, so 41
@@ -1642,6 +1677,7 @@ const eslintConfig = defineConfig([
       ],
     },
   },
+  playwrightConfig,
 ]);
 
 export default eslintConfig;
