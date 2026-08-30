@@ -6,8 +6,7 @@
     "baseUrl": ".",
     "paths": {
       "@api/*": ["./src/*"]
-    },
-    "noUncheckedIndexedAccess": true
+    }
   },
   "include": ["src/**/*.ts", "src/**/*.tsx"],
   "exclude": ["node_modules", "dist"]
