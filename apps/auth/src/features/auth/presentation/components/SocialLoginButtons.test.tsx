@@ -85,6 +85,26 @@ describe("SocialLoginButtons", () => {
     );
   });
 
+  it("logs and shows a visible error when authenticateWithRedirect rejects", async () => {
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    authenticateWithRedirect.mockRejectedValueOnce(
+      new Error("provider misconfigured"),
+    );
+
+    const user = userEvent.setup();
+    render(<SocialLoginButtons />);
+    await user.click(screen.getByTestId("login-google"));
+
+    expect(errorSpy).toHaveBeenCalledWith(
+      expect.stringContaining("oauth_google"),
+      expect.any(Error),
+    );
+    expect(await screen.findByTestId("login-error")).toBeInTheDocument();
+    expect(screen.getByRole("alert")).toBeInTheDocument();
+
+    errorSpy.mockRestore();
+  });
+
   it("does nothing when Clerk has not finished loading yet", async () => {
     useSignInMock.mockReturnValueOnce({
       isLoaded: false,

@@ -12,6 +12,7 @@
 import { useSignIn } from "@clerk/nextjs/legacy";
 import { useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
+import { useState } from "react";
 import { tid } from "shared";
 import { cn } from "ui";
 
@@ -47,11 +48,14 @@ export function SocialLoginButtons() {
   const locale = useLocale();
   const searchParams = useSearchParams();
   const { isLoaded, signIn } = useSignIn();
+  const [error, setError] = useState<string | null>(null);
 
   const returnTo = searchParams.get("returnTo") ?? `/${locale}/profile`;
 
   const handleSignIn = async (strategy: `oauth_${Provider}`) => {
     if (!isLoaded || !signIn) return;
+
+    setError(null);
 
     try {
       await signIn.authenticateWithRedirect({
@@ -59,8 +63,15 @@ export function SocialLoginButtons() {
         redirectUrl: `/${locale}/sso-callback`,
         redirectUrlComplete: `/${locale}/callback?next=${encodeURIComponent(returnTo)}`,
       });
-    } catch {
-      // Network error or popup blocked — silently ignore, provider redirects on success
+    } catch (error_) {
+      // authenticateWithRedirect only rejects when the request never made it
+      // to the provider (misconfigured strategy, network failure, popup
+      // blocked) — a working redirect navigates the browser away and this
+      // code never runs. Silently swallowing this left the button looking
+      // inert with no signal anywhere, on the one path a locked-out
+      // customer needs to work. Log it and tell the person.
+      console.error(`[SocialLoginButtons] ${strategy} sign-in failed:`, error_);
+      setError(t("signInError"));
     }
   };
 
@@ -83,6 +94,15 @@ export function SocialLoginButtons() {
           {t(labelKey)}
         </button>
       ))}
+      {error && (
+        <p
+          role="alert"
+          className="text-sm text-destructive"
+          {...tid("login-error")}
+        >
+          {error}
+        </p>
+      )}
     </div>
   );
 }
