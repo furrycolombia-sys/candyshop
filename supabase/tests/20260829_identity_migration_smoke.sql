@@ -496,6 +496,8 @@ declare
   v_order record;
   v_logged_user_id uuid;
   v_event_id bigint;
+  v_prior_identity_sub text;
+  v_watermark bigint;
 begin
   select id, user_id, seller_note into v_order from public.orders limit 1;
 
@@ -504,18 +506,30 @@ begin
     return;
   end if;
 
+  -- Capture everything this block is about to touch, so it can be restored
+  -- exactly, not assumed. NULL is not a safe default: for identity_sub in
+  -- particular, restoring the wrong value would deny a real caller (NULL
+  -- denies, per the rls denial test above).
+  select identity_sub into v_prior_identity_sub
+  from public.user_profiles where id = v_order.user_id;
+
+  select coalesce(max(event_id), 0) into v_watermark from audit.logged_actions;
+
   -- A resolvable caller performs an audited write ...
   update public.user_profiles set identity_sub = 'user_audit_smoketest' where id = v_order.user_id;
   perform set_config('request.jwt.claims', '{"sub":"user_audit_smoketest"}', true);
-  update public.orders set seller_note = coalesce(seller_note, '') || ' ' where id = v_order.id;
+  update public.orders set seller_note = coalesce(v_order.seller_note, '') || ' ' where id = v_order.id;
 
   -- ... and the audit trail must attribute it, not silently drop to NULL
   -- (see Finding 3: audit.log_changes() used to swallow the auth.uid() cast
-  -- error and always write user_id = NULL).
+  -- error and always write user_id = NULL). Scope the lookup to rows created
+  -- by this block (event_id > watermark) rather than "most recent", so a
+  -- concurrent writer elsewhere can't produce a false pass.
   select event_id, user_id into v_event_id, v_logged_user_id
   from audit.logged_actions
-  where table_name = 'orders' and action_type = 'UPDATE'
-  order by action_timestamp desc
+  where event_id > v_watermark
+    and table_name = 'orders' and action_type = 'UPDATE'
+  order by event_id desc
   limit 1;
 
   assert v_logged_user_id is not null,
@@ -524,9 +538,14 @@ begin
   assert v_logged_user_id = v_order.user_id,
     format('FAIL: audit row attributed to %s, expected %s', v_logged_user_id, v_order.user_id);
 
-  -- Clean up: restore state and remove the row this test generated.
-  delete from audit.logged_actions where event_id = v_event_id;
-  update public.user_profiles set identity_sub = null where id = v_order.user_id;
+  -- Clean up: restore every value this block touched to exactly what it
+  -- found (not an assumed default), and remove every audit row this block
+  -- generated — the orders UPDATE, and the user_profiles UPDATE(s) above and
+  -- below — not just the one row a narrower cleanup would remember. This
+  -- block must leave the database byte-identical to how it found it.
+  update public.orders set seller_note = v_order.seller_note where id = v_order.id;
+  update public.user_profiles set identity_sub = v_prior_identity_sub where id = v_order.user_id;
+  delete from audit.logged_actions where event_id > v_watermark;
 
   raise notice 'audit attribution: OK';
 end $$;
