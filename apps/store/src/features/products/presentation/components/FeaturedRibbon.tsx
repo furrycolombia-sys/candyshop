@@ -155,7 +155,7 @@ export function FeaturedRibbon({
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    let ctx: CanvasRenderingContext2D | null = null;
+    let ctx: CanvasRenderingContext2D | null;
     try {
       ctx = canvas.getContext(
         // eslint-disable-next-line i18next/no-literal-string -- HTML canvas API context identifier

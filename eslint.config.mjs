@@ -1,3 +1,4 @@
+import js from "@eslint/js";
 import { defineConfig, globalIgnores } from "eslint/config";
 import nextVitals from "eslint-config-next/core-web-vitals";
 import nextTs from "eslint-config-next/typescript";
@@ -22,6 +23,17 @@ const sonarRules = sonarjs.configs.recommended.rules;
 const unicornRules = unicorn.configs["flat/recommended"].rules;
 
 const eslintConfig = defineConfig([
+  // ESLint's own core correctness rules. These were never composed here, so 41
+  // rules that catch real defects (no-unsafe-finally, no-dupe-keys,
+  // no-unreachable, ...) were simply absent. Scoped to source, matching how the
+  // other recommended sets below are scoped.
+  {
+    files: [
+      `${APP_SRC}/**/*.{ts,tsx,js,jsx}`,
+      `${PKG_SRC}/**/*.{ts,tsx,js,jsx}`,
+    ],
+    ...js.configs.recommended,
+  },
   ...nextVitals,
   ...nextTs,
   i18next.configs["flat/recommended"],
