@@ -267,3 +267,29 @@ knows where those screens are heading.
 
 The Excel exporters are the strongest candidate: three copies of worksheet
 construction is knowledge duplication, not coincidence.
+
+---
+
+## CI's change filter had holes
+
+`ci.yml` skips the quality, unit-test, build and E2E jobs for docs-only PRs,
+decided by a path filter. The filter listed some tool configs and not others,
+so a change to an unlisted one was treated as documentation and went
+completely unverified.
+
+This was found the way these things should be: the PR that edited
+`.jscpd.json` had every check skipped.
+
+Added to the filter: `.jscpd.json`, `.secretlintrc.*`, `.secretlintignore`,
+`.syncpackrc.*`, `pnpm-workspace.yaml`, `.npmrc`, `.nvmrc`, `orval.config.*`,
+`.prettierrc*`, `.prettierignore`, `.gitattributes`, `.env.ci`, `.husky/**`
+and `config/**`.
+
+Two of those matter beyond tidiness. `pnpm-workspace.yaml` defines which
+workspaces exist, so adding or removing one would have skipped CI entirely.
+`.secretlintrc.*` and `.secretlintignore` configure secret scanning: weakening
+them was a docs-only change.
+
+If you add a root-level config file, add it to **both** the `tooling` and
+`code` filters in `.github/workflows/ci.yml`. A config that changes behaviour
+but not the filter is invisible to CI.
