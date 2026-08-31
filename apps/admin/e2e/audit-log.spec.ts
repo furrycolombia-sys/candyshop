@@ -37,9 +37,7 @@ test.describe.serial("Audit Log page", () => {
 
   test("loads audit log page without errors", async ({ context, page }) => {
     await injectSession(context, adminUser);
-    await page.goto(`${getAdminBaseUrl()}/en/audit`, {
-      waitUntil: "networkidle",
-    });
+    await page.goto(`${getAdminBaseUrl()}/en/audit`, {});
 
     await expect(page.getByTestId("audit-log-page")).toBeVisible({
       timeout: ELEMENT_TIMEOUT_MS,
@@ -51,9 +49,7 @@ test.describe.serial("Audit Log page", () => {
 
   test("shows filters bar", async ({ context, page }) => {
     await injectSession(context, adminUser);
-    await page.goto(`${getAdminBaseUrl()}/en/audit`, {
-      waitUntil: "networkidle",
-    });
+    await page.goto(`${getAdminBaseUrl()}/en/audit`, {});
 
     await expect(page.getByTestId("audit-filters")).toBeVisible({
       timeout: ELEMENT_TIMEOUT_MS,
@@ -71,10 +67,20 @@ test.describe.serial("Audit Log page", () => {
     page,
   }) => {
     await injectSession(context, adminUser);
+    // Kept deliberately. The assertion below is negative -- it checks that
+    // something is NOT there. Without a settle window it would pass simply
+    // because the page had not rendered yet, which is a false pass rather
+    // than a flake. Only a positive, retrying assertion makes a wait
+    // redundant.
     await page.goto(`${getAdminBaseUrl()}/en/audit`, {
       waitUntil: "networkidle",
     });
 
+    // Kept deliberately. The assertion below is negative -- it checks that
+    // something is NOT there. Without a settle window it would pass simply
+    // because the page had not rendered yet, which is a false pass rather
+    // than a flake. Only a positive, retrying assertion makes a wait
+    // redundant.
     await page.waitForTimeout(MUTATION_WAIT_MS);
 
     // The error state must NOT be visible (which would indicate a 406 or network error)
@@ -93,9 +99,7 @@ test.describe.serial("Audit Log page", () => {
     page,
   }) => {
     await injectSession(context, adminUser);
-    await page.goto(`${getAdminBaseUrl()}/en/audit`, {
-      waitUntil: "networkidle",
-    });
+    await page.goto(`${getAdminBaseUrl()}/en/audit`, {});
 
     await expect(page.getByTestId("audit-filters")).toBeVisible({
       timeout: ELEMENT_TIMEOUT_MS,
@@ -103,6 +107,11 @@ test.describe.serial("Audit Log page", () => {
 
     // Click INSERT filter
     await page.getByTestId("audit-filter-insert").click();
+    // Kept deliberately. The assertion below is negative -- it checks that
+    // something is NOT there. Without a settle window it would pass simply
+    // because the page had not rendered yet, which is a false pass rather
+    // than a flake. Only a positive, retrying assertion makes a wait
+    // redundant.
     await page.waitForTimeout(MUTATION_WAIT_MS);
 
     // Error state must not appear after filtering
@@ -110,6 +119,11 @@ test.describe.serial("Audit Log page", () => {
 
     // Reset to all
     await page.getByTestId("audit-filter-all").click();
+    // Kept deliberately. The assertion below is negative -- it checks that
+    // something is NOT there. Without a settle window it would pass simply
+    // because the page had not rendered yet, which is a false pass rather
+    // than a flake. Only a positive, retrying assertion makes a wait
+    // redundant.
     await page.waitForTimeout(MUTATION_WAIT_MS);
 
     await expect(page.getByTestId("audit-error")).toBeHidden();
@@ -120,11 +134,7 @@ test.describe.serial("Audit Log page", () => {
     page,
   }) => {
     await injectSession(context, adminUser);
-    await page.goto(`${getAdminBaseUrl()}/en/audit`, {
-      waitUntil: "networkidle",
-    });
-
-    await page.waitForTimeout(MUTATION_WAIT_MS);
+    await page.goto(`${getAdminBaseUrl()}/en/audit`, {});
 
     const tableSelect = page.getByTestId("audit-filter-table");
     await expect(tableSelect).toBeVisible({ timeout: ELEMENT_TIMEOUT_MS });
@@ -146,6 +156,11 @@ test.describe.serial("Audit Log page", () => {
 
     try {
       await injectSession(context, limitedUser);
+      // Kept deliberately. The assertion below is negative -- it checks that
+      // something is NOT there. Without a settle window it would pass simply
+      // because the page had not rendered yet, which is a false pass rather
+      // than a flake. Only a positive, retrying assertion makes a wait
+      // redundant.
       await page.goto(`${getAdminBaseUrl()}/en/audit`, {
         waitUntil: "networkidle",
       });
