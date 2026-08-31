@@ -202,6 +202,7 @@ test.describe.serial("Studio UX Improvements", { tag: "@ux" }, () => {
     // The cover image should be the second image URL (the one we set as cover)
     const imgSrc = await rowImage.getAttribute("src");
     // Next.js Image component uses /_next/image?url=... so we check the row has an image
+    // eslint-disable-next-line playwright/prefer-web-first-assertions -- compares two values captured at different times, which toHaveAttribute cannot express
     expect(imgSrc).toBeTruthy();
     await snap(page, "cover-image-in-table-row");
   });

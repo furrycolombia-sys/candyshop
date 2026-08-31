@@ -54,19 +54,39 @@ that trains people to ignore it — and would hide the first real case.
 Proved it fires: an assertion-free spec is rejected as an error, and the same
 file named `*.setup.ts` is correctly exempt.
 
-Two more rules were driven to zero and promoted on 2026-08-30:
-`no-useless-not` (19 reported, 25 sites) and
-`consistent-spacing-between-blocks` (1).
+Six rules have now been driven to zero and promoted to error:
 
-Promoting them needed an explicit `"error"`. The recommended set ships both as
-warnings, so removing them from the staged list left them as warnings and the
-promotion silently did nothing -- caught only by planting a violation and
-watching it fail to error. That is the whole reason this document asks you to
-prove a gate can fail.
+| Rule                                | Sites                     | What it catches                                                                              |
+| ----------------------------------- | ------------------------- | -------------------------------------------------------------------------------------------- |
+| `expect-expect`                     | 0 real                    | a test that asserts nothing                                                                  |
+| `no-conditional-expect`             | 5                         | an assertion that may never run                                                              |
+| `no-force-option`                   | 4                         | a click that skips actionability -- it passed even if a real buyer could not open their cart |
+| `no-useless-not`                    | 25                        | `not.toBeVisible()` where `toBeHidden()` says it positively                                  |
+| `prefer-web-first-assertions`       | 15, all exempted in place | `expect(await x.isVisible()).toBe(true)` instead of a retrying assertion                     |
+| `consistent-spacing-between-blocks` | 1                         | formatting                                                                                   |
 
-The remaining rules are staged as warnings with their counts recorded in
-`eslint.config.mjs`, to be driven to zero and promoted one at a time. Do not
-run `eslint --fix` blindly over them: `prefer-web-first-assertions` rewrote
+Two of those needed care.
+
+**Promoting a rule needs an explicit `"error"`.** The recommended set ships
+several as warnings, so removing one from the staged list leaves it a warning
+and the promotion silently does nothing. That was caught only by planting a
+violation and watching it fail to error -- which is the whole reason this
+document asks you to prove a gate can fail.
+
+**`prefer-web-first-assertions` is armed but exempted 15 times.** Every hit in
+this suite compares a value captured earlier against one captured later --
+"this block's testid now equals the one that block had before the drag" --
+which `toHaveAttribute` cannot express. Each site carries an
+`eslint-disable-next-line` with that reason, rather than the rule being turned
+off, so the genuine pattern is still caught. This is the rule whose `--fix`
+rewrote `const href = await link.getAttribute("href")` into
+`const href = link`.
+
+Four rules remain staged as warnings with their counts recorded in
+`eslint.config.mjs` -- `no-networkidle` (117), `no-wait-for-timeout` (93),
+`no-conditional-in-test` (26) and `no-skipped-test` (5). Each needs per-site
+judgement about what to wait for instead, so they are driven to zero one at a
+time. Do not run `eslint --fix` blindly over them: `prefer-web-first-assertions` rewrote
 `const href = await link.getAttribute("href")` into `const href = link`,
 silently turning a string into a Locator and breaking three assertions below
 it. Typecheck caught it. Review every hunk.

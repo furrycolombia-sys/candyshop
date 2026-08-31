@@ -396,7 +396,9 @@ test.describe.serial(
       const newFirstRowId = await rows.first().getAttribute("data-testid");
       const newSecondRowId = await rows.nth(1).getAttribute("data-testid");
 
+      // eslint-disable-next-line playwright/prefer-web-first-assertions -- compares two values captured at different times, which toHaveAttribute cannot express
       expect(newFirstRowId).toBe(secondRowId);
+      // eslint-disable-next-line playwright/prefer-web-first-assertions -- compares two values captured at different times, which toHaveAttribute cannot express
       expect(newSecondRowId).toBe(firstRowId);
     });
 
@@ -585,6 +587,7 @@ test.describe.serial(
         .locator("img")
         .first()
         .getAttribute("src");
+      // eslint-disable-next-line playwright/prefer-web-first-assertions -- compares two values captured at different times, which toHaveAttribute cannot express
       expect(srcBefore0).not.toBe(srcBefore1); // sanity: different images
 
       await snap(page, "carousel-before-reorder");
@@ -609,7 +612,9 @@ test.describe.serial(
         .locator("img")
         .first()
         .getAttribute("src");
+      // eslint-disable-next-line playwright/prefer-web-first-assertions -- compares two values captured at different times, which toHaveAttribute cannot express
       expect(srcAfter0).toBe(srcBefore1);
+      // eslint-disable-next-line playwright/prefer-web-first-assertions -- compares two values captured at different times, which toHaveAttribute cannot express
       expect(srcAfter1).toBe(srcBefore0);
 
       // Save and return to list
@@ -641,7 +646,9 @@ test.describe.serial(
         .getAttribute("src");
 
       // After reload, position 0 should still show the image that was originally at position 1
+      // eslint-disable-next-line playwright/prefer-web-first-assertions -- compares two values captured at different times, which toHaveAttribute cannot express
       expect(srcReload0).toBe(srcBefore1);
+      // eslint-disable-next-line playwright/prefer-web-first-assertions -- compares two values captured at different times, which toHaveAttribute cannot express
       expect(srcReload1).toBe(srcBefore0);
     });
   },

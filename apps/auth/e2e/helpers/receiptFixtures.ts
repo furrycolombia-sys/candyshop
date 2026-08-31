@@ -115,6 +115,7 @@ export async function verifyReceiptLinkResolves(
   await expect(receiptLink).toBeVisible({ timeout: ELEMENT_TIMEOUT_MS });
 
   const href = await receiptLink.getAttribute("href");
+  // eslint-disable-next-line playwright/prefer-web-first-assertions -- compares two values captured at different times, which toHaveAttribute cannot express
   expect(href).toBeTruthy();
   expect(href).toMatch(/^https?:\/\//);
   expect(href).toContain(
