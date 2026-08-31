@@ -82,7 +82,24 @@ off, so the genuine pattern is still caught. This is the rule whose `--fix`
 rewrote `const href = await link.getAttribute("href")` into
 `const href = link`.
 
-Four rules remain staged as warnings with their counts recorded in
+`no-conditional-in-test` was promoted the same way, and found three tests that
+could not fail for the thing they were named after:
+
+- `smoke-all-apps` "all apps load": an unreachable app was logged and
+  `continue`d, so with every app down the test still passed.
+- `smoke-all-apps` "all apps load **without errors**": page errors were
+  collected and then only `console.log`ged. It passed while an app threw on
+  load -- the single thing it exists to catch.
+- `product-detail-seller-card`: a bare `test.skip()` when the fixture data was
+  missing, which reported nothing. It is now an annotated skip that says what
+  went unverified.
+
+Its remaining sites are exempted where a conditional is honest: Playwright
+setup/teardown projects (fixture work is branchy by nature), the manual-only
+OAuth harnesses (a hosted sign-in shows different screens by session state),
+and idempotent form setup inside a serial flow.
+
+Two rules remain staged as warnings with their counts recorded in
 `eslint.config.mjs` -- `no-networkidle` (117), `no-wait-for-timeout` (93),
 `no-conditional-in-test` (26) and `no-skipped-test` (5). Each needs per-site
 judgement about what to wait for instead, so they are driven to zero one at a

@@ -76,21 +76,24 @@ test.describe("Smoke test -- all apps", () => {
     for (const [appName, url] of Object.entries(APPS)) {
       const response = await page.goto(`${url}/en`).catch(() => null);
 
-      if (!response || response.status() >= 400) {
-        console.log(`[smoke] ${appName} not reachable at ${url} -- skipped`);
-        continue;
-      }
+      // This used to log "not reachable -- skipped" and `continue`, so a smoke
+      // test whose whole purpose is "every app loads" stayed green with every
+      // app down. An app that does not respond is the failure.
+      expect(response, `${appName} did not respond at ${url}`).not.toBeNull();
+      expect(
+        response?.status() ?? 0,
+        `${appName} returned ${response?.status()} at ${url}`,
+      ).toBeLessThan(400);
 
       await page.waitForLoadState("networkidle");
 
       // Verify we actually landed on the app and didn't get redirected
       // to a login page (which would mean the session didn't carry over)
       const currentUrl = page.url();
-      if (currentUrl.includes("/login")) {
-        throw new Error(
-          `[smoke] ${appName} redirected to login -- session not persisted: ${currentUrl}`,
-        );
-      }
+      expect(
+        currentUrl,
+        `${appName} redirected to login -- session not persisted`,
+      ).not.toContain("/login");
 
       // This is the assertion the test exists for: the session injected once
       // must be visible in every app's navbar. It used to be wrapped in
@@ -115,13 +118,10 @@ test.describe("Smoke test -- all apps", () => {
 
       const response = await page.goto(`${url}/en`).catch(() => null);
 
-      if (!response) {
-        console.log(`[smoke] ${appName} not reachable at ${url}`);
-        continue;
-      }
+      expect(response, `${appName} did not respond at ${url}`).not.toBeNull();
 
       await page.waitForLoadState("networkidle");
-      const status = response.status();
+      const status = response?.status() ?? 0;
 
       expect(
         status,
@@ -131,11 +131,12 @@ test.describe("Smoke test -- all apps", () => {
       const nav = page.getByTestId("app-navigation");
       await expect(nav).toBeVisible();
 
-      if (errors.length > 0) {
-        console.log(`[smoke] ${appName} has JS errors:`, errors.slice(0, 3));
-      } else {
-        console.log(`[smoke] ${appName} (${url}) -- loads OK`);
-      }
+      // The test is called "all apps load without errors". It used to collect
+      // page errors and then only log them, so it passed while an app threw on
+      // load -- the single thing it exists to catch.
+      expect(errors, `${appName} threw on load: ${errors.join(" | ")}`).toEqual(
+        [],
+      );
     }
   });
 });
