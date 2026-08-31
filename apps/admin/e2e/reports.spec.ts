@@ -1,7 +1,6 @@
 import { expect, test } from "@playwright/test";
 
 import {
-  DEBOUNCE_WAIT_MS,
   ELEMENT_TIMEOUT_MS,
   MUTATION_WAIT_MS,
 } from "../../auth/e2e/helpers/constants";
@@ -128,9 +127,7 @@ test.describe.serial("Reports page", () => {
     page,
   }) => {
     await injectSession(context, adminUser);
-    await page.goto(`${getAdminBaseUrl()}/en/reports`, {
-      waitUntil: "networkidle",
-    });
+    await page.goto(`${getAdminBaseUrl()}/en/reports`);
 
     await expect(page.getByTestId("reports-page")).toBeVisible({
       timeout: ELEMENT_TIMEOUT_MS,
@@ -145,9 +142,7 @@ test.describe.serial("Reports page", () => {
 
   test("shows the orders table once data loads", async ({ context, page }) => {
     await injectSession(context, adminUser);
-    await page.goto(`${getAdminBaseUrl()}/en/reports`, {
-      waitUntil: "networkidle",
-    });
+    await page.goto(`${getAdminBaseUrl()}/en/reports`);
 
     await expect(page.getByTestId("report-table")).toBeVisible({
       timeout: ELEMENT_TIMEOUT_MS,
@@ -166,9 +161,7 @@ test.describe.serial("Reports page", () => {
     page,
   }) => {
     await injectSession(context, adminUser);
-    await page.goto(`${getAdminBaseUrl()}/en/reports`, {
-      waitUntil: "networkidle",
-    });
+    await page.goto(`${getAdminBaseUrl()}/en/reports`);
 
     await expect(page.getByTestId("reports-filters-bar")).toBeVisible({
       timeout: ELEMENT_TIMEOUT_MS,
@@ -177,10 +170,10 @@ test.describe.serial("Reports page", () => {
     const statusSelect = page.getByTestId("reports-filter-status");
     await statusSelect.selectOption("approved");
 
-    await page.waitForTimeout(DEBOUNCE_WAIT_MS);
-
-    const url = new URL(page.url());
-    expect(url.searchParams.get("status")).toBe("approved");
+    // toHaveURL retries; reading page.url() once does not. The filter is
+    // debounced, so a one-shot read raced the update as soon as the sleep that
+    // used to precede it was removed.
+    await expect(page).toHaveURL(/[?&]status=approved(&|$)/);
   });
 
   test("date range filters update URL query params", async ({
@@ -188,9 +181,7 @@ test.describe.serial("Reports page", () => {
     page,
   }) => {
     await injectSession(context, adminUser);
-    await page.goto(`${getAdminBaseUrl()}/en/reports`, {
-      waitUntil: "networkidle",
-    });
+    await page.goto(`${getAdminBaseUrl()}/en/reports`);
 
     await expect(page.getByTestId("reports-filters-bar")).toBeVisible({
       timeout: ELEMENT_TIMEOUT_MS,
@@ -199,11 +190,8 @@ test.describe.serial("Reports page", () => {
     await page.getByTestId("reports-filter-date-from").fill("2024-01-01");
     await page.getByTestId("reports-filter-date-to").fill("2099-12-31");
 
-    await page.waitForTimeout(DEBOUNCE_WAIT_MS);
-
-    const url = new URL(page.url());
-    expect(url.searchParams.get("dateFrom")).toBe("2024-01-01");
-    expect(url.searchParams.get("dateTo")).toBe("2099-12-31");
+    await expect(page).toHaveURL(/[?&]dateFrom=2024-01-01(&|$)/);
+    await expect(page).toHaveURL(/[?&]dateTo=2099-12-31(&|$)/);
   });
 
   test("amount min/max filters update URL query params", async ({
@@ -211,9 +199,7 @@ test.describe.serial("Reports page", () => {
     page,
   }) => {
     await injectSession(context, adminUser);
-    await page.goto(`${getAdminBaseUrl()}/en/reports`, {
-      waitUntil: "networkidle",
-    });
+    await page.goto(`${getAdminBaseUrl()}/en/reports`);
 
     await expect(page.getByTestId("reports-filters-bar")).toBeVisible({
       timeout: ELEMENT_TIMEOUT_MS,
@@ -222,18 +208,14 @@ test.describe.serial("Reports page", () => {
     await page.getByTestId("reports-filter-amount-min").fill("1000");
     await page.getByTestId("reports-filter-amount-max").fill("999999");
 
-    await page.waitForTimeout(DEBOUNCE_WAIT_MS);
-
-    const url = new URL(page.url());
-    expect(url.searchParams.get("amountMin")).toBe("1000");
-    expect(url.searchParams.get("amountMax")).toBe("999999");
+    await expect(page).toHaveURL(/[?&]amountMin=1000(&|$)/);
+    await expect(page).toHaveURL(/[?&]amountMax=999999(&|$)/);
   });
 
   test("clear button removes all active filters", async ({ context, page }) => {
     await injectSession(context, adminUser);
     await page.goto(
       `${getAdminBaseUrl()}/en/reports?status=approved&amountMin=100`,
-      { waitUntil: "networkidle" },
     );
 
     await expect(page.getByTestId("reports-filters-bar")).toBeVisible({
@@ -245,11 +227,11 @@ test.describe.serial("Reports page", () => {
     });
 
     await page.getByTestId("reports-filter-clear").click();
-    await page.waitForTimeout(DEBOUNCE_WAIT_MS);
 
-    const url = new URL(page.url());
-    expect(url.searchParams.get("status")).toBeNull();
-    expect(url.searchParams.get("amountMin")).toBeNull();
+    // Both params must be gone. toHaveURL retries, so this waits for the
+    // clear to land rather than sampling the URL once.
+    await expect(page).not.toHaveURL(/[?&]status=/);
+    await expect(page).not.toHaveURL(/[?&]amountMin=/);
   });
 
   test("URL filter params are respected on page load", async ({
@@ -257,9 +239,7 @@ test.describe.serial("Reports page", () => {
     page,
   }) => {
     await injectSession(context, adminUser);
-    await page.goto(`${getAdminBaseUrl()}/en/reports?status=approved`, {
-      waitUntil: "networkidle",
-    });
+    await page.goto(`${getAdminBaseUrl()}/en/reports?status=approved`);
 
     await expect(page.getByTestId("reports-filters-bar")).toBeVisible({
       timeout: ELEMENT_TIMEOUT_MS,
@@ -273,9 +253,7 @@ test.describe.serial("Reports page", () => {
 
   test("shows the seeded order in the table", async ({ context, page }) => {
     await injectSession(context, adminUser);
-    await page.goto(`${getAdminBaseUrl()}/en/reports?status=approved`, {
-      waitUntil: "networkidle",
-    });
+    await page.goto(`${getAdminBaseUrl()}/en/reports?status=approved`);
 
     await expect(page.getByTestId("report-table")).toBeVisible({
       timeout: ELEMENT_TIMEOUT_MS,
@@ -294,9 +272,7 @@ test.describe.serial("Reports page", () => {
     page,
   }) => {
     await injectSession(context, adminUser);
-    await page.goto(`${getAdminBaseUrl()}/en/reports?status=approved`, {
-      waitUntil: "networkidle",
-    });
+    await page.goto(`${getAdminBaseUrl()}/en/reports?status=approved`);
 
     await expect(page.getByTestId("report-table")).toBeVisible({
       timeout: ELEMENT_TIMEOUT_MS,
@@ -313,11 +289,7 @@ test.describe.serial("Reports page", () => {
     page,
   }) => {
     await injectSession(context, adminUser);
-    await page.goto(`${getAdminBaseUrl()}/en/reports?status=pending`, {
-      waitUntil: "networkidle",
-    });
-
-    await page.waitForTimeout(MUTATION_WAIT_MS);
+    await page.goto(`${getAdminBaseUrl()}/en/reports?status=pending`);
 
     // Transfer number should not be visible under pending filter
     await expect(
@@ -337,10 +309,7 @@ test.describe.serial("Reports page", () => {
     // Use a filter that will return no results
     await page.goto(
       `${getAdminBaseUrl()}/en/reports?status=pending&amountMin=9999999`,
-      { waitUntil: "networkidle" },
     );
-
-    await page.waitForTimeout(MUTATION_WAIT_MS);
 
     const exportButton = page.getByTestId("reports-export-button");
     await expect(exportButton).toBeVisible({ timeout: ELEMENT_TIMEOUT_MS });
@@ -349,9 +318,7 @@ test.describe.serial("Reports page", () => {
 
   test("export button downloads an XLS file", async ({ context, page }) => {
     await injectSession(context, adminUser);
-    await page.goto(`${getAdminBaseUrl()}/en/reports?status=approved`, {
-      waitUntil: "networkidle",
-    });
+    await page.goto(`${getAdminBaseUrl()}/en/reports?status=approved`);
 
     await expect(page.getByTestId("report-table")).toBeVisible({
       timeout: ELEMENT_TIMEOUT_MS,
@@ -380,6 +347,11 @@ test.describe.serial("Reports page", () => {
 
     try {
       await injectSession(context, limitedUser);
+      // Kept deliberately. The assertion below is negative -- it checks that
+      // something is NOT there. Without a settle window it would pass simply
+      // because the page had not rendered yet, which is a false pass rather
+      // than a flake. Only a positive, retrying assertion makes a wait
+      // redundant.
       await page.goto(`${getAdminBaseUrl()}/en/reports`, {
         waitUntil: "networkidle",
       });

@@ -46,6 +46,7 @@ const playwrightConfig = {
     "playwright/no-useless-not": "error",
     "playwright/no-conditional-expect": "error",
     "playwright/no-force-option": "error",
+    "playwright/no-conditional-in-test": "error",
     // prefer-web-first-assertions is an error, but every one of the suite's 15
     // hits is exempted in place. All 15 compare a value captured earlier
     // against one captured later -- "this block's testid now equals the one
@@ -67,7 +68,6 @@ const playwrightConfig = {
     // the three assertions below it. Typecheck caught it; review every hunk.
     "playwright/no-networkidle": "warn", // 118 — waits on a heuristic, not a condition
     "playwright/no-wait-for-timeout": "warn", // 96 — the main flakiness source
-    "playwright/no-conditional-in-test": "warn", // 31
     // expect-expect is an ERROR, not a warning: a test that asserts nothing
     // passes no matter how the product behaves, so it is the one defect a test
     // suite cannot detect on its own. It reported 11 violations before this
@@ -104,6 +104,10 @@ const playwrightSetupConfig = {
   ],
   rules: {
     "playwright/expect-expect": "off",
+    // Fixture work is branchy by nature: skip the teardown when there is no
+    // state file, bail when a key is absent. Those are not a test taking
+    // different paths on different runs.
+    "playwright/no-conditional-in-test": "off",
   },
 };
 

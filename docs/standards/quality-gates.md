@@ -82,7 +82,24 @@ off, so the genuine pattern is still caught. This is the rule whose `--fix`
 rewrote `const href = await link.getAttribute("href")` into
 `const href = link`.
 
-Four rules remain staged as warnings with their counts recorded in
+`no-conditional-in-test` was promoted the same way, and found three tests that
+could not fail for the thing they were named after:
+
+- `smoke-all-apps` "all apps load": an unreachable app was logged and
+  `continue`d, so with every app down the test still passed.
+- `smoke-all-apps` "all apps load **without errors**": page errors were
+  collected and then only `console.log`ged. It passed while an app threw on
+  load -- the single thing it exists to catch.
+- `product-detail-seller-card`: a bare `test.skip()` when the fixture data was
+  missing, which reported nothing. It is now an annotated skip that says what
+  went unverified.
+
+Its remaining sites are exempted where a conditional is honest: Playwright
+setup/teardown projects (fixture work is branchy by nature), the manual-only
+OAuth harnesses (a hosted sign-in shows different screens by session state),
+and idempotent form setup inside a serial flow.
+
+Two rules remain staged as warnings with their counts recorded in
 `eslint.config.mjs` -- `no-networkidle` (117), `no-wait-for-timeout` (93),
 `no-conditional-in-test` (26) and `no-skipped-test` (5). Each needs per-site
 judgement about what to wait for instead, so they are driven to zero one at a
@@ -411,3 +428,77 @@ either.
 `edited` is now in the trigger list. `changes`, `security` and `summary` opt
 out of it, so fixing a typo does not re-run an audit or rewrite the summary
 comment.
+
+---
+
+## The timing rules: the rule that makes a wait removable
+
+`no-networkidle` (117) and `no-wait-for-timeout` (93) are being driven down per
+app rather than in bulk, for the reason recorded above: the failure mode is
+intermittent, and one green pipeline does not disprove it.
+
+`admin` is done — 29 sites to 6. What made it safe is a single distinction,
+and it is not "does an assertion follow":
+
+**A wait is redundant only before a _positive_ assertion.** `expect(x)
+.toBeVisible()` retries until the thing appears, so whatever the wait was
+buying, the assertion buys again.
+
+**A wait before a _negative_ assertion is load-bearing.**
+`expect(x).toBeHidden()`, `not.toContain`, `toHaveCount(0)` all pass when the
+page has not rendered yet. Remove the settle window and the test does not
+become flaky — it becomes a **false pass**, which is worse, because nothing
+ever goes red to tell you.
+
+The first pass over `admin` missed this and removed the wait in front of five
+negative assertions. The diff was re-read, reverted, and redone with the check
+built into the transform. The six waits that remain are annotated in place with
+why.
+
+CI then caught a second half of the rule that the first version missed, and
+it is the more subtle one.
+
+**The assertion has to _retry_, not merely be positive.**
+`expect(url.searchParams.get("status")).toBe("approved")` is a positive
+assertion, but it reads `page.url()` once. It never retries. Two admin filter
+tests are debounced, so removing the sleep in front of a one-shot read raced
+the update and they failed — exactly the intermittent failure this ratchet is
+being paced to avoid, surfaced by doing one app at a time.
+
+The fix was not to put the sleep back. `await expect(page).toHaveURL(...)`
+retries, so the wait stays gone and the assertion is robust on top. Four
+one-shot URL reads in that file are now retrying assertions.
+
+So the full rule is: **a wait is redundant only in front of a positive,
+retrying assertion.** A Playwright web-first matcher (`toBeVisible`,
+`toHaveURL`, `toHaveText`) retries. A plain `expect()` over a value you already
+read does not.
+
+Apply that to `payments` (31) and `auth` (149).
+
+---
+
+## Found by arming a gate: landing throws on load
+
+Making `smoke-all-apps` able to fail immediately turned up a real defect.
+`landing` throws **React error #418** on load — the server-rendered text did
+not match the client's, so React discards the server HTML and re-renders. It
+reproduced across all three CI attempts.
+
+It is not new. The old version of that test collected page errors and
+`console.log`ged them, so this had been happening for as long as anyone had
+been not-reading the logs.
+
+It is not fixed yet, and the reason is worth stating: the cause is not proven.
+The obvious suspect is `useCurrentUserPermissions`, whose `useState`
+initializer prefers `readPermCache()` — a browser cookie the server cannot
+read — over the `initialGrantedKeys` the server rendered with. That is a
+textbook hydration mismatch. But `landing`'s layout passes
+`initialGrantedKeys` exactly as the other apps do, and only `landing` fails,
+so that explanation is incomplete. Confirming it needs the app running
+locally.
+
+Meanwhile the other six apps **are** checked, and `landing` has a `test.fixme`
+that names the error. `fixme` reports as a known failure rather than a skip,
+so it stays visible in every run instead of turning green by omission. Delete
+it, and the `KNOWN_FAILING_APP` exclusion, with the fix.
