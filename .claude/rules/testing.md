@@ -403,7 +403,20 @@ if (process.env.NEXT_PUBLIC_API_MOCKING === "enabled") {
 
 ## Accessibility Testing
 
-Automated accessibility testing using axe-core ensures WCAG compliance.
+Automated accessibility testing using axe-core.
+
+> **What actually exists today:** `vitest-axe` runs against the shared
+> components in `packages/ui` and `packages/app-components`. Those suites are
+> part of the normal unit-test run, so CI enforces them — there is no separate
+> accessibility job. The Playwright/`@axe-core/playwright` setup described
+> further down is **not** installed; treat it as the shape to follow when
+> adding page-level coverage, not as something already running. Same for the
+> visual regression section below it.
+>
+> When adding a component to either shared package, add it to that package's
+> `accessibility.test.tsx`. Both files include a test that deliberately fails
+> — an unlabelled input, an icon-only button — so the suite proves it can
+> still catch something.
 
 ### Unit Test Integration
 

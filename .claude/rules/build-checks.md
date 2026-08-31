@@ -188,10 +188,16 @@ jobs:
 jobs:
   branch-target: # Validates branch can target base
   pr-title: # Conventional commit format
+  changes: # Detects what the PR touches
   security: # pnpm audit
-  accessibility: # a11y tests (if configured)
-  visual-regression: # Visual tests (if configured)
+  summary: # Posts the PR summary comment
 ```
+
+> There is no separate `accessibility` or `visual-regression` job. Accessibility
+> is checked by axe inside the unit tests of `packages/ui` and
+> `packages/app-components`, so it runs as part of **Unit Tests**. Visual
+> regression is not set up at all. See
+> [Quality Gates](../../docs/standards/quality-gates.md).
 
 ---
 
