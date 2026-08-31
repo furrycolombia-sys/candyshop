@@ -107,7 +107,11 @@
   --secondary: oklch(0.16 0.02 300);
   --secondary-foreground: oklch(0.83 0.03 300);
   --muted: oklch(0.15 0.005 286);
-  --muted-foreground: oklch(0.57 0 0);
+  /* 0.57 measured 4.39:1 against the dark page as actually rendered -- below
+     AA. The token pair passed on its own because the rendered background is
+     composited and darker than --background alone, which a token-level check
+     cannot model. 0.61 gives 5.19:1 there and 5.47:1 against --background. */
+  --muted-foreground: oklch(0.61 0 0);
   --accent: oklch(0.83 0.14 162);
   --accent-foreground: oklch(0.09 0.005 286);
   --border: oklch(0.97 0 0);
