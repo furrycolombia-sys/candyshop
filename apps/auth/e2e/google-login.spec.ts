@@ -1,3 +1,9 @@
+/* eslint-disable playwright/no-conditional-in-test -- Google's hosted
+ * sign-in shows different screens depending on session state, and this spec
+ * has to walk whichever appears. It is a manual-only harness: the test is
+ * unconditionally skipped in CI because the provider blocks automated
+ * browsers, so these branches never run there. See
+ * docs/standards/quality-gates.md for what that leaves untested. */
 import * as path from "node:path";
 import { existsSync, readFileSync } from "node:fs";
 

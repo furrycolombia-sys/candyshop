@@ -127,6 +127,10 @@ test.describe.serial("Receipt + reference number payment flow", () => {
       state: "visible",
       timeout: ELEMENT_TIMEOUT_MS,
     });
+    // Idempotent setup: the checkbox may already be on from a previous
+    // phase in this serial flow. Reaching a known state is not the test
+    // branching on behaviour.
+    // eslint-disable-next-line playwright/no-conditional-in-test -- see above
     if (!(await requiresReceiptCheckbox.isChecked())) {
       await requiresReceiptCheckbox.click();
     }
@@ -136,6 +140,10 @@ test.describe.serial("Receipt + reference number payment flow", () => {
     const requiresTransferCheckbox = page.getByTestId(
       "payment-method-requires-transfer-number",
     );
+    // Idempotent setup: the checkbox may already be on from a previous
+    // phase in this serial flow. Reaching a known state is not the test
+    // branching on behaviour.
+    // eslint-disable-next-line playwright/no-conditional-in-test -- see above
     if (!(await requiresTransferCheckbox.isChecked())) {
       await requiresTransferCheckbox.click();
     }

@@ -201,10 +201,11 @@ test.describe.serial("admin users export with receipts backup", () => {
 
     const stream = await download.createReadStream();
     expect(stream).not.toBeNull();
-    if (!stream) return;
 
     const chunks: DownloadChunk[] = [];
-    for await (const chunk of stream) {
+    // The assertion above already failed the test if the stream is null; the
+    // `!` only tells the compiler that, and is erased at build.
+    for await (const chunk of stream!) {
       chunks.push(chunk as DownloadChunk);
     }
 

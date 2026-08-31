@@ -1,3 +1,9 @@
+/* eslint-disable playwright/no-conditional-in-test -- Discord's hosted
+ * sign-in shows different screens depending on session state, and this spec
+ * has to walk whichever appears. It is a manual-only harness: the test is
+ * unconditionally skipped in CI because the provider blocks automated
+ * browsers, so these branches never run there. See
+ * docs/standards/quality-gates.md for what that leaves untested. */
 import { type BrowserContext, chromium, expect, test } from "@playwright/test";
 import * as path from "node:path";
 

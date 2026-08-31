@@ -82,7 +82,24 @@ off, so the genuine pattern is still caught. This is the rule whose `--fix`
 rewrote `const href = await link.getAttribute("href")` into
 `const href = link`.
 
-Four rules remain staged as warnings with their counts recorded in
+`no-conditional-in-test` was promoted the same way, and found three tests that
+could not fail for the thing they were named after:
+
+- `smoke-all-apps` "all apps load": an unreachable app was logged and
+  `continue`d, so with every app down the test still passed.
+- `smoke-all-apps` "all apps load **without errors**": page errors were
+  collected and then only `console.log`ged. It passed while an app threw on
+  load -- the single thing it exists to catch.
+- `product-detail-seller-card`: a bare `test.skip()` when the fixture data was
+  missing, which reported nothing. It is now an annotated skip that says what
+  went unverified.
+
+Its remaining sites are exempted where a conditional is honest: Playwright
+setup/teardown projects (fixture work is branchy by nature), the manual-only
+OAuth harnesses (a hosted sign-in shows different screens by session state),
+and idempotent form setup inside a serial flow.
+
+Two rules remain staged as warnings with their counts recorded in
 `eslint.config.mjs` -- `no-networkidle` (117), `no-wait-for-timeout` (93),
 `no-conditional-in-test` (26) and `no-skipped-test` (5). Each needs per-site
 judgement about what to wait for instead, so they are driven to zero one at a
@@ -414,3 +431,30 @@ retrying assertion.** A Playwright web-first matcher (`toBeVisible`,
 read does not.
 
 Apply that to `payments` (31) and `auth` (149).
+
+---
+
+## Found by arming a gate: landing throws on load
+
+Making `smoke-all-apps` able to fail immediately turned up a real defect.
+`landing` throws **React error #418** on load — the server-rendered text did
+not match the client's, so React discards the server HTML and re-renders. It
+reproduced across all three CI attempts.
+
+It is not new. The old version of that test collected page errors and
+`console.log`ged them, so this had been happening for as long as anyone had
+been not-reading the logs.
+
+It is not fixed yet, and the reason is worth stating: the cause is not proven.
+The obvious suspect is `useCurrentUserPermissions`, whose `useState`
+initializer prefers `readPermCache()` — a browser cookie the server cannot
+read — over the `initialGrantedKeys` the server rendered with. That is a
+textbook hydration mismatch. But `landing`'s layout passes
+`initialGrantedKeys` exactly as the other apps do, and only `landing` fails,
+so that explanation is incomplete. Confirming it needs the app running
+locally.
+
+Meanwhile the other six apps **are** checked, and `landing` has a `test.fixme`
+that names the error. `fixme` reports as a known failure rather than a skip,
+so it stays visible in every run instead of turning green by omission. Delete
+it, and the `KNOWN_FAILING_APP` exclusion, with the fix.
