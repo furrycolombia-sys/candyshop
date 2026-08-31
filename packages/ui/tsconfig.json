@@ -7,7 +7,8 @@
     "paths": {
       "@ui/*": ["./src/*"],
       "@shared/*": ["../shared/src/*"]
-    }
+    },
+    "types": ["node"]
   },
   "include": ["src/**/*.ts", "src/**/*.tsx"],
   "exclude": ["node_modules", "dist"]
