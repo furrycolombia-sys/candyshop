@@ -367,20 +367,16 @@ test.describe.serial("Seller Reports page", () => {
     page,
   }) => {
     // No session injection
-    const response = await page.goto(`${getPaymentsBaseUrl()}/en/reports`, {
+    await page.goto(`${getPaymentsBaseUrl()}/en/reports`, {
       waitUntil: "networkidle",
     });
 
-    // Should redirect to login or return a non-200 status
-    const isOnReportsPage =
-      page.url().includes("/reports") && response?.status() === 200;
-    if (isOnReportsPage) {
-      // API call should fail with 401 and show error state
-      await page.waitForTimeout(MUTATION_WAIT_MS);
-      await expect(page.getByTestId("seller-report-table")).toBeHidden();
-    } else {
-      // Redirect happened — acceptable
-      expect(page.url()).not.toContain("/reports");
-    }
+    // The app may redirect to login or serve the page and fail the API with
+    // 401. Either is fine; an unauthenticated visitor must not see report data
+    // in either case, so assert that invariant directly instead of branching
+    // on which enforcement path ran.
+    await expect(page.getByTestId("seller-report-table")).toBeHidden({
+      timeout: ELEMENT_TIMEOUT_MS,
+    });
   });
 });

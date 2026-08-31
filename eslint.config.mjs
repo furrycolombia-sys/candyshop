@@ -44,6 +44,7 @@ const playwrightConfig = {
     // warnings, so dropping them from the staged list below is not enough --
     // verified by planting a violation and watching it fail.
     "playwright/no-useless-not": "error",
+    "playwright/no-conditional-expect": "error",
     "playwright/consistent-spacing-between-blocks": "error",
     //
     // The rules below have real violations today and are warnings with their
@@ -78,7 +79,6 @@ const playwrightConfig = {
         ],
       },
     ],
-    "playwright/no-conditional-expect": "warn", // 5
     "playwright/no-skipped-test": "warn", // 5
     "playwright/no-force-option": "warn", // 4
   },
