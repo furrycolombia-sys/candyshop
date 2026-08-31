@@ -127,7 +127,7 @@ test.describe.serial("Reports page", () => {
     page,
   }) => {
     await injectSession(context, adminUser);
-    await page.goto(`${getAdminBaseUrl()}/en/reports`, {});
+    await page.goto(`${getAdminBaseUrl()}/en/reports`);
 
     await expect(page.getByTestId("reports-page")).toBeVisible({
       timeout: ELEMENT_TIMEOUT_MS,
@@ -142,7 +142,7 @@ test.describe.serial("Reports page", () => {
 
   test("shows the orders table once data loads", async ({ context, page }) => {
     await injectSession(context, adminUser);
-    await page.goto(`${getAdminBaseUrl()}/en/reports`, {});
+    await page.goto(`${getAdminBaseUrl()}/en/reports`);
 
     await expect(page.getByTestId("report-table")).toBeVisible({
       timeout: ELEMENT_TIMEOUT_MS,
@@ -161,7 +161,7 @@ test.describe.serial("Reports page", () => {
     page,
   }) => {
     await injectSession(context, adminUser);
-    await page.goto(`${getAdminBaseUrl()}/en/reports`, {});
+    await page.goto(`${getAdminBaseUrl()}/en/reports`);
 
     await expect(page.getByTestId("reports-filters-bar")).toBeVisible({
       timeout: ELEMENT_TIMEOUT_MS,
@@ -170,8 +170,10 @@ test.describe.serial("Reports page", () => {
     const statusSelect = page.getByTestId("reports-filter-status");
     await statusSelect.selectOption("approved");
 
-    const url = new URL(page.url());
-    expect(url.searchParams.get("status")).toBe("approved");
+    // toHaveURL retries; reading page.url() once does not. The filter is
+    // debounced, so a one-shot read raced the update as soon as the sleep that
+    // used to precede it was removed.
+    await expect(page).toHaveURL(/[?&]status=approved/);
   });
 
   test("date range filters update URL query params", async ({
@@ -179,7 +181,7 @@ test.describe.serial("Reports page", () => {
     page,
   }) => {
     await injectSession(context, adminUser);
-    await page.goto(`${getAdminBaseUrl()}/en/reports`, {});
+    await page.goto(`${getAdminBaseUrl()}/en/reports`);
 
     await expect(page.getByTestId("reports-filters-bar")).toBeVisible({
       timeout: ELEMENT_TIMEOUT_MS,
@@ -188,9 +190,8 @@ test.describe.serial("Reports page", () => {
     await page.getByTestId("reports-filter-date-from").fill("2024-01-01");
     await page.getByTestId("reports-filter-date-to").fill("2099-12-31");
 
-    const url = new URL(page.url());
-    expect(url.searchParams.get("dateFrom")).toBe("2024-01-01");
-    expect(url.searchParams.get("dateTo")).toBe("2099-12-31");
+    await expect(page).toHaveURL(/[?&]dateFrom=2024-01-01/);
+    await expect(page).toHaveURL(/[?&]dateTo=2099-12-31/);
   });
 
   test("amount min/max filters update URL query params", async ({
@@ -198,7 +199,7 @@ test.describe.serial("Reports page", () => {
     page,
   }) => {
     await injectSession(context, adminUser);
-    await page.goto(`${getAdminBaseUrl()}/en/reports`, {});
+    await page.goto(`${getAdminBaseUrl()}/en/reports`);
 
     await expect(page.getByTestId("reports-filters-bar")).toBeVisible({
       timeout: ELEMENT_TIMEOUT_MS,
@@ -207,9 +208,8 @@ test.describe.serial("Reports page", () => {
     await page.getByTestId("reports-filter-amount-min").fill("1000");
     await page.getByTestId("reports-filter-amount-max").fill("999999");
 
-    const url = new URL(page.url());
-    expect(url.searchParams.get("amountMin")).toBe("1000");
-    expect(url.searchParams.get("amountMax")).toBe("999999");
+    await expect(page).toHaveURL(/[?&]amountMin=1000/);
+    await expect(page).toHaveURL(/[?&]amountMax=999999/);
   });
 
   test("clear button removes all active filters", async ({ context, page }) => {
@@ -228,9 +228,10 @@ test.describe.serial("Reports page", () => {
 
     await page.getByTestId("reports-filter-clear").click();
 
-    const url = new URL(page.url());
-    expect(url.searchParams.get("status")).toBeNull();
-    expect(url.searchParams.get("amountMin")).toBeNull();
+    // Both params must be gone. toHaveURL retries, so this waits for the
+    // clear to land rather than sampling the URL once.
+    await expect(page).not.toHaveURL(/[?&]status=/);
+    await expect(page).not.toHaveURL(/[?&]amountMin=/);
   });
 
   test("URL filter params are respected on page load", async ({
@@ -238,7 +239,7 @@ test.describe.serial("Reports page", () => {
     page,
   }) => {
     await injectSession(context, adminUser);
-    await page.goto(`${getAdminBaseUrl()}/en/reports?status=approved`, {});
+    await page.goto(`${getAdminBaseUrl()}/en/reports?status=approved`);
 
     await expect(page.getByTestId("reports-filters-bar")).toBeVisible({
       timeout: ELEMENT_TIMEOUT_MS,
@@ -252,7 +253,7 @@ test.describe.serial("Reports page", () => {
 
   test("shows the seeded order in the table", async ({ context, page }) => {
     await injectSession(context, adminUser);
-    await page.goto(`${getAdminBaseUrl()}/en/reports?status=approved`, {});
+    await page.goto(`${getAdminBaseUrl()}/en/reports?status=approved`);
 
     await expect(page.getByTestId("report-table")).toBeVisible({
       timeout: ELEMENT_TIMEOUT_MS,
@@ -271,7 +272,7 @@ test.describe.serial("Reports page", () => {
     page,
   }) => {
     await injectSession(context, adminUser);
-    await page.goto(`${getAdminBaseUrl()}/en/reports?status=approved`, {});
+    await page.goto(`${getAdminBaseUrl()}/en/reports?status=approved`);
 
     await expect(page.getByTestId("report-table")).toBeVisible({
       timeout: ELEMENT_TIMEOUT_MS,
@@ -288,7 +289,7 @@ test.describe.serial("Reports page", () => {
     page,
   }) => {
     await injectSession(context, adminUser);
-    await page.goto(`${getAdminBaseUrl()}/en/reports?status=pending`, {});
+    await page.goto(`${getAdminBaseUrl()}/en/reports?status=pending`);
 
     // Transfer number should not be visible under pending filter
     await expect(
@@ -317,7 +318,7 @@ test.describe.serial("Reports page", () => {
 
   test("export button downloads an XLS file", async ({ context, page }) => {
     await injectSession(context, adminUser);
-    await page.goto(`${getAdminBaseUrl()}/en/reports?status=approved`, {});
+    await page.goto(`${getAdminBaseUrl()}/en/reports?status=approved`);
 
     await expect(page.getByTestId("report-table")).toBeVisible({
       timeout: ELEMENT_TIMEOUT_MS,

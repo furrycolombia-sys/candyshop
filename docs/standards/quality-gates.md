@@ -394,4 +394,23 @@ negative assertions. The diff was re-read, reverted, and redone with the check
 built into the transform. The six waits that remain are annotated in place with
 why.
 
-Apply the same rule to `payments` (31) and `auth` (149).
+CI then caught a second half of the rule that the first version missed, and
+it is the more subtle one.
+
+**The assertion has to _retry_, not merely be positive.**
+`expect(url.searchParams.get("status")).toBe("approved")` is a positive
+assertion, but it reads `page.url()` once. It never retries. Two admin filter
+tests are debounced, so removing the sleep in front of a one-shot read raced
+the update and they failed — exactly the intermittent failure this ratchet is
+being paced to avoid, surfaced by doing one app at a time.
+
+The fix was not to put the sleep back. `await expect(page).toHaveURL(...)`
+retries, so the wait stays gone and the assertion is robust on top. Four
+one-shot URL reads in that file are now retrying assertions.
+
+So the full rule is: **a wait is redundant only in front of a positive,
+retrying assertion.** A Playwright web-first matcher (`toBeVisible`,
+`toHaveURL`, `toHaveText`) retries. A plain `expect()` over a value you already
+read does not.
+
+Apply that to `payments` (31) and `auth` (149).
