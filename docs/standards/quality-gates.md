@@ -230,3 +230,40 @@ and the failure mode for wait-condition changes is _intermittent_ flakiness,
 which one green CI run does not disprove. Rewriting 70 wait conditions on the
 strength of a single pipeline would trade a visible problem for an invisible
 one. Do these per app, with someone able to run the suite repeatedly.
+
+---
+
+## jscpd
+
+Configured, and still **not enforced in CI**, but its number is now honest.
+
+It reported 7.75% duplication against a 5% threshold. A chunk of that was the
+framework, not the codebase: Next.js requires `layout.tsx`, `error.tsx`,
+`global-error.tsx`, `not-found.tsx`, `loading.tsx` and `template.tsx` to exist
+as real files at specific paths in every app. Seven apps means seven
+near-identical copies of each, and they cannot be deduplicated -- the shared
+part is already extracted (`GlobalErrorFallback` lives in
+`packages/app-components`; what remains is the `"use client"` directive, a
+Sentry `useEffect`, and a default export). Measuring those as duplication
+measures Next.js.
+
+Excluding them takes the figure from **7.75% to 6%**.
+
+The remaining 6% is real, and is concentrated in four places:
+
+| Where                                                                                                                  | Clones | What it is                                                   |
+| ---------------------------------------------------------------------------------------------------------------------- | ------ | ------------------------------------------------------------ |
+| `studio` `SectionItems{Accordion,Cards,Gallery,TwoColumn}.tsx`                                                         | 21     | four renderers of the same section data in different layouts |
+| `admin` / `payments` report UI (`ReportTable`, `ReportFiltersBar`, `SellerReportFiltersBar`)                           | 10     | two apps with near-identical report screens                  |
+| `admin` / `payments` Excel export (`exportOrdersToExcel`, `exportDelegatedOrdersToExcel`, `exportSellerOrdersToExcel`) | 8      | the same worksheet-building code three times                 |
+| `packages/ui` (`status-card`, `mini-area-chart`)                                                                       | 4      | variant components                                           |
+
+Driving this under 5% needs component-extraction decisions that are product
+calls, not mechanical cleanup -- whether admin's and payments' report screens
+_should_ share a component, or are expected to diverge. This repo's own rules
+say to favour KISS over DRY and to treat coincidental duplication as something
+to leave alone, so the extraction should be a deliberate choice by someone who
+knows where those screens are heading.
+
+The Excel exporters are the strongest candidate: three copies of worksheet
+construction is knowledge duplication, not coincidence.
