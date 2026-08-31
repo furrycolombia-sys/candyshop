@@ -33,7 +33,7 @@ describe("PermissionGroupCard", () => {
     expect(checkboxes).toHaveLength(3);
   });
 
-  it("checks granted permissions and leaves ungrated ones unchecked", () => {
+  it("checks granted permissions and leaves the rest unchecked", () => {
     render(<PermissionGroupCard {...defaultProps} />);
     const checkboxes = screen.getAllByRole("checkbox");
     // orders.view is granted
