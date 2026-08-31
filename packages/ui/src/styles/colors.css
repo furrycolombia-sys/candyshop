@@ -51,10 +51,15 @@
   --popover-foreground: oklch(0.145 0 0);
   --destructive: oklch(0.51 0.23 15);
   --destructive-foreground: oklch(1 0 0);
+  /* Dark text, not white. White on either of these mid-tone fills lands at
+     3.5:1 and 3.3:1 -- below the 4.5:1 WCAG AA needs for normal text. Pairing
+     them with --foreground gives 5.6:1 and 5.9:1. The dark theme already made
+     this choice for its own warning fill; this brings light into line.
+     contrast.test.ts enforces it. */
   --success: oklch(0.61 0.17 148);
-  --success-foreground: oklch(1 0 0);
+  --success-foreground: oklch(0.145 0 0);
   --warning: oklch(0.65 0.17 68);
-  --warning-foreground: oklch(1 0 0);
+  --warning-foreground: oklch(0.145 0 0);
   --info: oklch(0.52 0.22 262);
   --info-foreground: oklch(1 0 0);
   --chart-1: var(--pink);

@@ -351,15 +351,19 @@ computed colour contrast against the real theme, focus order across a whole
 page, or a heading hierarchy that only exists once a layout composes.
 `@axe-core/playwright` against each app's main routes is the missing piece.
 
-### A naming hazard, deliberately left in place
+### A naming hazard, now removed
 
-`Label` in `packages/ui` is a **status badge that renders a `<span>`**, not a
-form label. The name collides with the shadcn convention, where `label.tsx`
+`Label` in `packages/ui` was a **status badge that rendered a `<span>`**, not a
+form label. The name collided with the shadcn convention, where `label.tsx`
 _is_ the form label — so anyone importing `Label` to label an input would
 silently get no association at all, which is the exact defect the `label` axe
-rule exists to catch. Nothing imports it today, and a test now pins the
-behaviour so the trap is at least written down. Renaming it to `StatusLabel`
-would be safe (no consumers) and is worth doing.
+rule exists to catch. That is how it was found: the first draft of the
+accessibility suite assumed `Label` was a form label, and axe failed.
+
+It is now `StatusLabel` in `StatusLabel.tsx`. Nothing imported it, so the
+rename cost nothing, and it frees `label.tsx` for a real form label — there
+isn't one in this package yet, which is worth knowing before building a form
+against `ui`. A test pins the shape so the trap cannot come back.
 
 ---
 
@@ -380,6 +384,53 @@ either.
 `edited` is now in the trigger list. `changes`, `security` and `summary` opt
 out of it, so fixing a typo does not re-run an audit or rewrite the summary
 comment.
+
+---
+
+## The timing rules: the rule that makes a wait removable
+
+`no-networkidle` (117) and `no-wait-for-timeout` (93) are being driven down per
+app rather than in bulk, for the reason recorded above: the failure mode is
+intermittent, and one green pipeline does not disprove it.
+
+`admin` is done — 29 sites to 6. What made it safe is a single distinction,
+and it is not "does an assertion follow":
+
+**A wait is redundant only before a _positive_ assertion.** `expect(x)
+.toBeVisible()` retries until the thing appears, so whatever the wait was
+buying, the assertion buys again.
+
+**A wait before a _negative_ assertion is load-bearing.**
+`expect(x).toBeHidden()`, `not.toContain`, `toHaveCount(0)` all pass when the
+page has not rendered yet. Remove the settle window and the test does not
+become flaky — it becomes a **false pass**, which is worse, because nothing
+ever goes red to tell you.
+
+The first pass over `admin` missed this and removed the wait in front of five
+negative assertions. The diff was re-read, reverted, and redone with the check
+built into the transform. The six waits that remain are annotated in place with
+why.
+
+CI then caught a second half of the rule that the first version missed, and
+it is the more subtle one.
+
+**The assertion has to _retry_, not merely be positive.**
+`expect(url.searchParams.get("status")).toBe("approved")` is a positive
+assertion, but it reads `page.url()` once. It never retries. Two admin filter
+tests are debounced, so removing the sleep in front of a one-shot read raced
+the update and they failed — exactly the intermittent failure this ratchet is
+being paced to avoid, surfaced by doing one app at a time.
+
+The fix was not to put the sleep back. `await expect(page).toHaveURL(...)`
+retries, so the wait stays gone and the assertion is robust on top. Four
+one-shot URL reads in that file are now retrying assertions.
+
+So the full rule is: **a wait is redundant only in front of a positive,
+retrying assertion.** A Playwright web-first matcher (`toBeVisible`,
+`toHaveURL`, `toHaveText`) retries. A plain `expect()` over a value you already
+read does not.
+
+Apply that to `payments` (31) and `auth` (149).
 
 ---
 
