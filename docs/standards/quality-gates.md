@@ -342,6 +342,31 @@ only exists once a layout composes.
 Still to do: the same treatment for the authenticated apps, which need a
 session fixture first.
 
+**Both layers earned their place immediately, and on different defects.**
+
+The route checks found white on `--warning` at 3.34:1 — a token pairing, fixed
+in `colors.css` and now guarded by `contrast.test.ts`.
+
+The dark-mode check then found two more that **no token test can see**, because
+neither is a token pairing at all:
+
+| Element                            | Measured | Cause        |
+| ---------------------------------- | -------- | ------------ |
+| `RolesSection` paragraphs          | 4.39:1   | `opacity-90` |
+| `RolesSection` "coming soon" badge | 3.85:1   | `opacity-70` |
+
+An opacity modifier blends the element — foreground and background together —
+toward whatever is behind it. The tokens involved all pass on their own; the
+rendered result does not. `.claude/rules/tailwind.md` already warned that
+low-opacity text is risky and asked for computed contrast to be verified.
+Nothing verified it. Those three modifiers are gone; reach for a muted token
+when something needs de-emphasising.
+
+The first failure also exposed a gap in `contrast.test.ts` itself: it paired
+`muted-foreground` only with `muted`, when its commonest use by far is on
+`background` — secondary copy, captions, help text. Both that and `card` are
+now checked.
+
 ### Landing's E2E suite had never run
 
 Adding the spec surfaced this. `apps/landing` has had a `playwright.config.ts`

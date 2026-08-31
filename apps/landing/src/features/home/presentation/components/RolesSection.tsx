@@ -11,6 +11,11 @@ const DEFAULT_LIBRA_TEXT = "var(--libra-text)";
 const LEMON_LIBRA_TEXT = "var(--libra-text-on-lemon)";
 const PINK_BG = "var(--pink)";
 
+// No opacity modifiers on text here. `opacity-90` and `opacity-70` blend the
+// element -- foreground and background together -- toward the page behind it,
+// which is invisible to a token-level contrast check and dropped these below
+// WCAG AA in dark mode: 4.39:1 for the paragraphs and 3.85:1 for the badge.
+// Reach for a muted token if something needs de-emphasising, not opacity.
 export function RolesSection() {
   const t = useTranslations("landing.split");
   const tSections = useTranslations("landing.sections");
@@ -43,11 +48,9 @@ export function RolesSection() {
             >
               {t("artists.title")}
             </h3>
-            <p className="mb-8 text-base/relaxed opacity-90">
-              {t("artists.description")}
-            </p>
+            <p className="mb-8 text-base/relaxed">{t("artists.description")}</p>
             <span
-              className="shadow-brutal-sm mt-auto inline-flex self-start border-strong border-foreground px-6 py-3 text-sm font-extrabold uppercase tracking-wider opacity-70"
+              className="shadow-brutal-sm mt-auto inline-flex self-start border-strong border-foreground px-6 py-3 text-sm font-extrabold uppercase tracking-wider"
               style={{
                 backgroundColor: "var(--lemon)",
                 color: LEMON_LIBRA_TEXT,
@@ -77,9 +80,7 @@ export function RolesSection() {
             >
               {t("fans.title")}
             </h3>
-            <p className="mb-8 text-base/relaxed opacity-90">
-              {t("fans.description")}
-            </p>
+            <p className="mb-8 text-base/relaxed">{t("fans.description")}</p>
             <Link
               href={appUrls.store}
               className="button-brutal button-press-sm shadow-brutal-sm mt-auto inline-flex self-start px-6 py-3 text-sm font-extrabold"
