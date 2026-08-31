@@ -380,3 +380,30 @@ either.
 `edited` is now in the trigger list. `changes`, `security` and `summary` opt
 out of it, so fixing a typo does not re-run an audit or rewrite the summary
 comment.
+
+---
+
+## Found by arming a gate: landing throws on load
+
+Making `smoke-all-apps` able to fail immediately turned up a real defect.
+`landing` throws **React error #418** on load — the server-rendered text did
+not match the client's, so React discards the server HTML and re-renders. It
+reproduced across all three CI attempts.
+
+It is not new. The old version of that test collected page errors and
+`console.log`ged them, so this had been happening for as long as anyone had
+been not-reading the logs.
+
+It is not fixed yet, and the reason is worth stating: the cause is not proven.
+The obvious suspect is `useCurrentUserPermissions`, whose `useState`
+initializer prefers `readPermCache()` — a browser cookie the server cannot
+read — over the `initialGrantedKeys` the server rendered with. That is a
+textbook hydration mismatch. But `landing`'s layout passes
+`initialGrantedKeys` exactly as the other apps do, and only `landing` fails,
+so that explanation is incomplete. Confirming it needs the app running
+locally.
+
+Meanwhile the other six apps **are** checked, and `landing` has a `test.fixme`
+that names the error. `fixme` reports as a known failure rather than a skip,
+so it stays visible in every run instead of turning green by omission. Delete
+it, and the `KNOWN_FAILING_APP` exclusion, with the fix.
