@@ -343,3 +343,23 @@ silently get no association at all, which is the exact defect the `label` axe
 rule exists to catch. Nothing imports it today, and a test now pins the
 behaviour so the trap is at least written down. Renaming it to `StatusLabel`
 would be safe (no consumers) and is worth doing.
+
+---
+
+## The PR Title check could not see a corrected title
+
+`pr-checks.yml` ran on `[opened, synchronize, reopened]`. `edited` -- the event
+GitHub fires when a title, body or base branch changes -- was missing.
+
+So the check that exists specifically to police the PR title validated it once,
+at open, and a corrected title could never clear the failure. The only way
+through was to push an unrelated commit. `Branch Target` had the same problem
+when a PR was retargeted.
+
+Found by hitting it: a title three characters over the 80-character subject
+limit stayed red through two corrections, because no run was triggered by
+either.
+
+`edited` is now in the trigger list. `changes`, `security` and `summary` opt
+out of it, so fixing a typo does not re-run an audit or rewrite the summary
+comment.
