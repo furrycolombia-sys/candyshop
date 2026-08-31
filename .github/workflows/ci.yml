@@ -153,6 +153,7 @@ jobs:
           pnpm run sherif
           pnpm run syncpack:lint
           pnpm exec ls-lint
+          pnpm exec cspell "apps/*/src/**/*.{ts,tsx,js,jsx,md}" "packages/*/src/**/*.{ts,tsx}"
           pnpm exec madge --circular --extensions ts,tsx,js,jsx             apps/store/src apps/studio/src apps/landing/src apps/payments/src             apps/admin/src apps/auth/src apps/playground/src             packages/ui/src packages/shared/src packages/api/src             packages/app-components/src packages/auth/src
 
       - name: Lint (scoped)

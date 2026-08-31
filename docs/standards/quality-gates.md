@@ -186,3 +186,47 @@ than a gate that runs.
 The hook now blocks on errors — which include every promoted rule and the
 whole recommended set — while warnings stay visible in `pnpm lint` and in CI's
 Quality Checks job, which has always allowed them.
+
+---
+
+## cspell
+
+Now enforced in CI's repo-hygiene step. It reported 70 issues across 36 files;
+**one was a real typo** — a test named `"checks granted permissions and leaves
+ungrated ones unchecked"`. The rest were vocabulary the config did not know.
+
+Adding the `en-GB` dictionary cleared the British spellings (`serialised`,
+`normalises`, `initialises`, `unrecognised`) that a US-only dictionary rejects.
+
+**The Spanish dictionary was tried and rejected.** This app is bilingual and
+`cspell.json` hand-maintains a Spanish word list, which does not scale — every
+new Spanish string in a component or test trips it. So `@cspell/dict-es-es`
+looked like the right fix. It is not: with it enabled, issues went from 70 to
+**396**. The remaining Spanish terms are in the word list instead, and the
+dependency was removed again.
+
+Proved the gate fires: a comment reading `// intentionaly mispeled coment`
+produces three errors, two with suggested corrections.
+
+## Not attempted: the two timing rules
+
+`no-networkidle` (117) and `no-wait-for-timeout` (93) are the largest staged
+rules and the main flakiness source. Their shape was measured so whoever picks
+them up does not have to:
+
+| Shape                                                                       | Count |
+| --------------------------------------------------------------------------- | ----- |
+| `goto(…, { waitUntil: "networkidle" })` with an assertion immediately after | 70    |
+| `goto` with no immediate assertion                                          | 23    |
+| `waitForLoadState("networkidle")` with an assertion after                   | 11    |
+| `waitForLoadState` with no assertion                                        | 13    |
+
+The first group is the safe one: the following web-first assertion already
+retries, so the `waitUntil` can simply go.
+
+They were deliberately **not** changed in bulk. The E2E suite cannot be run
+locally — it needs a live Supabase and the `auth.setup.ts` session artifact —
+and the failure mode for wait-condition changes is _intermittent_ flakiness,
+which one green CI run does not disprove. Rewriting 70 wait conditions on the
+strength of a single pipeline would trade a visible problem for an invisible
+one. Do these per app, with someone able to run the suite repeatedly.
