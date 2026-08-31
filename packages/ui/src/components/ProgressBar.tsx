@@ -1,6 +1,7 @@
 import { cva, type VariantProps } from "class-variance-authority";
 import * as React from "react";
 
+import type { RequiredAccessibleName } from "@ui/utils/accessibleName";
 import { cn } from "@ui/utils/cn";
 
 const progressBarTrackVariants = cva(
@@ -39,13 +40,14 @@ const progressBarSizeVariants = cva(
   },
 );
 
-export interface ProgressBarProps
-  extends
-    React.HTMLAttributes<HTMLDivElement>,
-    VariantProps<typeof progressBarTrackVariants> {
-  value: number;
-  size?: "sm" | "md" | "lg";
-}
+export type ProgressBarProps = Omit<
+  React.HTMLAttributes<HTMLDivElement>,
+  "aria-label" | "aria-labelledby"
+> &
+  VariantProps<typeof progressBarTrackVariants> & {
+    value: number;
+    size?: "sm" | "md" | "lg";
+  } & RequiredAccessibleName;
 
 function ProgressBar({
   className,
