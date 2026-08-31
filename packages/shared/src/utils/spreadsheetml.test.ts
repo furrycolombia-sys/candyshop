@@ -76,13 +76,13 @@ describe("buildWorkbook", () => {
 });
 
 describe("downloadExcel", () => {
-  let createObjectURL: ReturnType<typeof vi.fn>;
-  let revokeObjectURL: ReturnType<typeof vi.fn>;
+  let createObjectURL: ReturnType<typeof vi.fn<(obj: Blob) => string>>;
+  let revokeObjectURL: ReturnType<typeof vi.fn<(url: string) => void>>;
   const realClick = HTMLAnchorElement.prototype.click;
 
   beforeEach(() => {
-    createObjectURL = vi.fn(() => "blob:fake-url");
-    revokeObjectURL = vi.fn();
+    createObjectURL = vi.fn((_obj: Blob) => "blob:fake-url");
+    revokeObjectURL = vi.fn((_url: string) => {});
     globalThis.URL.createObjectURL = createObjectURL;
     globalThis.URL.revokeObjectURL = revokeObjectURL;
   });
@@ -111,7 +111,7 @@ describe("downloadExcel", () => {
     downloadExcel("<Workbook/>", "report.xls");
 
     expect(createObjectURL).toHaveBeenCalledTimes(1);
-    const blob = createObjectURL.mock.calls[0]![0] as Blob;
+    const blob = createObjectURL.mock.calls[0]![0];
     expect(blob.type).toBe("application/vnd.ms-excel;charset=utf-8;");
   });
 
