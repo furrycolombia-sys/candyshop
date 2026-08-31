@@ -78,7 +78,7 @@ test.describe.serial("Audit Log page", () => {
     await page.waitForTimeout(MUTATION_WAIT_MS);
 
     // The error state must NOT be visible (which would indicate a 406 or network error)
-    await expect(page.getByTestId("audit-error")).not.toBeVisible();
+    await expect(page.getByTestId("audit-error")).toBeHidden();
 
     // Either the table or the empty state must be visible
     const table = page.getByTestId("audit-table");
@@ -106,13 +106,13 @@ test.describe.serial("Audit Log page", () => {
     await page.waitForTimeout(MUTATION_WAIT_MS);
 
     // Error state must not appear after filtering
-    await expect(page.getByTestId("audit-error")).not.toBeVisible();
+    await expect(page.getByTestId("audit-error")).toBeHidden();
 
     // Reset to all
     await page.getByTestId("audit-filter-all").click();
     await page.waitForTimeout(MUTATION_WAIT_MS);
 
-    await expect(page.getByTestId("audit-error")).not.toBeVisible();
+    await expect(page.getByTestId("audit-error")).toBeHidden();
   });
 
   test("table filter dropdown is populated with table names", async ({
@@ -151,7 +151,7 @@ test.describe.serial("Audit Log page", () => {
       });
 
       // Should NOT show the audit log page content
-      await expect(page.getByTestId("audit-log-page")).not.toBeVisible({
+      await expect(page.getByTestId("audit-log-page")).toBeHidden({
         timeout: ELEMENT_TIMEOUT_MS,
       });
     } finally {

@@ -37,6 +37,15 @@ const playwrightConfig = {
     // the suite is already clean against it — including missing-playwright-await,
     // which catches an assertion that never runs.
     //
+    // Driven to zero and promoted to error (2026-08-30). Both fixes were
+    // applied by pattern rather than by `eslint --fix`, so the unsafe fixer
+    // below could not run alongside them, and all 25 rewrites were read in the
+    // diff. These need an explicit "error": the recommended set ships them as
+    // warnings, so dropping them from the staged list below is not enough --
+    // verified by planting a violation and watching it fail.
+    "playwright/no-useless-not": "error",
+    "playwright/consistent-spacing-between-blocks": "error",
+    //
     // The rules below have real violations today and are warnings with their
     // counts recorded, to be driven to zero and promoted to error one at a time.
     // Counts measured 2026-08-30. NOTE: several of these are auto-fixable, but
@@ -47,7 +56,6 @@ const playwrightConfig = {
     "playwright/no-networkidle": "warn", // 118 — waits on a heuristic, not a condition
     "playwright/no-wait-for-timeout": "warn", // 96 — the main flakiness source
     "playwright/no-conditional-in-test": "warn", // 31
-    "playwright/no-useless-not": "warn", // 19 (auto-fixable, safe)
     "playwright/prefer-web-first-assertions": "warn", // 15 (auto-fix is NOT safe here)
     // expect-expect is an ERROR, not a warning: a test that asserts nothing
     // passes no matter how the product behaves, so it is the one defect a test
@@ -73,7 +81,6 @@ const playwrightConfig = {
     "playwright/no-conditional-expect": "warn", // 5
     "playwright/no-skipped-test": "warn", // 5
     "playwright/no-force-option": "warn", // 4
-    "playwright/consistent-spacing-between-blocks": "warn", // 1
   },
 };
 

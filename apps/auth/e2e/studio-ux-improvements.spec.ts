@@ -340,7 +340,7 @@ test.describe.serial("Studio UX Improvements", { tag: "@ux" }, () => {
     // Mobile gallery uses a different test ID
     const mobileGallery = page.getByTestId("image-gallery-thumbs-mobile");
     // Mobile gallery is hidden on desktop (lg:hidden), so it should not be visible
-    await expect(mobileGallery).not.toBeVisible();
+    await expect(mobileGallery).toBeHidden();
     await snap(page, "mobile-no-drag-handles");
   });
 });

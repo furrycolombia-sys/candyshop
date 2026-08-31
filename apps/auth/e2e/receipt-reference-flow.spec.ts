@@ -283,7 +283,7 @@ test.describe.serial("Receipt + reference number payment flow", () => {
     await expect(receiptLink).toBeVisible({ timeout: ELEMENT_TIMEOUT_MS });
 
     // The "no receipt" placeholder must not be shown
-    await expect(page.getByTestId("receipt-none")).not.toBeVisible();
+    await expect(page.getByTestId("receipt-none")).toBeHidden();
 
     // Verify the receipt image is byte-for-byte the same file the buyer uploaded.
     // The href is a Supabase signed URL that serves the raw stored bytes.
@@ -324,7 +324,7 @@ test.describe.serial("Receipt + reference number payment flow", () => {
     await page.reload();
     await page.waitForLoadState("networkidle");
 
-    await expect(page.getByTestId(/^order-approve-/).first()).not.toBeVisible({
+    await expect(page.getByTestId(/^order-approve-/).first()).toBeHidden({
       timeout: NAVIGATION_TIMEOUT_MS,
     });
     await snap(page, "seller-order-approved");

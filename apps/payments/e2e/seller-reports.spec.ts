@@ -289,7 +289,7 @@ test.describe.serial("Seller Reports page", () => {
       page
         .locator(`[data-testid^="seller-report-row-transfer-"]`)
         .filter({ hasText: TEST_ORDER.transfer_number }),
-    ).not.toBeVisible();
+    ).toBeHidden();
   });
 
   test("seller only sees their own orders (not other sellers)", async ({
@@ -313,7 +313,7 @@ test.describe.serial("Seller Reports page", () => {
         page
           .locator(`[data-testid^="seller-report-row-transfer-"]`)
           .filter({ hasText: TEST_ORDER.transfer_number }),
-      ).not.toBeVisible();
+      ).toBeHidden();
     } finally {
       await deleteTestUser(otherSeller).catch(() => {});
     }
@@ -377,7 +377,7 @@ test.describe.serial("Seller Reports page", () => {
     if (isOnReportsPage) {
       // API call should fail with 401 and show error state
       await page.waitForTimeout(MUTATION_WAIT_MS);
-      await expect(page.getByTestId("seller-report-table")).not.toBeVisible();
+      await expect(page.getByTestId("seller-report-table")).toBeHidden();
     } else {
       // Redirect happened — acceptable
       expect(page.url()).not.toContain("/reports");

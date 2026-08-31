@@ -324,7 +324,7 @@ test.describe.serial("Reports page", () => {
       page.locator(`[data-testid^="report-row-transfer-"]`).filter({
         hasText: TEST_ORDER.transfer_number,
       }),
-    ).not.toBeVisible();
+    ).toBeHidden();
   });
 
   // ─── Export ───────────────────────────────────────────────────────
@@ -391,7 +391,7 @@ test.describe.serial("Reports page", () => {
       if (isOnReportsPage) {
         // If still on the page, the table should show an error state (API 403)
         await page.waitForTimeout(MUTATION_WAIT_MS);
-        await expect(page.getByTestId("report-table")).not.toBeVisible({
+        await expect(page.getByTestId("report-table")).toBeHidden({
           timeout: ELEMENT_TIMEOUT_MS,
         });
       } else {
