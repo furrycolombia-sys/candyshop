@@ -36,10 +36,15 @@ for (const route of ROUTES) {
       .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
       .analyze();
 
-    // Name the rule and the element, so a failure is actionable from the log
-    // alone rather than needing the run reproduced.
-    const summary = results.violations.map(
-      (v) => `${v.id} (${v.impact}) on ${v.nodes.length}: ${v.help}`,
+    // Name the rule AND the offending elements. A first version reported only
+    // the rule and the node count, which said a contrast check had failed
+    // without saying where -- not actionable from the log, which is the only
+    // place this runs.
+    const summary = results.violations.flatMap((v) =>
+      v.nodes.map(
+        (n) =>
+          `${v.id} (${v.impact}) at ${n.target.join(" ")} -- ${n.failureSummary?.replace(/\s+/g, " ").trim()}`,
+      ),
     );
 
     expect(summary, `${route.name} accessibility violations`).toEqual([]);
@@ -58,10 +63,14 @@ test("dark mode keeps its contrast", async ({ page }) => {
     .include("body")
     .analyze();
 
-  const contrast = results.violations.filter((v) => v.id === "color-contrast");
+  const contrast = results.violations
+    .filter((v) => v.id === "color-contrast")
+    .flatMap((v) =>
+      v.nodes.map(
+        (n) =>
+          `${n.target.join(" ")} -- ${n.failureSummary?.replace(/\s+/g, " ").trim()}`,
+      ),
+    );
 
-  expect(
-    contrast.map((v) => `${v.nodes.length} nodes: ${v.help}`),
-    "dark mode contrast violations",
-  ).toEqual([]);
+  expect(contrast, "dark mode contrast violations").toEqual([]);
 });
