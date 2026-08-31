@@ -1,7 +1,8 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
   buildWorkbook,
+  downloadExcel,
   escapeXml,
   toCell,
   toNumberCell,
@@ -71,5 +72,56 @@ describe("buildWorkbook", () => {
     ]);
 
     expect(xml.indexOf("First")).toBeLessThan(xml.indexOf("Second"));
+  });
+});
+
+describe("downloadExcel", () => {
+  let createObjectURL: ReturnType<typeof vi.fn>;
+  let revokeObjectURL: ReturnType<typeof vi.fn>;
+  const realClick = HTMLAnchorElement.prototype.click;
+
+  beforeEach(() => {
+    createObjectURL = vi.fn(() => "blob:fake-url");
+    revokeObjectURL = vi.fn();
+    globalThis.URL.createObjectURL = createObjectURL;
+    globalThis.URL.revokeObjectURL = revokeObjectURL;
+  });
+
+  afterEach(() => {
+    HTMLAnchorElement.prototype.click = realClick;
+    vi.restoreAllMocks();
+  });
+
+  it("offers the content under the requested filename", () => {
+    const clicked: HTMLAnchorElement[] = [];
+    HTMLAnchorElement.prototype.click = function (this: HTMLAnchorElement) {
+      clicked.push(this);
+    };
+
+    downloadExcel("<Workbook/>", "report.xls");
+
+    expect(clicked).toHaveLength(1);
+    expect(clicked[0]!.getAttribute("download")).toBe("report.xls");
+    expect(clicked[0]!.getAttribute("href")).toBe("blob:fake-url");
+  });
+
+  it("sends the content as an Excel blob", () => {
+    HTMLAnchorElement.prototype.click = vi.fn();
+
+    downloadExcel("<Workbook/>", "report.xls");
+
+    expect(createObjectURL).toHaveBeenCalledTimes(1);
+    const blob = createObjectURL.mock.calls[0]![0] as Blob;
+    expect(blob.type).toBe("application/vnd.ms-excel;charset=utf-8;");
+  });
+
+  it("cleans up after itself so the blob and the anchor do not leak", () => {
+    HTMLAnchorElement.prototype.click = vi.fn();
+    const before = document.body.children.length;
+
+    downloadExcel("<Workbook/>", "report.xls");
+
+    expect(document.body.children.length).toBe(before);
+    expect(revokeObjectURL).toHaveBeenCalledWith("blob:fake-url");
   });
 });
