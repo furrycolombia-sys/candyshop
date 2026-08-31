@@ -2,7 +2,13 @@ name: PR Checks
 
 on:
   pull_request:
-    types: [opened, synchronize, reopened]
+    # `edited` fires when the title, body or base branch changes. Without it the
+    # PR Title check validated the title once, at open, and a corrected title
+    # could never clear the failure -- the only way through was an unrelated
+    # commit. Branch Target has the same problem when the base is retargeted.
+    # The heavier jobs below opt out of `edited` so a typo fix does not re-run
+    # an audit.
+    types: [opened, synchronize, reopened, edited]
 
 permissions:
   contents: read
@@ -92,6 +98,8 @@ jobs:
   # ============================================
   changes:
     name: Detect Changes
+    # Not re-run when only the title or body changed.
+    if: github.event.action != 'edited'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     outputs:
@@ -172,7 +180,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     needs: changes
-    if: needs.changes.outputs.docs-only == 'false'
+    # Not re-run when only the title or body changed.
+    if: needs.changes.outputs.docs-only == 'false' && github.event.action != 'edited'
     steps:
       - name: Checkout code
         uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
@@ -231,7 +240,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     needs: [changes]
-    if: always()
+    # always() so it still reports when an earlier job failed, but not for a
+    # title or body edit -- that would only rewrite the same comment.
+    if: always() && github.event.action != 'edited'
     steps:
       - name: Create or update PR comment
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0

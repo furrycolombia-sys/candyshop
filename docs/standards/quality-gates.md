@@ -293,3 +293,73 @@ them was a docs-only change.
 If you add a root-level config file, add it to **both** the `tooling` and
 `code` filters in `.github/workflows/ci.yml`. A config that changes behaviour
 but not the filter is invisible to CI.
+
+---
+
+## Accessibility
+
+`.claude/rules/testing.md` documented an accessibility testing section, and
+`build-checks.md` listed an `accessibility` job in `pr-checks.yml`. Neither
+existed: no axe dependency, no a11y test file, no such job. Both documents now
+describe what is actually there.
+
+What is actually there: `vitest-axe` runs over the shared components in
+`packages/ui` and `packages/app-components`. Those suites are part of the
+normal unit-test run, so CI enforces them through **Unit Tests** — there is no
+separate job to forget to add.
+
+It found real defects on its first run:
+
+| Component          | Defect                                                                                                                                                                 |
+| ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ProgressBar`      | `role="progressbar"` with `aria-valuenow/min/max` and **no accessible name** — a screen reader announced "42%" with no indication of what was progressing (WCAG 4.1.2) |
+| `CircularProgress` | **no role at all** — visually a progress indicator, invisible to assistive technology, and with nothing for a checker to find fault with                               |
+
+Both now require an accessible name _in their type_ — exactly one of
+`aria-label` or `aria-labelledby`, via `RequiredAccessibleName`. That turns it
+into a compile error rather than something to remember, and it immediately
+stopped 23 existing renders from compiling.
+
+Use the same type for any new component that declares a value-carrying role
+(`progressbar`, `meter`, `slider`).
+
+Both suites include a test that deliberately fails — an unlabelled `<Input>`,
+an icon-only `<button>` — so a suite of green assertions cannot quietly stop
+checking anything.
+
+### Not covered
+
+Page-level accessibility. axe over a rendered component tree cannot see
+computed colour contrast against the real theme, focus order across a whole
+page, or a heading hierarchy that only exists once a layout composes.
+`@axe-core/playwright` against each app's main routes is the missing piece.
+
+### A naming hazard, deliberately left in place
+
+`Label` in `packages/ui` is a **status badge that renders a `<span>`**, not a
+form label. The name collides with the shadcn convention, where `label.tsx`
+_is_ the form label — so anyone importing `Label` to label an input would
+silently get no association at all, which is the exact defect the `label` axe
+rule exists to catch. Nothing imports it today, and a test now pins the
+behaviour so the trap is at least written down. Renaming it to `StatusLabel`
+would be safe (no consumers) and is worth doing.
+
+---
+
+## The PR Title check could not see a corrected title
+
+`pr-checks.yml` ran on `[opened, synchronize, reopened]`. `edited` -- the event
+GitHub fires when a title, body or base branch changes -- was missing.
+
+So the check that exists specifically to police the PR title validated it once,
+at open, and a corrected title could never clear the failure. The only way
+through was to push an unrelated commit. `Branch Target` had the same problem
+when a PR was retargeted.
+
+Found by hitting it: a title three characters over the 80-character subject
+limit stayed red through two corrections, because no run was triggered by
+either.
+
+`edited` is now in the trigger list. `changes`, `security` and `summary` opt
+out of it, so fixing a typo does not re-run an audit or rewrite the summary
+comment.
