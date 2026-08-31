@@ -392,10 +392,13 @@ test.describe.serial("Full purchase flow: two sellers, one buyer", () => {
     await snap(page, "store-added-beta");
 
     // ── Open cart and verify both items ────────────────────────
-    await page
-      .getByTestId("cart-drawer-trigger")
-      .first()
-      .click({ force: true });
+    // No `force: true` here. Forcing the click skips Playwright's actionability
+    // checks, so this passed even if the trigger were covered or disabled --
+    // i.e. even if a real buyer could not open their cart. Assert it is
+    // actually clickable, then click it normally.
+    const cartTrigger = page.getByTestId("cart-drawer-trigger").first();
+    await expect(cartTrigger).toBeVisible();
+    await cartTrigger.click();
     await expect(page.getByTestId("cart-drawer-items")).toBeVisible();
 
     // Should see two seller groups

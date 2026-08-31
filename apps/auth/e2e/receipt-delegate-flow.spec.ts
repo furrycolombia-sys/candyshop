@@ -212,10 +212,13 @@ test.describe.serial("Delegate sees buyer receipt", () => {
     await page.getByTestId("hero-add-to-cart").click();
     await page.waitForTimeout(MUTATION_WAIT_MS);
 
-    await page
-      .getByTestId("cart-drawer-trigger")
-      .first()
-      .click({ force: true });
+    // No `force: true` here. Forcing the click skips Playwright's actionability
+    // checks, so this passed even if the trigger were covered or disabled --
+    // i.e. even if a real buyer could not open their cart. Assert it is
+    // actually clickable, then click it normally.
+    const cartTrigger = page.getByTestId("cart-drawer-trigger").first();
+    await expect(cartTrigger).toBeVisible();
+    await cartTrigger.click();
     await expect(page.getByTestId("cart-drawer-items")).toBeVisible();
     await page.getByTestId("cart-checkout").click();
     await page.waitForURL(
