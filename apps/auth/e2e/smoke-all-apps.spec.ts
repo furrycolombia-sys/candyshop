@@ -92,19 +92,17 @@ test.describe("Smoke test -- all apps", () => {
         );
       }
 
+      // This is the assertion the test exists for: the session injected once
+      // must be visible in every app's navbar. It used to be wrapped in
+      // `if (isVisible)` with an else branch that only logged, so the test
+      // passed when the navbar showed no user at all -- the exact symptom of
+      // session propagation being broken.
       const navEmail = page.getByTestId("nav-user-email");
-      const isVisible = await navEmail
-        .isVisible({ timeout: 5000 })
-        .catch(() => false);
-
-      if (isVisible) {
-        await expect(navEmail).not.toBeEmpty();
-        console.log(`[smoke] ${appName} (${url}) -- navbar shows user email`);
-      } else {
-        console.log(
-          `[smoke] ${appName} (${url}) -- navbar does NOT show user email`,
-        );
-      }
+      await expect(
+        navEmail,
+        `${appName} (${url}) navbar does not show the signed-in user`,
+      ).toBeVisible({ timeout: 5000 });
+      await expect(navEmail).not.toBeEmpty();
     }
   });
 

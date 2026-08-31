@@ -380,24 +380,19 @@ test.describe.serial("Reports page", () => {
 
     try {
       await injectSession(context, limitedUser);
-      const response = await page.goto(`${getAdminBaseUrl()}/en/reports`, {
+      await page.goto(`${getAdminBaseUrl()}/en/reports`, {
         waitUntil: "networkidle",
       });
 
-      // Either gets redirected away from reports or the API returns 403
-      // The page should NOT show the reports table with real data
-      const isOnReportsPage = page.url().includes("/reports");
-
-      if (isOnReportsPage) {
-        // If still on the page, the table should show an error state (API 403)
-        await page.waitForTimeout(MUTATION_WAIT_MS);
-        await expect(page.getByTestId("report-table")).toBeHidden({
-          timeout: ELEMENT_TIMEOUT_MS,
-        });
-      } else {
-        // Redirected — acceptable outcome
-        expect(response?.status()).not.toBe(200);
-      }
+      // The app may enforce this by redirecting or by returning 403 and
+      // rendering an error state. Either is fine; the invariant is the same
+      // and holds in both cases, so assert it directly rather than branching.
+      // Branching meant that if isOnReportsPage were ever computed wrongly the
+      // test would assert something unrelated and still pass -- on an access
+      // control check.
+      await expect(page.getByTestId("report-table")).toBeHidden({
+        timeout: ELEMENT_TIMEOUT_MS,
+      });
     } finally {
       await deleteTestUser(limitedUser).catch(() => {});
     }
