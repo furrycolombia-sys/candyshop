@@ -104,6 +104,52 @@ untested by CI.
 
 ---
 
+## knip
+
+`knip` is configured but **not yet enforced in CI**: it still reports 202
+unused exports and 46 unused exported types, which need triage rather than
+configuration.
+
+Its _file_ report is now truthful — it went from 28 unused files to 0, and
+only four of the 28 were real:
+
+| Was reported                                                         | Why it was wrong                                                                                   |
+| -------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| 7x `shared/infrastructure/i18n/request.ts`                           | next-intl loads these by config path, never by import                                              |
+| 7x `.claude/tools/*.mjs`                                             | MCP servers launched by `.mcp.json` as `node <path>`                                               |
+| `docker/*.mjs`, `scripts/**/*.mjs`, `docker/ci/playwright.config.ts` | executed by Docker and by hand, never imported                                                     |
+| 4 feature barrels                                                    | mandated by the architecture rule — see below                                                      |
+| `apps/studio`, `packages/app-components`, `packages/auth`            | were missing from `knip.json` entirely, so their files were judged against the wrong project graph |
+
+Four files were genuinely dead and are deleted:
+
+- `HomeSections.tsx` and `SocialIcons.tsx` were pure re-export barrels created
+  only to satisfy a past naming review that flagged "test file has no matching
+  source file". Nothing ever imported them; the tests import the real
+  components directly. Both had passing tests, so coverage looked healthy for
+  files no product code used.
+- `packages/api/src/supabase/client.ts` — an anon-key browser client superseded
+  by `browser.ts` and exported from nowhere.
+- `vitest.aliases.ts` — a shared-alias helper none of the seven
+  `vitest.config.mts` files ever adopted.
+
+### Open question: the feature barrel rule
+
+`.claude/rules/architecture.md` says every feature MUST have an `index.ts`
+exporting its public API. Its own import examples then show deep absolute
+paths (`@/features/dashboard/domain/types`), and the codebase follows the
+examples: across the four barrels knip flagged, there are **126 deep imports
+against 6 barrel imports**.
+
+So the barrels are required to exist and are bypassed in practice. They are
+marked as knip entry points here because the rule mandates them — but the rule
+is inconsistent with itself, and someone should decide whether to enforce
+barrel-only imports or drop the requirement. Marking them as entry points also
+means their exports count as used, which slightly weakens the unused-export
+analysis; that is the cost of agreeing with the rule as written.
+
+---
+
 ## The pre-commit hook blocks on errors, not warnings
 
 `lint-staged` used to run `eslint --no-warn-ignored --max-warnings=0` over
