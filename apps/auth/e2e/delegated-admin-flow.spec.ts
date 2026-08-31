@@ -263,10 +263,13 @@ test.describe.serial("Delegated admin purchase flow", () => {
     await snap(page, "buyer-added-to-cart");
 
     // Open cart and checkout
-    await page
-      .getByTestId("cart-drawer-trigger")
-      .first()
-      .click({ force: true });
+    // No `force: true` here. Forcing the click skips Playwright's actionability
+    // checks, so this passed even if the trigger were covered or disabled --
+    // i.e. even if a real buyer could not open their cart. Assert it is
+    // actually clickable, then click it normally.
+    const cartTrigger = page.getByTestId("cart-drawer-trigger").first();
+    await expect(cartTrigger).toBeVisible();
+    await cartTrigger.click();
     await expect(page.getByTestId("cart-drawer-items")).toBeVisible();
     await snap(page, "buyer-cart-open");
 
