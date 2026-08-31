@@ -514,6 +514,9 @@ jobs:
               store)    E2E_APP="store" ;;
               admin)    E2E_APP="admin" ;;
               payments) E2E_APP="payments" ;;
+              # landing has had a playwright config and a spec all along, but no
+              # entry here -- so its E2E suite had never run.
+              landing)  E2E_APP="landing" ;;
               *)        echo "No E2E suite for ${APP}, skipping."; continue ;;
             esac
             echo "Running E2E for ${E2E_APP} (env=ci)"

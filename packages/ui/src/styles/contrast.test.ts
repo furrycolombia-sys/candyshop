@@ -28,6 +28,11 @@ const PAIRS = [
   ["primary", "primary-foreground"],
   ["secondary", "secondary-foreground"],
   ["muted", "muted-foreground"],
+  // muted-foreground is used on the page background far more often than on the
+  // muted fill -- secondary copy, captions, help text. Checking only the
+  // muted/muted-foreground pair misses its commonest use.
+  ["background", "muted-foreground"],
+  ["card", "muted-foreground"],
   ["destructive", "destructive-foreground"],
   ["success", "success-foreground"],
   ["warning", "warning-foreground"],

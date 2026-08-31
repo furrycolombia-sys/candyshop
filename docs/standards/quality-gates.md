@@ -344,12 +344,56 @@ Both suites include a test that deliberately fails — an unlabelled `<Input>`,
 an icon-only `<button>` — so a suite of green assertions cannot quietly stop
 checking anything.
 
-### Not covered
+### Page level
 
-Page-level accessibility. axe over a rendered component tree cannot see
-computed colour contrast against the real theme, focus order across a whole
-page, or a heading hierarchy that only exists once a layout composes.
-`@axe-core/playwright` against each app's main routes is the missing piece.
+`@axe-core/playwright` now runs against `landing`'s public routes — home,
+terms, privacy — at WCAG 2.1 AA, plus a dark-mode contrast check. Those routes
+need no session and no seeded data, so a failure is about the page and nothing
+else.
+
+This is a different check from the component suites, not a bigger one. axe
+over a rendered component tree cannot see colour contrast computed against the
+real theme, focus order across a whole document, or a heading hierarchy that
+only exists once a layout composes.
+
+Still to do: the same treatment for the authenticated apps, which need a
+session fixture first.
+
+**Both layers earned their place immediately, and on different defects.**
+
+The route checks found white on `--warning` at 3.34:1 — a token pairing, fixed
+in `colors.css` and now guarded by `contrast.test.ts`.
+
+The dark-mode check then found two more that **no token test can see**, because
+neither is a token pairing at all:
+
+| Element                            | Measured | Cause        |
+| ---------------------------------- | -------- | ------------ |
+| `RolesSection` paragraphs          | 4.39:1   | `opacity-90` |
+| `RolesSection` "coming soon" badge | 3.85:1   | `opacity-70` |
+
+An opacity modifier blends the element — foreground and background together —
+toward whatever is behind it. The tokens involved all pass on their own; the
+rendered result does not. `.claude/rules/tailwind.md` already warned that
+low-opacity text is risky and asked for computed contrast to be verified.
+Nothing verified it. Those three modifiers are gone; reach for a muted token
+when something needs de-emphasising.
+
+The first failure also exposed a gap in `contrast.test.ts` itself: it paired
+`muted-foreground` only with `muted`, when its commonest use by far is on
+`background` — secondary copy, captions, help text. Both that and `card` are
+now checked.
+
+### Landing's E2E suite had never run
+
+Adding the spec surfaced this. `apps/landing` has had a `playwright.config.ts`
+and `navbar-auth-state.spec.ts` all along, but the CI job maps pnpm filter
+names to `scripts/e2e.mjs --app` values, and there was no `landing` case — so
+it hit the `*)` branch and printed "No E2E suite for landing, skipping."
+`e2e.mjs` did not accept `landing` either.
+
+Both now do. If you add a Playwright config to an app, add it in **both**
+places or the suite is silently never run.
 
 ### A naming hazard, now removed
 
