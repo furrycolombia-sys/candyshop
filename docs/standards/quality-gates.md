@@ -351,15 +351,19 @@ computed colour contrast against the real theme, focus order across a whole
 page, or a heading hierarchy that only exists once a layout composes.
 `@axe-core/playwright` against each app's main routes is the missing piece.
 
-### A naming hazard, deliberately left in place
+### A naming hazard, now removed
 
-`Label` in `packages/ui` is a **status badge that renders a `<span>`**, not a
-form label. The name collides with the shadcn convention, where `label.tsx`
+`Label` in `packages/ui` was a **status badge that rendered a `<span>`**, not a
+form label. The name collided with the shadcn convention, where `label.tsx`
 _is_ the form label — so anyone importing `Label` to label an input would
 silently get no association at all, which is the exact defect the `label` axe
-rule exists to catch. Nothing imports it today, and a test now pins the
-behaviour so the trap is at least written down. Renaming it to `StatusLabel`
-would be safe (no consumers) and is worth doing.
+rule exists to catch. That is how it was found: the first draft of the
+accessibility suite assumed `Label` was a form label, and axe failed.
+
+It is now `StatusLabel` in `StatusLabel.tsx`. Nothing imported it, so the
+rename cost nothing, and it frees `label.tsx` for a real form label — there
+isn't one in this package yet, which is worth knowing before building a form
+against `ui`. A test pins the shape so the trap cannot come back.
 
 ---
 
