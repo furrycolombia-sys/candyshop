@@ -173,7 +173,7 @@ test.describe.serial("Reports page", () => {
     // toHaveURL retries; reading page.url() once does not. The filter is
     // debounced, so a one-shot read raced the update as soon as the sleep that
     // used to precede it was removed.
-    await expect(page).toHaveURL(/[?&]status=approved/);
+    await expect(page).toHaveURL(/[?&]status=approved(&|$)/);
   });
 
   test("date range filters update URL query params", async ({
@@ -190,8 +190,8 @@ test.describe.serial("Reports page", () => {
     await page.getByTestId("reports-filter-date-from").fill("2024-01-01");
     await page.getByTestId("reports-filter-date-to").fill("2099-12-31");
 
-    await expect(page).toHaveURL(/[?&]dateFrom=2024-01-01/);
-    await expect(page).toHaveURL(/[?&]dateTo=2099-12-31/);
+    await expect(page).toHaveURL(/[?&]dateFrom=2024-01-01(&|$)/);
+    await expect(page).toHaveURL(/[?&]dateTo=2099-12-31(&|$)/);
   });
 
   test("amount min/max filters update URL query params", async ({
@@ -208,8 +208,8 @@ test.describe.serial("Reports page", () => {
     await page.getByTestId("reports-filter-amount-min").fill("1000");
     await page.getByTestId("reports-filter-amount-max").fill("999999");
 
-    await expect(page).toHaveURL(/[?&]amountMin=1000/);
-    await expect(page).toHaveURL(/[?&]amountMax=999999/);
+    await expect(page).toHaveURL(/[?&]amountMin=1000(&|$)/);
+    await expect(page).toHaveURL(/[?&]amountMax=999999(&|$)/);
   });
 
   test("clear button removes all active filters", async ({ context, page }) => {
