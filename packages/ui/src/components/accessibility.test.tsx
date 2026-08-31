@@ -27,11 +27,11 @@ import { Chip } from "@ui/components/chip";
 import { CircularProgress } from "@ui/components/CircularProgress";
 import { InfoBadge } from "@ui/components/InfoBadge";
 import { Input } from "@ui/components/input";
-import { Label } from "@ui/components/label";
 import { ProgressBar } from "@ui/components/ProgressBar";
 import { Separator } from "@ui/components/separator";
 import { Skeleton } from "@ui/components/skeleton";
 import { StatusCard } from "@ui/components/StatusCard";
+import { StatusLabel } from "@ui/components/StatusLabel";
 
 async function expectNoViolations(ui: React.ReactElement) {
   const { container } = render(ui);
@@ -71,16 +71,16 @@ describe("shared UI primitives — accessibility", () => {
     expect(results.violations.map((v) => v.id)).toContain("label");
   });
 
-  it("Label is a status badge, not a form label", async () => {
-    // `Label` in this package renders a <span> and carries no htmlFor. The
-    // name collides with the shadcn convention, where label.tsx IS the form
-    // label -- so anyone importing `Label` expecting to label an input would
-    // silently get no association at all. Nothing imports it today.
-    const { container } = render(<Label>Healthy</Label>);
+  it("StatusLabel is a badge, not a form label", async () => {
+    // It renders a <span> and carries no htmlFor. Under its old name, `Label`,
+    // it collided with the shadcn convention where label.tsx IS the form label
+    // -- importing it to label an input gave no association at all. The name
+    // is fixed; this pins the shape so the trap cannot come back.
+    const { container } = render(<StatusLabel>Healthy</StatusLabel>);
 
     expect(container.querySelector("label")).toBeNull();
     expect(container.querySelector("span")).not.toBeNull();
-    await expectNoViolations(<Label>Healthy</Label>);
+    await expectNoViolations(<StatusLabel>Healthy</StatusLabel>);
   });
 
   it("Badge carries its text", async () => {
