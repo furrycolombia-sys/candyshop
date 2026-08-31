@@ -343,6 +343,7 @@ test.describe.serial("Delegate sees buyer receipt", () => {
     // Verify the downloaded file is byte-for-byte the image the buyer uploaded.
     // The href is a Supabase signed URL serving the raw stored bytes.
     const receiptHref = await receiptLink.getAttribute("href");
+    // eslint-disable-next-line playwright/prefer-web-first-assertions -- compares two values captured at different times, which toHaveAttribute cannot express
     expect(receiptHref).toBeTruthy();
 
     const fixtureHash = createHash("sha256")

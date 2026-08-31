@@ -46,6 +46,16 @@ const playwrightConfig = {
     "playwright/no-useless-not": "error",
     "playwright/no-conditional-expect": "error",
     "playwright/no-force-option": "error",
+    // prefer-web-first-assertions is an error, but every one of the suite's 15
+    // hits is exempted in place. All 15 compare a value captured earlier
+    // against one captured later -- "this block's testid now equals the one
+    // that block had before the drag" -- which toHaveAttribute cannot express.
+    // This is the rule whose --fix rewrote `const href = await
+    // link.getAttribute("href")` into `const href = link`, turning a string
+    // into a Locator and breaking three assertions in a shared helper. It stays
+    // armed so the genuine pattern, expect(await x.isVisible()).toBe(true),
+    // is still caught.
+    "playwright/prefer-web-first-assertions": "error",
     "playwright/consistent-spacing-between-blocks": "error",
     //
     // The rules below have real violations today and are warnings with their
@@ -58,7 +68,6 @@ const playwrightConfig = {
     "playwright/no-networkidle": "warn", // 118 — waits on a heuristic, not a condition
     "playwright/no-wait-for-timeout": "warn", // 96 — the main flakiness source
     "playwright/no-conditional-in-test": "warn", // 31
-    "playwright/prefer-web-first-assertions": "warn", // 15 (auto-fix is NOT safe here)
     // expect-expect is an ERROR, not a warning: a test that asserts nothing
     // passes no matter how the product behaves, so it is the one defect a test
     // suite cannot detect on its own. It reported 11 violations before this

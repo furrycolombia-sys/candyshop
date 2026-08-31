@@ -279,6 +279,7 @@ test.describe.serial("Full purchase flow: two sellers, one buyer", () => {
       // Record block order before drag
       const firstBlockTid = await blocks.nth(0).getAttribute("data-testid");
       const secondBlockTid = await blocks.nth(1).getAttribute("data-testid");
+      // eslint-disable-next-line playwright/prefer-web-first-assertions -- compares two values captured at different times, which toHaveAttribute cannot express
       expect(firstBlockTid).not.toBe(secondBlockTid);
 
       // Verify drag handles are present and have cursor-grab
@@ -293,6 +294,7 @@ test.describe.serial("Full purchase flow: two sellers, one buyer", () => {
       // Verify the order swapped
       const blocksAfter = page.getByTestId(/^display-block-[0-9a-f]/);
       const firstAfter = await blocksAfter.nth(0).getAttribute("data-testid");
+      // eslint-disable-next-line playwright/prefer-web-first-assertions -- compares two values captured at different times, which toHaveAttribute cannot express
       expect(firstAfter).toBe(secondBlockTid);
       await snap(page, "sellerA-blocks-reordered");
 
@@ -305,6 +307,7 @@ test.describe.serial("Full purchase flow: two sellers, one buyer", () => {
       // Record field order before drag
       const firstFieldTid = await fields.nth(0).getAttribute("data-testid");
       const secondFieldTid = await fields.nth(1).getAttribute("data-testid");
+      // eslint-disable-next-line playwright/prefer-web-first-assertions -- compares two values captured at different times, which toHaveAttribute cannot express
       expect(firstFieldTid).not.toBe(secondFieldTid);
 
       // Drag second field above first
@@ -316,6 +319,7 @@ test.describe.serial("Full purchase flow: two sellers, one buyer", () => {
       const firstFieldAfter = await fieldsAfter
         .nth(0)
         .getAttribute("data-testid");
+      // eslint-disable-next-line playwright/prefer-web-first-assertions -- compares two values captured at different times, which toHaveAttribute cannot express
       expect(firstFieldAfter).toBe(secondFieldTid);
       await snap(page, "sellerA-fields-reordered");
 
