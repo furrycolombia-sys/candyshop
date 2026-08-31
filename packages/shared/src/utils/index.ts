@@ -25,3 +25,11 @@ export type {
   TicketDetails,
 } from "./typeDetails";
 export { getCoverImageUrl } from "./getCoverImageUrl";
+export {
+  escapeXml,
+  toCell,
+  toNumberCell,
+  buildWorkbook,
+  downloadExcel,
+} from "./spreadsheetml";
+export type { WorkbookSheet } from "./spreadsheetml";
