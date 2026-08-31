@@ -327,12 +327,31 @@ Both suites include a test that deliberately fails — an unlabelled `<Input>`,
 an icon-only `<button>` — so a suite of green assertions cannot quietly stop
 checking anything.
 
-### Not covered
+### Page level
 
-Page-level accessibility. axe over a rendered component tree cannot see
-computed colour contrast against the real theme, focus order across a whole
-page, or a heading hierarchy that only exists once a layout composes.
-`@axe-core/playwright` against each app's main routes is the missing piece.
+`@axe-core/playwright` now runs against `landing`'s public routes — home,
+terms, privacy — at WCAG 2.1 AA, plus a dark-mode contrast check. Those routes
+need no session and no seeded data, so a failure is about the page and nothing
+else.
+
+This is a different check from the component suites, not a bigger one. axe
+over a rendered component tree cannot see colour contrast computed against the
+real theme, focus order across a whole document, or a heading hierarchy that
+only exists once a layout composes.
+
+Still to do: the same treatment for the authenticated apps, which need a
+session fixture first.
+
+### Landing's E2E suite had never run
+
+Adding the spec surfaced this. `apps/landing` has had a `playwright.config.ts`
+and `navbar-auth-state.spec.ts` all along, but the CI job maps pnpm filter
+names to `scripts/e2e.mjs --app` values, and there was no `landing` case — so
+it hit the `*)` branch and printed "No E2E suite for landing, skipping."
+`e2e.mjs` did not accept `landing` either.
+
+Both now do. If you add a Playwright config to an app, add it in **both**
+places or the suite is silently never run.
 
 ### A naming hazard, deliberately left in place
 
