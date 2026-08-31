@@ -1,4 +1,6 @@
 /* eslint-disable i18next/no-literal-string */
+import { buildWorkbook, toCell, toNumberCell } from "shared";
+
 import type { ReportOrder } from "@/features/reports/domain/types";
 
 const ORDERS_HEADERS = [
@@ -18,25 +20,6 @@ const ORDERS_HEADERS = [
   "Has Receipt",
   "Receipt URL",
 ] as const;
-
-const WORKSHEET_CLOSE = "</Table></Worksheet>";
-
-function escapeXml(value: string): string {
-  return value
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&apos;");
-}
-
-function toCell(value: string): string {
-  return `<Cell><Data ss:Type="String">${escapeXml(value)}</Data></Cell>`;
-}
-
-function toNumberCell(value: number): string {
-  return `<Cell><Data ss:Type="Number">${value}</Data></Cell>`;
-}
 
 function buildOrderRow(
   order: ReportOrder,
@@ -85,29 +68,8 @@ export function exportOrdersToExcel(orders: ReportOrder[]): string {
     })
     .join("");
 
-  return [
-    '<?xml version="1.0"?>',
-    '<?mso-application progid="Excel.Sheet"?>',
-    '<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">',
-    '<Worksheet ss:Name="Sales Report"><Table>',
-    headerRow,
-    bodyRows,
-    WORKSHEET_CLOSE,
-    "</Workbook>",
-  ].join("");
+  return buildWorkbook([{ name: "Sales Report", rows: [headerRow, bodyRows] }]);
 }
 
-export function downloadExcel(content: string, filename: string) {
-  const blob = new Blob([content], {
-    type: "application/vnd.ms-excel;charset=utf-8;",
-  });
-  const link = document.createElement("a");
-  const url = URL.createObjectURL(blob);
-  link.setAttribute("href", url);
-  link.setAttribute("download", filename);
-  link.style.visibility = "hidden";
-  document.body.append(link);
-  link.click();
-  link.remove();
-  URL.revokeObjectURL(url);
-}
+// Re-exported so call sites keep importing both helpers from one place.
+export { downloadExcel } from "shared";
