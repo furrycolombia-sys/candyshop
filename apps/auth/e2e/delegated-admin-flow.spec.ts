@@ -39,6 +39,7 @@ const { snap, resetCounter } = createSnapHelper(
  *
  * Requires: supabase start + pnpm dev (all apps)
  */
+
 test.describe.serial("Delegated admin purchase flow", () => {
   let seller: TestUser;
   let buyer: TestUser;
@@ -418,7 +419,7 @@ test.describe.serial("Delegated admin purchase flow", () => {
 
     const receiptLink = page.getByTestId("receipt-view-link").first();
     await expect(receiptLink).toBeVisible({ timeout: ELEMENT_TIMEOUT_MS });
-    await expect(page.getByTestId("receipt-none").first()).not.toBeVisible();
+    await expect(page.getByTestId("receipt-none").first()).toBeHidden();
     await snap(page, "delegate-receipt-visible");
 
     // Click request evidence button
@@ -533,7 +534,7 @@ test.describe.serial("Delegated admin purchase flow", () => {
 
     const receiptLink7 = page.getByTestId("receipt-view-link").first();
     await expect(receiptLink7).toBeVisible({ timeout: ELEMENT_TIMEOUT_MS });
-    await expect(page.getByTestId("receipt-none").first()).not.toBeVisible();
+    await expect(page.getByTestId("receipt-none").first()).toBeHidden();
     await snap(page, "delegate-resubmitted-receipt-visible");
 
     // Click approve

@@ -241,7 +241,7 @@ test.describe("Navbar permission caching across apps", () => {
       `[re-render] ${NAV_APPS[0]!.name}: stale cookie — expected nav mutations after API fetch`,
     ).toBeGreaterThan(0);
     // Confirm the studio link is now gone (permissions were revoked).
-    await expect(page.getByTestId("nav-link-studio")).not.toBeVisible({
+    await expect(page.getByTestId("nav-link-studio")).toBeHidden({
       timeout: 5_000,
     });
 

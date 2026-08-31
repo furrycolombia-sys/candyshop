@@ -133,7 +133,7 @@ test(
       await expect(
         page.getByTestId("payments-mobile-sidebar-trigger"),
       ).toBeVisible();
-      await expect(page.getByTestId("payments-sidebar")).not.toBeVisible();
+      await expect(page.getByTestId("payments-sidebar")).toBeHidden();
 
       const checkoutViewportMetrics = await page.evaluate(() => ({
         doc: document.documentElement.scrollWidth,

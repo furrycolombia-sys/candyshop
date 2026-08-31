@@ -603,9 +603,12 @@ pnpm fix:all          # format + lint --fix
 
 **Git hooks** (Husky) are scoped rather than exhaustive, so they stay fast:
 
-- **pre-commit** — `lint-staged` on staged files only (Prettier, ESLint with
-  `--max-warnings=0`, Secretlint); plus `sherif` and `syncpack` when a manifest or the
-  lockfile changed.
+- **pre-commit** — `lint-staged` on staged files only (Prettier, ESLint, Secretlint);
+  plus `sherif` and `syncpack` when a manifest or the lockfile changed. ESLint blocks on
+  **errors**, not warnings: `eslint.config.mjs` deliberately stages some rules as warnings
+  so they can be driven to zero one at a time, and rejecting every warning in a touched
+  file made those files uneditable — the only way through was `--no-verify`, which skips
+  Secretlint too. See [Quality Gates](docs/standards/quality-gates.md).
 - **pre-push** — detects changed workspaces via `scripts/detect-changes.sh`, runs unit
   tests only for those (everything, if `packages/` or tooling changed), and runs a
   Docker health check when deploy files changed. Docs-only pushes skip it entirely.

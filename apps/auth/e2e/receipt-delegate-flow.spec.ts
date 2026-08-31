@@ -333,7 +333,7 @@ test.describe.serial("Delegate sees buyer receipt", () => {
     // A receipt download link must be present — no "no receipt" placeholder.
     const receiptLink = page.getByTestId("receipt-view-link").first();
     await expect(receiptLink).toBeVisible({ timeout: ELEMENT_TIMEOUT_MS });
-    await expect(page.getByTestId("receipt-none")).not.toBeVisible();
+    await expect(page.getByTestId("receipt-none")).toBeHidden();
 
     await snap(page, "delegate-receipt-visible");
 

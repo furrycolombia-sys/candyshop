@@ -54,6 +54,16 @@ that trains people to ignore it — and would hide the first real case.
 Proved it fires: an assertion-free spec is rejected as an error, and the same
 file named `*.setup.ts` is correctly exempt.
 
+Two more rules were driven to zero and promoted on 2026-08-30:
+`no-useless-not` (19 reported, 25 sites) and
+`consistent-spacing-between-blocks` (1).
+
+Promoting them needed an explicit `"error"`. The recommended set ships both as
+warnings, so removing them from the staged list left them as warnings and the
+promotion silently did nothing -- caught only by planting a violation and
+watching it fail to error. That is the whole reason this document asks you to
+prove a gate can fail.
+
 The remaining rules are staged as warnings with their counts recorded in
 `eslint.config.mjs`, to be driven to zero and promoted one at a time. Do not
 run `eslint --fix` blindly over them: `prefer-web-first-assertions` rewrote
@@ -91,3 +101,22 @@ unconditionally. The reason is real: both providers block automated browsers
 and the tests need a pre-seeded profile. They are manual-only by design, but
 they are also coverage the suite does not have — treat the OAuth paths as
 untested by CI.
+
+---
+
+## The pre-commit hook blocks on errors, not warnings
+
+`lint-staged` used to run `eslint --no-warn-ignored --max-warnings=0` over
+staged files. That directly contradicts the staging strategy above: rules are
+deliberately left as warnings so they can be driven to zero one at a time, and
+a hook that rejects every warning in a touched file makes those files
+uneditable.
+
+The practical effect was worse than it sounds. The only way to commit a change
+to an E2E spec was `--no-verify`, which skips **Secretlint and the Prettier
+check as well**. A gate strict enough to be routinely bypassed protects less
+than a gate that runs.
+
+The hook now blocks on errors — which include every promoted rule and the
+whole recommended set — while warnings stay visible in `pnpm lint` and in CI's
+Quality Checks job, which has always allowed them.

@@ -565,7 +565,7 @@ test.describe.serial("Full purchase flow: two sellers, one buyer", () => {
 
     const receiptLinkA = page.getByTestId("receipt-view-link").first();
     await expect(receiptLinkA).toBeVisible({ timeout: ELEMENT_TIMEOUT_MS });
-    await expect(page.getByTestId("receipt-none").first()).not.toBeVisible();
+    await expect(page.getByTestId("receipt-none").first()).toBeHidden();
     await snap(page, "sellerA-receipt-visible");
 
     await approveBtn.click();
@@ -577,7 +577,7 @@ test.describe.serial("Full purchase flow: two sellers, one buyer", () => {
     await page.reload();
     await page.waitForLoadState("networkidle");
 
-    await expect(page.getByTestId(/^order-approve-/).first()).not.toBeVisible({
+    await expect(page.getByTestId(/^order-approve-/).first()).toBeHidden({
       timeout: NAVIGATION_TIMEOUT_MS,
     });
     await snap(page, "sellerA-order-approved");
@@ -606,7 +606,7 @@ test.describe.serial("Full purchase flow: two sellers, one buyer", () => {
 
     const receiptLinkB = page.getByTestId("receipt-view-link").first();
     await expect(receiptLinkB).toBeVisible({ timeout: ELEMENT_TIMEOUT_MS });
-    await expect(page.getByTestId("receipt-none").first()).not.toBeVisible();
+    await expect(page.getByTestId("receipt-none").first()).toBeHidden();
     await snap(page, "sellerB-receipt-visible");
 
     await approveBtn.click();
@@ -618,7 +618,7 @@ test.describe.serial("Full purchase flow: two sellers, one buyer", () => {
     await page.reload();
     await page.waitForLoadState("networkidle");
 
-    await expect(page.getByTestId(/^order-approve-/).first()).not.toBeVisible({
+    await expect(page.getByTestId(/^order-approve-/).first()).toBeHidden({
       timeout: NAVIGATION_TIMEOUT_MS,
     });
     await snap(page, "sellerB-order-approved");
