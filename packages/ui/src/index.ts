@@ -16,7 +16,7 @@ export * from "./components/dropdown-menu";
 export * from "./components/icon-showcase";
 export * from "./components/InfoBadge";
 export * from "./components/input";
-export * from "./components/label";
+export * from "./components/StatusLabel";
 export * from "./components/MiniAreaChart";
 export * from "./components/popover";
 export * from "./components/ProgressBar";

@@ -6,10 +6,16 @@ import * as React from "react";
 import { cn } from "@ui/utils/cn";
 
 /**
- * Label - Status label with solid colors and icons.
+ * StatusLabel - Status badge with solid colours and icons.
  * For process statuses like "Healthy", "Attention", "Critical".
+ *
+ * Renamed from `Label`. It renders a <span> and has no htmlFor, so under the
+ * old name it collided with the shadcn convention where label.tsx IS the form
+ * label -- importing `Label` to label an input gave no association at all, the
+ * exact defect axe's `label` rule exists to catch. Nothing imported it, so the
+ * rename cost nothing; it also frees `label.tsx` for a real form label.
  */
-const labelVariants = cva(
+const statusLabelVariants = cva(
   "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium",
   {
     variants: {
@@ -33,7 +39,7 @@ const labelVariants = cva(
  * Maps variant to default icon and whether to show icon wrapper (circle border).
  */
 const STATUS_ICONS: Record<
-  NonNullable<VariantProps<typeof labelVariants>["variant"]>,
+  NonNullable<VariantProps<typeof statusLabelVariants>["variant"]>,
   { icon: LucideIcon; showWrapper: boolean }
 > = {
   healthy: { icon: Check, showWrapper: true },
@@ -44,10 +50,10 @@ const STATUS_ICONS: Record<
   "brand-soft": { icon: Check, showWrapper: true },
 };
 
-export interface LabelProps
+export interface StatusLabelProps
   extends
     React.HTMLAttributes<HTMLSpanElement>,
-    VariantProps<typeof labelVariants> {
+    VariantProps<typeof statusLabelVariants> {
   /** Show the default icon for this variant */
   showIcon?: boolean;
   /** Custom icon to override the default */
@@ -56,7 +62,7 @@ export interface LabelProps
   showIconWrapper?: boolean;
 }
 
-function Label({
+function StatusLabel({
   className,
   variant = "healthy",
   showIcon = true,
@@ -64,13 +70,16 @@ function Label({
   showIconWrapper,
   children,
   ...props
-}: LabelProps) {
+}: StatusLabelProps) {
   const iconConfig = variant ? STATUS_ICONS[variant] : STATUS_ICONS.healthy;
   const Icon = icon ?? iconConfig.icon;
   const shouldShowWrapper = showIconWrapper ?? iconConfig.showWrapper;
 
   return (
-    <span className={cn(labelVariants({ variant }), className)} {...props}>
+    <span
+      className={cn(statusLabelVariants({ variant }), className)}
+      {...props}
+    >
       {showIcon && (
         <>
           {shouldShowWrapper ? (
@@ -87,4 +96,4 @@ function Label({
   );
 }
 
-export { Label, labelVariants };
+export { StatusLabel, statusLabelVariants };
