@@ -17,7 +17,13 @@
     "**/*.test.*",
     "**/*.spec.*",
     "**/mocks/**",
-    "**/test/**"
+    "**/test/**",
+    "**/src/app/**/layout.tsx",
+    "**/src/app/**/error.tsx",
+    "**/src/app/**/global-error.tsx",
+    "**/src/app/**/not-found.tsx",
+    "**/src/app/**/loading.tsx",
+    "**/src/app/**/template.tsx"
   ],
   "format": ["typescript", "tsx", "javascript", "jsx"],
   "absolute": true,
