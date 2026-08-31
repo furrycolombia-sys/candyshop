@@ -367,3 +367,50 @@ either.
 `edited` is now in the trigger list. `changes`, `security` and `summary` opt
 out of it, so fixing a typo does not re-run an audit or rewrite the summary
 comment.
+
+---
+
+## The timing rules: the rule that makes a wait removable
+
+`no-networkidle` (117) and `no-wait-for-timeout` (93) are being driven down per
+app rather than in bulk, for the reason recorded above: the failure mode is
+intermittent, and one green pipeline does not disprove it.
+
+`admin` is done — 29 sites to 6. What made it safe is a single distinction,
+and it is not "does an assertion follow":
+
+**A wait is redundant only before a _positive_ assertion.** `expect(x)
+.toBeVisible()` retries until the thing appears, so whatever the wait was
+buying, the assertion buys again.
+
+**A wait before a _negative_ assertion is load-bearing.**
+`expect(x).toBeHidden()`, `not.toContain`, `toHaveCount(0)` all pass when the
+page has not rendered yet. Remove the settle window and the test does not
+become flaky — it becomes a **false pass**, which is worse, because nothing
+ever goes red to tell you.
+
+The first pass over `admin` missed this and removed the wait in front of five
+negative assertions. The diff was re-read, reverted, and redone with the check
+built into the transform. The six waits that remain are annotated in place with
+why.
+
+CI then caught a second half of the rule that the first version missed, and
+it is the more subtle one.
+
+**The assertion has to _retry_, not merely be positive.**
+`expect(url.searchParams.get("status")).toBe("approved")` is a positive
+assertion, but it reads `page.url()` once. It never retries. Two admin filter
+tests are debounced, so removing the sleep in front of a one-shot read raced
+the update and they failed — exactly the intermittent failure this ratchet is
+being paced to avoid, surfaced by doing one app at a time.
+
+The fix was not to put the sleep back. `await expect(page).toHaveURL(...)`
+retries, so the wait stays gone and the assertion is robust on top. Four
+one-shot URL reads in that file are now retrying assertions.
+
+So the full rule is: **a wait is redundant only in front of a positive,
+retrying assertion.** A Playwright web-first matcher (`toBeVisible`,
+`toHaveURL`, `toHaveText`) retries. A plain `expect()` over a value you already
+read does not.
+
+Apply that to `payments` (31) and `auth` (149).
