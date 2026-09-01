@@ -1,5 +1,6 @@
-import { expect, test } from "@playwright/test";
 import path from "node:path";
+
+import { expect, test } from "./fixtures/auth.fixture";
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { resolveE2EAppUrls } = require(
@@ -34,7 +35,14 @@ function words(source: string): string[] {
 test("landing's server-rendered page matches the hydrated page", async ({
   page,
   context,
+  authenticatedPage,
 }) => {
+  // The mismatch only appears for a signed-in user, and this project has no
+  // storageState -- an earlier version of this test used the bare `page` and
+  // passed while the smoke test still failed, because it was rendering the
+  // signed-out page.
+  expect(authenticatedPage.email).toBeTruthy();
+
   await page.goto(`${LANDING_URL}/en`);
   await expect(page.getByTestId("app-navigation")).toBeVisible();
 
