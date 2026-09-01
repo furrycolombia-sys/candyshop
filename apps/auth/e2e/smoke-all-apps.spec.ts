@@ -9,8 +9,6 @@ const { resolveE2EAppUrls } = require(
 
 const APPS = resolveE2EAppUrls() as Record<string, string>;
 
-const KNOWN_FAILING_APP = "landing";
-
 test.describe("Smoke test -- all apps", () => {
   test("auth app: login page renders with social buttons", async ({ page }) => {
     await page.goto(`${APPS.auth}/en/login`);
@@ -116,9 +114,20 @@ test.describe("Smoke test -- all apps", () => {
 
     const thrown: Record<string, string[]> = {};
 
+    // ONE listener, registered before the loop, writing to whichever app is
+    // currently loaded. Registering it inside the loop -- as this test used to
+    // -- adds a listener per iteration and never removes any, so every app's
+    // array receives the errors of every app visited after it. `landing` is
+    // first in APPS, so it collected all seven apps' errors and was blamed for
+    // a React #418 that could not be reproduced against it.
+    let currentApp = "";
+    page.on("pageerror", (err) => {
+      thrown[currentApp]?.push(err.message);
+    });
+
     for (const [appName, url] of Object.entries(APPS)) {
-      const errors: string[] = [];
-      page.on("pageerror", (err) => errors.push(err.message));
+      currentApp = appName;
+      thrown[appName] = [];
 
       const response = await page.goto(`${url}/en`).catch(() => null);
 
@@ -134,50 +143,19 @@ test.describe("Smoke test -- all apps", () => {
 
       const nav = page.getByTestId("app-navigation");
       await expect(nav).toBeVisible();
-
-      thrown[appName] = errors;
     }
 
     // The test is called "all apps load without errors". It used to collect
     // page errors and then only log them, so it passed while an app threw on
     // load -- the single thing it exists to catch.
     //
-    // `landing` is filtered out because it genuinely does throw; the
-    // test.fixme below records that, rather than letting one known defect hide
-    // the other six apps' coverage. Remove it from the filter with the fix.
+    // No app is excluded. The previous exclusion named `landing` on the
+    // strength of an attribution that was wrong by construction; with the
+    // listener fixed, whatever this reports is the app that actually threw.
     const failed = Object.entries(thrown)
-      .filter(([appName]) => appName !== KNOWN_FAILING_APP)
       .filter(([, errors]) => errors.length > 0)
       .map(([appName, errors]) => `${appName}: ${errors.join(" | ")}`);
 
     expect(failed, "apps threw on load").toEqual([]);
-  });
-
-  // Not skipped and not silenced: `fixme` reports as a known failure, so it
-  // stays visible in every run instead of turning green by omission.
-  test.fixme("landing loads without errors (React #418 hydration mismatch)", async ({
-    page,
-  }) => {
-    // Reproducible in CI across all three attempts:
-    //
-    //   landing threw on load: Minified React error #418 -- the server-
-    //   rendered text did not match the client's, so React discarded the
-    //   server HTML and re-rendered on the client.
-    //
-    // The old assertion-free version of the test above had been logging this
-    // rather than failing, so it is not new -- only newly visible.
-    //
-    // Not fixed here because the cause is not yet proven. The layout passes
-    // `initialGrantedKeys` exactly as the other apps do, so the obvious
-    // suspect -- `useCurrentUserPermissions` seeding state from a browser
-    // cookie the server could not read -- does not by itself explain why
-    // only landing is affected. That needs the app running locally.
-    const errors: string[] = [];
-    page.on("pageerror", (err) => errors.push(err.message));
-
-    await page.goto(`${APPS.landing}/en`);
-    await page.waitForLoadState("networkidle");
-
-    expect(errors, `landing threw on load: ${errors.join(" | ")}`).toEqual([]);
   });
 });

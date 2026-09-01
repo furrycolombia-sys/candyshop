@@ -478,27 +478,42 @@ Apply that to `payments` (31) and `auth` (149).
 
 ---
 
-## Found by arming a gate: landing throws on load
+## A gate that named the wrong app
 
-Making `smoke-all-apps` able to fail immediately turned up a real defect.
-`landing` throws **React error #418** on load — the server-rendered text did
-not match the client's, so React discards the server HTML and re-renders. It
-reproduced across all three CI attempts.
+Arming `smoke-all-apps` surfaced a real React #418 hydration error — and
+attributed it to `landing`, which was wrong by construction.
 
-It is not new. The old version of that test collected page errors and
-`console.log`ged them, so this had been happening for as long as anyone had
-been not-reading the logs.
+The listener was registered **inside** the loop:
 
-It is not fixed yet, and the reason is worth stating: the cause is not proven.
-The obvious suspect is `useCurrentUserPermissions`, whose `useState`
-initializer prefers `readPermCache()` — a browser cookie the server cannot
-read — over the `initialGrantedKeys` the server rendered with. That is a
-textbook hydration mismatch. But `landing`'s layout passes
-`initialGrantedKeys` exactly as the other apps do, and only `landing` fails,
-so that explanation is incomplete. Confirming it needs the app running
-locally.
+```ts
+for (const [appName, url] of Object.entries(APPS)) {
+  const errors: string[] = [];
+  page.on("pageerror", (err) => errors.push(err.message)); // never removed
+```
 
-Meanwhile the other six apps **are** checked, and `landing` has a `test.fixme`
-that names the error. `fixme` reports as a known failure rather than a skip,
-so it stays visible in every run instead of turning green by omission. Delete
-it, and the `KNOWN_FAILING_APP` exclusion, with the fix.
+Every iteration adds another listener and none are removed, so an error thrown
+while visiting app N is pushed into the arrays of apps 1..N. `landing` is
+first in `APPS`, so it collected all seven apps' errors.
+
+Demonstrated with two throwing pages rather than argued:
+
+```
+OLD: {"landing":["boom from landing","boom from store"], "store":["boom from store"]}
+NEW: {"landing":["boom from landing"],                   "store":["boom from store"]}
+```
+
+There is now one listener, registered before the loop, writing to whichever
+app is currently loaded.
+
+**What this cost.** A `test.fixme` was added naming `landing` and describing a
+plausible cause — `useCurrentUserPermissions` seeding state from a browser
+cookie the server cannot read. Chasing it found nothing, because `landing` was
+probably never the culprit: it does not throw in dev, in a production build,
+or with a permissions cookie set, and every one of its routes is dynamically
+rendered (`ƒ`), so the static-prerender theory was wrong too. The exclusion and
+the fixme are gone.
+
+The lesson is not about Playwright listeners. An arming change made a real
+failure visible, and the first instinct was to explain the failure rather than
+to check whether the thing reporting it was telling the truth. **Verify the
+attribution before debugging the accusation.**
