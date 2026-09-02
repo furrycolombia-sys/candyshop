@@ -2571,3 +2571,118 @@ grant select ("display_email"), update ("display_email") on public.user_profiles
 grant select ("display_avatar_url"), update ("display_avatar_url") on public.user_profiles to anon, authenticated;
 grant select ("first_seen_at"), select ("last_seen_at") on public.user_profiles to anon, authenticated;
 grant select ("created_at"), select ("updated_at") on public.user_profiles to anon, authenticated;
+
+-- ===========================================================================
+-- Seed and storage
+-- ===========================================================================
+-- `supabase db dump` covers the public schema's structure and nothing else,
+-- so squashing through a dump silently dropped two things that the archived
+-- migrations did create: the reference rows the application reads at runtime,
+-- and the whole storage layer. A fresh database built from the baseline alone
+-- came up with an empty permissions table and no receipts bucket. CI caught it
+-- (Permission 'products.create' not found in DB); the schema diff could not,
+-- because it was comparing structure.
+--
+-- Everything below was generated from a database built by replaying all 51
+-- archived migrations, not written by hand.
+--
+-- Rows are seeded by natural key and never by id: permissions.id is
+-- gen_random_uuid(), and user_permissions rows in a production backup point at
+-- the ids that production generated. Hardcoding ids here would leave those
+-- references dangling. Every statement is idempotent so re-running a migration
+-- or seeding a database that already has rows is a no-op.
+
+insert into public.permissions (key, name_en, name_es, description_en, description_es, depends_on) values
+  ('admin.reports', 'Sales Reports', 'Reportes de Ventas', 'View and export the full sales report with all orders and receipts', 'Ver y exportar el reporte completo de ventas con todas las órdenes y recibos', 'orders.read'),
+  ('audit.read', 'View Audit Log', 'Ver Registro de Auditoria', 'View audit log', 'Ver registro de auditoria', null),
+  ('check_ins.create', 'Check In', 'Registrar Entrada', 'Check in attendees', 'Registrar entrada de asistentes', null),
+  ('check_ins.read', 'View Check-ins', 'Ver Check-ins', 'View check-in status', 'Ver estado de check-in', null),
+  ('check_ins.update', 'Undo Check-in', 'Deshacer Check-in', 'Undo check-in', 'Deshacer check-in', null),
+  ('events.create', 'Create Events', 'Crear Eventos', 'Create events', 'Crear eventos', null),
+  ('events.delete', 'Delete Events', 'Eliminar Eventos', 'Delete events', 'Eliminar eventos', null),
+  ('events.read', 'View Events', 'Ver Eventos', 'View events', 'Ver eventos', null),
+  ('events.update', 'Edit Events', 'Editar Eventos', 'Edit events', 'Editar eventos', null),
+  ('orders.approve', 'Approve Orders', 'Aprobar Pedidos', 'Approve purchase orders on behalf of a seller', 'Aprobar pedidos de compra en nombre de un vendedor', null),
+  ('orders.create', 'Place Orders', 'Hacer Pedidos', 'Place orders (checkout)', 'Hacer pedidos (checkout)', null),
+  ('orders.read', 'View Orders', 'Ver Pedidos', 'View own orders / received orders', 'Ver pedidos propios / recibidos', null),
+  ('orders.request_proof', 'Request Proof', 'Solicitar Comprobante', 'Request additional proof before approving an order', 'Solicitar comprobante adicional antes de aprobar un pedido', null),
+  ('orders.update', 'Manage Orders', 'Gestionar Pedidos', 'Approve or reject received orders', 'Aprobar o rechazar pedidos recibidos', 'products.create'),
+  ('payment_settings.read', 'View Payment Settings', 'Ver Config. de Pagos', 'View timeout settings', 'Ver configuracion de tiempos', null),
+  ('payment_settings.update', 'Edit Payment Settings', 'Editar Config. de Pagos', 'Change timeout settings', 'Cambiar configuracion de tiempos', null),
+  ('product_reviews.create', 'Write Reviews', 'Escribir Resenas', 'Write product reviews', 'Escribir resenas de producto', 'orders.create'),
+  ('product_reviews.delete', 'Delete Reviews', 'Eliminar Resenas', 'Delete own review', 'Eliminar resena propia', null),
+  ('product_reviews.read', 'Read Reviews', 'Ver Resenas', 'Read product reviews', 'Ver resenas de producto', null),
+  ('product_reviews.update', 'Edit Reviews', 'Editar Resenas', 'Edit own review', 'Editar resena propia', null),
+  ('products.create', 'Create Products', 'Crear Productos', 'Create new products in Studio', 'Crear nuevos productos en Studio', null),
+  ('products.delete', 'Delete Products', 'Eliminar Productos', 'Delete own products', 'Eliminar productos propios', null),
+  ('products.read', 'Read Products', 'Ver Productos', 'Browse and view products', 'Navegar y ver productos', null),
+  ('products.update', 'Update Products', 'Editar Productos', 'Edit own products', 'Editar productos propios', null),
+  ('receipts.create', 'Upload Receipts', 'Subir Recibos', 'Upload payment receipts', 'Subir recibos de pago', 'orders.create'),
+  ('receipts.delete', 'Delete Receipts', 'Eliminar Recibos', 'Delete own receipts', 'Eliminar recibos propios', null),
+  ('receipts.read', 'View Receipts', 'Ver Recibos', 'View receipts', 'Ver recibos', null),
+  ('reports.export', 'Export Delegated Reports', 'Exportar Reportes Delegados', 'Export the delegated sales report to Excel', 'Exportar el reporte de ventas delegado a Excel', 'reports.read'),
+  ('reports.read', 'View Delegated Reports', 'Ver Reportes Delegados', 'View the sales report for delegated products', 'Ver el reporte de ventas de los productos delegados', 'orders.read'),
+  ('seller_admins.create', 'Add Delegates', 'Agregar Delegados', 'Add delegated administrators', 'Agregar administradores delegados', null),
+  ('seller_admins.delete', 'Remove Delegates', 'Eliminar Delegados', 'Remove delegated administrators', 'Eliminar administradores delegados', null),
+  ('seller_admins.read', 'View Delegates', 'Ver Delegados', 'View delegated administrators', 'Ver administradores delegados', null),
+  ('seller_admins.update', 'Edit Delegates', 'Editar Delegados', 'Update delegate permissions', 'Actualizar permisos de delegados', null),
+  ('seller_payment_methods.create', 'Add Payment Methods', 'Agregar Metodos de Pago', 'Add payment methods', 'Agregar metodos de pago', 'products.create'),
+  ('seller_payment_methods.delete', 'Remove Payment Methods', 'Eliminar Metodos de Pago', 'Remove payment methods', 'Eliminar metodos de pago', 'products.create'),
+  ('seller_payment_methods.read', 'View Payment Methods', 'Ver Metodos de Pago', 'View own payment methods', 'Ver metodos de pago propios', 'products.create'),
+  ('seller_payment_methods.update', 'Edit Payment Methods', 'Editar Metodos de Pago', 'Edit payment methods', 'Editar metodos de pago', 'products.create'),
+  ('templates.create', 'Create Templates', 'Crear Plantillas', 'Create product templates', 'Crear plantillas de producto', null),
+  ('templates.delete', 'Delete Templates', 'Eliminar Plantillas', 'Delete product templates', 'Eliminar plantillas de producto', null),
+  ('templates.read', 'View Templates', 'Ver Plantillas', 'View product templates', 'Ver plantillas de producto', null),
+  ('templates.update', 'Edit Templates', 'Editar Plantillas', 'Edit product templates', 'Editar plantillas de producto', null),
+  ('user_permissions.create', 'Grant Permissions', 'Otorgar Permisos', 'Grant permissions to users', 'Otorgar permisos a usuarios', null),
+  ('user_permissions.delete', 'Revoke Permissions', 'Revocar Permisos', 'Revoke permissions', 'Revocar permisos', null),
+  ('user_permissions.read', 'View Permissions', 'Ver Permisos', 'View user permissions', 'Ver permisos de usuarios', null),
+  ('user_permissions.update', 'Modify Permissions', 'Modificar Permisos', 'Modify permission grants', 'Modificar concesiones de permisos', null),
+  ('users.export', 'Export Users', 'Exportar Usuarios', 'Export selected users and receipt backups', 'Exportar usuarios seleccionados y respaldos de comprobantes', 'user_permissions.read')
+on conflict (key) do nothing;
+
+-- One global grant row per permission; that is the whole table (46 of 46 rows
+-- are resource_type='global' with a null resource_id). The unique key includes
+-- resource_id, and NULL is never equal to NULL in a unique index, so ON
+-- CONFLICT cannot dedupe here — hence NOT EXISTS.
+insert into public.resource_permissions (permission_id, resource_type, resource_id)
+select p.id, 'global', null
+  from public.permissions p
+ where not exists (
+   select 1 from public.resource_permissions rp
+    where rp.permission_id = p.id
+      and rp.resource_type = 'global'
+      and rp.resource_id is null
+ );
+
+insert into public.payment_settings (key, value) values
+  ('timeout_awaiting_payment_hours', '48'),
+  ('timeout_pending_verification_hours', '72'),
+  ('timeout_evidence_requested_hours', '24')
+on conflict (key) do nothing;
+
+insert into public.product_templates (name_en, name_es, description_en, description_es, sections, sort_order, is_active) values
+  ('Art Commission', 'Comision de Arte', 'For custom artwork: pricing tiers, process steps, and terms', 'Para arte personalizado: niveles de precio, pasos del proceso y terminos', '[{"type": "cards", "items": [{"icon": "Palette", "title_en": "Base Package", "title_es": "Paquete Base", "image_url": "", "sort_order": 0, "description_en": "Describe what the buyer gets at the listed price (e.g. single character, flat color, simple bg)", "description_es": "Describe que obtiene el comprador al precio listado (ej. un personaje, color plano, fondo simple)"}, {"icon": "Sparkles", "title_en": "Add-ons", "title_es": "Extras", "image_url": "", "sort_order": 1, "description_en": "List available upgrades and their prices (e.g. extra character +$X, complex bg +$X)", "description_es": "Lista las mejoras disponibles y sus precios (ej. personaje extra +$X, fondo complejo +$X)"}], "name_en": "What You Get", "name_es": "Que Incluye", "sort_order": 0}, {"type": "accordion", "items": [{"icon": "FileText", "title_en": "Placing Your Order", "title_es": "Hacer Tu Pedido", "image_url": "", "sort_order": 0, "description_en": "Explain what references or info the buyer needs to provide (ref sheet, pose ideas, color palette)", "description_es": "Explica que referencias o informacion debe proporcionar el comprador (ref sheet, ideas de pose, paleta de color)"}, {"icon": "Clock", "title_en": "Turnaround Time", "title_es": "Tiempo de Entrega", "image_url": "", "sort_order": 1, "description_en": "State your typical delivery window and how many revision rounds are included", "description_es": "Indica tu tiempo de entrega tipico y cuantas rondas de revision estan incluidas"}, {"icon": "Shield", "title_en": "Terms & Revisions", "title_es": "Terminos y Revisiones", "image_url": "", "sort_order": 2, "description_en": "Clarify your policy on revisions, cancellations, and usage rights for the finished piece", "description_es": "Aclara tu politica de revisiones, cancelaciones y derechos de uso de la pieza terminada"}], "name_en": "How It Works", "name_es": "Como Funciona", "sort_order": 1}]'::jsonb, 1, true),
+  ('Fursuit Commission', 'Comision de Fursuit', 'For fursuits and wearables: features, process, and care guide', 'Para fursuits y accesorios: caracteristicas, proceso y guia de cuidado', '[{"type": "cards", "items": [{"icon": "Star", "title_en": "Materials", "title_es": "Materiales", "image_url": "", "sort_order": 0, "description_en": "Describe the fur type, foam, and other materials you use (e.g. NFT fur, EVA foam, resin)", "description_es": "Describe el tipo de pelaje, espuma y otros materiales que usas (ej. pelaje NFT, espuma EVA, resina)"}, {"icon": "Package", "title_en": "Included Parts", "title_es": "Partes Incluidas", "image_url": "", "sort_order": 1, "description_en": "List what comes in this commission (head, paws, tail, bodysuit, etc.)", "description_es": "Lista que incluye esta comision (cabeza, patas, cola, bodysuit, etc.)"}, {"icon": "Brush", "title_en": "Customization", "title_es": "Personalizacion", "image_url": "", "sort_order": 2, "description_en": "Explain what the buyer can customize (eye color, jaw style, LED options, etc.)", "description_es": "Explica que puede personalizar el comprador (color de ojos, tipo de mandibula, opciones LED, etc.)"}], "name_en": "Features & Specs", "name_es": "Caracteristicas", "sort_order": 0}, {"type": "accordion", "items": [{"icon": "Clock", "title_en": "Timeline", "title_es": "Cronograma", "image_url": "", "sort_order": 0, "description_en": "Break down the production stages and estimated duration for each (e.g. sculpt 2w, fur 3w, assembly 1w)", "description_es": "Desglosa las etapas de produccion y duracion estimada de cada una (ej. escultura 2s, pelaje 3s, ensamble 1s)"}, {"icon": "Shield", "title_en": "Payment Plan", "title_es": "Plan de Pago", "image_url": "", "sort_order": 1, "description_en": "Explain your payment structure (e.g. 50% deposit, 50% before shipping)", "description_es": "Explica tu estructura de pago (ej. 50% deposito, 50% antes del envio)"}], "name_en": "Production Process", "name_es": "Proceso de Produccion", "sort_order": 1}, {"type": "two-column", "items": [{"icon": "Wind", "title_en": "Cleaning", "title_es": "Limpieza", "image_url": "", "sort_order": 0, "description_en": "How to clean and maintain the fursuit (spot clean, brush, wash frequency)", "description_es": "Como limpiar y mantener el fursuit (limpieza puntual, cepillado, frecuencia de lavado)"}, {"icon": "Package", "title_en": "Storage", "title_es": "Almacenamiento", "image_url": "", "sort_order": 1, "description_en": "Recommend proper storage conditions (cool/dry, head on stand, tail hanging)", "description_es": "Recomienda condiciones de almacenamiento adecuadas (fresco/seco, cabeza en soporte, cola colgando)"}], "name_en": "Care Guide", "name_es": "Guia de Cuidado", "sort_order": 2}]'::jsonb, 2, true),
+  ('Merch Item', 'Articulo de Merch', 'For physical goods: product details, sizing, and shipping info', 'Para productos fisicos: detalles del producto, tallas e informacion de envio', '[{"type": "two-column", "items": [{"icon": "Star", "title_en": "Material & Quality", "title_es": "Material y Calidad", "image_url": "", "sort_order": 0, "description_en": "Describe materials and finish (e.g. 100% cotton, holographic vinyl, resin-cast)", "description_es": "Describe materiales y acabado (ej. 100% algodon, vinilo holografico, resina moldeada)"}, {"icon": "Package", "title_en": "Dimensions", "title_es": "Dimensiones", "image_url": "", "sort_order": 1, "description_en": "List sizes or dimensions (e.g. 2-inch pin, A4 print, S/M/L/XL)", "description_es": "Lista tallas o dimensiones (ej. pin de 5cm, impresion A4, S/M/L/XL)"}, {"icon": "Truck", "title_en": "Shipping", "title_es": "Envio", "image_url": "", "sort_order": 2, "description_en": "Shipping options and estimated delivery times (domestic and international)", "description_es": "Opciones de envio y tiempos de entrega estimados (nacional e internacional)"}], "name_en": "Product Details", "name_es": "Detalles del Producto", "sort_order": 0}, {"type": "accordion", "items": [{"icon": "", "title_en": "Returns & Exchanges", "title_es": "Devoluciones y Cambios", "image_url": "", "sort_order": 0, "description_en": "State your return/exchange policy and conditions", "description_es": "Indica tu politica de devoluciones y cambios y sus condiciones"}, {"icon": "", "title_en": "Care Instructions", "title_es": "Instrucciones de Cuidado", "image_url": "", "sort_order": 1, "description_en": "How to care for the product to keep it in good condition", "description_es": "Como cuidar el producto para mantenerlo en buen estado"}], "name_en": "FAQ", "name_es": "Preguntas Frecuentes", "sort_order": 1}]'::jsonb, 3, true),
+  ('Digital Download', 'Descarga Digital', 'For digital products: what is included, file formats, and usage terms', 'Para productos digitales: que incluye, formatos de archivo y terminos de uso', '[{"type": "cards", "items": [{"icon": "Download", "title_en": "File Contents", "title_es": "Contenido del Archivo", "image_url": "", "sort_order": 0, "description_en": "List everything included in the download (number of files, variations, bonus content)", "description_es": "Lista todo lo incluido en la descarga (cantidad de archivos, variaciones, contenido extra)"}, {"icon": "Image", "title_en": "File Formats", "title_es": "Formatos de Archivo", "image_url": "", "sort_order": 1, "description_en": "Specify formats and resolutions (e.g. PNG 4000x4000, PSD layers, PDF)", "description_es": "Especifica formatos y resoluciones (ej. PNG 4000x4000, capas PSD, PDF)"}], "name_en": "What You Get", "name_es": "Que Incluye", "sort_order": 0}, {"type": "accordion", "items": [{"icon": "Heart", "title_en": "Personal Use", "title_es": "Uso Personal", "image_url": "", "sort_order": 0, "description_en": "Explain what the buyer can do with the files for personal use (avatars, prints for self, etc.)", "description_es": "Explica que puede hacer el comprador con los archivos para uso personal (avatares, impresiones propias, etc.)"}, {"icon": "Shield", "title_en": "Commercial Use", "title_es": "Uso Comercial", "image_url": "", "sort_order": 1, "description_en": "State whether commercial use is allowed and any restrictions or additional licensing required", "description_es": "Indica si el uso comercial esta permitido y cualquier restriccion o licencia adicional requerida"}], "name_en": "License & Usage", "name_es": "Licencia y Uso", "sort_order": 1}]'::jsonb, 4, true),
+  ('Event Ticket', 'Boleto de Evento', 'For cons, meetups, and live events: highlights, schedule, and venue info', 'Para convenciones, meetups y eventos en vivo: destacados, horario e informacion del lugar', '[{"type": "cards", "items": [{"icon": "Zap", "title_en": "Main Attraction", "title_es": "Atraccion Principal", "image_url": "", "sort_order": 0, "description_en": "Describe the main activity or feature of the event (live drawing, panel, workshop)", "description_es": "Describe la actividad o caracteristica principal del evento (dibujo en vivo, panel, taller)"}, {"icon": "Users", "title_en": "Meet & Greet", "title_es": "Meet & Greet", "image_url": "", "sort_order": 1, "description_en": "Will there be a meet-and-greet? Describe what attendees can expect", "description_es": "Habra un meet-and-greet? Describe que pueden esperar los asistentes"}, {"icon": "Award", "title_en": "Exclusive Items", "title_es": "Articulos Exclusivos", "image_url": "", "sort_order": 2, "description_en": "List any event-exclusive merch, prints, or giveaways available only at this event", "description_es": "Lista cualquier merch, impresiones o regalos exclusivos del evento disponibles solo ahi"}], "name_en": "Event Highlights", "name_es": "Destacados del Evento", "sort_order": 0}, {"type": "two-column", "items": [{"icon": "MapPin", "title_en": "Location", "title_es": "Ubicacion", "image_url": "", "sort_order": 0, "description_en": "Venue name, address, and how to find your booth or table (e.g. Artist Alley, Table A-42)", "description_es": "Nombre del lugar, direccion y como encontrar tu stand o mesa (ej. Artist Alley, Mesa A-42)"}, {"icon": "Clock", "title_en": "Date & Hours", "title_es": "Fecha y Horario", "image_url": "", "sort_order": 1, "description_en": "Event dates and your hours of attendance", "description_es": "Fechas del evento y tus horas de asistencia"}], "name_en": "Venue & Schedule", "name_es": "Lugar y Horario", "sort_order": 1}]'::jsonb, 5, true)
+on conflict do nothing;
+
+-- Storage. `supabase db dump` does not emit the storage schema at all, so the
+-- receipts bucket and its policies vanished in the squash. Three policies is
+-- the correct final count: the archive created six across its history and
+-- dropped three of them again.
+insert into storage.buckets (id, name, public)
+values ('receipts', 'receipts', false)
+on conflict (id) do nothing;
+
+drop policy if exists receipts_delete on storage.objects;
+create policy receipts_delete on storage.objects for DELETE to public
+  using (((bucket_id = 'receipts'::text) AND public.has_permission(public.current_user_id(), 'receipts.delete'::text)));
+drop policy if exists receipts_read on storage.objects;
+create policy receipts_read on storage.objects for SELECT to public
+  using (((bucket_id = 'receipts'::text) AND (public.has_permission(public.current_user_id(), 'receipts.read'::text) OR ((name ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/'::text) AND (public.is_receipt_delegate((split_part(name, '/'::text, 1))::uuid) OR public.is_receipt_delegate_by_order_id((split_part(name, '/'::text, 1))::uuid))))));
+drop policy if exists receipts_upload on storage.objects;
+create policy receipts_upload on storage.objects for INSERT to public
+  with check (((bucket_id = 'receipts'::text) AND public.has_permission(public.current_user_id(), 'receipts.create'::text)));
