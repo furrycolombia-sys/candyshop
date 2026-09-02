@@ -1,0 +1,306 @@
+import { describe, it, expect, vi, beforeEach } from "vitest";
+
+import {
+  createOrder,
+  fetchSellerPaymentMethods,
+  fetchSellerProfiles,
+} from "./checkoutQueries";
+
+import type { CartItem } from "@/features/checkout/domain/types";
+
+// ---------------------------------------------------------------------------
+// Supabase mock builder
+// ---------------------------------------------------------------------------
+
+interface MockChain {
+  select: ReturnType<typeof vi.fn>;
+  eq: ReturnType<typeof vi.fn>;
+  in: ReturnType<typeof vi.fn>;
+  order: ReturnType<typeof vi.fn>;
+  insert: ReturnType<typeof vi.fn>;
+  update: ReturnType<typeof vi.fn>;
+  single: ReturnType<typeof vi.fn>;
+}
+
+interface MockSupabase {
+  from: ReturnType<typeof vi.fn>;
+  rpc: ReturnType<typeof vi.fn>;
+  _chain: MockChain;
+}
+
+function createMockSupabase(): MockSupabase {
+  const chainable: MockChain = {
+    select: vi.fn().mockReturnThis(),
+    eq: vi.fn().mockReturnThis(),
+    in: vi.fn().mockReturnThis(),
+    order: vi.fn().mockReturnThis(),
+    insert: vi.fn().mockReturnThis(),
+    update: vi.fn().mockReturnThis(),
+    single: vi.fn(),
+  };
+
+  return {
+    from: vi.fn(() => chainable),
+    rpc: vi.fn(),
+    _chain: chainable,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// fetchSellerPaymentMethods
+// ---------------------------------------------------------------------------
+
+describe("fetchSellerPaymentMethods", () => {
+  let supabase: ReturnType<typeof createMockSupabase>;
+
+  beforeEach(() => {
+    supabase = createMockSupabase();
+  });
+
+  it("returns mapped payment methods on success", async () => {
+    const rawData = [
+      {
+        id: "pm-1",
+        name_en: "Bank Transfer",
+        name_es: "Transferencia",
+        display_blocks: [],
+        form_fields: [],
+        is_active: true,
+        requires_receipt: false,
+        requires_transfer_number: false,
+      },
+    ];
+
+    supabase._chain.order.mockResolvedValue({ data: rawData, error: null });
+
+    const result = await fetchSellerPaymentMethods(
+      supabase as unknown as Parameters<typeof fetchSellerPaymentMethods>[0],
+      "seller-1",
+    );
+
+    expect(result).toHaveLength(1);
+    expect(result[0]).toEqual({
+      id: "pm-1",
+      name_en: "Bank Transfer",
+      name_es: "Transferencia",
+      display_blocks: [],
+      form_fields: [],
+      is_active: true,
+      requires_receipt: false,
+      requires_transfer_number: false,
+    });
+  });
+
+  it("throws on error", async () => {
+    supabase._chain.order.mockResolvedValue({
+      data: null,
+      error: new Error("DB error"),
+    });
+
+    await expect(
+      fetchSellerPaymentMethods(
+        supabase as unknown as Parameters<typeof fetchSellerPaymentMethods>[0],
+        "seller-1",
+      ),
+    ).rejects.toThrow("DB error");
+  });
+
+  it("returns empty array when data is null", async () => {
+    supabase._chain.order.mockResolvedValue({ data: null, error: null });
+
+    const result = await fetchSellerPaymentMethods(
+      supabase as unknown as Parameters<typeof fetchSellerPaymentMethods>[0],
+      "seller-1",
+    );
+
+    expect(result).toEqual([]);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// fetchSellerProfiles
+// ---------------------------------------------------------------------------
+
+describe("fetchSellerProfiles", () => {
+  let supabase: ReturnType<typeof createMockSupabase>;
+
+  beforeEach(() => {
+    supabase = createMockSupabase();
+  });
+
+  it("returns empty object for empty sellerIds", async () => {
+    const result = await fetchSellerProfiles(
+      supabase as unknown as Parameters<typeof fetchSellerProfiles>[0],
+      [],
+    );
+    expect(result).toEqual({});
+    expect(supabase.from).not.toHaveBeenCalled();
+  });
+
+  it("returns map of seller profiles", async () => {
+    supabase._chain.in.mockResolvedValue({
+      data: [
+        { id: "s1", display_name: "Alice", email: "alice@example.com" },
+        { id: "s2", display_name: null, email: "bob@example.com" },
+      ],
+      error: null,
+    });
+
+    const result = await fetchSellerProfiles(
+      supabase as unknown as Parameters<typeof fetchSellerProfiles>[0],
+      ["s1", "s2"],
+    );
+
+    expect(result).toEqual({
+      s1: "Alice",
+      s2: "bob@example.com",
+    });
+  });
+
+  it("returns empty object on error", async () => {
+    supabase._chain.in.mockResolvedValue({
+      data: null,
+      error: new Error("DB error"),
+    });
+
+    await expect(
+      fetchSellerProfiles(
+        supabase as unknown as Parameters<typeof fetchSellerProfiles>[0],
+        ["s1"],
+      ),
+    ).resolves.toEqual({});
+  });
+});
+
+// ---------------------------------------------------------------------------
+// createOrder
+// ---------------------------------------------------------------------------
+
+describe("createOrder", () => {
+  let supabase: ReturnType<typeof createMockSupabase>;
+
+  const mockItems: CartItem[] = [
+    {
+      id: "prod-1",
+      name_en: "Widget",
+      name_es: "Widget",
+      price: 5000,
+      currency: "COP",
+      seller_id: "s1",
+      quantity: 2,
+      images: [],
+      max_quantity: 10,
+    },
+  ];
+
+  const baseParams = {
+    userId: "user-1",
+    sellerId: "seller-1",
+    paymentMethodId: "pm-1",
+    checkoutSessionId: "session-1",
+    transferNumber: null,
+    receiptUrl: null,
+    buyerInfo: {},
+  };
+
+  beforeEach(() => {
+    supabase = createMockSupabase();
+  });
+
+  it("reserves stock, inserts order and items, returns order id", async () => {
+    const productChain = {
+      select: vi.fn().mockReturnThis(),
+      in: vi.fn().mockResolvedValue({
+        data: [{ id: "prod-1", price: 5000, currency: "COP" }],
+        error: null,
+      }),
+    };
+
+    const ordersChain = {
+      insert: vi.fn().mockReturnThis(),
+      select: vi.fn().mockReturnThis(),
+      single: vi
+        .fn()
+        .mockResolvedValue({ data: { id: "order-new" }, error: null }),
+    };
+
+    const orderItemsChain = {
+      insert: vi.fn().mockResolvedValue({ error: null }),
+    };
+
+    supabase.from.mockImplementation((table: string) => {
+      if (table === "products") return productChain as never;
+      if (table === "orders") return ordersChain as never;
+      if (table === "order_items") return orderItemsChain as never;
+      return supabase._chain as never;
+    });
+
+    supabase.rpc.mockResolvedValue({ data: true, error: null });
+
+    const result = await createOrder(
+      supabase as unknown as Parameters<typeof createOrder>[0],
+      { ...baseParams, items: mockItems },
+    );
+
+    expect(result).toBe("order-new");
+    expect(supabase.rpc).toHaveBeenCalledWith("reserve_stock", {
+      p_product_id: "prod-1",
+      p_quantity: 2,
+    });
+    expect(ordersChain.insert).toHaveBeenCalledWith(
+      expect.objectContaining({ payment_status: "pending_verification" }),
+    );
+    expect(result).toBe("order-new");
+  });
+
+  it("releases stock and throws on reserve_stock failure", async () => {
+    const productChain = {
+      select: vi.fn().mockReturnThis(),
+      in: vi.fn().mockResolvedValue({
+        data: [
+          { id: "prod-1", price: 5000, currency: "COP" },
+          { id: "prod-2", price: 3000, currency: "COP" },
+        ],
+        error: null,
+      }),
+    };
+
+    supabase.from.mockImplementation((table: string) => {
+      if (table === "products") return productChain as never;
+      return supabase._chain as never;
+    });
+
+    // First rpc call succeeds, second fails (simulating two items)
+    supabase.rpc
+      .mockResolvedValueOnce({ data: true, error: null }) // first item ok
+      .mockResolvedValueOnce({ data: false, error: null }); // second item fails
+
+    const twoItems: CartItem[] = [
+      ...mockItems,
+      {
+        id: "prod-2",
+        name_en: "Gadget",
+        name_es: "Gadget",
+        price: 3000,
+        currency: "COP",
+        seller_id: "s1",
+        quantity: 1,
+        images: [],
+        max_quantity: 5,
+      },
+    ];
+
+    await expect(
+      createOrder(supabase as unknown as Parameters<typeof createOrder>[0], {
+        ...baseParams,
+        items: twoItems,
+      }),
+    ).rejects.toThrow("stock_error");
+
+    // Should have called release_stock for the first item that was reserved
+    expect(supabase.rpc).toHaveBeenCalledWith("release_stock", {
+      p_product_id: "prod-1",
+      p_quantity: 2,
+    });
+  });
+});

@@ -141,6 +141,10 @@ const eslintConfig = defineConfig([
     "build/**",
     "next-env.d.ts",
     "**/node_modules/**",
+    // Frozen snapshot of the pre-rework tests. Linting a read-only copy would
+    // only ever demand edits to a file that is meant to stay identical to what
+    // it is a copy of. Deleted when the rework is verified complete.
+    "tests/legacy/**",
     // Auto-generated files (Orval REST API clients and types)
     "packages/api/src/rest/generated/**",
     "packages/api/src/rest/types/generated/**",

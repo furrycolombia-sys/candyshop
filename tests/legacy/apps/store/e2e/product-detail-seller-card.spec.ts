@@ -1,0 +1,74 @@
+import path from "node:path";
+
+import { test, expect } from "@playwright/test";
+
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { resolveE2EAppUrls } = require(
+  path.resolve(__dirname, "../../../scripts/app-url-resolver.js"),
+);
+
+const { store: STORE_URL } = resolveE2EAppUrls();
+
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+async function getSupabaseAdmin() {
+  if (!SUPABASE_URL || !SERVICE_ROLE_KEY) return null;
+  const { createClient } = await import("@supabase/supabase-js");
+  return createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Tests
+// ---------------------------------------------------------------------------
+
+test.describe("Product detail — seller card", () => {
+  test("renders seller card when product has a seller", async ({ page }) => {
+    // A missing service-role key is a broken environment, not a reason to pass
+    // quietly: auth.setup.ts already throws without it, so reaching here
+    // without one means something is wrong with the run.
+    const supabase = await getSupabaseAdmin();
+    expect(
+      supabase,
+      "SUPABASE_SERVICE_ROLE_KEY is required for this test",
+    ).not.toBeNull();
+
+    const { data: product } = await supabase!
+      .from("products")
+      .select("id, seller_id")
+      .not("seller_id", "is", null)
+      .limit(1)
+      .single();
+
+    // This one genuinely depends on seeded data. It stays a skip, but an
+    // annotated one -- the bare `test.skip()` it replaces reported nothing, so
+    // the coverage could evaporate without anybody noticing. The durable fix is
+    // for this test to seed its own product; see
+    // docs/standards/quality-gates.md.
+    test.skip(
+      !product,
+      "no product with a seller_id in the E2E database -- seller card not verified",
+    );
+
+    // test.skip above guarantees `product` at runtime; unlike an `if`-return
+    // it does not narrow the type, so the `!`s below are type-only.
+    await page.goto(`${STORE_URL}/en/products/${product!.id}`);
+
+    const sellerLink = page.getByTestId("seller-card");
+    await expect(sellerLink).toBeVisible({ timeout: 10_000 });
+    await expect(sellerLink).toHaveAttribute(
+      "href",
+      new RegExp(`/profile/${product!.seller_id as string}`),
+    );
+
+    const sellerName = page.getByTestId("seller-name");
+    await expect(sellerName).toBeVisible();
+    await expect(sellerName).not.toBeEmpty();
+  });
+});

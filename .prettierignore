@@ -8,3 +8,7 @@ README.md
 # only makes the next regeneration dirty again.
 tests/INVENTORY.md
 tests/inventory.json
+
+# Frozen snapshot of the pre-rework tests. Read-only reference: reformatting
+# it would make the copy differ from what it is a copy of.
+tests/legacy/
