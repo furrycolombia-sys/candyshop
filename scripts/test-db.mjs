@@ -30,8 +30,11 @@ console.log(
   `\ndatabase tests  env=${targetEnv}  supabase api port=${process.env.SUPABASE_PORT ?? "54321"}\n`,
 );
 
+// shell only on Windows, matching scripts/supabase-cmd.mjs: passing args with
+// shell:true elsewhere concatenates rather than escapes them.
+const isWindows = process.platform === "win32";
 const child = spawn(
-  "pnpm",
+  isWindows ? "pnpm.cmd" : "pnpm",
   [
     "exec",
     "vitest",
@@ -40,6 +43,6 @@ const child = spawn(
     "vitest.config.integration.ts",
     ...passthrough,
   ],
-  { cwd: rootDir, stdio: "inherit", shell: true, env: process.env },
+  { cwd: rootDir, stdio: "inherit", shell: isWindows, env: process.env },
 );
 child.on("exit", (code) => process.exit(code ?? 0));

@@ -10,7 +10,7 @@
     "tunnel:stop": "node scripts/cloudflared-stop.mjs",
     "tunnel:switch": "node scripts/tunnel-switch.mjs",
     "lint:env": "node scripts/check-env-parity.mjs",
-    "lint": "eslint apps/store/src apps/studio/src apps/landing/src apps/payments/src apps/admin/src apps/auth/src apps/playground/src packages/ui/src packages/shared/src packages/api/src packages/app-components/src packages/auth/src apps/store/e2e apps/admin/e2e apps/auth/e2e apps/payments/e2e apps/landing/e2e",
+    "lint": "eslint --no-error-on-unmatched-pattern apps/store/src apps/studio/src apps/landing/src apps/payments/src apps/admin/src apps/auth/src apps/playground/src packages/ui/src packages/shared/src packages/api/src packages/app-components/src packages/auth/src apps/store/tests apps/studio/tests apps/landing/tests apps/payments/tests apps/admin/tests apps/auth/tests apps/playground/tests packages/ui/tests packages/shared/tests packages/api/tests packages/app-components/tests packages/auth/tests tests/db apps/store/e2e apps/studio/e2e apps/landing/e2e apps/payments/e2e apps/admin/e2e apps/auth/e2e apps/playground/e2e",
     "typecheck": "turbo typecheck",
     "test": "turbo test",
     "test:watch": "vitest",

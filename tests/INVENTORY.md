@@ -13,42 +13,78 @@ output, so this total is deliberately not the runner total.
 
 ## app:admin -- 517 cases
 
-### `apps/admin/src/app/api/admin/_shared/reportsFilters.test.ts`
+### `apps/admin/tests/ActivityRow.test.tsx`
 
-- buildAdminOrderFilters — status validation > accepts a valid status from ORDER_STATUS_LIST
-- buildAdminOrderFilters — status validation > accepts every status value the UI can produce
-- buildAdminOrderFilters — status validation > silently drops an unknown status
-- buildAdminOrderFilters — status validation > silently drops a status that exists in legacy code but not the enum
-- buildAdminOrderFilters — currency validation > accepts a popular currency and normalizes to uppercase
-- buildAdminOrderFilters — currency validation > accepts non-USD currencies that exist in POPULAR_CURRENCIES
-- buildAdminOrderFilters — currency validation > silently drops an unknown currency
-- buildAdminOrderFilters — UUID pass-throughs > passes seller and buyer IDs through unchanged
-- buildAdminOrderFilters — date filters > builds an open-lower-bound filter for dateFrom alone
-- buildAdminOrderFilters — date filters > builds an open-upper-bound filter for dateTo alone (exclusive end)
-- buildAdminOrderFilters — date filters > builds a closed range when both dates are present
-- buildAdminOrderFilters — date filters > ignores invalid ISO dates
-- buildAdminOrderFilters — amount filters > builds a single-bound filter for amountMin alone
-- buildAdminOrderFilters — amount filters > builds a single-bound filter for amountMax alone
-- buildAdminOrderFilters — amount filters > builds a combined range using the and= clause
-- buildAdminOrderFilters — amount filters > appends to an existing and= clause when dates are also present
-- buildAdminOrderFilters — amount filters > ignores negative or non-numeric amounts
-- buildAdminOrderFilters — empty input > returns an empty object when no params are given
+- ActivityRow > renders the action badge
+- ActivityRow > renders the table name
+- ActivityRow > renders the user name
+- ActivityRow > renders the time
+- ActivityRow > renders UPDATE action
+- ActivityRow > renders DELETE action
 
-### `apps/admin/src/features/audit/application/hooks/useAuditLog.test.tsx`
+### `apps/admin/tests/AdminSidebar.test.tsx`
 
-- useAuditLog > returns data on success
-- useAuditLog > passes filters and offset to queryFn
-- useAuditLog > sets isError on failure
-- useAuditTableNames > returns table names on success
-- useAuditTableNames > handles error
+- AdminSidebar > renders correctly with granted permissions
+- AdminSidebar > filters out items when permissions are denied
+- AdminSidebar > shows items immediately when grantedKeys are seeded from cache
+- AdminSidebar > hides items when grantedKeys is empty
+- AdminSidebar > allows collapsing and expanding the sidebar
 
-### `apps/admin/src/features/audit/domain/constants.test.ts`
+### `apps/admin/tests/AppTopNavigation.test.tsx`
+
+- AppTopNavigation > renders AppNavigation
+- AppTopNavigation > passes permissionState with grantedKeys and isAuthenticated from hook
+- AppTopNavigation > passes through all original props to AppNavigation
+
+### `apps/admin/tests/AsDelegateRow.test.tsx`
+
+- AsDelegateRow > renders the row container with correct test-id
+- AsDelegateRow > shows the delegatedBy label
+- AsDelegateRow > shows the seller display_name when present
+- AsDelegateRow > falls back to seller email when display_name is null
+- AsDelegateRow > renders the product name
+- AsDelegateRow > does not render remove button when canDelete is false
+- AsDelegateRow > renders remove button when canDelete is true
+
+### `apps/admin/tests/AsSellerRow.test.tsx`
+
+- AsSellerRow > renders the row container with correct test-id
+- AsSellerRow > shows admin display_name when present
+- AsSellerRow > also shows email when display_name is set
+- AsSellerRow > shows email as primary when display_name is null
+- AsSellerRow > does not show a second email when display_name is null
+- AsSellerRow > renders the product name
+- AsSellerRow > does not render remove button when canDelete is false
+- AsSellerRow > renders remove button when canDelete is true
+
+### `apps/admin/tests/audit-constants.test.ts`
 
 - audit domain constants > exports AUDIT_PAGE_SIZE as 50
 - audit domain constants > exports the three valid action types
 - audit domain constants > AUDIT_ACTION_TYPES is a readonly tuple
 
-### `apps/admin/src/features/audit/infrastructure/auditQueries.test.ts`
+### `apps/admin/tests/AuditFilters.test.tsx`
+
+- AuditFilters > renders only the 'allTables' option when tableNames is undefined
+- AuditFilters > renders the table dropdown with options
+- AuditFilters > renders action type filter pills
+- AuditFilters > calls onTableChange when table select changes
+- AuditFilters > calls onActionChange when action pill is clicked
+- AuditFilters > calls onActionChange with empty string for 'all' pill
+
+### `apps/admin/tests/AuditLogPage.test.tsx`
+
+- AuditLogPage > renders the page with title
+- AuditLogPage > renders subtitle
+- AuditLogPage > renders AuditFilters component
+- AuditLogPage > renders AuditTable component
+- AuditLogPage > renders the page root with test id
+- AuditLogPage > handleLoadMore increments offset via setParams
+- AuditLogPage > onTableChange calls setParams with new table
+- AuditLogPage > onActionChange calls setParams with new action
+- AuditLogPage > shows access denied state when audit.read permission is not granted
+
+### `apps/admin/tests/auditQueries.test.ts`
 
 - fetchAuditLog > fetches audit log entries and returns them
 - fetchAuditLog > includes table_name filter when provided
@@ -64,16 +100,7 @@ output, so this total is deliberately not the runner total.
 - insertAuditLog > throws Unauthenticated when there is no Clerk session token
 - insertAuditLog > throws when the POST response is not ok
 
-### `apps/admin/src/features/audit/presentation/components/AuditFilters.test.tsx`
-
-- AuditFilters > renders only the 'allTables' option when tableNames is undefined
-- AuditFilters > renders the table dropdown with options
-- AuditFilters > renders action type filter pills
-- AuditFilters > calls onTableChange when table select changes
-- AuditFilters > calls onActionChange when action pill is clicked
-- AuditFilters > calls onActionChange with empty string for 'all' pill
-
-### `apps/admin/src/features/audit/presentation/components/AuditRowDetail.test.tsx`
+### `apps/admin/tests/AuditRowDetail.test.tsx`
 
 - AuditRowDetail > renders transaction id
 - AuditRowDetail > renders user display name with profile link
@@ -89,7 +116,7 @@ output, so this total is deliberately not the runner total.
 - AuditRowDetail > falls back to user_email when no display name
 - AuditRowDetail > copies user id to clipboard when copy button is clicked
 
-### `apps/admin/src/features/audit/presentation/components/AuditTable.test.tsx`
+### `apps/admin/tests/AuditTable.test.tsx`
 
 - AuditTable > shows loading state when loading with no entries
 - AuditTable > shows error state
@@ -113,49 +140,16 @@ output, so this total is deliberately not the runner total.
 - AuditTable > shows em dash when no summary applies (INSERT without name)
 - AuditTable > falls back to truncated user_id when user_display_name is null
 
-### `apps/admin/src/features/audit/presentation/pages/AuditLogPage.test.tsx`
+### `apps/admin/tests/computeRole.test.ts`
 
-- AuditLogPage > renders the page with title
-- AuditLogPage > renders subtitle
-- AuditLogPage > renders AuditFilters component
-- AuditLogPage > renders AuditTable component
-- AuditLogPage > renders the page root with test id
-- AuditLogPage > handleLoadMore increments offset via setParams
-- AuditLogPage > onTableChange calls setParams with new table
-- AuditLogPage > onActionChange calls setParams with new action
-- AuditLogPage > shows access denied state when audit.read permission is not granted
+- computeRole > returns 'none' when no keys are provided
+- computeRole > returns 'admin' when all permission keys are present
+- computeRole > returns 'seller' when exactly seller permission keys are present
+- computeRole > returns 'seller' when extra keys are present but all seller keys are granted
+- computeRole > returns 'buyer' when buyer permission keys are present
+- computeRole > returns 'custom' when partial or unknown permission keys are present
 
-### `apps/admin/src/features/dashboard/application/hooks/useRecentActivity.test.tsx`
-
-- useRecentActivity > fetches and returns recent activity
-- useRecentActivity > sets error state when fetch throws
-
-### `apps/admin/src/features/dashboard/infrastructure/recentActivityQueries.test.ts`
-
-- fetchRecentActivity > calls auditRestQuery with the correct table name
-- fetchRecentActivity > passes select param with expected fields
-- fetchRecentActivity > passes order param for descending timestamp
-- fetchRecentActivity > passes limit of 5
-- fetchRecentActivity > returns the data from auditRestQuery
-
-### `apps/admin/src/features/dashboard/presentation/components/ActivityRow.test.tsx`
-
-- ActivityRow > renders the action badge
-- ActivityRow > renders the table name
-- ActivityRow > renders the user name
-- ActivityRow > renders the time
-- ActivityRow > renders UPDATE action
-- ActivityRow > renders DELETE action
-
-### `apps/admin/src/features/dashboard/presentation/components/StatusRow.test.tsx`
-
-- StatusRow > renders the label
-- StatusRow > renders the status label
-- StatusRow > renders operational status dot
-- StatusRow > renders degraded status dot
-- StatusRow > renders down status dot
-
-### `apps/admin/src/features/dashboard/presentation/pages/DashboardPage.test.tsx`
+### `apps/admin/tests/DashboardPage.test.tsx`
 
 - DashboardPage > renders the page with test id
 - DashboardPage > renders the overview title
@@ -165,16 +159,19 @@ output, so this total is deliberately not the runner total.
 - DashboardPage > renders quick actions section with audit log link
 - DashboardPage > renders system status rows
 
-### `apps/admin/src/features/reports/application/hooks/useReportOrders.test.tsx`
+### `apps/admin/tests/export-csv.test.ts`
 
-- useReportOrders > returns orders and total on success
-- useReportOrders > returns empty arrays on initial load
-- useReportOrders > sets isError on fetch failure
-- useReportOrders > exposes setFilters from useQueryStates
-- useReportOrders > exposes current filters object
-- useReportOrders > calls fetchReportOrders with the current filters
+- export-excel > exportUsersToExcel > should format users and export them to excel xml
+- export-excel > downloadExcel > should create a link and trigger download
 
-### `apps/admin/src/features/reports/application/utils/exportOrdersToExcel.test.ts`
+### `apps/admin/tests/exportCsv.test.ts`
+
+- export-excel > exportUsersToExcel > should format users and export them to excel xml
+- export-excel > shows empty string for display_name when null
+- export-excel > uses empty permissions array for user not in permissionsByUserId
+- export-excel > downloadExcel > should create a link and trigger download
+
+### `apps/admin/tests/exportOrdersToExcel.test.ts`
 
 - exportOrdersToExcel > generates valid XML structure
 - exportOrdersToExcel > includes header row with all columns
@@ -188,23 +185,44 @@ output, so this total is deliberately not the runner total.
 - exportOrdersToExcel > handles null seller fields gracefully
 - downloadExcel > creates anchor element and triggers download
 
-### `apps/admin/src/features/reports/infrastructure/reportsApi.test.ts`
+### `apps/admin/tests/formatLastSeen.test.ts`
 
-- fetchReportOrders > calls the correct base URL when no filters are set
-- fetchReportOrders > appends dateFrom and dateTo to query string
-- fetchReportOrders > appends status filter
-- fetchReportOrders > appends sellerId filter
-- fetchReportOrders > appends buyerId filter
-- fetchReportOrders > appends productId filter
-- fetchReportOrders > appends currency filter
-- fetchReportOrders > appends amountMin filter including zero
-- fetchReportOrders > appends amountMax filter
-- fetchReportOrders > omits null filters from query string
-- fetchReportOrders > returns parsed JSON on success
-- fetchReportOrders > throws when response is not ok
-- fetchReportOrders > builds URL with ? separator when query string is non-empty
+- formatLastSeen > returns null for null input
+- formatLastSeen > returns justNow for timestamps within the last minute
+- formatLastSeen > returns minutesAgo for timestamps 1–59 minutes ago
+- formatLastSeen > returns hoursAgo for timestamps 1–23 hours ago
+- formatLastSeen > returns daysAgo for timestamps 1–29 days ago
+- formatLastSeen > returns monthsAgo for timestamps 1–11 months ago
+- formatLastSeen > returns yearsAgo for timestamps 1+ years ago
 
-### `apps/admin/src/features/reports/presentation/components/OrderStatusBadge.test.tsx`
+### `apps/admin/tests/getApiBasePath.test.ts`
+
+- getApiBasePath > returns '' when window is undefined (SSR)
+- getApiBasePath > returns '/admin' when pathname starts with /admin
+- getApiBasePath > returns '' for other paths
+
+### `apps/admin/tests/getInitials.test.ts`
+
+- getInitials > returns first letters of each word in a display name
+- getInitials > caps initials at 2 characters for names with more than 2 words
+- getInitials > returns single-letter initial for single-word name
+- getInitials > returns uppercased initials
+- getInitials > falls back to first letter of email when name is null
+- getInitials > returns uppercase email initial
+- getInitials > returns ? when name is null and email is empty
+
+### `apps/admin/tests/ItemRow.test.tsx`
+
+- ItemRow > renders input fields with item values
+- ItemRow > calls onUpdate when title_en changes
+- ItemRow > calls onRemove when remove button is clicked
+- ItemRow > calls onUpdate when title_es changes
+- ItemRow > calls onUpdate when description_en changes
+- ItemRow > renders empty string for icon when null
+- ItemRow > calls onUpdate when description_es changes
+- ItemRow > calls onUpdate when icon changes
+
+### `apps/admin/tests/OrderStatusBadge.test.tsx`
 
 - OrderStatusBadge > renders a span with the translated status text
 - OrderStatusBadge > renders a testid tied to the status
@@ -212,7 +230,62 @@ output, so this total is deliberately not the runner total.
 - OrderStatusBadge > renders as a span element
 - OrderStatusBadge > renders the correct status text for each status
 
-### `apps/admin/src/features/reports/presentation/components/ReportFiltersBar.test.tsx`
+### `apps/admin/tests/Pagination.test.tsx`
+
+- Pagination > renders the pagination container
+- Pagination > renders prev and next buttons
+- Pagination > prev button is disabled on the first page
+- Pagination > next button is disabled on the last page
+- Pagination > prev and next are both enabled on a middle page
+- Pagination > calls onPageChange with page - 1 when prev is clicked
+- Pagination > calls onPageChange with page + 1 when next is clicked
+- Pagination > calls onPageChange with the correct page number when a page button is clicked
+- Pagination > renders page number buttons within the visible window
+- Pagination > renders an ellipsis when there is a gap in the page window
+- Pagination > renders showing range text
+
+### `apps/admin/tests/PermissionBadges.test.tsx`
+
+- PermissionBadges > renders nothing when permissions is empty
+- PermissionBadges > renders a badge for each permission
+- PermissionBadges > translates permission key by replacing dots with underscores
+- PermissionBadges > handles multiple dot segments
+
+### `apps/admin/tests/PermissionGroupCard.test.tsx`
+
+- PermissionGroupCard > renders the group label
+- PermissionGroupCard > renders all permission checkboxes
+- PermissionGroupCard > checks granted permissions and leaves the rest unchecked
+- PermissionGroupCard > calls onToggle with correct args when a checkbox is changed
+- PermissionGroupCard > calls onToggle to revoke a currently-granted permission
+- PermissionGroupCard > disables checkboxes when isPending is true
+- PermissionGroupCard > disables checkboxes when canManage is false
+- PermissionGroupCard > renders with no permissions gracefully
+
+### `apps/admin/tests/ProductName.test.tsx`
+
+- ProductName > renders the English name when locale is en
+- ProductName > renders the Spanish name when locale is es
+- ProductName > renders the English name for any non-es locale
+
+### `apps/admin/tests/recentActivityQueries.test.ts`
+
+- fetchRecentActivity > calls auditRestQuery with the correct table name
+- fetchRecentActivity > passes select param with expected fields
+- fetchRecentActivity > passes order param for descending timestamp
+- fetchRecentActivity > passes limit of 5
+- fetchRecentActivity > returns the data from auditRestQuery
+
+### `apps/admin/tests/RemoveButton.test.tsx`
+
+- RemoveButton > renders nothing when canDelete is false
+- RemoveButton > renders the trash button when canDelete is true
+- RemoveButton > shows confirm/cancel buttons after clicking trash
+- RemoveButton > cancel returns to initial state
+- RemoveButton > calls mutate with userId and rowId when confirmed
+- RemoveButton > mutate receives onSettled callback that can be invoked
+
+### `apps/admin/tests/ReportFiltersBar.test.tsx`
 
 - ReportFiltersBar > renders filter bar container
 - ReportFiltersBar > renders date from and date to inputs
@@ -231,24 +304,44 @@ output, so this total is deliberately not the runner total.
 - ReportFiltersBar > calls onFiltersChange when amount min changes
 - ReportFiltersBar > shows active filter values as input values
 
-### `apps/admin/src/features/reports/presentation/components/ReportTable.test.tsx`
+### `apps/admin/tests/reportsApi.test.ts`
 
-- ReportTable > shows empty state when orders array is empty
-- ReportTable > renders table when orders are present
-- ReportTable > renders column headers
-- ReportTable > renders the first 8 characters of order ID
-- ReportTable > renders buyer email
-- ReportTable > renders seller email
-- ReportTable > renders dash for missing seller
-- ReportTable > renders item product names
-- ReportTable > renders currency in uppercase
-- ReportTable > renders transfer number
-- ReportTable > renders receipt link when receipt_url is present
-- ReportTable > shows no-receipt text when receipt_url is null
-- ReportTable > renders OrderStatusBadge with correct status
-- ReportTable > renders multiple orders as multiple rows
+- fetchReportOrders > calls the correct base URL when no filters are set
+- fetchReportOrders > appends dateFrom and dateTo to query string
+- fetchReportOrders > appends status filter
+- fetchReportOrders > appends sellerId filter
+- fetchReportOrders > appends buyerId filter
+- fetchReportOrders > appends productId filter
+- fetchReportOrders > appends currency filter
+- fetchReportOrders > appends amountMin filter including zero
+- fetchReportOrders > appends amountMax filter
+- fetchReportOrders > omits null filters from query string
+- fetchReportOrders > returns parsed JSON on success
+- fetchReportOrders > throws when response is not ok
+- fetchReportOrders > builds URL with ? separator when query string is non-empty
 
-### `apps/admin/src/features/reports/presentation/pages/ReportsPage.test.tsx`
+### `apps/admin/tests/reportsFilters.test.ts`
+
+- buildAdminOrderFilters — status validation > accepts a valid status from ORDER_STATUS_LIST
+- buildAdminOrderFilters — status validation > accepts every status value the UI can produce
+- buildAdminOrderFilters — status validation > silently drops an unknown status
+- buildAdminOrderFilters — status validation > silently drops a status that exists in legacy code but not the enum
+- buildAdminOrderFilters — currency validation > accepts a popular currency and normalizes to uppercase
+- buildAdminOrderFilters — currency validation > accepts non-USD currencies that exist in POPULAR_CURRENCIES
+- buildAdminOrderFilters — currency validation > silently drops an unknown currency
+- buildAdminOrderFilters — UUID pass-throughs > passes seller and buyer IDs through unchanged
+- buildAdminOrderFilters — date filters > builds an open-lower-bound filter for dateFrom alone
+- buildAdminOrderFilters — date filters > builds an open-upper-bound filter for dateTo alone (exclusive end)
+- buildAdminOrderFilters — date filters > builds a closed range when both dates are present
+- buildAdminOrderFilters — date filters > ignores invalid ISO dates
+- buildAdminOrderFilters — amount filters > builds a single-bound filter for amountMin alone
+- buildAdminOrderFilters — amount filters > builds a single-bound filter for amountMax alone
+- buildAdminOrderFilters — amount filters > builds a combined range using the and= clause
+- buildAdminOrderFilters — amount filters > appends to an existing and= clause when dates are also present
+- buildAdminOrderFilters — amount filters > ignores negative or non-numeric amounts
+- buildAdminOrderFilters — empty input > returns an empty object when no params are given
+
+### `apps/admin/tests/ReportsPage.test.tsx`
 
 - ReportsPage > renders the page root with test id
 - ReportsPage > renders page title and subtitle
@@ -266,95 +359,32 @@ output, so this total is deliberately not the runner total.
 - ReportsPage > includes string filters in export URL when set
 - ReportsPage > includes amountMin and amountMax in export URL when set
 
-### `apps/admin/src/features/settings/application/hooks/usePaymentSettings.test.tsx`
+### `apps/admin/tests/ReportTable.test.tsx`
 
-- usePaymentSettings > returns data on success
-- usePaymentSettings > handles error
+- ReportTable > shows empty state when orders array is empty
+- ReportTable > renders table when orders are present
+- ReportTable > renders column headers
+- ReportTable > renders the first 8 characters of order ID
+- ReportTable > renders buyer email
+- ReportTable > renders seller email
+- ReportTable > renders dash for missing seller
+- ReportTable > renders item product names
+- ReportTable > renders currency in uppercase
+- ReportTable > renders transfer number
+- ReportTable > renders receipt link when receipt_url is present
+- ReportTable > shows no-receipt text when receipt_url is null
+- ReportTable > renders OrderStatusBadge with correct status
+- ReportTable > renders multiple orders as multiple rows
 
-### `apps/admin/src/features/settings/application/hooks/useUpdateSettings.test.tsx`
+### `apps/admin/tests/RoleBadge.test.tsx`
 
-- useUpdateSettings > calls updatePaymentSetting with key and numeric value
+- *(parameterised)* RoleBadge > renders the '%s' role label
+- *(parameterised)* RoleBadge > includes the role test-id for '%s'
+- RoleBadge > applies destructive variant for admin role
+- RoleBadge > applies primary variant for seller role
+- RoleBadge > applies muted variant for none role
 
-### `apps/admin/src/features/settings/domain/constants.test.ts`
-
-- settings domain constants > exports SETTINGS_QUERY_KEY
-- settings domain constants > exports DEFAULT_SETTINGS with correct values
-
-### `apps/admin/src/features/settings/infrastructure/settingsQueries.test.ts`
-
-- fetchPaymentSettings > returns parsed settings from rows
-- fetchPaymentSettings > uses defaults for missing or invalid values
-- fetchPaymentSettings > handles null data
-- fetchPaymentSettings > throws on error
-- updatePaymentSetting > resolves on success
-- updatePaymentSetting > calls upsert with correct params
-- updatePaymentSetting > throws on error
-
-### `apps/admin/src/features/settings/presentation/components/TimeoutSettings.test.tsx`
-
-- TimeoutSettings > renders the card with test id
-- TimeoutSettings > renders title
-- TimeoutSettings > renders input fields for each timeout
-- TimeoutSettings > displays current settings values
-- TimeoutSettings > calls onSave with updated values when save is clicked
-- TimeoutSettings > shows saving text when isPending
-- TimeoutSettings > disables save button when isPending
-- TimeoutSettings > shows save text when not pending
-- TimeoutSettings > renders labels for each field
-- TimeoutSettings > renders hints for each field
-
-### `apps/admin/src/features/settings/presentation/pages/SettingsPage.test.tsx`
-
-- SettingsPage > renders title and subtitle
-- SettingsPage > renders loading state
-- SettingsPage > renders error state
-- SettingsPage > renders TimeoutSettings when data is loaded
-- SettingsPage > handleSave calls updateMutation for changed keys
-- SettingsPage > does not show loading or error when data is available
-- SettingsPage > shows access denied state when payment_settings.read permission is not granted
-
-### `apps/admin/src/features/templates/application/hooks/useTemplateMutations.test.tsx`
-
-- useInsertTemplate > calls insertTemplate on mutate
-- useUpdateTemplate > calls updateTemplate on mutate
-- useDeleteTemplate > calls deleteTemplate on mutate
-- useToggleTemplateActive > calls toggleTemplateActive on mutate
-
-### `apps/admin/src/features/templates/application/hooks/useTemplates.test.tsx`
-
-- useTemplates > returns templates on success
-- useTemplates > handles error
-
-### `apps/admin/src/features/templates/domain/constants.test.ts`
-
-- templates domain constants > exports TEMPLATES_QUERY_KEY
-- templates domain constants > exports TEMPLATE_FORM_DEFAULTS with correct shape
-- templates domain constants > TEMPLATE_FORM_DEFAULTS has empty sections array
-- templates domain constants > TEMPLATE_FORM_DEFAULTS is_active defaults to true
-
-### `apps/admin/src/features/templates/infrastructure/templateQueries.test.ts`
-
-- fetchTemplates > returns data on success
-- fetchTemplates > throws on error
-- fetchActiveTemplates > returns data on success
-- insertTemplate > returns created template on success
-- updateTemplate > returns updated template on success
-- deleteTemplate > resolves on success
-- deleteTemplate > throws on error
-- toggleTemplateActive > resolves on success
-
-### `apps/admin/src/features/templates/presentation/components/ItemRow.test.tsx`
-
-- ItemRow > renders input fields with item values
-- ItemRow > calls onUpdate when title_en changes
-- ItemRow > calls onRemove when remove button is clicked
-- ItemRow > calls onUpdate when title_es changes
-- ItemRow > calls onUpdate when description_en changes
-- ItemRow > renders empty string for icon when null
-- ItemRow > calls onUpdate when description_es changes
-- ItemRow > calls onUpdate when icon changes
-
-### `apps/admin/src/features/templates/presentation/components/SectionBlock.test.tsx`
+### `apps/admin/tests/SectionBlock.test.tsx`
 
 - SectionBlock > renders the section with test id
 - SectionBlock > renders section name inputs
@@ -368,7 +398,55 @@ output, so this total is deliberately not the runner total.
 - SectionBlock > calls onUpdateItem when ItemRow Update button is clicked
 - SectionBlock > calls onRemoveItem when ItemRow Remove button is clicked
 
-### `apps/admin/src/features/templates/presentation/components/TemplateEditor.test.tsx`
+### `apps/admin/tests/settings-constants.test.ts`
+
+- settings domain constants > exports SETTINGS_QUERY_KEY
+- settings domain constants > exports DEFAULT_SETTINGS with correct values
+
+### `apps/admin/tests/SettingsPage.test.tsx`
+
+- SettingsPage > renders title and subtitle
+- SettingsPage > renders loading state
+- SettingsPage > renders error state
+- SettingsPage > renders TimeoutSettings when data is loaded
+- SettingsPage > handleSave calls updateMutation for changed keys
+- SettingsPage > does not show loading or error when data is available
+- SettingsPage > shows access denied state when payment_settings.read permission is not granted
+
+### `apps/admin/tests/settingsQueries.test.ts`
+
+- fetchPaymentSettings > returns parsed settings from rows
+- fetchPaymentSettings > uses defaults for missing or invalid values
+- fetchPaymentSettings > handles null data
+- fetchPaymentSettings > throws on error
+- updatePaymentSetting > resolves on success
+- updatePaymentSetting > calls upsert with correct params
+- updatePaymentSetting > throws on error
+
+### `apps/admin/tests/StatusRow.test.tsx`
+
+- StatusRow > renders the label
+- StatusRow > renders the status label
+- StatusRow > renders operational status dot
+- StatusRow > renders degraded status dot
+- StatusRow > renders down status dot
+
+### `apps/admin/tests/TemplateButtons.test.tsx`
+
+- TemplateButtons > renders all 4 template buttons plus reset
+- TemplateButtons > renders template label text
+- TemplateButtons > calls onToggleTemplate with key and true when inactive template clicked
+- TemplateButtons > calls onToggleTemplate with false when active template clicked
+- TemplateButtons > shows buyer button as active (default variant) when all buyer keys are granted
+- TemplateButtons > shows buyer button as outline when not all buyer keys are granted
+- TemplateButtons > calls onReset when reset button is clicked
+- TemplateButtons > disables reset button when grantedKeys is empty
+- TemplateButtons > disables reset button when canManage is false
+- TemplateButtons > disables all buttons when isPending is true
+- TemplateButtons > disables template buttons when canManage is false
+- TemplateButtons > isTemplateActive returns false when only some keys are granted
+
+### `apps/admin/tests/TemplateEditor.test.tsx`
 
 - TemplateEditor > renders the editor with test id
 - TemplateEditor > renders name input fields
@@ -386,20 +464,31 @@ output, so this total is deliberately not the runner total.
 - TemplateEditor > updateItem updates an item in the section via onUpdateItem callback
 - TemplateEditor > removeItem removes an item from the section via onRemoveItem callback
 
-### `apps/admin/src/features/templates/presentation/components/TemplateTable.test.tsx`
+### `apps/admin/tests/templatePermissions.test.ts`
 
-- TemplateTable > shows loading state when loading with empty data
-- TemplateTable > shows empty state when no templates
-- TemplateTable > renders table with templates
-- TemplateTable > renders EN name for en locale
-- TemplateTable > calls onEdit when edit button is clicked
-- TemplateTable > calls onDelete when delete button is clicked and confirmed
-- TemplateTable > does not call onDelete when confirm is cancelled
-- TemplateTable > renders column headers
-- TemplateTable > shows dash for null description
-- TemplateTable > calls onToggleActive when switch is toggled
+- getUpdatedPermissionKeysForTemplateToggle > adds missing keys when activating a template
+- getUpdatedPermissionKeysForTemplateToggle > preserves overlapping keys required by another active template
+- getUpdatedPermissionKeysForTemplateToggle > removes template-only keys when deactivating a template
 
-### `apps/admin/src/features/templates/presentation/pages/TemplatesPage.test.tsx`
+### `apps/admin/tests/templateQueries.test.ts`
+
+- fetchTemplates > returns data on success
+- fetchTemplates > throws on error
+- fetchActiveTemplates > returns data on success
+- insertTemplate > returns created template on success
+- updateTemplate > returns updated template on success
+- deleteTemplate > resolves on success
+- deleteTemplate > throws on error
+- toggleTemplateActive > resolves on success
+
+### `apps/admin/tests/templates-constants.test.ts`
+
+- templates domain constants > exports TEMPLATES_QUERY_KEY
+- templates domain constants > exports TEMPLATE_FORM_DEFAULTS with correct shape
+- templates domain constants > TEMPLATE_FORM_DEFAULTS has empty sections array
+- templates domain constants > TEMPLATE_FORM_DEFAULTS is_active defaults to true
+
+### `apps/admin/tests/TemplatesPage.test.tsx`
 
 - TemplatesPage > renders the page with title
 - TemplatesPage > shows the table when editor is closed
@@ -412,107 +501,119 @@ output, so this total is deliberately not the runner total.
 - TemplatesPage > onDelete calls deleteMutation
 - TemplatesPage > onToggleActive calls toggleMutation
 
-### `apps/admin/src/features/users/application/hooks/useApplyTemplate.test.tsx`
+### `apps/admin/tests/TemplateTable.test.tsx`
+
+- TemplateTable > shows loading state when loading with empty data
+- TemplateTable > shows empty state when no templates
+- TemplateTable > renders table with templates
+- TemplateTable > renders EN name for en locale
+- TemplateTable > calls onEdit when edit button is clicked
+- TemplateTable > calls onDelete when delete button is clicked and confirmed
+- TemplateTable > does not call onDelete when confirm is cancelled
+- TemplateTable > renders column headers
+- TemplateTable > shows dash for null description
+- TemplateTable > calls onToggleActive when switch is toggled
+
+### `apps/admin/tests/TimeoutSettings.test.tsx`
+
+- TimeoutSettings > renders the card with test id
+- TimeoutSettings > renders title
+- TimeoutSettings > renders input fields for each timeout
+- TimeoutSettings > displays current settings values
+- TimeoutSettings > calls onSave with updated values when save is clicked
+- TimeoutSettings > shows saving text when isPending
+- TimeoutSettings > disables save button when isPending
+- TimeoutSettings > shows save text when not pending
+- TimeoutSettings > renders labels for each field
+- TimeoutSettings > renders hints for each field
+
+### `apps/admin/tests/useApplyTemplate.test.tsx`
 
 - useApplyTemplate > sends PUT request with userId and permissionKeys
 - useApplyTemplate > throws when response is not ok
 - useApplyTemplate > invalidates user permissions query on success
 
-### `apps/admin/src/features/users/application/hooks/useTogglePermission.test.tsx`
+### `apps/admin/tests/useAuditLog.test.tsx`
 
-- useTogglePermission > sends POST request when granting a permission
-- useTogglePermission > sends POST request when revoking a permission
-- useTogglePermission > throws when response is not ok
-- useTogglePermission > invalidates user permissions query on success
+- useAuditLog > returns data on success
+- useAuditLog > passes filters and offset to queryFn
+- useAuditLog > sets isError on failure
+- useAuditTableNames > returns table names on success
+- useAuditTableNames > handles error
 
-### `apps/admin/src/features/users/application/hooks/useUserDelegates.test.tsx`
+### `apps/admin/tests/usePaymentSettings.test.tsx`
 
-- useUserDelegates > does not fetch when userId is null
-- useUserDelegates > fetches delegates for a given userId
-- useUserDelegates > sets error state when response is not ok
-- useRemoveUserDelegate > calls DELETE endpoint and invalidates query on success
-- useRemoveUserDelegate > sets error state when DELETE response is not ok
+- usePaymentSettings > returns data on success
+- usePaymentSettings > handles error
 
-### `apps/admin/src/features/users/application/hooks/useUserPermissions.test.tsx`
+### `apps/admin/tests/UserDelegatesCard.test.tsx`
 
-- useUserPermissions > fetches granted keys for a given userId
-- useUserPermissions > does not fetch when userId is null
-- useUserPermissions > sets error state when response is not ok
+- UserDelegatesCard > renders the card container
+- UserDelegatesCard > shows loading text while isLoading is true
+- UserDelegatesCard > shows empty text when loaded with no delegates
+- UserDelegatesCard > does not show loading or empty when loading
+- UserDelegatesCard > renders asSeller rows
+- UserDelegatesCard > renders asDelegate rows
+- UserDelegatesCard > renders both seller and delegate sections when both have data
+- UserDelegatesCard > does not show asSeller section when asSeller is empty
+- UserDelegatesCard > passes userId to useUserDelegates
 
-### `apps/admin/src/features/users/application/hooks/useUserPermissionsBatch.test.ts`
+### `apps/admin/tests/UserDetailPage.test.tsx`
 
-- useUserPermissionsBatch > returns a fetchPermissions function
-- useUserPermissionsBatch > fetchPermissions returns a record mapping user ids to permission keys
-- useUserPermissionsBatch > maps rejected promises to empty arrays
-- useUserPermissionsBatch > returns empty record when no users provided
-- useUserPermissionsBatch > calls getUserPermissionKeys with supabase and user id
+- UserDetailPage > renders AccessDeniedState when user lacks user_permissions.read
+- UserDetailPage > shows translated title and hint in AccessDeniedState
+- UserDetailPage > renders UserDetailPageContent when user has user_permissions.read
+- UserDetailPage > passes userId to UserDetailPageContent
+- UserDetailPage > passes canCreate based on user_permissions.create permission
+- UserDetailPage > passes canDelete=false when user lacks user_permissions.delete
+- UserDetailPage > passes canManageDelegates based on seller_admins.read permission
 
-### `apps/admin/src/features/users/application/hooks/useUserProfile.test.tsx`
+### `apps/admin/tests/UserDetailPageContent.test.tsx`
 
-- useUserProfile > does not fetch when userId is null
-- useUserProfile > fetches and returns profile for given userId
-- useUserProfile > returns null when user profile is not found
-- useUserProfile > sets error state when query throws
+- UserDetailPageContent > shows loading state while profile or permissions are loading
+- UserDetailPageContent > shows no-results state when profile is null and not loading
+- UserDetailPageContent > renders user detail page when profile is available
+- UserDetailPageContent > renders UserHeader with profile data
+- UserDetailPageContent > renders TemplateButtons
+- UserDetailPageContent > renders permission group cards for each group
+- UserDetailPageContent > renders UserDelegatesCard when canManageDelegates is true
+- UserDetailPageContent > does not render UserDelegatesCard when canManageDelegates is false
+- UserDetailPageContent > navigates back when back button is clicked
+- UserDetailPageContent > calls templateMutation.mutate when handleToggleTemplate is triggered
+- UserDetailPageContent > handleToggleTemplate does nothing when canCreate or canDelete is false
+- UserDetailPageContent > calls templateMutation.mutate with empty keys when handleReset is triggered
+- UserDetailPageContent > handleReset does nothing when canDelete is false
 
-### `apps/admin/src/features/users/application/hooks/useUserReceiptsBatch.test.ts`
+### `apps/admin/tests/useRecentActivity.test.tsx`
 
-- useUserReceiptsBatch > returns a fetchReceipts function
-- useUserReceiptsBatch > delegates to fetchUserReceipts with supabase and userIds
-- useUserReceiptsBatch > passes empty array of userIds to fetchUserReceipts
+- useRecentActivity > fetches and returns recent activity
+- useRecentActivity > sets error state when fetch throws
 
-### `apps/admin/src/features/users/application/hooks/useUsers.test.tsx`
+### `apps/admin/tests/useReportOrders.test.tsx`
 
-- useUsers > calls listUsers with correct parameters and returns data
-- useUsers > handles empty responses correctly
+- useReportOrders > returns orders and total on success
+- useReportOrders > returns empty arrays on initial load
+- useReportOrders > sets isError on fetch failure
+- useReportOrders > exposes setFilters from useQueryStates
+- useReportOrders > exposes current filters object
+- useReportOrders > calls fetchReportOrders with the current filters
 
-### `apps/admin/src/features/users/application/utils/computeRole.test.ts`
+### `apps/admin/tests/UserHeader.test.tsx`
 
-- computeRole > returns 'none' when no keys are provided
-- computeRole > returns 'admin' when all permission keys are present
-- computeRole > returns 'seller' when exactly seller permission keys are present
-- computeRole > returns 'seller' when extra keys are present but all seller keys are granted
-- computeRole > returns 'buyer' when buyer permission keys are present
-- computeRole > returns 'custom' when partial or unknown permission keys are present
+- UserHeader > renders the user-header container
+- UserHeader > shows display_name when present
+- UserHeader > falls back to email when display_name is null
+- UserHeader > renders the email
+- UserHeader > renders avatar image when avatarUrl is present
+- UserHeader > does not render avatar image when no avatarUrl
+- UserHeader > prefers display_avatar_url over avatar_url
+- UserHeader > uses avatar_url when display_avatar_url is null
+- UserHeader > renders the role badge
+- UserHeader > shows computed last seen when last_seen_at is present
+- UserHeader > shows em dash when last_seen_at is null
+- UserHeader > renders view profile link with correct href
 
-### `apps/admin/src/features/users/application/utils/export-csv.test.ts`
-
-- export-excel > exportUsersToExcel > should format users and export them to excel xml
-- export-excel > downloadExcel > should create a link and trigger download
-
-### `apps/admin/src/features/users/application/utils/exportCsv.test.ts`
-
-- export-excel > exportUsersToExcel > should format users and export them to excel xml
-- export-excel > shows empty string for display_name when null
-- export-excel > uses empty permissions array for user not in permissionsByUserId
-- export-excel > downloadExcel > should create a link and trigger download
-
-### `apps/admin/src/features/users/application/utils/formatLastSeen.test.ts`
-
-- formatLastSeen > returns null for null input
-- formatLastSeen > returns justNow for timestamps within the last minute
-- formatLastSeen > returns minutesAgo for timestamps 1–59 minutes ago
-- formatLastSeen > returns hoursAgo for timestamps 1–23 hours ago
-- formatLastSeen > returns daysAgo for timestamps 1–29 days ago
-- formatLastSeen > returns monthsAgo for timestamps 1–11 months ago
-- formatLastSeen > returns yearsAgo for timestamps 1+ years ago
-
-### `apps/admin/src/features/users/application/utils/getInitials.test.ts`
-
-- getInitials > returns first letters of each word in a display name
-- getInitials > caps initials at 2 characters for names with more than 2 words
-- getInitials > returns single-letter initial for single-word name
-- getInitials > returns uppercased initials
-- getInitials > falls back to first letter of email when name is null
-- getInitials > returns uppercase email initial
-- getInitials > returns ? when name is null and email is empty
-
-### `apps/admin/src/features/users/application/utils/templatePermissions.test.ts`
-
-- getUpdatedPermissionKeysForTemplateToggle > adds missing keys when activating a template
-- getUpdatedPermissionKeysForTemplateToggle > preserves overlapping keys required by another active template
-- getUpdatedPermissionKeysForTemplateToggle > removes template-only keys when deactivating a template
-
-### `apps/admin/src/features/users/infrastructure/userPermissionQueries.test.ts`
+### `apps/admin/tests/userPermissionQueries.test.ts`
 
 - listUsers > returns paginated users without search
 - listUsers > applies search filter when search is non-empty
@@ -530,125 +631,7 @@ output, so this total is deliberately not the runner total.
 - grantPermission > prefers null resource_id row over non-null when multiple rows
 - revokePermission > revokes permission successfully
 
-### `apps/admin/src/features/users/presentation/components/delegates/AsDelegateRow.test.tsx`
-
-- AsDelegateRow > renders the row container with correct test-id
-- AsDelegateRow > shows the delegatedBy label
-- AsDelegateRow > shows the seller display_name when present
-- AsDelegateRow > falls back to seller email when display_name is null
-- AsDelegateRow > renders the product name
-- AsDelegateRow > does not render remove button when canDelete is false
-- AsDelegateRow > renders remove button when canDelete is true
-
-### `apps/admin/src/features/users/presentation/components/delegates/AsSellerRow.test.tsx`
-
-- AsSellerRow > renders the row container with correct test-id
-- AsSellerRow > shows admin display_name when present
-- AsSellerRow > also shows email when display_name is set
-- AsSellerRow > shows email as primary when display_name is null
-- AsSellerRow > does not show a second email when display_name is null
-- AsSellerRow > renders the product name
-- AsSellerRow > does not render remove button when canDelete is false
-- AsSellerRow > renders remove button when canDelete is true
-
-### `apps/admin/src/features/users/presentation/components/delegates/PermissionBadges.test.tsx`
-
-- PermissionBadges > renders nothing when permissions is empty
-- PermissionBadges > renders a badge for each permission
-- PermissionBadges > translates permission key by replacing dots with underscores
-- PermissionBadges > handles multiple dot segments
-
-### `apps/admin/src/features/users/presentation/components/delegates/ProductName.test.tsx`
-
-- ProductName > renders the English name when locale is en
-- ProductName > renders the Spanish name when locale is es
-- ProductName > renders the English name for any non-es locale
-
-### `apps/admin/src/features/users/presentation/components/delegates/RemoveButton.test.tsx`
-
-- RemoveButton > renders nothing when canDelete is false
-- RemoveButton > renders the trash button when canDelete is true
-- RemoveButton > shows confirm/cancel buttons after clicking trash
-- RemoveButton > cancel returns to initial state
-- RemoveButton > calls mutate with userId and rowId when confirmed
-- RemoveButton > mutate receives onSettled callback that can be invoked
-
-### `apps/admin/src/features/users/presentation/components/Pagination.test.tsx`
-
-- Pagination > renders the pagination container
-- Pagination > renders prev and next buttons
-- Pagination > prev button is disabled on the first page
-- Pagination > next button is disabled on the last page
-- Pagination > prev and next are both enabled on a middle page
-- Pagination > calls onPageChange with page - 1 when prev is clicked
-- Pagination > calls onPageChange with page + 1 when next is clicked
-- Pagination > calls onPageChange with the correct page number when a page button is clicked
-- Pagination > renders page number buttons within the visible window
-- Pagination > renders an ellipsis when there is a gap in the page window
-- Pagination > renders showing range text
-
-### `apps/admin/src/features/users/presentation/components/PermissionGroupCard.test.tsx`
-
-- PermissionGroupCard > renders the group label
-- PermissionGroupCard > renders all permission checkboxes
-- PermissionGroupCard > checks granted permissions and leaves the rest unchecked
-- PermissionGroupCard > calls onToggle with correct args when a checkbox is changed
-- PermissionGroupCard > calls onToggle to revoke a currently-granted permission
-- PermissionGroupCard > disables checkboxes when isPending is true
-- PermissionGroupCard > disables checkboxes when canManage is false
-- PermissionGroupCard > renders with no permissions gracefully
-
-### `apps/admin/src/features/users/presentation/components/RoleBadge.test.tsx`
-
-- *(parameterised)* RoleBadge > renders the '%s' role label
-- *(parameterised)* RoleBadge > includes the role test-id for '%s'
-- RoleBadge > applies destructive variant for admin role
-- RoleBadge > applies primary variant for seller role
-- RoleBadge > applies muted variant for none role
-
-### `apps/admin/src/features/users/presentation/components/TemplateButtons.test.tsx`
-
-- TemplateButtons > renders all 4 template buttons plus reset
-- TemplateButtons > renders template label text
-- TemplateButtons > calls onToggleTemplate with key and true when inactive template clicked
-- TemplateButtons > calls onToggleTemplate with false when active template clicked
-- TemplateButtons > shows buyer button as active (default variant) when all buyer keys are granted
-- TemplateButtons > shows buyer button as outline when not all buyer keys are granted
-- TemplateButtons > calls onReset when reset button is clicked
-- TemplateButtons > disables reset button when grantedKeys is empty
-- TemplateButtons > disables reset button when canManage is false
-- TemplateButtons > disables all buttons when isPending is true
-- TemplateButtons > disables template buttons when canManage is false
-- TemplateButtons > isTemplateActive returns false when only some keys are granted
-
-### `apps/admin/src/features/users/presentation/components/UserDelegatesCard.test.tsx`
-
-- UserDelegatesCard > renders the card container
-- UserDelegatesCard > shows loading text while isLoading is true
-- UserDelegatesCard > shows empty text when loaded with no delegates
-- UserDelegatesCard > does not show loading or empty when loading
-- UserDelegatesCard > renders asSeller rows
-- UserDelegatesCard > renders asDelegate rows
-- UserDelegatesCard > renders both seller and delegate sections when both have data
-- UserDelegatesCard > does not show asSeller section when asSeller is empty
-- UserDelegatesCard > passes userId to useUserDelegates
-
-### `apps/admin/src/features/users/presentation/components/UserHeader.test.tsx`
-
-- UserHeader > renders the user-header container
-- UserHeader > shows display_name when present
-- UserHeader > falls back to email when display_name is null
-- UserHeader > renders the email
-- UserHeader > renders avatar image when avatarUrl is present
-- UserHeader > does not render avatar image when no avatarUrl
-- UserHeader > prefers display_avatar_url over avatar_url
-- UserHeader > uses avatar_url when display_avatar_url is null
-- UserHeader > renders the role badge
-- UserHeader > shows computed last seen when last_seen_at is present
-- UserHeader > shows em dash when last_seen_at is null
-- UserHeader > renders view profile link with correct href
-
-### `apps/admin/src/features/users/presentation/components/UserRow.test.tsx`
+### `apps/admin/tests/UserRow.test.tsx`
 
 - UserRow > renders user email
 - UserRow > calls onClick with userId when row is clicked
@@ -657,53 +640,12 @@ output, so this total is deliberately not the runner total.
 - UserRow > checkbox reflects isSelected prop
 - UserRow > renders AvatarImage when display_avatar_url is set
 
-### `apps/admin/src/features/users/presentation/components/UserTable.test.tsx`
-
-- UserTable > renders users and filter inputs correctly
-- UserTable > triggers filter changes via props
-- UserTable > calls export excel when clicking download
-- UserTable > shows loading state
-- UserTable > shows empty state
-- UserTable > does not show export button when canExport is false
-- UserTable > export button is disabled when no users are selected
-- UserTable > calls onRoleFilterChange when role select changes
-- UserTable > calls onItemFilterChange when item select changes
-- UserTable > handleSelectAll — selects all users when header checkbox checked
-- UserTable > handleSelectAll — deselects all users when header checkbox unchecked
-- UserTable > does not render Pagination when total is 0
-
-### `apps/admin/src/features/users/presentation/pages/UserDetailPage.test.tsx`
-
-- UserDetailPage > renders AccessDeniedState when user lacks user_permissions.read
-- UserDetailPage > shows translated title and hint in AccessDeniedState
-- UserDetailPage > renders UserDetailPageContent when user has user_permissions.read
-- UserDetailPage > passes userId to UserDetailPageContent
-- UserDetailPage > passes canCreate based on user_permissions.create permission
-- UserDetailPage > passes canDelete=false when user lacks user_permissions.delete
-- UserDetailPage > passes canManageDelegates based on seller_admins.read permission
-
-### `apps/admin/src/features/users/presentation/pages/UserDetailPageContent.test.tsx`
-
-- UserDetailPageContent > shows loading state while profile or permissions are loading
-- UserDetailPageContent > shows no-results state when profile is null and not loading
-- UserDetailPageContent > renders user detail page when profile is available
-- UserDetailPageContent > renders UserHeader with profile data
-- UserDetailPageContent > renders TemplateButtons
-- UserDetailPageContent > renders permission group cards for each group
-- UserDetailPageContent > renders UserDelegatesCard when canManageDelegates is true
-- UserDetailPageContent > does not render UserDelegatesCard when canManageDelegates is false
-- UserDetailPageContent > navigates back when back button is clicked
-- UserDetailPageContent > calls templateMutation.mutate when handleToggleTemplate is triggered
-- UserDetailPageContent > handleToggleTemplate does nothing when canCreate or canDelete is false
-- UserDetailPageContent > calls templateMutation.mutate with empty keys when handleReset is triggered
-- UserDetailPageContent > handleReset does nothing when canDelete is false
-
-### `apps/admin/src/features/users/presentation/pages/UsersPage.test.tsx`
+### `apps/admin/tests/UsersPage.test.tsx`
 
 - UsersPage > renders access denied if no permission
 - UsersPage > renders content if user has permission
 
-### `apps/admin/src/features/users/presentation/pages/UsersPageContent.test.tsx`
+### `apps/admin/tests/UsersPageContent.test.tsx`
 
 - UsersPageContent > renders the page container
 - UsersPageContent > renders translated title
@@ -720,29 +662,148 @@ output, so this total is deliberately not the runner total.
 - UsersPageContent > handleExportExcel fetches data, exports and logs when users are selected
 - UsersPageContent > handleExportExcel calls setError when export throws
 
-### `apps/admin/src/shared/application/utils/getApiBasePath.test.ts`
+### `apps/admin/tests/UserTable.test.tsx`
 
-- getApiBasePath > returns '' when window is undefined (SSR)
-- getApiBasePath > returns '/admin' when pathname starts with /admin
-- getApiBasePath > returns '' for other paths
+- UserTable > renders users and filter inputs correctly
+- UserTable > triggers filter changes via props
+- UserTable > calls export excel when clicking download
+- UserTable > shows loading state
+- UserTable > shows empty state
+- UserTable > does not show export button when canExport is false
+- UserTable > export button is disabled when no users are selected
+- UserTable > calls onRoleFilterChange when role select changes
+- UserTable > calls onItemFilterChange when item select changes
+- UserTable > handleSelectAll — selects all users when header checkbox checked
+- UserTable > handleSelectAll — deselects all users when header checkbox unchecked
+- UserTable > does not render Pagination when total is 0
 
-### `apps/admin/src/shared/presentation/components/AdminSidebar.test.tsx`
+### `apps/admin/tests/useTemplateMutations.test.tsx`
 
-- AdminSidebar > renders correctly with granted permissions
-- AdminSidebar > filters out items when permissions are denied
-- AdminSidebar > shows items immediately when grantedKeys are seeded from cache
-- AdminSidebar > hides items when grantedKeys is empty
-- AdminSidebar > allows collapsing and expanding the sidebar
+- useInsertTemplate > calls insertTemplate on mutate
+- useUpdateTemplate > calls updateTemplate on mutate
+- useDeleteTemplate > calls deleteTemplate on mutate
+- useToggleTemplateActive > calls toggleTemplateActive on mutate
 
-### `apps/admin/src/shared/presentation/components/AppTopNavigation.test.tsx`
+### `apps/admin/tests/useTemplates.test.tsx`
 
-- AppTopNavigation > renders AppNavigation
-- AppTopNavigation > passes permissionState with grantedKeys and isAuthenticated from hook
-- AppTopNavigation > passes through all original props to AppNavigation
+- useTemplates > returns templates on success
+- useTemplates > handles error
+
+### `apps/admin/tests/useTogglePermission.test.tsx`
+
+- useTogglePermission > sends POST request when granting a permission
+- useTogglePermission > sends POST request when revoking a permission
+- useTogglePermission > throws when response is not ok
+- useTogglePermission > invalidates user permissions query on success
+
+### `apps/admin/tests/useUpdateSettings.test.tsx`
+
+- useUpdateSettings > calls updatePaymentSetting with key and numeric value
+
+### `apps/admin/tests/useUserDelegates.test.tsx`
+
+- useUserDelegates > does not fetch when userId is null
+- useUserDelegates > fetches delegates for a given userId
+- useUserDelegates > sets error state when response is not ok
+- useRemoveUserDelegate > calls DELETE endpoint and invalidates query on success
+- useRemoveUserDelegate > sets error state when DELETE response is not ok
+
+### `apps/admin/tests/useUserPermissions.test.tsx`
+
+- useUserPermissions > fetches granted keys for a given userId
+- useUserPermissions > does not fetch when userId is null
+- useUserPermissions > sets error state when response is not ok
+
+### `apps/admin/tests/useUserPermissionsBatch.test.ts`
+
+- useUserPermissionsBatch > returns a fetchPermissions function
+- useUserPermissionsBatch > fetchPermissions returns a record mapping user ids to permission keys
+- useUserPermissionsBatch > maps rejected promises to empty arrays
+- useUserPermissionsBatch > returns empty record when no users provided
+- useUserPermissionsBatch > calls getUserPermissionKeys with supabase and user id
+
+### `apps/admin/tests/useUserProfile.test.tsx`
+
+- useUserProfile > does not fetch when userId is null
+- useUserProfile > fetches and returns profile for given userId
+- useUserProfile > returns null when user profile is not found
+- useUserProfile > sets error state when query throws
+
+### `apps/admin/tests/useUserReceiptsBatch.test.ts`
+
+- useUserReceiptsBatch > returns a fetchReceipts function
+- useUserReceiptsBatch > delegates to fetchUserReceipts with supabase and userIds
+- useUserReceiptsBatch > passes empty array of userIds to fetchUserReceipts
+
+### `apps/admin/tests/useUsers.test.tsx`
+
+- useUsers > calls listUsers with correct parameters and returns data
+- useUsers > handles empty responses correctly
 
 ## app:auth -- 85 cases
 
-### `apps/auth/src/app/[locale]/callback/route.test.ts`
+### `apps/auth/tests/AccountSettingsPage.test.tsx`
+
+- AccountSettingsPage > shows skeleton when loading
+- AccountSettingsPage > shows error state when profile fails to load
+- AccountSettingsPage > renders account settings page with profile data
+- AccountSettingsPage > renders ProfileCard and ProfileForm
+- AccountSettingsPage > renders sign out button
+- AccountSettingsPage > renders page title
+- AccountSettingsPage > calls signOut when sign out button is clicked
+
+### `apps/auth/tests/constants.test.ts`
+
+- account domain constants > defines PROFILE_QUERY_KEY
+
+### `apps/auth/tests/LoginPage.test.tsx`
+
+- LoginPage > renders login card
+- LoginPage > renders social login buttons
+
+### `apps/auth/tests/messages.test.ts`
+
+- i18n messages consistency > en.json has keys
+- i18n messages consistency > es.json has keys
+- i18n messages consistency > en.json and es.json have the same keys
+- i18n messages consistency > no en.json values are empty strings
+- i18n messages consistency > no es.json values are empty strings
+
+### `apps/auth/tests/page.test.tsx`
+
+- AuthPage > renders AccountSettingsPage when there is a signed-in Clerk session
+- AuthPage > renders LoginPage when there is no signed-in Clerk session
+
+### `apps/auth/tests/ProfileCard.test.tsx`
+
+- ProfileCard > renders the profile card
+- ProfileCard > displays the email
+- ProfileCard > displays the provider
+- ProfileCard > renders avatar when avatar_url is present
+- ProfileCard > does not render avatar when avatar_url is null
+- ProfileCard > displays emailProvider translation when provider is null
+- ProfileCard > displays the auth info heading
+- ProfileCard > displays member since date
+
+### `apps/auth/tests/ProfileForm.test.tsx`
+
+- ProfileForm > renders the form
+- ProfileForm > renders display name, email, and avatar fields
+- ProfileForm > renders the public profile heading
+- ProfileForm > shows success message when isSuccess
+- ProfileForm > shows error message when isError
+- ProfileForm > shows saving text when isPending
+- ProfileForm > disables submit button when isPending
+- ProfileForm > renders save text when not pending
+
+### `apps/auth/tests/profileQueries.test.ts`
+
+- fetchProfile > returns profile data
+- fetchProfile > throws on error
+- updateProfile > returns updated profile
+- updateProfile > throws on error
+
+### `apps/auth/tests/route.test.ts`
 
 - *(parameterised)* [locale]/callback GET > redirects to the safe return URL when the profile is %s
 - [locale]/callback GET > falls back to the person's own profile page when next targets a disallowed origin
@@ -755,26 +816,22 @@ output, so this total is deliberately not the runner total.
 - [locale]/callback GET > redirects to login when Clerk has no session for this request
 - [locale]/callback GET > renders a generic error instead of crashing when resolveProfile throws
 
-### `apps/auth/src/app/[locale]/page.test.tsx`
+### `apps/auth/tests/SocialIcons.test.tsx`
 
-- AuthPage > renders AccountSettingsPage when there is a signed-in Clerk session
-- AuthPage > renders LoginPage when there is no signed-in Clerk session
+- Social Icons > DiscordIcon renders an SVG
+- Social Icons > GoogleIcon renders an SVG
 
-### `apps/auth/src/features/account/application/hooks/useProfile.test.tsx`
+### `apps/auth/tests/SocialLoginButtons.test.tsx`
 
-- useProfile > returns profile data on success
-- useProfile > does not fetch when userId is undefined
-- useProfile > handles error
+- SocialLoginButtons > renders the available provider buttons
+- SocialLoginButtons > starts a Google sign-in through Clerk
+- SocialLoginButtons > starts a Discord sign-in through Clerk
+- SocialLoginButtons > points the OAuth flow at the sso-callback page and the final callback route, with no guessed `next` when returnTo is absent
+- SocialLoginButtons > passes an explicit returnTo through as `next` unchanged
+- SocialLoginButtons > logs and shows a visible error when authenticateWithRedirect rejects
+- SocialLoginButtons > does nothing when Clerk has not finished loading yet
 
-### `apps/auth/src/features/account/application/hooks/useUpdateProfile.test.tsx`
-
-- useUpdateProfile > calls updateProfile on mutate
-
-### `apps/auth/src/features/account/domain/constants.test.ts`
-
-- account domain constants > defines PROFILE_QUERY_KEY
-
-### `apps/auth/src/features/account/domain/types.test.ts`
+### `apps/auth/tests/types.test.ts`
 
 - profileFormSchema > accepts valid display_name
 - profileFormSchema > trims and nullifies empty display_name
@@ -790,46 +847,13 @@ output, so this total is deliberately not the runner total.
 - profileFormSchema > accepts all fields together
 - profileFormSchema > accepts empty object (all optional)
 
-### `apps/auth/src/features/account/infrastructure/profileQueries.test.ts`
+### `apps/auth/tests/useProfile.test.tsx`
 
-- fetchProfile > returns profile data
-- fetchProfile > throws on error
-- updateProfile > returns updated profile
-- updateProfile > throws on error
+- useProfile > returns profile data on success
+- useProfile > does not fetch when userId is undefined
+- useProfile > handles error
 
-### `apps/auth/src/features/account/presentation/components/ProfileCard.test.tsx`
-
-- ProfileCard > renders the profile card
-- ProfileCard > displays the email
-- ProfileCard > displays the provider
-- ProfileCard > renders avatar when avatar_url is present
-- ProfileCard > does not render avatar when avatar_url is null
-- ProfileCard > displays emailProvider translation when provider is null
-- ProfileCard > displays the auth info heading
-- ProfileCard > displays member since date
-
-### `apps/auth/src/features/account/presentation/components/ProfileForm.test.tsx`
-
-- ProfileForm > renders the form
-- ProfileForm > renders display name, email, and avatar fields
-- ProfileForm > renders the public profile heading
-- ProfileForm > shows success message when isSuccess
-- ProfileForm > shows error message when isError
-- ProfileForm > shows saving text when isPending
-- ProfileForm > disables submit button when isPending
-- ProfileForm > renders save text when not pending
-
-### `apps/auth/src/features/account/presentation/pages/AccountSettingsPage.test.tsx`
-
-- AccountSettingsPage > shows skeleton when loading
-- AccountSettingsPage > shows error state when profile fails to load
-- AccountSettingsPage > renders account settings page with profile data
-- AccountSettingsPage > renders ProfileCard and ProfileForm
-- AccountSettingsPage > renders sign out button
-- AccountSettingsPage > renders page title
-- AccountSettingsPage > calls signOut when sign out button is clicked
-
-### `apps/auth/src/features/account/presentation/pages/UserProfilePage.test.tsx`
+### `apps/auth/tests/UserProfilePage.test.tsx`
 
 - UserProfilePage > shows skeletons when loading
 - UserProfilePage > shows not found state on error
@@ -844,37 +868,19 @@ output, so this total is deliberately not the runner total.
 - UserProfilePage > falls back to email when display_email is null
 - UserProfilePage > passes userId to useProfile hook
 
-### `apps/auth/src/features/auth/presentation/components/SocialIcons.test.tsx`
+### `apps/auth/tests/useUpdateProfile.test.tsx`
 
-- Social Icons > DiscordIcon renders an SVG
-- Social Icons > GoogleIcon renders an SVG
-
-### `apps/auth/src/features/auth/presentation/components/SocialLoginButtons.test.tsx`
-
-- SocialLoginButtons > renders the available provider buttons
-- SocialLoginButtons > starts a Google sign-in through Clerk
-- SocialLoginButtons > starts a Discord sign-in through Clerk
-- SocialLoginButtons > points the OAuth flow at the sso-callback page and the final callback route, with no guessed `next` when returnTo is absent
-- SocialLoginButtons > passes an explicit returnTo through as `next` unchanged
-- SocialLoginButtons > logs and shows a visible error when authenticateWithRedirect rejects
-- SocialLoginButtons > does nothing when Clerk has not finished loading yet
-
-### `apps/auth/src/features/auth/presentation/pages/LoginPage.test.tsx`
-
-- LoginPage > renders login card
-- LoginPage > renders social login buttons
-
-### `apps/auth/src/shared/infrastructure/i18n/messages.test.ts`
-
-- i18n messages consistency > en.json has keys
-- i18n messages consistency > es.json has keys
-- i18n messages consistency > en.json and es.json have the same keys
-- i18n messages consistency > no en.json values are empty strings
-- i18n messages consistency > no es.json values are empty strings
+- useUpdateProfile > calls updateProfile on mutate
 
 ## app:landing -- 16 cases
 
-### `apps/landing/src/features/home/presentation/components/HomeSections.test.tsx`
+### `apps/landing/tests/AppTopNavigation.test.tsx`
+
+- AppTopNavigation > renders app navigation with current app
+- AppTopNavigation > passes permission state from hook to AppNavigation
+- AppTopNavigation > renders with userEmail prop
+
+### `apps/landing/tests/HomeSections.test.tsx`
 
 - HomeSections > renders the CTA links
 - HomeSections > renders the landing category pills
@@ -882,43 +888,38 @@ output, so this total is deliberately not the runner total.
 - HomeSections > renders hero section with heading and CTA link
 - HomeSections > renders landing page with all sections
 
-### `apps/landing/src/features/legal/presentation/pages/PrivacyPage.test.tsx`
+### `apps/landing/tests/PrivacyPage.test.tsx`
 
 - PrivacyPage > renders the legal-privacy-page test id
 - PrivacyPage > renders the page title heading
 - PrivacyPage > renders a last-updated line
 - PrivacyPage > renders all 9 section headings
 
-### `apps/landing/src/features/legal/presentation/pages/TermsPage.test.tsx`
+### `apps/landing/tests/TermsPage.test.tsx`
 
 - TermsPage > renders the legal-terms-page test id
 - TermsPage > renders the page title heading
 - TermsPage > renders a last-updated line
 - TermsPage > renders all 10 section headings
 
-### `apps/landing/src/shared/presentation/components/AppTopNavigation.test.tsx`
-
-- AppTopNavigation > renders app navigation with current app
-- AppTopNavigation > passes permission state from hook to AppNavigation
-- AppTopNavigation > renders with userEmail prop
-
 ## app:payments -- 549 cases
 
-### `apps/payments/src/app/api/checkout/payment-methods/route.test.ts`
+### `apps/payments/tests/ActionButtons.test.tsx`
 
-- POST /api/checkout/payment-methods > returns payment methods when the cart quantities are valid
-- POST /api/checkout/payment-methods > returns no payment methods when the cart exceeds stock
-- POST /api/checkout/payment-methods > rejects users without checkout permissions
-- POST /api/checkout/payment-methods > rejects requests with no signed-in Clerk session
-- POST /api/checkout/payment-methods > rejects invalid payloads
+- ActionButtons > renders approve and reject for pending_verification
+- ActionButtons > renders approve and reject for evidence_requested
+- ActionButtons > renders nothing for approved status
+- ActionButtons > renders nothing for rejected status
+- ActionButtons > shows confirmation panel when approve is clicked
+- ActionButtons > calls onAction with approved after checkbox and confirm
+- ActionButtons > cancels approval and returns to buttons when cancel is clicked
+- ActionButtons > shows note input when reject is clicked
+- ActionButtons > submits rejection with note
+- ActionButtons > shows note input when evidence request is clicked
+- ActionButtons > submits evidence request with note
+- ActionButtons > cancels note mode when cancel is clicked
 
-### `apps/payments/src/features/assigned-orders/application/hooks/useAssignedOrders.test.ts`
-
-- useAssignedOrders > returns isLoading true initially
-- useAssignedOrders > returns data from fetchAssignedOrders once resolved
-- useAssignedOrders > calls fetchAssignedOrders with supabase client
-
-### `apps/payments/src/features/assigned-orders/presentation/pages/AssignedOrdersPageContent.test.tsx`
+### `apps/payments/tests/AssignedOrdersPageContent.test.tsx`
 
 - AssignedOrdersPageContent > shows loading spinner when isLoading is true
 - AssignedOrdersPageContent > shows empty state when orders is null after loading
@@ -930,42 +931,16 @@ output, so this total is deliberately not the runner total.
 - AssignedOrdersPageContent > calls setParams with the clicked filter status
 - AssignedOrdersPageContent > renders filter buttons for all defined statuses
 
-### `apps/payments/src/features/checkout/application/hooks/useCartFromCookie.test.tsx`
+### `apps/payments/tests/BuyerField.test.tsx`
 
-- useCartFromCookie > returns isEmpty=true when cart is empty after hydration
-- useCartFromCookie > groups items by seller_id
-- useCartFromCookie > subscribes to cart cookie changes
+- BuyerField > renders the input with correct type
+- BuyerField > renders email input for email type
+- BuyerField > shows test id based on fieldKey and sellerId
+- BuyerField > calls onChange when input value changes
+- BuyerField > is disabled when disabled prop is true
+- BuyerField > renders label text via translation key
 
-### `apps/payments/src/features/checkout/application/hooks/useSellerPaymentMethods.test.tsx`
-
-- useSellerPaymentMethods > returns payment methods on success
-- useSellerPaymentMethods > does not fetch when sellerId is empty
-- useSellerPaymentMethods > returns a stock-issue response without payment methods
-
-### `apps/payments/src/features/checkout/application/hooks/useSellerProfiles.test.tsx`
-
-- useSellerProfiles > returns profiles when sellerIds are provided
-- useSellerProfiles > does not fetch when sellerIds is empty
-
-### `apps/payments/src/features/checkout/application/hooks/useSubmitPayment.test.tsx`
-
-- useSubmitPayment > creates order with all params and returns its id
-- useSubmitPayment > passes buyer info to createOrder
-- useSubmitPayment > returns the order id on success
-- useSubmitPayment > invalidates my-orders query on success
-- useSubmitPayment > uploads receipt and passes receiptUrl to createOrder
-- useSubmitPayment > throws when receipt upload returns ok: false
-
-### `apps/payments/src/features/checkout/domain/constants.test.ts`
-
-- checkout domain constants > CART_COOKIE_KEY is a non-empty string
-- checkout domain constants > MAX_RECEIPT_SIZE_BYTES is 5 MB
-- checkout domain constants > ACCEPTED_RECEIPT_TYPES accepts images
-- checkout domain constants > RECEIPTS_BUCKET is defined
-- checkout domain constants > ORDER_EXPIRY_HOURS is 48
-- checkout domain constants > time conversion constants are correct
-
-### `apps/payments/src/features/checkout/infrastructure/cartCookie.test.ts`
+### `apps/payments/tests/cartCookie.test.ts`
 
 - readCartFromCookie > returns empty array when cookie is not set
 - readCartFromCookie > returns empty array when cookie is empty string
@@ -982,7 +957,48 @@ output, so this total is deliberately not the runner total.
 - subscribeToCartCookie > returns a callable no-op when window is not available
 - subscribeToCartCookie > does not call onStoreChange when visibilityState is not visible
 
-### `apps/payments/src/features/checkout/infrastructure/checkoutQueries.test.ts`
+### `apps/payments/tests/checkout-constants.test.ts`
+
+- checkout domain constants > CART_COOKIE_KEY is a non-empty string
+- checkout domain constants > MAX_RECEIPT_SIZE_BYTES is 5 MB
+- checkout domain constants > ACCEPTED_RECEIPT_TYPES accepts images
+- checkout domain constants > RECEIPTS_BUCKET is defined
+- checkout domain constants > ORDER_EXPIRY_HOURS is 48
+- checkout domain constants > time conversion constants are correct
+
+### `apps/payments/tests/CheckoutItemsSummary.test.tsx`
+
+- CheckoutItemsSummary > renders all items with names
+- CheckoutItemsSummary > shows quantity for each item
+- CheckoutItemsSummary > renders the subtotal
+- CheckoutItemsSummary > renders product images when available
+- CheckoutItemsSummary > has the correct test ID
+
+### `apps/payments/tests/CheckoutPage.test.tsx`
+
+- CheckoutPage > keeps the success state visible after checkout clears the cart
+- CheckoutPage > renders loading state with skeletons
+- CheckoutPage > renders empty cart state
+- CheckoutPage > renders seller checkout cards for groups
+- CheckoutPage > renders checkout title and back link
+
+### `apps/payments/tests/CheckoutPageContent.test.tsx`
+
+- CheckoutPageContent > renders loading skeletons when cart is loading
+- CheckoutPageContent > renders empty cart state when cart is empty
+- CheckoutPageContent > renders checkout page with seller cards when cart has items
+- CheckoutPageContent > renders back-to-store link on the main checkout page
+- CheckoutPageContent > renders completed checkout state when session flag is set
+- CheckoutPageContent > shows completion state and clears cart after successful submission
+- CheckoutPageContent > shows Error.message when mutateAsync throws an Error instance
+- CheckoutPageContent > formats code and message when thrown object has both fields
+- CheckoutPageContent > shows message when thrown object has only a string message field
+- CheckoutPageContent > shows code when thrown object has only a string code field
+- CheckoutPageContent > falls back to String(error) when object has no string message or code
+- CheckoutPageContent > converts null error to unknown_error fallback
+- CheckoutPageContent > converts plain string error to its string value
+
+### `apps/payments/tests/checkoutQueries.test.ts`
 
 - fetchSellerPaymentMethods > returns mapped payment methods on success
 - fetchSellerPaymentMethods > throws on error
@@ -993,36 +1009,45 @@ output, so this total is deliberately not the runner total.
 - createOrder > reserves stock, inserts order and items, returns order id
 - createOrder > releases stock and throws on reserve_stock failure
 
-### `apps/payments/src/features/checkout/infrastructure/receiptStorage.test.ts`
+### `apps/payments/tests/ConfirmActionPanel.test.tsx`
 
-- uploadReceipt > uploads file to the receipts bucket and returns storage path
-- uploadReceipt > sanitizes receipt file names before upload
-- uploadReceipt > throws on upload error
-- uploadReceipt > throws when the receipt type is not allowed
-- deleteReceipt > removes the file from the receipts bucket
-- deleteReceipt > throws on remove error
-- getReceiptUrl > returns null without calling storage when no path is given
-- getReceiptUrl > calls createSignedUrl and returns a URL rewritten to the public host
-- getReceiptUrl > returns null when createSignedUrl returns an error
+- ConfirmActionPanel > renders warning text, checkbox, and buttons
+- ConfirmActionPanel > confirm button is disabled when checkbox is unchecked
+- ConfirmActionPanel > confirm button is enabled after checking the checkbox
+- ConfirmActionPanel > calls onConfirm when confirm button is clicked with checkbox checked
+- ConfirmActionPanel > does not call onConfirm when confirm button is clicked with checkbox unchecked
+- ConfirmActionPanel > calls onCancel when cancel button is clicked
+- ConfirmActionPanel > shows '...' instead of confirmLabel when isPending is true
+- ConfirmActionPanel > shows confirmLabel when isPending is false
+- ConfirmActionPanel > disables both buttons when isPending is true
+- ConfirmActionPanel > renders with reject variant
+- ConfirmActionPanel > renders checkboxLabel text
 
-### `apps/payments/src/features/checkout/presentation/components/BuyerField.test.tsx`
+### `apps/payments/tests/delegatedReportsApi.test.ts`
 
-- BuyerField > renders the input with correct type
-- BuyerField > renders email input for email type
-- BuyerField > shows test id based on fieldKey and sellerId
-- BuyerField > calls onChange when input value changes
-- BuyerField > is disabled when disabled prop is true
-- BuyerField > renders label text via translation key
+- fetchDelegatedReportOrders > returns empty result when the user has no delegations granting reports.read
+- fetchDelegatedReportOrders > computes a product-scoped subtotal, keeps only delegated items, and never exposes receipt/transfer fields
+- fetchDelegatedReportOrders > only includes items for products granted reports.read, even when the same seller has another delegation row without it
+- fetchDelegatedReportOrders > drops orders with no delegated items
+- fetchDelegatedReportOrders > applies amountMin/amountMax against the delegated subtotal (app-side), not the order total
+- fetchDelegatedReportOrders > returns empty when there is no authenticated user
+- fetchDelegatedReportOrders > applies date, status, buyer, and currency filters at the query level
+- fetchDelegatedReportOrders > falls back gracefully when product name, buyer profile, or permissions are missing
 
-### `apps/payments/src/features/checkout/presentation/components/CheckoutItemsSummary.test.tsx`
+### `apps/payments/tests/DelegatedReportsPage.test.tsx`
 
-- CheckoutItemsSummary > renders all items with names
-- CheckoutItemsSummary > shows quantity for each item
-- CheckoutItemsSummary > renders the subtotal
-- CheckoutItemsSummary > renders product images when available
-- CheckoutItemsSummary > has the correct test ID
+- DelegatedReportsPage > shows access denied without reports.read
+- DelegatedReportsPage > renders the report and hides export without reports.export
+- DelegatedReportsPage > shows export button with reports.export
 
-### `apps/payments/src/features/checkout/presentation/components/DisplayBlockRenderer.test.tsx`
+### `apps/payments/tests/DelegatedReportTable.test.tsx`
+
+- DelegatedReportTable > shows empty state when no orders
+- DelegatedReportTable > renders the table container and one row per delegated item
+- DelegatedReportTable > shows buyer identity and delegated subtotal, not an order total
+- DelegatedReportTable > never renders receipt or transfer content
+
+### `apps/payments/tests/DisplayBlockRenderer.test.tsx`
 
 - DisplayBlockRenderer > renders text block content with markdown
 - DisplayBlockRenderer > renders image block via ImageBlock component
@@ -1031,7 +1056,14 @@ output, so this total is deliberately not the runner total.
 - DisplayBlockRenderer > renders url block with anchor inside container
 - DisplayBlockRenderer > wraps block in a div with test id
 
-### `apps/payments/src/features/checkout/presentation/components/DynamicFormField.test.tsx`
+### `apps/payments/tests/domain-constants.test.ts`
+
+- shared domain constants > FALLBACK_SELLER_NAME is a non-empty string
+- shared domain constants > FALLBACK_BUYER_NAME is a non-empty string
+- shared domain constants > cart constants are stable
+- shared domain constants > receipt constants are centralized
+
+### `apps/payments/tests/DynamicFormField.test.tsx`
 
 - DynamicFormField > renders label from label_en
 - DynamicFormField > renders input for non-textarea type
@@ -1043,7 +1075,44 @@ output, so this total is deliberately not the runner total.
 - DynamicFormField > calls onChange when input value changes
 - DynamicFormField > calls onChange when textarea value changes
 
-### `apps/payments/src/features/checkout/presentation/components/FileInput.test.tsx`
+### `apps/payments/tests/ExpirationLabel.test.tsx`
+
+- ExpirationLabel > shows remaining time in hours
+- ExpirationLabel > shows only minutes when less than 1 hour
+- ExpirationLabel > shows expired when time has passed
+
+### `apps/payments/tests/exportDelegatedOrdersToExcel.test.ts`
+
+- exportDelegatedOrdersToExcel > returns valid XML Workbook structure
+- exportDelegatedOrdersToExcel > includes the ten delegated columns and excludes transfer/receipt columns
+- exportDelegatedOrdersToExcel > reflects the delegated subtotal in a row
+- exportDelegatedOrdersToExcel > includes one row per item and the product name
+- exportDelegatedOrdersToExcel > handles an order with no items without crashing
+- exportDelegatedOrdersToExcel > escapes XML special characters in buyer email
+- buildDelegatedExportFilename > matches the delegated-report filename pattern
+
+### `apps/payments/tests/exportSellerOrdersToExcel.test.ts`
+
+- exportSellerOrdersToExcel > returns valid XML Workbook structure
+- exportSellerOrdersToExcel > includes order data in the output
+- exportSellerOrdersToExcel > handles empty created_at without crashing
+- exportSellerOrdersToExcel > handles order with no items
+- exportSellerOrdersToExcel > includes one row per item when order has items
+- exportSellerOrdersToExcel > includes Filters sheet
+- exportSellerOrdersToExcel > escapes XML special characters in buyer email
+- buildExportFilename > returns a string starting with my-sales-report
+- buildExportFilename > returns a .xls file
+
+### `apps/payments/tests/fetchUserDisplayNames.test.ts`
+
+- fetchUserDisplayNames > returns empty object for empty userIds array
+- fetchUserDisplayNames > returns a map of userId to display_name
+- fetchUserDisplayNames > falls back to email when display_name is null
+- fetchUserDisplayNames > falls back to fallbackName when both are null
+- fetchUserDisplayNames > returns empty object on error
+- fetchUserDisplayNames > handles null data gracefully
+
+### `apps/payments/tests/FileInput.test.tsx`
 
 - FileInput > renders a file input element
 - FileInput > is disabled when disabled prop is true
@@ -1051,19 +1120,110 @@ output, so this total is deliberately not the runner total.
 - FileInput > reports size error and clears handlers when file exceeds limit
 - FileInput > passes file to handlers when file is within size limit
 
-### `apps/payments/src/features/checkout/presentation/components/FormFieldsSection.test.tsx`
+### `apps/payments/tests/formatPrice.test.ts`
+
+- formatPrice > formats USD amount
+- formatPrice > formats COP amount with thousands separator
+- formatPrice > formats zero in USD
+- formatPrice > formats EUR amount
+
+### `apps/payments/tests/FormFieldsSection.test.tsx`
 
 - FormFieldsSection > returns null when fields array is empty
 - FormFieldsSection > renders the section label when fields are present
 - FormFieldsSection > renders a DynamicFormField for each field
 
-### `apps/payments/src/features/checkout/presentation/components/ImageBlock.test.tsx`
+### `apps/payments/tests/ImageBlock.test.tsx`
 
 - ImageBlock > renders an img when url is set
 - ImageBlock > shows fallback when block url is empty
 - ImageBlock > shows fallback on image load error
 
-### `apps/payments/src/features/checkout/presentation/components/PaymentMethodSelector.test.tsx`
+### `apps/payments/tests/OrderCard.test.tsx`
+
+- OrderCard > renders seller name and total
+- OrderCard > shows status badge
+- OrderCard > starts collapsed for non-evidence_requested status
+- OrderCard > starts expanded for evidence_requested status
+- OrderCard > toggles expand/collapse on click
+- OrderCard > shows expiration label for non-terminal orders with expires_at
+- OrderCard > does not show expiration label for terminal status
+- OrderCard > has aria-expanded attribute on toggle button
+
+### `apps/payments/tests/OrderItemsList.test.tsx`
+
+- OrderItemsList > renders all items
+- OrderItemsList > shows quantity for each item
+- OrderItemsList > shows the formatted total price per item
+- OrderItemsList > falls back to product_id when no name in metadata
+- OrderItemsList > has the correct test ID
+
+### `apps/payments/tests/orderQueries.test.ts`
+
+- fetchMyOrders > throws when current_user_id() errors
+- fetchMyOrders > throws when current_user_id() resolves to no profile
+- fetchMyOrders > returns orders with seller names
+- fetchMyOrders > throws on query error
+- resubmitEvidence > updates order without a receipt url
+- resubmitEvidence > updates order with a pre-computed receipt url
+- resubmitEvidence > throws on order update error
+
+### `apps/payments/tests/orders-constants.test.ts`
+
+- orders domain constants > MY_ORDERS_QUERY_KEY is defined
+- orders domain constants > MAX_RECEIPT_SIZE_BYTES is 5 MB
+- orders domain constants > ACCEPTED_RECEIPT_TYPES lists the accepted image mime types
+- orders domain constants > RECEIPTS_BUCKET is receipts
+- orders domain constants > ORDERS_STALE_TIME_MS is 30 seconds
+
+### `apps/payments/tests/orders-OrderStatusBadge.test.tsx`
+
+- OrderStatusBadge > renders the translated status text
+- OrderStatusBadge > applies the correct test ID
+- OrderStatusBadge > renders for all known statuses without crashing
+
+### `apps/payments/tests/OrdersPage.test.tsx`
+
+- OrdersPage > renders skeletons when loading
+- OrdersPage > renders empty state when no orders
+- OrdersPage > renders empty state when data is null
+- OrdersPage > renders orders grouped by checkout session
+- OrdersPage > renders back to store link
+
+### `apps/payments/tests/payment-methods-constants.test.ts`
+
+- payment-methods domain constants > defines PAYMENT_METHODS_QUERY_KEY
+
+### `apps/payments/tests/PaymentMethodEditor.test.tsx`
+
+- PaymentMethodEditor > renders name_en input with initial value
+- PaymentMethodEditor > renders name_es input with initial value
+- PaymentMethodEditor > renders display section editor
+- PaymentMethodEditor > renders form section editor
+- PaymentMethodEditor > shows validation error when name_en is cleared
+- PaymentMethodEditor > save button is disabled when nothing has changed
+- PaymentMethodEditor > save button becomes enabled after a field changes
+- PaymentMethodEditor > save button is disabled when name_en is empty even if dirty
+- PaymentMethodEditor > clicking save calls updatePaymentMethod with all current fields
+- PaymentMethodEditor > updates nameEs when ES name input changes
+- PaymentMethodEditor > toggles requiresReceipt when its checkbox is clicked
+- PaymentMethodEditor > toggles requiresTransferNumber when its checkbox is clicked
+- PaymentMethodEditor > defaults nameEs to empty string when method.name_es is null
+- PaymentMethodEditor > includes updated nameEs in the save payload
+- PaymentMethodEditor > includes requiresReceipt and requiresTransferNumber when toggled and saved
+
+### `apps/payments/tests/paymentMethodQueries.test.ts`
+
+- fetchPaymentMethods > returns payment methods for a seller
+- fetchPaymentMethods > throws on error
+- createPaymentMethod > inserts a payment method
+- createPaymentMethod > throws on error
+- updatePaymentMethod > updates a payment method
+- updatePaymentMethod > throws on error
+- deletePaymentMethod > deletes a payment method
+- deletePaymentMethod > throws on error
+
+### `apps/payments/tests/PaymentMethodSelector.test.tsx`
 
 - PaymentMethodSelector > renders a select with all methods as options
 - PaymentMethodSelector > displays method names in English by default
@@ -1071,7 +1231,82 @@ output, so this total is deliberately not the runner total.
 - PaymentMethodSelector > does not show details when no method is selected
 - PaymentMethodSelector > disables the select when disabled prop is true
 
-### `apps/payments/src/features/checkout/presentation/components/ReceiptUpload.test.tsx`
+### `apps/payments/tests/PaymentMethodsPage.test.tsx`
+
+- PaymentMethodsPage > renders page content with method list
+- PaymentMethodsPage > shows add button when canCreate
+- PaymentMethodsPage > calls create mutation when add button is clicked
+- PaymentMethodsPage > expands editor inline when method name is clicked
+- PaymentMethodsPage > collapses editor when same method name is clicked again
+- PaymentMethodsPage > shows loading state when methods are loading
+- PaymentMethodsPage > shows access denied without read permission
+- PaymentMethodsPage > shows delete button for each method when canDelete
+- PaymentMethodsPage > shows active toggle for each method when canUpdate
+- PaymentMethodsPage > add button stays visible alongside the list
+
+### `apps/payments/tests/PaymentMethodTable.test.tsx`
+
+- PaymentMethodTable > shows skeleton loading state
+- PaymentMethodTable > shows empty state when no methods
+- PaymentMethodTable > renders the table with methods
+- PaymentMethodTable > displays the payment method name
+- PaymentMethodTable > renders edit button
+- PaymentMethodTable > calls onEdit when edit button is clicked
+- PaymentMethodTable > calls onDelete when delete is confirmed
+- PaymentMethodTable > does not call onDelete when delete is cancelled
+- PaymentMethodTable > falls back to name_en when name_es is not available
+
+### `apps/payments/tests/paymentMethodUtils.test.ts`
+
+- validateBuyerSubmission > returns empty array when all required fields are filled
+- validateBuyerSubmission > returns label_en for a missing required field
+- validateBuyerSubmission > returns label_en for a whitespace-only required field value
+- validateBuyerSubmission > does not flag optional fields that are missing
+- validateBuyerSubmission > collects multiple missing required fields
+- validateBuyerSubmission > returns empty array when no fields are required
+- validateBuyerSubmission > returns empty array for empty fields list
+- validateFileSize > returns true for a file exactly at the 10 MB limit
+- validateFileSize > returns true for a file below the limit
+- validateFileSize > returns false for a file above the limit
+- validateFileSize > returns true for 0 bytes
+
+### `apps/payments/tests/PaymentsSidebar.test.tsx`
+
+- PaymentsSidebar > renders buyer section with checkout and purchases links
+- PaymentsSidebar > renders seller section with payment methods and sales links
+- PaymentsSidebar > highlights the active route
+- PaymentsSidebar > toggles collapsed state when collapse button is clicked
+- PaymentsSidebar > renders section group labels
+- PaymentsSidebar > renders a mobile trigger
+- PaymentsSidebar > renders delegated reports link when reports.read is granted
+
+### `apps/payments/tests/receipt.test.ts`
+
+- receipt helpers > accepts supported receipt images
+- receipt helpers > rejects unsupported receipt types
+- receipt helpers > rejects oversized receipts
+- receipt helpers > sanitizes filenames before building storage paths
+- receipt helpers > rejects traversal in orderId when building storage path
+- receipt helpers > accepts valid order IDs when building storage path
+- receipt helpers > assertSafeStoragePath allows normal paths
+- receipt helpers > assertSafeStoragePath rejects path traversal
+- receipt helpers > toSafeStoragePath returns reconstructed path for valid input
+- receipt helpers > toSafeStoragePath throws for path traversal
+- receipt helpers > only allows safe receipt hrefs
+
+### `apps/payments/tests/receiptStorage.test.ts`
+
+- uploadReceipt > uploads file to the receipts bucket and returns storage path
+- uploadReceipt > sanitizes receipt file names before upload
+- uploadReceipt > throws on upload error
+- uploadReceipt > throws when the receipt type is not allowed
+- deleteReceipt > removes the file from the receipts bucket
+- deleteReceipt > throws on remove error
+- getReceiptUrl > returns null without calling storage when no path is given
+- getReceiptUrl > calls createSignedUrl and returns a URL rewritten to the public host
+- getReceiptUrl > returns null when createSignedUrl returns an error
+
+### `apps/payments/tests/ReceiptUpload.test.tsx`
 
 - ReceiptUpload > renders upload trigger when no file is selected
 - ReceiptUpload > shows file name and preview when file is selected
@@ -1087,7 +1322,106 @@ output, so this total is deliberately not the runner total.
 - ReceiptUpload > revokes preview URL when remove is clicked after a file was selected
 - ReceiptUpload > revokes preview URL when file prop is cleared externally
 
-### `apps/payments/src/features/checkout/presentation/components/SellerCheckoutCard.test.tsx`
+### `apps/payments/tests/ReceiptViewer.test.tsx`
+
+- ReceiptViewer > renders the receipt heading
+- ReceiptViewer > displays transfer number when provided
+- ReceiptViewer > shows no transfer number message when null
+- ReceiptViewer > shows view receipt link when receiptUrl is provided
+- ReceiptViewer > shows no receipt message when receiptUrl is null
+- ReceiptViewer > hides unsafe receipt links
+- ReceiptViewer > has the correct test ID
+
+### `apps/payments/tests/received-orders-constants.test.ts`
+
+- received-orders domain constants > RECEIVED_ORDERS_QUERY_KEY is defined
+- received-orders domain constants > FILTER_STATUSES includes all expected values
+- received-orders domain constants > RECEIVED_ORDERS_STALE_TIME_MS is 30 seconds
+- received-orders domain constants > EXPIRING_SOON_THRESHOLD_MS is 6 hours
+
+### `apps/payments/tests/ReceivedOrderCard.test.tsx`
+
+- ReceivedOrderCard > renders buyer name and total
+- ReceivedOrderCard > renders status badge
+- ReceivedOrderCard > renders items list
+- ReceivedOrderCard > renders receipt viewer
+- ReceivedOrderCard > renders action buttons
+- ReceivedOrderCard > shows seller note when present
+- ReceivedOrderCard > does not show seller note when absent
+- ReceivedOrderCard > has the correct test ID
+- ReceivedOrderCard > renders buyer_info with plain text value as a span
+- ReceivedOrderCard > renders buyer_info with a non-image https URL as a link
+- ReceivedOrderCard > renders buyer_info with an image URL as an img element
+- ReceivedOrderCard > does not render buyer_info section when buyer_info is null
+- ReceivedOrderCard > renders seller_name badge when seller_name is present
+- ReceivedOrderCard > does not render seller_name badge when seller_name is null
+- ReceivedOrderCard > shows expiring soon warning for a past expires_at date with pending_verification status
+- ReceivedOrderCard > does not show expiring soon warning when expires_at is null
+- ReceivedOrderCard > does not show expiring soon warning when status is not pending_verification
+- ReceivedOrderCard > calls onAction with orderId and action when an action is triggered
+
+### `apps/payments/tests/receivedOrderQueries.test.ts`
+
+- fetchReceivedOrders > returns empty array when no user is authenticated
+- fetchReceivedOrders > returns orders with buyer names
+- fetchReceivedOrders > applies filter when provided and not 'all'
+- fetchReceivedOrders > throws on query error
+- updateOrderStatus > calls rpc with correct arguments
+- updateOrderStatus > passes undefined for seller_note when not provided
+- updateOrderStatus > throws on error
+- fetchPendingOrderCount > returns 0 when no user is authenticated
+- fetchPendingOrderCount > returns count from query
+- fetchPendingOrderCount > returns 0 on error
+
+### `apps/payments/tests/ReceivedOrdersPage.test.tsx`
+
+- ReceivedOrdersPage > renders loading spinner when loading
+- ReceivedOrdersPage > renders empty state when no orders
+- ReceivedOrdersPage > renders order cards when orders exist
+- ReceivedOrdersPage > renders filter pills
+- ReceivedOrdersPage > calls setParams when a filter pill is clicked
+- ReceivedOrdersPage > renders the page title
+- ReceivedOrdersPage > shows access denied when orders.read is missing
+- ReceivedOrdersPage > shows access denied when orders.update is missing
+
+### `apps/payments/tests/ReceivedStatusBadge.test.tsx`
+
+- ReceivedStatusBadge > renders badge with translated status text
+- ReceivedStatusBadge > has the correct test ID
+- ReceivedStatusBadge > renders for all actionable statuses
+- ReceivedStatusBadge > renders expired status without crashing
+
+### `apps/payments/tests/reports-OrderStatusBadge.test.tsx`
+
+- OrderStatusBadge > renders translated status text
+- OrderStatusBadge > applies the correct test ID
+- OrderStatusBadge > renders for all known statuses without crashing
+
+### `apps/payments/tests/ResubmitEvidenceForm.test.tsx`
+
+- ResubmitEvidenceForm > renders the form with transfer number input
+- ResubmitEvidenceForm > shows the seller note when provided
+- ResubmitEvidenceForm > does not show seller note section when null
+- ResubmitEvidenceForm > does not submit when transfer number is empty
+- ResubmitEvidenceForm > submits when transfer number is filled
+- ResubmitEvidenceForm > shows submitting text when isPending
+- ResubmitEvidenceForm > shows submit text when not pending
+- ResubmitEvidenceForm > disables submit button when isPending
+- ResubmitEvidenceForm > shows remove button after a valid file is selected
+- ResubmitEvidenceForm > ignores oversized files and keeps the upload button visible
+- ResubmitEvidenceForm > removes the file when the remove button is clicked
+- ResubmitEvidenceForm > clicking the upload button triggers the file input click handler
+- ResubmitEvidenceForm > submits with the file when both transfer number and receipt are provided
+
+### `apps/payments/tests/route.test.ts`
+
+- POST /api/checkout/payment-methods > returns payment methods when the cart quantities are valid
+- POST /api/checkout/payment-methods > returns no payment methods when the cart exceeds stock
+- POST /api/checkout/payment-methods > rejects users without checkout permissions
+- POST /api/checkout/payment-methods > rejects requests with no signed-in Clerk session
+- POST /api/checkout/payment-methods > rejects invalid payloads
+
+### `apps/payments/tests/SellerCheckoutCard.test.tsx`
 
 - SellerCheckoutCard > renders seller name and subtotal
 - SellerCheckoutCard > shows item count
@@ -1105,7 +1439,7 @@ output, so this total is deliberately not the runner total.
 - SellerCheckoutCard > calls onSubmit with correct params when all validations pass
 - SellerCheckoutCard > calls onSubmit with receipt and transfer when provided
 
-### `apps/payments/src/features/checkout/presentation/components/SellerCheckoutContent.test.tsx`
+### `apps/payments/tests/SellerCheckoutContent.test.tsx`
 
 - SellerCheckoutContent > renders items summary
 - SellerCheckoutContent > shows payment method selector when not submitted and not loading
@@ -1121,106 +1455,59 @@ output, so this total is deliberately not the runner total.
 - SellerCheckoutContent > disables submit button when no method selected
 - SellerCheckoutContent > shows submitting label when isSubmitting
 
-### `apps/payments/src/features/checkout/presentation/pages/CheckoutPage.test.tsx`
+### `apps/payments/tests/SellerNoteInput.test.tsx`
 
-- CheckoutPage > keeps the success state visible after checkout clears the cart
-- CheckoutPage > renders loading state with skeletons
-- CheckoutPage > renders empty cart state
-- CheckoutPage > renders seller checkout cards for groups
-- CheckoutPage > renders checkout title and back link
+- SellerNoteInput > renders textarea and buttons
+- SellerNoteInput > shows error when submitting empty note
+- SellerNoteInput > submits trimmed note on valid input
+- SellerNoteInput > calls onCancel when cancel button is clicked
+- SellerNoteInput > clears error when user types after validation failure
+- SellerNoteInput > disables inputs when isPending
+- SellerNoteInput > shows submitting text when pending
+- SellerNoteInput > uses custom placeholder when provided
 
-### `apps/payments/src/features/checkout/presentation/pages/CheckoutPageContent.test.tsx`
+### `apps/payments/tests/SellerReportFiltersBar.test.tsx`
 
-- CheckoutPageContent > renders loading skeletons when cart is loading
-- CheckoutPageContent > renders empty cart state when cart is empty
-- CheckoutPageContent > renders checkout page with seller cards when cart has items
-- CheckoutPageContent > renders back-to-store link on the main checkout page
-- CheckoutPageContent > renders completed checkout state when session flag is set
-- CheckoutPageContent > shows completion state and clears cart after successful submission
-- CheckoutPageContent > shows Error.message when mutateAsync throws an Error instance
-- CheckoutPageContent > formats code and message when thrown object has both fields
-- CheckoutPageContent > shows message when thrown object has only a string message field
-- CheckoutPageContent > shows code when thrown object has only a string code field
-- CheckoutPageContent > falls back to String(error) when object has no string message or code
-- CheckoutPageContent > converts null error to unknown_error fallback
-- CheckoutPageContent > converts plain string error to its string value
+- SellerReportFiltersBar > renders filter inputs
+- SellerReportFiltersBar > does not show currency filter when currencies list is empty
+- SellerReportFiltersBar > shows currency filter when currencies are provided
+- SellerReportFiltersBar > does not show clear button when no filters are active
+- SellerReportFiltersBar > shows clear button when filters are active
+- SellerReportFiltersBar > calls onFiltersChange when clear is clicked
+- SellerReportFiltersBar > calls onFiltersChange when date-from changes
+- SellerReportFiltersBar > calls onFiltersChange with null when date-from is cleared
+- SellerReportFiltersBar > calls onFiltersChange when date-to changes
+- SellerReportFiltersBar > calls onFiltersChange with null when date-to is cleared
+- SellerReportFiltersBar > calls onFiltersChange when status changes to a value
+- SellerReportFiltersBar > calls onFiltersChange with null when status is reset to empty
+- SellerReportFiltersBar > calls onFiltersChange when currency changes
+- SellerReportFiltersBar > calls onFiltersChange with null when currency is reset to empty
+- SellerReportFiltersBar > calls onFiltersChange when amount-max changes
+- SellerReportFiltersBar > calls onFiltersChange with null when amount-max is cleared
+- SellerReportFiltersBar > calls onFiltersChange when amount-min changes
+- SellerReportFiltersBar > calls onFiltersChange with null when amount-min is cleared
 
-### `apps/payments/src/features/orders/application/hooks/useMyOrders.test.tsx`
+### `apps/payments/tests/SellerReportsPage.test.tsx`
 
-- useMyOrders > returns orders from the query layer
+- SellerReportsPage > shows loading state
+- SellerReportsPage > shows error state
+- SellerReportsPage > renders filters bar and table when loaded
+- SellerReportsPage > shows total orders count
+- SellerReportsPage > export button is disabled when there are no orders
+- SellerReportsPage > export button is enabled when orders exist
+- SellerReportsPage > clicking export calls exportSellerOrdersToExcel and downloadExcel
 
-### `apps/payments/src/features/orders/application/hooks/useResubmitEvidence.test.tsx`
+### `apps/payments/tests/SellerReportTable.test.tsx`
 
-- useResubmitEvidence > submits evidence and invalidates the orders query
-- useResubmitEvidence > uploads receipt and passes receiptUrl to resubmitEvidence
-- useResubmitEvidence > throws when receipt upload returns ok: false
+- SellerReportTable > shows empty state when no orders
+- SellerReportTable > renders table with orders
+- SellerReportTable > shows transfer number
+- SellerReportTable > shows receipt link when present
+- SellerReportTable > shows no receipt text when receipt_url is null
+- SellerReportTable > shows product items
+- SellerReportTable > renders multiple orders
 
-### `apps/payments/src/features/orders/domain/constants.test.ts`
-
-- orders domain constants > MY_ORDERS_QUERY_KEY is defined
-- orders domain constants > MAX_RECEIPT_SIZE_BYTES is 5 MB
-- orders domain constants > ACCEPTED_RECEIPT_TYPES lists the accepted image mime types
-- orders domain constants > RECEIPTS_BUCKET is receipts
-- orders domain constants > ORDERS_STALE_TIME_MS is 30 seconds
-
-### `apps/payments/src/features/orders/infrastructure/orderQueries.test.ts`
-
-- fetchMyOrders > throws when current_user_id() errors
-- fetchMyOrders > throws when current_user_id() resolves to no profile
-- fetchMyOrders > returns orders with seller names
-- fetchMyOrders > throws on query error
-- resubmitEvidence > updates order without a receipt url
-- resubmitEvidence > updates order with a pre-computed receipt url
-- resubmitEvidence > throws on order update error
-
-### `apps/payments/src/features/orders/presentation/components/ExpirationLabel.test.tsx`
-
-- ExpirationLabel > shows remaining time in hours
-- ExpirationLabel > shows only minutes when less than 1 hour
-- ExpirationLabel > shows expired when time has passed
-
-### `apps/payments/src/features/orders/presentation/components/OrderCard.test.tsx`
-
-- OrderCard > renders seller name and total
-- OrderCard > shows status badge
-- OrderCard > starts collapsed for non-evidence_requested status
-- OrderCard > starts expanded for evidence_requested status
-- OrderCard > toggles expand/collapse on click
-- OrderCard > shows expiration label for non-terminal orders with expires_at
-- OrderCard > does not show expiration label for terminal status
-- OrderCard > has aria-expanded attribute on toggle button
-
-### `apps/payments/src/features/orders/presentation/components/OrderItemsList.test.tsx`
-
-- OrderItemsList > renders all items
-- OrderItemsList > shows quantity for each item
-- OrderItemsList > shows the formatted total price per item
-- OrderItemsList > falls back to product_id when no name in metadata
-- OrderItemsList > has the correct test ID
-
-### `apps/payments/src/features/orders/presentation/components/OrderStatusBadge.test.tsx`
-
-- OrderStatusBadge > renders the translated status text
-- OrderStatusBadge > applies the correct test ID
-- OrderStatusBadge > renders for all known statuses without crashing
-
-### `apps/payments/src/features/orders/presentation/components/ResubmitEvidenceForm.test.tsx`
-
-- ResubmitEvidenceForm > renders the form with transfer number input
-- ResubmitEvidenceForm > shows the seller note when provided
-- ResubmitEvidenceForm > does not show seller note section when null
-- ResubmitEvidenceForm > does not submit when transfer number is empty
-- ResubmitEvidenceForm > submits when transfer number is filled
-- ResubmitEvidenceForm > shows submitting text when isPending
-- ResubmitEvidenceForm > shows submit text when not pending
-- ResubmitEvidenceForm > disables submit button when isPending
-- ResubmitEvidenceForm > shows remove button after a valid file is selected
-- ResubmitEvidenceForm > ignores oversized files and keeps the upload button visible
-- ResubmitEvidenceForm > removes the file when the remove button is clicked
-- ResubmitEvidenceForm > clicking the upload button triggers the file input click handler
-- ResubmitEvidenceForm > submits with the file when both transfer number and receipt are provided
-
-### `apps/payments/src/features/orders/presentation/components/StatusContent.test.tsx`
+### `apps/payments/tests/StatusContent.test.tsx`
 
 - StatusContent > renders ResubmitEvidenceForm for evidence_requested
 - StatusContent > renders approved message
@@ -1230,26 +1517,44 @@ output, so this total is deliberately not the runner total.
 - StatusContent > renders expired message
 - StatusContent > renders nothing for unknown status
 
-### `apps/payments/src/features/orders/presentation/pages/OrdersPage.test.tsx`
+### `apps/payments/tests/useAssignedOrders.test.ts`
 
-- OrdersPage > renders skeletons when loading
-- OrdersPage > renders empty state when no orders
-- OrdersPage > renders empty state when data is null
-- OrdersPage > renders orders grouped by checkout session
-- OrdersPage > renders back to store link
+- useAssignedOrders > returns isLoading true initially
+- useAssignedOrders > returns data from fetchAssignedOrders once resolved
+- useAssignedOrders > calls fetchAssignedOrders with supabase client
 
-### `apps/payments/src/features/payment-methods/application/hooks/usePaymentMethodMutations.test.tsx`
+### `apps/payments/tests/useCartFromCookie.test.tsx`
+
+- useCartFromCookie > returns isEmpty=true when cart is empty after hydration
+- useCartFromCookie > groups items by seller_id
+- useCartFromCookie > subscribes to cart cookie changes
+
+### `apps/payments/tests/useDelegatedReports.test.tsx`
+
+- useDelegatedReports > returns empty orders and zero total when no data
+- useDelegatedReports > returns orders and total from query data
+- useDelegatedReports > exposes setFilters from nuqs
+
+### `apps/payments/tests/useMyOrders.test.tsx`
+
+- useMyOrders > returns orders from the query layer
+
+### `apps/payments/tests/useOrderActions.test.tsx`
+
+- useOrderActions > updates the order and invalidates the received orders query
+
+### `apps/payments/tests/usePaymentMethodMutations.test.tsx`
 
 - useCreatePaymentMethod > calls createPaymentMethod on mutate
 - useUpdatePaymentMethod > calls updatePaymentMethod on mutate
 - useDeletePaymentMethod > calls deletePaymentMethod on mutate
 
-### `apps/payments/src/features/payment-methods/application/hooks/usePaymentMethods.test.tsx`
+### `apps/payments/tests/usePaymentMethods.test.tsx`
 
 - usePaymentMethods > returns payment methods for a seller
 - usePaymentMethods > does not fetch when sellerId is empty
 
-### `apps/payments/src/features/payment-methods/application/hooks/usePaymentMethodsManager.test.tsx`
+### `apps/payments/tests/usePaymentMethodsManager.test.tsx`
 
 - usePaymentMethodsManager > returns methods and loading state from usePaymentMethods
 - usePaymentMethodsManager > starts with no expanded method
@@ -1266,7 +1571,17 @@ output, so this total is deliberately not the runner total.
 - usePaymentMethodsManager > handleMoveDown swaps sort_order with the next method
 - usePaymentMethodsManager > handleMoveDown does nothing when already at the bottom
 
-### `apps/payments/src/features/payment-methods/application/hooks/useSavePaymentMethod.test.ts`
+### `apps/payments/tests/useReceivedOrders.test.tsx`
+
+- useReceivedOrders > loads received orders for the active filter
+
+### `apps/payments/tests/useResubmitEvidence.test.tsx`
+
+- useResubmitEvidence > submits evidence and invalidates the orders query
+- useResubmitEvidence > uploads receipt and passes receiptUrl to resubmitEvidence
+- useResubmitEvidence > throws when receipt upload returns ok: false
+
+### `apps/payments/tests/useSavePaymentMethod.test.ts`
 
 - useSavePaymentMethod > isDirty is false when state matches initial values
 - useSavePaymentMethod > isDirty is true when nameEn changes
@@ -1277,11 +1592,36 @@ output, so this total is deliberately not the runner total.
 - useSavePaymentMethod > savedRecently is false initially
 - useSavePaymentMethod > savedRecently becomes true on success and resets after 2 seconds
 
-### `apps/payments/src/features/payment-methods/domain/constants.test.ts`
+### `apps/payments/tests/useSellerPaymentMethods.test.tsx`
 
-- payment-methods domain constants > defines PAYMENT_METHODS_QUERY_KEY
+- useSellerPaymentMethods > returns payment methods on success
+- useSellerPaymentMethods > does not fetch when sellerId is empty
+- useSellerPaymentMethods > returns a stock-issue response without payment methods
 
-### `apps/payments/src/features/payment-methods/domain/utils.test.ts`
+### `apps/payments/tests/useSellerProfiles.test.tsx`
+
+- useSellerProfiles > returns profiles when sellerIds are provided
+- useSellerProfiles > does not fetch when sellerIds is empty
+
+### `apps/payments/tests/useSellerReports.test.tsx`
+
+- useSellerReports > returns empty orders and zero total when no data
+- useSellerReports > returns orders and total from query data
+- useSellerReports > returns isLoading from query
+- useSellerReports > returns isError from query
+- useSellerReports > exposes filters built from query params
+- useSellerReports > exposes setFilters as setParams from nuqs
+
+### `apps/payments/tests/useSubmitPayment.test.tsx`
+
+- useSubmitPayment > creates order with all params and returns its id
+- useSubmitPayment > passes buyer info to createOrder
+- useSubmitPayment > returns the order id on success
+- useSubmitPayment > invalidates my-orders query on success
+- useSubmitPayment > uploads receipt and passes receiptUrl to createOrder
+- useSubmitPayment > throws when receipt upload returns ok: false
+
+### `apps/payments/tests/utils.test.ts`
 
 - assignBlockId > preserves an existing id
 - assignBlockId > assigns a uuid when id is absent
@@ -1319,7 +1659,14 @@ output, so this total is deliberately not the runner total.
 - validateFormField > returns error for missing label
 - validateFormField > returns error for empty label
 
-### `apps/payments/src/features/payment-methods/domain/youtubeEmbed.test.ts`
+### `apps/payments/tests/VideoBlockEditor.test.tsx`
+
+- VideoBlockEditor > renders the URL input with the block's current url
+- VideoBlockEditor > clears error and emits empty url when input is cleared
+- VideoBlockEditor > emits embed url and clears error when valid YouTube URL is entered
+- VideoBlockEditor > shows error message and does not emit when URL is invalid
+
+### `apps/payments/tests/youtubeEmbed.test.ts`
 
 - toYouTubeEmbedUrl > returns null for empty string
 - toYouTubeEmbedUrl > returns null for non-YouTube URL
@@ -1331,466 +1678,23 @@ output, so this total is deliberately not the runner total.
 - toYouTubeEmbedUrl > handles embed URL with http scheme
 - toYouTubeEmbedUrl > handles video IDs with hyphens and underscores
 
-### `apps/payments/src/features/payment-methods/infrastructure/paymentMethodQueries.test.ts`
-
-- fetchPaymentMethods > returns payment methods for a seller
-- fetchPaymentMethods > throws on error
-- createPaymentMethod > inserts a payment method
-- createPaymentMethod > throws on error
-- updatePaymentMethod > updates a payment method
-- updatePaymentMethod > throws on error
-- deletePaymentMethod > deletes a payment method
-- deletePaymentMethod > throws on error
-
-### `apps/payments/src/features/payment-methods/presentation/components/PaymentMethodEditor.test.tsx`
-
-- PaymentMethodEditor > renders name_en input with initial value
-- PaymentMethodEditor > renders name_es input with initial value
-- PaymentMethodEditor > renders display section editor
-- PaymentMethodEditor > renders form section editor
-- PaymentMethodEditor > shows validation error when name_en is cleared
-- PaymentMethodEditor > save button is disabled when nothing has changed
-- PaymentMethodEditor > save button becomes enabled after a field changes
-- PaymentMethodEditor > save button is disabled when name_en is empty even if dirty
-- PaymentMethodEditor > clicking save calls updatePaymentMethod with all current fields
-- PaymentMethodEditor > updates nameEs when ES name input changes
-- PaymentMethodEditor > toggles requiresReceipt when its checkbox is clicked
-- PaymentMethodEditor > toggles requiresTransferNumber when its checkbox is clicked
-- PaymentMethodEditor > defaults nameEs to empty string when method.name_es is null
-- PaymentMethodEditor > includes updated nameEs in the save payload
-- PaymentMethodEditor > includes requiresReceipt and requiresTransferNumber when toggled and saved
-
-### `apps/payments/src/features/payment-methods/presentation/components/PaymentMethodTable.test.tsx`
-
-- PaymentMethodTable > shows skeleton loading state
-- PaymentMethodTable > shows empty state when no methods
-- PaymentMethodTable > renders the table with methods
-- PaymentMethodTable > displays the payment method name
-- PaymentMethodTable > renders edit button
-- PaymentMethodTable > calls onEdit when edit button is clicked
-- PaymentMethodTable > calls onDelete when delete is confirmed
-- PaymentMethodTable > does not call onDelete when delete is cancelled
-- PaymentMethodTable > falls back to name_en when name_es is not available
-
-### `apps/payments/src/features/payment-methods/presentation/components/VideoBlockEditor.test.tsx`
-
-- VideoBlockEditor > renders the URL input with the block's current url
-- VideoBlockEditor > clears error and emits empty url when input is cleared
-- VideoBlockEditor > emits embed url and clears error when valid YouTube URL is entered
-- VideoBlockEditor > shows error message and does not emit when URL is invalid
-
-### `apps/payments/src/features/payment-methods/presentation/pages/PaymentMethodsPage.test.tsx`
-
-- PaymentMethodsPage > renders page content with method list
-- PaymentMethodsPage > shows add button when canCreate
-- PaymentMethodsPage > calls create mutation when add button is clicked
-- PaymentMethodsPage > expands editor inline when method name is clicked
-- PaymentMethodsPage > collapses editor when same method name is clicked again
-- PaymentMethodsPage > shows loading state when methods are loading
-- PaymentMethodsPage > shows access denied without read permission
-- PaymentMethodsPage > shows delete button for each method when canDelete
-- PaymentMethodsPage > shows active toggle for each method when canUpdate
-- PaymentMethodsPage > add button stays visible alongside the list
-
-### `apps/payments/src/features/received-orders/application/hooks/useOrderActions.test.tsx`
-
-- useOrderActions > updates the order and invalidates the received orders query
-
-### `apps/payments/src/features/received-orders/application/hooks/useReceivedOrders.test.tsx`
-
-- useReceivedOrders > loads received orders for the active filter
-
-### `apps/payments/src/features/received-orders/domain/constants.test.ts`
-
-- received-orders domain constants > RECEIVED_ORDERS_QUERY_KEY is defined
-- received-orders domain constants > FILTER_STATUSES includes all expected values
-- received-orders domain constants > RECEIVED_ORDERS_STALE_TIME_MS is 30 seconds
-- received-orders domain constants > EXPIRING_SOON_THRESHOLD_MS is 6 hours
-
-### `apps/payments/src/features/received-orders/infrastructure/receivedOrderQueries.test.ts`
-
-- fetchReceivedOrders > returns empty array when no user is authenticated
-- fetchReceivedOrders > returns orders with buyer names
-- fetchReceivedOrders > applies filter when provided and not 'all'
-- fetchReceivedOrders > throws on query error
-- updateOrderStatus > calls rpc with correct arguments
-- updateOrderStatus > passes undefined for seller_note when not provided
-- updateOrderStatus > throws on error
-- fetchPendingOrderCount > returns 0 when no user is authenticated
-- fetchPendingOrderCount > returns count from query
-- fetchPendingOrderCount > returns 0 on error
-
-### `apps/payments/src/features/received-orders/presentation/components/ActionButtons.test.tsx`
-
-- ActionButtons > renders approve and reject for pending_verification
-- ActionButtons > renders approve and reject for evidence_requested
-- ActionButtons > renders nothing for approved status
-- ActionButtons > renders nothing for rejected status
-- ActionButtons > shows confirmation panel when approve is clicked
-- ActionButtons > calls onAction with approved after checkbox and confirm
-- ActionButtons > cancels approval and returns to buttons when cancel is clicked
-- ActionButtons > shows note input when reject is clicked
-- ActionButtons > submits rejection with note
-- ActionButtons > shows note input when evidence request is clicked
-- ActionButtons > submits evidence request with note
-- ActionButtons > cancels note mode when cancel is clicked
-
-### `apps/payments/src/features/received-orders/presentation/components/ConfirmActionPanel.test.tsx`
-
-- ConfirmActionPanel > renders warning text, checkbox, and buttons
-- ConfirmActionPanel > confirm button is disabled when checkbox is unchecked
-- ConfirmActionPanel > confirm button is enabled after checking the checkbox
-- ConfirmActionPanel > calls onConfirm when confirm button is clicked with checkbox checked
-- ConfirmActionPanel > does not call onConfirm when confirm button is clicked with checkbox unchecked
-- ConfirmActionPanel > calls onCancel when cancel button is clicked
-- ConfirmActionPanel > shows '...' instead of confirmLabel when isPending is true
-- ConfirmActionPanel > shows confirmLabel when isPending is false
-- ConfirmActionPanel > disables both buttons when isPending is true
-- ConfirmActionPanel > renders with reject variant
-- ConfirmActionPanel > renders checkboxLabel text
-
-### `apps/payments/src/features/received-orders/presentation/components/ReceiptViewer.test.tsx`
-
-- ReceiptViewer > renders the receipt heading
-- ReceiptViewer > displays transfer number when provided
-- ReceiptViewer > shows no transfer number message when null
-- ReceiptViewer > shows view receipt link when receiptUrl is provided
-- ReceiptViewer > shows no receipt message when receiptUrl is null
-- ReceiptViewer > hides unsafe receipt links
-- ReceiptViewer > has the correct test ID
-
-### `apps/payments/src/features/received-orders/presentation/components/ReceivedOrderCard.test.tsx`
-
-- ReceivedOrderCard > renders buyer name and total
-- ReceivedOrderCard > renders status badge
-- ReceivedOrderCard > renders items list
-- ReceivedOrderCard > renders receipt viewer
-- ReceivedOrderCard > renders action buttons
-- ReceivedOrderCard > shows seller note when present
-- ReceivedOrderCard > does not show seller note when absent
-- ReceivedOrderCard > has the correct test ID
-- ReceivedOrderCard > renders buyer_info with plain text value as a span
-- ReceivedOrderCard > renders buyer_info with a non-image https URL as a link
-- ReceivedOrderCard > renders buyer_info with an image URL as an img element
-- ReceivedOrderCard > does not render buyer_info section when buyer_info is null
-- ReceivedOrderCard > renders seller_name badge when seller_name is present
-- ReceivedOrderCard > does not render seller_name badge when seller_name is null
-- ReceivedOrderCard > shows expiring soon warning for a past expires_at date with pending_verification status
-- ReceivedOrderCard > does not show expiring soon warning when expires_at is null
-- ReceivedOrderCard > does not show expiring soon warning when status is not pending_verification
-- ReceivedOrderCard > calls onAction with orderId and action when an action is triggered
-
-### `apps/payments/src/features/received-orders/presentation/components/ReceivedStatusBadge.test.tsx`
-
-- ReceivedStatusBadge > renders badge with translated status text
-- ReceivedStatusBadge > has the correct test ID
-- ReceivedStatusBadge > renders for all actionable statuses
-- ReceivedStatusBadge > renders expired status without crashing
-
-### `apps/payments/src/features/received-orders/presentation/components/SellerNoteInput.test.tsx`
-
-- SellerNoteInput > renders textarea and buttons
-- SellerNoteInput > shows error when submitting empty note
-- SellerNoteInput > submits trimmed note on valid input
-- SellerNoteInput > calls onCancel when cancel button is clicked
-- SellerNoteInput > clears error when user types after validation failure
-- SellerNoteInput > disables inputs when isPending
-- SellerNoteInput > shows submitting text when pending
-- SellerNoteInput > uses custom placeholder when provided
-
-### `apps/payments/src/features/received-orders/presentation/pages/ReceivedOrdersPage.test.tsx`
-
-- ReceivedOrdersPage > renders loading spinner when loading
-- ReceivedOrdersPage > renders empty state when no orders
-- ReceivedOrdersPage > renders order cards when orders exist
-- ReceivedOrdersPage > renders filter pills
-- ReceivedOrdersPage > calls setParams when a filter pill is clicked
-- ReceivedOrdersPage > renders the page title
-- ReceivedOrdersPage > shows access denied when orders.read is missing
-- ReceivedOrdersPage > shows access denied when orders.update is missing
-
-### `apps/payments/src/features/reports/application/hooks/useDelegatedReports.test.tsx`
-
-- useDelegatedReports > returns empty orders and zero total when no data
-- useDelegatedReports > returns orders and total from query data
-- useDelegatedReports > exposes setFilters from nuqs
-
-### `apps/payments/src/features/reports/application/hooks/useSellerReports.test.tsx`
-
-- useSellerReports > returns empty orders and zero total when no data
-- useSellerReports > returns orders and total from query data
-- useSellerReports > returns isLoading from query
-- useSellerReports > returns isError from query
-- useSellerReports > exposes filters built from query params
-- useSellerReports > exposes setFilters as setParams from nuqs
-
-### `apps/payments/src/features/reports/application/utils/exportDelegatedOrdersToExcel.test.ts`
-
-- exportDelegatedOrdersToExcel > returns valid XML Workbook structure
-- exportDelegatedOrdersToExcel > includes the ten delegated columns and excludes transfer/receipt columns
-- exportDelegatedOrdersToExcel > reflects the delegated subtotal in a row
-- exportDelegatedOrdersToExcel > includes one row per item and the product name
-- exportDelegatedOrdersToExcel > handles an order with no items without crashing
-- exportDelegatedOrdersToExcel > escapes XML special characters in buyer email
-- buildDelegatedExportFilename > matches the delegated-report filename pattern
-
-### `apps/payments/src/features/reports/application/utils/exportSellerOrdersToExcel.test.ts`
-
-- exportSellerOrdersToExcel > returns valid XML Workbook structure
-- exportSellerOrdersToExcel > includes order data in the output
-- exportSellerOrdersToExcel > handles empty created_at without crashing
-- exportSellerOrdersToExcel > handles order with no items
-- exportSellerOrdersToExcel > includes one row per item when order has items
-- exportSellerOrdersToExcel > includes Filters sheet
-- exportSellerOrdersToExcel > escapes XML special characters in buyer email
-- buildExportFilename > returns a string starting with my-sales-report
-- buildExportFilename > returns a .xls file
-
-### `apps/payments/src/features/reports/infrastructure/delegatedReportsApi.test.ts`
-
-- fetchDelegatedReportOrders > returns empty result when the user has no delegations granting reports.read
-- fetchDelegatedReportOrders > computes a product-scoped subtotal, keeps only delegated items, and never exposes receipt/transfer fields
-- fetchDelegatedReportOrders > only includes items for products granted reports.read, even when the same seller has another delegation row without it
-- fetchDelegatedReportOrders > drops orders with no delegated items
-- fetchDelegatedReportOrders > applies amountMin/amountMax against the delegated subtotal (app-side), not the order total
-- fetchDelegatedReportOrders > returns empty when there is no authenticated user
-- fetchDelegatedReportOrders > applies date, status, buyer, and currency filters at the query level
-- fetchDelegatedReportOrders > falls back gracefully when product name, buyer profile, or permissions are missing
-
-### `apps/payments/src/features/reports/presentation/components/DelegatedReportTable.test.tsx`
-
-- DelegatedReportTable > shows empty state when no orders
-- DelegatedReportTable > renders the table container and one row per delegated item
-- DelegatedReportTable > shows buyer identity and delegated subtotal, not an order total
-- DelegatedReportTable > never renders receipt or transfer content
-
-### `apps/payments/src/features/reports/presentation/components/OrderStatusBadge.test.tsx`
-
-- OrderStatusBadge > renders translated status text
-- OrderStatusBadge > applies the correct test ID
-- OrderStatusBadge > renders for all known statuses without crashing
-
-### `apps/payments/src/features/reports/presentation/components/SellerReportFiltersBar.test.tsx`
-
-- SellerReportFiltersBar > renders filter inputs
-- SellerReportFiltersBar > does not show currency filter when currencies list is empty
-- SellerReportFiltersBar > shows currency filter when currencies are provided
-- SellerReportFiltersBar > does not show clear button when no filters are active
-- SellerReportFiltersBar > shows clear button when filters are active
-- SellerReportFiltersBar > calls onFiltersChange when clear is clicked
-- SellerReportFiltersBar > calls onFiltersChange when date-from changes
-- SellerReportFiltersBar > calls onFiltersChange with null when date-from is cleared
-- SellerReportFiltersBar > calls onFiltersChange when date-to changes
-- SellerReportFiltersBar > calls onFiltersChange with null when date-to is cleared
-- SellerReportFiltersBar > calls onFiltersChange when status changes to a value
-- SellerReportFiltersBar > calls onFiltersChange with null when status is reset to empty
-- SellerReportFiltersBar > calls onFiltersChange when currency changes
-- SellerReportFiltersBar > calls onFiltersChange with null when currency is reset to empty
-- SellerReportFiltersBar > calls onFiltersChange when amount-max changes
-- SellerReportFiltersBar > calls onFiltersChange with null when amount-max is cleared
-- SellerReportFiltersBar > calls onFiltersChange when amount-min changes
-- SellerReportFiltersBar > calls onFiltersChange with null when amount-min is cleared
-
-### `apps/payments/src/features/reports/presentation/components/SellerReportTable.test.tsx`
-
-- SellerReportTable > shows empty state when no orders
-- SellerReportTable > renders table with orders
-- SellerReportTable > shows transfer number
-- SellerReportTable > shows receipt link when present
-- SellerReportTable > shows no receipt text when receipt_url is null
-- SellerReportTable > shows product items
-- SellerReportTable > renders multiple orders
-
-### `apps/payments/src/features/reports/presentation/pages/DelegatedReportsPage.test.tsx`
-
-- DelegatedReportsPage > shows access denied without reports.read
-- DelegatedReportsPage > renders the report and hides export without reports.export
-- DelegatedReportsPage > shows export button with reports.export
-
-### `apps/payments/src/features/reports/presentation/pages/SellerReportsPage.test.tsx`
-
-- SellerReportsPage > shows loading state
-- SellerReportsPage > shows error state
-- SellerReportsPage > renders filters bar and table when loaded
-- SellerReportsPage > shows total orders count
-- SellerReportsPage > export button is disabled when there are no orders
-- SellerReportsPage > export button is enabled when orders exist
-- SellerReportsPage > clicking export calls exportSellerOrdersToExcel and downloadExcel
-
-### `apps/payments/src/shared/application/utils/formatPrice.test.ts`
-
-- formatPrice > formats USD amount
-- formatPrice > formats COP amount with thousands separator
-- formatPrice > formats zero in USD
-- formatPrice > formats EUR amount
-
-### `apps/payments/src/shared/domain/constants.test.ts`
-
-- shared domain constants > FALLBACK_SELLER_NAME is a non-empty string
-- shared domain constants > FALLBACK_BUYER_NAME is a non-empty string
-- shared domain constants > cart constants are stable
-- shared domain constants > receipt constants are centralized
-
-### `apps/payments/src/shared/domain/paymentMethodUtils.test.ts`
-
-- validateBuyerSubmission > returns empty array when all required fields are filled
-- validateBuyerSubmission > returns label_en for a missing required field
-- validateBuyerSubmission > returns label_en for a whitespace-only required field value
-- validateBuyerSubmission > does not flag optional fields that are missing
-- validateBuyerSubmission > collects multiple missing required fields
-- validateBuyerSubmission > returns empty array when no fields are required
-- validateBuyerSubmission > returns empty array for empty fields list
-- validateFileSize > returns true for a file exactly at the 10 MB limit
-- validateFileSize > returns true for a file below the limit
-- validateFileSize > returns false for a file above the limit
-- validateFileSize > returns true for 0 bytes
-
-### `apps/payments/src/shared/domain/receipt.test.ts`
-
-- receipt helpers > accepts supported receipt images
-- receipt helpers > rejects unsupported receipt types
-- receipt helpers > rejects oversized receipts
-- receipt helpers > sanitizes filenames before building storage paths
-- receipt helpers > rejects traversal in orderId when building storage path
-- receipt helpers > accepts valid order IDs when building storage path
-- receipt helpers > assertSafeStoragePath allows normal paths
-- receipt helpers > assertSafeStoragePath rejects path traversal
-- receipt helpers > toSafeStoragePath returns reconstructed path for valid input
-- receipt helpers > toSafeStoragePath throws for path traversal
-- receipt helpers > only allows safe receipt hrefs
-
-### `apps/payments/src/shared/infrastructure/fetchUserDisplayNames.test.ts`
-
-- fetchUserDisplayNames > returns empty object for empty userIds array
-- fetchUserDisplayNames > returns a map of userId to display_name
-- fetchUserDisplayNames > falls back to email when display_name is null
-- fetchUserDisplayNames > falls back to fallbackName when both are null
-- fetchUserDisplayNames > returns empty object on error
-- fetchUserDisplayNames > handles null data gracefully
-
-### `apps/payments/src/shared/presentation/components/PaymentsSidebar.test.tsx`
-
-- PaymentsSidebar > renders buyer section with checkout and purchases links
-- PaymentsSidebar > renders seller section with payment methods and sales links
-- PaymentsSidebar > highlights the active route
-- PaymentsSidebar > toggles collapsed state when collapse button is clicked
-- PaymentsSidebar > renders section group labels
-- PaymentsSidebar > renders a mobile trigger
-- PaymentsSidebar > renders delegated reports link when reports.read is granted
-
 ## app:store -- 331 cases
 
-### `apps/store/src/features/cart/application/CartContext.test.tsx`
+### `apps/store/tests/AccordionItem.test.tsx`
 
-- CartContext > useCart outside provider > throws when used outside CartProvider
-- CartContext > initial state > starts with an empty cart
-- CartContext > addItem > adds a new item to the cart
-- CartContext > addItem > adds item with explicit quantity
-- CartContext > addItem > increments quantity for existing item
-- CartContext > addItem > increments by explicit quantity for existing item
-- CartContext > addItem > caps added quantity at max_quantity
-- CartContext > addItem > keeps different products separate
-- CartContext > removeItem > removes an item from the cart
-- CartContext > removeItem > does nothing when removing non-existent item
-- CartContext > updateQuantity > changes quantity of an existing item
-- CartContext > updateQuantity > caps updated quantity at max_quantity
-- CartContext > updateQuantity > removes item when quantity set to 0
-- CartContext > updateQuantity > removes item when quantity set to negative
-- CartContext > clearCart > empties the cart completely
-- CartContext > derived state > calculates itemCount as sum of all quantities
-- CartContext > derived state > calculates total as sum of price * quantity
-- CartContext > derived state > updates itemCount and total after removal
+- AccordionItem > renders question text
+- AccordionItem > does not show answer by default
+- AccordionItem > shows answer after clicking toggle
+- AccordionItem > hides answer after clicking toggle twice
+- AccordionItem > has aria-expanded attribute
 
-### `apps/store/src/features/cart/application/cartCookiePersistence.test.ts`
+### `apps/store/tests/AccordionSection.test.tsx`
 
-- COOKIE_MAX_AGE_S > equals 30 days in seconds
-- getCartCookieOptions — server-side (no window) > returns secure: false and no domain when window is undefined
-- getCartCookieOptions — browser (with window) > returns secure: true on https and includes domain when resolveSharedCookieDomain returns one
-- getCartCookieOptions — browser (with window) > returns secure: false on http
-- getCartCookieOptions — browser (with window) > omits domain when getSharedCookieDomain returns undefined
-- persistCartCookie > calls setCookie with serialized cart items
-- persistCartCookie > calls deleteCookie first when domain is set (to clear root-path cookie)
-- persistCartCookie > does not call deleteCookie when domain is not set
-- persistCartCookie > includes maxAge in setCookie options
-- removeCartCookie > calls deleteCookie with cookie options
-- removeCartCookie > calls deleteCookie twice when domain is set (once with domain, once root path)
-- removeCartCookie > calls deleteCookie only once when no domain
+- AccordionSection > renders section title
+- AccordionSection > renders accordion items
+- AccordionSection > returns null when items are empty
 
-### `apps/store/src/features/cart/application/FlyToCartContext.test.tsx`
-
-- FlyToCartContext > provides null outside provider
-- FlyToCartContext > provides context value inside provider
-
-### `apps/store/src/features/cart/application/groupBySeller.test.ts`
-
-- groupCartBySeller > returns empty array for empty cart
-- groupCartBySeller > groups all items under one seller
-- groupCartBySeller > groups items by different sellers
-- groupCartBySeller > groups items with no seller_id under 'unknown'
-- groupCartBySeller > mixes known sellers with unknown seller_id
-- groupCartBySeller > calculates subtotals correctly with fractional prices
-- groupCartBySeller > handles single item cart
-- groupCartBySeller > preserves item order within each group
-
-### `apps/store/src/features/cart/application/hooks/useAddToCart.test.ts`
-
-- useAddToCart > returns isAdded=false initially
-- useAddToCart > returns quantityInCart from cart items
-- useAddToCart > reports when the stock limit is reached
-- useAddToCart > calls addItem and fire on handleAddToCart
-- useAddToCart > resets isAdded after timeout
-- useAddToCart > does not add or animate when the stock limit is already reached
-
-### `apps/store/src/features/cart/application/hooks/useFlyToCart.test.ts`
-
-- useFlyToCart > returns fire, setCartTarget, and cartRef
-- useFlyToCart > setCartTarget sets the ref
-- useFlyToCart > fire does nothing when cartRef is null
-- useFlyToCart > fire creates and animates a projectile element
-
-### `apps/store/src/features/cart/application/hooks/useSellerProfiles.test.ts`
-
-- useSellerProfiles > disables query when sellerIds is empty
-- useSellerProfiles > filters out empty strings from sellerIds
-- useSellerProfiles > deduplicates seller IDs in query key
-- useSellerProfiles > enables query when valid IDs are provided
-- useSellerProfiles > queryFn returns empty object for no IDs
-- useSellerProfiles > queryFn calls supabase with correct table and fields
-- useSellerProfiles > queryFn maps profiles to display names
-
-### `apps/store/src/features/cart/presentation/components/CartDrawer.items.test.tsx`
-
-- CartDrawer with items > renders cart items
-- CartDrawer with items > renders checkout link
-- CartDrawer with items > calls clearCart when clear button is clicked
-- CartDrawer with items > renders seller group
-
-### `apps/store/src/features/cart/presentation/components/CartDrawer.test.tsx`
-
-- CartDrawer > renders trigger button
-- CartDrawer > renders empty state when no items
-
-### `apps/store/src/features/cart/presentation/components/CartDrawerWithItems.test.tsx`
-
-- CartDrawer with items > renders cart items
-- CartDrawer with items > renders checkout link
-- CartDrawer with items > calls clearCart when clear button is clicked
-- CartDrawer with items > renders seller group
-
-### `apps/store/src/features/cart/presentation/components/CartItemRow.test.tsx`
-
-- CartItemRow > renders the item name
-- CartItemRow > renders quantity
-- CartItemRow > calls removeItem when remove button is clicked
-- CartItemRow > calls updateQuantity with incremented value on increase click
-- CartItemRow > disables quantity increase when the cart item already reached the stock limit
-- CartItemRow > calls updateQuantity with decremented value on decrease click
-- CartItemRow > renders category and type badges
-- CartItemRow > renders refundable badge when refundable is true
-- CartItemRow > renders non-refundable badge when refundable is false
-- CartItemRow > renders image when images array has url entries
-
-### `apps/store/src/features/products/application/buildGridOrder.test.ts`
+### `apps/store/tests/buildGridOrder.test.ts`
 
 - buildGridOrder — exact scenarios (3-col) > F1 R1 R2 R3 R4 F2 R5 → pulls R5 forward to complete the row
 - buildGridOrder — exact scenarios (3-col) > F1 R1 R2 R3 R4 F2 F3 R5 R6 F4 R7 → fills row before F2, R7 stays in tail
@@ -1816,48 +1720,95 @@ output, so this total is deliberately not the runner total.
 - buildGridOrder — exact scenarios (2-col) > handles large dataset (100 products, featured every 4th)
 - buildGridOrder — exact scenarios (2-col) > returns the original order (no reordering needed)
 
-### `apps/store/src/features/products/application/hooks/useGridCols.test.ts`
+### `apps/store/tests/CardsSection.test.tsx`
 
-- useGridCols > returns 1 on mobile (no breakpoints)
-- useGridCols > returns 2 on sm breakpoint
-- useGridCols > returns 3 on lg breakpoint
+- CardsSection > renders section title
+- CardsSection > renders card items
+- CardsSection > returns null when items are empty
+- CardsSection > does not render title when name is empty
 
-### `apps/store/src/features/products/application/hooks/useSellerInfo.test.ts`
+### `apps/store/tests/CartContext.test.tsx`
 
-- useSellerInfo > returns undefined data and is disabled when sellerId is null
-- useSellerInfo > fetches and returns displayName and avatarUrl when sellerId is provided
-- useSellerInfo > falls back to avatar_url when display_avatar_url is null
-- useSellerInfo > returns null avatarUrl when both avatar fields are null
-- useSellerInfo > falls back to email prefix when display_name is null
-- useSellerInfo > sets isError when the query fails
+- CartContext > useCart outside provider > throws when used outside CartProvider
+- CartContext > initial state > starts with an empty cart
+- CartContext > addItem > adds a new item to the cart
+- CartContext > addItem > adds item with explicit quantity
+- CartContext > addItem > increments quantity for existing item
+- CartContext > addItem > increments by explicit quantity for existing item
+- CartContext > addItem > caps added quantity at max_quantity
+- CartContext > addItem > keeps different products separate
+- CartContext > removeItem > removes an item from the cart
+- CartContext > removeItem > does nothing when removing non-existent item
+- CartContext > updateQuantity > changes quantity of an existing item
+- CartContext > updateQuantity > caps updated quantity at max_quantity
+- CartContext > updateQuantity > removes item when quantity set to 0
+- CartContext > updateQuantity > removes item when quantity set to negative
+- CartContext > clearCart > empties the cart completely
+- CartContext > derived state > calculates itemCount as sum of all quantities
+- CartContext > derived state > calculates total as sum of price * quantity
+- CartContext > derived state > updates itemCount and total after removal
 
-### `apps/store/src/features/products/application/hooks/useStoreProducts.test.ts`
+### `apps/store/tests/cartCookiePersistence.test.ts`
 
-- useStoreProducts > fetches products
-- useStoreProducts > sets isError when fetchStoreProducts rejects
-- useStoreProduct > fetches a single product by id
+- COOKIE_MAX_AGE_S > equals 30 days in seconds
+- getCartCookieOptions — server-side (no window) > returns secure: false and no domain when window is undefined
+- getCartCookieOptions — browser (with window) > returns secure: true on https and includes domain when resolveSharedCookieDomain returns one
+- getCartCookieOptions — browser (with window) > returns secure: false on http
+- getCartCookieOptions — browser (with window) > omits domain when getSharedCookieDomain returns undefined
+- persistCartCookie > calls setCookie with serialized cart items
+- persistCartCookie > calls deleteCookie first when domain is set (to clear root-path cookie)
+- persistCartCookie > does not call deleteCookie when domain is not set
+- persistCartCookie > includes maxAge in setCookie options
+- removeCartCookie > calls deleteCookie with cookie options
+- removeCartCookie > calls deleteCookie twice when domain is set (once with domain, once root path)
+- removeCartCookie > calls deleteCookie only once when no domain
 
-### `apps/store/src/features/products/domain/types.test.ts`
+### `apps/store/tests/CartDrawer.items.test.tsx`
 
-- isProductAvailable > returns true when product is active and has no quantity limit
-- isProductAvailable > returns true when product is active and has stock remaining
-- isProductAvailable > returns false when product is not active
-- isProductAvailable > returns false when product is not active even with stock
-- isProductAvailable > returns false when max_quantity is 0 (out of stock)
-- isProductAvailable > returns true when max_quantity is 1 (last item)
+- CartDrawer with items > renders cart items
+- CartDrawer with items > renders checkout link
+- CartDrawer with items > calls clearCart when clear button is clicked
+- CartDrawer with items > renders seller group
 
-### `apps/store/src/features/products/infrastructure/productQueries.test.ts`
+### `apps/store/tests/CartDrawer.test.tsx`
 
-- productQueries > fetchStoreProducts > returns data on success
-- productQueries > fetchStoreProducts > throws on error
-- productQueries > fetchStoreProductById > returns data on success
-- productQueries > fetchStoreProductById > throws on error
-- productQueries > fetchStoreProductsByIds > returns empty array when ids is empty
-- productQueries > fetchStoreProductsByIds > deduplicates ids and returns data
-- productQueries > fetchStoreProductsByIds > throws on error
-- productQueries > fetchStoreProductsByIds > returns empty array when data is null
+- CartDrawer > renders trigger button
+- CartDrawer > renders empty state when no items
 
-### `apps/store/src/features/products/presentation/components/CategoryFilter.test.tsx`
+### `apps/store/tests/CartDrawerWithItems.test.tsx`
+
+- CartDrawer with items > renders cart items
+- CartDrawer with items > renders checkout link
+- CartDrawer with items > calls clearCart when clear button is clicked
+- CartDrawer with items > renders seller group
+
+### `apps/store/tests/CartItemRow.test.tsx`
+
+- CartItemRow > renders the item name
+- CartItemRow > renders quantity
+- CartItemRow > calls removeItem when remove button is clicked
+- CartItemRow > calls updateQuantity with incremented value on increase click
+- CartItemRow > disables quantity increase when the cart item already reached the stock limit
+- CartItemRow > calls updateQuantity with decremented value on decrease click
+- CartItemRow > renders category and type badges
+- CartItemRow > renders refundable badge when refundable is true
+- CartItemRow > renders non-refundable badge when refundable is false
+- CartItemRow > renders image when images array has url entries
+
+### `apps/store/tests/categoryConstants.test.ts`
+
+- CATEGORY_THEMES > has a theme entry for every product category
+- *(parameterised)* CATEGORY_THEMES > theme for '%s' has all required keys
+- CATEGORY_THEMES > generates CSS variable-driven theme values
+- PRODUCT_CATEGORIES > has 6 entries matching all category values
+- PRODUCT_CATEGORIES > each entry has a color derived from CATEGORY_THEMES
+- getCategoryTheme > returns the theme for a known category
+- getCategoryTheme > returns different themes for different categories
+- getCategoryColor > returns the bg color for a known category
+- getCategoryColor > returns merch bg as default for unknown category
+- getCategoryColor > returns merch bg for empty string
+
+### `apps/store/tests/CategoryFilter.test.tsx`
 
 - CategoryFilter > renders the 'All' button
 - CategoryFilter > renders a button for each product category
@@ -1868,7 +1819,19 @@ output, so this total is deliberately not the runner total.
 - CategoryFilter > marks the active category as pressed
 - CategoryFilter > renders the correct number of buttons (all + categories)
 
-### `apps/store/src/features/products/presentation/components/FeaturedRibbon.test.tsx`
+### `apps/store/tests/DescriptionSection.test.tsx`
+
+- DescriptionSection > renders title
+- DescriptionSection > renders single paragraph
+- DescriptionSection > renders multiple paragraphs split by double newline
+- DescriptionSection > filters out empty paragraphs
+
+### `apps/store/tests/ErrorContext.test.tsx`
+
+- ErrorContext re-export > re-exports ErrorProvider
+- ErrorContext re-export > re-exports useErrorContext
+
+### `apps/store/tests/FeaturedRibbon.test.tsx`
 
 - FeaturedRibbon > renders a canvas element
 - FeaturedRibbon > has aria-hidden attribute for accessibility
@@ -1883,56 +1846,12 @@ output, so this total is deliberately not the runner total.
 - FeaturedRibbon canvas drawing > schedules animation frame when fonts.ready rejects
 - FeaturedRibbon canvas drawing > updates colors on document class mutation
 
-### `apps/store/src/features/products/presentation/components/ProductBadges.test.tsx`
+### `apps/store/tests/FlyToCartContext.test.tsx`
 
-- ProductBadges > renders category badge
-- ProductBadges > renders type badge
-- ProductBadges > renders refundable badge when refundable is true
-- ProductBadges > renders non-refundable badge when refundable is false
-- ProductBadges > does not render refund badge when refundable is null
+- FlyToCartContext > provides null outside provider
+- FlyToCartContext > provides context value inside provider
 
-### `apps/store/src/features/products/presentation/components/ProductCard.test.tsx`
-
-- ProductCard > renders product name
-- ProductCard > renders product price
-- ProductCard > renders product card article element
-- ProductCard > renders add to cart button
-- ProductCard > calls handleAddToCart when add to cart button is clicked
-- ProductCard > renders as default variant by default
-- ProductCard > renders as featured variant when specified
-- ProductCard > disables add to cart when product is not active
-- ProductCard > disables add to cart when product is out of stock
-- ProductCard > disables add to cart when the cart already reached the stock limit
-- ProductCard > renders a link to the product detail page
-- ProductCard > sets data-product-id attribute
-
-### `apps/store/src/features/products/presentation/components/ProductCardImage.test.tsx`
-
-- ProductCardImage > renders the image container
-- ProductCardImage > renders an image when product has images
-- ProductCardImage > renders type label when no images
-- ProductCardImage > renders featured ribbon when product is featured
-- ProductCardImage > does not render featured ribbon when not featured
-- ProductCardImage > shows in-cart stamp when quantityInCart > 0
-- ProductCardImage > does not show in-cart stamp when quantityInCart is 0
-- ProductCardImage > shows out of stock overlay when product is not available
-
-### `apps/store/src/features/products/presentation/components/ProductCardMeta.test.tsx`
-
-- ProductCardMeta > renders digital label for digital products
-- ProductCardMeta > does not render digital label for non-digital products
-- ProductCardMeta > renders out of stock when max_quantity is 0
-- ProductCardMeta > renders stock left when max_quantity is positive
-- ProductCardMeta > renders nothing for stock when max_quantity is null
-
-### `apps/store/src/features/products/presentation/components/ProductDetail/DescriptionSection.test.tsx`
-
-- DescriptionSection > renders title
-- DescriptionSection > renders single paragraph
-- DescriptionSection > renders multiple paragraphs split by double newline
-- DescriptionSection > filters out empty paragraphs
-
-### `apps/store/src/features/products/presentation/components/ProductDetail/GalleryOverlays.test.tsx`
+### `apps/store/tests/GalleryOverlays.test.tsx`
 
 - GalleryOverlays > renders counter
 - GalleryOverlays > renders view label
@@ -1941,7 +1860,25 @@ output, so this total is deliberately not the runner total.
 - GalleryOverlays > renders out-of-stock overlay when product is unavailable
 - GalleryOverlays > does not render out-of-stock overlay when product is available
 
-### `apps/store/src/features/products/presentation/components/ProductDetail/HeroSection.test.tsx`
+### `apps/store/tests/GallerySection.test.tsx`
+
+- GallerySection > renders section title
+- GallerySection > renders gallery items with images
+- GallerySection > renders placeholder number when no image_url
+- GallerySection > returns null when items are empty
+
+### `apps/store/tests/groupBySeller.test.ts`
+
+- groupCartBySeller > returns empty array for empty cart
+- groupCartBySeller > groups all items under one seller
+- groupCartBySeller > groups items by different sellers
+- groupCartBySeller > groups items with no seller_id under 'unknown'
+- groupCartBySeller > mixes known sellers with unknown seller_id
+- groupCartBySeller > calculates subtotals correctly with fractional prices
+- groupCartBySeller > handles single item cart
+- groupCartBySeller > preserves item order within each group
+
+### `apps/store/tests/HeroSection.test.tsx`
 
 - HeroSection > renders product name
 - HeroSection > renders tagline when present
@@ -1960,7 +1897,7 @@ output, so this total is deliberately not the runner total.
 - HeroSection > disables add-to-cart when product is unavailable
 - HeroSection > disables add-to-cart when the cart already reached the stock limit
 
-### `apps/store/src/features/products/presentation/components/ProductDetail/ImageGallery.test.tsx`
+### `apps/store/tests/ImageGallery.test.tsx`
 
 - ImageGallery > renders placeholder when no images
 - ImageGallery > shows product type in placeholder
@@ -1972,7 +1909,14 @@ output, so this total is deliberately not the runner total.
 - ImageGallery > handles object-format images
 - ImageGallery > renders featured ribbon on images when featured
 
-### `apps/store/src/features/products/presentation/components/ProductDetail/MobileBar.test.tsx`
+### `apps/store/tests/lucideIconMap.test.ts`
+
+- lucideIconMap > returns known icon by name
+- lucideIconMap > returns Sparkles as default for unknown icon
+- lucideIconMap > exports DEFAULT_ICON_NAME as Sparkles
+- lucideIconMap > contains expected icons
+
+### `apps/store/tests/MobileBar.test.tsx`
 
 - MobileBar > renders price
 - MobileBar > renders add-to-cart button
@@ -1984,76 +1928,80 @@ output, so this total is deliberately not the runner total.
 - MobileBar > disables button when already added
 - MobileBar > disables button when the stock limit is already reached
 
-### `apps/store/src/features/products/presentation/components/ProductDetail/MobileBarWithCart.test.tsx`
+### `apps/store/tests/MobileBarWithCart.test.tsx`
 
 - MobileBarWithCart > renders MobileBar with cart hook connected
 
-### `apps/store/src/features/products/presentation/components/ProductDetail/PriceBlock.test.tsx`
+### `apps/store/tests/PriceBlock.test.tsx`
 
 - PriceBlock > renders price and currency badge
 - PriceBlock > renders compare-at price when discount exists
 - PriceBlock > renders discount label when discount exists
 - PriceBlock > does not render compare-at price when no discount
 
-### `apps/store/src/features/products/presentation/components/ProductDetail/ProductSections.test.tsx`
+### `apps/store/tests/ProductBadges.test.tsx`
 
-- ProductSections > renders HeroSection
-- ProductSections > renders DescriptionSection when long description exists
-- ProductSections > does not render DescriptionSection when no long description
-- ProductSections > renders section renderers sorted by sort_order
+- ProductBadges > renders category badge
+- ProductBadges > renders type badge
+- ProductBadges > renders refundable badge when refundable is true
+- ProductBadges > renders non-refundable badge when refundable is false
+- ProductBadges > does not render refund badge when refundable is null
 
-### `apps/store/src/features/products/presentation/components/ProductDetail/RatingStars.test.tsx`
+### `apps/store/tests/ProductCard.test.tsx`
 
-- RatingStars > renders 5 stars
-- RatingStars > fills stars based on rounded rating
-- RatingStars > renders 0 filled stars for rating 0
-- RatingStars > renders 5 filled stars for rating 5
-- RatingStars > renders unfilled stars with muted class
-- RatingStars > applies theme text color when theme is provided
+- ProductCard > renders product name
+- ProductCard > renders product price
+- ProductCard > renders product card article element
+- ProductCard > renders add to cart button
+- ProductCard > calls handleAddToCart when add to cart button is clicked
+- ProductCard > renders as default variant by default
+- ProductCard > renders as featured variant when specified
+- ProductCard > disables add to cart when product is not active
+- ProductCard > disables add to cart when product is out of stock
+- ProductCard > disables add to cart when the cart already reached the stock limit
+- ProductCard > renders a link to the product detail page
+- ProductCard > sets data-product-id attribute
 
-### `apps/store/src/features/products/presentation/components/ProductDetail/Sections/AccordionItem.test.tsx`
+### `apps/store/tests/ProductCardImage.test.tsx`
 
-- AccordionItem > renders question text
-- AccordionItem > does not show answer by default
-- AccordionItem > shows answer after clicking toggle
-- AccordionItem > hides answer after clicking toggle twice
-- AccordionItem > has aria-expanded attribute
+- ProductCardImage > renders the image container
+- ProductCardImage > renders an image when product has images
+- ProductCardImage > renders type label when no images
+- ProductCardImage > renders featured ribbon when product is featured
+- ProductCardImage > does not render featured ribbon when not featured
+- ProductCardImage > shows in-cart stamp when quantityInCart > 0
+- ProductCardImage > does not show in-cart stamp when quantityInCart is 0
+- ProductCardImage > shows out of stock overlay when product is not available
 
-### `apps/store/src/features/products/presentation/components/ProductDetail/Sections/AccordionSection.test.tsx`
+### `apps/store/tests/ProductCardMeta.test.tsx`
 
-- AccordionSection > renders section title
-- AccordionSection > renders accordion items
-- AccordionSection > returns null when items are empty
+- ProductCardMeta > renders digital label for digital products
+- ProductCardMeta > does not render digital label for non-digital products
+- ProductCardMeta > renders out of stock when max_quantity is 0
+- ProductCardMeta > renders stock left when max_quantity is positive
+- ProductCardMeta > renders nothing for stock when max_quantity is null
 
-### `apps/store/src/features/products/presentation/components/ProductDetail/Sections/CardsSection.test.tsx`
+### `apps/store/tests/ProductCatalogPage.test.tsx`
 
-- CardsSection > renders section title
-- CardsSection > renders card items
-- CardsSection > returns null when items are empty
-- CardsSection > does not render title when name is empty
+- ProductCatalogPage > renders loading state
+- ProductCatalogPage > renders error state
+- ProductCatalogPage > renders product catalog with data
+- ProductCatalogPage > filters products by category
+- ProductCatalogPage > filters products by type
+- ProductCatalogPage > filters products by search query matching name
+- ProductCatalogPage > filters products by search query matching description
+- ProductCatalogPage > returns empty list when search query has no match
+- ProductCatalogPage > returns empty list when products is undefined
 
-### `apps/store/src/features/products/presentation/components/ProductDetail/Sections/GallerySection.test.tsx`
+### `apps/store/tests/ProductDetailPage.test.tsx`
 
-- GallerySection > renders section title
-- GallerySection > renders gallery items with images
-- GallerySection > renders placeholder number when no image_url
-- GallerySection > returns null when items are empty
+- ProductDetailPage > renders loading state
+- ProductDetailPage > renders error state when error
+- ProductDetailPage > renders error state when no product
+- ProductDetailPage > renders product detail with data
+- ProductDetailPage > renders back link
 
-### `apps/store/src/features/products/presentation/components/ProductDetail/Sections/SectionRenderer.test.tsx`
-
-- SectionRenderer > renders CardsSection for cards type
-- SectionRenderer > renders AccordionSection for accordion type
-- SectionRenderer > renders TwoColumnSection for two-column type
-- SectionRenderer > renders GallerySection for gallery type
-- SectionRenderer > renders null for unknown type
-
-### `apps/store/src/features/products/presentation/components/ProductDetail/Sections/TwoColumnSection.test.tsx`
-
-- TwoColumnSection > renders section title
-- TwoColumnSection > renders rows with label and value
-- TwoColumnSection > returns null when items are empty
-
-### `apps/store/src/features/products/presentation/components/ProductFilters.test.tsx`
+### `apps/store/tests/ProductFilters.test.tsx`
 
 - ProductFilters > renders the filter container
 - ProductFilters > renders search bar input
@@ -2071,14 +2019,41 @@ output, so this total is deliberately not the runner total.
 - ProductFilters > sets q to null when search input is cleared
 - ProductFilters > syncs external URL change back to input when q differs from local state
 
-### `apps/store/src/features/products/presentation/components/ProductGrid.test.tsx`
+### `apps/store/tests/ProductGrid.test.tsx`
 
 - ProductGrid > renders empty state when products array is empty
 - ProductGrid > renders the grid when products are provided
 - ProductGrid > renders featured products with col-span-full
 - ProductGrid > renders non-featured products with default variant
 
-### `apps/store/src/features/products/presentation/components/SearchBar.test.tsx`
+### `apps/store/tests/productQueries.test.ts`
+
+- productQueries > fetchStoreProducts > returns data on success
+- productQueries > fetchStoreProducts > throws on error
+- productQueries > fetchStoreProductById > returns data on success
+- productQueries > fetchStoreProductById > throws on error
+- productQueries > fetchStoreProductsByIds > returns empty array when ids is empty
+- productQueries > fetchStoreProductsByIds > deduplicates ids and returns data
+- productQueries > fetchStoreProductsByIds > throws on error
+- productQueries > fetchStoreProductsByIds > returns empty array when data is null
+
+### `apps/store/tests/ProductSections.test.tsx`
+
+- ProductSections > renders HeroSection
+- ProductSections > renders DescriptionSection when long description exists
+- ProductSections > does not render DescriptionSection when no long description
+- ProductSections > renders section renderers sorted by sort_order
+
+### `apps/store/tests/RatingStars.test.tsx`
+
+- RatingStars > renders 5 stars
+- RatingStars > fills stars based on rounded rating
+- RatingStars > renders 0 filled stars for rating 0
+- RatingStars > renders 5 filled stars for rating 5
+- RatingStars > renders unfilled stars with muted class
+- RatingStars > applies theme text color when theme is provided
+
+### `apps/store/tests/SearchBar.test.tsx`
 
 - SearchBar > renders the search input
 - SearchBar > renders with the search container
@@ -2089,7 +2064,15 @@ output, so this total is deliberately not the runner total.
 - SearchBar > initialises with null query treated as empty string
 - SearchBar > syncs local value when external query changes
 
-### `apps/store/src/features/products/presentation/components/SellerCard/SellerCard.test.tsx`
+### `apps/store/tests/SectionRenderer.test.tsx`
+
+- SectionRenderer > renders CardsSection for cards type
+- SectionRenderer > renders AccordionSection for accordion type
+- SectionRenderer > renders TwoColumnSection for two-column type
+- SectionRenderer > renders GallerySection for gallery type
+- SectionRenderer > renders null for unknown type
+
+### `apps/store/tests/SellerCard.test.tsx`
 
 - SellerCard > renders nothing when sellerId is null
 - SellerCard > renders nothing while loading
@@ -2098,7 +2081,13 @@ output, so this total is deliberately not the runner total.
 - SellerCard > renders initials as fallback when avatarUrl is null
 - SellerCard > links to the seller profile in the auth app
 
-### `apps/store/src/features/products/presentation/components/TypeFilter.test.tsx`
+### `apps/store/tests/TwoColumnSection.test.tsx`
+
+- TwoColumnSection > renders section title
+- TwoColumnSection > renders rows with label and value
+- TwoColumnSection > returns null when items are empty
+
+### `apps/store/tests/TypeFilter.test.tsx`
 
 - TypeFilter > renders the 'All' tab
 - TypeFilter > renders a tab for each product type
@@ -2110,121 +2099,94 @@ output, so this total is deliberately not the runner total.
 - TypeFilter > renders the correct number of tabs (all + types)
 - TypeFilter > all tabs have role='tab'
 
-### `apps/store/src/features/products/presentation/pages/ProductCatalogPage.test.tsx`
+### `apps/store/tests/types.test.ts`
 
-- ProductCatalogPage > renders loading state
-- ProductCatalogPage > renders error state
-- ProductCatalogPage > renders product catalog with data
-- ProductCatalogPage > filters products by category
-- ProductCatalogPage > filters products by type
-- ProductCatalogPage > filters products by search query matching name
-- ProductCatalogPage > filters products by search query matching description
-- ProductCatalogPage > returns empty list when search query has no match
-- ProductCatalogPage > returns empty list when products is undefined
+- isProductAvailable > returns true when product is active and has no quantity limit
+- isProductAvailable > returns true when product is active and has stock remaining
+- isProductAvailable > returns false when product is not active
+- isProductAvailable > returns false when product is not active even with stock
+- isProductAvailable > returns false when max_quantity is 0 (out of stock)
+- isProductAvailable > returns true when max_quantity is 1 (last item)
 
-### `apps/store/src/features/products/presentation/pages/ProductDetailPage.test.tsx`
+### `apps/store/tests/useAddToCart.test.ts`
 
-- ProductDetailPage > renders loading state
-- ProductDetailPage > renders error state when error
-- ProductDetailPage > renders error state when no product
-- ProductDetailPage > renders product detail with data
-- ProductDetailPage > renders back link
+- useAddToCart > returns isAdded=false initially
+- useAddToCart > returns quantityInCart from cart items
+- useAddToCart > reports when the stock limit is reached
+- useAddToCart > calls addItem and fire on handleAddToCart
+- useAddToCart > resets isAdded after timeout
+- useAddToCart > does not add or animate when the stock limit is already reached
 
-### `apps/store/src/features/products/presentation/utils/lucideIconMap.test.ts`
+### `apps/store/tests/useFlyToCart.test.ts`
 
-- lucideIconMap > returns known icon by name
-- lucideIconMap > returns Sparkles as default for unknown icon
-- lucideIconMap > exports DEFAULT_ICON_NAME as Sparkles
-- lucideIconMap > contains expected icons
+- useFlyToCart > returns fire, setCartTarget, and cartRef
+- useFlyToCart > setCartTarget sets the ref
+- useFlyToCart > fire does nothing when cartRef is null
+- useFlyToCart > fire creates and animates a projectile element
 
-### `apps/store/src/shared/application/context/ErrorContext.test.tsx`
+### `apps/store/tests/useGridCols.test.ts`
 
-- ErrorContext re-export > re-exports ErrorProvider
-- ErrorContext re-export > re-exports useErrorContext
+- useGridCols > returns 1 on mobile (no breakpoints)
+- useGridCols > returns 2 on sm breakpoint
+- useGridCols > returns 3 on lg breakpoint
 
-### `apps/store/src/shared/domain/categoryConstants.test.ts`
+### `apps/store/tests/useSellerInfo.test.ts`
 
-- CATEGORY_THEMES > has a theme entry for every product category
-- *(parameterised)* CATEGORY_THEMES > theme for '%s' has all required keys
-- CATEGORY_THEMES > generates CSS variable-driven theme values
-- PRODUCT_CATEGORIES > has 6 entries matching all category values
-- PRODUCT_CATEGORIES > each entry has a color derived from CATEGORY_THEMES
-- getCategoryTheme > returns the theme for a known category
-- getCategoryTheme > returns different themes for different categories
-- getCategoryColor > returns the bg color for a known category
-- getCategoryColor > returns merch bg as default for unknown category
-- getCategoryColor > returns merch bg for empty string
+- useSellerInfo > returns undefined data and is disabled when sellerId is null
+- useSellerInfo > fetches and returns displayName and avatarUrl when sellerId is provided
+- useSellerInfo > falls back to avatar_url when display_avatar_url is null
+- useSellerInfo > returns null avatarUrl when both avatar fields are null
+- useSellerInfo > falls back to email prefix when display_name is null
+- useSellerInfo > sets isError when the query fails
+
+### `apps/store/tests/useSellerProfiles.test.ts`
+
+- useSellerProfiles > disables query when sellerIds is empty
+- useSellerProfiles > filters out empty strings from sellerIds
+- useSellerProfiles > deduplicates seller IDs in query key
+- useSellerProfiles > enables query when valid IDs are provided
+- useSellerProfiles > queryFn returns empty object for no IDs
+- useSellerProfiles > queryFn calls supabase with correct table and fields
+- useSellerProfiles > queryFn maps profiles to display names
+
+### `apps/store/tests/useStoreProducts.test.ts`
+
+- useStoreProducts > fetches products
+- useStoreProducts > sets isError when fetchStoreProducts rejects
+- useStoreProduct > fetches a single product by id
 
 ## app:studio -- 416 cases
 
-### `apps/studio/src/features/orders/application/hooks/usePendingOrderCount.test.tsx`
+### `apps/studio/tests/AddDelegateForm.test.tsx`
 
-- usePendingOrderCount > returns count on success
-- usePendingOrderCount > handles error
+- AddDelegateForm > renders search input with correct test ID
+- AddDelegateForm > renders permission checkboxes with correct test IDs
+- AddDelegateForm > renders submit button with correct test ID
+- AddDelegateForm > submit button is disabled when no user selected
+- AddDelegateForm > toggles permission checkboxes
+- AddDelegateForm > does not trigger search for short queries (< 2 chars)
+- AddDelegateForm > searches and displays results for valid queries
+- AddDelegateForm > selects a user from search results
+- AddDelegateForm > submits with selected user and permissions
+- AddDelegateForm > does not submit when no user is selected
+- AddDelegateForm > does not submit when no permissions are checked
+- AddDelegateForm > clears form after successful submission
+- AddDelegateForm > toggles permission off after toggling on
 
-### `apps/studio/src/features/orders/infrastructure/pendingOrderCount.test.ts`
+### `apps/studio/tests/AutoTextarea.test.tsx`
 
-- fetchPendingOrderCount > returns 0 when user is not authenticated
-- fetchPendingOrderCount > returns count when query succeeds
-- fetchPendingOrderCount > returns 0 when query errors
-- fetchPendingOrderCount > returns 0 when count is null
-- fetchPendingOrderCount > queries the correct table and filters
+- AutoTextarea > renders a textarea with the given value
+- AutoTextarea > calls onChange when text changes
+- AutoTextarea > renders with single row by default
 
-### `apps/studio/src/features/orders/presentation/components/PendingOrdersBadge.test.tsx`
+### `apps/studio/tests/categoryConstants.test.ts`
 
-- PendingOrdersBadge > returns null when count is 0
-- PendingOrdersBadge > returns null when count is undefined
-- PendingOrdersBadge > renders badge with count
-- PendingOrdersBadge > renders link to received orders page
-- PendingOrdersBadge > renders the translated pending orders text
+- CATEGORY_THEMES > has a theme for all six categories
+- getCategoryTheme > returns the correct theme for fursuits
+- getCategoryTheme > returns the correct theme for digital
+- getCategoryTheme > falls back to merch for unknown categories
 
-### `apps/studio/src/features/products/application/hooks/useAutoResize.test.ts`
-
-- useAutoResize > sets the textarea height to its scrollHeight
-- useAutoResize > resets height to auto before measuring
-- useAutoResize > does nothing when ref is null
-- useAutoResize > recalculates when key changes
-- useAutoResize > returns the autoResize function
-
-### `apps/studio/src/features/products/application/hooks/useLangToggle.test.ts`
-
-- useLangToggle > starts with 'en' as the default language
-- useLangToggle > toggles from 'en' to 'es'
-- useLangToggle > toggles back from 'es' to 'en'
-- useLangToggle > returns a stable toggleLang callback
-
-### `apps/studio/src/features/products/application/hooks/useProductForm.test.tsx`
-
-- productToFormValues > converts a product to form values
-- productToFormValues > joins tags with comma separator
-- productToFormValues > converts images to form format
-- productToFormValues > handles null images
-- productToFormValues > handles null sections
-- productToFormValues > handles null tags
-- productToFormValues > handles null nullable fields with defaults
-- useProductById > returns product data on success
-- useProductById > does not fetch when id is undefined
-- useInsertProduct > calls insertProduct on mutate
-- useUpdateProduct > calls updateProduct on mutate
-
-### `apps/studio/src/features/products/application/hooks/useProductMutations.test.tsx`
-
-- useToggleProduct > calls toggleProductField on mutate
-- useDeleteProduct > calls deleteProduct on mutate
-- useReorderProducts > calls reorderProducts on mutate
-
-### `apps/studio/src/features/products/application/hooks/useProducts.test.tsx`
-
-- useProducts > returns products on success
-- useProducts > passes filters to fetchProducts
-- useProducts > handles error
-
-### `apps/studio/src/features/products/application/hooks/useProductTemplates.test.tsx`
-
-- useProductTemplates > returns templates on success
-- useProductTemplates > handles error
-
-### `apps/studio/src/features/products/domain/constants.test.ts`
+### `apps/studio/tests/constants.test.ts`
 
 - products domain constants > defines PRODUCTS_QUERY_KEY
 - products domain constants > defines all product types
@@ -2242,402 +2204,27 @@ output, so this total is deliberately not the runner total.
 - products domain constants > PRODUCT_FORM_DEFAULTS > has is_active true and featured false by default
 - products domain constants > PRODUCT_FORM_DEFAULTS > has null for nullable fields
 
-### `apps/studio/src/features/products/domain/validationSchema.test.ts`
-
-- productImageSchema > accepts a valid image
-- productImageSchema > rejects an invalid URL
-- productImageSchema > rejects negative sort_order
-- createProductFormSchema > validates a minimal valid product
-- createProductFormSchema > rejects empty name_en
-- createProductFormSchema > rejects zero price
-- createProductFormSchema > rejects negative price
-- createProductFormSchema > rejects invalid type
-- createProductFormSchema > rejects invalid category
-- createProductFormSchema > accepts all valid types
-- createProductFormSchema > accepts all valid categories
-- createProductFormSchema > defaults optional fields correctly
-- createProductFormSchema — section validation > accepts a product with a valid section
-- createProductFormSchema — section validation > rejects a section with no name (both name_en and name_es empty)
-- createProductFormSchema — section validation > accepts a section with only name_es set
-- createProductFormSchema — section validation > rejects a section with no items
-- createProductFormSchema — section item validation > rejects a section item with no title (both title_en and title_es empty)
-- createProductFormSchema — section item validation > accepts a section item with only title_es set
-- createProductFormSchema — section item validation > accepts a section item with only title_en set
-
-### `apps/studio/src/features/products/infrastructure/productMutations.test.ts`
-
-- fetchProductById > returns product data
-- fetchProductById > throws on error
-- insertProduct > inserts a product with sort_order and seller_id
-- insertProduct > throws on error
-- insertProduct > throws Unauthenticated when there is no signed-in profile
-- updateProduct > updates a product
-- updateProduct > throws on error
-
-### `apps/studio/src/features/products/infrastructure/productQueries.test.ts`
-
-- fetchProducts > fetches products for the current user
-- fetchProducts > throws on supabase error
-- toggleProductField > updates the specified field
-- toggleProductField > throws on error
-- deleteProduct > deletes a product by ID
-- deleteProduct > throws on error
-- reorderProducts > calls update for each product
-- reorderProducts > throws on error in any update
-
-### `apps/studio/src/features/products/infrastructure/templateQueries.test.ts`
-
-- fetchActiveTemplates > returns active templates
-- fetchActiveTemplates > throws on error
-
-### `apps/studio/src/features/products/presentation/components/InlineEditor/AutoTextarea.test.tsx`
-
-- AutoTextarea > renders a textarea with the given value
-- AutoTextarea > calls onChange when text changes
-- AutoTextarea > renders with single row by default
-
-### `apps/studio/src/features/products/presentation/components/InlineEditor/EditorToolbar.test.tsx`
-
-- EditorToolbar > renders back link
-- EditorToolbar > renders save button
-- EditorToolbar > shows saving state when isSaving
-- EditorToolbar > shows createProduct text when not editing
-- EditorToolbar > shows saveProduct text when editing
-- EditorToolbar > renders type selector buttons for all types
-- EditorToolbar > renders category selector
-- EditorToolbar > renders featured toggle
-- EditorToolbar > renders active toggle
-- EditorToolbar > renders refundable select
-- EditorToolbar > renders template picker
-- EditorToolbar > renders reset button
-- EditorToolbar > calls onSave when save button is clicked
-- EditorToolbar > confirms before resetting and calls onReset
-- EditorToolbar > does not call onReset when confirm is cancelled
-
-### `apps/studio/src/features/products/presentation/components/InlineEditor/FormErrorBanner.test.tsx`
-
-- FormErrorBanner > renders nothing when there are no errors
-- FormErrorBanner > renders error messages from field errors
-- FormErrorBanner > renders multiple error messages
-- FormErrorBanner > has role=alert for accessibility
-- FormErrorBanner > can be dismissed
-- FormErrorBanner > extracts root errors from arrays
-
-### `apps/studio/src/features/products/presentation/components/InlineEditor/IconPicker.test.tsx`
-
-- IconPicker > renders the trigger button
-- IconPicker > renders the current icon in the trigger
-- IconPicker > renders search input
-- IconPicker > renders icon buttons in the grid
-- IconPicker > filters icons based on search
-- IconPicker > shows no results message when nothing matches
-- IconPicker > calls onChange when an icon is selected
-- IconPicker > defaults to sparkles when value is empty
-
-### `apps/studio/src/features/products/presentation/components/InlineEditor/ImageEditBar.test.tsx`
-
-- ImageEditBar > renders when editing is true
-- ImageEditBar > hides when editing is false
-- ImageEditBar > renders URL and alt inputs
-- ImageEditBar > renders store cover checkbox
-- ImageEditBar > calls onDone when done button is clicked
-- ImageEditBar > fit checkbox is checked when fit is 'contain'
-- ImageEditBar > fit checkbox is unchecked when fit is 'cover'
-- ImageEditBar > toggling fit checkbox triggers replace
-- ImageEditBar > unchecking fit checkbox sets fit to cover
-
-### `apps/studio/src/features/products/presentation/components/InlineEditor/InlineAddButton.test.tsx`
-
-- InlineAddButton > renders with label
-- InlineAddButton > calls onClick when clicked
-- InlineRemoveButton > renders with aria label
-- InlineRemoveButton > calls onClick when clicked
-
-### `apps/studio/src/features/products/presentation/components/InlineEditor/InlineEditor.test.tsx`
-
-- InlineEditor > renders the form
-- InlineEditor > renders the toolbar
-- InlineEditor > renders the form error banner
-- InlineEditor > renders the hero section
-- InlineEditor > renders the sections component
-- InlineEditor > renders long description text field
-- InlineEditor > does not show mutation error banner when no error
-- InlineEditor > shows mutation error banner when error is provided
-- InlineEditor > passes isEdit to the toolbar
-- InlineEditor > passes isSaving to the toolbar
-- InlineEditor > renders as a form element
-
-### `apps/studio/src/features/products/presentation/components/InlineEditor/InlineHero.test.tsx`
-
-- InlineHero > renders the hero section
-- InlineHero > renders name text field
-- InlineHero > renders image carousel
-- InlineHero > renders price fields
-- InlineHero > renders tag editor
-- InlineHero > renders description text field
-- InlineHero > renders category badge
-- InlineHero > renders stock status
-- InlineHero branches > shows out of stock when inactive
-- InlineHero branches > shows out of stock when max_quantity is 0
-- InlineHero branches > shows refundable badge when refundable is true
-- InlineHero branches > shows non-refundable badge when refundable is false
-- InlineHero branches > shows no refund badge when refundable is null
-- InlineHero branches > shows quantity input when max_quantity is set
-- InlineHero branches > shows unlimited checkbox when max_quantity is null
-
-### `apps/studio/src/features/products/presentation/components/InlineEditor/InlineImageCarousel.test.tsx`
-
-- InlineImageCarousel > renders empty state when no images
-- InlineImageCarousel > renders add thumbnail button
-- InlineImageCarousel > adds an image when add button is clicked
-- InlineImageCarousel > renders images when provided
-- InlineImageCarousel > shows edit bar when image is selected
-- InlineImageCarousel > renders set-as-cover buttons on each thumbnail
-- InlineImageCarousel > clicking set-as-cover updates the cover image
-- InlineImageCarousel > shows filled star on the cover image and unfilled on others
-
-### `apps/studio/src/features/products/presentation/components/InlineEditor/InlinePriceFields.test.tsx`
-
-- InlinePriceFields > renders the container
-- InlinePriceFields > renders price input
-- InlinePriceFields > renders currency selector
-- InlinePriceFields > renders compare-at price input
-- InlinePriceFields > renders price label
-- InlinePriceFields > renders compare-at label
-
-### `apps/studio/src/features/products/presentation/components/InlineEditor/InlineRemoveButton.test.tsx`
-
-- InlineRemoveButton > renders with aria-label
-- InlineRemoveButton > calls onClick when clicked
-- InlineRemoveButton > is a button with type=button
-
-### `apps/studio/src/features/products/presentation/components/InlineEditor/InlineSections.test.tsx`
-
-- InlineSections > renders the sections container
-- InlineSections > renders title
-- InlineSections > shows empty state when no sections
-- InlineSections > renders add section button
-- InlineSections > adds a section when add button is clicked
-- InlineSections > renders section cards when sections exist
-- InlineSections > renders multiple section cards
-- InlineSections > hides empty state when sections exist
-- InlineSections > removes a section when remove is clicked
-- InlineSections > toggles collapse state when toggle button is clicked
-- InlineSections > handleDragEnd does nothing when destination is null
-- InlineSections > handleDragEnd reorders sections on section-level drag
-- InlineSections > handleDragEnd triggers item move for item-level drag
-
-### `apps/studio/src/features/products/presentation/components/InlineEditor/InlineTagEditor.test.tsx`
-
-- InlineTagEditor > renders the tag editor container
-- InlineTagEditor > shows add button initially (input hidden)
-- InlineTagEditor > shows input when add button is clicked
-- InlineTagEditor > renders existing tags as badges
-- InlineTagEditor > adds a tag on Enter key
-- InlineTagEditor > removes a tag when remove button is clicked
-- InlineTagEditor > hides input on Escape key
-- InlineTagEditor > does not add duplicate tags
-- InlineTagEditor > adds tag on blur
-
-### `apps/studio/src/features/products/presentation/components/InlineEditor/InlineTextField.test.tsx`
-
-- InlineTextField > renders both language textareas
-- InlineTextField > renders language toggle button
-- InlineTextField > shows EN textarea as visible by default
-- InlineTextField > toggles language on button click
-
-### `apps/studio/src/features/products/presentation/components/InlineEditor/LangTextarea.test.tsx`
-
-- LangTextarea > renders textarea with value from form
-- LangTextarea > updates value on change
-- LangTextarea > sets tabIndex to -1 when not visible
-- LangTextarea > uses rows=1 when isMultiline is false
-- LangTextarea > uses rows=3 when isMultiline is true
-- LangTextarea > applies dashed border when value is empty
-- LangTextarea > applies transparent border when value is non-empty
-- LangTextarea > becomes empty after clearing the value
-
-### `apps/studio/src/features/products/presentation/components/InlineEditor/MutationErrorBanner.test.tsx`
-
-- MutationErrorBanner > renders the error message
-- MutationErrorBanner > has role=alert for accessibility
-- MutationErrorBanner > has the correct test id
-- MutationErrorBanner > displays different error messages
-
-### `apps/studio/src/features/products/presentation/components/InlineEditor/PriceInput.test.tsx`
-
-- PriceInput > renders with the given value
-- PriceInput > strips non-digit characters on change
-- PriceInput > calls onBlur when input loses focus
-- PriceInput > renders empty string when value is null
-- PriceInput > has numeric inputMode
-
-### `apps/studio/src/features/products/presentation/components/InlineEditor/SectionCard.test.tsx`
-
-- SectionCard > renders the section card
-- SectionCard > renders section name input
-- SectionCard > renders type selector
-- SectionCard > renders collapse toggle
-- SectionCard > renders remove button
-- SectionCard > calls onRemove when remove is clicked
-- SectionCard > calls onToggleCollapse when collapse button is clicked
-- SectionCard > renders cards section items by default
-- SectionCard > renders accordion section items when type is accordion
-- SectionCard > renders gallery section items when type is gallery
-- SectionCard > renders two-column section items when type is two-column
-- SectionCard > hides items when collapsed
-- SectionCard > shows items when not collapsed
-- SectionCard > has aria-expanded attribute on collapse toggle
-- SectionCard > has aria-expanded=false when collapsed
-
-### `apps/studio/src/features/products/presentation/components/InlineEditor/SectionItemsAccordion.test.tsx`
-
-- SectionItemsAccordion > shows empty state when no items
-- SectionItemsAccordion > renders add item button
-- SectionItemsAccordion > renders items when provided
-- SectionItemsAccordion > renders title input for item
-- SectionItemsAccordion > renders remove button for each item
-- SectionItemsAccordion > renders language toggle for items
-- SectionItemsAccordion > hides empty state when items exist
-- SectionItemsAccordion > renders multiple items
-
-### `apps/studio/src/features/products/presentation/components/InlineEditor/SectionItemsCards.test.tsx`
-
-- SectionItemsCards > shows empty state when no items
-- SectionItemsCards > renders add item button
-- SectionItemsCards > renders card items when provided
-- SectionItemsCards > renders icon picker for each card
-- SectionItemsCards > renders title and description textareas
-- SectionItemsCards > renders language toggle
-- SectionItemsCards > renders multiple items
-- SectionItemsCards > hides empty state when items exist
-
-### `apps/studio/src/features/products/presentation/components/InlineEditor/SectionItemsGallery.test.tsx`
-
-- SectionItemsGallery > shows empty state when no items
-- SectionItemsGallery > renders add item button
-- SectionItemsGallery > renders gallery items when provided
-- SectionItemsGallery > renders image URL input for each item
-- SectionItemsGallery > renders title input for each item
-- SectionItemsGallery > renders language toggle
-- SectionItemsGallery > renders image when URL is provided
-- SectionItemsGallery > renders multiple items
-- SectionItemsGallery > hides empty state when items exist
-
-### `apps/studio/src/features/products/presentation/components/InlineEditor/SectionItemsTwoColumn.test.tsx`
-
-- SectionItemsTwoColumn > shows empty state when no items
-- SectionItemsTwoColumn > renders add item button
-- SectionItemsTwoColumn > renders rows when items are provided
-- SectionItemsTwoColumn > renders title (label) and description (value) columns
-- SectionItemsTwoColumn > renders language toggle
-- SectionItemsTwoColumn > renders multiple rows
-- SectionItemsTwoColumn > hides empty state when items exist
-
-### `apps/studio/src/features/products/presentation/components/InlineEditor/TemplatePicker.test.tsx`
-
-- TemplatePicker > renders the trigger button
-- TemplatePicker > renders template names
-- TemplatePicker > renders template description
-- TemplatePicker > shows section count
-- TemplatePicker empty state > renders without crashing when templates is empty
-
-### `apps/studio/src/features/products/presentation/components/ProductFilters.test.tsx`
-
-- ProductFilters > renders search input
-- ProductFilters > renders type filter pills
-- ProductFilters > renders category filter pills
-- ProductFilters > clicking type pill updates params
-- ProductFilters > clicking category pill updates params
-- ProductFilters > search input debounces and updates params
-
-### `apps/studio/src/features/products/presentation/components/ProductTable.test.tsx`
-
-- ProductTable > shows loading text when isLoading is true
-- ProductTable > shows empty state when products is empty and not loading
-- ProductTable > renders a table with products
-- ProductTable > renders table headers
-- ProductTable > renders product rows
-- ProductTable > passes delegate counts to product rows
-
-### `apps/studio/src/features/products/presentation/components/ProductTableRow.test.tsx`
-
-- ProductTableRow > renders product name
-- ProductTableRow > renders product image
-- ProductTableRow > renders price
-- ProductTableRow > renders type and category badges
-- ProductTableRow > renders active toggle
-- ProductTableRow > toggles active state when switch is clicked
-- ProductTableRow > shows confirm button after clicking delete, then deletes on confirm
-- ProductTableRow > cancels delete when cancel button is clicked
-- ProductTableRow > renders drag handle when canReorder is true
-- ProductTableRow > applies dragging styles when isDragging
-- ProductTableRow > toggles featured state
-- ProductTableRow > renders without image when images is empty
-- ProductTableRow > renders delegate badge when delegateCount > 0
-- ProductTableRow > does not render delegate badge when delegateCount is 0
-- ProductTableRow > does not render delegate badge when delegateCount is undefined
-- ProductTableRow > does not render delegate badge when canManageDelegates is false
-- ProductTableRow > renders manage delegates button when canManageDelegates is true
-- ProductTableRow > does not render manage delegates button when canManageDelegates is false
-- ProductTableRow > manage delegates button links to correct URL
-- ProductTableRow > uses cover image when is_cover is set
-
-### `apps/studio/src/features/products/presentation/pages/ProductFormPage.test.tsx`
-
-- ProductFormPage > renders editor in create mode when no productId
-- ProductFormPage > shows skeleton when loading in edit mode
-- ProductFormPage > renders editor in edit mode when product is loaded
-
-### `apps/studio/src/features/products/presentation/pages/ProductListPage.test.tsx`
-
-- ProductListPage > renders page with title
-- ProductListPage > renders product filters
-- ProductListPage > renders product table
-- ProductListPage > renders add product button
-
-### `apps/studio/src/features/seller-admins/application/hooks/useDelegateCountsByProduct.test.tsx`
-
-- useDelegateCountsByProduct > returns delegate counts on success
-- useDelegateCountsByProduct > does not fetch when sellerId is undefined
-- useDelegateCountsByProduct > handles error
-
-### `apps/studio/src/features/seller-admins/application/hooks/useDelegateMutations.test.tsx`
-
-- useAddDelegate > calls addDelegate with productId on mutate
-- useUpdateDelegatePermissions > calls updateDelegatePermissions on mutate
-- useRemoveDelegate > calls removeDelegate with productId on mutate
-
-### `apps/studio/src/features/seller-admins/application/hooks/useDelegates.test.tsx`
-
-- useDelegates > returns delegates on success
-- useDelegates > does not fetch when sellerId is undefined
-- useDelegates > does not fetch when productId is undefined
-- useDelegates > handles error
-
-### `apps/studio/src/features/seller-admins/application/hooks/useDelegateSearch.test.ts`
-
-- useDelegateSearch > returns a search function
-- useDelegateSearch > calls searchUsers with query and excludeUserId
-- useDelegateSearch > returns empty array immediately when excludeUserId is not set
-- useDelegateSearch > returns empty array when query is empty string
-
-### `apps/studio/src/features/seller-admins/domain/utils.test.ts`
-
-- getDisplayName > returns display_name when present
-- getDisplayName > falls back to email when display_name is null
-
-### `apps/studio/src/features/seller-admins/domain/validation.test.ts`
-
-- validateDelegateInput > accepts valid input with a single permission
-- validateDelegateInput > accepts valid input with all permissions
-- validateDelegateInput > throws when sellerId equals adminUserId (self-delegation)
-- validateDelegateInput > throws when permissions array is empty
-- validateDelegateInput > throws when a permission value is invalid
-- validateDelegateInput > accepts reports.read and reports.export as valid delegate permissions
-- validateDelegateInput > still rejects an unknown permission
-
-### `apps/studio/src/features/seller-admins/infrastructure/delegateMutations.test.ts`
+### `apps/studio/tests/DelegateList.test.tsx`
+
+- DelegateList > renders empty state when no delegates
+- DelegateList > renders delegate items with correct test IDs
+- DelegateList > renders remove button with correct test ID
+- DelegateList > calls onRemove when remove button is clicked
+- DelegateList > renders permission badges
+- DelegateList > renders the avatar image when the delegate has an avatar_url
+
+### `apps/studio/tests/DelegateManagementPage.test.tsx`
+
+- DelegateManagementPage > renders the page with title
+- DelegateManagementPage > renders delegate list and add form
+- DelegateManagementPage > shows access denied when missing permission
+- DelegateManagementPage > returns null when isLoading is true
+- DelegateManagementPage > handleAdd calls addMutation.mutate with sellerId
+- DelegateManagementPage > handleAdd does nothing when sellerId is undefined
+- DelegateManagementPage > handleRemove calls removeMutation.mutate with sellerId
+- DelegateManagementPage > handleRemove does nothing when sellerId is undefined
+
+### `apps/studio/tests/delegateMutations.test.ts`
 
 - addDelegate > inserts a delegation row with product_id and returns it
 - addDelegate > throws validation error for self-delegation before DB call
@@ -2650,7 +2237,7 @@ output, so this total is deliberately not the runner total.
 - removeDelegate > deletes the correct seller-admin-product row
 - removeDelegate > throws on supabase error
 
-### `apps/studio/src/features/seller-admins/infrastructure/delegateQueries.test.ts`
+### `apps/studio/tests/delegateQueries.test.ts`
 
 - escapeLikePattern > escapes % wildcard
 - escapeLikePattern > escapes _ wildcard
@@ -2676,32 +2263,7 @@ output, so this total is deliberately not the runner total.
 - searchUsers > returns empty array when supabase returns null data
 - searchUsers > throws on supabase error
 
-### `apps/studio/src/features/seller-admins/presentation/components/AddDelegateForm.test.tsx`
-
-- AddDelegateForm > renders search input with correct test ID
-- AddDelegateForm > renders permission checkboxes with correct test IDs
-- AddDelegateForm > renders submit button with correct test ID
-- AddDelegateForm > submit button is disabled when no user selected
-- AddDelegateForm > toggles permission checkboxes
-- AddDelegateForm > does not trigger search for short queries (< 2 chars)
-- AddDelegateForm > searches and displays results for valid queries
-- AddDelegateForm > selects a user from search results
-- AddDelegateForm > submits with selected user and permissions
-- AddDelegateForm > does not submit when no user is selected
-- AddDelegateForm > does not submit when no permissions are checked
-- AddDelegateForm > clears form after successful submission
-- AddDelegateForm > toggles permission off after toggling on
-
-### `apps/studio/src/features/seller-admins/presentation/components/DelegateList.test.tsx`
-
-- DelegateList > renders empty state when no delegates
-- DelegateList > renders delegate items with correct test IDs
-- DelegateList > renders remove button with correct test ID
-- DelegateList > calls onRemove when remove button is clicked
-- DelegateList > renders permission badges
-- DelegateList > renders the avatar image when the delegate has an avatar_url
-
-### `apps/studio/src/features/seller-admins/presentation/components/EditDelegatePermissions.test.tsx`
+### `apps/studio/tests/EditDelegatePermissions.test.tsx`
 
 - EditDelegatePermissions > renders with current permissions checked
 - EditDelegatePermissions > calls onSave with updated permissions
@@ -2709,18 +2271,199 @@ output, so this total is deliberately not the runner total.
 - EditDelegatePermissions > unchecks a permission and saves with remaining permissions
 - EditDelegatePermissions > does not save when all permissions are unchecked
 
-### `apps/studio/src/features/seller-admins/presentation/pages/DelegateManagementPage.test.tsx`
+### `apps/studio/tests/EditorToolbar.test.tsx`
 
-- DelegateManagementPage > renders the page with title
-- DelegateManagementPage > renders delegate list and add form
-- DelegateManagementPage > shows access denied when missing permission
-- DelegateManagementPage > returns null when isLoading is true
-- DelegateManagementPage > handleAdd calls addMutation.mutate with sellerId
-- DelegateManagementPage > handleAdd does nothing when sellerId is undefined
-- DelegateManagementPage > handleRemove calls removeMutation.mutate with sellerId
-- DelegateManagementPage > handleRemove does nothing when sellerId is undefined
+- EditorToolbar > renders back link
+- EditorToolbar > renders save button
+- EditorToolbar > shows saving state when isSaving
+- EditorToolbar > shows createProduct text when not editing
+- EditorToolbar > shows saveProduct text when editing
+- EditorToolbar > renders type selector buttons for all types
+- EditorToolbar > renders category selector
+- EditorToolbar > renders featured toggle
+- EditorToolbar > renders active toggle
+- EditorToolbar > renders refundable select
+- EditorToolbar > renders template picker
+- EditorToolbar > renders reset button
+- EditorToolbar > calls onSave when save button is clicked
+- EditorToolbar > confirms before resetting and calls onReset
+- EditorToolbar > does not call onReset when confirm is cancelled
 
-### `apps/studio/src/features/seller-admins/presentation/pages/ProductDelegatesPage.test.tsx`
+### `apps/studio/tests/FormErrorBanner.test.tsx`
+
+- FormErrorBanner > renders nothing when there are no errors
+- FormErrorBanner > renders error messages from field errors
+- FormErrorBanner > renders multiple error messages
+- FormErrorBanner > has role=alert for accessibility
+- FormErrorBanner > can be dismissed
+- FormErrorBanner > extracts root errors from arrays
+
+### `apps/studio/tests/IconPicker.test.tsx`
+
+- IconPicker > renders the trigger button
+- IconPicker > renders the current icon in the trigger
+- IconPicker > renders search input
+- IconPicker > renders icon buttons in the grid
+- IconPicker > filters icons based on search
+- IconPicker > shows no results message when nothing matches
+- IconPicker > calls onChange when an icon is selected
+- IconPicker > defaults to sparkles when value is empty
+
+### `apps/studio/tests/ImageEditBar.test.tsx`
+
+- ImageEditBar > renders when editing is true
+- ImageEditBar > hides when editing is false
+- ImageEditBar > renders URL and alt inputs
+- ImageEditBar > renders store cover checkbox
+- ImageEditBar > calls onDone when done button is clicked
+- ImageEditBar > fit checkbox is checked when fit is 'contain'
+- ImageEditBar > fit checkbox is unchecked when fit is 'cover'
+- ImageEditBar > toggling fit checkbox triggers replace
+- ImageEditBar > unchecking fit checkbox sets fit to cover
+
+### `apps/studio/tests/InlineAddButton.test.tsx`
+
+- InlineAddButton > renders with label
+- InlineAddButton > calls onClick when clicked
+- InlineRemoveButton > renders with aria label
+- InlineRemoveButton > calls onClick when clicked
+
+### `apps/studio/tests/InlineEditor.test.tsx`
+
+- InlineEditor > renders the form
+- InlineEditor > renders the toolbar
+- InlineEditor > renders the form error banner
+- InlineEditor > renders the hero section
+- InlineEditor > renders the sections component
+- InlineEditor > renders long description text field
+- InlineEditor > does not show mutation error banner when no error
+- InlineEditor > shows mutation error banner when error is provided
+- InlineEditor > passes isEdit to the toolbar
+- InlineEditor > passes isSaving to the toolbar
+- InlineEditor > renders as a form element
+
+### `apps/studio/tests/InlineHero.test.tsx`
+
+- InlineHero > renders the hero section
+- InlineHero > renders name text field
+- InlineHero > renders image carousel
+- InlineHero > renders price fields
+- InlineHero > renders tag editor
+- InlineHero > renders description text field
+- InlineHero > renders category badge
+- InlineHero > renders stock status
+- InlineHero branches > shows out of stock when inactive
+- InlineHero branches > shows out of stock when max_quantity is 0
+- InlineHero branches > shows refundable badge when refundable is true
+- InlineHero branches > shows non-refundable badge when refundable is false
+- InlineHero branches > shows no refund badge when refundable is null
+- InlineHero branches > shows quantity input when max_quantity is set
+- InlineHero branches > shows unlimited checkbox when max_quantity is null
+
+### `apps/studio/tests/InlineImageCarousel.test.tsx`
+
+- InlineImageCarousel > renders empty state when no images
+- InlineImageCarousel > renders add thumbnail button
+- InlineImageCarousel > adds an image when add button is clicked
+- InlineImageCarousel > renders images when provided
+- InlineImageCarousel > shows edit bar when image is selected
+- InlineImageCarousel > renders set-as-cover buttons on each thumbnail
+- InlineImageCarousel > clicking set-as-cover updates the cover image
+- InlineImageCarousel > shows filled star on the cover image and unfilled on others
+
+### `apps/studio/tests/InlinePriceFields.test.tsx`
+
+- InlinePriceFields > renders the container
+- InlinePriceFields > renders price input
+- InlinePriceFields > renders currency selector
+- InlinePriceFields > renders compare-at price input
+- InlinePriceFields > renders price label
+- InlinePriceFields > renders compare-at label
+
+### `apps/studio/tests/InlineRemoveButton.test.tsx`
+
+- InlineRemoveButton > renders with aria-label
+- InlineRemoveButton > calls onClick when clicked
+- InlineRemoveButton > is a button with type=button
+
+### `apps/studio/tests/InlineSections.test.tsx`
+
+- InlineSections > renders the sections container
+- InlineSections > renders title
+- InlineSections > shows empty state when no sections
+- InlineSections > renders add section button
+- InlineSections > adds a section when add button is clicked
+- InlineSections > renders section cards when sections exist
+- InlineSections > renders multiple section cards
+- InlineSections > hides empty state when sections exist
+- InlineSections > removes a section when remove is clicked
+- InlineSections > toggles collapse state when toggle button is clicked
+- InlineSections > handleDragEnd does nothing when destination is null
+- InlineSections > handleDragEnd reorders sections on section-level drag
+- InlineSections > handleDragEnd triggers item move for item-level drag
+
+### `apps/studio/tests/InlineTagEditor.test.tsx`
+
+- InlineTagEditor > renders the tag editor container
+- InlineTagEditor > shows add button initially (input hidden)
+- InlineTagEditor > shows input when add button is clicked
+- InlineTagEditor > renders existing tags as badges
+- InlineTagEditor > adds a tag on Enter key
+- InlineTagEditor > removes a tag when remove button is clicked
+- InlineTagEditor > hides input on Escape key
+- InlineTagEditor > does not add duplicate tags
+- InlineTagEditor > adds tag on blur
+
+### `apps/studio/tests/InlineTextField.test.tsx`
+
+- InlineTextField > renders both language textareas
+- InlineTextField > renders language toggle button
+- InlineTextField > shows EN textarea as visible by default
+- InlineTextField > toggles language on button click
+
+### `apps/studio/tests/LangTextarea.test.tsx`
+
+- LangTextarea > renders textarea with value from form
+- LangTextarea > updates value on change
+- LangTextarea > sets tabIndex to -1 when not visible
+- LangTextarea > uses rows=1 when isMultiline is false
+- LangTextarea > uses rows=3 when isMultiline is true
+- LangTextarea > applies dashed border when value is empty
+- LangTextarea > applies transparent border when value is non-empty
+- LangTextarea > becomes empty after clearing the value
+
+### `apps/studio/tests/MutationErrorBanner.test.tsx`
+
+- MutationErrorBanner > renders the error message
+- MutationErrorBanner > has role=alert for accessibility
+- MutationErrorBanner > has the correct test id
+- MutationErrorBanner > displays different error messages
+
+### `apps/studio/tests/pendingOrderCount.test.ts`
+
+- fetchPendingOrderCount > returns 0 when user is not authenticated
+- fetchPendingOrderCount > returns count when query succeeds
+- fetchPendingOrderCount > returns 0 when query errors
+- fetchPendingOrderCount > returns 0 when count is null
+- fetchPendingOrderCount > queries the correct table and filters
+
+### `apps/studio/tests/PendingOrdersBadge.test.tsx`
+
+- PendingOrdersBadge > returns null when count is 0
+- PendingOrdersBadge > returns null when count is undefined
+- PendingOrdersBadge > renders badge with count
+- PendingOrdersBadge > renders link to received orders page
+- PendingOrdersBadge > renders the translated pending orders text
+
+### `apps/studio/tests/PriceInput.test.tsx`
+
+- PriceInput > renders with the given value
+- PriceInput > strips non-digit characters on change
+- PriceInput > calls onBlur when input loses focus
+- PriceInput > renders empty string when value is null
+- PriceInput > has numeric inputMode
+
+### `apps/studio/tests/ProductDelegatesPage.test.tsx`
 
 - ProductDelegatesPage > renders the page with product name in header
 - ProductDelegatesPage > renders delegate list and add form
@@ -2734,12 +2477,269 @@ output, so this total is deliberately not the runner total.
 - ProductDelegatesPage > handleRemove calls removeMutation.mutate with sellerId and productId
 - ProductDelegatesPage > handleRemove does nothing when sellerId is undefined
 
-### `apps/studio/src/shared/domain/categoryConstants.test.ts`
+### `apps/studio/tests/ProductFilters.test.tsx`
 
-- CATEGORY_THEMES > has a theme for all six categories
-- getCategoryTheme > returns the correct theme for fursuits
-- getCategoryTheme > returns the correct theme for digital
-- getCategoryTheme > falls back to merch for unknown categories
+- ProductFilters > renders search input
+- ProductFilters > renders type filter pills
+- ProductFilters > renders category filter pills
+- ProductFilters > clicking type pill updates params
+- ProductFilters > clicking category pill updates params
+- ProductFilters > search input debounces and updates params
+
+### `apps/studio/tests/ProductFormPage.test.tsx`
+
+- ProductFormPage > renders editor in create mode when no productId
+- ProductFormPage > shows skeleton when loading in edit mode
+- ProductFormPage > renders editor in edit mode when product is loaded
+
+### `apps/studio/tests/ProductListPage.test.tsx`
+
+- ProductListPage > renders page with title
+- ProductListPage > renders product filters
+- ProductListPage > renders product table
+- ProductListPage > renders add product button
+
+### `apps/studio/tests/productMutations.test.ts`
+
+- fetchProductById > returns product data
+- fetchProductById > throws on error
+- insertProduct > inserts a product with sort_order and seller_id
+- insertProduct > throws on error
+- insertProduct > throws Unauthenticated when there is no signed-in profile
+- updateProduct > updates a product
+- updateProduct > throws on error
+
+### `apps/studio/tests/productQueries.test.ts`
+
+- fetchProducts > fetches products for the current user
+- fetchProducts > throws on supabase error
+- toggleProductField > updates the specified field
+- toggleProductField > throws on error
+- deleteProduct > deletes a product by ID
+- deleteProduct > throws on error
+- reorderProducts > calls update for each product
+- reorderProducts > throws on error in any update
+
+### `apps/studio/tests/ProductTable.test.tsx`
+
+- ProductTable > shows loading text when isLoading is true
+- ProductTable > shows empty state when products is empty and not loading
+- ProductTable > renders a table with products
+- ProductTable > renders table headers
+- ProductTable > renders product rows
+- ProductTable > passes delegate counts to product rows
+
+### `apps/studio/tests/ProductTableRow.test.tsx`
+
+- ProductTableRow > renders product name
+- ProductTableRow > renders product image
+- ProductTableRow > renders price
+- ProductTableRow > renders type and category badges
+- ProductTableRow > renders active toggle
+- ProductTableRow > toggles active state when switch is clicked
+- ProductTableRow > shows confirm button after clicking delete, then deletes on confirm
+- ProductTableRow > cancels delete when cancel button is clicked
+- ProductTableRow > renders drag handle when canReorder is true
+- ProductTableRow > applies dragging styles when isDragging
+- ProductTableRow > toggles featured state
+- ProductTableRow > renders without image when images is empty
+- ProductTableRow > renders delegate badge when delegateCount > 0
+- ProductTableRow > does not render delegate badge when delegateCount is 0
+- ProductTableRow > does not render delegate badge when delegateCount is undefined
+- ProductTableRow > does not render delegate badge when canManageDelegates is false
+- ProductTableRow > renders manage delegates button when canManageDelegates is true
+- ProductTableRow > does not render manage delegates button when canManageDelegates is false
+- ProductTableRow > manage delegates button links to correct URL
+- ProductTableRow > uses cover image when is_cover is set
+
+### `apps/studio/tests/SectionCard.test.tsx`
+
+- SectionCard > renders the section card
+- SectionCard > renders section name input
+- SectionCard > renders type selector
+- SectionCard > renders collapse toggle
+- SectionCard > renders remove button
+- SectionCard > calls onRemove when remove is clicked
+- SectionCard > calls onToggleCollapse when collapse button is clicked
+- SectionCard > renders cards section items by default
+- SectionCard > renders accordion section items when type is accordion
+- SectionCard > renders gallery section items when type is gallery
+- SectionCard > renders two-column section items when type is two-column
+- SectionCard > hides items when collapsed
+- SectionCard > shows items when not collapsed
+- SectionCard > has aria-expanded attribute on collapse toggle
+- SectionCard > has aria-expanded=false when collapsed
+
+### `apps/studio/tests/SectionItemsAccordion.test.tsx`
+
+- SectionItemsAccordion > shows empty state when no items
+- SectionItemsAccordion > renders add item button
+- SectionItemsAccordion > renders items when provided
+- SectionItemsAccordion > renders title input for item
+- SectionItemsAccordion > renders remove button for each item
+- SectionItemsAccordion > renders language toggle for items
+- SectionItemsAccordion > hides empty state when items exist
+- SectionItemsAccordion > renders multiple items
+
+### `apps/studio/tests/SectionItemsCards.test.tsx`
+
+- SectionItemsCards > shows empty state when no items
+- SectionItemsCards > renders add item button
+- SectionItemsCards > renders card items when provided
+- SectionItemsCards > renders icon picker for each card
+- SectionItemsCards > renders title and description textareas
+- SectionItemsCards > renders language toggle
+- SectionItemsCards > renders multiple items
+- SectionItemsCards > hides empty state when items exist
+
+### `apps/studio/tests/SectionItemsGallery.test.tsx`
+
+- SectionItemsGallery > shows empty state when no items
+- SectionItemsGallery > renders add item button
+- SectionItemsGallery > renders gallery items when provided
+- SectionItemsGallery > renders image URL input for each item
+- SectionItemsGallery > renders title input for each item
+- SectionItemsGallery > renders language toggle
+- SectionItemsGallery > renders image when URL is provided
+- SectionItemsGallery > renders multiple items
+- SectionItemsGallery > hides empty state when items exist
+
+### `apps/studio/tests/SectionItemsTwoColumn.test.tsx`
+
+- SectionItemsTwoColumn > shows empty state when no items
+- SectionItemsTwoColumn > renders add item button
+- SectionItemsTwoColumn > renders rows when items are provided
+- SectionItemsTwoColumn > renders title (label) and description (value) columns
+- SectionItemsTwoColumn > renders language toggle
+- SectionItemsTwoColumn > renders multiple rows
+- SectionItemsTwoColumn > hides empty state when items exist
+
+### `apps/studio/tests/TemplatePicker.test.tsx`
+
+- TemplatePicker > renders the trigger button
+- TemplatePicker > renders template names
+- TemplatePicker > renders template description
+- TemplatePicker > shows section count
+- TemplatePicker empty state > renders without crashing when templates is empty
+
+### `apps/studio/tests/templateQueries.test.ts`
+
+- fetchActiveTemplates > returns active templates
+- fetchActiveTemplates > throws on error
+
+### `apps/studio/tests/useAutoResize.test.ts`
+
+- useAutoResize > sets the textarea height to its scrollHeight
+- useAutoResize > resets height to auto before measuring
+- useAutoResize > does nothing when ref is null
+- useAutoResize > recalculates when key changes
+- useAutoResize > returns the autoResize function
+
+### `apps/studio/tests/useDelegateCountsByProduct.test.tsx`
+
+- useDelegateCountsByProduct > returns delegate counts on success
+- useDelegateCountsByProduct > does not fetch when sellerId is undefined
+- useDelegateCountsByProduct > handles error
+
+### `apps/studio/tests/useDelegateMutations.test.tsx`
+
+- useAddDelegate > calls addDelegate with productId on mutate
+- useUpdateDelegatePermissions > calls updateDelegatePermissions on mutate
+- useRemoveDelegate > calls removeDelegate with productId on mutate
+
+### `apps/studio/tests/useDelegates.test.tsx`
+
+- useDelegates > returns delegates on success
+- useDelegates > does not fetch when sellerId is undefined
+- useDelegates > does not fetch when productId is undefined
+- useDelegates > handles error
+
+### `apps/studio/tests/useDelegateSearch.test.ts`
+
+- useDelegateSearch > returns a search function
+- useDelegateSearch > calls searchUsers with query and excludeUserId
+- useDelegateSearch > returns empty array immediately when excludeUserId is not set
+- useDelegateSearch > returns empty array when query is empty string
+
+### `apps/studio/tests/useLangToggle.test.ts`
+
+- useLangToggle > starts with 'en' as the default language
+- useLangToggle > toggles from 'en' to 'es'
+- useLangToggle > toggles back from 'es' to 'en'
+- useLangToggle > returns a stable toggleLang callback
+
+### `apps/studio/tests/usePendingOrderCount.test.tsx`
+
+- usePendingOrderCount > returns count on success
+- usePendingOrderCount > handles error
+
+### `apps/studio/tests/useProductForm.test.tsx`
+
+- productToFormValues > converts a product to form values
+- productToFormValues > joins tags with comma separator
+- productToFormValues > converts images to form format
+- productToFormValues > handles null images
+- productToFormValues > handles null sections
+- productToFormValues > handles null tags
+- productToFormValues > handles null nullable fields with defaults
+- useProductById > returns product data on success
+- useProductById > does not fetch when id is undefined
+- useInsertProduct > calls insertProduct on mutate
+- useUpdateProduct > calls updateProduct on mutate
+
+### `apps/studio/tests/useProductMutations.test.tsx`
+
+- useToggleProduct > calls toggleProductField on mutate
+- useDeleteProduct > calls deleteProduct on mutate
+- useReorderProducts > calls reorderProducts on mutate
+
+### `apps/studio/tests/useProducts.test.tsx`
+
+- useProducts > returns products on success
+- useProducts > passes filters to fetchProducts
+- useProducts > handles error
+
+### `apps/studio/tests/useProductTemplates.test.tsx`
+
+- useProductTemplates > returns templates on success
+- useProductTemplates > handles error
+
+### `apps/studio/tests/utils.test.ts`
+
+- getDisplayName > returns display_name when present
+- getDisplayName > falls back to email when display_name is null
+
+### `apps/studio/tests/validation.test.ts`
+
+- validateDelegateInput > accepts valid input with a single permission
+- validateDelegateInput > accepts valid input with all permissions
+- validateDelegateInput > throws when sellerId equals adminUserId (self-delegation)
+- validateDelegateInput > throws when permissions array is empty
+- validateDelegateInput > throws when a permission value is invalid
+- validateDelegateInput > accepts reports.read and reports.export as valid delegate permissions
+- validateDelegateInput > still rejects an unknown permission
+
+### `apps/studio/tests/validationSchema.test.ts`
+
+- productImageSchema > accepts a valid image
+- productImageSchema > rejects an invalid URL
+- productImageSchema > rejects negative sort_order
+- createProductFormSchema > validates a minimal valid product
+- createProductFormSchema > rejects empty name_en
+- createProductFormSchema > rejects zero price
+- createProductFormSchema > rejects negative price
+- createProductFormSchema > rejects invalid type
+- createProductFormSchema > rejects invalid category
+- createProductFormSchema > accepts all valid types
+- createProductFormSchema > accepts all valid categories
+- createProductFormSchema > defaults optional fields correctly
+- createProductFormSchema — section validation > accepts a product with a valid section
+- createProductFormSchema — section validation > rejects a section with no name (both name_en and name_es empty)
+- createProductFormSchema — section validation > accepts a section with only name_es set
+- createProductFormSchema — section validation > rejects a section with no items
+- createProductFormSchema — section item validation > rejects a section item with no title (both title_en and title_es empty)
+- createProductFormSchema — section item validation > accepts a section item with only title_es set
+- createProductFormSchema — section item validation > accepts a section item with only title_en set
 
 ## db -- 7 cases
 
@@ -2986,7 +2986,7 @@ output, so this total is deliberately not the runner total.
 
 ## package:api -- 11 cases
 
-### `packages/api/src/supabase/browser.test.ts`
+### `packages/api/tests/browser.test.ts`
 
 - createBrowserSupabaseClient — accessToken > returns the session token without warning when Clerk is loaded and signed in
 - createBrowserSupabaseClient — accessToken > returns null without warning when Clerk is loaded but signed out — legitimate anonymous browsing
@@ -2998,14 +2998,14 @@ output, so this total is deliberately not the runner total.
 - createBrowserSupabaseClient — waiting for Clerk to hydrate > gives up and warns if Clerk never finishes loading
 - createBrowserSupabaseClient — waiting for Clerk to hydrate > does not wait when Clerk is already loaded
 
-### `packages/api/src/supabase/server.test.ts`
+### `packages/api/tests/server.test.ts`
 
 - createServiceRoleSupabaseClient > throws instead of silently falling back when the service-role key is not configured
 - createServiceRoleSupabaseClient > creates a client authenticated with the service-role key, not the anon key
 
 ## package:app-components -- 76 cases
 
-### `packages/app-components/src/components/accessibility.test.tsx`
+### `packages/app-components/tests/accessibility.test.tsx`
 
 - shared app components — accessibility > EmptyState is announced
 - shared app components — accessibility > LoadingState is announced
@@ -3013,7 +3013,7 @@ output, so this total is deliberately not the runner total.
 - shared app components — accessibility > ErrorIndicator is announced
 - shared app components — accessibility > catches a violation it should catch
 
-### `packages/app-components/src/components/AppFooter.test.tsx`
+### `packages/app-components/tests/AppFooter.test.tsx`
 
 - AppFooter > renders the current year + copyrightSuffix
 - AppFooter > renders the terms link with passed label and href
@@ -3021,7 +3021,7 @@ output, so this total is deliberately not the runner total.
 - AppFooter > exposes a stable test id
 - AppFooter > renders the localized labels passed in (not hardcoded English)
 
-### `packages/app-components/src/components/AppNavigation.test.tsx`
+### `packages/app-components/tests/AppNavigation.test.tsx`
 
 - AppNavigation > renders without crashing
 - AppNavigation > renders the brand name
@@ -3038,7 +3038,7 @@ output, so this total is deliberately not the runner total.
 - AppNavigation > renders public apps when permissionState prop is omitted
 - AppNavigation > clears protected links when grantedKeys is cleared but keeps public links
 
-### `packages/app-components/src/components/EmptyState.test.tsx`
+### `packages/app-components/tests/EmptyState.test.tsx`
 
 - EmptyState > renders without crashing
 - EmptyState > displays custom message when provided
@@ -3046,7 +3046,7 @@ output, so this total is deliberately not the runner total.
 - EmptyState > applies custom height class
 - EmptyState > applies default height class when not specified
 
-### `packages/app-components/src/components/ErrorIndicator.test.tsx`
+### `packages/app-components/tests/ErrorIndicator.test.tsx`
 
 - ErrorIndicator > returns null when error is null
 - ErrorIndicator > renders when error is provided
@@ -3055,7 +3055,7 @@ output, so this total is deliberately not the runner total.
 - ErrorIndicator > calls onRetry when clicked
 - ErrorIndicator > renders without onRetry callback
 
-### `packages/app-components/src/components/ErrorState.test.tsx`
+### `packages/app-components/tests/ErrorState.test.tsx`
 
 - ErrorState > renders without crashing
 - ErrorState > displays the error message
@@ -3066,7 +3066,7 @@ output, so this total is deliberately not the runner total.
 - ErrorState > displays translated retry label when no custom label
 - ErrorState > applies custom height class
 
-### `packages/app-components/src/components/LoadingState.test.tsx`
+### `packages/app-components/tests/LoadingState.test.tsx`
 
 - LoadingState > renders without crashing
 - LoadingState > displays translated loading message by default
@@ -3078,7 +3078,7 @@ output, so this total is deliberately not the runner total.
 - LoadingState > applies md icon size class when size='md'
 - LoadingState > applies lg icon size class by default
 
-### `packages/app-components/src/components/LocaleSwitcher.test.tsx`
+### `packages/app-components/tests/LocaleSwitcher.test.tsx`
 
 - LocaleSwitcher > renders without crashing
 - LocaleSwitcher > renders a button for each locale
@@ -3090,14 +3090,14 @@ output, so this total is deliberately not the runner total.
 - LocaleSwitcher > falls back to uppercased locale for unknown locales
 - LocaleSwitcher > has accessible aria-label on radiogroup
 
-### `packages/app-components/src/components/ThemeToggle.test.tsx`
+### `packages/app-components/tests/ThemeToggle.test.tsx`
 
 - ThemeToggle > renders without crashing
 - ThemeToggle > calls toggleTheme when clicked
 - ThemeToggle > passes switchToDark aria-label when light theme is active
 - ThemeToggle > passes switchToLight aria-label when dark theme is active
 
-### `packages/app-components/src/utils/tid.test.ts`
+### `packages/app-components/tests/tid.test.ts`
 
 - tid > exports TID_ATTR as data-testid
 - tid > returns data-testid when given a string in test env
@@ -3113,7 +3113,7 @@ output, so this total is deliberately not the runner total.
 
 ## package:auth -- 94 cases
 
-### `packages/auth/src/client/permCachePersistence.test.ts`
+### `packages/auth/tests/client/permCachePersistence.test.ts`
 
 - readPermCache > returns null when cookie is absent
 - readPermCache > returns string[] when cookie holds valid JSON array
@@ -3128,7 +3128,7 @@ output, so this total is deliberately not the runner total.
 - clearPermCache > calls deleteCookie once with base options when domain is undefined
 - clearPermCache > calls deleteCookie twice when domain is present (double-delete pattern)
 
-### `packages/auth/src/client/permissions.test.tsx`
+### `packages/auth/tests/client/permissions.test.tsx`
 
 - useCurrentUserPermissions — cookie seeding > initializes grantedKeys to [] when no cookie
 - useCurrentUserPermissions — cookie seeding > uses the server's keys for the first render even when a fresher cookie exists
@@ -3153,13 +3153,13 @@ output, so this total is deliberately not the runner total.
 - useCurrentUserPermissions — cookie seeding > returns true in 'any' mode when at least one required key is granted
 - useCurrentUserPermissions — cookie seeding > returns false in 'any' mode when no required key is granted
 
-### `packages/auth/src/client/PermissionsContext.test.tsx`
+### `packages/auth/tests/client/PermissionsContext.test.tsx`
 
 - PermissionsContext > provides initialGrantedKeys through context to consumers
 - PermissionsContext > returns empty array when no PermissionsProvider is present (default context value)
 - PermissionsContext > reflects updated initialGrantedKeys when provider re-renders with new value
 
-### `packages/auth/src/client/ProtectedRoute.test.tsx`
+### `packages/auth/tests/client/ProtectedRoute.test.tsx`
 
 - ProtectedRoute > shows the fallback while auth state is loading
 - ProtectedRoute > renders children when there is a signed-in Clerk session
@@ -3167,7 +3167,46 @@ output, so this total is deliberately not the runner total.
 - ProtectedRoute > renders nothing while signed out and not loading
 - ProtectedRoute > does not render children and does not redirect when the profile lookup errors
 
-### `packages/auth/src/domain/tokens.test.ts`
+### `packages/auth/tests/node/redirects.test.ts`
+
+- buildLoginRedirectUrl > builds URL with absolute authHostUrl
+- buildLoginRedirectUrl > builds URL with relative authHostUrl
+- buildLoginRedirectUrl > strips trailing slash from authHostUrl
+- buildLoginRedirectUrl > encodes returnTo parameter
+- resolveSafeRedirectTarget > returns fallback when value is null
+- resolveSafeRedirectTarget > returns fallback when value is empty string
+- resolveSafeRedirectTarget > returns URL when origin is in allowed list
+- resolveSafeRedirectTarget > resolves relative URL against requestOrigin and allows it
+- resolveSafeRedirectTarget > returns fallback when origin is not in allowed list
+- resolveSafeRedirectTarget > returns fallback for invalid URL that cannot be parsed
+- resolveSafeRedirectTarget > allows second allowed origin
+- resolveSafeRedirectTarget > handles allowed origins with invalid entries gracefully
+
+### `packages/auth/tests/node/resolveProfile.test.ts`
+
+- resolveProfile > matches an already-claimed profile by sub without touching email
+- resolveProfile > claims an unclaimed profile by verified email
+- resolveProfile > refuses to claim on an unverified email
+- resolveProfile > reports a conflict when the profile belongs to a different identity
+- resolveProfile > creates a profile when nothing matches
+- resolveProfile > matches case-insensitively on email
+- resolveProfile > is a no-op the second time, so it can be re-run after a Clerk promotion
+- resolveProfile > returns a typed result instead of crashing when the identity has no email at all
+- resolveProfile > propagates a real duplicate-key failure instead of silently mislabelling it as created
+
+### `packages/auth/tests/node/supabaseProfileStore.test.ts`
+
+- createSupabaseProfileStore > looks a profile up by identity_sub
+- createSupabaseProfileStore > returns null when no profile matches by sub
+- createSupabaseProfileStore > looks a profile up by email
+- createSupabaseProfileStore > throws on a read failure instead of treating it as not-found
+- createSupabaseProfileStore > claims an unclaimed profile by id, guarding against a lost race
+- createSupabaseProfileStore > throws if the profile was claimed by someone else between findByEmail and claim
+- createSupabaseProfileStore > creates a profile via the atomic RPC that also grants default buyer permissions
+- createSupabaseProfileStore > throws on a creation failure
+- createSupabaseProfileStore > lowercases the email before creating a profile, so a later findByEmail lookup (which always lowercases) can find it
+
+### `packages/auth/tests/node/tokens.test.ts`
 
 - auth tokens > creates active access and refresh tokens
 - auth tokens > creates tokens with expected expiry windows
@@ -3192,64 +3231,9 @@ output, so this total is deliberately not the runner total.
 - isTokenActive with standard JWT format > prefers internal token format over JWT when decodable
 - encodeAuthToken / decodeAuthToken roundtrip > roundtrips a valid payload
 
-### `packages/auth/src/server/redirects.test.ts`
-
-- buildLoginRedirectUrl > builds URL with absolute authHostUrl
-- buildLoginRedirectUrl > builds URL with relative authHostUrl
-- buildLoginRedirectUrl > strips trailing slash from authHostUrl
-- buildLoginRedirectUrl > encodes returnTo parameter
-- resolveSafeRedirectTarget > returns fallback when value is null
-- resolveSafeRedirectTarget > returns fallback when value is empty string
-- resolveSafeRedirectTarget > returns URL when origin is in allowed list
-- resolveSafeRedirectTarget > resolves relative URL against requestOrigin and allows it
-- resolveSafeRedirectTarget > returns fallback when origin is not in allowed list
-- resolveSafeRedirectTarget > returns fallback for invalid URL that cannot be parsed
-- resolveSafeRedirectTarget > allows second allowed origin
-- resolveSafeRedirectTarget > handles allowed origins with invalid entries gracefully
-
-### `packages/auth/src/server/resolveProfile.test.ts`
-
-- resolveProfile > matches an already-claimed profile by sub without touching email
-- resolveProfile > claims an unclaimed profile by verified email
-- resolveProfile > refuses to claim on an unverified email
-- resolveProfile > reports a conflict when the profile belongs to a different identity
-- resolveProfile > creates a profile when nothing matches
-- resolveProfile > matches case-insensitively on email
-- resolveProfile > is a no-op the second time, so it can be re-run after a Clerk promotion
-- resolveProfile > returns a typed result instead of crashing when the identity has no email at all
-- resolveProfile > propagates a real duplicate-key failure instead of silently mislabelling it as created
-
-### `packages/auth/src/server/supabaseProfileStore.test.ts`
-
-- createSupabaseProfileStore > looks a profile up by identity_sub
-- createSupabaseProfileStore > returns null when no profile matches by sub
-- createSupabaseProfileStore > looks a profile up by email
-- createSupabaseProfileStore > throws on a read failure instead of treating it as not-found
-- createSupabaseProfileStore > claims an unclaimed profile by id, guarding against a lost race
-- createSupabaseProfileStore > throws if the profile was claimed by someone else between findByEmail and claim
-- createSupabaseProfileStore > creates a profile via the atomic RPC that also grants default buyer permissions
-- createSupabaseProfileStore > throws on a creation failure
-- createSupabaseProfileStore > lowercases the email before creating a profile, so a later findByEmail lookup (which always lowercases) can find it
-
 ## package:shared -- 190 cases
 
-### `packages/shared/src/components/BuildVersion.test.tsx`
-
-- BuildVersion > renders the short hash (first 7 characters)
-- BuildVersion > uses the full hash as the title attribute
-- BuildVersion > applies sidebar variant classes by default
-- BuildVersion > applies footer variant classes when variant is footer
-- BuildVersion > uses custom formatLabel when provided
-- BuildVersion > uses default label format when formatLabel is not provided
-- BuildVersion > handles short hash input
-
-### `packages/shared/src/components/ThemeScript.test.tsx`
-
-- ThemeScript > renders a script element
-- ThemeScript > contains theme detection logic
-- ThemeScript > has suppressHydrationWarning attribute
-
-### `packages/shared/src/config/api.test.ts`
+### `packages/shared/tests/api.test.ts`
 
 - API_REFRESH_INTERVALS > has LIVE set to 5000ms
 - API_REFRESH_INTERVALS > has STATIC set to false
@@ -3259,13 +3243,21 @@ output, so this total is deliberately not the runner total.
 - orvalOptions > wraps query options under a query key
 - orvalOptions > returns an object with the query property
 
-### `packages/shared/src/config/appUrls.property.test.ts`
+### `packages/shared/tests/ApiAuthBootstrap.test.tsx`
+
+- ApiAuthBootstrap > renders null (no visible output)
+- ApiAuthBootstrap > registers access token getter on mount
+- ApiAuthBootstrap > registers refresh token callback on mount
+- ApiAuthBootstrap > registers onUnauthorized callback on mount
+- ApiAuthBootstrap > cleans up callbacks on unmount
+
+### `packages/shared/tests/appUrls.property.test.ts`
 
 - Feature: app-navigation-origins, Property 1: explicit NEXT_PUBLIC app URLs are passed through in production > for any valid origin in production, landing and store return the explicit env values
 - Feature: app-navigation-origins, Property 2: relative production defaults are stable > with no explicit app URLs in production, every app resolves to its relative path
 - Feature: app-navigation-origins, Property 3: deprecated APP_PUBLIC_ORIGIN is ignored > for any APP_PUBLIC_ORIGIN value in production, output equals output with APP_PUBLIC_ORIGIN unset
 
-### `packages/shared/src/config/appUrls.test.ts`
+### `packages/shared/tests/appUrls.test.ts`
 
 - appUrls > uses local app URLs by default in development
 - appUrls > uses relative same-domain paths by default in production
@@ -3273,7 +3265,25 @@ output, so this total is deliberately not the runner total.
 - appUrls > uses NEXT_PUBLIC_*_URL values in production when set
 - appUrls > legacy SITE_PUBLIC_ORIGIN, E2E_PUBLIC_ORIGIN, and APP_PUBLIC_ORIGIN have no effect on output
 
-### `packages/shared/src/config/environment.test.ts`
+### `packages/shared/tests/BuildVersion.test.tsx`
+
+- BuildVersion > renders the short hash (first 7 characters)
+- BuildVersion > uses the full hash as the title attribute
+- BuildVersion > applies sidebar variant classes by default
+- BuildVersion > applies footer variant classes when variant is footer
+- BuildVersion > uses custom formatLabel when provided
+- BuildVersion > uses default label format when formatLabel is not provided
+- BuildVersion > handles short hash input
+
+### `packages/shared/tests/cookieDomain.test.ts`
+
+- getSharedCookieDomain > returns undefined for 'localhost'
+- getSharedCookieDomain > returns undefined for '127.0.0.1'
+- getSharedCookieDomain > returns undefined for a single-segment hostname
+- getSharedCookieDomain > returns '.example.com' for 'app.example.com'
+- getSharedCookieDomain > returns '.example.com' for 'sub1.sub2.example.com'
+
+### `packages/shared/tests/environment.test.ts`
 
 - environment > getRuntimeEnv reads API URL from process.env
 - environment > getRuntimeEnv defaults to empty string when env vars are missing
@@ -3294,42 +3304,7 @@ output, so this total is deliberately not the runner total.
 - environment > environment.isTest returns true when VITEST is set
 - environment > environment.isTest returns true when NODE_ENV is test
 
-### `packages/shared/src/constants/time.test.ts`
-
-- TIME_CONSTANTS > has QUERY.STALE_TIME_MS set to 60 seconds
-- TIME_CONSTANTS > has QUERY.GC_TIME_MS set to 5 minutes
-
-### `packages/shared/src/hooks/useSupabase.test.ts`
-
-- useSupabase > calls createBrowserSupabaseClient once during mount
-- useSupabase > returns a stable client reference across re-renders
-- useSupabase > does not call createBrowserSupabaseClient again on re-render
-
-### `packages/shared/src/hooks/useTheme.test.ts`
-
-- useTheme > should return default theme state
-- useTheme > should set theme to light
-- useTheme > should set theme to dark
-- useTheme > should set theme to system
-- useTheme > should toggle theme from light to dark
-- useTheme > should toggle theme from dark to light
-- useTheme > should toggle theme from system to dark when system prefers light
-- useTheme > should toggle theme from system to light when system prefers dark
-- useTheme > should handle invalid stored theme
-- useTheme > should initialize from stored theme
-- useTheme > should apply system theme changes when mounted
-- useTheme > should apply CSS classes correctly
-- useTheme > should return mounted state correctly
-
-### `packages/shared/src/providers/ApiAuthBootstrap.test.tsx`
-
-- ApiAuthBootstrap > renders null (no visible output)
-- ApiAuthBootstrap > registers access token getter on mount
-- ApiAuthBootstrap > registers refresh token callback on mount
-- ApiAuthBootstrap > registers onUnauthorized callback on mount
-- ApiAuthBootstrap > cleans up callbacks on unmount
-
-### `packages/shared/src/providers/ErrorContext.test.tsx`
+### `packages/shared/tests/ErrorContext.test.tsx`
 
 - ErrorContext > useErrorContext > throws when used outside ErrorProvider
 - ErrorContext > useErrorContext > returns initial state with no error
@@ -3338,38 +3313,7 @@ output, so this total is deliberately not the runner total.
 - ErrorContext > useErrorContext > clears the error
 - ErrorContext > useErrorContext > sets error to null message
 
-### `packages/shared/src/providers/MSWProvider.test.tsx`
-
-- MSWProvider > renders children immediately when mocks are disabled
-
-### `packages/shared/src/providers/QueryProvider.test.tsx`
-
-- QueryProvider > renders children
-- QueryProvider > provides a QueryClient to children
-
-### `packages/shared/src/providers/ThemeProvider.test.tsx`
-
-- ThemeProvider > throws when useThemeContext is used outside ThemeProvider
-- ThemeProvider > provides theme state to children
-
-### `packages/shared/src/types/sections.test.ts`
-
-- SECTION_TYPES > contains exactly the expected section types
-- SECTION_TYPES > has 4 section types
-- SECTION_TYPES > includes 'cards'
-- SECTION_TYPES > includes 'accordion'
-- SECTION_TYPES > includes 'two-column'
-- SECTION_TYPES > includes 'gallery'
-
-### `packages/shared/src/utils/cookieDomain.test.ts`
-
-- getSharedCookieDomain > returns undefined for 'localhost'
-- getSharedCookieDomain > returns undefined for '127.0.0.1'
-- getSharedCookieDomain > returns undefined for a single-segment hostname
-- getSharedCookieDomain > returns '.example.com' for 'app.example.com'
-- getSharedCookieDomain > returns '.example.com' for 'sub1.sub2.example.com'
-
-### `packages/shared/src/utils/escapeLikePattern.test.ts`
+### `packages/shared/tests/escapeLikePattern.test.ts`
 
 - escapeLikePattern > escapes %
 - escapeLikePattern > escapes _
@@ -3378,7 +3322,7 @@ output, so this total is deliberately not the runner total.
 - escapeLikePattern > handles string with no special chars
 - escapeLikePattern > handles multiple wildcards in one string
 
-### `packages/shared/src/utils/getCoverImageUrl.test.ts`
+### `packages/shared/tests/getCoverImageUrl.test.ts`
 
 - getCoverImageUrl > returns the URL of the image with is_cover: true
 - getCoverImageUrl > falls back to the first image when no cover is marked
@@ -3389,7 +3333,7 @@ output, so this total is deliberately not the runner total.
 - getCoverImageUrl > returns null when the first element has no url and is not a string
 - getCoverImageUrl > ignores is_cover: false and falls back to first
 
-### `packages/shared/src/utils/i18nField.test.ts`
+### `packages/shared/tests/i18nField.test.ts`
 
 - i18nField > returns the field for the requested locale
 - i18nField > returns the field for a non-English locale
@@ -3400,7 +3344,16 @@ output, so this total is deliberately not the runner total.
 - i18nField > returns empty string for null object
 - i18nField > returns empty string for undefined object
 
-### `packages/shared/src/utils/receiptPath.test.ts`
+### `packages/shared/tests/MSWProvider.test.tsx`
+
+- MSWProvider > renders children immediately when mocks are disabled
+
+### `packages/shared/tests/QueryProvider.test.tsx`
+
+- QueryProvider > renders children
+- QueryProvider > provides a QueryClient to children
+
+### `packages/shared/tests/receiptPath.test.ts`
 
 - SAFE_RECEIPT_PATH > matches the canonical path shape
 - SAFE_RECEIPT_PATH > order-123/receipt.png
@@ -3439,7 +3392,16 @@ output, so this total is deliberately not the runner total.
 - assertSafeReceiptPath > throws on unknown extension
 - assertSafeReceiptPath > throws on empty input
 
-### `packages/shared/src/utils/slugify.test.ts`
+### `packages/shared/tests/sections.test.ts`
+
+- SECTION_TYPES > contains exactly the expected section types
+- SECTION_TYPES > has 4 section types
+- SECTION_TYPES > includes 'cards'
+- SECTION_TYPES > includes 'accordion'
+- SECTION_TYPES > includes 'two-column'
+- SECTION_TYPES > includes 'gallery'
+
+### `packages/shared/tests/slugify.test.ts`
 
 - slugify > converts a normal string to a slug
 - slugify > converts uppercase to lowercase
@@ -3453,7 +3415,7 @@ output, so this total is deliberately not the runner total.
 - slugify > handles strings with only special characters
 - slugify > handles mixed unicode and ASCII
 
-### `packages/shared/src/utils/spreadsheetml.test.ts`
+### `packages/shared/tests/spreadsheetml.test.ts`
 
 - escapeXml > escapes every character XML gives meaning to
 - escapeXml > escapes ampersands before the entities it introduces
@@ -3468,7 +3430,18 @@ output, so this total is deliberately not the runner total.
 - downloadExcel > sends the content as an Excel blob
 - downloadExcel > cleans up after itself so the blob and the anchor do not leak
 
-### `packages/shared/src/utils/tid.test.ts`
+### `packages/shared/tests/ThemeProvider.test.tsx`
+
+- ThemeProvider > throws when useThemeContext is used outside ThemeProvider
+- ThemeProvider > provides theme state to children
+
+### `packages/shared/tests/ThemeScript.test.tsx`
+
+- ThemeScript > renders a script element
+- ThemeScript > contains theme detection logic
+- ThemeScript > has suppressHydrationWarning attribute
+
+### `packages/shared/tests/tid.test.ts`
 
 - tid > in non-production mode > returns data-testid when passed a string
 - tid > in non-production mode > returns data-testid when passed options with id
@@ -3480,7 +3453,12 @@ output, so this total is deliberately not the runner total.
 - tid > in production mode > returns empty object
 - tid > in production mode > returns test IDs when NEXT_PUBLIC_ENABLE_TEST_IDS is set
 
-### `packages/shared/src/utils/typeDetails.test.ts`
+### `packages/shared/tests/time.test.ts`
+
+- TIME_CONSTANTS > has QUERY.STALE_TIME_MS set to 60 seconds
+- TIME_CONSTANTS > has QUERY.GC_TIME_MS set to 5 minutes
+
+### `packages/shared/tests/typeDetails.test.ts`
 
 - typeDetails > extracts and casts type_details correctly
 - typeDetails > returns empty object when type_details is null
@@ -3489,7 +3467,7 @@ output, so this total is deliberately not the runner total.
 - typeDetails > casts ServiceDetails correctly
 - typeDetails > casts TicketDetails correctly
 
-### `packages/shared/src/utils/url.test.ts`
+### `packages/shared/tests/url.test.ts`
 
 - stripTrailingSlash > removes a trailing slash from a URL
 - stripTrailingSlash > returns the same string if there is no trailing slash
@@ -3498,9 +3476,31 @@ output, so this total is deliberately not the runner total.
 - stripTrailingSlash > does not remove slashes in the middle
 - stripTrailingSlash > handles empty string
 
+### `packages/shared/tests/useSupabase.test.ts`
+
+- useSupabase > calls createBrowserSupabaseClient once during mount
+- useSupabase > returns a stable client reference across re-renders
+- useSupabase > does not call createBrowserSupabaseClient again on re-render
+
+### `packages/shared/tests/useTheme.test.ts`
+
+- useTheme > should return default theme state
+- useTheme > should set theme to light
+- useTheme > should set theme to dark
+- useTheme > should set theme to system
+- useTheme > should toggle theme from light to dark
+- useTheme > should toggle theme from dark to light
+- useTheme > should toggle theme from system to dark when system prefers light
+- useTheme > should toggle theme from system to light when system prefers dark
+- useTheme > should handle invalid stored theme
+- useTheme > should initialize from stored theme
+- useTheme > should apply system theme changes when mounted
+- useTheme > should apply CSS classes correctly
+- useTheme > should return mounted state correctly
+
 ## package:ui -- 230 cases
 
-### `packages/ui/src/components/accessibility.test.tsx`
+### `packages/ui/tests/accessibility.test.tsx`
 
 - shared UI primitives — accessibility > Button has an accessible name
 - shared UI primitives — accessibility > Button remains accessible when disabled
@@ -3519,7 +3519,7 @@ output, so this total is deliberately not the runner total.
 - shared UI primitives — accessibility > CircularProgress reports its progress
 - shared UI primitives — accessibility > AnalysisProgress does not trap or mislabel its phases
 
-### `packages/ui/src/components/avatar.test.tsx`
+### `packages/ui/tests/avatar.test.tsx`
 
 - Avatar > renders with data-slot attribute
 - Avatar > applies custom className
@@ -3528,7 +3528,7 @@ output, so this total is deliberately not the runner total.
 - AvatarFallback > renders fallback text
 - AvatarFallback > applies custom className
 
-### `packages/ui/src/components/badge.test.tsx`
+### `packages/ui/tests/badge.test.tsx`
 
 - Badge > renders without crashing
 - Badge > has data-slot attribute
@@ -3542,7 +3542,7 @@ output, so this total is deliberately not the runner total.
 - Badge > renders outline variant
 - Badge > applies custom className
 
-### `packages/ui/src/components/button.test.tsx`
+### `packages/ui/tests/button.test.tsx`
 
 - Button > renders without crashing
 - Button > has data-slot attribute
@@ -3561,7 +3561,7 @@ output, so this total is deliberately not the runner total.
 - Button > applies custom className
 - Button > forwards ref correctly
 
-### `packages/ui/src/components/card.test.tsx`
+### `packages/ui/tests/card.test.tsx`
 
 - Card > renders without crashing
 - Card > has data-slot attribute
@@ -3581,7 +3581,7 @@ output, so this total is deliberately not the runner total.
 - CardFooter > has data-slot attribute
 - Card composition > renders all sub-components together
 
-### `packages/ui/src/components/chip.test.tsx`
+### `packages/ui/tests/chip.test.tsx`
 
 - Chip > renders the count
 - Chip > returns null when count is 0 and hideZero is true (default)
@@ -3597,7 +3597,7 @@ output, so this total is deliberately not the runner total.
 - Chip > applies lg size classes
 - Chip > applies custom className
 
-### `packages/ui/src/components/CircularProgress.test.tsx`
+### `packages/ui/tests/CircularProgress.test.tsx`
 
 - CircularProgress > renders an svg element
 - CircularProgress > shows percentage text by default
@@ -3610,7 +3610,26 @@ output, so this total is deliberately not the runner total.
 - CircularProgress > applies custom className
 - CircularProgress > rounds the displayed percentage
 
-### `packages/ui/src/components/InfoBadge.test.tsx`
+### `packages/ui/tests/cn.test.ts`
+
+- cn > merges multiple class strings
+- cn > handles conditional classes via objects
+- cn > handles undefined and null values
+- cn > handles empty strings
+- cn > handles arrays of classes
+- cn > deduplicates conflicting Tailwind classes via tailwind-merge
+- cn > deduplicates conflicting color classes
+- cn > preserves custom text-ui-xs alongside text-color classes
+- cn > resolves conflicting font-size utilities correctly
+- cn > returns empty string for no inputs
+- cn > handles boolean false values in arrays
+
+### `packages/ui/tests/contrast.test.ts`
+
+- *(parameterised)* %s / %s meets WCAG AA for normal text
+- the check itself > rejects a pair that fails
+
+### `packages/ui/tests/InfoBadge.test.tsx`
 
 - InfoBadge > renders children
 - InfoBadge > renders as a span element
@@ -3624,7 +3643,7 @@ output, so this total is deliberately not the runner total.
 - InfoBadge > applies lg size classes
 - InfoBadge > applies custom className
 
-### `packages/ui/src/components/input.test.tsx`
+### `packages/ui/tests/input.test.tsx`
 
 - Input > renders without crashing
 - Input > has data-slot attribute
@@ -3635,7 +3654,7 @@ output, so this total is deliberately not the runner total.
 - Input > forwards ref correctly
 - Input > passes through additional HTML attributes
 
-### `packages/ui/src/components/ProgressBar.test.tsx`
+### `packages/ui/tests/ProgressBar.test.tsx`
 
 - ProgressBar > renders with progressbar role
 - ProgressBar > sets aria-valuenow to the value
@@ -3651,7 +3670,7 @@ output, so this total is deliberately not the runner total.
 - ProgressBar > applies lg size by default
 - ProgressBar > applies custom className
 
-### `packages/ui/src/components/separator.test.tsx`
+### `packages/ui/tests/separator.test.tsx`
 
 - Separator > renders with data-slot attribute
 - Separator > renders horizontal orientation by default
@@ -3660,7 +3679,7 @@ output, so this total is deliberately not the runner total.
 - Separator > has separator role when not decorative
 - Separator > applies custom className
 
-### `packages/ui/src/components/skeleton.test.tsx`
+### `packages/ui/tests/skeleton.test.tsx`
 
 - Skeleton > renders without crashing
 - Skeleton > applies custom className
@@ -3669,7 +3688,7 @@ output, so this total is deliberately not the runner total.
 - Skeleton > always includes rounded-md base class
 - Skeleton > passes through additional HTML attributes
 
-### `packages/ui/src/components/sparkline.test.tsx`
+### `packages/ui/tests/sparkline.test.tsx`
 
 - Sparkline > renders null when data is empty
 - Sparkline > renders an svg element when data is provided
@@ -3681,7 +3700,7 @@ output, so this total is deliberately not the runner total.
 - Sparkline > handles single data point
 - Sparkline > handles data with equal values
 
-### `packages/ui/src/components/StatusCard.test.tsx`
+### `packages/ui/tests/StatusCard.test.tsx`
 
 - StatusCard > renders children
 - StatusCard > applies default variant class
@@ -3698,7 +3717,7 @@ output, so this total is deliberately not the runner total.
 - StatusCard sub-components > renders StatusCardActions
 - StatusCard sub-components > composes all sub-components together
 
-### `packages/ui/src/components/StatusLabel.test.tsx`
+### `packages/ui/tests/StatusLabel.test.tsx`
 
 - StatusLabel > renders children
 - StatusLabel > renders as a span element
@@ -3713,7 +3732,7 @@ output, so this total is deliberately not the runner total.
 - StatusLabel > does not show icon wrapper for attention variant
 - StatusLabel > applies custom className
 
-### `packages/ui/src/components/switch.test.tsx`
+### `packages/ui/tests/switch.test.tsx`
 
 - Switch > renders without crashing
 - Switch > has data-slot attribute
@@ -3724,7 +3743,7 @@ output, so this total is deliberately not the runner total.
 - Switch > renders as disabled when disabled prop is set
 - Switch > applies custom className
 
-### `packages/ui/src/components/tabs.test.tsx`
+### `packages/ui/tests/tabs.test.tsx`
 
 - Tabs > renders tab triggers
 - Tabs > shows content for default tab
@@ -3733,7 +3752,7 @@ output, so this total is deliberately not the runner total.
 - Tabs > applies custom className to Tabs root
 - Tabs > renders folder variant on TabsList
 
-### `packages/ui/src/components/textarea.test.tsx`
+### `packages/ui/tests/textarea.test.tsx`
 
 - Textarea > renders without crashing
 - Textarea > has data-slot attribute
@@ -3743,7 +3762,7 @@ output, so this total is deliberately not the runner total.
 - Textarea > applies custom className
 - Textarea > forwards ref correctly
 
-### `packages/ui/src/components/theme-toggle.test.tsx`
+### `packages/ui/tests/theme-toggle.test.tsx`
 
 - ThemeToggle > renders the toggle button when mounted
 - ThemeToggle > renders disabled state when not mounted
@@ -3757,7 +3776,7 @@ output, so this total is deliberately not the runner total.
 - ThemeToggle > shows icon when not mounted (loading state)
 - ThemeToggle > uses custom testId when provided
 
-### `packages/ui/src/components/ThemeToggle.test.tsx`
+### `packages/ui/tests/ThemeToggle.test.tsx`
 
 - ThemeToggle > renders the toggle button when mounted
 - ThemeToggle > renders disabled state when not mounted
@@ -3771,7 +3790,7 @@ output, so this total is deliberately not the runner total.
 - ThemeToggle > shows icon when not mounted (loading state)
 - ThemeToggle > uses custom testId when provided
 
-### `packages/ui/src/constants/uiConstants.test.ts`
+### `packages/ui/tests/uiConstants.test.ts`
 
 - UI_CONSTANTS > exports a frozen object (as const)
 - UI_CONSTANTS > has numeric z-index values
@@ -3779,22 +3798,3 @@ output, so this total is deliberately not the runner total.
 - UI_CONSTANTS > has chart dimension constants
 - UI_CONSTANTS > has chart bar radius as a 4-element tuple
 - UI_CONSTANTS > has chart margin object with expected keys
-
-### `packages/ui/src/styles/contrast.test.ts`
-
-- *(parameterised)* %s theme contrast > %s / %s meets WCAG AA for normal text
-- %s theme contrast > rejects a pair that fails
-
-### `packages/ui/src/utils/cn.test.ts`
-
-- cn > merges multiple class strings
-- cn > handles conditional classes via objects
-- cn > handles undefined and null values
-- cn > handles empty strings
-- cn > handles arrays of classes
-- cn > deduplicates conflicting Tailwind classes via tailwind-merge
-- cn > deduplicates conflicting color classes
-- cn > preserves custom text-ui-xs alongside text-color classes
-- cn > resolves conflicting font-size utilities correctly
-- cn > returns empty string for no inputs
-- cn > handles boolean false values in arrays

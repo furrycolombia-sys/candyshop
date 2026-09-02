@@ -166,9 +166,18 @@ function classify(rel) {
   return "other";
 }
 
-const files = walk(rootDir).sort();
+// --root scans somewhere else, which is how tests/legacy is inventoried: a
+// baseline produced by an OLDER version of this scanner is not comparable
+// with a current one, and the differences look exactly like lost cases.
+// Scanning the frozen snapshot with today's scanner gives a like-for-like
+// baseline.
+const rootFlag = process.argv.indexOf("--root");
+const scanRoot =
+  rootFlag === -1 ? rootDir : resolve(rootDir, process.argv[rootFlag + 1]);
+
+const files = walk(scanRoot).sort();
 const entries = files.map((file) => {
-  const rel = relative(rootDir, file).split("\\").join("/");
+  const rel = relative(scanRoot, file).split("\\").join("/");
   return {
     file: rel,
     group: classify(rel),

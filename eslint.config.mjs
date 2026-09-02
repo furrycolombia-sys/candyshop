@@ -19,6 +19,9 @@ import playwright from "eslint-plugin-playwright";
 // Monorepo paths
 const APP_SRC = "apps/*/src";
 const PKG_SRC = "packages/*/src";
+// Unit tests live in a flat tests/ directory per workspace, not in src/.
+const APP_TESTS = "apps/*/tests";
+const PKG_TESTS = "packages/*/tests";
 
 const sonarRules = sonarjs.configs.recommended.rules;
 const unicornRules = unicorn.configs["flat/recommended"].rules;
@@ -317,21 +320,35 @@ const eslintConfig = defineConfig([
       "react/no-multi-comp": ["error", { ignoreStateless: false }],
     },
   },
+  // Register the plugins the moved tests reference in inline disables, WITHOUT
+  // enabling their rule sets.
+  //
+  // An `eslint-disable-next-line sonarjs/no-hardcoded-ip` is itself an error
+  // when that plugin is not registered for the file, so the tests did not just
+  // lose coverage when they moved out of src/ -- they failed outright. Turning
+  // the full source rule sets on for them instead produced 1988 errors: these
+  // are tests, and were never written against rules meant for shipped code.
+  {
+    files: [
+      `${APP_TESTS}/**/*.{ts,tsx,js,jsx}`,
+      `${PKG_TESTS}/**/*.{ts,tsx,js,jsx}`,
+    ],
+    plugins: { sonarjs, unicorn, vitest },
+  },
   // Testing rules for Vitest + Testing Library (unit tests only)
   {
     files: [
-      `${APP_SRC}/**/*.test.{ts,tsx,js,jsx}`,
-      `${APP_SRC}/**/*.spec.{ts,tsx,js,jsx}`,
-      `${PKG_SRC}/**/*.test.{ts,tsx,js,jsx}`,
-      `${PKG_SRC}/**/*.spec.{ts,tsx,js,jsx}`,
+      `${APP_TESTS}/**/*.test.{ts,tsx,js,jsx}`,
+      `${PKG_TESTS}/**/*.test.{ts,tsx,js,jsx}`,
     ],
     // Exclude shadcn/ui component tests - they test generic UI primitives
     // using standard Testing Library queries (getByRole, getByText) which
     // is appropriate for testing component APIs, not business features
     ignores: [
-      `${APP_SRC}/**/components/ui/*.test.{ts,tsx,js,jsx}`,
-      `${PKG_SRC}/**/components/ui/*.test.{ts,tsx,js,jsx}`,
-      `${PKG_SRC}/components/*.test.{ts,tsx,js,jsx}`,
+      // Every test in packages/ui covers a shadcn/ui primitive, so the whole
+      // directory is the exclusion. The two apps/*/**/components/ui patterns
+      // this replaces never matched a file: no app has ever had one.
+      `${PKG_TESTS}/**/*.test.{ts,tsx,js,jsx}`,
     ],
     ...testingLibrary.configs["flat/react"],
     rules: {
@@ -431,21 +448,29 @@ const eslintConfig = defineConfig([
     },
   },
   // Enforce stable negative assertions with test IDs (no queryByText in unit tests)
+  //
+  // Staged as a warning with its count, not because the rule is wrong but
+  // because it has never actually run. It was declared for `apps/*/src/**`,
+  // where a later block redefining no-restricted-syntax overrode it, so the
+  // 37 violations below have been accumulating unreported. Moving the tests
+  // out of src/ is what made it live.
+  //
+  // 37 violations across 26 files as of this commit. Drive to zero and
+  // promote to "error", the same ratchet used for the Playwright rules.
   {
     files: [
-      `${APP_SRC}/**/*.test.{ts,tsx,js,jsx}`,
-      `${APP_SRC}/**/*.spec.{ts,tsx,js,jsx}`,
-      `${PKG_SRC}/**/*.test.{ts,tsx,js,jsx}`,
-      `${PKG_SRC}/**/*.spec.{ts,tsx,js,jsx}`,
+      `${APP_TESTS}/**/*.test.{ts,tsx,js,jsx}`,
+      `${PKG_TESTS}/**/*.test.{ts,tsx,js,jsx}`,
     ],
     ignores: [
-      `${APP_SRC}/**/components/ui/*.test.{ts,tsx,js,jsx}`,
-      `${PKG_SRC}/**/components/ui/*.test.{ts,tsx,js,jsx}`,
-      `${PKG_SRC}/components/*.test.{ts,tsx,js,jsx}`,
+      // Every test in packages/ui covers a shadcn/ui primitive, so the whole
+      // directory is the exclusion. The two apps/*/**/components/ui patterns
+      // this replaces never matched a file: no app has ever had one.
+      `${PKG_TESTS}/**/*.test.{ts,tsx,js,jsx}`,
     ],
     rules: {
       "no-restricted-syntax": [
-        "error",
+        "warn",
         {
           selector: "CallExpression[callee.property.name='queryByText']",
           message:

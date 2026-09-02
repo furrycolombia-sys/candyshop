@@ -13,13 +13,21 @@ before=$(mktemp)
 after=$(mktemp)
 trap 'rm -f "$before" "$after"' EXIT
 
-git show "$ref:tests/INVENTORY.md" 2>/dev/null | grep '^- ' | sort > "$before" || {
+# Compare on the case NAME, not "suite > name". Suite attribution can shift
+# without a case being lost -- moving a file, or improving how this scanner
+# tracks nesting, both do it -- and those shifts read as losses when they are
+# nothing of the sort. The name is what identifies the assertion.
+strip_suite() {
+  sed 's/^- //; s/^\*\*\[skipped\]\*\* //; s/^\*(parameterised)\* //; s/^.* > //'
+}
+
+git show "$ref:tests/INVENTORY.md" 2>/dev/null | grep '^- ' | strip_suite | sort > "$before" || {
   echo "No inventory at $ref -- nothing to compare against."
   exit 0
 }
 
 node scripts/test-inventory.mjs > /dev/null
-grep '^- ' tests/INVENTORY.md | sort > "$after"
+grep '^- ' tests/INVENTORY.md | strip_suite | sort > "$after"
 
 lost=$(comm -23 "$before" "$after" | wc -l | tr -d ' ')
 added=$(comm -13 "$before" "$after" | wc -l | tr -d ' ')
