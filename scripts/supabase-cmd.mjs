@@ -5,11 +5,20 @@
 import { spawnSync } from "node:child_process";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { generateConfig } from "./lib/supabase-config.mjs";
 import { loadEnv } from "./load-env.mjs";
 
 const envFlag = process.argv.indexOf("--env");
 const targetEnv = envFlag !== -1 ? process.argv[envFlag + 1] : "dev";
 loadEnv(targetEnv);
+
+// supabase/config.toml is generated and gitignored. Without it the CLI falls
+// back to its own defaults (base port 54321) instead of this project's
+// SUPABASE_PORT, which starts a different instance and collides with any other
+// Supabase on the machine. It is deliberately left in place afterwards so that
+// direct CLI invocations -- `supabase gen types --local` in codegen:supabase,
+// or `supabase status` by hand -- also target this project's instance.
+generateConfig(targetEnv);
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const rootDir = resolve(__dirname, "..");
@@ -20,7 +29,8 @@ const supabaseArgs = process.argv
   .slice(2)
   .filter((a, i, arr) => a !== "--env" && arr[i - 1] !== "--env");
 
-const result = spawnSync( // nosemgrep: spawn-shell-true
+const result = spawnSync(
+  // nosemgrep: spawn-shell-true
   isWindows ? "pnpm.cmd" : "pnpm",
   ["supabase", ...supabaseArgs],
   { cwd: rootDir, stdio: "inherit", env: process.env, shell: isWindows },

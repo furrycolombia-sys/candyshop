@@ -32,6 +32,37 @@ declare global {
 let browserClient: SupabaseClient<Database> | null = null;
 
 /**
+ * How long to wait for `<ClerkProvider>` to finish hydrating before giving up
+ * and treating the request as anonymous. Clerk's own initialization (script
+ * fetch, environment call, session restore) is well under a second in
+ * practice; this is a ceiling, not an expectation, and it is only ever reached
+ * when Clerk is genuinely failing to load.
+ */
+const CLERK_HYDRATION_TIMEOUT_MS = 3000;
+const CLERK_POLL_INTERVAL_MS = 20;
+
+/**
+ * Waits for the Clerk SDK to report `loaded`.
+ *
+ * `globalThis.Clerk` is re-read on every tick rather than captured once: the
+ * SDK replaces the global during initialization, so a captured reference can
+ * stay `loaded: false` forever.
+ */
+async function waitForClerkHydration(): Promise<ClerkGlobal | undefined> {
+  const deadline = Date.now() + CLERK_HYDRATION_TIMEOUT_MS;
+
+  while (Date.now() < deadline) {
+    const clerk = globalThis.Clerk;
+    if (clerk?.loaded) return clerk;
+    // The provider was there a moment ago and has now gone: nothing to wait for.
+    if (clerk === undefined) return undefined;
+    await new Promise((resolve) => setTimeout(resolve, CLERK_POLL_INTERVAL_MS));
+  }
+
+  return undefined;
+}
+
+/**
  * Resolves the current Clerk session token.
  *
  * Used as the `accessToken` client option below, and — exported — as a
@@ -80,17 +111,34 @@ export async function getSupabaseAccessToken(): Promise<string | null> {
     return null;
   }
 
-  if (!clerk.loaded) {
+  if (clerk.loaded) {
+    return (await clerk.session?.getToken()) ?? null;
+  }
+
+  // Case 2: the provider is mounted and still initializing. This used to
+  // return null immediately, which handed supabase-js the anon key, so every
+  // RLS-protected read a signed-in user made during that window came back
+  // EMPTY rather than failing — "you have no orders" rather than "something
+  // broke". It is observable: it is why the permission cache was never
+  // written on first load, leaving the user with no permissions until a
+  // later navigation happened to win the race.
+  //
+  // Waiting is safe here precisely because this state is transient. It is
+  // reached only when `globalThis.Clerk` already exists, which means the SDK
+  // script has run and `<ClerkProvider>` is mounted, so `loaded` will flip.
+  const hydrated = await waitForClerkHydration();
+
+  if (!hydrated) {
     console.warn(
-      "[supabase/browser] Clerk has not finished loading yet — this " +
-        "request will use the anon key instead of a session token. If this " +
-        "keeps happening after the initial page load, something is calling " +
-        "Supabase before <ClerkProvider> has hydrated.",
+      "[supabase/browser] Clerk did not finish loading within " +
+        `${CLERK_HYDRATION_TIMEOUT_MS}ms — this request will use the anon ` +
+        "key instead of a session token, so anything behind RLS will come " +
+        "back empty. Check that the Clerk SDK is reachable.",
     );
     return null;
   }
 
-  return (await clerk.session?.getToken()) ?? null;
+  return (await hydrated.session?.getToken()) ?? null;
 }
 
 /**

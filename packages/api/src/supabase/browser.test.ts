@@ -79,13 +79,94 @@ describe("createBrowserSupabaseClient — accessToken", () => {
     expect(warnSpy).not.toHaveBeenCalled();
   });
 
-  it("warns and returns null when Clerk exists but has not finished hydrating (loaded: false)", async () => {
+  it("warns and returns null when Clerk never finishes hydrating (loaded stays false)", async () => {
     const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
     globalThis.Clerk = { loaded: false, session: undefined };
 
-    const token = await getAccessTokenFn()();
+    // This now waits for the hydration window before giving up -- see the
+    // "waiting for Clerk to hydrate" suite below. The contract asserted here
+    // is unchanged: if it never loads, one warning and no token.
+    vi.useFakeTimers();
+    let token: string | null;
+    try {
+      const pending = getAccessTokenFn()();
+      await vi.advanceTimersByTimeAsync(30_000);
+      token = await pending;
+    } finally {
+      vi.useRealTimers();
+    }
 
     expect(token).toBeNull();
     expect(warnSpy).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("createBrowserSupabaseClient — waiting for Clerk to hydrate", () => {
+  const originalClerk = globalThis.Clerk;
+
+  afterEach(() => {
+    globalThis.Clerk = originalClerk;
+    vi.restoreAllMocks();
+  });
+
+  it("waits for Clerk to finish loading and then returns the session token", async () => {
+    // The race this exists for: a signed-in user's first request fires before
+    // <ClerkProvider> has hydrated. Returning null here hands supabase-js the
+    // anon key, so an RLS-protected read comes back EMPTY rather than failing
+    // — indistinguishable from "you have no orders".
+    globalThis.Clerk = {
+      loaded: false,
+      session: { getToken: async () => "session-token" },
+    };
+    setTimeout(() => {
+      globalThis.Clerk = {
+        loaded: true,
+        session: { getToken: async () => "session-token" },
+      };
+    }, 60);
+
+    await expect(getAccessTokenFn()()).resolves.toBe("session-token");
+  });
+
+  it("returns the anonymous result once Clerk loads signed out", async () => {
+    globalThis.Clerk = { loaded: false, session: null };
+    setTimeout(() => {
+      globalThis.Clerk = { loaded: true, session: null };
+    }, 60);
+
+    await expect(getAccessTokenFn()()).resolves.toBeNull();
+  });
+
+  it("gives up and warns if Clerk never finishes loading", async () => {
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    globalThis.Clerk = {
+      loaded: false,
+      session: { getToken: async () => "session-token" },
+    };
+
+    // Fake timers so the real hydration ceiling can stay generous without
+    // costing this suite that many seconds. Advanced well past any plausible
+    // value of the constant so the test does not need to know it.
+    vi.useFakeTimers();
+    try {
+      const pending = getAccessTokenFn()();
+      await vi.advanceTimersByTimeAsync(30_000);
+      await expect(pending).resolves.toBeNull();
+    } finally {
+      vi.useRealTimers();
+    }
+
+    expect(warnSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not wait when Clerk is already loaded", async () => {
+    globalThis.Clerk = {
+      loaded: true,
+      session: { getToken: async () => "session-token" },
+    };
+
+    const started = performance.now();
+    await expect(getAccessTokenFn()()).resolves.toBe("session-token");
+    expect(performance.now() - started).toBeLessThan(50);
   });
 });
