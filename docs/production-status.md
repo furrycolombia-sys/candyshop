@@ -103,6 +103,21 @@ project to turn on. It means:
 --restore` into that fresh project, **before anyone signs in** — the
    restore truncates `user_profiles`, so restoring over a live system would
    wipe every `identity_sub` already claimed.
+
+   The migrations now **seed** the reference tables — `permissions`,
+   `resource_permissions`, `product_templates`, `payment_settings` — so a
+   fresh database is usable before any restore. `backup-prod.mjs --restore`
+   empties every table before inserting, so those seeded rows are replaced by
+   the backup's and nothing collides. **A restore done by hand must do the
+   same**, or it silently corrupts the reference tables rather than failing:
+   `resource_permissions` and `product_templates` have no unique key that
+   catches a duplicate (`resource_permissions`' unique index includes a
+   nullable column, and NULL never equals NULL), so seeded rows and restored
+   rows simply coexist — a rehearsal ended with 92 and 10 rows where 46 and 5
+   were correct, with no error raised. Truncate `audit.logged_actions` too:
+   seeding writes 100 audit rows, which take the `event_id` values the
+   backup's own audit rows need.
+
 4. **Pointing every app's env at the new project** (`NEXT_PUBLIC_SUPABASE_URL`,
    keys, and Supabase's trusted-Clerk-domain config) and re-enabling
    `backup-scheduled.yml`, which is currently `disabled_manually` because it

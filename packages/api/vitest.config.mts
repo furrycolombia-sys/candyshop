@@ -1,3 +1,5 @@
+import path from "node:path";
+
 import { defineConfig } from "vitest/config";
 
 export default defineConfig({
@@ -9,7 +11,7 @@ export default defineConfig({
       NEXT_PUBLIC_SUPABASE_URL: "http://localhost:54321",
       NEXT_PUBLIC_SUPABASE_ANON_KEY: "test-anon-key",
     },
-    include: ["src/**/*.test.{ts,tsx}"],
+    include: ["tests/**/*.test.{ts,tsx}"],
     exclude: ["node_modules/", "**/*.d.ts", "**/*.config.*", "**/index.ts"],
     testTimeout: 10_000,
     hookTimeout: 10_000,
@@ -23,9 +25,19 @@ export default defineConfig({
       // coverage was never measured or enforced. Floors pinned to the first real
       // measurement so regressions fail; raise them as coverage improves.
       thresholds: {
-        branches: 75, functions: 60, lines: 80, statements: 75,
+        branches: 75,
+        functions: 60,
+        lines: 80,
+        statements: 75,
       },
       cleanOnRerun: false,
+    },
+  },
+  resolve: {
+    alias: {
+      // The tests moved out of src/, so they address the package by its own
+      // alias. tsconfig already declared it; vitest resolves separately.
+      "@api": path.resolve(__dirname, "./src"),
     },
   },
 });

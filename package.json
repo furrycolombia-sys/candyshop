@@ -10,7 +10,7 @@
     "tunnel:stop": "node scripts/cloudflared-stop.mjs",
     "tunnel:switch": "node scripts/tunnel-switch.mjs",
     "lint:env": "node scripts/check-env-parity.mjs",
-    "lint": "eslint apps/store/src apps/studio/src apps/landing/src apps/payments/src apps/admin/src apps/auth/src apps/playground/src packages/ui/src packages/shared/src packages/api/src packages/app-components/src packages/auth/src apps/store/e2e apps/admin/e2e apps/auth/e2e apps/payments/e2e apps/landing/e2e",
+    "lint": "eslint --no-error-on-unmatched-pattern apps/store/src apps/studio/src apps/landing/src apps/payments/src apps/admin/src apps/auth/src apps/playground/src packages/ui/src packages/shared/src packages/api/src packages/app-components/src packages/auth/src apps/store/tests apps/studio/tests apps/landing/tests apps/payments/tests apps/admin/tests apps/auth/tests apps/playground/tests packages/ui/tests packages/shared/tests packages/api/tests packages/app-components/tests packages/auth/tests tests/db apps/store/e2e apps/studio/e2e apps/landing/e2e apps/payments/e2e apps/admin/e2e apps/auth/e2e apps/playground/e2e",
     "typecheck": "turbo typecheck",
     "test": "turbo test",
     "test:watch": "vitest",
@@ -52,7 +52,10 @@
     "supabase:reset": "node scripts/supabase-cmd.mjs db reset",
     "prepare": "husky",
     "clean:builds": "find . -not -path '*/node_modules/*' -not -path '*/.git/*' \\( -name '.next' -o -name '.turbo' -o -name 'test-results' -o -name 'playwright-report' -o -name 'coverage' \\) -type d -prune -exec rm -rf '{}' + ; find . -not -path '*/node_modules/*' -not -path '*/.git/*' \\( -name 'tsconfig.tsbuildinfo' -o -name 'next-env.d.ts' \\) -delete",
-    "clean": "pnpm clean:builds && find . -name 'node_modules' -type d -prune -exec rm -rf '{}' +"
+    "clean": "pnpm clean:builds && find . -name 'node_modules' -type d -prune -exec rm -rf '{}' +",
+    "test:db": "node scripts/test-db.mjs",
+    "test:inventory": "node scripts/test-inventory.mjs",
+    "test:inventory:diff": "bash scripts/test-inventory-diff.sh"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
@@ -61,6 +64,7 @@
     "@secretlint/secretlint-rule-preset-recommend": "^12.3.1",
     "@tailwindcss/typography": "^0.5.19",
     "@tanstack/eslint-plugin-query": "^5.100.5",
+    "@types/pg": "^8.23.1",
     "@typescript-eslint/eslint-plugin": "^8.59.0",
     "@typescript-eslint/parser": "^8.59.0",
     "@vitest/eslint-plugin": "^1.6.16",
@@ -86,6 +90,7 @@
     "lint-staged": "^16.4.0",
     "madge": "^8.0.0",
     "orval": "^8.9.0",
+    "pg": "^8.23.0",
     "prettier": "^3.8.3",
     "secretlint": "^12.3.1",
     "sharp": "^0.34.5",
@@ -109,23 +114,6 @@
     ],
     "*.{json,md,css}": [
       "prettier --check"
-    ]
-  },
-  "pnpm": {
-    "overrides": {
-      "vite": ">=7.3.2",
-      "uuid": ">=14.0.0",
-      "postcss": "^8.5.12"
-    },
-    "onlyBuiltDependencies": [
-      "@parcel/watcher",
-      "@sentry/cli",
-      "@swc/core",
-      "esbuild",
-      "msw",
-      "sharp",
-      "supabase",
-      "unrs-resolver"
     ]
   },
   "packageManager": "pnpm@10.32.1+sha512.a706938f0e89ac1456b6563eab4edf1d1faf3368d1191fc5c59790e96dc918e4456ab2e67d613de1043d2e8c81f87303e6b40d4ffeca9df15ef1ad567348f2be",

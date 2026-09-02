@@ -415,6 +415,74 @@ jobs:
   # ============================================
   # E2E Tests (Playwright)
   # ============================================
+  # ============================================
+  # Database Invariants
+  # ============================================
+  db-tests:
+    name: Database Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: changes
+    if: needs.changes.outputs.docs-only == 'false'
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v4.4.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # Applies every migration from scratch, so the suite asserts against the
+      # schema the migrations produce rather than whatever a previous run left.
+      - name: Start Supabase
+        # The env loader validates every $secret: reference in .env.ci, not just
+        # the ones this job reads, so the full set has to be present or it
+        # refuses to load. Mirrors the e2e-tests block.
+        env:
+          CI_SUPABASE_ANON_KEY: ${{ secrets.CI_SUPABASE_ANON_KEY }}
+          CI_SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.CI_SUPABASE_SERVICE_ROLE_KEY }}
+          CI_SUPABASE_JWT_SECRET: ${{ secrets.CI_SUPABASE_JWT_SECRET }}
+          CI_SUPABASE_DB_PASSWORD: ${{ secrets.CI_SUPABASE_DB_PASSWORD }}
+          CLERK_DOMAIN: ${{ secrets.CLERK_DOMAIN }}
+          CLERK_PUBLISHABLE_KEY: ${{ secrets.CLERK_PUBLISHABLE_KEY }}
+          CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
+          GOOGLE_TEST_EMAIL: ${{ secrets.GOOGLE_TEST_EMAIL }}
+          GOOGLE_TEST_PASSWORD: ${{ secrets.GOOGLE_TEST_PASSWORD }}
+          TALLY_FORM_ID: ${{ secrets.TALLY_FORM_ID }}
+        run: pnpm supabase:docker start --env ci
+
+      - name: Run database invariant tests
+        # The env loader validates every $secret: reference in .env.ci, not just
+        # the ones this job reads, so the full set has to be present or it
+        # refuses to load. Mirrors the e2e-tests block.
+        env:
+          CI_SUPABASE_ANON_KEY: ${{ secrets.CI_SUPABASE_ANON_KEY }}
+          CI_SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.CI_SUPABASE_SERVICE_ROLE_KEY }}
+          CI_SUPABASE_JWT_SECRET: ${{ secrets.CI_SUPABASE_JWT_SECRET }}
+          CI_SUPABASE_DB_PASSWORD: ${{ secrets.CI_SUPABASE_DB_PASSWORD }}
+          CLERK_DOMAIN: ${{ secrets.CLERK_DOMAIN }}
+          CLERK_PUBLISHABLE_KEY: ${{ secrets.CLERK_PUBLISHABLE_KEY }}
+          CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
+          GOOGLE_TEST_EMAIL: ${{ secrets.GOOGLE_TEST_EMAIL }}
+          GOOGLE_TEST_PASSWORD: ${{ secrets.GOOGLE_TEST_PASSWORD }}
+          TALLY_FORM_ID: ${{ secrets.TALLY_FORM_ID }}
+        run: pnpm test:db --env ci
+
+      - name: Stop Supabase
+        if: always()
+        run: pnpm supabase:docker stop --env ci || true
+
   e2e-tests:
     name: E2E Tests
     runs-on: ubuntu-latest

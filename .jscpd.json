@@ -23,7 +23,8 @@
     "**/src/app/**/global-error.tsx",
     "**/src/app/**/not-found.tsx",
     "**/src/app/**/loading.tsx",
-    "**/src/app/**/template.tsx"
+    "**/src/app/**/template.tsx",
+    "tests/legacy/**"
   ],
   "format": ["typescript", "tsx", "javascript", "jsx"],
   "absolute": true,

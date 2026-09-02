@@ -6,7 +6,8 @@
         "docker/**/*.mjs",
         "docker/ci/playwright.config.ts",
         ".claude/tools/*.mjs"
-      ]
+      ],
+      "ignore": ["tests/legacy/**"]
     },
     "apps/admin": {
       "entry": [

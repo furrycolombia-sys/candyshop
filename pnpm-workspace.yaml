@@ -1,3 +1,27 @@
 packages:
   - "apps/*"
   - "packages/*"
+
+# pnpm 10 stopped reading the "pnpm" field in package.json and moved these
+# settings here. They lived in package.json until 2026-09-02 and were being
+# silently ignored: every install printed a warning naming both keys, and
+# neither took effect. See https://pnpm.io/settings.
+#
+# onlyBuiltDependencies is what actually broke: the supabase package's
+# postinstall downloads the CLI binary, so with the list ignored a clean
+# install produced no binary and the Database Tests job could not start
+# Supabase. Local machines kept working on a binary installed months ago.
+overrides:
+  vite: ">=7.3.2"
+  uuid: ">=14.0.0"
+  postcss: "^8.5.12"
+
+onlyBuiltDependencies:
+  - "@parcel/watcher"
+  - "@sentry/cli"
+  - "@swc/core"
+  - esbuild
+  - msw
+  - sharp
+  - supabase
+  - unrs-resolver
