@@ -50,10 +50,16 @@ const QUOTES = new Set([
   String.fromCharCode(96),
 ]);
 
+// The frozen pre-rework copy. Counting it would double every total and make
+// the before/after diff meaningless; its own inventory is the committed
+// baseline.
+const LEGACY_SNAPSHOT = join(rootDir, "tests", "legacy");
+
 function walk(dir, out = []) {
   for (const entry of readdirSync(dir)) {
     if (SKIP_DIRS.has(entry)) continue;
     const full = join(dir, entry);
+    if (full === LEGACY_SNAPSHOT) continue;
     if (statSync(full).isDirectory()) walk(full, out);
     else if (TEST_FILE.test(entry)) out.push(full);
   }

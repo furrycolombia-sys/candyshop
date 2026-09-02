@@ -52,7 +52,10 @@
     "supabase:reset": "node scripts/supabase-cmd.mjs db reset",
     "prepare": "husky",
     "clean:builds": "find . -not -path '*/node_modules/*' -not -path '*/.git/*' \\( -name '.next' -o -name '.turbo' -o -name 'test-results' -o -name 'playwright-report' -o -name 'coverage' \\) -type d -prune -exec rm -rf '{}' + ; find . -not -path '*/node_modules/*' -not -path '*/.git/*' \\( -name 'tsconfig.tsbuildinfo' -o -name 'next-env.d.ts' \\) -delete",
-    "clean": "pnpm clean:builds && find . -name 'node_modules' -type d -prune -exec rm -rf '{}' +"
+    "clean": "pnpm clean:builds && find . -name 'node_modules' -type d -prune -exec rm -rf '{}' +",
+    "test:db": "node scripts/test-db.mjs",
+    "test:inventory": "node scripts/test-inventory.mjs",
+    "test:inventory:diff": "bash scripts/test-inventory-diff.sh"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
@@ -61,6 +64,7 @@
     "@secretlint/secretlint-rule-preset-recommend": "^12.3.1",
     "@tailwindcss/typography": "^0.5.19",
     "@tanstack/eslint-plugin-query": "^5.100.5",
+    "@types/pg": "^8.23.1",
     "@typescript-eslint/eslint-plugin": "^8.59.0",
     "@typescript-eslint/parser": "^8.59.0",
     "@vitest/eslint-plugin": "^1.6.16",
@@ -86,6 +90,7 @@
     "lint-staged": "^16.4.0",
     "madge": "^8.0.0",
     "orval": "^8.9.0",
+    "pg": "^8.23.0",
     "prettier": "^3.8.3",
     "secretlint": "^12.3.1",
     "sharp": "^0.34.5",

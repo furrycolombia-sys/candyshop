@@ -6,7 +6,7 @@ Every test case in the repo, so a refactor can be checked for losses:
 regenerate and diff. Counting files or totals is not enough -- a rework
 can keep both and still drop the one assertion that mattered.
 
-**2655 cases across 364 files** (0 skipped, 7 parameterised).
+**2662 cases across 366 files** (0 skipped, 7 parameterised).
 
 Source-level cases: a `.each` case is one entry here and many in vitest
 output, so this total is deliberately not the runner total.
@@ -2740,6 +2740,21 @@ output, so this total is deliberately not the runner total.
 - getCategoryTheme > returns the correct theme for fursuits
 - getCategoryTheme > returns the correct theme for digital
 - getCategoryTheme > falls back to merch for unknown categories
+
+## db -- 7 cases
+
+### `tests/db/exposure-invariants.test.ts`
+
+- exposure invariants > no client role can read a linkability column, on any relation
+- exposure invariants > every table in public has row level security enabled
+- exposure invariants > finds a leak when one exists
+
+### `tests/db/seller-payment-methods.test.ts`
+
+- seller_payment_methods > is still readable by the seller who owns it
+- seller_payment_methods > is not readable by an anonymous client
+- seller_payment_methods > is not readable by an authenticated user who owns none of it
+- seller_payment_methods > has no SELECT policy that ignores who is asking
 
 ## e2e -- 134 cases
 
