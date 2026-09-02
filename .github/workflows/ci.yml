@@ -446,19 +446,37 @@ jobs:
       # Applies every migration from scratch, so the suite asserts against the
       # schema the migrations produce rather than whatever a previous run left.
       - name: Start Supabase
+        # The env loader validates every $secret: reference in .env.ci, not just
+        # the ones this job reads, so the full set has to be present or it
+        # refuses to load. Mirrors the e2e-tests block.
         env:
           CI_SUPABASE_ANON_KEY: ${{ secrets.CI_SUPABASE_ANON_KEY }}
           CI_SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.CI_SUPABASE_SERVICE_ROLE_KEY }}
           CI_SUPABASE_JWT_SECRET: ${{ secrets.CI_SUPABASE_JWT_SECRET }}
           CI_SUPABASE_DB_PASSWORD: ${{ secrets.CI_SUPABASE_DB_PASSWORD }}
+          CLERK_DOMAIN: ${{ secrets.CLERK_DOMAIN }}
+          CLERK_PUBLISHABLE_KEY: ${{ secrets.CLERK_PUBLISHABLE_KEY }}
+          CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
+          GOOGLE_TEST_EMAIL: ${{ secrets.GOOGLE_TEST_EMAIL }}
+          GOOGLE_TEST_PASSWORD: ${{ secrets.GOOGLE_TEST_PASSWORD }}
+          TALLY_FORM_ID: ${{ secrets.TALLY_FORM_ID }}
         run: pnpm supabase:docker start --env ci
 
       - name: Run database invariant tests
+        # The env loader validates every $secret: reference in .env.ci, not just
+        # the ones this job reads, so the full set has to be present or it
+        # refuses to load. Mirrors the e2e-tests block.
         env:
           CI_SUPABASE_ANON_KEY: ${{ secrets.CI_SUPABASE_ANON_KEY }}
           CI_SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.CI_SUPABASE_SERVICE_ROLE_KEY }}
           CI_SUPABASE_JWT_SECRET: ${{ secrets.CI_SUPABASE_JWT_SECRET }}
           CI_SUPABASE_DB_PASSWORD: ${{ secrets.CI_SUPABASE_DB_PASSWORD }}
+          CLERK_DOMAIN: ${{ secrets.CLERK_DOMAIN }}
+          CLERK_PUBLISHABLE_KEY: ${{ secrets.CLERK_PUBLISHABLE_KEY }}
+          CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
+          GOOGLE_TEST_EMAIL: ${{ secrets.GOOGLE_TEST_EMAIL }}
+          GOOGLE_TEST_PASSWORD: ${{ secrets.GOOGLE_TEST_PASSWORD }}
+          TALLY_FORM_ID: ${{ secrets.TALLY_FORM_ID }}
         run: pnpm test:db --env ci
 
       - name: Stop Supabase
