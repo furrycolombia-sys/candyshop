@@ -10,6 +10,7 @@ import {
   writePermCache,
 } from "./permCachePersistence";
 import { matchesPermissions, useCurrentUserPermissions } from "./permissions";
+import { PermissionsProvider } from "./PermissionsContext";
 import { useCurrentUser } from "./useCurrentUser";
 
 vi.mock("./permCachePersistence", () => ({
@@ -102,7 +103,51 @@ describe("useCurrentUserPermissions — cookie seeding", () => {
     expect(result.current.grantedKeys).toEqual([]);
   });
 
-  it("initializes grantedKeys from cookie synchronously when cookie present", () => {
+  it("uses the server's keys for the first render even when a fresher cookie exists", () => {
+    // The hydration invariant. The server rendered from the cookies on ITS
+    // request; a cookie written client-side after that -- by a permissions
+    // fetch on the previous page, or another tab -- was not visible to it.
+    // Seeding first render from that cookie makes the client's first render
+    // disagree with the server HTML, which React reports as #418 "server
+    // rendered text didn't match". Measured on landing: the server rendered
+    // nav links [auth, landing, store] and the client rendered
+    // [auth, landing, payments, store].
+    mockReadCache.mockReturnValue(["products.create", "orders.read"]);
+    mockCreateClient.mockReturnValue(
+      makeSupabase() as unknown as ReturnType<
+        typeof createBrowserSupabaseClient
+      >,
+    );
+
+    // Record every render: the assertion is about the FIRST one, which is the
+    // render React compares against the server HTML. The settled value is
+    // allowed -- and expected -- to differ once the effect adopts the cache.
+    const renders: string[][] = [];
+    renderHook(
+      () => {
+        const value = useCurrentUserPermissions();
+        renders.push(value.grantedKeys);
+        return value;
+      },
+      {
+        wrapper: ({ children }) => (
+          <PermissionsProvider initialGrantedKeys={["orders.read"]}>
+            {children}
+          </PermissionsProvider>
+        ),
+      },
+    );
+
+    expect(renders[0]).toEqual(["orders.read"]);
+    // ...and the cache is still applied, just after hydration rather than during.
+    expect(renders.at(-1)).toEqual(["products.create", "orders.read"]);
+  });
+
+  it("adopts the cached cookie when the server had nothing to seed from", () => {
+    // No longer "synchronously": the cache is applied by an effect just after
+    // hydration rather than in the state initializer. With no
+    // PermissionsProvider above, the server value is [] and the cookie wins,
+    // which is the same end state as before.
     mockReadCache.mockReturnValue(["products.create", "orders.read"]);
     mockCreateClient.mockReturnValue(
       makeSupabase() as unknown as ReturnType<

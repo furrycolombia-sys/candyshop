@@ -44,9 +44,32 @@ export function useCurrentUserPermissions() {
   // Server layouts pass the cookie value via PermissionsProvider so SSR
   // and client hydration both start with the same granted keys — no flicker.
   const initialGrantedKeys = useInitialGrantedKeys();
-  const [grantedKeys, setGrantedKeys] = useState<string[]>(
-    () => readPermCache() ?? initialGrantedKeys,
-  );
+  // Seeded ONLY from the server's value, never from readPermCache(). The
+  // server rendered from the cookies on its own request; a cache cookie
+  // written after that — by the permissions fetch on the previous page, or by
+  // another tab — was not visible to it. Using it here made the client's first
+  // render disagree with the server HTML, which React reports as #418 "server
+  // rendered text didn't match" and recovers from by throwing the server tree
+  // away. Reproduced on landing's first load after sign-in: the server
+  // rendered nav links [auth, landing, store], the client [auth, landing,
+  // payments, store]. The cache is still used — see the effect below, which
+  // applies it immediately after hydration.
+  const [grantedKeys, setGrantedKeys] = useState<string[]>(initialGrantedKeys);
+
+  // Adopt the cached keys once hydration is done. This is what the cache was
+  // for — showing the right navigation before the database round-trip
+  // finishes — and after the first commit it can no longer desynchronise the
+  // client from the server HTML.
+  useEffect(() => {
+    const cached = readPermCache();
+    if (!cached) return;
+    setGrantedKeys((current) =>
+      current.length === cached.length &&
+      current.every((key, i) => key === cached[i])
+        ? current
+        : cached,
+    );
+  }, []);
   const userId = user?.id ?? null;
   // Track whether we have ever confirmed a live user session. Without this
   // guard, a transient userId=null during component mount (e.g. getUser()
