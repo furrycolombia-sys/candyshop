@@ -8,8 +8,13 @@
  * - In CI mode (CI=true), unresolved $secret: refs use process.env directly
  */
 
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import fc from "fast-check";
+import { readFileSync } from "node:fs";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const TRACKED_KEYS = [
   "NEXT_PUBLIC_SUPABASE_URL",
@@ -36,8 +41,16 @@ afterEach(() => {
 });
 
 async function freshLoadEnv(targetEnv) {
-  // Force re-import by busting module cache via timestamp query param
-  const { loadEnv } = await import(`../load-env.mjs?t=${Date.now()}`);
+  // A fresh module each call, because loadEnv memoises what it has read.
+  //
+  // This used to bust the cache with `import(\`../load-env.mjs?t=${Date.now()}\`)`,
+  // which vite cannot statically analyse -- it fails with "Unknown variable
+  // dynamic import" and took the whole file down with it. That is why this
+  // file was excluded from `test:workflows` rather than fixed.
+  // vi.resetModules() is vitest's own answer to the same problem and needs no
+  // dynamic specifier at all.
+  vi.resetModules();
+  const { loadEnv } = await import("../load-env.mjs");
   loadEnv(targetEnv);
 }
 
@@ -92,10 +105,52 @@ describe("loadEnv — loads non-secret values from .env.dev", () => {
 
 describe("loadEnv — CI mode uses process.env for secrets", () => {
   it("in CI mode, uses process.env value for secret refs instead of .secrets", async () => {
+    // In CI mode the loader validates EVERY $secret: reference in the file,
+    // not just the one under test, so all of them have to be present. Read
+    // from .env.dev rather than listed here: the list was hardcoded, .env.dev
+    // gained Clerk references, and this test broke on a name it had never
+    // heard of.
+    const envDev = readFileSync(resolve(__dirname, "../../.env.dev"), "utf-8");
+    const refs = [...envDev.matchAll(/\$secret:([A-Z0-9_]+)/g)].map(
+      (m) => m[1],
+    );
+    const placeholders = Object.fromEntries(
+      refs.map((name) => [name, `ci-${name.toLowerCase()}`]),
+    );
+
     process.env.CI = "true";
-    process.env.DEV_SUPABASE_ANON_KEY = "ci-anon-key";
-    await freshLoadEnv("dev");
-    expect(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY).toBe("ci-anon-key");
-    delete process.env.DEV_SUPABASE_ANON_KEY;
+    for (const [name, value] of Object.entries(placeholders)) {
+      process.env[name] = value;
+    }
+
+    // Pick the key under test from the file too. This asserted on
+    // NEXT_PUBLIC_SUPABASE_ANON_KEY, which stopped being a $secret: reference
+    // when .env.dev switched to a local Supabase with its demo keys inline --
+    // so the test was checking that a literal resolved from process.env, which
+    // it never will.
+    const pair = envDev
+      .split("\n")
+      .map((line) => line.match(/^([A-Z0-9_]+)=\$secret:([A-Z0-9_]+)$/))
+      .find(Boolean);
+    expect(
+      pair,
+      ".env.dev has no $secret: reference left to test",
+    ).toBeTruthy();
+    const [, publicKey, secretName] = pair;
+
+    // loadEnv never overwrites a key already in process.env -- that is what
+    // the first describe block asserts -- so the key under test has to start
+    // absent, or this measures the ambient shell instead of the loader.
+    const previous = process.env[publicKey];
+    delete process.env[publicKey];
+
+    try {
+      await freshLoadEnv("dev");
+      expect(process.env[publicKey]).toBe(placeholders[secretName]);
+    } finally {
+      for (const name of refs) delete process.env[name];
+      if (previous === undefined) delete process.env[publicKey];
+      else process.env[publicKey] = previous;
+    }
   });
 });

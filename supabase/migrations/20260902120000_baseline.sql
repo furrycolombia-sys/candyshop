@@ -25,6 +25,26 @@
 -- `scripts/backup-prod.mjs --restore`, which sorts tables topologically, or
 -- set `session_replication_role = replica` for the load.
 --
+-- HOW TO CHANGE THE SCHEMA FROM HERE. Not by editing this file.
+--
+-- Every object is now defined exactly once, which makes "change the function"
+-- look like an edit to the file that already defines it. It is not. Supabase
+-- records an applied migration by name and never re-runs it, so an in-place
+-- edit reaches this file and never reaches any database that has already run
+-- it -- silently, and without ever failing. The file and the database then
+-- disagree, and the file is the one everybody reads.
+--
+-- tests/db cannot catch this. It builds a fresh database from these files,
+-- where the two agree by construction. That is the same blind spot aeleos
+-- found the expensive way: a function on its live project was missing an
+-- entire validation block for five merged pull requests, while every check
+-- passed, because every check was reading a database built from the file.
+--
+-- So: add a new timestamped migration for every change, including changes to
+-- something defined here. Edit this file only when no database has applied it
+-- yet -- which today is true, and stops being true the moment production is
+-- restored.
+--
 -- The archived files are kept for their reasoning, not for replay. Several
 -- carry the argument for a security decision -- why identity_sub is revoked
 -- from client roles, why the audit view stopped being SECURITY DEFINER, why

@@ -159,6 +159,10 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          # Full history: the migration-edit check diffs against the
+          # base branch, which a shallow clone does not contain.
+          fetch-depth: 0
 
       - name: Setup pnpm
         uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v4.4.0
@@ -177,6 +181,14 @@ jobs:
 
       - name: Check formatting
         run: pnpm run format:check
+
+      # The migration set is squashed, so "change the function" looks like an
+      # edit to the file that already defines it. Supabase never re-runs an
+      # applied migration, so such an edit reaches the file and no database.
+      # Needs the base branch present, hence fetch-depth: 0 is required on the
+      # checkout above for this job.
+      - name: Check no applied migration was edited
+        run: node scripts/check-migration-edits.mjs "origin/${{ github.base_ref || 'develop' }}"
 
       # These ran in no workflow — only in the husky precommit hook, which any
       # `--no-verify` commit bypasses.
