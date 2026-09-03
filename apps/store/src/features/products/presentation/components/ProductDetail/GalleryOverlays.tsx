@@ -34,12 +34,18 @@ export function GalleryOverlays({
     <>
       {/* Dot texture */}
       <div
+        aria-hidden="true"
         className="absolute inset-0 opacity-[0.07]"
         style={DOT_TEXTURE_STYLE}
       />
 
-      {/* View label watermark */}
-      <span className="relative font-display text-4xl font-extrabold uppercase tracking-widest text-foreground/10 select-none text-center px-6">
+      {/* View label watermark. Decoration: 10% opacity over the category
+          colour, which axe measured at 1.22:1 against a required 3:1 in
+          ImageGallery's equivalent. Hidden for the same reason. */}
+      <span
+        aria-hidden="true"
+        className="relative font-display text-4xl font-extrabold uppercase tracking-widest text-foreground/10 select-none text-center px-6"
+      >
         {activeView?.label}
       </span>
 
