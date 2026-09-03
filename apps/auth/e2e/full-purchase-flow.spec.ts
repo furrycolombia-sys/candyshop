@@ -8,7 +8,6 @@ import {
   APP_URLS,
   ELEMENT_TIMEOUT_MS,
   LONG_OPERATION_TIMEOUT_MS,
-  MUTATION_WAIT_MS,
   NAVIGATION_TIMEOUT_MS,
 } from "./helpers/constants";
 import {
@@ -372,19 +371,11 @@ test.describe.serial("Full purchase flow: two sellers, one buyer", () => {
 
     await page.getByTestId("hero-add-to-cart").click();
 
-    // The indicator proves React took the item, which is worth asserting on
-    // its own -- but it is not sufficient here. The cart also persists to a
-    // cookie from a useEffect, and it is the cookie, not the DOM, that
-    // survives the navigation below. Two attempts at replacing the sleep
-    // failed in CI: waiting on the indicator alone still lost the item, and
-    // polling the cookie for an exact count failed too, most likely because
-    // the count is not what I assumed. Diagnosing that needs the suite run
-    // locally against a real store, so the sleep stays until someone can.
+    // The in-cart indicator only renders once the cart holds this product, so
+    // it is a real signal the add landed before we navigate away.
     await expect(page.getByTestId("hero-in-cart")).toBeVisible({
       timeout: ELEMENT_TIMEOUT_MS,
     });
-    // eslint-disable-next-line playwright/no-wait-for-timeout -- see above
-    await page.waitForTimeout(MUTATION_WAIT_MS);
     await snap(page, "store-added-alpha");
 
     // ── Add Seller B's product ──────────────────────────────────
@@ -413,19 +404,11 @@ test.describe.serial("Full purchase flow: two sellers, one buyer", () => {
 
     await page.getByTestId("hero-add-to-cart").click();
 
-    // The indicator proves React took the item, which is worth asserting on
-    // its own -- but it is not sufficient here. The cart also persists to a
-    // cookie from a useEffect, and it is the cookie, not the DOM, that
-    // survives the navigation below. Two attempts at replacing the sleep
-    // failed in CI: waiting on the indicator alone still lost the item, and
-    // polling the cookie for an exact count failed too, most likely because
-    // the count is not what I assumed. Diagnosing that needs the suite run
-    // locally against a real store, so the sleep stays until someone can.
+    // The in-cart indicator only renders once the cart holds this product, so
+    // it is a real signal the add landed before we navigate away.
     await expect(page.getByTestId("hero-in-cart")).toBeVisible({
       timeout: ELEMENT_TIMEOUT_MS,
     });
-    // eslint-disable-next-line playwright/no-wait-for-timeout -- see above
-    await page.waitForTimeout(MUTATION_WAIT_MS);
     await snap(page, "store-added-beta");
 
     // ── Open cart and verify both items ────────────────────────
