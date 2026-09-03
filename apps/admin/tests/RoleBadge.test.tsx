@@ -27,14 +27,12 @@ describe("RoleBadge", () => {
   });
 
   it("applies destructive variant for admin role", () => {
-    // eslint-disable-next-line jsx-a11y/aria-role -- `role` is a custom prop on RoleBadge, not an HTML ARIA role
     render(<RoleBadge role="admin" />);
     const badge = screen.getByTestId("role-badge-admin");
     expect(badge).toHaveAttribute("data-variant", "admin");
   });
 
   it("applies primary variant for seller role", () => {
-    // eslint-disable-next-line jsx-a11y/aria-role -- `role` is a custom prop on RoleBadge, not an HTML ARIA role
     render(<RoleBadge role="seller" />);
     const badge = screen.getByTestId("role-badge-seller");
     expect(badge).toHaveAttribute("data-variant", "seller");

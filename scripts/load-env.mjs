@@ -44,14 +44,22 @@ function parseEnvContent(content) {
 // from the caller-supplied env name.
 function envFileName(env) {
   switch (env) {
-    case "dev":        return ".env.dev";
-    case "staging":    return ".env.staging";
-    case "e2e":        return ".env.e2e";
-    case "prod":       return ".env.prod";
-    case "production": return ".env.production";
-    case "test":       return ".env.test";
-    case "ci":         return ".env.ci";
-    default:           return null;
+    case "dev":
+      return ".env.dev";
+    case "staging":
+      return ".env.staging";
+    case "e2e":
+      return ".env.e2e";
+    case "prod":
+      return ".env.prod";
+    case "production":
+      return ".env.production";
+    case "test":
+      return ".env.test";
+    case "ci":
+      return ".env.ci";
+    default:
+      return null;
   }
 }
 
@@ -96,7 +104,15 @@ function resolveSecrets(vars, secrets) {
   return vars;
 }
 
-const ALLOWED_ENVS = ["dev", "staging", "e2e", "prod", "production", "test", "ci"];
+const ALLOWED_ENVS = [
+  "dev",
+  "staging",
+  "e2e",
+  "prod",
+  "production",
+  "test",
+  "ci",
+];
 
 export function loadEnv(targetEnv) {
   const env = targetEnv || process.env.TARGET_ENV || "dev";
@@ -107,7 +123,8 @@ export function loadEnv(targetEnv) {
   }
 
   const filename = envFileName(env);
-  if (!filename || !existsSync(resolve(rootDir, filename))) { // nosemgrep: AIK_ts_generic_path_traversal
+  if (!filename || !existsSync(resolve(rootDir, filename))) {
+    // nosemgrep: AIK_ts_generic_path_traversal
     throw new Error(`Env file not found: .env.${env}`);
   }
 

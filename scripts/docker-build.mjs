@@ -70,7 +70,9 @@ try {
 }
 
 try {
-  process.env.NEXT_PUBLIC_BUILD_HASH = execSync("git rev-parse --short HEAD", { encoding: "utf8" }).trim();
+  process.env.NEXT_PUBLIC_BUILD_HASH = execSync("git rev-parse --short HEAD", {
+    encoding: "utf8",
+  }).trim();
 } catch {
   // Not in a git repo or git unavailable — keep env file value
 }

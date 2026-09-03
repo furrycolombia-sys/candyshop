@@ -94,7 +94,6 @@ vi.mock(
   }),
 );
 
-// eslint-disable-next-line import/order -- vi.mock must be hoisted before this import
 import { SellerCheckoutCard } from "@/features/checkout/presentation/components/SellerCheckoutCard";
 
 function makeMethod(

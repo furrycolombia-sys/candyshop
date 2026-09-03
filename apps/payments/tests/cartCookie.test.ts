@@ -1,4 +1,3 @@
-// eslint-disable-next-line import/order -- vi.mock calls between imports require this ordering
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 vi.mock("cookies-next", () => ({
@@ -6,7 +5,6 @@ vi.mock("cookies-next", () => ({
   deleteCookie: vi.fn(),
 }));
 
-// eslint-disable-next-line import/order -- vi.mock must be hoisted before this import
 import { getCookie, deleteCookie } from "cookies-next";
 
 import {

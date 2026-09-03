@@ -12,3 +12,22 @@ tests/inventory.json
 # Frozen snapshot of the pre-rework tests. Read-only reference: reformatting
 # it would make the copy differ from what it is a copy of.
 tests/legacy/
+
+# ── Added when the format glob was widened to mjs/yml/yaml ────────────────
+# The glob used to be "**/*.{ts,tsx,js,jsx,json,css,md}", so none of the
+# following was ever checked and none of it needed excluding. `format:check`
+# passed by not looking, the same way `pnpm lint` did with its directory list.
+
+# Generated lockfile.
+pnpm-lock.yaml
+
+# Build output and test artefacts.
+**/.next/
+**/out/
+**/coverage/
+**/playwright-report/
+**/test-results/
+node_modules/
+
+# Git-ignored agent scratch.
+.superpowers/

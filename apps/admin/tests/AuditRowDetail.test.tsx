@@ -32,7 +32,7 @@ const baseEntry: AuditEntry = {
   changed_fields: null,
   action_timestamp: "2025-01-01T00:00:00Z",
   transaction_id: 999,
-  // eslint-disable-next-line sonarjs/no-hardcoded-ip -- test fixture data
+
   client_ip: "192.168.1.1",
 };
 
@@ -118,7 +118,6 @@ describe("AuditRowDetail", () => {
   });
 
   it("copies user id to clipboard when copy button is clicked", async () => {
-    // eslint-disable-next-line unicorn/no-useless-undefined -- TS strict requires the argument
     const writeText = vi.fn().mockResolvedValue(undefined);
     Object.defineProperty(navigator, "clipboard", {
       value: { writeText },

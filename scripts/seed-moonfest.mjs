@@ -32,19 +32,6 @@ async function query(path) {
   return res.json();
 }
 
-async function upsert(path, body) {
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
-    method: "POST",
-    headers: {
-      ...headers,
-      Prefer: "return=representation,resolution=merge-duplicates",
-    },
-    body: JSON.stringify(body),
-  });
-  if (!res.ok) throw new Error(`Upsert ${path}: ${await res.text()}`);
-  return res.json();
-}
-
 async function insert(path, body) {
   const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
     method: "POST",

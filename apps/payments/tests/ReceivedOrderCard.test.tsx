@@ -64,7 +64,6 @@ vi.mock("lucide-react", () => ({
   Clock: () => <svg data-testid="clock-icon" />,
 }));
 
-// eslint-disable-next-line import/order -- vi.mock must be hoisted before this import
 import { ReceivedOrderCard } from "@/features/received-orders/presentation/components/ReceivedOrderCard";
 
 function makeOrder(overrides: Partial<ReceivedOrder> = {}): ReceivedOrder {

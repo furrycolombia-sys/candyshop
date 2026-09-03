@@ -1,4 +1,3 @@
-/* eslint-disable react/button-has-type */
 import { render, screen } from "@testing-library/react";
 import { beforeEach, describe, it, expect, vi } from "vitest";
 

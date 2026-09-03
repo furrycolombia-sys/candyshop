@@ -551,9 +551,22 @@ const eslintConfig = defineConfig([
       "react-hooks/refs": "off",
       "@tanstack/query/exhaustive-deps": "off",
       "unused-imports/no-unused-imports": "error",
-      "unused-imports/no-unused-vars": [
-        "warn",
-        { argsIgnorePattern: "^_", varsIgnorePattern: "^_" },
+      // Two rules covered this ground and disagreed. tseslint's recommended
+      // preset brings @typescript-eslint/no-unused-vars with no ignore
+      // pattern, so it reported `_obj` and `_url` -- deliberately-unused mock
+      // parameters written to the very convention the rule below declares one
+      // line away. The preset's copy won because it was never turned off, so
+      // the declared convention did nothing. One rule now, at error, honouring
+      // the underscore prefix.
+      "unused-imports/no-unused-vars": "off",
+      "@typescript-eslint/no-unused-vars": [
+        "error",
+        {
+          argsIgnorePattern: "^_",
+          varsIgnorePattern: "^_",
+          caughtErrorsIgnorePattern: "^_",
+          destructuredArrayIgnorePattern: "^_",
+        },
       ],
       "import/no-duplicates": "error",
       "import/order": [
@@ -1773,6 +1786,28 @@ const eslintConfig = defineConfig([
   },
   playwrightConfig,
   playwrightSetupConfig,
+
+  // The unused-variable convention, applied everywhere rather than only under
+  // apps/*/src and packages/*/src. Tests, scripts and root config files were
+  // outside every block that set it, so they fell through to the preset's
+  // copy -- which has no underscore convention at all. That went unnoticed
+  // while `pnpm lint` only looked at a hand-listed set of source directories.
+  // Last in the array so it wins over the preset for every file.
+  {
+    files: ["**/*.{ts,tsx,js,jsx,mjs,cjs}"],
+    rules: {
+      "unused-imports/no-unused-vars": "off",
+      "@typescript-eslint/no-unused-vars": [
+        "error",
+        {
+          argsIgnorePattern: "^_",
+          varsIgnorePattern: "^_",
+          caughtErrorsIgnorePattern: "^_",
+          destructuredArrayIgnorePattern: "^_",
+        },
+      ],
+    },
+  },
 ]);
 
 export default eslintConfig;

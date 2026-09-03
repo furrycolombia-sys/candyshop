@@ -30,9 +30,7 @@ import type { BrowserContext, Page } from "@playwright/test";
 import { dragAndDrop } from "./helpers/drag";
 import {
   APP_URLS,
-  DEBOUNCE_WAIT_MS,
   ELEMENT_TIMEOUT_MS,
-  MUTATION_WAIT_MS,
   NAVIGATION_TIMEOUT_MS,
 } from "./helpers/constants";
 import {

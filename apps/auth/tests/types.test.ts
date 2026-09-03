@@ -1,4 +1,3 @@
-/* eslint-disable vitest/no-conditional-expect */
 import { describe, it, expect } from "vitest";
 
 import { profileFormSchema } from "@/features/account/domain/types";

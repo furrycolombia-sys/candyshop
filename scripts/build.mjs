@@ -11,7 +11,9 @@ const targetEnv = envFlag !== -1 ? process.argv[envFlag + 1] : "prod";
 loadEnv(targetEnv);
 
 try {
-  process.env.NEXT_PUBLIC_BUILD_HASH = execSync("git rev-parse --short HEAD", { encoding: "utf8" }).trim();
+  process.env.NEXT_PUBLIC_BUILD_HASH = execSync("git rev-parse --short HEAD", {
+    encoding: "utf8",
+  }).trim();
 } catch {
   // Not in a git repo or git unavailable — keep env file value
 }
@@ -25,13 +27,19 @@ const isWindows = process.platform === "win32";
 const result = isWindows
   ? spawnSync(
       "cmd.exe",
-      ["/d", "/s", "/c", resolve(rootDir, "node_modules", ".bin", "turbo.CMD"), "build"],
+      [
+        "/d",
+        "/s",
+        "/c",
+        resolve(rootDir, "node_modules", ".bin", "turbo.CMD"),
+        "build",
+      ],
       { cwd: rootDir, stdio: "inherit", env: process.env, shell: false },
     )
-  : spawnSync(
-      resolve(rootDir, "node_modules", ".bin", "turbo"),
-      ["build"],
-      { cwd: rootDir, stdio: "inherit", env: process.env },
-    );
+  : spawnSync(resolve(rootDir, "node_modules", ".bin", "turbo"), ["build"], {
+      cwd: rootDir,
+      stdio: "inherit",
+      env: process.env,
+    });
 
 process.exit(result.status ?? 0);

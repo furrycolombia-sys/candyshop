@@ -1,4 +1,3 @@
-/* eslint-disable sonarjs/no-clear-text-protocols */
 import { describe, it, expect, vi, afterEach } from "vitest";
 
 describe("environment", () => {

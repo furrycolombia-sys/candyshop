@@ -1,5 +1,5 @@
 import { render, screen, fireEvent } from "@testing-library/react";
-// eslint-disable-next-line import/order -- vi.mock calls between imports require this ordering
+
 import { describe, it, expect, vi } from "vitest";
 
 vi.mock("next-intl", () => ({
@@ -29,7 +29,6 @@ vi.mock("@/features/templates/presentation/components/ItemRow", () => ({
   ),
 }));
 
-// eslint-disable-next-line import/order -- vi.mock must be hoisted before this import
 import type { ProductSection } from "shared/types";
 
 import { SectionBlock } from "@/features/templates/presentation/components/SectionBlock";

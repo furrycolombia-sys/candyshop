@@ -25,7 +25,6 @@ vi.mock(
   }),
 );
 
-// eslint-disable-next-line import/order -- vi.mock must be hoisted before this import
 import { StatusContent } from "@/features/orders/presentation/components/StatusContent";
 
 function makeOrder(overrides: Partial<OrderWithItems> = {}): OrderWithItems {
