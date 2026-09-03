@@ -17,7 +17,10 @@ export function SellerReportTable({ orders }: SellerReportTableProps) {
 
   if (orders.length === 0) {
     return (
-      <div className="flex items-center justify-center rounded-lg border border-foreground/10 py-16 text-sm text-muted-foreground">
+      <div
+        className="flex items-center justify-center rounded-lg border border-foreground/10 py-16 text-sm text-muted-foreground"
+        {...tid("seller-report-empty")}
+      >
         {t("noResults")}
       </div>
     );
