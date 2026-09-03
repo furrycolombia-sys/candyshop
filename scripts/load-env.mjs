@@ -73,12 +73,29 @@ function readEnvFile(env) {
   return parseEnvContent(readFileSync(fullPath, "utf-8")); // nosemgrep: AIK_ts_generic_path_traversal
 }
 
-// Reads and parses the .secrets file. Path is fully hardcoded — no external
-// input flows into the file read.
+// Where the secrets file lives. Hardcoded to the repository root, with one
+// documented exception: LOAD_ENV_SECRETS_PATH.
+//
+// The exception exists for the test suite. These tests used to exercise the
+// local path by writing a placeholder .secrets at the repository root and
+// removing it afterwards, which is shared mutable state -- it failed roughly
+// one run in six, and a flaky gate teaches people to re-run rather than read.
+// Pointing the test at its own temp file removes the shared state instead of
+// retrying around it.
+//
+// It is read from the environment rather than passed as an argument because
+// loadEnv is called by scripts that must not know about it.
+function secretsFilePath() {
+  return process.env.LOAD_ENV_SECRETS_PATH
+    ? resolve(process.env.LOAD_ENV_SECRETS_PATH) // nosemgrep: AIK_ts_generic_path_traversal
+    : resolve(rootDir, ".secrets");
+}
+
+// Reads and parses the secrets file.
 function readSecretsFile() {
-  const fullPath = resolve(rootDir, ".secrets");
+  const fullPath = secretsFilePath();
   if (!existsSync(fullPath)) return {};
-  return parseEnvContent(readFileSync(fullPath, "utf-8"));
+  return parseEnvContent(readFileSync(fullPath, "utf-8")); // nosemgrep: AIK_ts_generic_path_traversal
 }
 
 const SECRET_RE = /(?<!\$)\$secret:([A-Z][A-Z0-9_]*)/g;
@@ -160,7 +177,7 @@ export function loadEnv(targetEnv) {
         }
       }
     } else {
-      if (!existsSync(resolve(rootDir, ".secrets"))) {
+      if (!existsSync(secretsFilePath())) {
         throw new Error("Missing .secrets file. Run pnpm sync-secrets.");
       }
       resolveSecrets(vars, readSecretsFile());

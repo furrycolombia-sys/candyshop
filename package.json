@@ -56,7 +56,8 @@
     "test:db": "node scripts/test-db.mjs",
     "test:inventory": "node scripts/test-inventory.mjs",
     "test:inventory:diff": "bash scripts/test-inventory-diff.sh",
-    "check:migrations": "node scripts/check-migration-edits.mjs"
+    "check:migrations": "node scripts/check-migration-edits.mjs",
+    "check:source-bytes": "node scripts/check-source-bytes.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
