@@ -31,6 +31,7 @@ if (!CLERK_SECRET_KEY)
 
 const AUTH_FILE = "e2e/.auth/session.json";
 const USER_FILE = path.join(path.dirname(AUTH_FILE), "user.json");
+const PRODUCT_FILE = path.join(path.dirname(AUTH_FILE), "product.json");
 const { store: STORE_URL, auth: AUTH_URL } = resolveE2EAppUrls();
 
 setup("authenticate", async ({ page }) => {
@@ -127,6 +128,41 @@ setup("authenticate", async ({ page }) => {
     USER_FILE,
     JSON.stringify({ id: profile.id, email, clerkUserId: clerkUser.id }),
   );
+
+  // ── A product for the specs that need one ──────────────────────────────
+  //
+  // Two specs were skipping for want of one: product-detail-seller-card and
+  // the product-detail case in accessibility.spec.ts. An annotated skip is
+  // honest, but it is still coverage that reports itself as absent every run
+  // and that nobody acts on, so quality-gates.md recorded seeding as the
+  // durable fix. This is it.
+  //
+  // Owned by the throwaway user, so it is this run's product and not shared
+  // state another spec can change underneath. Removed in auth.teardown.ts --
+  // the local Docker stack is ephemeral, but CI reuses one database across
+  // the apps' projects, so leaving rows behind would accumulate.
+  // slug is unique, so this uses the whole Clerk id rather than a suffix:
+  // a teardown that failed once would otherwise leave a row that collides
+  // with the next run's insert and fails setup for an unrelated reason.
+  const productSlug = `e2e-product-${clerkUser.id.replace(/[^a-zA-Z0-9]/g, "").toLowerCase()}`;
+  const { data: seededProduct, error: productError } = await supabaseAdmin
+    .from("products")
+    .insert({
+      slug: productSlug,
+      name_en: "E2E Test Product",
+      name_es: "Producto de Prueba E2E",
+      type: "merch",
+      price: 10000,
+      currency: "COP",
+      seller_id: profile.id,
+      is_active: true,
+    })
+    .select("id, slug")
+    .single();
+  if (productError || !seededProduct)
+    throw new Error(`Failed to seed the E2E product: ${productError?.message}`);
+
+  fs.writeFileSync(PRODUCT_FILE, JSON.stringify(seededProduct));
 
   // NOTE: Do NOT delete the Clerk user or the profile HERE, in this file.
   // Clerk's client validates the session against its own API on every page
