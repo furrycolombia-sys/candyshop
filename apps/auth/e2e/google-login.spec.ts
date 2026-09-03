@@ -119,7 +119,6 @@ async function expectAuthenticatedAcrossApps(
 ) {
   for (const app of APP_CHECKS) {
     await page.goto(app.url);
-    await page.waitForLoadState("networkidle", { timeout: 20000 });
     await expect(
       page,
       `${app.name} should not bounce back to login`,
@@ -166,7 +165,6 @@ test("Google OAuth login flow", async ({ page }) => {
   await expect(page.getByTestId("login-google")).toBeVisible();
   console.log("[e2e] Login page loaded");
 
-  await page.waitForTimeout(1000);
   await page.getByTestId("login-google").click();
   console.log("[e2e] Clicked Google");
 
@@ -207,7 +205,6 @@ test("Google OAuth login flow", async ({ page }) => {
       .first();
     await nextBtn.click();
     console.log("[e2e] Submitted password");
-    await page.waitForTimeout(3000);
   }
 
   await page.waitForURL(

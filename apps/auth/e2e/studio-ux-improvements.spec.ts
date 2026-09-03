@@ -102,7 +102,6 @@ test.describe.serial("Studio UX Improvements", { tag: "@ux" }, () => {
     const desktopThumbs = page.getByTestId("image-gallery-thumbs");
     const addImageBtn = desktopThumbs.getByTestId("image-thumb-add");
     await addImageBtn.click();
-    await page.waitForTimeout(MUTATION_WAIT_MS);
 
     // Fill first image URL
     const urlInput = page.getByTestId("image-edit-url");
@@ -117,7 +116,6 @@ test.describe.serial("Studio UX Improvements", { tag: "@ux" }, () => {
 
     // Add second image
     await addImageBtn.click();
-    await page.waitForTimeout(MUTATION_WAIT_MS);
 
     const urlInput2 = page.getByTestId("image-edit-url");
     await expect(urlInput2).toBeVisible({ timeout: ELEMENT_TIMEOUT_MS });
@@ -156,7 +154,6 @@ test.describe.serial("Studio UX Improvements", { tag: "@ux" }, () => {
 
     // Navigate to edit the product
     await page.goto(`${APP_URLS.STUDIO}/en/products/${productId}`);
-    await page.waitForLoadState("networkidle");
     await expect(page.getByTestId("inline-image-carousel")).toBeVisible({
       timeout: ELEMENT_TIMEOUT_MS,
     });
@@ -177,7 +174,6 @@ test.describe.serial("Studio UX Improvements", { tag: "@ux" }, () => {
     const coverBtn1 = desktopThumbs.getByTestId("image-thumb-cover-1");
     await expect(coverBtn1).toBeVisible({ timeout: ELEMENT_TIMEOUT_MS });
     await coverBtn1.click();
-    await page.waitForTimeout(MUTATION_WAIT_MS);
     await snap(page, "cover-set-on-second-image");
 
     // Verify the star on the second thumbnail is filled (yellow)
@@ -215,7 +211,6 @@ test.describe.serial("Studio UX Improvements", { tag: "@ux" }, () => {
   }) => {
     await injectSession(context, seller);
     await page.goto(`${APP_URLS.STUDIO}/en`);
-    await page.waitForLoadState("networkidle");
     await expect(page.getByTestId("product-table")).toBeVisible({
       timeout: ELEMENT_TIMEOUT_MS,
     });
@@ -251,7 +246,6 @@ test.describe.serial("Studio UX Improvements", { tag: "@ux" }, () => {
     // Search for the delegate user by email
     const searchInput = page.getByTestId("delegate-search-input");
     await searchInput.fill(delegate.email);
-    await page.waitForTimeout(DEBOUNCE_WAIT_MS);
     await snap(page, "delegate-search");
 
     // Select the delegate from search results
@@ -267,7 +261,6 @@ test.describe.serial("Studio UX Improvements", { tag: "@ux" }, () => {
 
     // Submit
     await page.getByTestId("delegate-add-submit").click();
-    await page.waitForTimeout(MUTATION_WAIT_MS);
     await snap(page, "delegate-added");
 
     // Wait for the delegate to appear in the list (query invalidation)
@@ -279,7 +272,6 @@ test.describe.serial("Studio UX Improvements", { tag: "@ux" }, () => {
 
     // Navigate back to product table
     await page.goto(`${APP_URLS.STUDIO}/en`);
-    await page.waitForLoadState("networkidle");
     await expect(page.getByTestId("product-table")).toBeVisible({
       timeout: ELEMENT_TIMEOUT_MS,
     });
@@ -309,7 +301,6 @@ test.describe.serial("Studio UX Improvements", { tag: "@ux" }, () => {
 
     // Navigate to edit the product
     await page.goto(`${APP_URLS.STUDIO}/en/products/${productId}`);
-    await page.waitForLoadState("networkidle");
     await expect(page.getByTestId("inline-image-carousel")).toBeVisible({
       timeout: ELEMENT_TIMEOUT_MS,
     });

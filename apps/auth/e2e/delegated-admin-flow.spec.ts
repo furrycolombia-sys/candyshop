@@ -101,7 +101,6 @@ test.describe.serial("Delegated admin purchase flow", () => {
   ): Promise<string> {
     await injectSession(context, user);
     await page.goto(`${APP_URLS.STUDIO}/en`);
-    await page.waitForLoadState("networkidle");
     // Wait for permissions to load — page renders null while isLoading=true
     await expect(page.getByTestId("new-product-button")).toBeVisible({
       timeout: LONG_OPERATION_TIMEOUT_MS,
@@ -109,7 +108,6 @@ test.describe.serial("Delegated admin purchase flow", () => {
     await snap(page, `${snapPrefix}-product-list`);
 
     await page.getByTestId("new-product-button").click();
-    await page.waitForLoadState("networkidle");
 
     const nameField = page.getByTestId("inline-text-en-name_en");
     await nameField.click();
@@ -149,7 +147,6 @@ test.describe.serial("Delegated admin purchase flow", () => {
   ) {
     await injectSession(context, user);
     await page.goto(`${APP_URLS.PAYMENTS}/en/payment-methods`);
-    await page.waitForLoadState("networkidle");
 
     await page.getByTestId("add-payment-method-button").click();
 
@@ -199,7 +196,6 @@ test.describe.serial("Delegated admin purchase flow", () => {
 
     // Save the payment method and wait for the mutation to complete
     await page.getByTestId("payment-method-save").click();
-    await page.waitForTimeout(MUTATION_WAIT_MS);
 
     await expect(page.getByTestId("payment-methods-page")).toBeVisible({
       timeout: ELEMENT_TIMEOUT_MS,
@@ -243,23 +239,19 @@ test.describe.serial("Delegated admin purchase flow", () => {
     await injectSession(context, buyer);
 
     await page.goto(`${APP_URLS.STORE}/en`);
-    await page.waitForLoadState("networkidle");
 
     // Search for the product
     await expect(page.getByTestId("search-bar-input")).toBeVisible({
       timeout: ELEMENT_TIMEOUT_MS,
     });
     await page.getByTestId("search-bar-input").fill("E2E Delegated Product");
-    await page.waitForTimeout(DEBOUNCE_WAIT_MS);
     await snap(page, "buyer-search-product");
 
     const card = page.getByTestId("product-card-link").first();
     await expect(card).toBeVisible({ timeout: ELEMENT_TIMEOUT_MS });
     await card.click();
-    await page.waitForLoadState("networkidle");
 
     await page.getByTestId("hero-add-to-cart").click();
-    await page.waitForTimeout(MUTATION_WAIT_MS);
     await snap(page, "buyer-added-to-cart");
 
     // Open cart and checkout
@@ -289,7 +281,6 @@ test.describe.serial("Delegated admin purchase flow", () => {
       )
       .toBeGreaterThan(1);
     await methodSelect.selectOption({ index: 1 });
-    await page.waitForTimeout(MUTATION_WAIT_MS);
     await snap(page, "buyer-method-selected");
 
     // Fill form field
@@ -311,7 +302,6 @@ test.describe.serial("Delegated admin purchase flow", () => {
 
     const fileInput = page.getByTestId("receipt-file-input");
     await fileInput.setInputFiles(RECEIPT_FIXTURE);
-    await page.waitForTimeout(MUTATION_WAIT_MS);
 
     const receiptPreview = page.getByTestId("receipt-preview");
     await expect(receiptPreview).toBeVisible({
@@ -331,7 +321,6 @@ test.describe.serial("Delegated admin purchase flow", () => {
 
     // Verify order is pending on purchases page
     await page.goto(`${APP_URLS.PAYMENTS}/en/purchases`);
-    await page.waitForLoadState("networkidle");
 
     const pendingBadge = page.getByTestId("order-status-pending_verification");
     await expect(pendingBadge.first()).toBeVisible({
@@ -348,7 +337,6 @@ test.describe.serial("Delegated admin purchase flow", () => {
   }) => {
     await injectSession(context, seller);
     await page.goto(`${APP_URLS.STUDIO}/en/products/${productId}/delegates`);
-    await page.waitForLoadState("networkidle");
 
     await expect(page.getByTestId("product-delegates-page")).toBeVisible({
       timeout: ELEMENT_TIMEOUT_MS,
@@ -358,7 +346,6 @@ test.describe.serial("Delegated admin purchase flow", () => {
     // Search for delegate by email
     const searchInput = page.getByTestId("delegate-search-input");
     await searchInput.fill(delegate.email);
-    await page.waitForTimeout(DEBOUNCE_WAIT_MS);
     await snap(page, "seller-delegate-search");
 
     // Select the delegate from search results
@@ -374,12 +361,10 @@ test.describe.serial("Delegated admin purchase flow", () => {
 
     // Submit
     await page.getByTestId("delegate-add-submit").click();
-    await page.waitForTimeout(MUTATION_WAIT_MS);
     await snap(page, "seller-delegate-added");
 
     // Verify delegate appears in the list
     await page.reload();
-    await page.waitForLoadState("networkidle");
 
     const delegateItem = page.getByTestId(`delegate-item-${delegate.userId}`);
     await expect(delegateItem).toBeVisible({ timeout: ELEMENT_TIMEOUT_MS });
@@ -394,7 +379,6 @@ test.describe.serial("Delegated admin purchase flow", () => {
   }) => {
     await injectSession(context, delegate);
     await page.goto(`${APP_URLS.PAYMENTS}/en/assigned`);
-    await page.waitForLoadState("networkidle");
 
     await expect(page.getByTestId("assigned-orders-page")).toBeVisible({
       timeout: ELEMENT_TIMEOUT_MS,
@@ -436,12 +420,10 @@ test.describe.serial("Delegated admin purchase flow", () => {
 
     // Submit the note
     await page.getByTestId("seller-note-submit").click();
-    await page.waitForTimeout(MUTATION_WAIT_MS);
     await snap(page, "delegate-proof-requested");
 
     // Reload and verify the order is still visible (evidence_requested is actionable)
     await page.reload();
-    await page.waitForLoadState("networkidle");
 
     await expect(page.getByTestId("assigned-orders-list")).toBeVisible({
       timeout: ELEMENT_TIMEOUT_MS,
@@ -460,7 +442,6 @@ test.describe.serial("Delegated admin purchase flow", () => {
   }) => {
     await injectSession(context, buyer);
     await page.goto(`${APP_URLS.PAYMENTS}/en/purchases`);
-    await page.waitForLoadState("networkidle");
 
     // Verify order shows evidence_requested status
     const evidenceBadge = page.getByTestId("order-status-evidence_requested");
@@ -485,17 +466,14 @@ test.describe.serial("Delegated admin purchase flow", () => {
     // Upload a new receipt
     const resubmitFileInput = resubmitForm.locator('input[type="file"]');
     await resubmitFileInput.setInputFiles(RECEIPT_FIXTURE);
-    await page.waitForTimeout(MUTATION_WAIT_MS);
     await snap(page, "buyer-resubmit-filled");
 
     // Submit resubmission
     await page.getByTestId(`resubmit-submit-${orderId}`).click();
-    await page.waitForTimeout(MUTATION_WAIT_MS);
     await snap(page, "buyer-resubmit-submitted");
 
     // Reload and verify order returns to pending_verification
     await page.reload();
-    await page.waitForLoadState("networkidle");
 
     const pendingBadge = page.getByTestId("order-status-pending_verification");
     await expect(pendingBadge.first()).toBeVisible({
@@ -512,7 +490,6 @@ test.describe.serial("Delegated admin purchase flow", () => {
   }) => {
     await injectSession(context, delegate);
     await page.goto(`${APP_URLS.PAYMENTS}/en/assigned`);
-    await page.waitForLoadState("networkidle");
 
     await expect(page.getByTestId("assigned-orders-page")).toBeVisible({
       timeout: ELEMENT_TIMEOUT_MS,
@@ -548,13 +525,11 @@ test.describe.serial("Delegated admin purchase flow", () => {
     await expect(page.getByTestId("confirm-action-panel")).toBeVisible();
     await page.getByTestId("confirm-checkbox").check();
     await page.getByTestId("confirm-action-submit").click();
-    await page.waitForTimeout(MUTATION_WAIT_MS);
     await snap(page, "delegate-order-approved");
 
     // Reload and verify order is no longer in the assigned list
     // (assigned only shows pending_verification / evidence_requested)
     await page.reload();
-    await page.waitForLoadState("networkidle");
 
     await expect(page.getByTestId("assigned-orders-empty")).toBeVisible({
       timeout: ELEMENT_TIMEOUT_MS,
@@ -567,7 +542,6 @@ test.describe.serial("Delegated admin purchase flow", () => {
   test("Phase 8: buyer sees order approved", async ({ context, page }) => {
     await injectSession(context, buyer);
     await page.goto(`${APP_URLS.PAYMENTS}/en/purchases`);
-    await page.waitForLoadState("networkidle");
 
     const approvedBadge = page.getByTestId("order-status-approved");
     await expect(approvedBadge.first()).toBeVisible({

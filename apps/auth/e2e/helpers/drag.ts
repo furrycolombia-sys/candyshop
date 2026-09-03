@@ -17,7 +17,23 @@ import type { Locator, Page } from "@playwright/test";
  * @param direction - Direction to move: "up"/"down" for vertical droppables,
  *                    "left"/"right" for horizontal droppables (e.g. cards section)
  * @param positions - Number of positions to move (default: 1)
+ *
+ * The waits below are deliberate and are not the usual "wait for the network"
+ * anti-pattern this repo removes elsewhere. @hello-pangea/dnd drives a
+ * state machine of its own between keystrokes -- lift, move, drop each run an
+ * animation and a screen-reader announcement -- and it drops keystrokes that
+ * arrive mid-transition. There is no assertion to anchor on here: the helper
+ * has no idea what the caller expects to change, so it cannot wait for it.
+ * The caller asserts the outcome instead.
+ *
+ * Replacing these with the library's own drag signals (the placeholder node
+ * it mounts while a drag is live) is plausible but unverified -- it needs the
+ * e2e suite to confirm, and a wrong guess here breaks reordering coverage
+ * silently rather than loudly. Left as-is on purpose, disabled with a reason
+ * rather than left to sit in a warning list where it reads as unexamined.
  */
+/* eslint-disable playwright/no-wait-for-timeout -- see the note above:
+   these pace a third-party drag state machine, not a network operation. */
 export async function dragAndDrop(
   page: Page,
   handle: Locator,

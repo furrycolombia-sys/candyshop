@@ -70,7 +70,7 @@ test(
       await injectSession(context, buyer);
 
       // Verify session landed (not redirected to login)
-      await page.goto(`${STORE_URL}/en`, { waitUntil: "networkidle" });
+      await page.goto(`${STORE_URL}/en`);
       expect(page.url(), "Store should not redirect to login").not.toContain(
         "/login",
       );
@@ -96,7 +96,6 @@ test(
       });
 
       await page.getByTestId("product-card-link").first().click();
-      await page.waitForLoadState("networkidle");
       await expect(page.getByTestId("product-detail-page")).toBeVisible();
       await expect(page.getByTestId("hero-section")).toBeVisible();
 

@@ -83,7 +83,6 @@ test("Discord OAuth login flow", async () => {
       // On authorize page — scroll down to reveal the accept button
       console.log("[e2e] On authorize page, scrolling to reveal button...");
       await page.mouse.wheel(0, 500);
-      await page.waitForTimeout(1000);
       // Also try scrolling inside the modal
       const modal = page
         .locator('[class*="modal"], [class*="oauth2"], [role="dialog"]')
@@ -92,7 +91,6 @@ test("Discord OAuth login flow", async () => {
         await modal.evaluate((el) => el.scrollTo(0, el.scrollHeight));
       }
       await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
-      await page.waitForTimeout(1000);
       await page.screenshot({ path: "e2e/screenshots/discord-scrolled.png" });
       await authorizeBtn.waitFor({ state: "visible", timeout: 15000 });
       firstVisible = "authorize";
@@ -134,9 +132,8 @@ test("Discord OAuth login flow", async () => {
 
     console.log("[e2e] ✓ Back on app:", page.url());
 
-    // 5. Wait for page to settle
-    await page.waitForLoadState("networkidle", { timeout: 15000 });
-    await page.waitForTimeout(2000);
+    // The account-card check below waits on its own (isVisible has a
+    // timeout), so settling here was redundant.
     await page.screenshot({ path: "e2e/screenshots/final-page.png" });
     console.log("[e2e] Final URL:", page.url());
 

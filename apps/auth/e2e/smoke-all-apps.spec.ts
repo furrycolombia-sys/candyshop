@@ -25,7 +25,6 @@ test.describe("Smoke test -- all apps", () => {
   }) => {
     expect(authenticatedPage.email).toBeTruthy();
     await page.goto(`${APPS.auth}/en`);
-    await page.waitForLoadState("networkidle");
 
     await expect(page.getByTestId("account-settings-page")).toBeVisible({
       timeout: 10000,
@@ -41,7 +40,6 @@ test.describe("Smoke test -- all apps", () => {
   test("auth app: sign out works", async ({ page, authenticatedPage }) => {
     expect(authenticatedPage.email).toBeTruthy();
     await page.goto(`${APPS.auth}/en`);
-    await page.waitForLoadState("networkidle");
 
     // Verify we are actually on the authenticated page before signing out
     await expect(page.getByTestId("account-settings-page")).toBeVisible({
@@ -68,7 +66,6 @@ test.describe("Smoke test -- all apps", () => {
 
     // First verify the session is actually working on the auth app
     await page.goto(`${APPS.auth}/en`);
-    await page.waitForLoadState("networkidle");
     await expect(page.getByTestId("nav-user-email")).toBeVisible({
       timeout: 10000,
     });
@@ -85,10 +82,13 @@ test.describe("Smoke test -- all apps", () => {
         `${appName} returned ${response?.status()} at ${url}`,
       ).toBeLessThan(400);
 
-      await page.waitForLoadState("networkidle");
-
       // Verify we actually landed on the app and didn't get redirected
-      // to a login page (which would mean the session didn't carry over)
+      // to a login page (which would mean the session didn't carry over).
+      // toHaveURL retries, so it both waits and asserts -- the settle wait
+      // it replaces was only ever making a single later snapshot likelier
+      // to be right.
+      await expect(page).not.toHaveURL(/\/login/);
+
       const currentUrl = page.url();
       expect(
         currentUrl,
