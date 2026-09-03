@@ -225,10 +225,11 @@ jobs:
       # config loading), so it's a parallel implementation that needs this
       # test to catch drift between the two.
       #
-      # Scoped to this explicit file list on purpose: vitest.config.scripts.js
-      # also picks up scripts/__tests__/load-env.test.js, which is currently
-      # failing for an unrelated reason (vite dynamic import). Widen this
-      # once that is fixed.
+      # This used to name five files explicitly, because vitest.config.scripts.js
+      # also picks up load-env.test.js and that file was failing on a vite
+      # dynamic import -- so the gate ran the subset that passed and said so.
+      # The import is fixed (vi.resetModules, which needs no dynamic specifier),
+      # and the whole config runs now: 12 files, 124 tests.
       - name: Run workflow config tests
         run: pnpm run test:workflows
 

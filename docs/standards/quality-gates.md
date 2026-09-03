@@ -517,3 +517,8 @@ The lesson is not about Playwright listeners. An arming change made a real
 failure visible, and the first instinct was to explain the failure rather than
 to check whether the thing reporting it was telling the truth. **Verify the
 attribution before debugging the accusation.**
+
+<!-- cspell:ignore intentionaly mispeled coment ungrated -->
+<!-- The four above are quoted on purpose: three are the deliberate typo
+     used to prove the cspell gate fires, and one is the real typo it
+     found. Spelling them correctly here would delete the evidence. -->

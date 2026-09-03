@@ -154,11 +154,16 @@ This project strictly follows **DRY**, **SOLID**, and **KISS** principles.
 
 ### SOLID Principles
 
-| Principle                 | Application                                         |
-| ------------------------- | --------------------------------------------------- |
-| **S**ingle Responsibility | One component/hook = one purpose                    |
-| **O**pen/Closed           | Extend via props/composition, not modification      |
-| **D**ependency Inversion  | Depend on abstractions (hooks), not implementations |
+| Principle                 | Application                                    |
+| ------------------------- | ---------------------------------------------- |
+| **S**ingle Responsibility | One component/hook = one purpose               |
+| **O**pen/Closed           | Extend via props/composition, not modification |
+
+<!-- cspell:ignore ependency -- the bold marker in **D**ependency splits the
+     word, and "ependency" is the half that is left. **S**ingle and **O**pen
+     survive the same treatment only because "ingle" and "pen" are words. -->
+
+| **D**ependency Inversion | Depend on abstractions (hooks), not implementations |
 
 ### KISS - Keep It Simple
 
