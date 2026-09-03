@@ -108,6 +108,11 @@ async function waitForAnyVisible(
       }
     }
 
+    // The poll interval of a hand-rolled race across Google's own markup,
+    // which varies by account state and locale. Playwright's .or() would
+    // express it natively, but rewriting a flow that can only be exercised
+    // against the live provider is not something a lint sweep should do blind.
+    // eslint-disable-next-line playwright/no-wait-for-timeout -- see above
     await page.waitForTimeout(500);
   }
 
@@ -119,7 +124,6 @@ async function expectAuthenticatedAcrossApps(
 ) {
   for (const app of APP_CHECKS) {
     await page.goto(app.url);
-    await page.waitForLoadState("networkidle", { timeout: 20000 });
     await expect(
       page,
       `${app.name} should not bounce back to login`,
@@ -166,7 +170,6 @@ test("Google OAuth login flow", async ({ page }) => {
   await expect(page.getByTestId("login-google")).toBeVisible();
   console.log("[e2e] Login page loaded");
 
-  await page.waitForTimeout(1000);
   await page.getByTestId("login-google").click();
   console.log("[e2e] Clicked Google");
 
@@ -207,7 +210,6 @@ test("Google OAuth login flow", async ({ page }) => {
       .first();
     await nextBtn.click();
     console.log("[e2e] Submitted password");
-    await page.waitForTimeout(3000);
   }
 
   await page.waitForURL(
@@ -217,9 +219,8 @@ test("Google OAuth login flow", async ({ page }) => {
   );
   console.log("[e2e] Back on app:", page.url());
 
-  await page.waitForLoadState("networkidle", { timeout: 15000 });
-  await page.waitForTimeout(2000);
-
+  // The account-page check below waits on its own (isVisible has a timeout),
+  // so settling here was redundant.
   const isAccountPage = await page
     .getByTestId("account-settings-page")
     .isVisible({ timeout: 5000 })

@@ -174,9 +174,7 @@ test.describe.serial("admin users export with receipts backup", () => {
   }) => {
     await injectSession(context, adminUser);
 
-    await page.goto(resolveAdminUsersUrl(), {
-      waitUntil: "networkidle",
-    });
+    await page.goto(resolveAdminUsersUrl());
     await expect(page.getByTestId("users-page")).toBeVisible({
       timeout: ELEMENT_TIMEOUT_MS,
     });

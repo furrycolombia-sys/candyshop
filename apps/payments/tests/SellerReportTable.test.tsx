@@ -47,7 +47,10 @@ function makeOrder(id: string): SellerReportOrder {
 describe("SellerReportTable", () => {
   it("shows empty state when no orders", () => {
     render(<SellerReportTable orders={[]} />);
-    expect(screen.getByText("noResults")).toBeInTheDocument();
+    // Asserted by test id, not by the translated string. The empty state had
+    // no test id at all, which is why the e2e suite could not wait for it and
+    // slept instead -- there was nothing observable to wait for.
+    expect(screen.getByTestId("seller-report-empty")).toBeInTheDocument();
   });
 
   it("renders table with orders", () => {

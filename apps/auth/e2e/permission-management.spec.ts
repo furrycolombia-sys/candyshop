@@ -67,7 +67,6 @@ async function navigateToUserDetail(
   targetUserId: string,
 ): Promise<void> {
   await page.goto(`${APP_URLS.ADMIN}/en/users/${targetUserId}`, {
-    waitUntil: "networkidle",
     timeout: NAVIGATION_TIMEOUT_MS,
   });
   await expect(page.getByTestId("user-detail-page")).toBeVisible({
@@ -144,7 +143,6 @@ async function setPermissions(
     const current = await checkbox.isChecked();
     if (current !== desired) {
       await checkbox.click();
-      await page.waitForTimeout(MUTATION_WAIT_MS);
       await waitForPermissionState(target.userId, { [permissionKey]: desired });
     }
 
@@ -493,7 +491,6 @@ test.describe.serial("Permission management", () => {
     await injectSession(context, admin);
     await navigateToUserDetail(page, target.userId);
     await page.getByTestId("template-btn-none").click();
-    await page.waitForTimeout(MUTATION_WAIT_MS);
 
     await expect(
       page.getByTestId("permission-toggle-products.read"),
@@ -524,7 +521,6 @@ test.describe.serial("Permission management", () => {
     await injectSession(context, admin);
     await navigateToUserDetail(page, target.userId);
     await page.getByTestId("template-btn-admin").click();
-    await page.waitForTimeout(MUTATION_WAIT_MS);
 
     await expect(
       page.getByTestId("permission-toggle-products.read"),

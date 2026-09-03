@@ -6,11 +6,8 @@ import { cleanupTestData } from "./helpers/cleanup";
 import { dragAndDrop } from "./helpers/drag";
 import {
   APP_URLS,
-  BULK_MUTATION_WAIT_MS,
-  DEBOUNCE_WAIT_MS,
   ELEMENT_TIMEOUT_MS,
   LONG_OPERATION_TIMEOUT_MS,
-  MUTATION_WAIT_MS,
   NAVIGATION_TIMEOUT_MS,
 } from "./helpers/constants";
 import {
@@ -83,11 +80,9 @@ test.describe.serial("Full purchase flow: two sellers, one buyer", () => {
   ) {
     await injectSession(context, seller);
     await page.goto(`${APP_URLS.STUDIO}/en`);
-    await page.waitForLoadState("networkidle");
     await snap(page, `${snapPrefix}-product-list`);
 
     await page.getByTestId("new-product-button").click();
-    await page.waitForLoadState("networkidle");
 
     const nameField = page.getByTestId("inline-text-en-name_en");
     await nameField.click();
@@ -121,7 +116,6 @@ test.describe.serial("Full purchase flow: two sellers, one buyer", () => {
   ) {
     await injectSession(context, seller);
     await page.goto(`${APP_URLS.PAYMENTS}/en/payment-methods`);
-    await page.waitForLoadState("networkidle");
 
     // New builder UX: "Add Method" instantly creates and expands inline
     await page.getByTestId("add-payment-method-button").click();
@@ -173,7 +167,6 @@ test.describe.serial("Full purchase flow: two sellers, one buyer", () => {
 
     // Save the payment method and wait for the mutation to complete
     await page.getByTestId("payment-method-save").click();
-    await page.waitForTimeout(MUTATION_WAIT_MS);
 
     await expect(page.getByTestId("payment-methods-page")).toBeVisible({
       timeout: ELEMENT_TIMEOUT_MS,
@@ -255,7 +248,6 @@ test.describe.serial("Full purchase flow: two sellers, one buyer", () => {
     async ({ context, page }) => {
       await injectSession(context, sellerA);
       await page.goto(`${APP_URLS.PAYMENTS}/en/payment-methods`);
-      await page.waitForLoadState("networkidle");
 
       // Expand the first payment method
       await page.getByTestId("payment-method-name").first().click();
@@ -353,7 +345,6 @@ test.describe.serial("Full purchase flow: two sellers, one buyer", () => {
     await injectSession(context, buyer);
 
     await page.goto(`${APP_URLS.STORE}/en`);
-    await page.waitForLoadState("networkidle");
     await snap(page, "store-catalog");
 
     // ── Add Seller A's product ──────────────────────────────────
@@ -361,38 +352,63 @@ test.describe.serial("Full purchase flow: two sellers, one buyer", () => {
       timeout: ELEMENT_TIMEOUT_MS,
     });
     await page.getByTestId("search-bar-input").fill(PRODUCT_ALPHA);
-    await page.waitForTimeout(DEBOUNCE_WAIT_MS);
     await snap(page, "store-search-alpha");
 
-    const cardA = page.getByTestId("product-card-link").first();
+    // Match the product being searched for rather than "whatever is first".
+    // The search is debounced, so straight after fill() the grid still shows
+    // the previous results -- .first() then clicks a stale card, and picking
+    // the same card twice is exactly how this test came to find one seller
+    // group where it expected two. Filtering makes the locator wait for the
+    // debounced result *and* click the right thing; the sleep it replaces did
+    // the first and never checked the second.
+    const cardA = page
+      .getByTestId("product-card-link")
+      .filter({ hasText: PRODUCT_ALPHA })
+      .first();
     await expect(cardA).toBeVisible({ timeout: ELEMENT_TIMEOUT_MS });
     await cardA.click();
-    await page.waitForLoadState("networkidle");
     await snap(page, "store-product-alpha");
 
     await page.getByTestId("hero-add-to-cart").click();
-    await page.waitForTimeout(MUTATION_WAIT_MS);
+
+    // The in-cart indicator only renders once the cart holds this product, so
+    // it is a real signal the add landed before we navigate away.
+    await expect(page.getByTestId("hero-in-cart")).toBeVisible({
+      timeout: ELEMENT_TIMEOUT_MS,
+    });
     await snap(page, "store-added-alpha");
 
     // ── Add Seller B's product ──────────────────────────────────
     await page.goto(`${APP_URLS.STORE}/en`);
-    await page.waitForLoadState("networkidle");
 
     await expect(page.getByTestId("search-bar-input")).toBeVisible({
       timeout: ELEMENT_TIMEOUT_MS,
     });
     await page.getByTestId("search-bar-input").fill(PRODUCT_BETA);
-    await page.waitForTimeout(DEBOUNCE_WAIT_MS);
     await snap(page, "store-search-beta");
 
-    const cardB = page.getByTestId("product-card-link").first();
+    // Match the product being searched for rather than "whatever is first".
+    // The search is debounced, so straight after fill() the grid still shows
+    // the previous results -- .first() then clicks a stale card, and picking
+    // the same card twice is exactly how this test came to find one seller
+    // group where it expected two. Filtering makes the locator wait for the
+    // debounced result *and* click the right thing; the sleep it replaces did
+    // the first and never checked the second.
+    const cardB = page
+      .getByTestId("product-card-link")
+      .filter({ hasText: PRODUCT_BETA })
+      .first();
     await expect(cardB).toBeVisible({ timeout: ELEMENT_TIMEOUT_MS });
     await cardB.click();
-    await page.waitForLoadState("networkidle");
     await snap(page, "store-product-beta");
 
     await page.getByTestId("hero-add-to-cart").click();
-    await page.waitForTimeout(MUTATION_WAIT_MS);
+
+    // The in-cart indicator only renders once the cart holds this product, so
+    // it is a real signal the add landed before we navigate away.
+    await expect(page.getByTestId("hero-in-cart")).toBeVisible({
+      timeout: ELEMENT_TIMEOUT_MS,
+    });
     await snap(page, "store-added-beta");
 
     // ── Open cart and verify both items ────────────────────────
@@ -442,7 +458,6 @@ test.describe.serial("Full purchase flow: two sellers, one buyer", () => {
       )
       .toBeGreaterThan(1);
     await cardASelect.selectOption({ index: 1 });
-    await page.waitForTimeout(MUTATION_WAIT_MS);
     await snap(page, "checkout-sellerA-method-selected");
 
     await expect(firstCard.getByTestId(/^display-block-/).first()).toBeVisible({
@@ -466,7 +481,6 @@ test.describe.serial("Full purchase flow: two sellers, one buyer", () => {
 
     const fileInputA = firstCard.getByTestId("receipt-file-input");
     await fileInputA.setInputFiles(RECEIPT_FIXTURE);
-    await page.waitForTimeout(MUTATION_WAIT_MS);
 
     const receiptPreviewA = firstCard.getByTestId("receipt-preview");
     await expect(receiptPreviewA).toBeVisible({
@@ -490,7 +504,6 @@ test.describe.serial("Full purchase flow: two sellers, one buyer", () => {
       )
       .toBeGreaterThan(1);
     await cardBSelect.selectOption({ index: 1 });
-    await page.waitForTimeout(MUTATION_WAIT_MS);
     await snap(page, "checkout-sellerB-method-selected");
 
     await expect(secondCard.getByTestId(/^dynamic-field-/).first()).toBeVisible(
@@ -511,7 +524,6 @@ test.describe.serial("Full purchase flow: two sellers, one buyer", () => {
 
     const fileInputB = secondCard.getByTestId("receipt-file-input");
     await fileInputB.setInputFiles(RECEIPT_FIXTURE);
-    await page.waitForTimeout(MUTATION_WAIT_MS);
 
     const receiptPreviewB = secondCard.getByTestId("receipt-preview");
     await expect(receiptPreviewB).toBeVisible({
@@ -539,7 +551,6 @@ test.describe.serial("Full purchase flow: two sellers, one buyer", () => {
   }) => {
     await injectSession(context, buyer);
     await page.goto(`${APP_URLS.PAYMENTS}/en/purchases`);
-    await page.waitForLoadState("networkidle");
 
     const pendingBadges = page.getByTestId("order-status-pending_verification");
     await expect(pendingBadges.first()).toBeVisible({
@@ -554,7 +565,6 @@ test.describe.serial("Full purchase flow: two sellers, one buyer", () => {
   test("Phase 5a: seller A approves their order", async ({ context, page }) => {
     await injectSession(context, sellerA);
     await page.goto(`${APP_URLS.PAYMENTS}/en/sales`);
-    await page.waitForLoadState("networkidle");
 
     const approveBtn = page.getByTestId(/^order-approve-/).first();
     await expect(approveBtn).toBeVisible({ timeout: ELEMENT_TIMEOUT_MS });
@@ -580,9 +590,24 @@ test.describe.serial("Full purchase flow: two sellers, one buyer", () => {
     await page.getByTestId("confirm-checkbox").check();
     await page.getByTestId("confirm-action-submit").click();
 
-    await page.waitForTimeout(BULK_MUTATION_WAIT_MS);
+    // The approve mutation invalidates the received-orders query on success,
+    // so the row's approve button disappears once the refetch lands. Waiting
+    // for that is a real signal the server accepted the write; the fixed sleep
+    // it replaces was guessing how long the write takes.
+    await expect(page.getByTestId(/^order-approve-/).first()).toBeHidden({
+      timeout: NAVIGATION_TIMEOUT_MS,
+    });
+
+    // Reload anyway, to prove it persisted rather than merely leaving the
+    // client cache -- and wait for the list to come back before asserting an
+    // absence against it, since an absence also holds on a page that has not
+    // rendered. Either the list or its empty state means the page is up.
     await page.reload();
-    await page.waitForLoadState("networkidle");
+    await expect(
+      page
+        .getByTestId("received-orders-list")
+        .or(page.getByTestId("received-orders-empty")),
+    ).toBeVisible({ timeout: NAVIGATION_TIMEOUT_MS });
 
     await expect(page.getByTestId(/^order-approve-/).first()).toBeHidden({
       timeout: NAVIGATION_TIMEOUT_MS,
@@ -595,7 +620,6 @@ test.describe.serial("Full purchase flow: two sellers, one buyer", () => {
   test("Phase 5b: seller B approves their order", async ({ context, page }) => {
     await injectSession(context, sellerB);
     await page.goto(`${APP_URLS.PAYMENTS}/en/sales`);
-    await page.waitForLoadState("networkidle");
 
     const approveBtn = page.getByTestId(/^order-approve-/).first();
     await expect(approveBtn).toBeVisible({ timeout: ELEMENT_TIMEOUT_MS });
@@ -621,9 +645,24 @@ test.describe.serial("Full purchase flow: two sellers, one buyer", () => {
     await page.getByTestId("confirm-checkbox").check();
     await page.getByTestId("confirm-action-submit").click();
 
-    await page.waitForTimeout(BULK_MUTATION_WAIT_MS);
+    // The approve mutation invalidates the received-orders query on success,
+    // so the row's approve button disappears once the refetch lands. Waiting
+    // for that is a real signal the server accepted the write; the fixed sleep
+    // it replaces was guessing how long the write takes.
+    await expect(page.getByTestId(/^order-approve-/).first()).toBeHidden({
+      timeout: NAVIGATION_TIMEOUT_MS,
+    });
+
+    // Reload anyway, to prove it persisted rather than merely leaving the
+    // client cache -- and wait for the list to come back before asserting an
+    // absence against it, since an absence also holds on a page that has not
+    // rendered. Either the list or its empty state means the page is up.
     await page.reload();
-    await page.waitForLoadState("networkidle");
+    await expect(
+      page
+        .getByTestId("received-orders-list")
+        .or(page.getByTestId("received-orders-empty")),
+    ).toBeVisible({ timeout: NAVIGATION_TIMEOUT_MS });
 
     await expect(page.getByTestId(/^order-approve-/).first()).toBeHidden({
       timeout: NAVIGATION_TIMEOUT_MS,
@@ -639,7 +678,6 @@ test.describe.serial("Full purchase flow: two sellers, one buyer", () => {
   }) => {
     await injectSession(context, buyer);
     await page.goto(`${APP_URLS.PAYMENTS}/en/purchases`);
-    await page.waitForLoadState("networkidle");
 
     const approvedBadges = page.getByTestId("order-status-approved");
     await expect(approvedBadges.first()).toBeVisible({

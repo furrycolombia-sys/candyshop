@@ -69,8 +69,11 @@ const playwrightConfig = {
     // rewrote `const href = await link.getAttribute("href")` into
     // `const href = link`, silently turning a string into a Locator and breaking
     // the three assertions below it. Typecheck caught it; review every hunk.
-    "playwright/no-networkidle": "warn", // 118 — waits on a heuristic, not a condition
-    "playwright/no-wait-for-timeout": "warn", // 96 — the main flakiness source
+    // Both were "warn" with backlogs of 118 and 96. The backlog is gone: every
+    // site either waits on the condition it actually cared about, or carries a
+    // disable naming the third-party page it cannot anchor against.
+    "playwright/no-networkidle": "error",
+    "playwright/no-wait-for-timeout": "error",
     // expect-expect is an ERROR, not a warning: a test that asserts nothing
     // passes no matter how the product behaves, so it is the one defect a test
     // suite cannot detect on its own. It reported 11 violations before this
@@ -138,12 +141,20 @@ const eslintConfig = defineConfig([
   })),
   // Override default ignores of eslint-config-next.
   globalIgnores([
-    // Default ignores of eslint-config-next:
-    ".next/**",
-    "out/**",
-    "build/**",
-    "next-env.d.ts",
+    // Default ignores of eslint-config-next, re-globbed for a monorepo. These
+    // shipped as ".next/**", which only ever matched a .next at the repo root
+    // -- and the build output lives at apps/<app>/.next. `eslint .` was
+    // linting 212 files of minified output per app, ~28k messages each.
+    // `pnpm lint` never showed it because it lists src directories explicitly,
+    // so the gate passed by not looking. "**/node_modules/**" below was
+    // already correct, which is what the others should have looked like.
+    "**/.next/**",
+    "**/out/**",
+    "**/build/**",
+    "**/next-env.d.ts",
     "**/node_modules/**",
+    // Git-ignored agent scratch: throwaway probe scripts, not shipped code.
+    ".superpowers/**",
     // Frozen snapshot of the pre-rework tests. Linting a read-only copy would
     // only ever demand edits to a file that is meant to stay identical to what
     // it is a copy of. Deleted when the rework is verified complete.

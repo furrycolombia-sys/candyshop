@@ -7,10 +7,8 @@ import { expect, test } from "@playwright/test";
 import { cleanupTestData } from "./helpers/cleanup";
 import {
   APP_URLS,
-  DEBOUNCE_WAIT_MS,
   ELEMENT_TIMEOUT_MS,
   LONG_OPERATION_TIMEOUT_MS,
-  MUTATION_WAIT_MS,
   NAVIGATION_TIMEOUT_MS,
 } from "./helpers/constants";
 import {
@@ -69,10 +67,8 @@ test.describe.serial("Receipt + reference number payment flow", () => {
   }) => {
     await injectSession(context, seller);
     await page.goto(`${APP_URLS.STUDIO}/en`);
-    await page.waitForLoadState("networkidle");
 
     await page.getByTestId("new-product-button").click();
-    await page.waitForLoadState("networkidle");
 
     const nameField = page.getByTestId("inline-text-en-name_en");
     await nameField.click();
@@ -100,7 +96,6 @@ test.describe.serial("Receipt + reference number payment flow", () => {
   }) => {
     await injectSession(context, seller);
     await page.goto(`${APP_URLS.PAYMENTS}/en/payment-methods`);
-    await page.waitForLoadState("networkidle");
 
     await page.getByTestId("add-payment-method-button").click();
 
@@ -152,7 +147,6 @@ test.describe.serial("Receipt + reference number payment flow", () => {
     await snap(page, "seller-method-configured");
 
     await page.getByTestId("payment-method-save").click();
-    await page.waitForTimeout(MUTATION_WAIT_MS);
 
     await expect(page.getByTestId("payment-methods-page")).toBeVisible({
       timeout: ELEMENT_TIMEOUT_MS,
@@ -170,21 +164,25 @@ test.describe.serial("Receipt + reference number payment flow", () => {
 
     // Find and add product to cart
     await page.goto(`${APP_URLS.STORE}/en`);
-    await page.waitForLoadState("networkidle");
 
     await expect(page.getByTestId("search-bar-input")).toBeVisible({
       timeout: ELEMENT_TIMEOUT_MS,
     });
     await page.getByTestId("search-bar-input").fill(PRODUCT_NAME);
-    await page.waitForTimeout(DEBOUNCE_WAIT_MS);
 
-    const productCard = page.getByTestId("product-card-link").first();
+    // Filter by the product just searched for rather than taking whatever is
+    // first. The search is debounced, so straight after fill() the grid can
+    // still be showing the previous results, and .first() would click a stale
+    // card. This bit full-purchase-flow, which added the same product twice
+    // and then found one seller group where it expected two.
+    const productCard = page
+      .getByTestId("product-card-link")
+      .filter({ hasText: PRODUCT_NAME })
+      .first();
     await expect(productCard).toBeVisible({ timeout: ELEMENT_TIMEOUT_MS });
     await productCard.click();
-    await page.waitForLoadState("networkidle");
 
     await page.getByTestId("hero-add-to-cart").click();
-    await page.waitForTimeout(MUTATION_WAIT_MS);
     await snap(page, "buyer-product-added");
 
     // Open cart and proceed to checkout
@@ -218,7 +216,6 @@ test.describe.serial("Receipt + reference number payment flow", () => {
       )
       .toBeGreaterThan(1);
     await methodSelect.selectOption({ index: 1 });
-    await page.waitForTimeout(MUTATION_WAIT_MS);
     await snap(page, "buyer-method-selected");
 
     // Enter the bank reference / transfer number
@@ -230,7 +227,6 @@ test.describe.serial("Receipt + reference number payment flow", () => {
     // Upload the receipt image via the hidden file input
     const fileInput = sellerCard.getByTestId("receipt-file-input");
     await fileInput.setInputFiles(RECEIPT_FIXTURE);
-    await page.waitForTimeout(MUTATION_WAIT_MS);
 
     // Verify receipt preview is visible — confirms the image was selected
     const receiptPreview = sellerCard.getByTestId("receipt-preview");
@@ -260,7 +256,6 @@ test.describe.serial("Receipt + reference number payment flow", () => {
   }) => {
     await injectSession(context, buyer);
     await page.goto(`${APP_URLS.PAYMENTS}/en/purchases`);
-    await page.waitForLoadState("networkidle");
 
     await expect(
       page.getByTestId("order-status-pending_verification").first(),
@@ -276,7 +271,6 @@ test.describe.serial("Receipt + reference number payment flow", () => {
   }) => {
     await injectSession(context, seller);
     await page.goto(`${APP_URLS.PAYMENTS}/en/sales`);
-    await page.waitForLoadState("networkidle");
 
     // Receipt viewer container must be present on the order card
     const receiptViewer = page.getByTestId("receipt-viewer").first();
@@ -332,9 +326,24 @@ test.describe.serial("Receipt + reference number payment flow", () => {
     await page.getByTestId("confirm-checkbox").check();
     await page.getByTestId("confirm-action-submit").click();
 
-    await page.waitForTimeout(MUTATION_WAIT_MS);
+    // The approve mutation invalidates the received-orders query on success,
+    // so the row's approve button disappears once the refetch lands. Waiting
+    // for that is a real signal the server accepted the write; the fixed sleep
+    // it replaces was guessing how long the write takes.
+    await expect(page.getByTestId(/^order-approve-/).first()).toBeHidden({
+      timeout: NAVIGATION_TIMEOUT_MS,
+    });
+
+    // Reload anyway, to prove it persisted rather than merely leaving the
+    // client cache -- and wait for the list to come back before asserting an
+    // absence against it, since an absence also holds on a page that has not
+    // rendered. Either the list or its empty state means the page is up.
     await page.reload();
-    await page.waitForLoadState("networkidle");
+    await expect(
+      page
+        .getByTestId("received-orders-list")
+        .or(page.getByTestId("received-orders-empty")),
+    ).toBeVisible({ timeout: NAVIGATION_TIMEOUT_MS });
 
     await expect(page.getByTestId(/^order-approve-/).first()).toBeHidden({
       timeout: NAVIGATION_TIMEOUT_MS,
@@ -347,7 +356,6 @@ test.describe.serial("Receipt + reference number payment flow", () => {
   test("Phase 6: buyer sees order approved", async ({ context, page }) => {
     await injectSession(context, buyer);
     await page.goto(`${APP_URLS.PAYMENTS}/en/purchases`);
-    await page.waitForLoadState("networkidle");
 
     await expect(page.getByTestId("order-status-approved").first()).toBeVisible(
       { timeout: ELEMENT_TIMEOUT_MS },

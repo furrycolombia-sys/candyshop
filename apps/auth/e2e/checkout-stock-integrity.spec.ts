@@ -106,7 +106,6 @@ test.describe.serial("Checkout stock integrity", () => {
     ]);
 
     await page.goto(`${APP_URLS.PAYMENTS}/en/checkout`);
-    await page.waitForLoadState("networkidle");
 
     await expect(page.getByTestId(/^seller-checkout-/).first()).toBeVisible({
       timeout: ELEMENT_TIMEOUT_MS,

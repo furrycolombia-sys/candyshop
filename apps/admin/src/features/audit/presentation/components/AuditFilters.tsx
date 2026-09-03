@@ -56,6 +56,7 @@ export function AuditFilters({
         <button
           type="button"
           onClick={() => onActionChange("")}
+          aria-pressed={actionType === ""}
           className={getActionButtonClass(actionType === "")}
           {...tid("audit-filter-all")}
         >
@@ -66,6 +67,7 @@ export function AuditFilters({
             type="button"
             key={type}
             onClick={() => onActionChange(type)}
+            aria-pressed={actionType === type}
             className={getActionButtonClass(actionType === type)}
             {...tid(`audit-filter-${type.toLowerCase()}`)}
           >

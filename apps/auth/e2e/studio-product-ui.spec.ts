@@ -242,8 +242,6 @@ test.describe.serial(
 
       // Open the pre-seeded product in edit mode
       await page.goto(`${APP_URLS.STUDIO}/en/products/${productId}`);
-      await page.waitForLoadState("networkidle");
-      await page.waitForTimeout(MUTATION_WAIT_MS);
 
       // Verify the initial seeded section order: cards(0), accordion(1), two-column(2), gallery(3)
       await expect(page.getByTestId("section-type-0")).toHaveValue("cards");
@@ -261,7 +259,6 @@ test.describe.serial(
         .locator("[data-rfd-drag-handle-draggable-id]")
         .first();
       await dragAndDrop(page, sectionHandle0, "down", 1);
-      await page.waitForTimeout(MUTATION_WAIT_MS);
 
       await expect(page.getByTestId("section-type-0")).toHaveValue("accordion");
       await expect(page.getByTestId("section-type-1")).toHaveValue("cards");
@@ -276,8 +273,6 @@ test.describe.serial(
 
       // Re-open and verify the new order persisted
       await page.goto(`${APP_URLS.STUDIO}/en/products/${productId}`);
-      await page.waitForLoadState("networkidle");
-      await page.waitForTimeout(MUTATION_WAIT_MS);
 
       await snap(page, "sections-persistence-check");
 
@@ -302,8 +297,6 @@ test.describe.serial(
       await injectSession(context, seller);
 
       await page.goto(`${APP_URLS.STUDIO}/en/products/${productId}`);
-      await page.waitForLoadState("networkidle");
-      await page.waitForTimeout(MUTATION_WAIT_MS);
 
       // Scope to desktop gallery to avoid strict-mode collision with mobile gallery
       const gallery = page.getByTestId("image-gallery-thumbs");
@@ -327,7 +320,6 @@ test.describe.serial(
 
       // Change cover to image 1
       await gallery.getByTestId("image-thumb-cover-1").click();
-      await page.waitForTimeout(DEBOUNCE_WAIT_MS);
       await snap(page, "cover-changed-to-1");
 
       await expect(gallery.getByTestId("image-thumb-cover-1")).toHaveAttribute(
@@ -341,7 +333,6 @@ test.describe.serial(
 
       // Revert cover back to image 0
       await gallery.getByTestId("image-thumb-cover-0").click();
-      await page.waitForTimeout(DEBOUNCE_WAIT_MS);
       await snap(page, "cover-reverted-to-0");
 
       await expect(gallery.getByTestId("image-thumb-cover-0")).toHaveAttribute(
@@ -373,7 +364,6 @@ test.describe.serial(
       await injectSession(context, seller);
 
       await page.goto(`${APP_URLS.STUDIO}/en`);
-      await page.waitForLoadState("networkidle");
 
       const rows = page.locator(`[data-testid^="product-row-"]`);
       await rows
@@ -390,7 +380,6 @@ test.describe.serial(
         .locator("[data-rfd-drag-handle-draggable-id]")
         .first();
       await dragAndDrop(page, handle, "down", 1);
-      await page.waitForTimeout(MUTATION_WAIT_MS);
       await snap(page, "product-list-after-reorder");
 
       const newFirstRowId = await rows.first().getAttribute("data-testid");
@@ -429,8 +418,6 @@ test.describe.serial(
       // ── Phase 1: open editor, confirm current order, drag-reorder ─────────────
 
       await page.goto(`${APP_URLS.STUDIO}/en/products/${productId}`);
-      await page.waitForLoadState("networkidle");
-      await page.waitForTimeout(MUTATION_WAIT_MS);
 
       // Post-test-1 section layout: accordion(0), cards(1), two-column(2), gallery(3)
       await expect(page.getByTestId("section-item-title-0-0")).toHaveValue(
@@ -462,19 +449,15 @@ test.describe.serial(
 
       // Accordion (slot 0) — vertical droppable: move item 0 → position 1
       await dragAndDrop(page, itemDragHandle(page, 0, 0), "down", 1);
-      await page.waitForTimeout(MUTATION_WAIT_MS);
 
       // Cards (slot 1) — horizontal droppable: move item 0 → position 1
       await dragAndDrop(page, itemDragHandle(page, 1, 0), "right", 1);
-      await page.waitForTimeout(MUTATION_WAIT_MS);
 
       // Two-column (slot 2) — vertical droppable: move item 0 → position 1
       await dragAndDrop(page, itemDragHandle(page, 2, 0), "down", 1);
-      await page.waitForTimeout(MUTATION_WAIT_MS);
 
       // Gallery (slot 3) — vertical droppable: move item 0 → position 1
       await dragAndDrop(page, itemDragHandle(page, 3, 0), "down", 1);
-      await page.waitForTimeout(MUTATION_WAIT_MS);
 
       await snap(page, "section-items-after-reorder");
 
@@ -514,8 +497,6 @@ test.describe.serial(
       // ── Phase 2: re-open and verify the order persisted ───────────────────────
 
       await page.goto(`${APP_URLS.STUDIO}/en/products/${productId}`);
-      await page.waitForLoadState("networkidle");
-      await page.waitForTimeout(MUTATION_WAIT_MS);
 
       await snap(page, "section-items-persistence-check");
 
@@ -564,8 +545,6 @@ test.describe.serial(
       // ── Phase 1: open editor, capture initial srcs, drag-reorder ─────────────
 
       await page.goto(`${APP_URLS.STUDIO}/en/products/${productId}`);
-      await page.waitForLoadState("networkidle");
-      await page.waitForTimeout(MUTATION_WAIT_MS);
 
       const gallery = page.getByTestId("image-gallery-thumbs");
 
@@ -597,7 +576,6 @@ test.describe.serial(
         .locator("[data-rfd-drag-handle-draggable-id]")
         .first();
       await dragAndDrop(page, thumbHandle, "down", 1);
-      await page.waitForTimeout(MUTATION_WAIT_MS);
 
       await snap(page, "carousel-after-reorder");
 
@@ -627,10 +605,12 @@ test.describe.serial(
       // ── Phase 2: re-open and verify the order persisted ───────────────────────
 
       await page.goto(`${APP_URLS.STUDIO}/en/products/${productId}`);
-      await page.waitForLoadState("networkidle");
-      await page.waitForTimeout(MUTATION_WAIT_MS);
 
       const galleryReload = page.getByTestId("image-gallery-thumbs");
+      // Reading src attributes below is a one-shot read, so the gallery has to
+      // be there first. Waiting for it replaces both a settle wait and a fixed
+      // sleep, and says what it is waiting for.
+      await expect(galleryReload).toBeVisible({ timeout: ELEMENT_TIMEOUT_MS });
 
       await snap(page, "carousel-persistence-check");
 

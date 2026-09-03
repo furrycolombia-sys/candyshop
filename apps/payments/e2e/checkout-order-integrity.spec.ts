@@ -2,11 +2,7 @@ import type { BrowserContext } from "@playwright/test";
 import { expect, test } from "@playwright/test";
 
 import { cleanupTestData } from "../../auth/e2e/helpers/cleanup";
-import {
-  APP_URLS,
-  DEBOUNCE_WAIT_MS,
-  ELEMENT_TIMEOUT_MS,
-} from "../../auth/e2e/helpers/constants";
+import { APP_URLS, ELEMENT_TIMEOUT_MS } from "../../auth/e2e/helpers/constants";
 import {
   BUYER_PERMISSIONS,
   SELLER_PERMISSIONS,
@@ -145,9 +141,7 @@ test.describe.serial("Checkout order creation integrity", () => {
     await injectSession(context, buyer);
     await injectCartCookie(context, seller.userId, productId);
 
-    await page.goto(`${PAYMENTS_URL}/en/checkout`, {
-      waitUntil: "networkidle",
-    });
+    await page.goto(`${PAYMENTS_URL}/en/checkout`);
 
     await expect(
       page.getByTestId(`seller-checkout-${seller.userId}`),
@@ -166,9 +160,7 @@ test.describe.serial("Checkout order creation integrity", () => {
     await injectSession(context, buyer);
     await injectCartCookie(context, seller.userId, productId);
 
-    await page.goto(`${PAYMENTS_URL}/en/checkout`, {
-      waitUntil: "networkidle",
-    });
+    await page.goto(`${PAYMENTS_URL}/en/checkout`);
 
     const sellerCard = page.getByTestId(`seller-checkout-${seller.userId}`);
     await expect(sellerCard).toBeVisible({ timeout: ELEMENT_TIMEOUT_MS });
@@ -177,7 +169,6 @@ test.describe.serial("Checkout order creation integrity", () => {
     await sellerCard
       .getByTestId("payment-method-select")
       .selectOption({ index: 1 });
-    await page.waitForTimeout(DEBOUNCE_WAIT_MS);
 
     // Fill the transfer reference field
     await expect(
@@ -202,9 +193,7 @@ test.describe.serial("Checkout order creation integrity", () => {
     await injectSession(context, buyer);
     await injectCartCookie(context, seller.userId, productId);
 
-    await page.goto(`${PAYMENTS_URL}/en/checkout`, {
-      waitUntil: "networkidle",
-    });
+    await page.goto(`${PAYMENTS_URL}/en/checkout`);
 
     const sellerCard = page.getByTestId(`seller-checkout-${seller.userId}`);
     await expect(sellerCard).toBeVisible({ timeout: ELEMENT_TIMEOUT_MS });
@@ -213,7 +202,6 @@ test.describe.serial("Checkout order creation integrity", () => {
     await sellerCard
       .getByTestId("payment-method-select")
       .selectOption({ index: 1 });
-    await page.waitForTimeout(DEBOUNCE_WAIT_MS);
 
     // Fill the transfer reference field
     await expect(
