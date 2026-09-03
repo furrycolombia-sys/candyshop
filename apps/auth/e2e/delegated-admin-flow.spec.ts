@@ -361,12 +361,20 @@ test.describe.serial("Delegated admin purchase flow", () => {
 
     // Submit
     await page.getByTestId("delegate-add-submit").click();
+
+    // Wait for the mutation's own refetch before reloading. The mutation
+    // invalidates its query on success, so this is the point at which the
+    // server is known to have accepted the write; reloading before it races
+    // the commit and reads stale data. This replaces a fixed sleep -- removing
+    // that sleep without putting this in its place is what broke the
+    // two-seller cart assertion in full-purchase-flow.
+    const delegateItem = page.getByTestId(`delegate-item-${delegate.userId}`);
+    await expect(delegateItem).toBeVisible({ timeout: ELEMENT_TIMEOUT_MS });
     await snap(page, "seller-delegate-added");
 
-    // Verify delegate appears in the list
+    // Reload to prove it persisted rather than merely leaving the cache.
     await page.reload();
 
-    const delegateItem = page.getByTestId(`delegate-item-${delegate.userId}`);
     await expect(delegateItem).toBeVisible({ timeout: ELEMENT_TIMEOUT_MS });
     await snap(page, "seller-delegate-in-list");
   });
@@ -420,6 +428,16 @@ test.describe.serial("Delegated admin purchase flow", () => {
 
     // Submit the note
     await page.getByTestId("seller-note-submit").click();
+
+    // Wait for the mutation's own refetch before reloading. The mutation
+    // invalidates its query on success, so this is the point at which the
+    // server is known to have accepted the write; reloading before it races
+    // the commit and reads stale data. This replaces a fixed sleep -- removing
+    // that sleep without putting this in its place is what broke the
+    // two-seller cart assertion in full-purchase-flow.
+    await expect(page.getByTestId("assigned-orders-list")).toBeVisible({
+      timeout: ELEMENT_TIMEOUT_MS,
+    });
     await snap(page, "delegate-proof-requested");
 
     // Reload and verify the order is still visible (evidence_requested is actionable)
@@ -470,12 +488,19 @@ test.describe.serial("Delegated admin purchase flow", () => {
 
     // Submit resubmission
     await page.getByTestId(`resubmit-submit-${orderId}`).click();
+
+    // Wait for the mutation's own refetch before reloading -- the status badge
+    // flipping is the point at which the server is known to have accepted the
+    // resubmission. Reloading first races the commit.
+    const pendingBadge = page.getByTestId("order-status-pending_verification");
+    await expect(pendingBadge.first()).toBeVisible({
+      timeout: ELEMENT_TIMEOUT_MS,
+    });
     await snap(page, "buyer-resubmit-submitted");
 
-    // Reload and verify order returns to pending_verification
+    // Reload to prove it persisted rather than merely leaving the cache.
     await page.reload();
 
-    const pendingBadge = page.getByTestId("order-status-pending_verification");
     await expect(pendingBadge.first()).toBeVisible({
       timeout: ELEMENT_TIMEOUT_MS,
     });
@@ -525,6 +550,16 @@ test.describe.serial("Delegated admin purchase flow", () => {
     await expect(page.getByTestId("confirm-action-panel")).toBeVisible();
     await page.getByTestId("confirm-checkbox").check();
     await page.getByTestId("confirm-action-submit").click();
+
+    // Wait for the mutation's own refetch before reloading. The mutation
+    // invalidates its query on success, so this is the point at which the
+    // server is known to have accepted the write; reloading before it races
+    // the commit and reads stale data. This replaces a fixed sleep -- removing
+    // that sleep without putting this in its place is what broke the
+    // two-seller cart assertion in full-purchase-flow.
+    await expect(page.getByTestId("assigned-orders-empty")).toBeVisible({
+      timeout: ELEMENT_TIMEOUT_MS,
+    });
     await snap(page, "delegate-order-approved");
 
     // Reload and verify order is no longer in the assigned list

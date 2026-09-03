@@ -360,6 +360,15 @@ test.describe.serial("Full purchase flow: two sellers, one buyer", () => {
     await snap(page, "store-product-alpha");
 
     await page.getByTestId("hero-add-to-cart").click();
+
+    // Wait for the item to be in the cart before navigating away. The hero's
+    // in-cart indicator only renders once the cart holds this product, so it
+    // is a real signal the write landed. Removing the sleep that used to sit
+    // here without adding this is what broke the two-seller assertion below:
+    // the next page-load assertion said nothing about the cart.
+    await expect(page.getByTestId("hero-in-cart")).toBeVisible({
+      timeout: ELEMENT_TIMEOUT_MS,
+    });
     await snap(page, "store-added-alpha");
 
     // ── Add Seller B's product ──────────────────────────────────
@@ -377,6 +386,15 @@ test.describe.serial("Full purchase flow: two sellers, one buyer", () => {
     await snap(page, "store-product-beta");
 
     await page.getByTestId("hero-add-to-cart").click();
+
+    // Wait for the item to be in the cart before navigating away. The hero's
+    // in-cart indicator only renders once the cart holds this product, so it
+    // is a real signal the write landed. Removing the sleep that used to sit
+    // here without adding this is what broke the two-seller assertion below:
+    // the next page-load assertion said nothing about the cart.
+    await expect(page.getByTestId("hero-in-cart")).toBeVisible({
+      timeout: ELEMENT_TIMEOUT_MS,
+    });
     await snap(page, "store-added-beta");
 
     // ── Open cart and verify both items ────────────────────────

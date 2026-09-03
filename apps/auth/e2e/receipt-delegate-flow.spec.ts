@@ -372,6 +372,16 @@ test.describe.serial("Delegate sees buyer receipt", () => {
     await expect(page.getByTestId("confirm-action-panel")).toBeVisible();
     await page.getByTestId("confirm-checkbox").check();
     await page.getByTestId("confirm-action-submit").click();
+
+    // Wait for the mutation's own refetch before reloading. The mutation
+    // invalidates its query on success, so this is the point at which the
+    // server is known to have accepted the write; reloading before it races
+    // the commit and reads stale data. This replaces a fixed sleep -- removing
+    // that sleep without putting this in its place is what broke the
+    // two-seller cart assertion in full-purchase-flow.
+    await expect(page.getByTestId("assigned-orders-empty")).toBeVisible({
+      timeout: ELEMENT_TIMEOUT_MS,
+    });
     await snap(page, "delegate-order-approved");
 
     // After approval the order leaves the assigned list (only pending/evidence
