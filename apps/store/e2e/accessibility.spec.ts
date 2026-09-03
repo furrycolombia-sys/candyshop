@@ -72,6 +72,10 @@ test("product detail has no WCAG 2 AA violations", async ({ page }) => {
     .limit(1)
     .single();
 
+  // Annotated, not bare: the E2E database currently has no seeded products, so
+  // this reports itself as skipped rather than passing silently. It shares that
+  // gap with product-detail-seller-card.spec.ts, and the durable fix is the
+  // same one recorded in docs/standards/quality-gates.md -- seed a product.
   test.skip(
     !product,
     "no product in the E2E database -- product detail accessibility not verified",
@@ -95,7 +99,16 @@ test("the cart drawer has no WCAG 2 AA violations", async ({ page }) => {
   await expect(page.getByTestId("app-navigation")).toBeVisible();
 
   await page.getByTestId("cart-drawer-trigger").first().click();
-  await expect(page.getByTestId("cart-drawer-items")).toBeVisible();
+
+  // Either state means the drawer is open. This waited for the item list
+  // alone, which assumed a cart with something in it -- the E2E database has
+  // no seeded products, so the drawer renders its empty state and the wait
+  // timed out on a drawer that had opened perfectly well.
+  await expect(
+    page
+      .getByTestId("cart-drawer-items")
+      .or(page.getByTestId("cart-drawer-empty")),
+  ).toBeVisible();
 
   const results = await new AxeBuilder({ page }).withTags(WCAG_AA).analyze();
 
