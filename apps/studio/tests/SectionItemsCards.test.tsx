@@ -132,7 +132,7 @@ function Wrapper({ items = [] }: { items?: Array<typeof sampleItem> }) {
 describe("SectionItemsCards", () => {
   it("shows empty state when no items", () => {
     render(<Wrapper />);
-    expect(screen.getByText("emptySection")).toBeInTheDocument();
+    expect(screen.getByTestId("section-items-cards-empty")).toBeInTheDocument();
   });
 
   it("renders add item button", () => {
@@ -171,6 +171,8 @@ describe("SectionItemsCards", () => {
 
   it("hides empty state when items exist", () => {
     render(<Wrapper items={[sampleItem]} />);
-    expect(screen.queryByText("emptySection")).not.toBeInTheDocument();
+    expect(
+      screen.queryByTestId("section-items-cards-empty"),
+    ).not.toBeInTheDocument();
   });
 });

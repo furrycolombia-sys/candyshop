@@ -62,7 +62,12 @@ test("Discord OAuth login flow", async () => {
     // 4. Handle Discord — could be login page OR authorize page
     //    Wait for either the login form or the authorize button
     const emailInput = page.locator('input[name="email"]');
-    // Discord's authorize button — use multiple strategies
+    // Discord's authorize button — use multiple strategies.
+    // Class-based selection, which the e2e-selectors rule bans, because this
+    // is Discord's own markup: there is no test id to add and their class
+    // names are the only stable-ish handle. Disabled rather than left to
+    // report, so the ban stays meaningful for pages we do control.
+    // eslint-disable-next-line no-restricted-syntax -- third-party markup
     const authorizeBtn = page
       .locator(
         'button:has-text("Authorize"), button:has-text("Autorizar"), button:has-text("Allow"), button[class*="colorBrand"], button[class*="lookFilled"]:not(:has-text("Cancel"))',
@@ -90,6 +95,7 @@ test("Discord OAuth login flow", async () => {
       console.log("[e2e] On authorize page, scrolling to reveal button...");
       await page.mouse.wheel(0, 500);
       // Also try scrolling inside the modal
+      // eslint-disable-next-line no-restricted-syntax -- third-party markup, see above
       const modal = page
         .locator('[class*="modal"], [class*="oauth2"], [role="dialog"]')
         .first();

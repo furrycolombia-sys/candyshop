@@ -72,6 +72,16 @@ const playwrightConfig = {
     // Both were "warn" with backlogs of 118 and 96. The backlog is gone: every
     // site either waits on the condition it actually cared about, or carries a
     // disable naming the third-party page it cannot anchor against.
+    // Set to match aeleos, which enforces these and Libra did not set at all.
+    // A rule nobody wrote down is not a rule the codebase is held to.
+    "playwright/no-focused-test": "error",
+    "playwright/no-element-handle": "error",
+    "playwright/no-page-pause": "error",
+    "playwright/no-standalone-expect": "error",
+    "playwright/no-useless-await": "error",
+    "playwright/valid-expect": "error",
+    "playwright/no-eval": "off",
+
     "playwright/no-networkidle": "error",
     "playwright/no-wait-for-timeout": "error",
     // expect-expect is an ERROR, not a warning: a test that asserts nothing
@@ -95,7 +105,11 @@ const playwrightConfig = {
         ],
       },
     ],
-    "playwright/no-skipped-test": "warn", // 5
+    // allowConditional matches aeleos. `test.skip(cond, reason)` is a runtime
+    // guard -- a suite that declines to run without live OAuth credentials, or
+    // without a seeded product -- not a disabled test. A bare test.skip() still
+    // fails, which is the case worth catching.
+    "playwright/no-skipped-test": ["error", { allowConditional: true }],
   },
 };
 
@@ -205,8 +219,36 @@ const eslintConfig = defineConfig([
     rules: {
       // Playwright's `use()` function triggers react-hooks false positives
       "react-hooks/rules-of-hooks": "off",
+      // e2e-selectors.md's headline rule -- "never use Tailwind classes to
+      // select or assert state" -- had no lint rule behind it, so it was
+      // advice rather than a gate. Three specs were violating it: a drag
+      // handle checked by cursor-grab, which a class rename would have failed
+      // and an element that merely looked grabbable would have passed, and the
+      // theme suite reading the .dark class Tailwind happens to key off.
       "no-restricted-syntax": [
         "error",
+        {
+          selector: "CallExpression[callee.property.name='toHaveClass']",
+          message:
+            "Don't assert CSS classes in E2E tests -- they are styling details that rename freely. Assert an ARIA or data attribute instead (see .claude/rules/e2e-selectors.md).",
+        },
+        {
+          selector: "CallExpression[callee.property.name='toHaveCSS']",
+          message:
+            "Don't assert computed styles in E2E tests. Expose the state as an ARIA or data attribute and assert that (see .claude/rules/e2e-selectors.md).",
+        },
+        {
+          selector:
+            "CallExpression[callee.property.name='locator'][arguments.0.value=/^[.][a-zA-Z]/]",
+          message:
+            "Don't select by CSS class in E2E tests. Use getByTestId, or a role/attribute selector (see .claude/rules/e2e-selectors.md).",
+        },
+        {
+          selector:
+            "CallExpression[callee.property.name='locator'][arguments.0.value=/class/]",
+          message:
+            "Don't select by class attribute in E2E tests. Use getByTestId, or a role/attribute selector (see .claude/rules/e2e-selectors.md).",
+        },
         {
           selector:
             "CallExpression[callee.property.name=/^(getByRole|getAllByRole|queryByRole|queryAllByRole|findByRole|findAllByRole)$/]",

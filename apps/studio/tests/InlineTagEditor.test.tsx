@@ -63,8 +63,8 @@ describe("InlineTagEditor", () => {
     render(<Wrapper initialTags="alpha, beta" />);
     const removeButtons = screen.getAllByLabelText("removeTag");
     fireEvent.click(removeButtons[0]!);
-    expect(screen.queryByText(/#alpha/)).not.toBeInTheDocument();
-    expect(screen.getByText(/#beta/)).toBeInTheDocument();
+    expect(screen.queryByTestId("inline-tag-alpha")).not.toBeInTheDocument();
+    expect(screen.getByTestId("inline-tag-beta")).toBeInTheDocument();
   });
 
   it("hides input on Escape key", () => {

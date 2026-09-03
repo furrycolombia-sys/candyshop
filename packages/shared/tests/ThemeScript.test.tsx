@@ -16,6 +16,9 @@ describe("ThemeScript", () => {
     expect(script?.innerHTML).toContain("theme-preference");
     expect(script?.innerHTML).toContain("prefers-color-scheme");
     expect(script?.innerHTML).toContain("classList.toggle");
+    // Must set the same data attribute the hook does, or the first paint and
+    // the first render would disagree about the theme.
+    expect(script?.innerHTML).toContain("data-theme");
   });
 
   it("has suppressHydrationWarning attribute", () => {

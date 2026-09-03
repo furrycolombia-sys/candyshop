@@ -119,7 +119,7 @@ export function AddDelegateForm({ onAdd, isAdding }: AddDelegateFormProps) {
       </div>
 
       {selectedUser && (
-        <p className="text-sm">
+        <p className="text-sm" {...tid("delegate-selected-user")}>
           {t("selectedUser")}: <strong>{getDisplayName(selectedUser)}</strong>
         </p>
       )}

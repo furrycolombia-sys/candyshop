@@ -179,7 +179,10 @@ export function SectionItemsTwoColumn({
       </Droppable>
 
       {fields.length === 0 && (
-        <p className="py-4 text-center text-xs text-muted-foreground">
+        <p
+          className="py-4 text-center text-xs text-muted-foreground"
+          {...tid("section-items-two-column-empty")}
+        >
           {t("emptySection")}
         </p>
       )}

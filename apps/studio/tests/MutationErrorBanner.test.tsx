@@ -25,10 +25,16 @@ describe("MutationErrorBanner", () => {
 
   it("displays different error messages", () => {
     const { rerender } = render(<MutationErrorBanner message="First error" />);
-    expect(screen.getByText("First error")).toBeInTheDocument();
+    expect(screen.getByTestId("mutation-error-banner")).toHaveTextContent(
+      "First error",
+    );
 
     rerender(<MutationErrorBanner message="Second error" />);
-    expect(screen.getByText("Second error")).toBeInTheDocument();
-    expect(screen.queryByText("First error")).not.toBeInTheDocument();
+    expect(screen.getByTestId("mutation-error-banner")).toHaveTextContent(
+      "Second error",
+    );
+    expect(screen.getByTestId("mutation-error-banner")).not.toHaveTextContent(
+      "First error",
+    );
   });
 });

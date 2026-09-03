@@ -193,7 +193,10 @@ export function SectionItemsAccordion({
       </Droppable>
 
       {fields.length === 0 && (
-        <p className="py-4 text-center text-xs text-muted-foreground">
+        <p
+          className="py-4 text-center text-xs text-muted-foreground"
+          {...tid("section-items-accordion-empty")}
+        >
           {t("emptySection")}
         </p>
       )}

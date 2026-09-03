@@ -1,6 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
+import { tid } from "shared";
 
 import type { Product } from "@/features/products/domain/types";
 
@@ -24,8 +25,10 @@ export function ProductCardMeta({ product }: ProductCardMetaProps) {
 
   return (
     <>
-      {product.type === "digital" && <p>{t("digital")}</p>}
-      {stockLabel && <p>{stockLabel}</p>}
+      {product.type === "digital" && (
+        <p {...tid("product-meta-digital")}>{t("digital")}</p>
+      )}
+      {stockLabel && <p {...tid("product-meta-stock")}>{stockLabel}</p>}
     </>
   );
 }

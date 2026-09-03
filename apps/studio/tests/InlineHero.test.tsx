@@ -170,18 +170,24 @@ describe("InlineHero branches", () => {
 
   it("shows refundable badge when refundable is true", () => {
     render(<WrapperWithProps refundable={true} />);
-    expect(screen.getByText("refundable")).toBeInTheDocument();
+    expect(screen.getByTestId("inline-hero-refundable")).toBeInTheDocument();
   });
 
   it("shows non-refundable badge when refundable is false", () => {
     render(<WrapperWithProps refundable={false} />);
-    expect(screen.getByText("nonRefundable")).toBeInTheDocument();
+    expect(
+      screen.getByTestId("inline-hero-non-refundable"),
+    ).toBeInTheDocument();
   });
 
   it("shows no refund badge when refundable is null", () => {
     render(<WrapperWithProps refundable={null} />);
-    expect(screen.queryByText("refundable")).not.toBeInTheDocument();
-    expect(screen.queryByText("nonRefundable")).not.toBeInTheDocument();
+    expect(
+      screen.queryByTestId("inline-hero-refundable"),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByTestId("inline-hero-non-refundable"),
+    ).not.toBeInTheDocument();
   });
 
   it("shows quantity input when max_quantity is set", () => {

@@ -156,7 +156,7 @@ describe("InlineSections", () => {
 
   it("shows empty state when no sections", () => {
     render(<Wrapper />);
-    expect(screen.getByText("emptySection")).toBeInTheDocument();
+    expect(screen.getByTestId("inline-sections-empty")).toBeInTheDocument();
   });
 
   it("renders add section button", () => {
@@ -226,7 +226,9 @@ describe("InlineSections", () => {
         ]}
       />,
     );
-    expect(screen.queryByText("emptySection")).not.toBeInTheDocument();
+    expect(
+      screen.queryByTestId("inline-sections-empty"),
+    ).not.toBeInTheDocument();
   });
 
   it("removes a section when remove is clicked", () => {

@@ -61,27 +61,35 @@ function makeProduct(overrides: Partial<Product> = {}): Product {
 describe("ProductCardMeta", () => {
   it("renders digital label for digital products", () => {
     render(<ProductCardMeta product={makeProduct({ type: "digital" })} />);
-    expect(screen.getByText("digital")).toBeInTheDocument();
+    expect(screen.getByTestId("product-meta-digital")).toHaveTextContent(
+      "digital",
+    );
   });
 
   it("does not render digital label for non-digital products", () => {
     render(<ProductCardMeta product={makeProduct({ type: "merch" })} />);
-    expect(screen.queryByText("digital")).toBeNull();
+    expect(screen.queryByTestId("product-meta-digital")).toBeNull();
   });
 
   it("renders out of stock when max_quantity is 0", () => {
     render(<ProductCardMeta product={makeProduct({ max_quantity: 0 })} />);
-    expect(screen.getByText("outOfStock")).toBeInTheDocument();
+    expect(screen.getByTestId("product-meta-stock")).toHaveTextContent(
+      "outOfStock",
+    );
   });
 
   it("renders stock left when max_quantity is positive", () => {
     render(<ProductCardMeta product={makeProduct({ max_quantity: 5 })} />);
-    expect(screen.getByText("stockLeft:5")).toBeInTheDocument();
+    expect(screen.getByTestId("product-meta-stock")).toHaveTextContent(
+      "stockLeft:5",
+    );
   });
 
   it("renders nothing for stock when max_quantity is null", () => {
     render(<ProductCardMeta product={makeProduct({ max_quantity: null })} />);
-    expect(screen.queryByText("outOfStock")).toBeNull();
-    expect(screen.queryByText(/stockLeft/)).toBeNull();
+    // One assertion, not two: with max_quantity null the stock paragraph is
+    // not rendered at all, so "no outOfStock" and "no stockLeft" were the same
+    // fact checked twice through its text.
+    expect(screen.queryByTestId("product-meta-stock")).toBeNull();
   });
 });
