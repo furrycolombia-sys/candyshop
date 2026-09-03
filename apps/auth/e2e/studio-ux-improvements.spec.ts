@@ -80,15 +80,21 @@ test.describe.serial("Studio UX Improvements", { tag: "@ux" }, () => {
   }) => {
     await injectSession(context, seller);
     await page.goto(`${APP_URLS.STUDIO}/en`);
-    await page.waitForLoadState("networkidle");
+
+    // The screenshot below wants a rendered page, and the click after it wants
+    // this button, so waiting for the button covers both -- and unlike a
+    // settle wait it fails with a useful message when the page does not load.
+    await expect(page.getByTestId("new-product-button")).toBeVisible({
+      timeout: ELEMENT_TIMEOUT_MS,
+    });
     await snap(page, "studio-product-list");
 
     // Create a new product
     await page.getByTestId("new-product-button").click();
-    await page.waitForLoadState("networkidle");
 
     // Fill product name
     const nameField = page.getByTestId("inline-text-en-name_en");
+    await expect(nameField).toBeVisible({ timeout: ELEMENT_TIMEOUT_MS });
     await nameField.click();
     await nameField.fill("E2E Studio UX Product");
 

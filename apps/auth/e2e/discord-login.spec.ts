@@ -70,6 +70,12 @@ test("Discord OAuth login flow", async () => {
       .first();
 
     console.log("[e2e] Waiting for Discord page to load...");
+    // Discord's page can settle into any of three states (login form,
+    // authorize prompt, or straight back to the app), and the branch below
+    // reads the URL to find out which. There is no single element to wait for
+    // without first knowing the answer, and the markup belongs to a third
+    // party.
+    // eslint-disable-next-line playwright/no-wait-for-timeout -- see above
     await page.waitForTimeout(5000);
 
     // Determine what Discord is showing

@@ -118,16 +118,21 @@ test(
       });
 
       await page.getByTestId("product-detail-mobile-add-to-cart").click();
-      await page.waitForTimeout(500);
 
-      await page.goto(`${PAYMENTS_URL}/en/checkout`, {
-        waitUntil: "networkidle",
-      });
+      // Wait for the item to actually be in the cart before navigating away.
+      // The bar's in-cart indicator only renders once quantityInCart > 0, and
+      // unlike the button's "added" state it does not time out after a moment,
+      // so it is safe to assert against. It had no test id until now, which is
+      // why this was a fixed 500ms sleep -- there was nothing to wait for.
+      await expect(
+        page.getByTestId("product-detail-mobile-in-cart"),
+      ).toBeVisible();
 
-      // Verify we landed on checkout, not redirected to login
-      expect(page.url(), "Checkout should not redirect to login").not.toContain(
-        "/login",
-      );
+      await page.goto(`${PAYMENTS_URL}/en/checkout`);
+
+      // Verify we landed on checkout, not redirected to login. toHaveURL
+      // retries, so it waits and asserts in one step.
+      await expect(page).not.toHaveURL(/\/login/);
 
       await expect(
         page.getByTestId("payments-mobile-sidebar-trigger"),

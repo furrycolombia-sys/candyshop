@@ -69,8 +69,11 @@ const playwrightConfig = {
     // rewrote `const href = await link.getAttribute("href")` into
     // `const href = link`, silently turning a string into a Locator and breaking
     // the three assertions below it. Typecheck caught it; review every hunk.
-    "playwright/no-networkidle": "warn", // 118 — waits on a heuristic, not a condition
-    "playwright/no-wait-for-timeout": "warn", // 96 — the main flakiness source
+    // Both were "warn" with backlogs of 118 and 96. The backlog is gone: every
+    // site either waits on the condition it actually cared about, or carries a
+    // disable naming the third-party page it cannot anchor against.
+    "playwright/no-networkidle": "error",
+    "playwright/no-wait-for-timeout": "error",
     // expect-expect is an ERROR, not a warning: a test that asserts nothing
     // passes no matter how the product behaves, so it is the one defect a test
     // suite cannot detect on its own. It reported 11 violations before this

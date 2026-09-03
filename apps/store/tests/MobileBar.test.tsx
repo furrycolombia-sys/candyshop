@@ -134,7 +134,12 @@ describe("MobileBar", () => {
         quantityInCart={3}
       />,
     );
-    expect(screen.getByText("inCart:3")).toBeInTheDocument();
+    // By test id, not by the translated string. The indicator had no test
+    // id, so an e2e test had no way to see that an item reached the cart
+    // and slept for a fixed 500ms before navigating on instead.
+    expect(
+      screen.getByTestId("product-detail-mobile-in-cart"),
+    ).toHaveTextContent("inCart:3");
   });
 
   it("does not show in-cart when quantityInCart is 0", () => {

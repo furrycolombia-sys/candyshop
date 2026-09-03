@@ -133,7 +133,8 @@ test.describe("Smoke test -- all apps", () => {
 
       expect(response, `${appName} did not respond at ${url}`).not.toBeNull();
 
-      await page.waitForLoadState("networkidle");
+      // The status comes off the response object captured above, so it does
+      // not need the page to have settled at all.
       const status = response?.status() ?? 0;
 
       expect(

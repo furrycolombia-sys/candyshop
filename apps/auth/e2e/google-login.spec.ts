@@ -108,6 +108,11 @@ async function waitForAnyVisible(
       }
     }
 
+    // The poll interval of a hand-rolled race across Google's own markup,
+    // which varies by account state and locale. Playwright's .or() would
+    // express it natively, but rewriting a flow that can only be exercised
+    // against the live provider is not something a lint sweep should do blind.
+    // eslint-disable-next-line playwright/no-wait-for-timeout -- see above
     await page.waitForTimeout(500);
   }
 
@@ -214,9 +219,8 @@ test("Google OAuth login flow", async ({ page }) => {
   );
   console.log("[e2e] Back on app:", page.url());
 
-  await page.waitForLoadState("networkidle", { timeout: 15000 });
-  await page.waitForTimeout(2000);
-
+  // The account-page check below waits on its own (isVisible has a timeout),
+  // so settling here was redundant.
   const isAccountPage = await page
     .getByTestId("account-settings-page")
     .isVisible({ timeout: 5000 })

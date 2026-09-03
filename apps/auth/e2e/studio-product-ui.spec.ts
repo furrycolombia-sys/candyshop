@@ -605,10 +605,12 @@ test.describe.serial(
       // ── Phase 2: re-open and verify the order persisted ───────────────────────
 
       await page.goto(`${APP_URLS.STUDIO}/en/products/${productId}`);
-      await page.waitForLoadState("networkidle");
-      await page.waitForTimeout(MUTATION_WAIT_MS);
 
       const galleryReload = page.getByTestId("image-gallery-thumbs");
+      // Reading src attributes below is a one-shot read, so the gallery has to
+      // be there first. Waiting for it replaces both a settle wait and a fixed
+      // sleep, and says what it is waiting for.
+      await expect(galleryReload).toBeVisible({ timeout: ELEMENT_TIMEOUT_MS });
 
       await snap(page, "carousel-persistence-check");
 

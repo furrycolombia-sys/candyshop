@@ -288,8 +288,16 @@ test.describe.serial("Delegate sees buyer receipt", () => {
     await snap(page, "seller-delegate-configured");
 
     await page.getByTestId("delegate-add-submit").click();
-    await page.waitForTimeout(MUTATION_WAIT_MS);
 
+    // The mutation invalidates the seller-admins query on success, so the new
+    // delegate shows up once the refetch lands. That is a real signal the
+    // server accepted the write, which is what the fixed sleep was standing in
+    // for -- the reload after it would otherwise have raced the commit.
+    await expect(
+      page.getByTestId(`delegate-item-${delegate.userId}`),
+    ).toBeVisible({ timeout: ELEMENT_TIMEOUT_MS });
+
+    // Reload to prove it persisted rather than merely leaving the cache.
     await page.reload();
 
     await expect(
