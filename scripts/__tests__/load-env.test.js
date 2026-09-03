@@ -19,8 +19,9 @@ import {
   vi,
 } from "vitest";
 import fc from "fast-check";
-import { existsSync, readFileSync, rmSync, writeFileSync } from "node:fs";
-import { dirname, resolve } from "node:path";
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -36,27 +37,33 @@ const TRACKED_KEYS = [
 
 let savedEnv = {};
 
-// The local resolution path reads .secrets, which is gitignored and so absent
-// in CI. That is why widening test:workflows to this file first turned CI red.
-// Rather than narrow the gate back, write a placeholder .secrets for the run
-// and remove it again -- but only when there is none, so a developer's real
-// file is never touched.
-const secretsPath = resolve(__dirname, "../../.secrets");
-let wroteSecretsFixture = false;
+// The local resolution path reads a secrets file. Pointing it at a temp file
+// keeps the suite off the repository's real .secrets: writing a placeholder
+// there and deleting it afterwards is shared mutable state, and it failed
+// about one run in six. The key names come from the $secret: references in
+// .env.dev, so the fixture cannot drift out of step with them.
+const secretsFixture = join(
+  mkdtempSync(join(tmpdir(), "libra-load-env-")),
+  ".secrets",
+);
+let previousSecretsPath;
 
 beforeAll(() => {
-  if (existsSync(secretsPath)) return;
   const envDev = readFileSync(resolve(__dirname, "../../.env.dev"), "utf-8");
   const refs = [...envDev.matchAll(/\$secret:([A-Z0-9_]+)/g)].map((m) => m[1]);
   const body = [...new Set(refs)]
     .map((name) => `${name}=fixture-${name.toLowerCase()}`)
     .join("\n");
-  writeFileSync(secretsPath, `# written by load-env.test.js\n${body}\n`);
-  wroteSecretsFixture = true;
+  writeFileSync(secretsFixture, `# written by load-env.test.js\n${body}\n`);
+  previousSecretsPath = process.env.LOAD_ENV_SECRETS_PATH;
+  process.env.LOAD_ENV_SECRETS_PATH = secretsFixture;
 });
 
 afterAll(() => {
-  if (wroteSecretsFixture) rmSync(secretsPath, { force: true });
+  rmSync(dirname(secretsFixture), { recursive: true, force: true });
+  if (previousSecretsPath === undefined)
+    delete process.env.LOAD_ENV_SECRETS_PATH;
+  else process.env.LOAD_ENV_SECRETS_PATH = previousSecretsPath;
 });
 
 beforeEach(() => {

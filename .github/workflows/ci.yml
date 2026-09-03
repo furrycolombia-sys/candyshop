@@ -216,6 +216,7 @@ jobs:
           pnpm exec ls-lint
           pnpm exec cspell "**/*.{ts,tsx,md,json}" --no-progress
           pnpm exec jscpd .
+          node scripts/check-source-bytes.mjs
           pnpm exec madge --circular --extensions ts,tsx,js,jsx apps/store/src apps/studio/src apps/landing/src apps/payments/src apps/admin/src apps/auth/src apps/playground/src packages/ui/src packages/shared/src packages/api/src packages/app-components/src packages/auth/src tests scripts docker
 
       - name: Lint (scoped)
