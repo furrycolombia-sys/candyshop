@@ -91,8 +91,10 @@ function loadEnvFile(filePath) {
     const match = trimmed.match(/^LINEAR_API_KEY=(.+)$/);
     if (match) {
       let token = match[1].trim();
-      if ((token.startsWith('"') && token.endsWith('"')) ||
-          (token.startsWith("'") && token.endsWith("'"))) {
+      if (
+        (token.startsWith('"') && token.endsWith('"')) ||
+        (token.startsWith("'") && token.endsWith("'"))
+      ) {
         token = token.slice(1, -1);
       }
       process.env.LINEAR_API_KEY = token;
@@ -107,7 +109,9 @@ loadEnvFile(join(__toolsDir, ".env.local"));
 const LINEAR_API_KEY = process.env.LINEAR_API_KEY;
 if (!LINEAR_API_KEY) {
   console.error("Error: LINEAR_API_KEY not found");
-  console.error("Please set LINEAR_API_KEY in .env.local or .claude/tools/.env.local");
+  console.error(
+    "Please set LINEAR_API_KEY in .env.local or .claude/tools/.env.local",
+  );
   process.exit(1);
 }
 
@@ -131,7 +135,9 @@ async function linearQuery(query, variables = {}) {
 
   const result = await response.json();
   if (result.errors) {
-    throw new Error(`Linear GraphQL error: ${result.errors.map(e => e.message).join(", ")}`);
+    throw new Error(
+      `Linear GraphQL error: ${result.errors.map((e) => e.message).join(", ")}`,
+    );
   }
 
   return result.data;
@@ -142,7 +148,8 @@ const TOOLS = [
   // ===== User & Organization =====
   {
     name: "linear_get_viewer",
-    description: "Get the currently authenticated user's information (useful for getting your user ID for assignments).",
+    description:
+      "Get the currently authenticated user's information (useful for getting your user ID for assignments).",
     inputSchema: {
       type: "object",
       properties: {},
@@ -162,8 +169,14 @@ const TOOLS = [
     inputSchema: {
       type: "object",
       properties: {
-        includeDisabled: { type: "boolean", description: "Include disabled users (default: false)" },
-        first: { type: "number", description: "Number of users to return (default: 50)" },
+        includeDisabled: {
+          type: "boolean",
+          description: "Include disabled users (default: false)",
+        },
+        first: {
+          type: "number",
+          description: "Number of users to return (default: 50)",
+        },
       },
     },
   },
@@ -179,13 +192,21 @@ const TOOLS = [
   },
   {
     name: "linear_get_team",
-    description: "Get detailed information about a specific team including its issues.",
+    description:
+      "Get detailed information about a specific team including its issues.",
     inputSchema: {
       type: "object",
       properties: {
         teamId: { type: "string", description: "Team ID" },
-        includeIssues: { type: "boolean", description: "Include team's issues (default: false)" },
-        issueLimit: { type: "number", description: "Number of issues to return if includeIssues is true (default: 25)" },
+        includeIssues: {
+          type: "boolean",
+          description: "Include team's issues (default: false)",
+        },
+        issueLimit: {
+          type: "number",
+          description:
+            "Number of issues to return if includeIssues is true (default: 25)",
+        },
       },
       required: ["teamId"],
     },
@@ -194,7 +215,8 @@ const TOOLS = [
   // ===== Issues =====
   {
     name: "linear_list_issues",
-    description: "List issues with optional filtering by team, state, assignee, or project.",
+    description:
+      "List issues with optional filtering by team, state, assignee, or project.",
     inputSchema: {
       type: "object",
       properties: {
@@ -202,24 +224,32 @@ const TOOLS = [
         stateId: { type: "string", description: "Filter by state ID" },
         assigneeId: { type: "string", description: "Filter by assignee ID" },
         projectId: { type: "string", description: "Filter by project ID" },
-        first: { type: "number", description: "Number of issues to return (default: 50)" },
+        first: {
+          type: "number",
+          description: "Number of issues to return (default: 50)",
+        },
       },
     },
   },
   {
     name: "linear_get_issue",
-    description: "Get detailed information about a specific issue by its ID or identifier (e.g., 'ENG-123').",
+    description:
+      "Get detailed information about a specific issue by its ID or identifier (e.g., 'ENG-123').",
     inputSchema: {
       type: "object",
       properties: {
-        id: { type: "string", description: "Issue ID or identifier (e.g., 'ENG-123')" },
+        id: {
+          type: "string",
+          description: "Issue ID or identifier (e.g., 'ENG-123')",
+        },
       },
       required: ["id"],
     },
   },
   {
     name: "linear_search_issues",
-    description: "Search for issues using a text query. Searches in title and description.",
+    description:
+      "Search for issues using a text query. Searches in title and description.",
     inputSchema: {
       type: "object",
       properties: {
@@ -227,7 +257,10 @@ const TOOLS = [
         teamId: { type: "string", description: "Filter by team ID" },
         assigneeId: { type: "string", description: "Filter by assignee ID" },
         status: { type: "string", description: "Filter by status name" },
-        first: { type: "number", description: "Number of results (default: 25)" },
+        first: {
+          type: "number",
+          description: "Number of results (default: 25)",
+        },
       },
       required: ["query"],
     },
@@ -239,14 +272,27 @@ const TOOLS = [
       type: "object",
       properties: {
         title: { type: "string", description: "Issue title" },
-        description: { type: "string", description: "Issue description (markdown supported)" },
+        description: {
+          type: "string",
+          description: "Issue description (markdown supported)",
+        },
         teamId: { type: "string", description: "Team ID (required)" },
         stateId: { type: "string", description: "Workflow state ID" },
         assigneeId: { type: "string", description: "Assignee user ID" },
-        priority: { type: "number", description: "Priority (0=none, 1=urgent, 2=high, 3=normal, 4=low)" },
+        priority: {
+          type: "number",
+          description: "Priority (0=none, 1=urgent, 2=high, 3=normal, 4=low)",
+        },
         projectId: { type: "string", description: "Project ID" },
-        parentId: { type: "string", description: "Parent issue ID (for sub-issues)" },
-        labelIds: { type: "array", items: { type: "string" }, description: "Array of label IDs" },
+        parentId: {
+          type: "string",
+          description: "Parent issue ID (for sub-issues)",
+        },
+        labelIds: {
+          type: "array",
+          items: { type: "string" },
+          description: "Array of label IDs",
+        },
         cycleId: { type: "string", description: "Cycle ID to add issue to" },
       },
       required: ["title", "teamId"],
@@ -258,12 +304,22 @@ const TOOLS = [
     inputSchema: {
       type: "object",
       properties: {
-        id: { type: "string", description: "Issue ID or identifier (e.g., 'ENG-123') to update" },
+        id: {
+          type: "string",
+          description: "Issue ID or identifier (e.g., 'ENG-123') to update",
+        },
         title: { type: "string", description: "New title" },
         description: { type: "string", description: "New description" },
         stateId: { type: "string", description: "New workflow state ID" },
-        assigneeId: { type: "string", description: "New assignee ID (use null to unassign)" },
-        priority: { type: "number", description: "New priority (0=none, 1=urgent, 2=high, 3=normal, 4=low)" },
+        assigneeId: {
+          type: "string",
+          description: "New assignee ID (use null to unassign)",
+        },
+        priority: {
+          type: "number",
+          description:
+            "New priority (0=none, 1=urgent, 2=high, 3=normal, 4=low)",
+        },
         projectId: { type: "string", description: "New project ID" },
         cycleId: { type: "string", description: "New cycle ID" },
       },
@@ -272,13 +328,23 @@ const TOOLS = [
   },
   {
     name: "linear_get_user_issues",
-    description: "Get issues assigned to a specific user or the authenticated user.",
+    description:
+      "Get issues assigned to a specific user or the authenticated user.",
     inputSchema: {
       type: "object",
       properties: {
-        userId: { type: "string", description: "User ID (omit to get authenticated user's issues)" },
-        includeArchived: { type: "boolean", description: "Include archived issues (default: false)" },
-        first: { type: "number", description: "Number of issues to return (default: 50)" },
+        userId: {
+          type: "string",
+          description: "User ID (omit to get authenticated user's issues)",
+        },
+        includeArchived: {
+          type: "boolean",
+          description: "Include archived issues (default: false)",
+        },
+        first: {
+          type: "number",
+          description: "Number of issues to return (default: 50)",
+        },
       },
     },
   },
@@ -290,8 +356,14 @@ const TOOLS = [
     inputSchema: {
       type: "object",
       properties: {
-        issueId: { type: "string", description: "Issue ID or identifier to assign" },
-        assigneeId: { type: "string", description: "User ID to assign (use null to unassign)" },
+        issueId: {
+          type: "string",
+          description: "Issue ID or identifier to assign",
+        },
+        assigneeId: {
+          type: "string",
+          description: "User ID to assign (use null to unassign)",
+        },
       },
       required: ["issueId"],
     },
@@ -303,7 +375,10 @@ const TOOLS = [
       type: "object",
       properties: {
         issueId: { type: "string", description: "Issue ID or identifier" },
-        priority: { type: "number", description: "Priority (0=none, 1=urgent, 2=high, 3=normal, 4=low)" },
+        priority: {
+          type: "number",
+          description: "Priority (0=none, 1=urgent, 2=high, 3=normal, 4=low)",
+        },
       },
       required: ["issueId", "priority"],
     },
@@ -326,7 +401,10 @@ const TOOLS = [
     inputSchema: {
       type: "object",
       properties: {
-        issueId: { type: "string", description: "Issue ID or identifier to archive" },
+        issueId: {
+          type: "string",
+          description: "Issue ID or identifier to archive",
+        },
       },
       required: ["issueId"],
     },
@@ -363,8 +441,14 @@ const TOOLS = [
     inputSchema: {
       type: "object",
       properties: {
-        issueId: { type: "string", description: "Issue ID or identifier to comment on" },
-        body: { type: "string", description: "Comment body (markdown supported)" },
+        issueId: {
+          type: "string",
+          description: "Issue ID or identifier to comment on",
+        },
+        body: {
+          type: "string",
+          description: "Comment body (markdown supported)",
+        },
       },
       required: ["issueId", "body"],
     },
@@ -376,7 +460,10 @@ const TOOLS = [
       type: "object",
       properties: {
         issueId: { type: "string", description: "Issue ID or identifier" },
-        first: { type: "number", description: "Number of comments to return (default: 50)" },
+        first: {
+          type: "number",
+          description: "Number of comments to return (default: 50)",
+        },
       },
       required: ["issueId"],
     },
@@ -390,7 +477,10 @@ const TOOLS = [
       type: "object",
       properties: {
         teamId: { type: "string", description: "Filter by team ID" },
-        first: { type: "number", description: "Number of projects to return (default: 50)" },
+        first: {
+          type: "number",
+          description: "Number of projects to return (default: 50)",
+        },
       },
     },
   },
@@ -402,9 +492,17 @@ const TOOLS = [
       properties: {
         name: { type: "string", description: "Project name" },
         description: { type: "string", description: "Project description" },
-        teamIds: { type: "array", items: { type: "string" }, description: "Array of team IDs this project belongs to" },
+        teamIds: {
+          type: "array",
+          items: { type: "string" },
+          description: "Array of team IDs this project belongs to",
+        },
         leadId: { type: "string", description: "Project lead user ID" },
-        state: { type: "string", description: "Project state (planned, started, paused, completed, canceled)" },
+        state: {
+          type: "string",
+          description:
+            "Project state (planned, started, paused, completed, canceled)",
+        },
       },
       required: ["name", "teamIds"],
     },
@@ -416,7 +514,10 @@ const TOOLS = [
       type: "object",
       properties: {
         issueId: { type: "string", description: "Issue ID or identifier" },
-        projectId: { type: "string", description: "Project ID to add issue to" },
+        projectId: {
+          type: "string",
+          description: "Project ID to add issue to",
+        },
       },
       required: ["issueId", "projectId"],
     },
@@ -425,7 +526,8 @@ const TOOLS = [
   // ===== Workflow & Labels =====
   {
     name: "linear_list_workflow_states",
-    description: "List workflow states for a team (e.g., Backlog, In Progress, Done).",
+    description:
+      "List workflow states for a team (e.g., Backlog, In Progress, Done).",
     inputSchema: {
       type: "object",
       properties: {
@@ -441,7 +543,10 @@ const TOOLS = [
       type: "object",
       properties: {
         teamId: { type: "string", description: "Filter by team ID" },
-        first: { type: "number", description: "Number of labels to return (default: 100)" },
+        first: {
+          type: "number",
+          description: "Number of labels to return (default: 100)",
+        },
       },
     },
   },
@@ -454,7 +559,10 @@ const TOOLS = [
       type: "object",
       properties: {
         teamId: { type: "string", description: "Team ID to get cycles for" },
-        first: { type: "number", description: "Number of cycles to return (default: 10)" },
+        first: {
+          type: "number",
+          description: "Number of cycles to return (default: 10)",
+        },
       },
       required: ["teamId"],
     },
@@ -465,7 +573,10 @@ const TOOLS = [
     inputSchema: {
       type: "object",
       properties: {
-        teamId: { type: "string", description: "Team ID to get active cycle for" },
+        teamId: {
+          type: "string",
+          description: "Team ID to get active cycle for",
+        },
       },
       required: ["teamId"],
     },
@@ -486,24 +597,40 @@ const TOOLS = [
   // ===== Images =====
   {
     name: "linear_get_issue_images",
-    description: "Download images embedded in an issue's description. Parses markdown image syntax and downloads files to the specified directory.",
+    description:
+      "Download images embedded in an issue's description. Parses markdown image syntax and downloads files to the specified directory.",
     inputSchema: {
       type: "object",
       properties: {
-        id: { type: "string", description: "Issue ID or identifier (e.g., 'CLA-1234')" },
-        outputDir: { type: "string", description: "Directory to save downloaded images (will be created if it doesn't exist)" },
+        id: {
+          type: "string",
+          description: "Issue ID or identifier (e.g., 'CLA-1234')",
+        },
+        outputDir: {
+          type: "string",
+          description:
+            "Directory to save downloaded images (will be created if it doesn't exist)",
+        },
       },
       required: ["id", "outputDir"],
     },
   },
   {
     name: "linear_get_comments_images",
-    description: "Download images embedded in an issue's comments. Parses markdown image syntax and downloads files to the specified directory.",
+    description:
+      "Download images embedded in an issue's comments. Parses markdown image syntax and downloads files to the specified directory.",
     inputSchema: {
       type: "object",
       properties: {
-        issueId: { type: "string", description: "Issue ID or identifier (e.g., 'CLA-1234')" },
-        outputDir: { type: "string", description: "Directory to save downloaded images (will be created if it doesn't exist)" },
+        issueId: {
+          type: "string",
+          description: "Issue ID or identifier (e.g., 'CLA-1234')",
+        },
+        outputDir: {
+          type: "string",
+          description:
+            "Directory to save downloaded images (will be created if it doesn't exist)",
+        },
       },
       required: ["issueId", "outputDir"],
     },
@@ -512,28 +639,45 @@ const TOOLS = [
   // ===== Uploads =====
   {
     name: "linear_upload_image",
-    description: "Upload a local image file to Linear's storage and return the asset URL. The returned URL can be used in markdown comments/descriptions with ![alt](url) syntax.",
+    description:
+      "Upload a local image file to Linear's storage and return the asset URL. The returned URL can be used in markdown comments/descriptions with ![alt](url) syntax.",
     inputSchema: {
       type: "object",
       properties: {
-        filePath: { type: "string", description: "Absolute path to the local image file to upload" },
-        filename: { type: "string", description: "Optional filename override (defaults to original filename)" },
+        filePath: {
+          type: "string",
+          description: "Absolute path to the local image file to upload",
+        },
+        filename: {
+          type: "string",
+          description:
+            "Optional filename override (defaults to original filename)",
+        },
       },
       required: ["filePath"],
     },
   },
   {
     name: "linear_create_comment_with_images",
-    description: "Upload local images to Linear and create a comment on an issue with the images embedded. Images are uploaded first, then referenced in the comment body using markdown image syntax.",
+    description:
+      "Upload local images to Linear and create a comment on an issue with the images embedded. Images are uploaded first, then referenced in the comment body using markdown image syntax.",
     inputSchema: {
       type: "object",
       properties: {
-        issueId: { type: "string", description: "Issue ID or identifier (e.g., 'CLA-1234')" },
-        body: { type: "string", description: "Comment body in markdown. Use {image:N} placeholders (1-indexed) where images should appear, e.g., 'Here is the screenshot:\\n\\n{image:1}\\n\\nAnd another:\\n\\n{image:2}'" },
+        issueId: {
+          type: "string",
+          description: "Issue ID or identifier (e.g., 'CLA-1234')",
+        },
+        body: {
+          type: "string",
+          description:
+            "Comment body in markdown. Use {image:N} placeholders (1-indexed) where images should appear, e.g., 'Here is the screenshot:\\n\\n{image:1}\\n\\nAnd another:\\n\\n{image:2}'",
+        },
         imagePaths: {
           type: "array",
           items: { type: "string" },
-          description: "Array of absolute paths to local image files to upload and embed",
+          description:
+            "Array of absolute paths to local image files to upload and embed",
         },
       },
       required: ["issueId", "body", "imagePaths"],
@@ -543,11 +687,15 @@ const TOOLS = [
   // ===== Favorites =====
   {
     name: "linear_favorite_issue",
-    description: "Add an issue to the authenticated user's favorites (starred items). The issue appears in the user's favorites sidebar in Linear.",
+    description:
+      "Add an issue to the authenticated user's favorites (starred items). The issue appears in the user's favorites sidebar in Linear.",
     inputSchema: {
       type: "object",
       properties: {
-        issueId: { type: "string", description: "Issue ID or identifier (e.g., 'CLA-1234') to favorite" },
+        issueId: {
+          type: "string",
+          description: "Issue ID or identifier (e.g., 'CLA-1234') to favorite",
+        },
       },
       required: ["issueId"],
     },
@@ -560,13 +708,16 @@ async function resolveIssueId(idOrIdentifier) {
     return idOrIdentifier; // Already an ID
   }
 
-  const data = await linearQuery(`
+  const data = await linearQuery(
+    `
     query($identifier: String!) {
       issue(id: $identifier) {
         id
       }
     }
-  `, { identifier: idOrIdentifier });
+  `,
+    { identifier: idOrIdentifier },
+  );
 
   if (!data.issue) {
     throw new Error(`Issue not found: ${idOrIdentifier}`);
@@ -615,8 +766,14 @@ function validateOutputDir(outputDir) {
   const normalizedRoot = resolve(projectRoot);
 
   // Ensure the resolved path is within projectRoot
-  if (!resolved.startsWith(normalizedRoot + "/") && !resolved.startsWith(normalizedRoot + "\\") && resolved !== normalizedRoot) {
-    throw new Error(`Security error: outputDir must be within project root. Got: ${outputDir}`);
+  if (
+    !resolved.startsWith(normalizedRoot + "/") &&
+    !resolved.startsWith(normalizedRoot + "\\") &&
+    resolved !== normalizedRoot
+  ) {
+    throw new Error(
+      `Security error: outputDir must be within project root. Got: ${outputDir}`,
+    );
   }
 
   return resolved;
@@ -637,7 +794,9 @@ async function downloadImage(url, outputPath) {
   const response = await fetch(url, fetchOptions);
 
   if (!response.ok) {
-    throw new Error(`Failed to download image: ${response.status} ${response.statusText}`);
+    throw new Error(
+      `Failed to download image: ${response.status} ${response.statusText}`,
+    );
   }
 
   const arrayBuffer = await response.arrayBuffer();
@@ -666,7 +825,10 @@ async function uploadFileToLinear(filePath, filenameOverride) {
   const normalizedRoot = resolve(projectRoot);
 
   // Prevent path traversal — file must be within the project root
-  if (!resolvedPath.startsWith(normalizedRoot + "/") && !resolvedPath.startsWith(normalizedRoot + "\\")) {
+  if (
+    !resolvedPath.startsWith(normalizedRoot + "/") &&
+    !resolvedPath.startsWith(normalizedRoot + "\\")
+  ) {
     throw new Error(`Access denied: path is outside project root: ${filePath}`);
   }
 
@@ -693,7 +855,8 @@ async function uploadFileToLinear(filePath, filenameOverride) {
   const contentType = mimeTypes[ext] || "application/octet-stream";
 
   // Step 1: Request upload URL from Linear
-  const data = await linearQuery(`
+  const data = await linearQuery(
+    `
     mutation($size: Int!, $contentType: String!, $filename: String!) {
       fileUpload(size: $size, contentType: $contentType, filename: $filename) {
         uploadFile {
@@ -709,7 +872,9 @@ async function uploadFileToLinear(filePath, filenameOverride) {
         }
       }
     }
-  `, { size: fileSize, contentType, filename });
+  `,
+    { size: fileSize, contentType, filename },
+  );
 
   const uploadFile = data.fileUpload?.uploadFile;
   if (!uploadFile) {
@@ -791,7 +956,8 @@ async function handleTool(name, args) {
     }
 
     case "linear_get_users": {
-      const data = await linearQuery(`
+      const data = await linearQuery(
+        `
         query($first: Int, $includeDisabled: Boolean) {
           users(first: $first, includeDisabled: $includeDisabled) {
             nodes {
@@ -805,7 +971,12 @@ async function handleTool(name, args) {
             }
           }
         }
-      `, { first: args.first || 50, includeDisabled: args.includeDisabled || false });
+      `,
+        {
+          first: args.first || 50,
+          includeDisabled: args.includeDisabled || false,
+        },
+      );
       return data.users.nodes;
     }
 
@@ -830,7 +1001,8 @@ async function handleTool(name, args) {
       const includeIssues = args.includeIssues || false;
       const issueLimit = args.issueLimit || 25;
 
-      const query = includeIssues ? `
+      const query = includeIssues
+        ? `
         query($teamId: String!, $issueLimit: Int) {
           team(id: $teamId) {
             id
@@ -850,7 +1022,8 @@ async function handleTool(name, args) {
             }
           }
         }
-      ` : `
+      `
+        : `
         query($teamId: String!) {
           team(id: $teamId) {
             id
@@ -863,7 +1036,10 @@ async function handleTool(name, args) {
         }
       `;
 
-      const data = await linearQuery(query, { teamId: args.teamId, issueLimit });
+      const data = await linearQuery(query, {
+        teamId: args.teamId,
+        issueLimit,
+      });
       return data.team;
     }
 
@@ -875,7 +1051,8 @@ async function handleTool(name, args) {
       if (args.assigneeId) filter.assignee = { id: { eq: args.assigneeId } };
       if (args.projectId) filter.project = { id: { eq: args.projectId } };
 
-      const data = await linearQuery(`
+      const data = await linearQuery(
+        `
         query($filter: IssueFilter, $first: Int) {
           issues(filter: $filter, first: $first) {
             nodes {
@@ -892,13 +1069,19 @@ async function handleTool(name, args) {
             }
           }
         }
-      `, { filter: Object.keys(filter).length ? filter : undefined, first: args.first || 50 });
+      `,
+        {
+          filter: Object.keys(filter).length ? filter : undefined,
+          first: args.first || 50,
+        },
+      );
 
       return data.issues.nodes;
     }
 
     case "linear_get_issue": {
-      const data = await linearQuery(`
+      const data = await linearQuery(
+        `
         query($id: String!) {
           issue(id: $id) {
             id
@@ -920,12 +1103,15 @@ async function handleTool(name, args) {
             url
           }
         }
-      `, { id: args.id });
+      `,
+        { id: args.id },
+      );
       return data.issue;
     }
 
     case "linear_search_issues": {
-      const data = await linearQuery(`
+      const data = await linearQuery(
+        `
         query($term: String!, $first: Int) {
           searchIssues(term: $term, first: $first) {
             nodes {
@@ -941,7 +1127,9 @@ async function handleTool(name, args) {
             }
           }
         }
-      `, { term: args.query, first: args.first || 25 });
+      `,
+        { term: args.query, first: args.first || 25 },
+      );
 
       return data.searchIssues.nodes;
     }
@@ -960,7 +1148,8 @@ async function handleTool(name, args) {
       if (args.labelIds) input.labelIds = args.labelIds;
       if (args.cycleId) input.cycleId = args.cycleId;
 
-      const data = await linearQuery(`
+      const data = await linearQuery(
+        `
         mutation($input: IssueCreateInput!) {
           issueCreate(input: $input) {
             success
@@ -972,7 +1161,9 @@ async function handleTool(name, args) {
             }
           }
         }
-      `, { input });
+      `,
+        { input },
+      );
 
       return data.issueCreate;
     }
@@ -989,7 +1180,8 @@ async function handleTool(name, args) {
       if (args.projectId !== undefined) input.projectId = args.projectId;
       if (args.cycleId !== undefined) input.cycleId = args.cycleId;
 
-      const data = await linearQuery(`
+      const data = await linearQuery(
+        `
         mutation($id: String!, $input: IssueUpdateInput!) {
           issueUpdate(id: $id, input: $input) {
             success
@@ -1003,7 +1195,9 @@ async function handleTool(name, args) {
             }
           }
         }
-      `, { id: issueId, input });
+      `,
+        { id: issueId, input },
+      );
 
       return data.issueUpdate;
     }
@@ -1025,7 +1219,8 @@ async function handleTool(name, args) {
         filter.archivedAt = { null: true };
       }
 
-      const data = await linearQuery(`
+      const data = await linearQuery(
+        `
         query($filter: IssueFilter, $first: Int) {
           issues(filter: $filter, first: $first) {
             nodes {
@@ -1042,7 +1237,9 @@ async function handleTool(name, args) {
             }
           }
         }
-      `, { filter, first: args.first || 50 });
+      `,
+        { filter, first: args.first || 50 },
+      );
 
       return data.issues.nodes;
     }
@@ -1051,7 +1248,8 @@ async function handleTool(name, args) {
     case "linear_assign_issue": {
       const issueId = await resolveIssueId(args.issueId);
 
-      const data = await linearQuery(`
+      const data = await linearQuery(
+        `
         mutation($id: String!, $input: IssueUpdateInput!) {
           issueUpdate(id: $id, input: $input) {
             success
@@ -1062,7 +1260,9 @@ async function handleTool(name, args) {
             }
           }
         }
-      `, { id: issueId, input: { assigneeId: args.assigneeId || null } });
+      `,
+        { id: issueId, input: { assigneeId: args.assigneeId || null } },
+      );
 
       return data.issueUpdate;
     }
@@ -1070,7 +1270,8 @@ async function handleTool(name, args) {
     case "linear_set_issue_priority": {
       const issueId = await resolveIssueId(args.issueId);
 
-      const data = await linearQuery(`
+      const data = await linearQuery(
+        `
         mutation($id: String!, $input: IssueUpdateInput!) {
           issueUpdate(id: $id, input: $input) {
             success
@@ -1081,7 +1282,9 @@ async function handleTool(name, args) {
             }
           }
         }
-      `, { id: issueId, input: { priority: args.priority } });
+      `,
+        { id: issueId, input: { priority: args.priority } },
+      );
 
       return data.issueUpdate;
     }
@@ -1089,7 +1292,8 @@ async function handleTool(name, args) {
     case "linear_set_issue_state": {
       const issueId = await resolveIssueId(args.issueId);
 
-      const data = await linearQuery(`
+      const data = await linearQuery(
+        `
         mutation($id: String!, $input: IssueUpdateInput!) {
           issueUpdate(id: $id, input: $input) {
             success
@@ -1100,7 +1304,9 @@ async function handleTool(name, args) {
             }
           }
         }
-      `, { id: issueId, input: { stateId: args.stateId } });
+      `,
+        { id: issueId, input: { stateId: args.stateId } },
+      );
 
       return data.issueUpdate;
     }
@@ -1108,13 +1314,16 @@ async function handleTool(name, args) {
     case "linear_archive_issue": {
       const issueId = await resolveIssueId(args.issueId);
 
-      const data = await linearQuery(`
+      const data = await linearQuery(
+        `
         mutation($id: String!) {
           issueArchive(id: $id) {
             success
           }
         }
-      `, { id: issueId });
+      `,
+        { id: issueId },
+      );
 
       return data.issueArchive;
     }
@@ -1123,18 +1332,22 @@ async function handleTool(name, args) {
       const issueId = await resolveIssueId(args.issueId);
 
       // First get current labels
-      const issue = await linearQuery(`
+      const issue = await linearQuery(
+        `
         query($id: String!) {
           issue(id: $id) {
             labels { nodes { id } }
           }
         }
-      `, { id: issueId });
+      `,
+        { id: issueId },
+      );
 
-      const currentLabelIds = issue.issue.labels.nodes.map(l => l.id);
+      const currentLabelIds = issue.issue.labels.nodes.map((l) => l.id);
       const newLabelIds = [...new Set([...currentLabelIds, args.labelId])];
 
-      const data = await linearQuery(`
+      const data = await linearQuery(
+        `
         mutation($id: String!, $input: IssueUpdateInput!) {
           issueUpdate(id: $id, input: $input) {
             success
@@ -1145,7 +1358,9 @@ async function handleTool(name, args) {
             }
           }
         }
-      `, { id: issueId, input: { labelIds: newLabelIds } });
+      `,
+        { id: issueId, input: { labelIds: newLabelIds } },
+      );
 
       return data.issueUpdate;
     }
@@ -1154,19 +1369,23 @@ async function handleTool(name, args) {
       const issueId = await resolveIssueId(args.issueId);
 
       // First get current labels
-      const issue = await linearQuery(`
+      const issue = await linearQuery(
+        `
         query($id: String!) {
           issue(id: $id) {
             labels { nodes { id } }
           }
         }
-      `, { id: issueId });
+      `,
+        { id: issueId },
+      );
 
       const newLabelIds = issue.issue.labels.nodes
-        .map(l => l.id)
-        .filter(id => id !== args.labelId);
+        .map((l) => l.id)
+        .filter((id) => id !== args.labelId);
 
-      const data = await linearQuery(`
+      const data = await linearQuery(
+        `
         mutation($id: String!, $input: IssueUpdateInput!) {
           issueUpdate(id: $id, input: $input) {
             success
@@ -1177,7 +1396,9 @@ async function handleTool(name, args) {
             }
           }
         }
-      `, { id: issueId, input: { labelIds: newLabelIds } });
+      `,
+        { id: issueId, input: { labelIds: newLabelIds } },
+      );
 
       return data.issueUpdate;
     }
@@ -1186,7 +1407,8 @@ async function handleTool(name, args) {
     case "linear_create_comment": {
       const issueId = await resolveIssueId(args.issueId);
 
-      const data = await linearQuery(`
+      const data = await linearQuery(
+        `
         mutation($input: CommentCreateInput!) {
           commentCreate(input: $input) {
             success
@@ -1198,7 +1420,9 @@ async function handleTool(name, args) {
             }
           }
         }
-      `, { input: { issueId, body: args.body } });
+      `,
+        { input: { issueId, body: args.body } },
+      );
 
       return data.commentCreate;
     }
@@ -1206,7 +1430,8 @@ async function handleTool(name, args) {
     case "linear_get_comments": {
       const issueId = await resolveIssueId(args.issueId);
 
-      const data = await linearQuery(`
+      const data = await linearQuery(
+        `
         query($id: String!, $first: Int) {
           issue(id: $id) {
             comments(first: $first) {
@@ -1220,7 +1445,9 @@ async function handleTool(name, args) {
             }
           }
         }
-      `, { id: issueId, first: args.first || 50 });
+      `,
+        { id: issueId, first: args.first || 50 },
+      );
 
       return data.issue.comments.nodes;
     }
@@ -1230,7 +1457,8 @@ async function handleTool(name, args) {
       const filter = {};
       if (args.teamId) filter.accessibleTeams = { id: { eq: args.teamId } };
 
-      const data = await linearQuery(`
+      const data = await linearQuery(
+        `
         query($filter: ProjectFilter, $first: Int) {
           projects(filter: $filter, first: $first) {
             nodes {
@@ -1246,7 +1474,12 @@ async function handleTool(name, args) {
             }
           }
         }
-      `, { filter: Object.keys(filter).length ? filter : undefined, first: args.first || 50 });
+      `,
+        {
+          filter: Object.keys(filter).length ? filter : undefined,
+          first: args.first || 50,
+        },
+      );
 
       return data.projects.nodes;
     }
@@ -1260,7 +1493,8 @@ async function handleTool(name, args) {
       if (args.leadId) input.leadId = args.leadId;
       if (args.state) input.state = args.state;
 
-      const data = await linearQuery(`
+      const data = await linearQuery(
+        `
         mutation($input: ProjectCreateInput!) {
           projectCreate(input: $input) {
             success
@@ -1272,7 +1506,9 @@ async function handleTool(name, args) {
             }
           }
         }
-      `, { input });
+      `,
+        { input },
+      );
 
       return data.projectCreate;
     }
@@ -1280,7 +1516,8 @@ async function handleTool(name, args) {
     case "linear_add_issue_to_project": {
       const issueId = await resolveIssueId(args.issueId);
 
-      const data = await linearQuery(`
+      const data = await linearQuery(
+        `
         mutation($id: String!, $input: IssueUpdateInput!) {
           issueUpdate(id: $id, input: $input) {
             success
@@ -1291,14 +1528,17 @@ async function handleTool(name, args) {
             }
           }
         }
-      `, { id: issueId, input: { projectId: args.projectId } });
+      `,
+        { id: issueId, input: { projectId: args.projectId } },
+      );
 
       return data.issueUpdate;
     }
 
     // ===== Workflow & Labels =====
     case "linear_list_workflow_states": {
-      const data = await linearQuery(`
+      const data = await linearQuery(
+        `
         query($teamId: ID!) {
           workflowStates(filter: { team: { id: { eq: $teamId } } }) {
             nodes {
@@ -1310,7 +1550,9 @@ async function handleTool(name, args) {
             }
           }
         }
-      `, { teamId: args.teamId });
+      `,
+        { teamId: args.teamId },
+      );
 
       return data.workflowStates.nodes;
     }
@@ -1319,7 +1561,8 @@ async function handleTool(name, args) {
       const filter = {};
       if (args.teamId) filter.team = { id: { eq: args.teamId } };
 
-      const data = await linearQuery(`
+      const data = await linearQuery(
+        `
         query($filter: IssueLabelFilter, $first: Int) {
           issueLabels(filter: $filter, first: $first) {
             nodes {
@@ -1331,14 +1574,20 @@ async function handleTool(name, args) {
             }
           }
         }
-      `, { filter: Object.keys(filter).length ? filter : undefined, first: args.first || 100 });
+      `,
+        {
+          filter: Object.keys(filter).length ? filter : undefined,
+          first: args.first || 100,
+        },
+      );
 
       return data.issueLabels.nodes;
     }
 
     // ===== Cycles =====
     case "linear_get_cycles": {
-      const data = await linearQuery(`
+      const data = await linearQuery(
+        `
         query($teamId: ID!, $first: Int) {
           cycles(filter: { team: { id: { eq: $teamId } } }, first: $first) {
             nodes {
@@ -1352,13 +1601,16 @@ async function handleTool(name, args) {
             }
           }
         }
-      `, { teamId: args.teamId, first: args.first || 10 });
+      `,
+        { teamId: args.teamId, first: args.first || 10 },
+      );
 
       return data.cycles.nodes;
     }
 
     case "linear_get_active_cycle": {
-      const data = await linearQuery(`
+      const data = await linearQuery(
+        `
         query($teamId: String!) {
           team(id: $teamId) {
             activeCycle {
@@ -1371,7 +1623,9 @@ async function handleTool(name, args) {
             }
           }
         }
-      `, { teamId: args.teamId });
+      `,
+        { teamId: args.teamId },
+      );
 
       return data.team?.activeCycle || null;
     }
@@ -1379,7 +1633,8 @@ async function handleTool(name, args) {
     case "linear_add_issue_to_cycle": {
       const issueId = await resolveIssueId(args.issueId);
 
-      const data = await linearQuery(`
+      const data = await linearQuery(
+        `
         mutation($id: String!, $input: IssueUpdateInput!) {
           issueUpdate(id: $id, input: $input) {
             success
@@ -1390,7 +1645,9 @@ async function handleTool(name, args) {
             }
           }
         }
-      `, { id: issueId, input: { cycleId: args.cycleId } });
+      `,
+        { id: issueId, input: { cycleId: args.cycleId } },
+      );
 
       return data.issueUpdate;
     }
@@ -1398,7 +1655,8 @@ async function handleTool(name, args) {
     // ===== Images =====
     case "linear_get_issue_images": {
       // Fetch the issue to get its description
-      const data = await linearQuery(`
+      const data = await linearQuery(
+        `
         query($id: String!) {
           issue(id: $id) {
             id
@@ -1407,7 +1665,9 @@ async function handleTool(name, args) {
             description
           }
         }
-      `, { id: args.id });
+      `,
+        { id: args.id },
+      );
 
       if (!data.issue) {
         throw new Error(`Issue not found: ${args.id}`);
@@ -1438,8 +1698,11 @@ async function handleTool(name, args) {
           // Extract filename from URL or use index
           // Prefix with issue identifier to prevent filename collisions across issues
           const urlParts = img.url.split("/");
-          const rawFilename = img.alt || urlParts[urlParts.length - 1] || `image_${i + 1}.png`;
-          const filename = sanitizeFilename(`${data.issue.identifier}_${rawFilename}`);
+          const rawFilename =
+            img.alt || urlParts[urlParts.length - 1] || `image_${i + 1}.png`;
+          const filename = sanitizeFilename(
+            `${data.issue.identifier}_${rawFilename}`,
+          );
           const outputPath = join(outputDir, filename);
 
           const result = await downloadImage(img.url, outputPath);
@@ -1475,7 +1738,8 @@ async function handleTool(name, args) {
       const issueId = await resolveIssueId(args.issueId);
 
       // Fetch all comments for the issue
-      const data = await linearQuery(`
+      const data = await linearQuery(
+        `
         query($id: String!, $first: Int) {
           issue(id: $id) {
             id
@@ -1491,7 +1755,9 @@ async function handleTool(name, args) {
             }
           }
         }
-      `, { id: issueId, first: 100 });
+      `,
+        { id: issueId, first: 100 },
+      );
 
       if (!data.issue) {
         throw new Error(`Issue not found: ${args.issueId}`);
@@ -1535,8 +1801,13 @@ async function handleTool(name, args) {
           // Extract filename from URL or use index
           // Prefix with issue identifier to prevent filename collisions across issues
           const urlParts = img.url.split("/");
-          const rawFilename = img.alt || urlParts[urlParts.length - 1] || `comment_image_${i + 1}.png`;
-          const filename = sanitizeFilename(`${data.issue.identifier}_${i + 1}_${rawFilename}`);
+          const rawFilename =
+            img.alt ||
+            urlParts[urlParts.length - 1] ||
+            `comment_image_${i + 1}.png`;
+          const filename = sanitizeFilename(
+            `${data.issue.identifier}_${i + 1}_${rawFilename}`,
+          );
           const outputPath = join(outputDir, filename);
 
           const result = await downloadImage(img.url, outputPath);
@@ -1607,7 +1878,9 @@ async function handleTool(name, args) {
       }
 
       if (uploaded.length === 0) {
-        throw new Error(`All image uploads failed: ${uploadErrors.map(e => e.error).join(", ")}`);
+        throw new Error(
+          `All image uploads failed: ${uploadErrors.map((e) => e.error).join(", ")}`,
+        );
       }
 
       // Replace {image:N} placeholders with markdown image syntax
@@ -1619,7 +1892,8 @@ async function handleTool(name, args) {
       }
 
       // Create the comment
-      const commentData = await linearQuery(`
+      const commentData = await linearQuery(
+        `
         mutation($input: CommentCreateInput!) {
           commentCreate(input: $input) {
             success
@@ -1631,13 +1905,18 @@ async function handleTool(name, args) {
             }
           }
         }
-      `, { input: { issueId, body: commentBody } });
+      `,
+        { input: { issueId, body: commentBody } },
+      );
 
       return {
         comment: commentData.commentCreate,
         imagesUploaded: uploaded.length,
         uploadErrors: uploadErrors.length > 0 ? uploadErrors : undefined,
-        imageUrls: uploaded.map(img => ({ filename: img.filename, assetUrl: img.assetUrl })),
+        imageUrls: uploaded.map((img) => ({
+          filename: img.filename,
+          assetUrl: img.assetUrl,
+        })),
       };
     }
 
@@ -1645,7 +1924,8 @@ async function handleTool(name, args) {
     case "linear_favorite_issue": {
       const issueId = await resolveIssueId(args.issueId);
 
-      const data = await linearQuery(`
+      const data = await linearQuery(
+        `
         mutation($input: FavoriteCreateInput!) {
           favoriteCreate(input: $input) {
             success
@@ -1654,7 +1934,9 @@ async function handleTool(name, args) {
             }
           }
         }
-      `, { input: { issueId } });
+      `,
+        { input: { issueId } },
+      );
 
       return data.favoriteCreate;
     }

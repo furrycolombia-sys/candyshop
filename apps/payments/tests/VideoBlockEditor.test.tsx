@@ -38,7 +38,7 @@ describe("VideoBlockEditor", () => {
     fireEvent.change(screen.getByRole("textbox"), { target: { value: "  " } });
 
     expect(onChange).toHaveBeenCalledWith({ ...baseBlock, url: "" });
-    expect(screen.queryByText("invalidYoutubeUrl")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("video-url-error")).not.toBeInTheDocument();
   });
 
   it("emits embed url and clears error when valid YouTube URL is entered", () => {
@@ -56,7 +56,7 @@ describe("VideoBlockEditor", () => {
       ...baseBlock,
       url: "https://www.youtube.com/embed/xyz789",
     });
-    expect(screen.queryByText("invalidYoutubeUrl")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("video-url-error")).not.toBeInTheDocument();
   });
 
   it("shows error message and does not emit when URL is invalid", () => {

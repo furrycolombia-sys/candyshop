@@ -5,10 +5,8 @@ import { expect, test } from "@playwright/test";
 import { cleanupTestData } from "./helpers/cleanup";
 import {
   APP_URLS,
-  DEBOUNCE_WAIT_MS,
   ELEMENT_TIMEOUT_MS,
   LONG_OPERATION_TIMEOUT_MS,
-  MUTATION_WAIT_MS,
   NAVIGATION_TIMEOUT_MS,
 } from "./helpers/constants";
 import {
@@ -316,22 +314,24 @@ test.describe.serial("Studio UX Improvements", { tag: "@ux" }, () => {
     const thumbGallery = page.getByTestId("image-gallery-thumbs");
     await expect(thumbGallery).toBeVisible({ timeout: ELEMENT_TIMEOUT_MS });
 
-    // Verify GripVertical handles are visible on desktop thumbnails
-    // Each thumbnail wrapper has a GripVertical icon with aria-label for drag
-    // The drag handle has cursor-grab styling and contains the GripVertical SVG
-    const dragHandles = thumbGallery.locator("[aria-label]").filter({
-      has: page.locator("svg"),
-    });
+    // One drag handle per desktop thumbnail.
+    const dragHandles = thumbGallery.getByTestId("image-thumb-drag-handle");
 
     // We should have at least 2 drag handles (one per image)
     const handleCount = await dragHandles.count();
     expect(handleCount).toBeGreaterThanOrEqual(2);
     await snap(page, "grip-vertical-handles-visible");
 
-    // Verify the first drag handle has cursor-grab styling
+    // The handle is draggable. This used to assert toHaveClass(/cursor-grab/),
+    // which is a styling detail: it would fail on a Tailwind rename and pass
+    // on an element that merely looked grabbable without being wired up. The
+    // attribute below is set by @hello-pangea/dnd on real drag handles, so it
+    // checks the thing that matters.
     const firstHandle = dragHandles.first();
     await expect(firstHandle).toBeVisible();
-    await expect(firstHandle).toHaveClass(/cursor-grab/);
+    await expect(firstHandle).toHaveAttribute(
+      "data-rfd-drag-handle-draggable-id",
+    );
     await snap(page, "grip-handle-styling-verified");
 
     // Verify mobile thumbnails do NOT have drag handles

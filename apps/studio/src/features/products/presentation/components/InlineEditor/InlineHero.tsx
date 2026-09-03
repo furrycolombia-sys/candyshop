@@ -143,6 +143,7 @@ export function InlineHero({ control, errors }: InlineHeroProps) {
               {/* Refundable badge */}
               {refundable === true && (
                 <span
+                  {...tid("inline-hero-refundable")}
                   className={cn(
                     "bg-success text-success-foreground",
                     badgeBase,
@@ -153,6 +154,7 @@ export function InlineHero({ control, errors }: InlineHeroProps) {
               )}
               {refundable === false && (
                 <span
+                  {...tid("inline-hero-non-refundable")}
                   className={cn(
                     "bg-warning text-warning-foreground",
                     badgeBase,

@@ -58,13 +58,13 @@ describe("UserDelegatesCard", () => {
       isLoading: false,
     });
     render(<UserDelegatesCard userId="u1" canDelete={false} />);
-    expect(screen.getByText("t:empty")).toBeInTheDocument();
+    expect(screen.getByTestId("user-delegates-empty")).toBeInTheDocument();
   });
 
   it("does not show loading or empty when loading", () => {
     mockUseUserDelegates.mockReturnValue({ data: null, isLoading: true });
     render(<UserDelegatesCard userId="u1" canDelete={false} />);
-    expect(screen.queryByText("t:empty")).toBeNull();
+    expect(screen.queryByTestId("user-delegates-empty")).toBeNull();
   });
 
   it("renders asSeller rows", () => {
@@ -78,7 +78,7 @@ describe("UserDelegatesCard", () => {
     render(<UserDelegatesCard userId="u1" canDelete={false} />);
     expect(screen.getByTestId("seller-row-s1")).toBeInTheDocument();
     expect(screen.getByTestId("seller-row-s2")).toBeInTheDocument();
-    expect(screen.getByText("t:asSeller")).toBeInTheDocument();
+    expect(screen.getByTestId("user-delegates-as-seller")).toBeInTheDocument();
   });
 
   it("renders asDelegate rows", () => {
@@ -105,7 +105,7 @@ describe("UserDelegatesCard", () => {
     render(<UserDelegatesCard userId="u1" canDelete={false} />);
     expect(screen.getByTestId("seller-row-s1")).toBeInTheDocument();
     expect(screen.getByTestId("delegate-row-d1")).toBeInTheDocument();
-    expect(screen.queryByText("t:empty")).toBeNull();
+    expect(screen.queryByTestId("user-delegates-empty")).toBeNull();
   });
 
   it("does not show asSeller section when asSeller is empty", () => {
@@ -114,7 +114,7 @@ describe("UserDelegatesCard", () => {
       isLoading: false,
     });
     render(<UserDelegatesCard userId="u1" canDelete={false} />);
-    expect(screen.queryByText("t:asSeller")).toBeNull();
+    expect(screen.queryByTestId("user-delegates-as-seller")).toBeNull();
   });
 
   it("passes userId to useUserDelegates", () => {

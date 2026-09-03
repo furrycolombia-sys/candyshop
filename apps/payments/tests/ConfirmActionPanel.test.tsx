@@ -102,10 +102,13 @@ describe("ConfirmActionPanel", () => {
   it("shows '...' instead of confirmLabel when isPending is true", () => {
     render(<ConfirmActionPanel {...defaultProps} isPending={true} />);
 
-    expect(screen.getByTestId("confirm-action-submit")).toHaveTextContent(
-      "...",
-    );
-    expect(screen.queryByText("Confirm")).not.toBeInTheDocument();
+    // The submit button is always in the document -- only its label changes
+    // while pending. So this asserts on the content of that one element, not
+    // on the element's absence: a blind swap of queryByText for queryByTestId
+    // claimed the button disappears, which it does not.
+    const submit = screen.getByTestId("confirm-action-submit");
+    expect(submit).toHaveTextContent("...");
+    expect(submit).not.toHaveTextContent("Confirm");
   });
 
   it("shows confirmLabel when isPending is false", () => {

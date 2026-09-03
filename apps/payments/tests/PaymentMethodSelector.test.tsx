@@ -24,7 +24,6 @@ vi.mock("shared", async (importOriginal) => {
   };
 });
 
-// eslint-disable-next-line import/order -- vi.mock must be hoisted before this import
 import { PaymentMethodSelector } from "@/features/checkout/presentation/components/PaymentMethodSelector";
 
 const mockMethods: SellerPaymentMethodWithType[] = [

@@ -35,12 +35,18 @@ export function ProductBadges({
         {tTypes(product.type)}
       </span>
       {product.refundable === true && (
-        <span className="border-2 border-foreground bg-success px-2 py-0.5 text-ui-xs font-bold uppercase tracking-widest text-success-foreground">
+        <span
+          {...tid("product-badge-refundable")}
+          className="border-2 border-foreground bg-success px-2 py-0.5 text-ui-xs font-bold uppercase tracking-widest text-success-foreground"
+        >
           {t("refundable")}
         </span>
       )}
       {product.refundable === false && (
-        <span className="border-2 border-foreground bg-warning px-2 py-0.5 text-ui-xs font-bold uppercase tracking-widest text-warning-foreground">
+        <span
+          {...tid("product-badge-non-refundable")}
+          className="border-2 border-foreground bg-warning px-2 py-0.5 text-ui-xs font-bold uppercase tracking-widest text-warning-foreground"
+        >
           {t("nonRefundable")}
         </span>
       )}

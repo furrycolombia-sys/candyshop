@@ -64,7 +64,6 @@ vi.mock("lucide-react", () => ({
   Clock: () => <svg data-testid="clock-icon" />,
 }));
 
-// eslint-disable-next-line import/order -- vi.mock must be hoisted before this import
 import { ReceivedOrderCard } from "@/features/received-orders/presentation/components/ReceivedOrderCard";
 
 function makeOrder(overrides: Partial<ReceivedOrder> = {}): ReceivedOrder {
@@ -170,7 +169,9 @@ describe("ReceivedOrderCard", () => {
         isPending={false}
       />,
     );
-    expect(screen.getByText(/Please check the receipt/)).toBeInTheDocument();
+    expect(screen.getByTestId("received-order-seller-note")).toHaveTextContent(
+      "Please check the receipt",
+    );
   });
 
   it("does not show seller note when absent", () => {
@@ -182,7 +183,9 @@ describe("ReceivedOrderCard", () => {
       />,
     );
     // No note displayed as standalone text
-    expect(screen.queryByText(/Please check/)).not.toBeInTheDocument();
+    expect(
+      screen.queryByTestId("received-order-seller-note"),
+    ).not.toBeInTheDocument();
   });
 
   it("has the correct test ID", () => {
@@ -205,7 +208,9 @@ describe("ReceivedOrderCard", () => {
       />,
     );
     expect(screen.getByText("3001234567")).toBeInTheDocument();
-    expect(screen.getByText("Nequi")).toBeInTheDocument();
+    expect(screen.getByTestId("received-order-buyer-info")).toHaveTextContent(
+      "Nequi",
+    );
   });
 
   it("renders buyer_info with a non-image https URL as a link", () => {
@@ -244,7 +249,9 @@ describe("ReceivedOrderCard", () => {
       />,
     );
     // No extra keys in the document from buyer_info
-    expect(screen.queryByText("Nequi")).not.toBeInTheDocument();
+    expect(
+      screen.queryByTestId("received-order-buyer-info"),
+    ).not.toBeInTheDocument();
   });
 
   it("renders seller_name badge when seller_name is present", () => {
@@ -267,7 +274,9 @@ describe("ReceivedOrderCard", () => {
         isPending={false}
       />,
     );
-    expect(screen.queryByText("onBehalfOf")).not.toBeInTheDocument();
+    expect(
+      screen.queryByTestId("received-order-on-behalf-of"),
+    ).not.toBeInTheDocument();
   });
 
   it("shows expiring soon warning for a past expires_at date with pending_verification status", () => {

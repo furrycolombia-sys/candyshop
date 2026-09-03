@@ -32,7 +32,7 @@ const baseEntry: AuditEntry = {
   changed_fields: null,
   action_timestamp: "2025-01-01T00:00:00Z",
   transaction_id: 999,
-  // eslint-disable-next-line sonarjs/no-hardcoded-ip -- test fixture data
+
   client_ip: "192.168.1.1",
 };
 
@@ -60,13 +60,17 @@ describe("AuditRowDetail", () => {
 
   it("renders client IP when present", () => {
     render(<AuditRowDetail entry={baseEntry} />);
-    expect(screen.getByText(/192\.168\.1\.1/)).toBeInTheDocument();
+    // Through the same id the "hides client IP" case checks, so that absence
+    // is measured against something proven to exist.
+    expect(screen.getByTestId("audit-client-ip")).toHaveTextContent(
+      "192.168.1.1",
+    );
   });
 
   it("hides client IP when null", () => {
     const entry = { ...baseEntry, client_ip: null };
     render(<AuditRowDetail entry={entry} />);
-    expect(screen.queryByText(/ip/)).not.toBeInTheDocument();
+    expect(screen.queryByTestId("audit-client-ip")).not.toBeInTheDocument();
   });
 
   it("renders changed fields table for UPDATE actions", () => {
@@ -77,14 +81,16 @@ describe("AuditRowDetail", () => {
     };
     render(<AuditRowDetail entry={entry} />);
 
-    expect(screen.getByText("changedFields")).toBeInTheDocument();
+    expect(screen.getByTestId("audit-changed-fields")).toBeInTheDocument();
     expect(screen.getByText("name")).toBeInTheDocument();
     expect(screen.getByText("New Name")).toBeInTheDocument();
   });
 
   it("does not render changed fields for INSERT actions", () => {
     render(<AuditRowDetail entry={baseEntry} />);
-    expect(screen.queryByText("changedFields")).not.toBeInTheDocument();
+    expect(
+      screen.queryByTestId("audit-changed-fields"),
+    ).not.toBeInTheDocument();
   });
 
   it("renders full record in a details element", () => {
@@ -118,7 +124,6 @@ describe("AuditRowDetail", () => {
   });
 
   it("copies user id to clipboard when copy button is clicked", async () => {
-    // eslint-disable-next-line unicorn/no-useless-undefined -- TS strict requires the argument
     const writeText = vi.fn().mockResolvedValue(undefined);
     Object.defineProperty(navigator, "clipboard", {
       value: { writeText },

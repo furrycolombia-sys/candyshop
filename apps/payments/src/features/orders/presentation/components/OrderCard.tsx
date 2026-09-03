@@ -79,7 +79,10 @@ export function OrderCard({ order }: OrderCardProps) {
 
       {/* Expiration — if applicable */}
       {order.expires_at && !isTerminal && (
-        <div className="flex items-center gap-1.5 border-t border-muted-foreground/10 px-4 py-2 text-xs text-muted-foreground">
+        <div
+          className="flex items-center gap-1.5 border-t border-muted-foreground/10 px-4 py-2 text-xs text-muted-foreground"
+          {...tid("order-card-expiration")}
+        >
           <Clock className="size-3" />
           <ExpirationLabel expiresAt={order.expires_at} />
         </div>

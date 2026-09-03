@@ -10,14 +10,14 @@
     "tunnel:stop": "node scripts/cloudflared-stop.mjs",
     "tunnel:switch": "node scripts/tunnel-switch.mjs",
     "lint:env": "node scripts/check-env-parity.mjs",
-    "lint": "eslint .",
+    "lint": "eslint . --max-warnings=0",
     "typecheck": "turbo typecheck",
     "test": "turbo test",
     "test:watch": "vitest",
     "test:coverage": "turbo test:coverage",
     "test:workflows": "vitest run -c vitest.config.scripts.js scripts/__tests__/sync-secrets-workflow.test.mjs scripts/__tests__/restore-order.test.mjs scripts/__tests__/sql-statement.test.mjs scripts/__tests__/verify-restore.test.mjs scripts/__tests__/load-root-env-equivalence.test.mjs",
-    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,css,md}\"",
-    "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,css,md}\"",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,mjs,cjs,json,css,md,yml,yaml}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,mjs,cjs,json,css,md,yml,yaml}\"",
     "fix:staged": "lint-staged --concurrent false",
     "fix:all": "pnpm format && pnpm lint --fix",
     "check:style": "stylelint \"apps/*/src/**/*.css\" \"packages/*/src/**/*.css\" && node scripts/check-css-sync.mjs",
@@ -107,12 +107,12 @@
     "vitest": "^4.1.5"
   },
   "lint-staged": {
-    "*.{ts,tsx,js,jsx}": [
+    "*.{ts,tsx,js,jsx,mjs,cjs}": [
       "prettier --check",
-      "eslint --no-warn-ignored",
+      "eslint --max-warnings=0 --no-warn-ignored",
       "secretlint"
     ],
-    "*.{json,md,css}": [
+    "*.{json,md,css,yml,yaml}": [
       "prettier --check"
     ]
   },

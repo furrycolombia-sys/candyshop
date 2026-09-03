@@ -54,6 +54,12 @@ function applyThemeToDOM(theme: Theme) {
     THEMES.DARK,
     effectiveTheme === THEMES.DARK,
   );
+  // The class is what Tailwind's dark variant keys off, so it has to stay.
+  // This mirrors the same fact onto an attribute, because a class is a
+  // styling detail and the e2e-selectors rule asks for state to be readable
+  // without one -- a test asserting toHaveClass(/dark/) breaks the day the
+  // dark-mode strategy changes, even though the behaviour has not.
+  document.documentElement.dataset.theme = effectiveTheme;
 }
 
 function resolveEffectiveTheme(

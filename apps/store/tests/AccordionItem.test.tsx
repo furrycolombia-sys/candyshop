@@ -41,7 +41,7 @@ describe("AccordionItem", () => {
         theme={theme}
       />,
     );
-    expect(screen.queryByText("The answer")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("accordion-answer-0")).not.toBeInTheDocument();
   });
 
   it("shows answer after clicking toggle", () => {
@@ -54,7 +54,9 @@ describe("AccordionItem", () => {
       />,
     );
     fireEvent.click(screen.getByTestId("accordion-toggle-0"));
-    expect(screen.getByText("The answer")).toBeInTheDocument();
+    expect(screen.getByTestId("accordion-answer-0")).toHaveTextContent(
+      "The answer",
+    );
     expect(screen.getByTestId("accordion-answer-0")).toBeInTheDocument();
   });
 
@@ -69,9 +71,11 @@ describe("AccordionItem", () => {
     );
     const toggle = screen.getByTestId("accordion-toggle-0");
     fireEvent.click(toggle);
-    expect(screen.getByText("The answer")).toBeInTheDocument();
+    expect(screen.getByTestId("accordion-answer-0")).toHaveTextContent(
+      "The answer",
+    );
     fireEvent.click(toggle);
-    expect(screen.queryByText("The answer")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("accordion-answer-0")).not.toBeInTheDocument();
   });
 
   it("has aria-expanded attribute", () => {

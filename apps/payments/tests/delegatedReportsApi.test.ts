@@ -30,7 +30,7 @@ function makeSupabase(datasets: {
       gte: () => builder,
       lte: () => builder,
       order: () => builder,
-      // eslint-disable-next-line unicorn/no-thenable -- minimal thenable stub so any point in the chain can be awaited
+
       then: (resolve: (v: { data: unknown[]; error: null }) => unknown) =>
         resolve({ data: rows, error: null }),
     };

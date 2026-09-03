@@ -75,6 +75,8 @@ describe("PriceBlock", () => {
     render(
       <PriceBlock product={makeProduct()} discountLabel={discountLabel} />,
     );
-    expect(screen.queryByText("30")).not.toBeInTheDocument();
+    expect(
+      screen.queryByTestId("hero-price-compare-at"),
+    ).not.toBeInTheDocument();
   });
 });

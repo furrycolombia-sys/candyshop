@@ -40,12 +40,20 @@ export function UserDelegatesCard({
       )}
 
       {!isLoading && isEmpty && (
-        <p className="text-sm text-muted-foreground">{t("empty")}</p>
+        <p
+          className="text-sm text-muted-foreground"
+          {...tid("user-delegates-empty")}
+        >
+          {t("empty")}
+        </p>
       )}
 
       {asSeller.length > 0 && (
         <div className="mb-4">
-          <h4 className="mb-1 text-xs font-bold uppercase tracking-wider text-muted-foreground">
+          <h4
+            className="mb-1 text-xs font-bold uppercase tracking-wider text-muted-foreground"
+            {...tid("user-delegates-as-seller")}
+          >
             {t("asSeller")}
           </h4>
           <div className="rounded-none border border-border">

@@ -1,8 +1,8 @@
 import { renderHook } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
-// eslint-disable-next-line import/order -- vi.mock hoisting requires these imports before mocks are defined
+
 import { useQueryStates } from "nuqs";
-// eslint-disable-next-line import/order -- vi.mock hoisting requires these imports before mocks are defined
+
 import { useQuery } from "@tanstack/react-query";
 
 vi.mock("nuqs", async (importOriginal) => {

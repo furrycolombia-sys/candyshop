@@ -356,6 +356,7 @@ export function InlineImageCarousel({ control }: InlineImageCarouselProps) {
                           {...dragProvided.dragHandleProps}
                           className="cursor-grab text-muted-foreground hover:text-foreground"
                           aria-label={t("dragToReorder")}
+                          {...tid("image-thumb-drag-handle")}
                         >
                           <GripVertical className="size-3" />
                         </div>

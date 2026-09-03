@@ -1,4 +1,3 @@
-/* eslint-disable react/button-has-type */
 import { render, screen, fireEvent } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
@@ -83,7 +82,6 @@ vi.mock("api/supabase", () => ({
   createBrowserSupabaseClient: vi.fn(() => ({})),
 }));
 
-// eslint-disable-next-line import/order -- vi.mock must be hoisted before this import
 import { SellerCheckoutContent } from "@/features/checkout/presentation/components/SellerCheckoutContent";
 
 const mockItems: CartItem[] = [

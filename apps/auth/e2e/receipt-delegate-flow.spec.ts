@@ -7,10 +7,8 @@ import { expect, test } from "@playwright/test";
 import { cleanupTestData } from "./helpers/cleanup";
 import {
   APP_URLS,
-  DEBOUNCE_WAIT_MS,
   ELEMENT_TIMEOUT_MS,
   LONG_OPERATION_TIMEOUT_MS,
-  MUTATION_WAIT_MS,
   NAVIGATION_TIMEOUT_MS,
 } from "./helpers/constants";
 import {

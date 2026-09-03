@@ -39,8 +39,10 @@ function loadEnvFile(filePath) {
     const match = trimmed.match(/^VERCEL_TOKEN=(.+)$/);
     if (match) {
       let token = match[1].trim();
-      if ((token.startsWith('"') && token.endsWith('"')) ||
-          (token.startsWith("'") && token.endsWith("'"))) {
+      if (
+        (token.startsWith('"') && token.endsWith('"')) ||
+        (token.startsWith("'") && token.endsWith("'"))
+      ) {
         token = token.slice(1, -1);
       }
       process.env.VERCEL_TOKEN = token;
@@ -84,19 +86,39 @@ async function vercelFetch(endpoint, options = {}) {
 const TOOLS = [
   {
     name: "vercel_list_deployments",
-    description: "List recent deployments. Returns deployment ID, URL, state, and creation time.",
+    description:
+      "List recent deployments. Returns deployment ID, URL, state, and creation time.",
     inputSchema: {
       type: "object",
       properties: {
-        projectId: { type: "string", description: "Filter by project ID or name" },
-        limit: { type: "number", description: "Number of deployments to return (default: 10, max: 100)" },
-        state: { type: "string", enum: ["BUILDING", "ERROR", "INITIALIZING", "QUEUED", "READY", "CANCELED"], description: "Filter by deployment state" },
+        projectId: {
+          type: "string",
+          description: "Filter by project ID or name",
+        },
+        limit: {
+          type: "number",
+          description:
+            "Number of deployments to return (default: 10, max: 100)",
+        },
+        state: {
+          type: "string",
+          enum: [
+            "BUILDING",
+            "ERROR",
+            "INITIALIZING",
+            "QUEUED",
+            "READY",
+            "CANCELED",
+          ],
+          description: "Filter by deployment state",
+        },
       },
     },
   },
   {
     name: "vercel_get_deployment",
-    description: "Get details of a specific deployment by ID or URL. Includes status, build info, and errors.",
+    description:
+      "Get details of a specific deployment by ID or URL. Includes status, build info, and errors.",
     inputSchema: {
       type: "object",
       properties: {
@@ -107,13 +129,21 @@ const TOOLS = [
   },
   {
     name: "vercel_get_deployment_events",
-    description: "Get build logs and events for a deployment. Essential for debugging build failures.",
+    description:
+      "Get build logs and events for a deployment. Essential for debugging build failures.",
     inputSchema: {
       type: "object",
       properties: {
         idOrUrl: { type: "string", description: "Deployment ID or URL" },
-        limit: { type: "number", description: "Number of events to return (default: 100)" },
-        direction: { type: "string", enum: ["backward", "forward"], description: "Direction to fetch events" },
+        limit: {
+          type: "number",
+          description: "Number of events to return (default: 100)",
+        },
+        direction: {
+          type: "string",
+          enum: ["backward", "forward"],
+          description: "Direction to fetch events",
+        },
       },
       required: ["idOrUrl"],
     },
@@ -125,13 +155,17 @@ const TOOLS = [
       type: "object",
       properties: {
         search: { type: "string", description: "Search projects by name" },
-        limit: { type: "number", description: "Number of projects to return (default: 20)" },
+        limit: {
+          type: "number",
+          description: "Number of projects to return (default: 20)",
+        },
       },
     },
   },
   {
     name: "vercel_get_project",
-    description: "Get details of a specific project including settings, domains, and environment info.",
+    description:
+      "Get details of a specific project including settings, domains, and environment info.",
     inputSchema: {
       type: "object",
       properties: {
@@ -153,12 +187,17 @@ const TOOLS = [
   },
   {
     name: "vercel_get_project_env",
-    description: "Get environment variables for a project (names only, not values for security).",
+    description:
+      "Get environment variables for a project (names only, not values for security).",
     inputSchema: {
       type: "object",
       properties: {
         idOrName: { type: "string", description: "Project ID or name" },
-        target: { type: "string", enum: ["production", "preview", "development"], description: "Environment target" },
+        target: {
+          type: "string",
+          enum: ["production", "preview", "development"],
+          description: "Environment target",
+        },
       },
       required: ["idOrName"],
     },
@@ -180,20 +219,32 @@ const TOOLS = [
     inputSchema: {
       type: "object",
       properties: {
-        deploymentId: { type: "string", description: "Deployment ID to redeploy" },
-        target: { type: "string", enum: ["production", "preview"], description: "Deployment target" },
+        deploymentId: {
+          type: "string",
+          description: "Deployment ID to redeploy",
+        },
+        target: {
+          type: "string",
+          enum: ["production", "preview"],
+          description: "Deployment target",
+        },
       },
       required: ["deploymentId"],
     },
   },
   {
     name: "vercel_get_latest_deployment",
-    description: "Get the latest deployment for a project (convenience wrapper).",
+    description:
+      "Get the latest deployment for a project (convenience wrapper).",
     inputSchema: {
       type: "object",
       properties: {
         projectId: { type: "string", description: "Project ID or name" },
-        target: { type: "string", enum: ["production", "preview"], description: "Filter by target (optional)" },
+        target: {
+          type: "string",
+          enum: ["production", "preview"],
+          description: "Filter by target (optional)",
+        },
       },
       required: ["projectId"],
     },
@@ -209,7 +260,7 @@ async function handleTool(name, args) {
       if (args.limit) params.set("limit", String(args.limit));
       if (args.state) params.set("state", args.state);
       const data = await vercelFetch(`/v6/deployments?${params}`);
-      return data.deployments.map(d => ({
+      return data.deployments.map((d) => ({
         id: d.uid,
         url: d.url,
         state: d.state || d.readyState,
@@ -244,18 +295,23 @@ async function handleTool(name, args) {
       const params = new URLSearchParams();
       if (args.limit) params.set("limit", String(args.limit));
       if (args.direction) params.set("direction", args.direction);
-      const data = await vercelFetch(`/v3/deployments/${args.idOrUrl}/events?${params}`);
-      return data.filter(e =>
-        e.type === "stdout" ||
-        e.type === "stderr" ||
-        e.type === "error" ||
-        e.type === "command" ||
-        e.type === "exit"
-      ).map(e => ({
-        type: e.type,
-        created: e.created,
-        text: e.text || e.payload?.text,
-      }));
+      const data = await vercelFetch(
+        `/v3/deployments/${args.idOrUrl}/events?${params}`,
+      );
+      return data
+        .filter(
+          (e) =>
+            e.type === "stdout" ||
+            e.type === "stderr" ||
+            e.type === "error" ||
+            e.type === "command" ||
+            e.type === "exit",
+        )
+        .map((e) => ({
+          type: e.type,
+          created: e.created,
+          text: e.text || e.payload?.text,
+        }));
     }
 
     case "vercel_list_projects": {
@@ -263,12 +319,12 @@ async function handleTool(name, args) {
       if (args.search) params.set("search", args.search);
       if (args.limit) params.set("limit", String(args.limit));
       const data = await vercelFetch(`/v9/projects?${params}`);
-      return data.projects.map(p => ({
+      return data.projects.map((p) => ({
         id: p.id,
         name: p.name,
         framework: p.framework,
         updatedAt: p.updatedAt,
-        latestDeployments: p.latestDeployments?.map(d => ({
+        latestDeployments: p.latestDeployments?.map((d) => ({
           id: d.id,
           state: d.readyState,
           target: d.target,
@@ -294,7 +350,7 @@ async function handleTool(name, args) {
 
     case "vercel_get_project_domains": {
       const data = await vercelFetch(`/v9/projects/${args.idOrName}/domains`);
-      return data.domains.map(d => ({
+      return data.domains.map((d) => ({
         name: d.name,
         verified: d.verified,
         gitBranch: d.gitBranch,
@@ -305,8 +361,10 @@ async function handleTool(name, args) {
     case "vercel_get_project_env": {
       const params = new URLSearchParams();
       if (args.target) params.set("target", args.target);
-      const data = await vercelFetch(`/v10/projects/${args.idOrName}/env?${params}`);
-      return data.envs.map(e => ({
+      const data = await vercelFetch(
+        `/v10/projects/${args.idOrName}/env?${params}`,
+      );
+      return data.envs.map((e) => ({
         key: e.key,
         target: e.target,
         type: e.type,

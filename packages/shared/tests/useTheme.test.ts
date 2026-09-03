@@ -33,6 +33,7 @@ Object.defineProperty(document, "documentElement", {
       remove: vi.fn(),
       toggle: vi.fn(),
     },
+    dataset: {} as Record<string, string>,
   },
   writable: true,
 });
@@ -229,6 +230,24 @@ describe("useTheme", () => {
       "dark",
       false,
     );
+  });
+
+  // The .dark class is Tailwind's mechanism and has to stay, but a class is a
+  // styling detail: the e2e-selectors rule says state belongs in a data
+  // attribute, and an e2e test asserting toHaveClass(/dark/) breaks the moment
+  // the strategy changes. data-theme is the assertable half.
+  it("mirrors the effective theme onto a data attribute", async () => {
+    const { result } = renderHook(() => useTheme());
+
+    await act(async () => {
+      result.current.setTheme("dark");
+    });
+    expect(document.documentElement.dataset.theme).toBe("dark");
+
+    await act(async () => {
+      result.current.setTheme("light");
+    });
+    expect(document.documentElement.dataset.theme).toBe("light");
   });
 
   it("should apply CSS classes correctly", async () => {

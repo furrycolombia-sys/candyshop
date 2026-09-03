@@ -93,7 +93,7 @@ describe("ProductBadges", () => {
         t={identity}
       />,
     );
-    expect(screen.getByText("refundable")).toBeInTheDocument();
+    expect(screen.getByTestId("product-badge-refundable")).toBeInTheDocument();
   });
 
   it("renders non-refundable badge when refundable is false", () => {
@@ -107,7 +107,9 @@ describe("ProductBadges", () => {
         t={identity}
       />,
     );
-    expect(screen.getByText("nonRefundable")).toBeInTheDocument();
+    expect(
+      screen.getByTestId("product-badge-non-refundable"),
+    ).toBeInTheDocument();
   });
 
   it("does not render refund badge when refundable is null", () => {
@@ -121,7 +123,7 @@ describe("ProductBadges", () => {
         t={identity}
       />,
     );
-    expect(screen.queryByText("refundable")).toBeNull();
-    expect(screen.queryByText("nonRefundable")).toBeNull();
+    expect(screen.queryByTestId("product-badge-refundable")).toBeNull();
+    expect(screen.queryByTestId("product-badge-non-refundable")).toBeNull();
   });
 });

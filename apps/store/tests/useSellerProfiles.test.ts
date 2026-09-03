@@ -16,7 +16,6 @@ vi.mock("api/supabase", () => ({
         select: (...sArgs: unknown[]) => {
           mockSelect(...sArgs);
           return {
-            // eslint-disable-next-line sonarjs/no-nested-functions -- vi.mock factory requires deeply nested mock chain
             in: (...inArgs: unknown[]) => {
               mockIn(...inArgs);
               return Promise.resolve({

@@ -125,7 +125,9 @@ function Wrapper({ items = [] }: { items?: Array<typeof sampleItem> }) {
 describe("SectionItemsGallery", () => {
   it("shows empty state when no items", () => {
     render(<Wrapper />);
-    expect(screen.getByText("emptySection")).toBeInTheDocument();
+    expect(
+      screen.getByTestId("section-items-gallery-empty"),
+    ).toBeInTheDocument();
   });
 
   it("renders add item button", () => {
@@ -169,6 +171,8 @@ describe("SectionItemsGallery", () => {
 
   it("hides empty state when items exist", () => {
     render(<Wrapper items={[sampleItem]} />);
-    expect(screen.queryByText("emptySection")).not.toBeInTheDocument();
+    expect(
+      screen.queryByTestId("section-items-gallery-empty"),
+    ).not.toBeInTheDocument();
   });
 });

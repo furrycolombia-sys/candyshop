@@ -131,7 +131,10 @@ export function InlineSections({ control, theme }: InlineSectionsProps) {
 
           {/* Empty state */}
           {sectionFields.length === 0 && (
-            <p className="py-8 text-center text-sm text-muted-foreground">
+            <p
+              className="py-8 text-center text-sm text-muted-foreground"
+              {...tid("inline-sections-empty")}
+            >
               {t("emptySection")}
             </p>
           )}

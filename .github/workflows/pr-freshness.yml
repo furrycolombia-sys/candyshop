@@ -222,4 +222,3 @@ jobs:
           echo ""
           echo "Run: git merge origin/$BASE_REF"
           exit 1
-

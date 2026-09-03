@@ -72,6 +72,7 @@ export function InlineTagEditor({ control }: InlineTagEditorProps) {
       {tags.map((tag) => (
         <span
           key={tag}
+          {...tid(`inline-tag-${tag}`)}
           className="flex items-center gap-1 rounded-full border-2 border-foreground bg-muted px-2.5 py-0.5 font-display text-ui-xs font-bold uppercase tracking-widest"
         >
           #{tag}

@@ -24,7 +24,6 @@ import {
   readFileSync,
   unlinkSync,
   writeFileSync,
-  mkdirSync,
   rmSync,
 } from "node:fs";
 import { spawnSync } from "node:child_process";
@@ -250,14 +249,15 @@ function decryptAndWrite(encryptedPath, passphrase, downloadDir) {
     const key = keyAndIv.subarray(0, 32);
     const iv = keyAndIv.subarray(32, 48);
     const decipher = createDecipheriv("aes-256-cbc", key, iv);
-    const decrypted = Buffer.concat([decipher.update(ciphertext), decipher.final()]);
+    const decrypted = Buffer.concat([
+      decipher.update(ciphertext),
+      decipher.final(),
+    ]);
     writeFileSync(decryptedPath, decrypted);
   } catch (err) {
     rmSync(downloadDir, { recursive: true, force: true });
     if (existsSync(decryptedPath)) unlinkSync(decryptedPath);
-    fail(
-      `Failed to decrypt secrets artifact: ${err.message}`,
-    );
+    fail(`Failed to decrypt secrets artifact: ${err.message}`);
   }
 
   rmSync(downloadDir, { recursive: true, force: true });

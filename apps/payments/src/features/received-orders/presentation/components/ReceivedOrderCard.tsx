@@ -121,7 +121,10 @@ export function ReceivedOrderCard({
             <ReceivedStatusBadge status={order.payment_status} />
           </div>
           {order.seller_name && (
-            <span className="inline-flex items-center rounded-md bg-muted px-2 py-0.5 font-display text-xs font-bold text-muted-foreground">
+            <span
+              className="inline-flex items-center rounded-md bg-muted px-2 py-0.5 font-display text-xs font-bold text-muted-foreground"
+              {...tid("received-order-on-behalf-of")}
+            >
               {t("onBehalfOf", { sellerName: order.seller_name })}
             </span>
           )}
@@ -166,7 +169,10 @@ export function ReceivedOrderCard({
 
       {/* Buyer info (e.g. Nequi fields) */}
       {order.buyer_info && Object.keys(order.buyer_info).length > 0 && (
-        <div className="border-b-2 border-dashed border-muted-foreground/30 px-4 py-3 space-y-1">
+        <div
+          className="border-b-2 border-dashed border-muted-foreground/30 px-4 py-3 space-y-1"
+          {...tid("received-order-buyer-info")}
+        >
           {Object.entries(order.buyer_info).map(([key, value]) => (
             <div key={key} className="flex items-start gap-2 text-sm">
               <span className="font-display text-xs font-bold uppercase tracking-widest text-muted-foreground min-w-24 pt-0.5">
@@ -180,7 +186,10 @@ export function ReceivedOrderCard({
 
       {/* Seller note */}
       {order.seller_note && (
-        <div className="border-b-2 border-dashed border-muted-foreground/30 px-4 py-3">
+        <div
+          className="border-b-2 border-dashed border-muted-foreground/30 px-4 py-3"
+          {...tid("received-order-seller-note")}
+        >
           <p className="text-sm italic text-muted-foreground">
             &ldquo;{order.seller_note}&rdquo;
           </p>

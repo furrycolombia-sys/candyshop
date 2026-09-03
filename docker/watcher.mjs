@@ -32,15 +32,16 @@ const STARTUP_GRACE_MS = 90_000; // wait before first check so apps can boot
 const REPEAT_ALERT_MS = 2 * 60 * 60 * 1_000;
 
 // System resource thresholds
-const RAM_CRITICAL_PCT  = 2;   // alert only when free RAM drops below 2% of total
+const RAM_CRITICAL_PCT = 2; // alert only when free RAM drops below 2% of total
 const DISK_CRITICAL_PCT = 90;
-const DISK_WARN_PCT     = 80;
+const DISK_WARN_PCT = 80;
 
-const TELEGRAM_TOKEN           = process.env.TELEGRAM_BOT_TOKEN          ?? "";
-const TELEGRAM_CHAT            = process.env.TELEGRAM_CHAT_ID             ?? "";
-const TELEGRAM_THREAD          = process.env.TELEGRAM_THREAD_ID           ?? "";
-const TELEGRAM_CRITICAL_THREAD = process.env.TELEGRAM_CRITICAL_THREAD_ID ?? TELEGRAM_THREAD;
-const CONTAINER_NAME           = process.env.CONTAINER_NAME ?? "libra-prod";
+const TELEGRAM_TOKEN = process.env.TELEGRAM_BOT_TOKEN ?? "";
+const TELEGRAM_CHAT = process.env.TELEGRAM_CHAT_ID ?? "";
+const TELEGRAM_THREAD = process.env.TELEGRAM_THREAD_ID ?? "";
+const TELEGRAM_CRITICAL_THREAD =
+  process.env.TELEGRAM_CRITICAL_THREAD_ID ?? TELEGRAM_THREAD;
+const CONTAINER_NAME = process.env.CONTAINER_NAME ?? "libra-prod";
 
 function htmlEscape(str) {
   return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -60,13 +61,41 @@ let tunnelFailStreak = 0;
 const NGINX_PORT = process.env.WATCHER_NGINX_PORT ?? null;
 
 const APPS = [
-  { name: "store",      directUrl: "http://127.0.0.1:5001/store/health",      nginxPath: "/store/health"      },
-  { name: "auth",       directUrl: "http://127.0.0.1:5000/auth/health",       nginxPath: "/auth/health"       },
-  { name: "admin",      directUrl: "http://127.0.0.1:5002/admin/health",      nginxPath: "/admin/health"      },
-  { name: "landing",    directUrl: "http://127.0.0.1:5004/health",            nginxPath: "/"                  },
-  { name: "payments",   directUrl: "http://127.0.0.1:5005/payments/health",   nginxPath: "/payments/health"   },
-  { name: "studio",     directUrl: "http://127.0.0.1:5006/studio/health",     nginxPath: "/studio/health"     },
-  { name: "playground", directUrl: "http://127.0.0.1:5003/playground/health", nginxPath: "/playground/health" },
+  {
+    name: "store",
+    directUrl: "http://127.0.0.1:5001/store/health",
+    nginxPath: "/store/health",
+  },
+  {
+    name: "auth",
+    directUrl: "http://127.0.0.1:5000/auth/health",
+    nginxPath: "/auth/health",
+  },
+  {
+    name: "admin",
+    directUrl: "http://127.0.0.1:5002/admin/health",
+    nginxPath: "/admin/health",
+  },
+  {
+    name: "landing",
+    directUrl: "http://127.0.0.1:5004/health",
+    nginxPath: "/",
+  },
+  {
+    name: "payments",
+    directUrl: "http://127.0.0.1:5005/payments/health",
+    nginxPath: "/payments/health",
+  },
+  {
+    name: "studio",
+    directUrl: "http://127.0.0.1:5006/studio/health",
+    nginxPath: "/studio/health",
+  },
+  {
+    name: "playground",
+    directUrl: "http://127.0.0.1:5003/playground/health",
+    nginxPath: "/playground/health",
+  },
 ].map(({ name, directUrl, nginxPath }) => ({
   name,
   url: NGINX_PORT ? `http://127.0.0.1:${NGINX_PORT}${nginxPath}` : directUrl,
@@ -141,7 +170,10 @@ async function sendTelegram(text) {
 
 // Critical channel — DOWN alerts, resource warnings, failures
 async function sendTelegramCritical(text) {
-  return sendTelegramTo(text, TELEGRAM_CRITICAL_THREAD || TELEGRAM_THREAD || null);
+  return sendTelegramTo(
+    text,
+    TELEGRAM_CRITICAL_THREAD || TELEGRAM_THREAD || null,
+  );
 }
 
 /**
@@ -176,7 +208,7 @@ function readRamInfo() {
     if (total && avail) {
       return {
         totalMB: Number(total[1]) / 1024,
-        freeMB:  Number(avail[1]) / 1024,
+        freeMB: Number(avail[1]) / 1024,
       };
     }
     // Fallback: MemFree (less accurate — doesn't include reclaimable cache)
@@ -184,7 +216,7 @@ function readRamInfo() {
     if (total && free) {
       return {
         totalMB: Number(total[1]) / 1024,
-        freeMB:  Number(free[1]) / 1024,
+        freeMB: Number(free[1]) / 1024,
       };
     }
   } catch {
@@ -195,7 +227,10 @@ function readRamInfo() {
 
 function readDiskUsedPct() {
   try {
-    const result = spawnSync("df", ["-P", "/"], { encoding: "utf8", timeout: 5_000 });
+    const result = spawnSync("df", ["-P", "/"], {
+      encoding: "utf8",
+      timeout: 5_000,
+    });
     if (result.status !== 0) return null;
     // Output: Filesystem  1024-blocks  Used  Available  Capacity%  Mounted
     const lines = result.stdout.trim().split("\n");
@@ -214,25 +249,42 @@ function isTunnelRunning() {
   // Return null to skip the check entirely rather than sending false DOWN alerts.
   try {
     if (existsSync("/.dockerenv")) return null;
-  } catch { /* ignore */ }
+  } catch {
+    /* ignore */
+  }
 
   // Method 1: exact process name (native install)
   try {
-    const r = spawnSync("pgrep", ["-x", "cloudflared"], { encoding: "utf8", timeout: 3_000 });
+    const r = spawnSync("pgrep", ["-x", "cloudflared"], {
+      encoding: "utf8",
+      timeout: 3_000,
+    });
     if (r.status === 0) return true;
-  } catch { /* ignore */ }
+  } catch {
+    /* ignore */
+  }
 
   // Method 2: full command-line match (handles systemd ExecStart paths, wrappers)
   try {
-    const r = spawnSync("pgrep", ["-f", "cloudflared tunnel"], { encoding: "utf8", timeout: 3_000 });
+    const r = spawnSync("pgrep", ["-f", "cloudflared tunnel"], {
+      encoding: "utf8",
+      timeout: 3_000,
+    });
     if (r.status === 0) return true;
-  } catch { /* ignore */ }
+  } catch {
+    /* ignore */
+  }
 
   // Method 3: systemd service
   try {
-    const r = spawnSync("systemctl", ["is-active", "--quiet", "cloudflared"], { encoding: "utf8", timeout: 3_000 });
+    const r = spawnSync("systemctl", ["is-active", "--quiet", "cloudflared"], {
+      encoding: "utf8",
+      timeout: 3_000,
+    });
     if (r.status === 0) return true;
-  } catch { /* ignore */ }
+  } catch {
+    /* ignore */
+  }
 
   return false;
 }
@@ -249,12 +301,20 @@ async function checkSystem() {
     if (next === "critical") {
       const msg = `🔴 <b>RAM CRITICAL</b>\nAvailable: <code>${freeMB.toFixed(0)} MB</code> (<code>${freePct.toFixed(1)}%</code> of <code>${totalMB.toFixed(0)} MB</code>)  •  <code>${CONTAINER_NAME}</code>`;
       await maybeAlert("ram", prev !== "critical", msg);
-      console.error(`[watcher] RAM critical: ${freeMB.toFixed(0)} MB (${freePct.toFixed(1)}%) of ${totalMB.toFixed(0)} MB`);
+      console.error(
+        `[watcher] RAM critical: ${freeMB.toFixed(0)} MB (${freePct.toFixed(1)}%) of ${totalMB.toFixed(0)} MB`,
+      );
     } else if (prev === "critical") {
-      await sendTelegram(`✅ <b>RAM recovered</b>\nAvailable: <code>${freeMB.toFixed(0)} MB</code> (<code>${freePct.toFixed(1)}%</code>)  •  <code>${CONTAINER_NAME}</code>`);
-      console.log(`[watcher] RAM recovered: ${freeMB.toFixed(0)} MB (${freePct.toFixed(1)}%)`);
+      await sendTelegram(
+        `✅ <b>RAM recovered</b>\nAvailable: <code>${freeMB.toFixed(0)} MB</code> (<code>${freePct.toFixed(1)}%</code>)  •  <code>${CONTAINER_NAME}</code>`,
+      );
+      console.log(
+        `[watcher] RAM recovered: ${freeMB.toFixed(0)} MB (${freePct.toFixed(1)}%)`,
+      );
     } else {
-      console.log(`[watcher] RAM ok: ${freeMB.toFixed(0)} MB (${freePct.toFixed(1)}% of ${totalMB.toFixed(0)} MB)`);
+      console.log(
+        `[watcher] RAM ok: ${freeMB.toFixed(0)} MB (${freePct.toFixed(1)}% of ${totalMB.toFixed(0)} MB)`,
+      );
     }
     sysState.ram = next;
   }
@@ -275,7 +335,9 @@ async function checkSystem() {
       await maybeAlert("disk", prev === "ok" || prev === "unknown", msg);
       console.error(`[watcher] Disk ${next}: ${diskPct}% used`);
     } else if (prev === "warning" || prev === "critical") {
-      await sendTelegram(`✅ <b>Disk recovered</b>\nUsed: <code>${diskPct}%</code>  •  <code>${CONTAINER_NAME}</code>`);
+      await sendTelegram(
+        `✅ <b>Disk recovered</b>\nUsed: <code>${diskPct}%</code>  •  <code>${CONTAINER_NAME}</code>`,
+      );
       console.log(`[watcher] Disk recovered: ${diskPct}%`);
     } else {
       console.log(`[watcher] Disk ok: ${diskPct}%`);
@@ -299,14 +361,18 @@ async function checkSystem() {
         await maybeAlert("tunnel", prev !== "critical", msg);
         console.error("[watcher] Cloudflare tunnel: DOWN");
       } else {
-        console.warn(`[watcher] Cloudflare tunnel: detection failed (${tunnelFailStreak}/2 — not alerting yet)`);
+        console.warn(
+          `[watcher] Cloudflare tunnel: detection failed (${tunnelFailStreak}/2 — not alerting yet)`,
+        );
       }
     } else {
       const wasDown = prev === "critical";
       tunnelFailStreak = 0;
       sysState.tunnel = "ok";
       if (wasDown) {
-        await sendTelegram(`✅ <b>Cloudflare tunnel recovered</b>\n<code>cloudflared</code> is running again  •  <code>${CONTAINER_NAME}</code>`);
+        await sendTelegram(
+          `✅ <b>Cloudflare tunnel recovered</b>\n<code>cloudflared</code> is running again  •  <code>${CONTAINER_NAME}</code>`,
+        );
         console.log("[watcher] Cloudflare tunnel: recovered");
       } else {
         console.log("[watcher] Cloudflare tunnel: ok");
@@ -322,16 +388,24 @@ async function warmUp() {
   const start = Date.now();
   const results = await Promise.allSettled(
     WARM_ROUTES.map((url) =>
-      fetch(url, { signal: AbortSignal.timeout(TIMEOUT_MS), redirect: "manual" })
-        .then((res) => { if (res.status >= 400) throw new Error(`HTTP ${res.status}`); }),
+      fetch(url, {
+        signal: AbortSignal.timeout(TIMEOUT_MS),
+        redirect: "manual",
+      }).then((res) => {
+        if (res.status >= 400) throw new Error(`HTTP ${res.status}`);
+      }),
     ),
   );
   const failed = results.filter((r) => r.status === "rejected").length;
   const dur = ((Date.now() - start) / 1000).toFixed(1);
   if (failed > 0) {
-    console.warn(`[watcher] warm-up: ${failed}/${WARM_ROUTES.length} routes failed in ${dur}s`);
+    console.warn(
+      `[watcher] warm-up: ${failed}/${WARM_ROUTES.length} routes failed in ${dur}s`,
+    );
   } else {
-    console.log(`[watcher] warm-up: all ${WARM_ROUTES.length} routes ok in ${dur}s`);
+    console.log(
+      `[watcher] warm-up: all ${WARM_ROUTES.length} routes ok in ${dur}s`,
+    );
   }
 }
 
@@ -355,7 +429,9 @@ async function ping(app) {
     if (prev === "down") {
       console.log(`[watcher] ${app.name}: ✓ recovered`);
       state[app.name] = "up";
-      await sendTelegram(`✅ <b>${app.name}</b> is back up  •  <code>${CONTAINER_NAME}</code>`);
+      await sendTelegram(
+        `✅ <b>${app.name}</b> is back up  •  <code>${CONTAINER_NAME}</code>`,
+      );
     } else {
       console.log(`[watcher] ${app.name}: ok`);
       state[app.name] = "up";
@@ -369,7 +445,9 @@ async function ping(app) {
         `🔴 <b>${app.name}</b> is not responding\n<code>${err.message}</code>  •  <code>${CONTAINER_NAME}</code>`,
       );
     } else if (prev === "unknown") {
-      console.error(`[watcher] ${app.name}: ✗ unreachable on first check — ${err.message}`);
+      console.error(
+        `[watcher] ${app.name}: ✗ unreachable on first check — ${err.message}`,
+      );
     } else {
       console.error(`[watcher] ${app.name}: ✗ still down — ${err.message}`);
     }
@@ -398,6 +476,6 @@ async function tick() {
 // Allow apps to finish booting before the first check
 console.log(
   `[watcher] started — first check in ${STARTUP_GRACE_MS / 1000}s ` +
-  `(telegram: ${TELEGRAM_TOKEN ? `enabled, thread: ${TELEGRAM_THREAD || "none"}` : "disabled"})`,
+    `(telegram: ${TELEGRAM_TOKEN ? `enabled, thread: ${TELEGRAM_THREAD || "none"}` : "disabled"})`,
 );
 setTimeout(tick, STARTUP_GRACE_MS);

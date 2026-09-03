@@ -100,7 +100,11 @@ if (tunnelId) {
   }
   baseHost = new URL(siteUrl).hostname.split(".").slice(-2).join(".");
 
-  const configPath = resolve(homedir(), ".cloudflared", `${targetEnv}-config.yml`);
+  const configPath = resolve(
+    homedir(),
+    ".cloudflared",
+    `${targetEnv}-config.yml`,
+  );
   const config = `tunnel: ${tunnelId}
 credentials-file: ${credentialsFile}
 protocol: http2
@@ -248,7 +252,9 @@ if (launchedCount > 0 && baseHost) {
     await new Promise((r) => setTimeout(r, 2_000));
   }
   if (!ready) {
-    console.warn(`⚠ Tunnel readiness check timed out after 300 s — tests may fail\n`);
+    console.warn(
+      `⚠ Tunnel readiness check timed out after 300 s — tests may fail\n`,
+    );
   }
 }
 

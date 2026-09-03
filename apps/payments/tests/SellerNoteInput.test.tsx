@@ -1,4 +1,3 @@
-/* eslint-disable react/button-has-type */
 import { render, screen, fireEvent } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
@@ -117,7 +116,7 @@ describe("SellerNoteInput", () => {
     // Type something -> error clears
     const textarea = screen.getByTestId("seller-note-textarea");
     fireEvent.change(textarea, { target: { value: "a" } });
-    expect(screen.queryByText("noteRequired")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("seller-note-error")).not.toBeInTheDocument();
   });
 
   it("disables inputs when isPending", () => {

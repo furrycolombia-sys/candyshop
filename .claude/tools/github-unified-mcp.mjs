@@ -40,8 +40,10 @@ function loadEnvFile(filePath) {
     const match = trimmed.match(/^GITHUB_PERSONAL_ACCESS_TOKEN=(.+)$/);
     if (match) {
       let token = match[1].trim();
-      if ((token.startsWith('"') && token.endsWith('"')) ||
-          (token.startsWith("'") && token.endsWith("'"))) {
+      if (
+        (token.startsWith('"') && token.endsWith('"')) ||
+        (token.startsWith("'") && token.endsWith("'"))
+      ) {
         token = token.slice(1, -1);
       }
       process.env.GITHUB_PERSONAL_ACCESS_TOKEN = token;
@@ -64,7 +66,9 @@ const GITHUB_API = "https://api.github.com";
 
 // GitHub API helper
 async function githubFetch(endpoint, options = {}) {
-  const url = endpoint.startsWith("http") ? endpoint : `${GITHUB_API}${endpoint}`;
+  const url = endpoint.startsWith("http")
+    ? endpoint
+    : `${GITHUB_API}${endpoint}`;
   const response = await fetch(url, {
     ...options,
     headers: {
@@ -77,8 +81,12 @@ async function githubFetch(endpoint, options = {}) {
   });
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ message: response.statusText }));
-    throw new Error(`GitHub API error (${response.status}): ${error.message || JSON.stringify(error)}`);
+    const error = await response
+      .json()
+      .catch(() => ({ message: response.statusText }));
+    throw new Error(
+      `GitHub API error (${response.status}): ${error.message || JSON.stringify(error)}`,
+    );
   }
 
   const text = await response.text();
@@ -94,9 +102,18 @@ const TOOLS = [
     inputSchema: {
       type: "object",
       properties: {
-        query: { type: "string", description: "Search query (see GitHub search syntax)" },
-        page: { type: "number", description: "Page number for pagination (default: 1)" },
-        perPage: { type: "number", description: "Number of results per page (default: 30, max: 100)" },
+        query: {
+          type: "string",
+          description: "Search query (see GitHub search syntax)",
+        },
+        page: {
+          type: "number",
+          description: "Page number for pagination (default: 1)",
+        },
+        perPage: {
+          type: "number",
+          description: "Number of results per page (default: 30, max: 100)",
+        },
       },
       required: ["query"],
     },
@@ -109,7 +126,10 @@ const TOOLS = [
       properties: {
         name: { type: "string", description: "Repository name" },
         description: { type: "string", description: "Repository description" },
-        private: { type: "boolean", description: "Whether the repository should be private" },
+        private: {
+          type: "boolean",
+          description: "Whether the repository should be private",
+        },
         autoInit: { type: "boolean", description: "Initialize with README.md" },
       },
       required: ["name"],
@@ -117,13 +137,20 @@ const TOOLS = [
   },
   {
     name: "fork_repository",
-    description: "Fork a GitHub repository to your account or specified organization",
+    description:
+      "Fork a GitHub repository to your account or specified organization",
     inputSchema: {
       type: "object",
       properties: {
-        owner: { type: "string", description: "Repository owner (username or organization)" },
+        owner: {
+          type: "string",
+          description: "Repository owner (username or organization)",
+        },
         repo: { type: "string", description: "Repository name" },
-        organization: { type: "string", description: "Optional: organization to fork to" },
+        organization: {
+          type: "string",
+          description: "Optional: organization to fork to",
+        },
       },
       required: ["owner", "repo"],
     },
@@ -137,7 +164,11 @@ const TOOLS = [
         owner: { type: "string", description: "Repository owner" },
         repo: { type: "string", description: "Repository name" },
         branch: { type: "string", description: "Name for the new branch" },
-        from_branch: { type: "string", description: "Source branch to create from (defaults to default branch)" },
+        from_branch: {
+          type: "string",
+          description:
+            "Source branch to create from (defaults to default branch)",
+        },
       },
       required: ["owner", "repo", "branch"],
     },
@@ -229,16 +260,30 @@ const TOOLS = [
   },
   {
     name: "get_issue_comments",
-    description: "Get comments on an issue or pull request. Note: GitHub treats PR conversation comments as issue comments. Use this to fetch bot comments (e.g. from Claude, Vercel, Linear) and general discussion comments on PRs.",
+    description:
+      "Get comments on an issue or pull request. Note: GitHub treats PR conversation comments as issue comments. Use this to fetch bot comments (e.g. from Claude, Vercel, Linear) and general discussion comments on PRs.",
     inputSchema: {
       type: "object",
       properties: {
         owner: { type: "string" },
         repo: { type: "string" },
-        issue_number: { type: "number", description: "Issue or pull request number" },
-        since: { type: "string", description: "Only show comments updated after this time (ISO 8601 format)" },
-        page: { type: "number", description: "Page number for pagination (default: 1)" },
-        per_page: { type: "number", description: "Results per page (default: 30, max: 100)" },
+        issue_number: {
+          type: "number",
+          description: "Issue or pull request number",
+        },
+        since: {
+          type: "string",
+          description:
+            "Only show comments updated after this time (ISO 8601 format)",
+        },
+        page: {
+          type: "number",
+          description: "Page number for pagination (default: 1)",
+        },
+        per_page: {
+          type: "number",
+          description: "Results per page (default: 30, max: 100)",
+        },
       },
       required: ["owner", "repo", "issue_number"],
     },
@@ -258,12 +303,16 @@ const TOOLS = [
   },
   {
     name: "search_issues",
-    description: "Search for issues and pull requests across GitHub repositories",
+    description:
+      "Search for issues and pull requests across GitHub repositories",
     inputSchema: {
       type: "object",
       properties: {
         q: { type: "string", description: "Search query" },
-        sort: { type: "string", enum: ["comments", "reactions", "created", "updated"] },
+        sort: {
+          type: "string",
+          enum: ["comments", "reactions", "created", "updated"],
+        },
         order: { type: "string", enum: ["asc", "desc"] },
         page: { type: "number" },
         per_page: { type: "number" },
@@ -281,8 +330,14 @@ const TOOLS = [
         owner: { type: "string", description: "Repository owner" },
         repo: { type: "string", description: "Repository name" },
         title: { type: "string", description: "Pull request title" },
-        head: { type: "string", description: "Branch where your changes are implemented" },
-        base: { type: "string", description: "Branch you want changes pulled into" },
+        head: {
+          type: "string",
+          description: "Branch where your changes are implemented",
+        },
+        base: {
+          type: "string",
+          description: "Branch you want changes pulled into",
+        },
         body: { type: "string", description: "Pull request body/description" },
         draft: { type: "boolean", description: "Create as draft pull request" },
         maintainer_can_modify: { type: "boolean" },
@@ -301,7 +356,10 @@ const TOOLS = [
         state: { type: "string", enum: ["open", "closed", "all"] },
         head: { type: "string" },
         base: { type: "string" },
-        sort: { type: "string", enum: ["created", "updated", "popularity", "long-running"] },
+        sort: {
+          type: "string",
+          enum: ["created", "updated", "popularity", "long-running"],
+        },
         direction: { type: "string", enum: ["asc", "desc"] },
         page: { type: "number" },
         per_page: { type: "number" },
@@ -381,7 +439,8 @@ const TOOLS = [
   },
   {
     name: "get_pull_request_status",
-    description: "Get the combined status of all status checks for a pull request",
+    description:
+      "Get the combined status of all status checks for a pull request",
     inputSchema: {
       type: "object",
       properties: {
@@ -402,7 +461,10 @@ const TOOLS = [
         repo: { type: "string" },
         pull_number: { type: "number" },
         body: { type: "string", description: "Review body text" },
-        event: { type: "string", enum: ["APPROVE", "REQUEST_CHANGES", "COMMENT"] },
+        event: {
+          type: "string",
+          enum: ["APPROVE", "REQUEST_CHANGES", "COMMENT"],
+        },
         commit_id: { type: "string", description: "SHA of commit to review" },
         comments: {
           type: "array",
@@ -439,7 +501,8 @@ const TOOLS = [
   },
   {
     name: "update_pull_request_branch",
-    description: "Update a pull request branch with the latest changes from the base branch",
+    description:
+      "Update a pull request branch with the latest changes from the base branch",
     inputSchema: {
       type: "object",
       properties: {
@@ -517,7 +580,9 @@ async function handleTool(name, args) {
     case "create_branch": {
       // First get the SHA of the source branch
       const sourceBranch = args.from_branch || "main";
-      const ref = await githubFetch(`/repos/${args.owner}/${args.repo}/git/ref/heads/${sourceBranch}`);
+      const ref = await githubFetch(
+        `/repos/${args.owner}/${args.repo}/git/ref/heads/${sourceBranch}`,
+      );
 
       // Create new branch
       return await githubFetch(`/repos/${args.owner}/${args.repo}/git/refs`, {
@@ -534,7 +599,9 @@ async function handleTool(name, args) {
       if (args.sha) params.set("sha", args.sha);
       if (args.page) params.set("page", String(args.page));
       if (args.perPage) params.set("per_page", String(args.perPage));
-      return await githubFetch(`/repos/${args.owner}/${args.repo}/commits?${params}`);
+      return await githubFetch(
+        `/repos/${args.owner}/${args.repo}/commits?${params}`,
+      );
     }
 
     // Issue tools
@@ -559,7 +626,9 @@ async function handleTool(name, args) {
       if (args.since) params.set("since", args.since);
       if (args.page) params.set("page", String(args.page));
       if (args.per_page) params.set("per_page", String(args.per_page));
-      return await githubFetch(`/repos/${args.owner}/${args.repo}/issues?${params}`);
+      return await githubFetch(
+        `/repos/${args.owner}/${args.repo}/issues?${params}`,
+      );
     }
 
     case "update_issue": {
@@ -570,17 +639,23 @@ async function handleTool(name, args) {
       if (args.labels) body.labels = args.labels;
       if (args.assignees) body.assignees = args.assignees;
       if (args.milestone !== undefined) body.milestone = args.milestone;
-      return await githubFetch(`/repos/${args.owner}/${args.repo}/issues/${args.issue_number}`, {
-        method: "PATCH",
-        body: JSON.stringify(body),
-      });
+      return await githubFetch(
+        `/repos/${args.owner}/${args.repo}/issues/${args.issue_number}`,
+        {
+          method: "PATCH",
+          body: JSON.stringify(body),
+        },
+      );
     }
 
     case "add_issue_comment": {
-      return await githubFetch(`/repos/${args.owner}/${args.repo}/issues/${args.issue_number}/comments`, {
-        method: "POST",
-        body: JSON.stringify({ body: args.body }),
-      });
+      return await githubFetch(
+        `/repos/${args.owner}/${args.repo}/issues/${args.issue_number}/comments`,
+        {
+          method: "POST",
+          body: JSON.stringify({ body: args.body }),
+        },
+      );
     }
 
     case "get_issue_comments": {
@@ -588,11 +663,15 @@ async function handleTool(name, args) {
       if (args.since) params.set("since", args.since);
       if (args.page) params.set("page", String(args.page));
       if (args.per_page) params.set("per_page", String(args.per_page));
-      return await githubFetch(`/repos/${args.owner}/${args.repo}/issues/${args.issue_number}/comments?${params}`);
+      return await githubFetch(
+        `/repos/${args.owner}/${args.repo}/issues/${args.issue_number}/comments?${params}`,
+      );
     }
 
     case "get_issue": {
-      return await githubFetch(`/repos/${args.owner}/${args.repo}/issues/${args.issue_number}`);
+      return await githubFetch(
+        `/repos/${args.owner}/${args.repo}/issues/${args.issue_number}`,
+      );
     }
 
     case "search_issues": {
@@ -613,7 +692,8 @@ async function handleTool(name, args) {
       };
       if (args.body) body.body = args.body;
       if (args.draft !== undefined) body.draft = args.draft;
-      if (args.maintainer_can_modify !== undefined) body.maintainer_can_modify = args.maintainer_can_modify;
+      if (args.maintainer_can_modify !== undefined)
+        body.maintainer_can_modify = args.maintainer_can_modify;
       return await githubFetch(`/repos/${args.owner}/${args.repo}/pulls`, {
         method: "POST",
         body: JSON.stringify(body),
@@ -629,11 +709,15 @@ async function handleTool(name, args) {
       if (args.direction) params.set("direction", args.direction);
       if (args.page) params.set("page", String(args.page));
       if (args.per_page) params.set("per_page", String(args.per_page));
-      return await githubFetch(`/repos/${args.owner}/${args.repo}/pulls?${params}`);
+      return await githubFetch(
+        `/repos/${args.owner}/${args.repo}/pulls?${params}`,
+      );
     }
 
     case "get_pull_request": {
-      return await githubFetch(`/repos/${args.owner}/${args.repo}/pulls/${args.pull_number}`);
+      return await githubFetch(
+        `/repos/${args.owner}/${args.repo}/pulls/${args.pull_number}`,
+      );
     }
 
     case "github_update_pull_request": {
@@ -642,30 +726,44 @@ async function handleTool(name, args) {
       if (args.body) body.body = args.body;
       if (args.base) body.base = args.base;
       if (args.state) body.state = args.state;
-      if (args.maintainer_can_modify !== undefined) body.maintainer_can_modify = args.maintainer_can_modify;
-      return await githubFetch(`/repos/${args.owner}/${args.repo}/pulls/${args.pull_number}`, {
-        method: "PATCH",
-        body: JSON.stringify(body),
-      });
+      if (args.maintainer_can_modify !== undefined)
+        body.maintainer_can_modify = args.maintainer_can_modify;
+      return await githubFetch(
+        `/repos/${args.owner}/${args.repo}/pulls/${args.pull_number}`,
+        {
+          method: "PATCH",
+          body: JSON.stringify(body),
+        },
+      );
     }
 
     case "get_pull_request_files": {
-      return await githubFetch(`/repos/${args.owner}/${args.repo}/pulls/${args.pull_number}/files`);
+      return await githubFetch(
+        `/repos/${args.owner}/${args.repo}/pulls/${args.pull_number}/files`,
+      );
     }
 
     case "get_pull_request_comments": {
-      return await githubFetch(`/repos/${args.owner}/${args.repo}/pulls/${args.pull_number}/comments`);
+      return await githubFetch(
+        `/repos/${args.owner}/${args.repo}/pulls/${args.pull_number}/comments`,
+      );
     }
 
     case "get_pull_request_reviews": {
-      return await githubFetch(`/repos/${args.owner}/${args.repo}/pulls/${args.pull_number}/reviews`);
+      return await githubFetch(
+        `/repos/${args.owner}/${args.repo}/pulls/${args.pull_number}/reviews`,
+      );
     }
 
     case "get_pull_request_status": {
       // Get the PR first to get the head SHA
-      const pr = await githubFetch(`/repos/${args.owner}/${args.repo}/pulls/${args.pull_number}`);
+      const pr = await githubFetch(
+        `/repos/${args.owner}/${args.repo}/pulls/${args.pull_number}`,
+      );
       // Get combined status for the head commit
-      return await githubFetch(`/repos/${args.owner}/${args.repo}/commits/${pr.head.sha}/status`);
+      return await githubFetch(
+        `/repos/${args.owner}/${args.repo}/commits/${pr.head.sha}/status`,
+      );
     }
 
     case "create_pull_request_review": {
@@ -675,10 +773,13 @@ async function handleTool(name, args) {
       };
       if (args.commit_id) body.commit_id = args.commit_id;
       if (args.comments) body.comments = args.comments;
-      return await githubFetch(`/repos/${args.owner}/${args.repo}/pulls/${args.pull_number}/reviews`, {
-        method: "POST",
-        body: JSON.stringify(body),
-      });
+      return await githubFetch(
+        `/repos/${args.owner}/${args.repo}/pulls/${args.pull_number}/reviews`,
+        {
+          method: "POST",
+          body: JSON.stringify(body),
+        },
+      );
     }
 
     case "merge_pull_request": {
@@ -686,19 +787,26 @@ async function handleTool(name, args) {
       if (args.commit_title) body.commit_title = args.commit_title;
       if (args.commit_message) body.commit_message = args.commit_message;
       if (args.merge_method) body.merge_method = args.merge_method;
-      return await githubFetch(`/repos/${args.owner}/${args.repo}/pulls/${args.pull_number}/merge`, {
-        method: "PUT",
-        body: JSON.stringify(body),
-      });
+      return await githubFetch(
+        `/repos/${args.owner}/${args.repo}/pulls/${args.pull_number}/merge`,
+        {
+          method: "PUT",
+          body: JSON.stringify(body),
+        },
+      );
     }
 
     case "update_pull_request_branch": {
       const body = {};
-      if (args.expected_head_sha) body.expected_head_sha = args.expected_head_sha;
-      return await githubFetch(`/repos/${args.owner}/${args.repo}/pulls/${args.pull_number}/update-branch`, {
-        method: "PUT",
-        body: JSON.stringify(body),
-      });
+      if (args.expected_head_sha)
+        body.expected_head_sha = args.expected_head_sha;
+      return await githubFetch(
+        `/repos/${args.owner}/${args.repo}/pulls/${args.pull_number}/update-branch`,
+        {
+          method: "PUT",
+          body: JSON.stringify(body),
+        },
+      );
     }
 
     // Search tools

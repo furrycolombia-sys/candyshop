@@ -12,7 +12,6 @@ vi.mock("shared", () => ({
   formatPrice: (amount: number, currency: string) => `${currency} ${amount}`,
 }));
 
-// eslint-disable-next-line import/order -- vi.mock must be hoisted before this import
 import { CheckoutItemsSummary } from "@/features/checkout/presentation/components/CheckoutItemsSummary";
 
 const mockItems: CartItem[] = [

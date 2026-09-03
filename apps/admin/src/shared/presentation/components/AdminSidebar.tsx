@@ -138,7 +138,10 @@ export function AdminSidebar() {
           <div key={section.labelKey} className="mb-2">
             {/* Section label */}
             {!isCollapsed && (
-              <span className="text-section-label mb-1.5 block px-2 font-mono text-muted-foreground/60">
+              <span
+                className="text-section-label mb-1.5 block px-2 font-mono text-muted-foreground/60"
+                {...tid(`sidebar-section-${section.labelKey}`)}
+              >
                 {t(section.labelKey)}
               </span>
             )}

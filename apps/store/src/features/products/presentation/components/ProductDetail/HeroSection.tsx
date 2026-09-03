@@ -154,7 +154,10 @@ export function HeroSection({ product, theme }: HeroSectionProps) {
 
             {/* Tags */}
             {product.tags && product.tags.length > 0 && (
-              <div className="flex items-center gap-1.5 flex-wrap">
+              <div
+                className="flex items-center gap-1.5 flex-wrap"
+                {...tid("hero-tags")}
+              >
                 {product.tags.map((tag) => (
                   <span
                     key={tag}

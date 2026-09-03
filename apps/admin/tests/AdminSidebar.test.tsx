@@ -122,14 +122,20 @@ describe("AdminSidebar", () => {
     const toggleBtn = screen.getByTestId("sidebar-collapse-toggle");
 
     // Initially expanded
-    expect(screen.getByText("operations")).toBeInTheDocument();
+    expect(
+      screen.getByTestId("sidebar-section-operations"),
+    ).toBeInTheDocument();
 
     // Click collapse
     fireEvent.click(toggleBtn);
-    expect(screen.queryByText("operations")).not.toBeInTheDocument();
+    expect(
+      screen.queryByTestId("sidebar-section-operations"),
+    ).not.toBeInTheDocument();
 
     // Click expand
     fireEvent.click(toggleBtn);
-    expect(screen.getByText("operations")).toBeInTheDocument();
+    expect(
+      screen.getByTestId("sidebar-section-operations"),
+    ).toBeInTheDocument();
   });
 });

@@ -8,7 +8,6 @@ describe("getApiBasePath", () => {
   });
 
   it("returns '' when window is undefined (SSR)", () => {
-    // eslint-disable-next-line unicorn/no-useless-undefined -- stub must be undefined to simulate SSR (no window object)
     vi.stubGlobal("window", undefined);
     expect(getApiBasePath()).toBe("");
   });

@@ -219,15 +219,17 @@ describe("HeroSection", () => {
         theme={defaultTheme}
       />,
     );
-    expect(screen.getByText("#cool")).toBeInTheDocument();
-    expect(screen.getByText("#new")).toBeInTheDocument();
+    // Through the same id the negative case below checks, so that absence is
+    // measured against something this test has proven exists.
+    expect(screen.getByTestId("hero-tags")).toHaveTextContent("#cool");
+    expect(screen.getByTestId("hero-tags")).toHaveTextContent("#new");
   });
 
   it("does not render tags when empty", () => {
     render(
       <HeroSection product={makeProduct({ tags: [] })} theme={defaultTheme} />,
     );
-    expect(screen.queryByText(/#/)).not.toBeInTheDocument();
+    expect(screen.queryByTestId("hero-tags")).not.toBeInTheDocument();
   });
 
   it("renders add-to-cart button and calls handler on click", () => {

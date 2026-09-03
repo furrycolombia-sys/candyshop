@@ -159,7 +159,9 @@ const sampleItem = {
 describe("SectionItemsAccordion", () => {
   it("shows empty state when no items", () => {
     render(<Wrapper />);
-    expect(screen.getByText("emptySection")).toBeInTheDocument();
+    expect(
+      screen.getByTestId("section-items-accordion-empty"),
+    ).toBeInTheDocument();
   });
 
   it("renders add item button", () => {
@@ -191,7 +193,9 @@ describe("SectionItemsAccordion", () => {
 
   it("hides empty state when items exist", () => {
     render(<Wrapper items={[sampleItem]} />);
-    expect(screen.queryByText("emptySection")).not.toBeInTheDocument();
+    expect(
+      screen.queryByTestId("section-items-accordion-empty"),
+    ).not.toBeInTheDocument();
   });
 
   it("renders multiple items", () => {

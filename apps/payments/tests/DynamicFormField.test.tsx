@@ -57,7 +57,9 @@ describe("DynamicFormField", () => {
 
   it("does not show required marker when required is false", () => {
     render(<DynamicFormField field={baseField} value="" onChange={vi.fn()} />);
-    expect(screen.queryByText("*")).not.toBeInTheDocument();
+    expect(
+      screen.queryByTestId("dynamic-field-required"),
+    ).not.toBeInTheDocument();
   });
 
   it("shows error message when error prop is provided", () => {

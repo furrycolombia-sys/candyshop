@@ -1,5 +1,5 @@
 import { render } from "@testing-library/react";
-// eslint-disable-next-line import/order -- vi.mock calls between imports require this ordering
+
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 vi.mock("api", () => ({
@@ -14,7 +14,6 @@ vi.mock("auth", () => ({
   TOKEN_TTL_SECONDS: { access: 3600 },
 }));
 
-// eslint-disable-next-line import/order -- vi.mock must come before these imports
 import {
   setAccessTokenGetter,
   setOnUnauthorized,

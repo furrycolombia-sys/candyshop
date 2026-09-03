@@ -142,7 +142,9 @@ describe("OrderCard", () => {
 
     // Expand
     fireEvent.click(screen.getByTestId("order-card-toggle-order-1"));
-    expect(screen.queryByText(/Expires:/)).not.toBeInTheDocument();
+    expect(
+      screen.queryByTestId("order-card-expiration"),
+    ).not.toBeInTheDocument();
   });
 
   it("has aria-expanded attribute on toggle button", () => {

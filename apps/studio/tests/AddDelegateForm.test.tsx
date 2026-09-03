@@ -237,7 +237,9 @@ describe("AddDelegateForm", () => {
     ) as HTMLInputElement;
     expect(checkbox.checked).toBe(false);
 
-    expect(screen.queryByText(/selectedUser/)).not.toBeInTheDocument();
+    expect(
+      screen.queryByTestId("delegate-selected-user"),
+    ).not.toBeInTheDocument();
   });
 
   it("toggles permission off after toggling on", () => {

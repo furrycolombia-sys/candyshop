@@ -1,4 +1,3 @@
-/* eslint-disable react/button-has-type */
 import { render, screen, fireEvent } from "@testing-library/react";
 import { useForm } from "react-hook-form";
 import { describe, it, expect, vi, beforeEach } from "vitest";
