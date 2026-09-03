@@ -75,15 +75,24 @@ export function ImageGallery({ product, theme }: ImageGalleryProps) {
           {...tid(TID_GALLERY_MAIN)}
         >
           {/*
-            Decoration, not content. This is a watermark at 10% opacity over
-            the category colour -- axe measured 1.22:1 against a required 3:1
-            -- so it is not readable as text by anyone, and announcing it adds
-            noise rather than information. The product type is already carried
-            by the hero's type badge, so hiding it here loses nothing.
+            Decoration, not content: a watermark at 10% opacity over the
+            category colour, filling a box that would otherwise be empty.
+
+            aria-hidden keeps it out of the accessible name -- the product type
+            it repeats is already announced by the hero's type badge.
+
+            It does NOT satisfy axe, and axe is right: aria-hidden removes an
+            element from the accessibility tree but the text is still on screen,
+            so 1.22:1 is still 1.22:1 for a sighted reader with low vision.
+            WCAG 1.4.3 exempts pure decoration and this qualifies -- nothing is
+            conveyed here that is not conveyed elsewhere -- but that is a
+            judgement axe cannot make, so accessibility.spec.ts excludes this
+            one element by test id and says why.
           */}
           <span
             aria-hidden="true"
             className="font-display text-4xl font-extrabold uppercase tracking-widest text-foreground/10 select-none"
+            {...tid("gallery-placeholder-watermark")}
           >
             {tTypes(product.type)}
           </span>

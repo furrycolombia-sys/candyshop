@@ -84,7 +84,18 @@ test("product detail has no WCAG 2 AA violations", async ({ page }) => {
   await page.goto(`${STORE_URL}/en/products/${product!.id}/x`);
   await expect(page.getByTestId("hero-section")).toBeVisible();
 
-  const results = await new AxeBuilder({ page }).withTags(WCAG_AA).analyze();
+  // One exclusion, and only one. The gallery placeholder writes the product
+  // type across a category-coloured square as a watermark at 10% opacity; axe
+  // measures 1.22:1 against a required 3:1 and is not wrong about the number.
+  // WCAG 1.4.3 exempts pure decoration, and this qualifies: the type it
+  // repeats is announced by the hero's type badge, so nothing is conveyed
+  // here that is not conveyed elsewhere. axe cannot make that judgement, so
+  // it is made here, narrowly, against one test id rather than by turning off
+  // the colour-contrast rule -- which would take every other element with it.
+  const results = await new AxeBuilder({ page })
+    .withTags(WCAG_AA)
+    .exclude('[data-testid="gallery-placeholder-watermark"]')
+    .analyze();
 
   expect(summarise(results.violations), "product detail accessibility").toEqual(
     [],
