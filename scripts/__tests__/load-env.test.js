@@ -8,9 +8,18 @@
  * - In CI mode (CI=true), unresolved $secret: refs use process.env directly
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from "vitest";
 import fc from "fast-check";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -26,6 +35,29 @@ const TRACKED_KEYS = [
 ];
 
 let savedEnv = {};
+
+// The local resolution path reads .secrets, which is gitignored and so absent
+// in CI. That is why widening test:workflows to this file first turned CI red.
+// Rather than narrow the gate back, write a placeholder .secrets for the run
+// and remove it again -- but only when there is none, so a developer's real
+// file is never touched.
+const secretsPath = resolve(__dirname, "../../.secrets");
+let wroteSecretsFixture = false;
+
+beforeAll(() => {
+  if (existsSync(secretsPath)) return;
+  const envDev = readFileSync(resolve(__dirname, "../../.env.dev"), "utf-8");
+  const refs = [...envDev.matchAll(/\$secret:([A-Z0-9_]+)/g)].map((m) => m[1]);
+  const body = [...new Set(refs)]
+    .map((name) => `${name}=fixture-${name.toLowerCase()}`)
+    .join("\n");
+  writeFileSync(secretsPath, `# written by load-env.test.js\n${body}\n`);
+  wroteSecretsFixture = true;
+});
+
+afterAll(() => {
+  if (wroteSecretsFixture) rmSync(secretsPath, { force: true });
+});
 
 beforeEach(() => {
   savedEnv = {};
