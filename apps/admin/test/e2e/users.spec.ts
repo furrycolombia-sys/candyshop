@@ -9,6 +9,15 @@ import {
   type TestUser,
 } from "../../../auth/e2e/helpers/session";
 
+// Read at module scope, not inside the test. A missing base URL is a broken
+// run configuration, not a case the test is meant to branch on -- hoisting it
+// makes the whole file fail at collection instead of part-way through a test,
+// and keeps the test body free of the conditional the linter objects to.
+const ADMIN_BASE_URL = process.env.NEXT_PUBLIC_ADMIN_URL;
+if (!ADMIN_BASE_URL) {
+  throw new Error("NEXT_PUBLIC_ADMIN_URL is required for this e2e test.");
+}
+
 test.describe("Users Page", () => {
   let adminUser: TestUser;
 
@@ -27,14 +36,9 @@ test.describe("Users Page", () => {
     context,
     page,
   }) => {
-    const adminBaseUrl = process.env.NEXT_PUBLIC_ADMIN_URL;
-    if (!adminBaseUrl) {
-      throw new Error("NEXT_PUBLIC_ADMIN_URL is required for this e2e test.");
-    }
-
     await injectSession(context, adminUser);
 
-    await page.goto(`${adminBaseUrl}/en/users`, { waitUntil: "networkidle" });
+    await page.goto(`${ADMIN_BASE_URL}/en/users`, { waitUntil: "networkidle" });
 
     await expect(page.getByTestId("users-page")).toBeVisible({
       timeout: ELEMENT_TIMEOUT_MS,

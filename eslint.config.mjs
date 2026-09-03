@@ -138,12 +138,20 @@ const eslintConfig = defineConfig([
   })),
   // Override default ignores of eslint-config-next.
   globalIgnores([
-    // Default ignores of eslint-config-next:
-    ".next/**",
-    "out/**",
-    "build/**",
-    "next-env.d.ts",
+    // Default ignores of eslint-config-next, re-globbed for a monorepo. These
+    // shipped as ".next/**", which only ever matched a .next at the repo root
+    // -- and the build output lives at apps/<app>/.next. `eslint .` was
+    // linting 212 files of minified output per app, ~28k messages each.
+    // `pnpm lint` never showed it because it lists src directories explicitly,
+    // so the gate passed by not looking. "**/node_modules/**" below was
+    // already correct, which is what the others should have looked like.
+    "**/.next/**",
+    "**/out/**",
+    "**/build/**",
+    "**/next-env.d.ts",
     "**/node_modules/**",
+    // Git-ignored agent scratch: throwaway probe scripts, not shipped code.
+    ".superpowers/**",
     // Frozen snapshot of the pre-rework tests. Linting a read-only copy would
     // only ever demand edits to a file that is meant to stay identical to what
     // it is a copy of. Deleted when the rework is verified complete.
