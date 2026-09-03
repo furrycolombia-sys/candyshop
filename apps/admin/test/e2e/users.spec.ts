@@ -38,7 +38,9 @@ test.describe("Users Page", () => {
   }) => {
     await injectSession(context, adminUser);
 
-    await page.goto(`${ADMIN_BASE_URL}/en/users`, { waitUntil: "networkidle" });
+    // No wait needed: the next assertion is positive and retrying, so it
+    // already waits for the page to render.
+    await page.goto(`${ADMIN_BASE_URL}/en/users`);
 
     await expect(page.getByTestId("users-page")).toBeVisible({
       timeout: ELEMENT_TIMEOUT_MS,

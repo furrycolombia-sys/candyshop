@@ -347,14 +347,17 @@ test.describe.serial("Reports page", () => {
 
     try {
       await injectSession(context, limitedUser);
-      // Kept deliberately. The assertion below is negative -- it checks that
-      // something is NOT there. Without a settle window it would pass simply
-      // because the page had not rendered yet, which is a false pass rather
-      // than a flake. Only a positive, retrying assertion makes a wait
-      // redundant.
-      await page.goto(`${getAdminBaseUrl()}/en/reports`, {
-        waitUntil: "networkidle",
-      });
+      await page.goto(`${getAdminBaseUrl()}/en/reports`);
+
+      // Anchor on something positive before asserting an absence. The page
+      // shell renders for any signed-in user and the data layer is what
+      // refuses, so `reports-page` is the normal outcome; `access-denied`
+      // covers a guard that short-circuits instead. Waiting for either means
+      // the absence below is measured against a rendered page rather than
+      // against a page that had not started.
+      await expect(
+        page.getByTestId("reports-page").or(page.getByTestId("access-denied")),
+      ).toBeVisible({ timeout: ELEMENT_TIMEOUT_MS });
 
       // The app may enforce this by redirecting or by returning 403 and
       // rendering an error state. Either is fine; the invariant is the same

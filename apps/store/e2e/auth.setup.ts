@@ -2,12 +2,16 @@ import fs from "node:fs";
 import path from "node:path";
 
 import { clerk, clerkSetup } from "@clerk/testing/playwright";
-import { test as setup } from "@playwright/test";
+import { expect, test as setup } from "@playwright/test";
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { resolveE2EAppUrls } = require(
   path.resolve(__dirname, "../../../scripts/app-url-resolver.js"),
 );
+
+// resolveProfile() runs on a page load, so this only has to outlast one
+// server round-trip plus the write.
+const PROFILE_TIMEOUT_MS = 15_000;
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 if (!SUPABASE_URL)
@@ -67,12 +71,38 @@ setup("authenticate", async ({ page }) => {
   // permission-gated page and ProtectedRoute check in the suite would fail:
   // there is no DB trigger provisioning profiles anymore (Task 8 removed the
   // `auth.users`-keyed one).
-  await page.goto(`${AUTH_URL}/en/callback`, { waitUntil: "networkidle" });
+  await page.goto(`${AUTH_URL}/en/callback`);
 
   const { createClient } = await import("@supabase/supabase-js");
   const supabaseAdmin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
     auth: { autoRefreshToken: false, persistSession: false },
   });
+
+  // Wait for the row itself, not for the network to go quiet. This step has no
+  // DOM assertion -- the thing it cares about is a server-side write -- so a
+  // networkidle wait was standing in for "the write probably landed by now".
+  // Polling the row makes the wait the actual condition: it ends the moment
+  // resolveProfile() has committed, and fails loudly if it never does.
+  await expect
+    .poll(
+      async () => {
+        const { data } = await supabaseAdmin
+          .from("user_profiles")
+          .select("id")
+          .eq("identity_sub", clerkUser.id)
+          .maybeSingle();
+        return data?.id ?? null;
+      },
+      {
+        timeout: PROFILE_TIMEOUT_MS,
+        message: `resolveProfile() never created a profile for ${clerkUser.id}`,
+      },
+    )
+    .not.toBeNull();
+
+  // Read it back plainly now that the poll has established it exists. Keeping
+  // the row out of the poll's closure avoids narrowing a closure-assigned
+  // variable, which TypeScript cannot follow.
   const { data: profile, error } = await supabaseAdmin
     .from("user_profiles")
     .select("id")
