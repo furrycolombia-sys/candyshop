@@ -98,14 +98,23 @@ describe("ImageGallery", () => {
     expect(screen.getByTestId("image-gallery-main")).toBeInTheDocument();
   });
 
-  it("shows product type in placeholder", () => {
+  it("shows product type in placeholder, hidden from assistive tech", () => {
     render(
       <ImageGallery
         product={makeProduct({ images: [], type: "digital" })}
         theme={defaultTheme}
       />,
     );
-    expect(screen.getByText("digital")).toBeInTheDocument();
+
+    // The watermark is decoration: it sits at 10% opacity on the category
+    // colour, which axe measured at a contrast ratio of 1.22 against a
+    // required 3:1 on the product detail page. Nobody reads it as text,
+    // sighted or otherwise, and the type is already announced by the hero's
+    // type badge -- so it is marked decorative rather than restyled, and the
+    // information is not lost.
+    const watermark = screen.getByText("digital");
+    expect(watermark).toBeInTheDocument();
+    expect(watermark).toHaveAttribute("aria-hidden", "true");
   });
 
   it("renders featured ribbon on placeholder when featured", () => {

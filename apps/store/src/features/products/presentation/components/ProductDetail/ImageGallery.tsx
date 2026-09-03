@@ -74,7 +74,17 @@ export function ImageGallery({ product, theme }: ImageGalleryProps) {
           style={{ backgroundColor: theme.bg }}
           {...tid(TID_GALLERY_MAIN)}
         >
-          <span className="font-display text-4xl font-extrabold uppercase tracking-widest text-foreground/10 select-none">
+          {/*
+            Decoration, not content. This is a watermark at 10% opacity over
+            the category colour -- axe measured 1.22:1 against a required 3:1
+            -- so it is not readable as text by anyone, and announcing it adds
+            noise rather than information. The product type is already carried
+            by the hero's type badge, so hiding it here loses nothing.
+          */}
+          <span
+            aria-hidden="true"
+            className="font-display text-4xl font-extrabold uppercase tracking-widest text-foreground/10 select-none"
+          >
             {tTypes(product.type)}
           </span>
           {product.featured && (
