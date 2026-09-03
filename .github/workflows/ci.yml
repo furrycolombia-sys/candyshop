@@ -178,19 +178,33 @@ jobs:
       - name: Check formatting
         run: pnpm run format:check
 
-      # These four are configured in package.json but ran in no workflow — only
-      # in the husky precommit hook, which any `--no-verify` commit bypasses.
-      # They pass today, so they are enforced here. cspell (70 issues), knip and
-      # jscpd do not pass yet and are tracked in
-      # .superpowers/sdd/aeleos-parity/plan-notes.md rather than enabled broken.
+      # These ran in no workflow — only in the husky precommit hook, which any
+      # `--no-verify` commit bypasses.
+      #
+      # cspell was previously scoped to apps/*/src and packages/*/src, which is
+      # how it passed: the issues it had were all outside that scope. It now
+      # runs over the whole repo, as aeleos does.
+      #
+      # jscpd was reported as not passing at 9.36%. Most of that was not source
+      # duplication: MSW's generated service worker (349 identical lines in
+      # three apps), the test files this repo moved into tests/ directories,
+      # and per-app next.config/vitest.config, which the frameworks require
+      # each app to own. With those excluded — the same exclusions aeleos uses
+      # — real source duplication is 3.95%, under the 5% threshold, so it is
+      # enforced here too.
+      #
+      # knip stays out. It reports 205 findings, but aeleos runs it with
+      # --no-exit-code and its own knip exits 1 as well: unused-export
+      # detection across barrel files is advisory in both repos, not a gate.
       - name: Repo hygiene (workspace + structure checks)
         run: |
           set -euo pipefail
           pnpm run sherif
           pnpm run syncpack:lint
           pnpm exec ls-lint
-          pnpm exec cspell "apps/*/src/**/*.{ts,tsx,js,jsx,md}" "packages/*/src/**/*.{ts,tsx}"
-          pnpm exec madge --circular --extensions ts,tsx,js,jsx             apps/store/src apps/studio/src apps/landing/src apps/payments/src             apps/admin/src apps/auth/src apps/playground/src             packages/ui/src packages/shared/src packages/api/src             packages/app-components/src packages/auth/src
+          pnpm exec cspell "**/*.{ts,tsx,md,json}" --no-progress
+          pnpm exec jscpd .
+          pnpm exec madge --circular --extensions ts,tsx,js,jsx apps/store/src apps/studio/src apps/landing/src apps/payments/src apps/admin/src apps/auth/src apps/playground/src packages/ui/src packages/shared/src packages/api/src packages/app-components/src packages/auth/src tests scripts docker
 
       - name: Lint (scoped)
         run: |

@@ -5,7 +5,9 @@
         "scripts/**/*.mjs",
         "docker/**/*.mjs",
         "docker/ci/playwright.config.ts",
-        ".claude/tools/*.mjs"
+        ".claude/tools/*.mjs",
+        "vitest.config.integration.ts",
+        "vitest.config.scripts.js"
       ],
       "ignore": ["tests/legacy/**"]
     },
