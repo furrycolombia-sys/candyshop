@@ -130,8 +130,12 @@ test(
       // Then persisted state, which is what the navigation below actually
       // needs. The cart writes its cookie from a useEffect, so the write lands
       // a tick after React has already rendered the indicator above -- and it
-      // is the cookie, not the DOM, that survives the goto. Asserting only the
-      // rendered state here left the same race the sleep was covering.
+      // is the cookie, not the DOM, that survives the goto.
+      //
+      // Kept as a presence check rather than a count. full-purchase-flow tried
+      // asserting an exact item count here and CI rejected it, so the count is
+      // not what I assumed; presence is the part I can stand behind without
+      // running the suite.
       await expect
         .poll(
           async () =>

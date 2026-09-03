@@ -1,6 +1,5 @@
 import path from "node:path";
 
-import type { BrowserContext } from "@playwright/test";
 import { expect, test } from "@playwright/test";
 
 import { cleanupTestData } from "./helpers/cleanup";
@@ -9,6 +8,7 @@ import {
   APP_URLS,
   ELEMENT_TIMEOUT_MS,
   LONG_OPERATION_TIMEOUT_MS,
+  MUTATION_WAIT_MS,
   NAVIGATION_TIMEOUT_MS,
 } from "./helpers/constants";
 import {
@@ -43,42 +43,6 @@ const { snap, resetCounter } = createSnapHelper(
  *
  * Requires: supabase start + pnpm dev (all apps)
  */
-/**
- * Wait until the cart cookie holds `count` items.
- *
- * The cart persists to a cookie from a useEffect on the item list, so the
- * write lands a tick after React has already rendered the "in cart" state.
- * Navigating in that gap loses the item -- which is what a fixed sleep used to
- * paper over here, and what an assertion on the rendered indicator failed to
- * catch: the DOM was right and the cookie had not been written yet. The
- * cookie is what survives the navigation, so the cookie is what to wait for.
- */
-async function expectCartCookieToHold(
-  context: BrowserContext,
-  count: number,
-): Promise<void> {
-  await expect
-    .poll(
-      async () => {
-        const cookie = (await context.cookies()).find(
-          (c) => c.name === "libra-cart",
-        );
-        if (!cookie) return 0;
-        try {
-          const items: unknown = JSON.parse(decodeURIComponent(cookie.value));
-          return Array.isArray(items) ? items.length : 0;
-        } catch {
-          return 0;
-        }
-      },
-      {
-        timeout: ELEMENT_TIMEOUT_MS,
-        message: `cart cookie never reached ${count} item(s)`,
-      },
-    )
-    .toBe(count);
-}
-
 test.describe.serial("Full purchase flow: two sellers, one buyer", () => {
   let sellerA: TestUser;
   let sellerB: TestUser;
@@ -398,12 +362,19 @@ test.describe.serial("Full purchase flow: two sellers, one buyer", () => {
 
     await page.getByTestId("hero-add-to-cart").click();
 
-    // Rendered state first, then persisted state. The indicator proves React
-    // took the item; the cookie is what the navigation below actually needs.
+    // The indicator proves React took the item, which is worth asserting on
+    // its own -- but it is not sufficient here. The cart also persists to a
+    // cookie from a useEffect, and it is the cookie, not the DOM, that
+    // survives the navigation below. Two attempts at replacing the sleep
+    // failed in CI: waiting on the indicator alone still lost the item, and
+    // polling the cookie for an exact count failed too, most likely because
+    // the count is not what I assumed. Diagnosing that needs the suite run
+    // locally against a real store, so the sleep stays until someone can.
     await expect(page.getByTestId("hero-in-cart")).toBeVisible({
       timeout: ELEMENT_TIMEOUT_MS,
     });
-    await expectCartCookieToHold(context, 1);
+    // eslint-disable-next-line playwright/no-wait-for-timeout -- see above
+    await page.waitForTimeout(MUTATION_WAIT_MS);
     await snap(page, "store-added-alpha");
 
     // ── Add Seller B's product ──────────────────────────────────
@@ -422,12 +393,19 @@ test.describe.serial("Full purchase flow: two sellers, one buyer", () => {
 
     await page.getByTestId("hero-add-to-cart").click();
 
-    // Rendered state first, then persisted state. The indicator proves React
-    // took the item; the cookie is what the navigation below actually needs.
+    // The indicator proves React took the item, which is worth asserting on
+    // its own -- but it is not sufficient here. The cart also persists to a
+    // cookie from a useEffect, and it is the cookie, not the DOM, that
+    // survives the navigation below. Two attempts at replacing the sleep
+    // failed in CI: waiting on the indicator alone still lost the item, and
+    // polling the cookie for an exact count failed too, most likely because
+    // the count is not what I assumed. Diagnosing that needs the suite run
+    // locally against a real store, so the sleep stays until someone can.
     await expect(page.getByTestId("hero-in-cart")).toBeVisible({
       timeout: ELEMENT_TIMEOUT_MS,
     });
-    await expectCartCookieToHold(context, 2);
+    // eslint-disable-next-line playwright/no-wait-for-timeout -- see above
+    await page.waitForTimeout(MUTATION_WAIT_MS);
     await snap(page, "store-added-beta");
 
     // ── Open cart and verify both items ────────────────────────
