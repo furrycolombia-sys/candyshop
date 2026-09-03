@@ -64,7 +64,9 @@ describe("ResubmitEvidenceForm", () => {
       />,
     );
 
-    expect(screen.queryByText("sellerNote")).not.toBeInTheDocument();
+    expect(
+      screen.queryByTestId("resubmit-seller-note"),
+    ).not.toBeInTheDocument();
   });
 
   it("does not submit when transfer number is empty", () => {

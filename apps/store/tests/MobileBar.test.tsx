@@ -153,7 +153,9 @@ describe("MobileBar", () => {
         quantityInCart={0}
       />,
     );
-    expect(screen.queryByText(/inCart/)).not.toBeInTheDocument();
+    expect(
+      screen.queryByTestId("product-detail-mobile-in-cart"),
+    ).not.toBeInTheDocument();
   });
 
   it("calls onAddToCart when button clicked", () => {

@@ -126,7 +126,9 @@ describe("GalleryOverlays", () => {
         t={mockT}
       />,
     );
-    expect(screen.getByText("outOfStock")).toBeInTheDocument();
+    expect(screen.getByTestId("hero-out-of-stock")).toHaveTextContent(
+      "outOfStock",
+    );
   });
 
   it("does not render out-of-stock overlay when product is available", () => {
@@ -140,6 +142,6 @@ describe("GalleryOverlays", () => {
         t={mockT}
       />,
     );
-    expect(screen.queryByText("outOfStock")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("hero-out-of-stock")).not.toBeInTheDocument();
   });
 });
