@@ -355,7 +355,17 @@ test.describe.serial("Full purchase flow: two sellers, one buyer", () => {
     await page.getByTestId("search-bar-input").fill(PRODUCT_ALPHA);
     await snap(page, "store-search-alpha");
 
-    const cardA = page.getByTestId("product-card-link").first();
+    // Match the product being searched for rather than "whatever is first".
+    // The search is debounced, so straight after fill() the grid still shows
+    // the previous results -- .first() then clicks a stale card, and picking
+    // the same card twice is exactly how this test came to find one seller
+    // group where it expected two. Filtering makes the locator wait for the
+    // debounced result *and* click the right thing; the sleep it replaces did
+    // the first and never checked the second.
+    const cardA = page
+      .getByTestId("product-card-link")
+      .filter({ hasText: PRODUCT_ALPHA })
+      .first();
     await expect(cardA).toBeVisible({ timeout: ELEMENT_TIMEOUT_MS });
     await cardA.click();
     await snap(page, "store-product-alpha");
@@ -386,7 +396,17 @@ test.describe.serial("Full purchase flow: two sellers, one buyer", () => {
     await page.getByTestId("search-bar-input").fill(PRODUCT_BETA);
     await snap(page, "store-search-beta");
 
-    const cardB = page.getByTestId("product-card-link").first();
+    // Match the product being searched for rather than "whatever is first".
+    // The search is debounced, so straight after fill() the grid still shows
+    // the previous results -- .first() then clicks a stale card, and picking
+    // the same card twice is exactly how this test came to find one seller
+    // group where it expected two. Filtering makes the locator wait for the
+    // debounced result *and* click the right thing; the sleep it replaces did
+    // the first and never checked the second.
+    const cardB = page
+      .getByTestId("product-card-link")
+      .filter({ hasText: PRODUCT_BETA })
+      .first();
     await expect(cardB).toBeVisible({ timeout: ELEMENT_TIMEOUT_MS });
     await cardB.click();
     await snap(page, "store-product-beta");

@@ -206,7 +206,15 @@ test.describe.serial("Delegate sees buyer receipt", () => {
     });
     await page.getByTestId("search-bar-input").fill(PRODUCT_NAME);
 
-    const productCard = page.getByTestId("product-card-link").first();
+    // Filter by the product just searched for rather than taking whatever is
+    // first. The search is debounced, so straight after fill() the grid can
+    // still be showing the previous results, and .first() would click a stale
+    // card. This bit full-purchase-flow, which added the same product twice
+    // and then found one seller group where it expected two.
+    const productCard = page
+      .getByTestId("product-card-link")
+      .filter({ hasText: PRODUCT_NAME })
+      .first();
     await expect(productCard).toBeVisible({ timeout: ELEMENT_TIMEOUT_MS });
     await productCard.click();
 

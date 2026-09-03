@@ -247,7 +247,15 @@ test.describe.serial("Delegated admin purchase flow", () => {
     await page.getByTestId("search-bar-input").fill("E2E Delegated Product");
     await snap(page, "buyer-search-product");
 
-    const card = page.getByTestId("product-card-link").first();
+    // Filter by the product just searched for rather than taking whatever is
+    // first. The search is debounced, so straight after fill() the grid can
+    // still be showing the previous results, and .first() would click a stale
+    // card. This bit full-purchase-flow, which added the same product twice
+    // and then found one seller group where it expected two.
+    const card = page
+      .getByTestId("product-card-link")
+      .filter({ hasText: "E2E Delegated Product" })
+      .first();
     await expect(card).toBeVisible({ timeout: ELEMENT_TIMEOUT_MS });
     await card.click();
 
