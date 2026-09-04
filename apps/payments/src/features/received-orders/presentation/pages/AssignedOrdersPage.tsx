@@ -3,7 +3,7 @@
 import { useCurrentUserPermissions } from "auth/client";
 import { useTranslations } from "next-intl";
 
-import { AssignedOrdersPageContent } from "@/features/assigned-orders/presentation/pages/AssignedOrdersPageContent";
+import { AssignedOrdersPageContent } from "@/features/received-orders/presentation/pages/AssignedOrdersPageContent";
 import { AccessDeniedState } from "@/shared/presentation/components/AccessDeniedState";
 
 export function AssignedOrdersPage() {

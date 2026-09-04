@@ -1,6 +1,6 @@
 import { setRequestLocale } from "next-intl/server";
 
-import { AssignedOrdersPage } from "@/features/assigned-orders";
+import { AssignedOrdersPage } from "@/features/received-orders";
 
 export default async function Page({
   params,

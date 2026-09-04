@@ -20,13 +20,16 @@
  * useCart and useAddToCart moved to shared/application/cart, and the cart
  * feature is now the drawer that reads them.
  *
- * The remaining four are payments: assigned-orders and received-orders import
- * each other. Assigned orders are received orders seen through a delegation
- * lens -- the same card, the same actions hook, the same SellerAction type,
- * and assigned-orders' own query function even lives in received-orders'
- * file. Resolving it means lifting the shared order-management domain into
- * shared/ and leaving two thin features that differ only in which orders they
- * list. That is a design decision, not a lint fix.
+ * The last four were payments: assigned-orders and received-orders imported
+ * each other. Counting the files settled what the import graph only hinted at:
+ * received-orders held fourteen files -- the card, the actions hook, the
+ * types, the queries -- and assigned-orders held six, of which none were a
+ * component, a type, or a domain rule. It was a query and a page. Assigned
+ * orders are received orders under a delegation filter, so the two were merged
+ * into one feature exporting two pages, and assigned-orders was deleted. The
+ * fix was not to move imports around but to stop pretending there were two
+ * features. Test ids and the query-key string keep the word "assigned": those
+ * name a view and a cache entry, not a directory.
  *
  * It also replaced a claim in docs/standards/quality-gates.md that the feature
  * barrel rule "is inconsistent with itself", evidenced by 126 deep imports
@@ -44,9 +47,10 @@ import { readFileSync } from "node:fs";
 
 /**
  * What the codebase had when this check was written. It may fall; it may not
- * rise. Lower it when a pair is resolved -- that is the ratchet.
+ * rise. Lower it when a pair is resolved -- that is the ratchet. It is now at
+ * zero, so any new cross-feature import fails the build.
  */
-const BASELINE = 4;
+const BASELINE = 0;
 
 const FEATURE_IMPORT = /from\s+"(@\/features\/([^/"]+)([^"]*))"/g;
 
