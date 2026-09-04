@@ -2,19 +2,19 @@ import { renderHook, act } from "@testing-library/react";
 import type { Product } from "shared/types";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-import { useAddToCart } from "@/features/cart/application/hooks/useAddToCart";
+import { useAddToCart } from "@/shared/application/cart/useAddToCart";
 
 const mockAddItem = vi.fn();
 const mockFire = vi.fn();
 
-vi.mock("@/features/cart/application/CartContext", () => ({
+vi.mock("@/shared/application/cart/CartContext", () => ({
   useCart: () => ({
     addItem: mockAddItem,
     items: [{ id: "p1", quantity: 3 }],
   }),
 }));
 
-vi.mock("@/features/cart/application/FlyToCartContext", () => ({
+vi.mock("@/shared/application/cart/FlyToCartContext", () => ({
   useFlyToCartContext: () => ({
     fire: mockFire,
     setCartTarget: vi.fn(),

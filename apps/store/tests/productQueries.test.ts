@@ -3,8 +3,8 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import {
   fetchStoreProducts,
   fetchStoreProductById,
-  fetchStoreProductsByIds,
 } from "@/features/products/infrastructure/productQueries";
+import { fetchStoreProductsByIds } from "@/shared/infrastructure/productQueries";
 
 // ---------------------------------------------------------------------------
 // Mock Supabase with chained builder

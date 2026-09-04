@@ -3,8 +3,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { Product } from "shared/types";
 
-import { useCart } from "../CartContext";
-import { useFlyToCartContext } from "../FlyToCartContext";
+import { useCart } from "./CartContext";
+import { useFlyToCartContext } from "./FlyToCartContext";
 
 import { getCategoryColor } from "@/shared/domain/categoryConstants";
 

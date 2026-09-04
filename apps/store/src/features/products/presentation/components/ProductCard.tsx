@@ -9,11 +9,11 @@ import { ProductBadges } from "./ProductBadges";
 import { ProductCardImage } from "./ProductCardImage";
 import { ProductCardMeta } from "./ProductCardMeta";
 
-import { useAddToCart } from "@/features/cart";
 import {
   isProductAvailable,
   type Product,
 } from "@/features/products/domain/types";
+import { useAddToCart } from "@/shared/application/cart";
 import {
   getCategoryColor,
   getCategoryTheme,

@@ -1,8 +1,8 @@
 import { renderHook, act } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-import { CartProvider, useCart } from "@/features/cart/application/CartContext";
-import type { CartItem } from "@/features/cart/domain/types";
+import { CartProvider, useCart } from "@/shared/application/cart/CartContext";
+import type { CartItem } from "@/shared/domain/cart";
 
 // ---------------------------------------------------------------------------
 // Mock next-intl — pulled in transitively via @/features/products barrel

@@ -1,1 +1,1 @@
-export type { CartItem, CartState } from "./types";
+export { SELLER_PROFILES_QUERY_KEY } from "./constants";

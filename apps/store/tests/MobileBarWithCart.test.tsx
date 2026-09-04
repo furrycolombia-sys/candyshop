@@ -15,7 +15,7 @@ vi.mock("shared", () => ({
   formatPrice: (amount: number, currency: string) => `${currency} ${amount}`,
 }));
 
-vi.mock("@/features/cart/application/hooks/useAddToCart", () => ({
+vi.mock("@/shared/application/cart/useAddToCart", () => ({
   useAddToCart: () => ({
     isAdded: false,
     quantityInCart: 0,

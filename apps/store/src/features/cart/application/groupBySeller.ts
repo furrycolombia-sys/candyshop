@@ -1,4 +1,4 @@
-import type { CartItem, SellerGroup } from "@/features/cart/domain/types";
+import type { CartItem, SellerGroup } from "@/shared/domain/cart";
 
 /** Group cart items by seller_id, calculating subtotal per group */
 export function groupCartBySeller(items: CartItem[]): SellerGroup[] {

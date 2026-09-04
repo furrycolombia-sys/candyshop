@@ -31,7 +31,7 @@ import {
   persistCartCookie,
   removeCartCookie,
   COOKIE_MAX_AGE_S,
-} from "@/features/cart/application/cartCookiePersistence";
+} from "@/shared/application/cart/cartCookiePersistence";
 
 describe("COOKIE_MAX_AGE_S", () => {
   it("equals 30 days in seconds", () => {

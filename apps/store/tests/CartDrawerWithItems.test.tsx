@@ -61,7 +61,7 @@ vi.mock("@/features/cart/presentation/components/CartItemRow", () => ({
   ),
 }));
 
-vi.mock("@/features/cart/application/CartContext", () => ({
+vi.mock("@/shared/application/cart/CartContext", () => ({
   useCart: () => ({
     items: cartItems,
     itemCount: 2,
@@ -71,7 +71,7 @@ vi.mock("@/features/cart/application/CartContext", () => ({
   }),
 }));
 
-vi.mock("@/features/cart/application/FlyToCartContext", () => ({
+vi.mock("@/shared/application/cart/FlyToCartContext", () => ({
   useFlyToCartContext: () => ({
     setCartTarget: vi.fn(),
     fire: vi.fn(),

@@ -1,4 +1,4 @@
-import type { CartItem, CartState } from "@/features/cart/domain/types";
+import type { CartItem, CartState } from "@/shared/domain/cart";
 
 export type CartAction =
   | {

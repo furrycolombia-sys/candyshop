@@ -1,7 +1,7 @@
 import { render, screen, fireEvent } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-import type { CartItem } from "@/features/cart/domain/types";
+import type { CartItem } from "@/shared/domain/cart";
 import { CartItemRow } from "@/features/cart/presentation/components/CartItemRow";
 
 // ---------------------------------------------------------------------------

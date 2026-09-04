@@ -4,7 +4,7 @@ import { captureException } from "@sentry/nextjs";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { Suspense, type ReactNode } from "react";
 
-import { CartProvider, FlyToCartProvider } from "@/features/cart";
+import { CartProvider, FlyToCartProvider } from "@/shared/application/cart";
 import { ErrorProvider } from "@/shared/application/context/ErrorContext";
 import { getRuntimeEnv } from "@/shared/infrastructure/config/environment";
 import {

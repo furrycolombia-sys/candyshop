@@ -46,7 +46,7 @@ vi.mock("@/features/cart/presentation/components/CartItemRow", () => ({
     <li data-testid={`cart-item-${item.id}`}>Item</li>
   ),
 }));
-vi.mock("@/features/cart/application/CartContext", () => ({
+vi.mock("@/shared/application/cart/CartContext", () => ({
   useCart: () => ({
     items: [],
     total: 0,
@@ -56,7 +56,7 @@ vi.mock("@/features/cart/application/CartContext", () => ({
     clearCart: mockClearCart,
   }),
 }));
-vi.mock("@/features/cart/application/FlyToCartContext", () => ({
+vi.mock("@/shared/application/cart/FlyToCartContext", () => ({
   useFlyToCartContext: () => ({
     setCartTarget: vi.fn(),
     fire: vi.fn(),
