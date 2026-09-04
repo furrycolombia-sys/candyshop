@@ -376,3 +376,35 @@ pnpm lint:env
 | `NEXT_PUBLIC_ENABLE_TEST_IDS` | Enables `data-testid` attributes for E2E |
 | `ENV_DEBUG`                   | Enables env debug viewer at `/en/env`    |
 | `NEXT_PUBLIC_ENV_DEBUG`       | Serialized env snapshot (set by loadEnv) |
+
+## Five GitHub secrets nothing reads
+
+`SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID`, `SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET`,
+`SUPABASE_AUTH_EXTERNAL_DISCORD_CLIENT_ID`, `SUPABASE_AUTH_EXTERNAL_DISCORD_SECRET`
+and `DEV_SUPABASE_AUTH_EXTERNAL_REDIRECT_URI` exist as repository secrets, dated
+14 and 19 April 2026. Nothing references them: not a workflow, not a script, not
+an env file, and they are not in the local `.secrets` either, so
+`pnpm sync-secrets` does not pull them.
+
+They configured Supabase Auth's own Google and Discord providers, which Clerk
+replaced. Verify with:
+
+```bash
+gh secret list --repo vaoan/libra | grep SUPABASE_AUTH_EXTERNAL
+grep -rl SUPABASE_AUTH_EXTERNAL --include='*.yml' --include='*.mjs' --include='*.ts' .
+```
+
+**Deliberately not deleted.** Removing them is a one-line command and safe as far
+as this repository is concerned, but the values cannot be recovered afterwards,
+and whether the matching OAuth applications are still live in the Google and
+Discord consoles is not visible from here. If they are, these are real
+credentials and deleting them here removes them from CI without revoking
+anything -- which is worth doing, but is a decision about credentials rather
+than about code.
+
+```bash
+# When that call has been made:
+for s in SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET          SUPABASE_AUTH_EXTERNAL_DISCORD_CLIENT_ID SUPABASE_AUTH_EXTERNAL_DISCORD_SECRET          DEV_SUPABASE_AUTH_EXTERNAL_REDIRECT_URI; do
+  gh secret delete "$s" --repo vaoan/libra
+done
+```
