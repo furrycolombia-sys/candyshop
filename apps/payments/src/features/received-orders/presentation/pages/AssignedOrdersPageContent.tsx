@@ -7,10 +7,10 @@ import { useCallback, useMemo } from "react";
 import { tid } from "shared";
 import { cn } from "ui";
 
-import { useAssignedOrders } from "@/features/assigned-orders/application/hooks/useAssignedOrders";
-import { ASSIGNED_FILTER_STATUSES } from "@/features/assigned-orders/domain/constants";
-import { assignedOrdersSearchParams } from "@/features/assigned-orders/domain/searchParams";
+import { useAssignedOrders } from "@/features/received-orders/application/hooks/useAssignedOrders";
 import { useOrderActions } from "@/features/received-orders/application/hooks/useOrderActions";
+import { ASSIGNED_FILTER_STATUSES } from "@/features/received-orders/domain/constants";
+import { assignedOrdersSearchParams } from "@/features/received-orders/domain/searchParams";
 import { canActOnOrder } from "@/features/received-orders/domain/types";
 import type { SellerAction } from "@/features/received-orders/domain/types";
 import { ReceivedOrderCard } from "@/features/received-orders/presentation/components/ReceivedOrderCard";

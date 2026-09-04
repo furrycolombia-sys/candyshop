@@ -29,7 +29,7 @@ vi.mock("nuqs", async (importOriginal) => {
 
 const mockUseAssignedOrders = vi.fn();
 vi.mock(
-  "@/features/assigned-orders/application/hooks/useAssignedOrders",
+  "@/features/received-orders/application/hooks/useAssignedOrders",
   () => ({
     useAssignedOrders: () => mockUseAssignedOrders(),
   }),
@@ -52,7 +52,7 @@ vi.mock(
   }),
 );
 
-import { AssignedOrdersPageContent } from "@/features/assigned-orders/presentation/pages/AssignedOrdersPageContent";
+import { AssignedOrdersPageContent } from "@/features/received-orders/presentation/pages/AssignedOrdersPageContent";
 
 const makeOrder = (id: string, payment_status: string) => ({
   id,

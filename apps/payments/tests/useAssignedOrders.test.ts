@@ -16,7 +16,7 @@ vi.mock(
   }),
 );
 
-import { useAssignedOrders } from "@/features/assigned-orders/application/hooks/useAssignedOrders";
+import { useAssignedOrders } from "@/features/received-orders/application/hooks/useAssignedOrders";
 
 import { fetchAssignedOrders } from "@/features/received-orders/infrastructure/receivedOrderQueries";
 
