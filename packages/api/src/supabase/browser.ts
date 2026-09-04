@@ -69,9 +69,9 @@ async function waitForClerkHydration(): Promise<ClerkGlobal | undefined> {
  * standalone getter for the handful of call sites that bypass supabase-js
  * entirely with a manual `fetch()` (e.g.
  * `apps/admin/src/shared/infrastructure/auditRestClient.ts` and
- * `apps/admin/src/features/audit/infrastructure/auditQueries.ts`'s
- * `insertAuditLog`, which need the raw bearer token for a request against a
- * schema/view supabase-js's query builder cannot reach). Both uses have the
+ * `apps/admin/src/shared/infrastructure/auditLog.ts`'s `insertAuditLog`,
+ * which need the raw bearer token for a request against a schema/view
+ * supabase-js's query builder cannot reach). Both uses have the
  * same failure mode: a `null` here either falls back to the anon key
  * (supabase-js: `fetchWithAuth`: `const accessToken = (await
  * getAccessToken()) ?? supabaseKey` in `@supabase/supabase-js`'s
@@ -91,17 +91,22 @@ async function waitForClerkHydration(): Promise<ClerkGlobal | undefined> {
  *    have `<ClerkProvider>`, the Clerk JS SDK's script has started
  *    executing and assigned itself to the global, but its own async
  *    initialization (environment fetch, session restore) hasn't finished.
- *    This is the real transient race on first paint: a signed-in request
- *    that merely ran a moment too early would otherwise be silently treated
- *    as anonymous, with no trace of why. Warn.
+ *    This is the real transient race on first paint. It is now **waited
+ *    out** rather than reported: see below.
  * 3. `globalThis.Clerk.loaded === true` and `session` is null/absent —
  *    genuinely signed out, the legitimate state the storefront's anonymous
  *    browsing depends on. Silent.
  *
- * This still can't block the request — there is no good way to "wait" from
- * inside a `SupabaseClient` constructor option — but case 2 is now
- * observable via `console.warn` instead of indistinguishable from case 1 or
- * 3, which was the actual gap this closes.
+ * Case 2 does block the request, for up to
+ * {@link CLERK_HYDRATION_TIMEOUT_MS}. An earlier version of this function
+ * returned `null` immediately and merely warned, on the reasoning that there
+ * was no good way to wait from inside a `SupabaseClient` constructor option.
+ * That reasoning was wrong: the option is an async callback, so awaiting in it
+ * is exactly what it allows. Returning early handed supabase-js the anon key,
+ * and every RLS-protected read a signed-in user made during that window came
+ * back empty rather than failing — which is how the permission cache went
+ * unwritten on first load. The warning now fires only when the wait times out,
+ * because that is the case a developer can act on.
  */
 export async function getSupabaseAccessToken(): Promise<string | null> {
   const clerk = globalThis.Clerk;
