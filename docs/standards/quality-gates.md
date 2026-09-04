@@ -647,3 +647,43 @@ them is safe as far as this repository is concerned, but the values cannot be
 recovered and whether the matching OAuth applications are still live in the
 Google and Discord consoles is not visible from here. That is a decision about
 credentials rather than about code.
+
+---
+
+## One AeleOS gate that does not port: `check-agent-notes`
+
+AeleOS fails a build when a directory's agent note went unread while code under
+it changed. Every `CLAUDE.md` and `AGENTS.md` governs its directory; a change
+below one must be accompanied by a change to it. It is a good gate there. It
+does not transfer here, for two reasons that are worth writing down so nobody
+re-derives them.
+
+**Its central mechanism conflicts with a rule this repo already has.** The
+check walks up from a changed file to the nearest governing note and demands an
+edit. AeleOS's root `CLAUDE.md` is 118KB of running record, so that demand is
+normal there. Libra's root `CLAUDE.md` is a portable template, and
+[portability.md](../../.claude/rules/portability.md) requires it to stay
+project-agnostic — no project names, no dated content, no running record. A
+gate that demanded an edit to it on every commit would push exactly the
+project-specific churn that rule forbids into the file the rule protects. The
+gate would be fighting the codebase's own stated standard, not enforcing it.
+
+**With the root exempted, there is almost nothing left to guard.** Libra has
+two notes: the root template and `.claude/tools/CLAUDE.md`. Across the last 200
+commits on `develop`, exactly one changed something under `.claude/tools/`
+without also editing that note. Roughly 200 lines of script and tests to catch
+a drift that occurs half a percent of the time is ceremony, and this document
+argues elsewhere that a gate nobody's work meets becomes a gate everybody
+learns to satisfy hollowly.
+
+The precondition that would change the answer is real subtree notes — a
+`CLAUDE.md` per app or per package, each describing that subtree's actual
+invariants. With those in place the gate has bounded, meaningful subjects, the
+root exemption stops being load-bearing, and porting it is worth doing. Until
+then it would be a check scoped to a directory it already passes, which is the
+failure this whole document catalogues.
+
+`check-doc-freshness` covers the adjacent ground in the meantime: it is per
+symbol rather than per directory, so it cannot see a note whose subject is a
+different file, but it does guard the prose that sits directly above the code
+it describes.
