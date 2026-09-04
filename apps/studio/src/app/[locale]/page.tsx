@@ -1,6 +1,6 @@
 import { setRequestLocale } from "next-intl/server";
 
-import { ProductListPage } from "@/features/products";
+import { ProductListPage } from "@/shared/presentation/pages/ProductListPage";
 
 export default async function StudioPage({
   params,

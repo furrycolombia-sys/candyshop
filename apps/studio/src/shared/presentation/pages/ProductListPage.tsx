@@ -10,6 +10,18 @@ import { SELLER_ADMINS_READ_PERMISSION } from "@/features/seller-admins/domain/c
 import { useCurrentUser } from "@/shared/application/hooks/useCurrentUser";
 import { AccessDeniedState } from "@/shared/presentation/components/AccessDeniedState";
 
+/**
+ * Studio's landing page.
+ *
+ * It lives in shared/presentation rather than features/products because it
+ * composes three features: the product list, the pending-order count, and the
+ * per-product delegate counts. Inside features/products those last two were
+ * cross-feature imports, which the architecture rule forbids -- but the
+ * imports were not the problem. A page that needs three features is a
+ * composition root, and a feature is the wrong place for one.
+ *
+ * The route stays thin, as the rule asks: it renders this and nothing else.
+ */
 export function ProductListPage() {
   const { hasPermission } = useCurrentUserPermissions();
   const t = useTranslations("common");

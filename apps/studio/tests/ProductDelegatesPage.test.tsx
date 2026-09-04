@@ -97,7 +97,7 @@ vi.mock("@/shared/presentation/components/AccessDeniedState", () => ({
   AccessDeniedState: () => <div data-testid="access-denied" />,
 }));
 
-import { ProductDelegatesPage } from "@/features/seller-admins/presentation/pages/ProductDelegatesPage";
+import { ProductDelegatesPage } from "@/shared/presentation/pages/ProductDelegatesPage";
 
 describe("ProductDelegatesPage", () => {
   beforeEach(() => {

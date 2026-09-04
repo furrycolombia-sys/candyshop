@@ -22,6 +22,16 @@ interface ProductDelegatesPageProps {
   productId: string;
 }
 
+/**
+ * The delegates for one product.
+ *
+ * Shared rather than in features/seller-admins for the same reason as
+ * ProductListPage: it composes two features. It manages delegates and it needs
+ * the product's own record to title the page, and reaching into
+ * features/products for that from inside another feature is what the
+ * architecture rule forbids. A page that needs two features is a composition
+ * root; a feature is the wrong place for one.
+ */
 export function ProductDelegatesPage({ productId }: ProductDelegatesPageProps) {
   const { hasPermission } = useCurrentUserPermissions();
   const { user } = useCurrentUser();
