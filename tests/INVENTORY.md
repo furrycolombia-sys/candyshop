@@ -6,7 +6,7 @@ Every test case in the repo, so a refactor can be checked for losses:
 regenerate and diff. Counting files or totals is not enough -- a rework
 can keep both and still drop the one assertion that mattered.
 
-**2662 cases across 366 files** (0 skipped, 7 parameterised).
+**2673 cases across 370 files** (0 skipped, 9 parameterised).
 
 Source-level cases: a `.each` case is one entry here and many in vitest
 output, so this total is deliberately not the runner total.
@@ -71,6 +71,14 @@ output, so this total is deliberately not the runner total.
 - AuditFilters > calls onTableChange when table select changes
 - AuditFilters > calls onActionChange when action pill is clicked
 - AuditFilters > calls onActionChange with empty string for 'all' pill
+- AuditFilters > marks the active action pill with aria-pressed
+- AuditFilters > marks the 'all' pill as pressed when no action type is selected
+
+### `apps/admin/tests/auditLog.test.ts`
+
+- insertAuditLog > POSTs to logged_actions and resolves on success
+- insertAuditLog > throws Unauthenticated when there is no Clerk session token
+- insertAuditLog > throws when the POST response is not ok
 
 ### `apps/admin/tests/AuditLogPage.test.tsx`
 
@@ -96,9 +104,6 @@ output, so this total is deliberately not the runner total.
 - fetchAuditTableNames > requests only table_name column
 - fetchAuditLog — branch coverage > omits table_name param when tableName contains only non-word chars
 - fetchAuditLog — branch coverage > omits action_type param when actionType is not in AUDIT_ACTION_TYPES
-- insertAuditLog > POSTs to logged_actions and resolves on success
-- insertAuditLog > throws Unauthenticated when there is no Clerk session token
-- insertAuditLog > throws when the POST response is not ok
 
 ### `apps/admin/tests/AuditRowDetail.test.tsx`
 
@@ -158,11 +163,6 @@ output, so this total is deliberately not the runner total.
 - DashboardPage > renders activity rows from audit data
 - DashboardPage > renders quick actions section with audit log link
 - DashboardPage > renders system status rows
-
-### `apps/admin/tests/export-csv.test.ts`
-
-- export-excel > exportUsersToExcel > should format users and export them to excel xml
-- export-excel > downloadExcel > should create a link and trigger download
 
 ### `apps/admin/tests/exportCsv.test.ts`
 
@@ -902,7 +902,7 @@ output, so this total is deliberately not the runner total.
 - TermsPage > renders a last-updated line
 - TermsPage > renders all 10 section headings
 
-## app:payments -- 549 cases
+## app:payments -- 550 cases
 
 ### `apps/payments/tests/ActionButtons.test.tsx`
 
@@ -1486,6 +1486,7 @@ output, so this total is deliberately not the runner total.
 - SellerReportFiltersBar > calls onFiltersChange with null when amount-max is cleared
 - SellerReportFiltersBar > calls onFiltersChange when amount-min changes
 - SellerReportFiltersBar > calls onFiltersChange with null when amount-min is cleared
+- *(parameterised)* SellerReportFiltersBar > %s is labelled
 
 ### `apps/payments/tests/SellerReportsPage.test.tsx`
 
@@ -1900,7 +1901,7 @@ output, so this total is deliberately not the runner total.
 ### `apps/store/tests/ImageGallery.test.tsx`
 
 - ImageGallery > renders placeholder when no images
-- ImageGallery > shows product type in placeholder
+- ImageGallery > shows product type in placeholder, hidden from assistive tech
 - ImageGallery > renders featured ribbon on placeholder when featured
 - ImageGallery > renders main image when images exist
 - ImageGallery > renders thumbnails for multiple images
@@ -2741,13 +2742,19 @@ output, so this total is deliberately not the runner total.
 - createProductFormSchema — section item validation > accepts a section item with only title_es set
 - createProductFormSchema — section item validation > accepts a section item with only title_en set
 
-## db -- 7 cases
+## db -- 10 cases
 
 ### `tests/db/exposure-invariants.test.ts`
 
 - exposure invariants > no client role can read a linkability column, on any relation
 - exposure invariants > every table in public has row level security enabled
 - exposure invariants > finds a leak when one exists
+
+### `tests/db/seed-data.test.ts`
+
+- *(parameterised)* reference data the application reads at runtime > $table is seeded
+- reference data the application reads at runtime > every permission has a matching global resource_permissions row
+- reference data the application reads at runtime > the receipts bucket and its storage policies exist
 
 ### `tests/db/seller-payment-methods.test.ts`
 
@@ -2756,7 +2763,13 @@ output, so this total is deliberately not the runner total.
 - seller_payment_methods > is not readable by an authenticated user who owns none of it
 - seller_payment_methods > has no SELECT policy that ignores who is asking
 
-## e2e -- 134 cases
+## e2e -- 151 cases
+
+### `apps/admin/e2e/accessibility.spec.ts`
+
+- Admin accessibility
+- ${route.name} has no WCAG 2 AA violations
+- dark mode keeps its contrast
 
 ### `apps/admin/e2e/audit-log.spec.ts`
 
@@ -2880,6 +2893,14 @@ output, so this total is deliberately not the runner total.
 - navbar shows user email across all apps
 - all apps load without errors
 
+### `apps/auth/e2e/studio-accessibility.spec.ts`
+
+- Studio accessibility
+- the product list has no WCAG 2 AA violations
+- the product editor has no WCAG 2 AA violations
+- delegate management has no WCAG 2 AA violations
+- dark mode keeps its contrast
+
 ### `apps/auth/e2e/studio-product-ui.spec.ts`
 
 - Studio product UI: drag-drop, images, cover
@@ -2906,6 +2927,14 @@ output, so this total is deliberately not the runner total.
 
 - Landing navbar auth state
 - shows public app links while signed out and hides protected ones
+
+### `apps/payments/e2e/accessibility.spec.ts`
+
+- Payments accessibility
+- seller reports has no WCAG 2 AA violations
+- received orders has no WCAG 2 AA violations
+- a buyer's orders page has no WCAG 2 AA violations
+- dark mode keeps its contrast
 
 ### `apps/payments/e2e/checkout-order-integrity.spec.ts`
 
@@ -2947,6 +2976,13 @@ output, so this total is deliberately not the runner total.
 - export button is disabled when no orders are loaded
 - export button downloads an XLS file when orders are present
 - unauthenticated user cannot access the reports page
+
+### `apps/store/e2e/accessibility.spec.ts`
+
+- catalog has no WCAG 2 AA violations
+- product detail has no WCAG 2 AA violations
+- the cart drawer has no WCAG 2 AA violations
+- dark mode keeps its contrast
 
 ### `apps/store/e2e/navbar-persistence.spec.ts`
 
@@ -3231,7 +3267,7 @@ output, so this total is deliberately not the runner total.
 - isTokenActive with standard JWT format > prefers internal token format over JWT when decodable
 - encodeAuthToken / decodeAuthToken roundtrip > roundtrips a valid payload
 
-## package:shared -- 190 cases
+## package:shared -- 191 cases
 
 ### `packages/shared/tests/api.test.ts`
 
@@ -3495,10 +3531,11 @@ output, so this total is deliberately not the runner total.
 - useTheme > should handle invalid stored theme
 - useTheme > should initialize from stored theme
 - useTheme > should apply system theme changes when mounted
+- useTheme > mirrors the effective theme onto a data attribute
 - useTheme > should apply CSS classes correctly
 - useTheme > should return mounted state correctly
 
-## package:ui -- 230 cases
+## package:ui -- 219 cases
 
 ### `packages/ui/tests/accessibility.test.tsx`
 
@@ -3761,20 +3798,6 @@ output, so this total is deliberately not the runner total.
 - Textarea > accepts rows prop
 - Textarea > applies custom className
 - Textarea > forwards ref correctly
-
-### `packages/ui/tests/theme-toggle.test.tsx`
-
-- ThemeToggle > renders the toggle button when mounted
-- ThemeToggle > renders disabled state when not mounted
-- ThemeToggle > has accessible aria-label
-- ThemeToggle > uses default aria-label when not provided
-- ThemeToggle > uses disabledAriaLabel when not mounted
-- ThemeToggle > calls onToggle when clicked
-- ThemeToggle > does not call onToggle when disabled
-- ThemeToggle > shows icon when theme is light
-- ThemeToggle > shows icon when theme is dark
-- ThemeToggle > shows icon when not mounted (loading state)
-- ThemeToggle > uses custom testId when provided
 
 ### `packages/ui/tests/ThemeToggle.test.tsx`
 
