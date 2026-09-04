@@ -82,7 +82,7 @@ vi.mock("@/features/products/presentation/components/ProductTable", () => ({
   ProductTable: () => <div data-testid="product-table" />,
 }));
 
-import { ProductListPage } from "@/features/products/presentation/pages/ProductListPage";
+import { ProductListPage } from "@/shared/presentation/pages/ProductListPage";
 
 describe("ProductListPage", () => {
   beforeEach(() => {
