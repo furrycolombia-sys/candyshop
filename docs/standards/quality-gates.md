@@ -282,7 +282,39 @@ authors touch the doc, and the rate falls toward zero.
 hook** — findable by anyone who went looking for it, enforced on nobody. It is
 the same failure this document catalogues elsewhere in a quieter form: not a
 check scoped to the files it already passes, but a check with no caller at
-all. It now runs in the CI hygiene block beside the others.
+all.
+
+Finding it by accident is not a method, so all 58 `package.json` scripts were
+then checked against `.github/` and `.husky/`. Two more were in the same
+state: **`check-css-sync`** and **`check-env-parity`**. Everything else
+unreferenced was a developer command — `tunnel`, `fix:all`, `supabase:reset`,
+`user:grant-role` — which is what an unreferenced script is supposed to look
+like. All three gates now run in the CI hygiene block.
+
+`check-css-sync` had a second, worse problem. Its header says it "ensures
+globals.css files are synchronized across **all apps**". It held a hardcoded
+list of five — store, studio, landing, payments, admin — and this repository
+has **seven** apps with a `globals.css`. `auth` and `playground` were absent,
+so the check printed "in sync across all apps" while declining to look at two
+of them. That is this document's central failure in its purest form, sitting
+inside a gate that was also not running.
+
+Both omitted files happened to be byte-identical to the reference. That is
+luck rather than evidence: the check could not have said otherwise, and it was
+not running anywhere to say it. The list is now derived from
+`git ls-files apps/*/src/app/globals.css`, which is the same reasoning that
+keeps the other gates honest — a hand-maintained list drifts from the
+repository the moment someone adds an app and does not think of this file.
+
+`check-env-parity` exited **0** when it found fewer than two env files,
+printing "nothing to compare". The politest form of the same thing: success
+reported from an empty comparison. All four `.env.*` files are tracked in git,
+so any checkout that can run the script has them, and their absence means the
+working tree is wrong rather than the comparison unnecessary. It now exits 1.
+
+Both were made to fail deliberately before being trusted to pass — a rule
+appended to `apps/auth/src/app/globals.css` for the first, a copy of the
+second run from a directory with no env files.
 
 ---
 
