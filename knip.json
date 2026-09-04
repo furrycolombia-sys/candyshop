@@ -125,8 +125,9 @@
   "ignoreDependencies": [
     "@faker-js/faker",
     "@secretlint/secretlint-rule-preset-recommend",
+    "tailwindcss",
     "tw-animate-css",
-    "tailwindcss"
+    "ui"
   ],
   "ignoreBinaries": ["semgrep"]
 }

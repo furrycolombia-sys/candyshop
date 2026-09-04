@@ -602,6 +602,9 @@ importers:
       tw-animate-css:
         specifier: ^1.4.0
         version: 1.4.0
+      ui:
+        specifier: workspace:*
+        version: link:../../packages/ui
     devDependencies:
       '@faker-js/faker':
         specifier: ^10.4.0

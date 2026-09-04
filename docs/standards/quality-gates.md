@@ -188,6 +188,28 @@ inline `import("...").ActiveTemplate[]`, a form knip does not follow. That was
 fixed in the test rather than suppressed in the config; a normal `import type`
 is clearer and is also what knip can see.
 
+A second false positive cost a CI run and is worth recording, because the
+local checks could not have caught it. knip reported `ui` as an unused
+dependency of `apps/playground`, and a grep for `from "ui"` in that app agreed.
+Both were looking only at TypeScript. The app consumes the package from CSS:
+
+```css
+@import "ui/globals";
+```
+
+Removing the dependency still passed `lint`, `typecheck`, `test` and `build`
+locally, because pnpm's workspace links resolve `ui` whether or not the
+manifest asks for it. Docker builds from a clean install, and only there did it
+fail: `Can't resolve 'ui/globals'`. Every one of the seven apps imports `ui`
+this way, so it is never legitimately unused; it now sits in
+`ignoreDependencies` beside `tailwindcss` and `tw-animate-css`, which are in
+that list for exactly the same reason. `knip.json` is JSON and cannot hold the
+explanation, which is why it is here.
+
+The lesson generalises: a dependency check that reads only the import graph of
+one language will be wrong about a polyglot build, and a local build that
+resolves through workspace links cannot confirm a manifest is complete.
+
 Its _file_ report had already been made truthful earlier — it went from 28
 unused files to 0, and only four of the 28 were real:
 
