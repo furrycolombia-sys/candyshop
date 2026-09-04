@@ -89,7 +89,10 @@ test.describe.serial("Payments accessibility", () => {
     page,
   }) => {
     await injectSession(context, seller);
-    await page.goto(`${getPaymentsBaseUrl()}/en/received-orders`);
+    // /en/sales, not /en/received-orders: the feature directory and the test
+    // id are named for the domain concept, the route is named for what a
+    // seller calls it. I guessed from the test id and CI corrected me.
+    await page.goto(`${getPaymentsBaseUrl()}/en/sales`);
     await expect(page.getByTestId("received-orders-page")).toBeVisible({
       timeout: ELEMENT_TIMEOUT_MS,
     });
