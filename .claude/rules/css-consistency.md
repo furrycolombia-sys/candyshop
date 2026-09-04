@@ -108,7 +108,7 @@ The code review agent checks:
 To check if `globals.css` files are in sync:
 
 ```bash
-diff apps/web/src/app/globals.css apps/admin/src/app/globals.css
+diff apps/store/src/app/globals.css apps/admin/src/app/globals.css
 ```
 
 The only expected differences should be:
@@ -123,7 +123,7 @@ The only expected differences should be:
 ### DON'T: Add CSS to only one app
 
 ```css
-/* BAD: Only in apps/web/globals.css */
+/* BAD: Only in apps/store/globals.css */
 .my-new-class {
   @apply text-primary font-bold;
 }

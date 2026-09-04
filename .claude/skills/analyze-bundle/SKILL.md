@@ -353,7 +353,7 @@ bundle-analysis:
   if: docs-only == 'false' && github.event_name == 'pull_request'
   steps:
     - name: Analyze web bundle
-      run: cd apps/web && ANALYZE=true pnpm run build || true
+      run: cd apps/store && ANALYZE=true pnpm run build || true
 ```
 
 ---

@@ -770,6 +770,51 @@ secrets remain valid there. See
 
 ---
 
+## Instructions that point at things that are not there
+
+`.claude/**` and `CLAUDE.md` are loaded into every session. A wrong instruction
+there is not a stale comment — it is a confident, wrong direction given to
+whoever reads next, and it costs time before anyone works out that the document
+was the thing that was wrong.
+
+The knip work turned up the worst case: `.claude/rules/architecture.md` told the
+reader to `import type { GlobalMetrics } from "api/types/generated"`, a subpath
+`packages/api` declared but whose target directory had never been created. The
+example was from a dashboard API this project does not have. No code had
+followed the instruction, which is the only reason nothing broke.
+
+Auditing the rest found that it was not alone:
+
+| what was cited                            | reality                                                                      |
+| ----------------------------------------- | ---------------------------------------------------------------------------- |
+| `apps/web`, 12 times across 4 files       | there is no `apps/web`; the reference app is `apps/store`, as CLAUDE.md says |
+| `packages/api/src/mutator/customFetch.ts` | it is at `src/rest/mutator/customFetch.ts`                                   |
+| `pnpm type-check`                         | the script is `typecheck`                                                    |
+| `pnpm dev:admin`                          | no such script                                                               |
+| `pnpm test:coverage:<app>` × 5            | no such scripts; per-app coverage is `pnpm --filter <app> test:coverage`     |
+| `.claude/tools/skillsmp-mcp.mjs`          | no such tool                                                                 |
+
+The `apps/web` set is the one worth pausing on. `monorepo-architecture.md`
+opened with "the `apps/web` application is the **reference standard**", while
+CLAUDE.md names `apps/store`. Two instruction files disagreeing about which app
+is the standard is worse than either being merely out of date.
+
+`scripts/check-doc-references.mjs` now fails on any cited path or `pnpm` script
+that does not exist. It reads **prose only** — fenced code blocks are skipped,
+because a skill that generates setup guides shows an example `package.json`
+with scripts this repository does not have, and an audit skill shows an example
+report row naming a file that never existed. Both are illustrations, not
+claims. Paths matched by `.gitignore` are skipped too, since
+`.claude/portability-exceptions.json` is documented as deliberately untracked.
+
+Writing that exemption exposed a real formatting bug: a README template in
+`generate-setup-guide` had a stray closing fence, so eighty lines of template
+content — including a command table citing a `pnpm test:e2e` this repo does not
+have — escaped the code block and rendered as live instruction. The fence is
+fixed rather than the checker taught to ignore it.
+
+---
+
 ## One AeleOS gate that does not port: `check-agent-notes`
 
 AeleOS fails a build when a directory's agent note went unread while code under

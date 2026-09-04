@@ -78,7 +78,7 @@ At the repository level, dependencies flow in ONE direction:
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                         APPLICATIONS                             │
-│                    (apps/web, apps/admin)                        │
+│                    (apps/store, apps/admin)                        │
 │         Full Clean Architecture, i18n, feature modules           │
 ├─────────────────────────────────────────────────────────────────┤
 │                      SHARED PACKAGES                             │
@@ -301,7 +301,7 @@ function SheetContent({ closeLabel = "Close", ...props }: SheetContentProps) {
 **In consuming app:**
 
 ```typescript
-// apps/web/src/features/some-feature/presentation/components/MySheet.tsx
+// apps/store/src/features/some-feature/presentation/components/MySheet.tsx
 "use client";
 import { useTranslations } from "next-intl";
 import { Sheet, SheetContent } from "ui";
@@ -322,7 +322,7 @@ export function MySheet() {
 ### Each App Owns Its Translations
 
 ```
-apps/web/src/shared/infrastructure/i18n/
+apps/store/src/shared/infrastructure/i18n/
 ├── messages/
 │   ├── en.json    # Web app English translations
 │   └── es.json    # Web app Spanish translations
@@ -341,7 +341,8 @@ apps/admin/src/shared/infrastructure/i18n/
 
 ## Standard App: Web
 
-The `apps/web` application is the **reference standard**. All other apps MUST comply with its:
+The `apps/store` application is the **reference standard**, matching
+[CLAUDE.md](../../CLAUDE.md#key-principles). All other apps MUST comply with its:
 
 - ESLint configuration (enforced at monorepo root)
 - Clean Architecture patterns
@@ -389,7 +390,7 @@ The `apps/playground` is a **permanent incubation sandbox** for experimenting wi
 | **Never delete components**      | Components remain available for future reference and reuse                 |
 | **Relaxed quality expectations** | Playground may use hardcoded strings, simpler patterns for quick iteration |
 | **Same architecture structure**  | Follows Clean Architecture (features, layers) for consistency              |
-| **Independent from production**  | Playground features do NOT import from web/admin and vice versa            |
+| **Independent from production**  | Playground features do NOT import from store/admin and vice versa          |
 
 ### Workflow: Playground to Production
 
@@ -447,7 +448,7 @@ packages:
 Apps reference packages using `workspace:*`:
 
 ```json
-// apps/web/package.json
+// apps/store/package.json
 {
   "dependencies": {
     "api": "workspace:*",
@@ -462,7 +463,7 @@ Apps reference packages using `workspace:*`:
 Each app has its own path aliases:
 
 ```json
-// apps/web/tsconfig.json
+// apps/store/tsconfig.json
 {
   "compilerOptions": {
     "paths": {
@@ -483,7 +484,7 @@ Each app has its own path aliases:
 Apps must transpile workspace packages:
 
 ```typescript
-// apps/web/next.config.ts
+// apps/store/next.config.ts
 const nextConfig = {
   transpilePackages: ["api", "ui", "shared"],
 };
@@ -526,7 +527,7 @@ Packages are consumed as source code, not pre-built bundles:
 When adding a new application:
 
 1. **Create app folder**: `apps/[app-name]/`
-2. **Copy structure from web**: Use `apps/web` as template
+2. **Copy structure from store**: Use `apps/store` as template
 3. **Set up i18n**: Create own `shared/infrastructure/i18n/` with locale files
 4. **Configure TypeScript**: Extend `tsconfig.base.json`, add path aliases
 5. **Add transpilePackages**: Include `api`, `ui`, and `shared`
@@ -570,14 +571,14 @@ pnpm lint && pnpm typecheck
 
 ## Commands
 
-| Command          | Description                 |
-| ---------------- | --------------------------- |
-| `pnpm dev`       | Start web app development   |
-| `pnpm dev:admin` | Start admin app development |
-| `pnpm build`     | Build all workspaces        |
-| `pnpm lint`      | Lint all apps and packages  |
-| `pnpm typecheck` | Type-check all workspaces   |
-| `pnpm test`      | Run web app tests           |
+| Command            | Description                    |
+| ------------------ | ------------------------------ |
+| `pnpm dev`         | Start all apps with `.env.dev` |
+| `pnpm dev --env X` | Start all apps with `.env.X`   |
+| `pnpm build`       | Build all workspaces           |
+| `pnpm lint`        | Lint all apps and packages     |
+| `pnpm typecheck`   | Type-check all workspaces      |
+| `pnpm test`        | Run web app tests              |
 
 ---
 

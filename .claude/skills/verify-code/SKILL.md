@@ -257,17 +257,17 @@ None.
 
 When checking coverage, verify each workspace individually:
 
-| Workspace         | Command                       | Threshold |
-| ----------------- | ----------------------------- | --------- |
-| `apps/admin`      | `pnpm test:coverage:admin`    | 85%       |
-| `apps/auth`       | `pnpm test:coverage:auth`     | 85%       |
-| `apps/store`      | `pnpm test:coverage:store`    | 85%       |
-| `apps/studio`     | `pnpm test:coverage:studio`   | 85%       |
-| `apps/payments`   | `pnpm test:coverage:payments` | 85%       |
-| `apps/landing`    | N/A (passWithNoTests)         | —         |
-| `apps/playground` | N/A (passWithNoTests)         | —         |
-| `packages/shared` | Part of `pnpm test:coverage`  | 85%       |
-| `packages/ui`     | Part of `pnpm test:coverage`  | 85%       |
+| Workspace         | Command                                | Threshold |
+| ----------------- | -------------------------------------- | --------- |
+| `apps/admin`      | `pnpm --filter admin test:coverage`    | 85%       |
+| `apps/auth`       | `pnpm --filter auth-app test:coverage` | 85%       |
+| `apps/store`      | `pnpm --filter store test:coverage`    | 85%       |
+| `apps/studio`     | `pnpm --filter studio test:coverage`   | 85%       |
+| `apps/payments`   | `pnpm --filter payments test:coverage` | 85%       |
+| `apps/landing`    | N/A (passWithNoTests)                  | —         |
+| `apps/playground` | N/A (passWithNoTests)                  | —         |
+| `packages/shared` | Part of `pnpm test:coverage`           | 85%       |
+| `packages/ui`     | Part of `pnpm test:coverage`           | 85%       |
 
 ---
 

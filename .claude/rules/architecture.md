@@ -1,6 +1,6 @@
 # Architecture Rules
 
-> This document covers **application-level** Clean Architecture within each app (`apps/web`, `apps/admin`).
+> This document covers **application-level** Clean Architecture within each app (`apps/store`, `apps/admin`).
 > For **repository-level** architecture (packages, apps, dependencies), see [Monorepo Architecture](./monorepo-architecture.md).
 
 ---
@@ -248,7 +248,7 @@ pnpm codegen
 
 ### API Response Handling
 
-The custom Orval mutator (`packages/api/src/mutator/customFetch.ts`) handles API responses:
+The custom Orval mutator (`packages/api/src/rest/mutator/customFetch.ts`) handles API responses:
 
 1. **Response Envelope** - Extracts `data` from `{ success: true, data: T }` wrapper
 2. **No Case Transformation** - Returns data as-is to match generated TypeScript types
