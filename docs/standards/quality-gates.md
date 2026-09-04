@@ -354,6 +354,25 @@ unreferenced was a developer command — `tunnel`, `fix:all`, `supabase:reset`,
 `user:grant-role` — which is what an unreferenced script is supposed to look
 like. All three gates now run in the CI hygiene block.
 
+A fourth turned up later, from a different direction: **`test-inventory-diff`**.
+It answers the one question a test count cannot -- did a rework drop a case?
+Neither a file count nor a total catches that, because both can hold while an
+assertion disappears. It ran nowhere, and when finally run it reported 14 lost
+cases.
+
+None were lost. All fourteen were checked individually against the live test
+tree and every one was present. The committed inventory predated the scanner's
+`LEGACY_SNAPSHOT` exclusion, so it counted `tests/legacy` as well as the live
+tree and listed those names twice; the diff compares sorted lists with `comm`,
+which is duplicate-sensitive, so a name appearing twice before and once now
+produced a line of output. The report was surplus, not loss.
+
+That episode is the reason the CI step carries a warning in its comment.
+Regenerating `tests/INVENTORY.md` makes any failure disappear without
+answering it, which is precisely how a real loss would be buried. The rule is
+to check each reported name against the live tree first, and to say what was
+checked -- the baseline moves only after that, never instead of it.
+
 `check-css-sync` had a second, worse problem. Its header says it "ensures
 globals.css files are synchronized across **all apps**". It held a hardcoded
 list of five — store, studio, landing, payments, admin — and this repository
