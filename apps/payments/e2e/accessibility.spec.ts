@@ -111,9 +111,14 @@ test.describe.serial("Payments accessibility", () => {
   }) => {
     await injectSession(context, buyer);
     await page.goto(`${getPaymentsBaseUrl()}/en/purchases`);
-    await expect(page.getByTestId("orders-page")).toBeVisible({
-      timeout: ELEMENT_TIMEOUT_MS,
-    });
+
+    // Either state. `orders-page` only renders once the buyer has orders, and
+    // this user is created fresh for the run, so what actually renders is the
+    // empty state -- which is a page a real buyer sees on their first visit
+    // and worth scanning on its own account.
+    await expect(
+      page.getByTestId("orders-page").or(page.getByTestId("orders-empty")),
+    ).toBeVisible({ timeout: ELEMENT_TIMEOUT_MS });
 
     const results = await new AxeBuilder({ page }).withTags(WCAG_AA).analyze();
 
