@@ -24,11 +24,15 @@ export default defineConfig({
       // This package had no thresholds and no `test:coverage` script, so its
       // coverage was never measured or enforced. Floors pinned to the first real
       // measurement so regressions fail; raise them as coverage improves.
+      // Below the repo's 85 target, and pinned just under measured coverage
+      // so the numbers can only go up. Measured 78.57 / 71.42 / 86.04 / 81.25;
+      // the previous values sat as much as eleven points under that, which
+      // left room to lose coverage without the gate noticing.
       thresholds: {
-        branches: 75,
-        functions: 60,
-        lines: 80,
-        statements: 75,
+        branches: 78,
+        functions: 71,
+        lines: 86,
+        statements: 81,
       },
       cleanOnRerun: false,
     },
