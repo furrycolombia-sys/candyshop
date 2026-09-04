@@ -9,7 +9,7 @@ import {
 } from "@/features/users/domain/constants";
 
 /** Result of computing a relative time label: an i18n key + optional params */
-export interface LastSeenResult {
+interface LastSeenResult {
   key: string;
   params?: Record<string, number>;
 }

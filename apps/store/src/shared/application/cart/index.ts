@@ -1,3 +1,3 @@
-export { CartProvider, useCart } from "./CartContext";
-export { FlyToCartProvider, useFlyToCartContext } from "./FlyToCartContext";
+export { CartProvider } from "./CartContext";
+export { FlyToCartProvider } from "./FlyToCartContext";
 export { useAddToCart } from "./useAddToCart";

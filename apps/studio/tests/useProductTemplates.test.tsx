@@ -16,6 +16,8 @@ import { useProductTemplates } from "@/features/products/application/hooks/usePr
 
 import { fetchActiveTemplates } from "@/features/products/infrastructure/templateQueries";
 
+import type { ActiveTemplate } from "@/features/products/infrastructure/templateQueries";
+
 function createWrapper() {
   const qc = new QueryClient({
     defaultOptions: { queries: { retry: false } },
@@ -29,17 +31,16 @@ describe("useProductTemplates", () => {
   beforeEach(() => vi.clearAllMocks());
 
   it("returns templates on success", async () => {
-    const mock: import("@/features/products/infrastructure/templateQueries").ActiveTemplate[] =
-      [
-        {
-          id: "t1",
-          name_en: "Basic",
-          name_es: "Básico",
-          description_en: null,
-          description_es: null,
-          sections: [],
-        },
-      ];
+    const mock: ActiveTemplate[] = [
+      {
+        id: "t1",
+        name_en: "Basic",
+        name_es: "Básico",
+        description_en: null,
+        description_es: null,
+        sections: [],
+      },
+    ];
     vi.mocked(fetchActiveTemplates).mockResolvedValue(mock);
 
     const { result } = renderHook(() => useProductTemplates(), {

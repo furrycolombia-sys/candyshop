@@ -113,7 +113,7 @@ const NAV_SECTIONS: readonly NavSection[] = [
 const INACTIVE_LINK_CLASS =
   "text-muted-foreground hover:bg-muted hover:text-foreground";
 
-export interface PaymentsSidebarNavProps {
+interface PaymentsSidebarNavProps {
   appPath: string;
   collapsed?: boolean;
   grantedKeys: string[];

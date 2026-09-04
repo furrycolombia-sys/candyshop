@@ -1,6 +1,6 @@
 import type { CartItem, CartState } from "@/shared/domain/cart";
 
-export type CartAction =
+type CartAction =
   | {
       type: "ADD_ITEM";
       payload: Omit<CartItem, "quantity"> & { quantity?: number };
@@ -31,7 +31,7 @@ function toCartSnapshot(
   };
 }
 
-export function addItemToItems(
+function addItemToItems(
   items: CartItem[],
   payload: Omit<CartItem, "quantity"> & { quantity?: number },
 ): CartItem[] {
@@ -66,7 +66,7 @@ export function addItemToItems(
   ];
 }
 
-export function updateItemQuantity(
+function updateItemQuantity(
   items: CartItem[],
   id: string,
   quantity: number,
@@ -88,7 +88,7 @@ export function updateItemQuantity(
   );
 }
 
-export function deriveState(items: CartItem[]): CartState {
+function deriveState(items: CartItem[]): CartState {
   return {
     items,
     itemCount: items.reduce((sum, item) => sum + item.quantity, 0),

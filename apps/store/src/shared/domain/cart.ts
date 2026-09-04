@@ -32,10 +32,3 @@ export interface SellerGroup {
   items: CartItem[];
   subtotal: number;
 }
-
-/** A seller profile subset used for cart seller display names. */
-export interface SellerProfile {
-  id: string;
-  display_name: string | null;
-  email: string;
-}

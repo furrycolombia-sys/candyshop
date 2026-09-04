@@ -5,10 +5,6 @@ vi.mock("next-intl", () => ({
   useTranslations: () => (key: string) => key,
 }));
 
-vi.mock("@/shared/infrastructure/config/tid", () => ({
-  tid: (id: string) => ({ "data-testid": id }),
-}));
-
 import { ReportFiltersBar } from "@/features/reports/presentation/components/ReportFiltersBar";
 
 import type { ReportFilters } from "@/features/reports/domain/types";

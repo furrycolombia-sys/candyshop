@@ -7,7 +7,7 @@ export type OrderStatus =
   | "rejected"
   | "expired";
 
-export interface ReportOrderItem {
+interface ReportOrderItem {
   id: string;
   product_id: string;
   product_name: string;
@@ -48,15 +48,4 @@ export interface ReportFilters {
 export interface ReportOrdersResponse {
   orders: ReportOrder[];
   total: number;
-}
-
-export interface UserOption {
-  id: string;
-  email: string;
-  display_name: string | null;
-}
-
-export interface ProductOption {
-  id: string;
-  name: string;
 }

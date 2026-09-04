@@ -12,7 +12,7 @@ import {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- next-intl Translator type is complex; accepting any callable
 type TranslatorFn = (...args: any[]) => string;
 
-export interface CartItemTranslators {
+interface CartItemTranslators {
   t: TranslatorFn;
   tProducts: TranslatorFn;
   tTypes: TranslatorFn;

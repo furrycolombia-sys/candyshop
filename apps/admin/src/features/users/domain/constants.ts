@@ -161,9 +161,6 @@ export const PERMISSION_TEMPLATES = {
   none: [],
 } satisfies Record<string, string[]>;
 
-/** @deprecated Import from `@/shared/domain/constants` instead */
-export { ADMIN_APP_ACCESS_KEYS } from "@/shared/domain/constants";
-
 export const SELLER_ADMINS_READ_PERMISSION = "seller_admins.read";
 
 export const USER_PERMISSIONS_QUERY_KEY = "user-permissions";

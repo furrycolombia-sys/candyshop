@@ -8,10 +8,6 @@ vi.mock("next-intl", () => ({
   },
 }));
 
-vi.mock("@/shared/infrastructure/config/tid", () => ({
-  tid: (id: string) => ({ "data-testid": id }),
-}));
-
 vi.mock("@/features/reports/presentation/components/OrderStatusBadge", () => ({
   OrderStatusBadge: ({ status }: { status: string }) => (
     <span data-testid={`status-badge-${status}`}>{status}</span>

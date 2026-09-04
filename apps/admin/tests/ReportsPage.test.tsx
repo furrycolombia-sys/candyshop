@@ -8,10 +8,6 @@ vi.mock("next-intl", () => ({
   },
 }));
 
-vi.mock("@/shared/infrastructure/config/tid", () => ({
-  tid: (id: string) => ({ "data-testid": id }),
-}));
-
 const mockSetFilters = vi.fn();
 
 vi.mock("@/features/reports/application/hooks/useReportOrders", () => ({
