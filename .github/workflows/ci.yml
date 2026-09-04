@@ -244,6 +244,21 @@ jobs:
       - name: Check documentation moved with the code
         run: node scripts/check-doc-freshness.mjs "origin/${{ github.base_ref || 'develop' }}"
 
+      # The fourth gate in this series found running in no workflow and no hook.
+      # It answers the one question a test-count cannot: did a rework drop a
+      # case? Neither file counts nor totals catch that -- both can hold while
+      # an assertion disappears. It compares the committed inventory at the
+      # merge base against one regenerated from the working tree, and fails on
+      # any case name present before and absent now. Needs fetch-depth: 0,
+      # above, for the merge base to exist.
+      #
+      # If it fails, the fix is to restore the case. Regenerating
+      # tests/INVENTORY.md makes the failure disappear without answering it,
+      # which is how a real loss gets buried -- only regenerate after checking
+      # each reported name against the live tree, and say what you checked.
+      - name: Check no test case was dropped
+        run: bash scripts/test-inventory-diff.sh "origin/${{ github.base_ref || 'develop' }}"
+
       - name: Lint (scoped)
         run: |
           set -euo pipefail
