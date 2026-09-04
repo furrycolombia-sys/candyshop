@@ -9,7 +9,6 @@ import type { CartCookieItem } from "shared/types";
 
 import { useSellerProfiles } from "./useSellerProfiles";
 
-import { CHECKOUT_CART_PRODUCTS_QUERY_KEY } from "@/features/checkout/domain/constants";
 import type { CartItem, SellerGroup } from "@/features/checkout/domain/types";
 import {
   readCartFromCookie,
@@ -17,6 +16,7 @@ import {
 } from "@/features/checkout/infrastructure/cartCookie";
 import { fetchCheckoutProductsByIds } from "@/features/checkout/infrastructure/checkoutQueries";
 import { FALLBACK_SELLER_NAME } from "@/shared/domain/constants";
+import { CHECKOUT_CART_PRODUCTS_QUERY_KEY } from "@/shared/domain/queryKeys";
 
 /** Stable empty array so the server snapshot reference never changes. */
 const EMPTY_COOKIE_ITEMS: CartCookieItem[] = [];

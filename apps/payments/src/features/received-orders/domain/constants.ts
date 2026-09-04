@@ -1,5 +1,3 @@
-export const RECEIVED_ORDERS_QUERY_KEY = "received-orders";
-
 export const FILTER_STATUSES = [
   "all",
   "pending_verification",

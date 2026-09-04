@@ -30,7 +30,7 @@ import { readFileSync } from "node:fs";
  * What the codebase had when this check was written. It may fall; it may not
  * rise. Lower it when a pair is resolved -- that is the ratchet.
  */
-const BASELINE = 13;
+const BASELINE = 10;
 
 const FEATURE_IMPORT = /from\s+"(@\/features\/([^/"]+)([^"]*))"/g;
 

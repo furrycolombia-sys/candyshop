@@ -3,9 +3,9 @@ import { describe, it, expect } from "vitest";
 import {
   EXPIRING_SOON_THRESHOLD_MS,
   FILTER_STATUSES,
-  RECEIVED_ORDERS_QUERY_KEY,
   RECEIVED_ORDERS_STALE_TIME_MS,
 } from "@/features/received-orders/domain/constants";
+import { RECEIVED_ORDERS_QUERY_KEY } from "@/shared/domain/queryKeys";
 
 describe("received-orders domain constants", () => {
   it("RECEIVED_ORDERS_QUERY_KEY is defined", () => {

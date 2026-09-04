@@ -19,7 +19,7 @@ vi.mock(
 
 import { useOrderActions } from "@/features/received-orders/application/hooks/useOrderActions";
 
-import { RECEIVED_ORDERS_QUERY_KEY } from "@/features/received-orders/domain/constants";
+import { RECEIVED_ORDERS_QUERY_KEY } from "@/shared/domain/queryKeys";
 import { updateOrderStatus } from "@/features/received-orders/infrastructure/receivedOrderQueries";
 
 function createWrapper(queryClient: QueryClient) {

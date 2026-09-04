@@ -20,7 +20,7 @@ vi.mock("@/shared/infrastructure/receiptActions", () => ({
 
 import { useResubmitEvidence } from "@/features/orders/application/hooks/useResubmitEvidence";
 
-import { MY_ORDERS_QUERY_KEY } from "@/features/orders/domain/constants";
+import { MY_ORDERS_QUERY_KEY } from "@/shared/domain/queryKeys";
 import { resubmitEvidence } from "@/features/orders/infrastructure/orderQueries";
 import { uploadOrderReceipt } from "@/shared/infrastructure/receiptActions";
 
