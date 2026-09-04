@@ -170,20 +170,50 @@ Four files were genuinely dead and are deleted:
 - `vitest.aliases.ts` — a shared-alias helper none of the seven
   `vitest.config.mts` files ever adopted.
 
-### Open question: the feature barrel rule
+### The feature barrel rule: measured, and it holds
 
-`.claude/rules/architecture.md` says every feature MUST have an `index.ts`
-exporting its public API. Its own import examples then show deep absolute
-paths (`@/features/dashboard/domain/types`), and the codebase follows the
-examples: across the four barrels knip flagged, there are **126 deep imports
-against 6 barrel imports**.
+This section previously recorded the rule as "inconsistent with itself",
+evidenced by **126 deep imports against 6 barrel imports**, and left the
+decision open. That comparison was counting the wrong thing.
 
-So the barrels are required to exist and are bypassed in practice. They are
-marked as knip entry points here because the rule mandates them — but the rule
-is inconsistent with itself, and someone should decide whether to enforce
-barrel-only imports or drop the requirement. Marking them as entry points also
-means their exports count as used, which slightly weakens the unused-export
-analysis; that is the cost of agreeing with the rule as written.
+`.claude/rules/architecture.md` mandates a barrel as each feature's public API,
+and separately forbids features importing each other. So the barrel is the
+interface for code _outside_ the feature -- and 427 of those "deep imports" are
+a feature importing itself, which the rule never asked to go through a barrel.
+
+Split by who is doing the importing:
+
+| importer          | via barrel | deep  |
+| ----------------- | ---------- | ----- |
+| within a feature  | 0          | 427   |
+| **`app/` routes** | **38**     | **0** |
+| another feature   | 3          | 13    |
+
+Routes were 31 to 7 when this was measured. The seven are fixed: four already
+had what they needed on the barrel, and three barrels were widened to export
+what an API route consumes -- a route is outside the feature, so what it needs
+is part of the public API by definition. The rule is now satisfied wherever it
+applies, and there is nothing to decide.
+
+### What that measurement did surface: 13 cross-feature imports
+
+Those violate a stated MUST, and they are the real finding.
+
+```
+  1  admin: users -> audit                         1  payments: checkout -> orders
+  4  payments: assigned-orders -> received-orders  1  payments: received-orders -> assigned-orders
+  1  store: cart -> products                       1  store: products -> cart
+  2  studio: products -> seller-admins             1  studio: seller-admins -> products
+  1  studio: products -> orders
+```
+
+Three of those pairs import **each other**: assigned-orders and
+received-orders, cart and products, products and seller-admins. A cycle at
+feature level usually means one feature wearing two names, and deciding that
+is a design call rather than an import fix.
+
+`scripts/check-feature-boundaries.mjs` holds the count at 13 and fails on a
+fourteenth. Lower the baseline as pairs are resolved; that is the ratchet.
 
 ---
 

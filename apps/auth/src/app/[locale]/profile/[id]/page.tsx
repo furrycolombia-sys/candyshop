@@ -1,6 +1,6 @@
 import { setRequestLocale } from "next-intl/server";
 
-import { UserProfilePage } from "@/features/account/presentation/pages/UserProfilePage";
+import { UserProfilePage } from "@/features/account";
 
 export default async function Page({
   params,

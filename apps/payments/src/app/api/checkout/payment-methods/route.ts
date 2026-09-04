@@ -6,7 +6,7 @@ import { NextResponse } from "next/server";
 import type {
   CheckoutPaymentMethodsResponse,
   SellerPaymentMethodWithType,
-} from "@/features/checkout/domain/types";
+} from "@/features/checkout";
 import {
   adminFetchJson,
   createRestPath,
