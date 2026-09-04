@@ -2,7 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import { setRequestLocale } from "next-intl/server";
 
 import { AccountSettingsPage } from "@/features/account";
-import { LoginPage } from "@/features/auth/presentation/pages/LoginPage";
+import { LoginPage } from "@/features/auth";
 
 export default async function AuthPage({
   params,

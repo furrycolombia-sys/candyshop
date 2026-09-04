@@ -8,7 +8,7 @@ import {
   INTERNAL_SERVER_ERROR_STATUS,
   validateUuid,
 } from "@/app/api/admin/_shared/adminRest";
-import { SELLER_ADMINS_READ_PERMISSION } from "@/features/users/domain/constants";
+import { SELLER_ADMINS_READ_PERMISSION } from "@/features/users";
 
 const SELLER_ADMINS_DELETE = "seller_admins.delete";
 

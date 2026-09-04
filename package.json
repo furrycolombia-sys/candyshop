@@ -58,7 +58,8 @@
     "test:inventory:diff": "bash scripts/test-inventory-diff.sh",
     "check:migrations": "node scripts/check-migration-edits.mjs",
     "check:source-bytes": "node scripts/check-source-bytes.mjs",
-    "check:a11y-patterns": "node scripts/check-a11y-patterns.mjs"
+    "check:a11y-patterns": "node scripts/check-a11y-patterns.mjs",
+    "check:boundaries": "node scripts/check-feature-boundaries.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

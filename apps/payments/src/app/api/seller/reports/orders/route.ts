@@ -5,7 +5,7 @@ import { NextResponse } from "next/server";
 import { ORDER_STATUS_SET } from "shared/constants/orders";
 import { POPULAR_CURRENCIES_SET } from "shared/utils/currencies";
 
-import type { SellerReportOrder } from "@/features/reports/domain/types";
+import type { SellerReportOrder } from "@/features/reports";
 import type { SupabaseClient } from "@/shared/domain/types";
 import {
   adminFetchJson,
