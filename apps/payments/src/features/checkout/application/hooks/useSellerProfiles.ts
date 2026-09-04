@@ -3,8 +3,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { useSupabase } from "shared";
 
-import { SELLER_PROFILES_QUERY_KEY } from "@/features/checkout/domain/constants";
 import { fetchSellerProfiles } from "@/features/checkout/infrastructure/checkoutQueries";
+import { SELLER_PROFILES_QUERY_KEY } from "@/shared/domain/queryKeys";
 
 /**
  * Fetches display names for a list of seller IDs.

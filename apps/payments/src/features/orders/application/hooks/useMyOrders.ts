@@ -3,11 +3,9 @@
 import { useQuery } from "@tanstack/react-query";
 import { useSupabase } from "shared";
 
-import {
-  MY_ORDERS_QUERY_KEY,
-  ORDERS_STALE_TIME_MS,
-} from "@/features/orders/domain/constants";
+import { ORDERS_STALE_TIME_MS } from "@/features/orders/domain/constants";
 import { fetchMyOrders } from "@/features/orders/infrastructure/orderQueries";
+import { MY_ORDERS_QUERY_KEY } from "@/shared/domain/queryKeys";
 
 /**
  * Fetches the authenticated user's orders with items and seller names.

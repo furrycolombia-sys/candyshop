@@ -5,7 +5,7 @@ import { useSupabase } from "shared";
 
 import type { CartItem } from "@/features/checkout/domain/types";
 import { createOrder } from "@/features/checkout/infrastructure/checkoutQueries";
-import { MY_ORDERS_QUERY_KEY } from "@/features/orders/domain/constants";
+import { MY_ORDERS_QUERY_KEY } from "@/shared/domain/queryKeys";
 import { uploadCheckoutReceipt } from "@/shared/infrastructure/receiptActions";
 
 interface SubmitPaymentParams {

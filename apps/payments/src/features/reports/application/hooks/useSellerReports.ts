@@ -3,10 +3,10 @@
 import { useQuery } from "@tanstack/react-query";
 import { useQueryStates } from "nuqs";
 
-import { SELLER_REPORTS_QUERY_KEY } from "@/features/reports/domain/constants";
 import { sellerReportsSearchParams } from "@/features/reports/domain/searchParams";
 import type { SellerReportFilters } from "@/features/reports/domain/types";
 import { fetchSellerReportOrders } from "@/features/reports/infrastructure/reportsApi";
+import { SELLER_REPORTS_QUERY_KEY } from "@/shared/domain/queryKeys";
 
 export function useSellerReports() {
   const [params, setParams] = useQueryStates(sellerReportsSearchParams);

@@ -6,7 +6,6 @@ import { useQueryStates } from "nuqs";
 import { useEffect, useState } from "react";
 import { tid } from "shared";
 
-import { useLogExport } from "@/features/audit/application/hooks/useAuditLog";
 import { useUserPermissionsBatch } from "@/features/users/application/hooks/useUserPermissionsBatch";
 import { useUserReceiptsBatch } from "@/features/users/application/hooks/useUserReceiptsBatch";
 import { useUsers } from "@/features/users/application/hooks/useUsers";
@@ -18,6 +17,7 @@ import { USER_SEARCH_DEBOUNCE_MS } from "@/features/users/domain/constants";
 import { usersSearchParams } from "@/features/users/domain/searchParams";
 import { UserTable } from "@/features/users/presentation/components/UserTable";
 import { useErrorContext } from "@/shared/application/context/ErrorContext";
+import { useLogExport } from "@/shared/application/hooks/useLogExport";
 import { useRouter } from "@/shared/infrastructure/i18n";
 
 export function UsersPageContent() {

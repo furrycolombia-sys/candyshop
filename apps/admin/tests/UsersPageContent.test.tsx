@@ -22,7 +22,7 @@ vi.mock("nuqs", async (importOriginal) => {
 });
 
 const mockLogExport = vi.fn();
-vi.mock("@/features/audit/application/hooks/useAuditLog", () => ({
+vi.mock("@/shared/application/hooks/useLogExport", () => ({
   useLogExport: () => ({ mutate: mockLogExport }),
 }));
 

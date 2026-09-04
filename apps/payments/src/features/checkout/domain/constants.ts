@@ -14,9 +14,6 @@ export const CHECKOUT_COMPLETED_VALUE = "1";
 /** Error code thrown when stock reservation fails */
 export const STOCK_ERROR_CODE = "stock_error";
 
-export const SELLER_PROFILES_QUERY_KEY = "seller-profiles";
-export const CHECKOUT_CART_PRODUCTS_QUERY_KEY = "checkout-cart-products";
-
 /** Default expiry offset for new orders (48 hours) */
 export const ORDER_EXPIRY_HOURS = 48;
 

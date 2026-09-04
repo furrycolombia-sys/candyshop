@@ -18,7 +18,7 @@ vi.mock("@/shared/infrastructure/receiptActions", () => ({
 import { useSubmitPayment } from "@/features/checkout/application/hooks/useSubmitPayment";
 
 import { createOrder } from "@/features/checkout/infrastructure/checkoutQueries";
-import { MY_ORDERS_QUERY_KEY } from "@/features/orders/domain/constants";
+import { MY_ORDERS_QUERY_KEY } from "@/shared/domain/queryKeys";
 import { uploadCheckoutReceipt } from "@/shared/infrastructure/receiptActions";
 
 function createWrapper() {
