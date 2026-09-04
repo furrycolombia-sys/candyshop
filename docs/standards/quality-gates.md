@@ -755,12 +755,18 @@ fail the job on its own.
 
 **The feature barrel rule** — measured and settled; see the section above.
 
-**Five orphaned GitHub secrets** — still open, deliberately. They are unused and
-documented in `docs/environment.md` with the command to remove them. Deleting
-them is safe as far as this repository is concerned, but the values cannot be
-recovered and whether the matching OAuth applications are still live in the
-Google and Discord consoles is not visible from here. That is a decision about
-credentials rather than about code.
+**Five orphaned GitHub secrets** — deleted, on the owner's instruction. They
+were the `SUPABASE_AUTH_EXTERNAL_*` pair for Google and Discord plus a dev
+redirect URI, left behind when Clerk replaced Supabase Auth's own providers.
+Nothing read them, which was re-checked before deletion rather than taken from
+the earlier note: no workflow, no script, no env file, absent from `.secrets`
+and from `sync-secrets.yml`'s `env:` block. The repository went from 61 secrets
+to 56.
+
+Deleting them removed them from CI; it revoked nothing. If the matching OAuth
+applications are still live in the Google and Discord consoles, those client
+secrets remain valid there. See
+[Environment System](../environment.md#five-github-secrets-that-were-deleted).
 
 ---
 

@@ -377,34 +377,32 @@ pnpm lint:env
 | `ENV_DEBUG`                   | Enables env debug viewer at `/en/env`    |
 | `NEXT_PUBLIC_ENV_DEBUG`       | Serialized env snapshot (set by loadEnv) |
 
-## Five GitHub secrets nothing reads
+## Five GitHub secrets that were deleted
 
 `SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID`, `SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET`,
 `SUPABASE_AUTH_EXTERNAL_DISCORD_CLIENT_ID`, `SUPABASE_AUTH_EXTERNAL_DISCORD_SECRET`
-and `DEV_SUPABASE_AUTH_EXTERNAL_REDIRECT_URI` exist as repository secrets, dated
-14 and 19 April 2026. Nothing references them: not a workflow, not a script, not
-an env file, and they are not in the local `.secrets` either, so
-`pnpm sync-secrets` does not pull them.
+and `DEV_SUPABASE_AUTH_EXTERNAL_REDIRECT_URI` existed as repository secrets,
+dated 14 and 19 April 2026. They configured Supabase Auth's own Google and
+Discord providers, which Clerk replaced.
 
-They configured Supabase Auth's own Google and Discord providers, which Clerk
-replaced. Verify with:
+Nothing read them: no workflow, no script, no env file. They were not in the
+local `.secrets` either, so `pnpm sync-secrets` never pulled them, and they were
+not in the `env:` block of `sync-secrets.yml`, so nothing broke by their going
+away. The only occurrence of the string left in the repository is a comment in
+`scripts/load-root-env.cjs` recounting a past bug about empty
+`SUPABASE_AUTH_EXTERNAL_*` values — prose, not a reference.
+
+They were deleted on the owner's instruction after that was re-verified. The
+repository went from 61 repository secrets to 56.
+
+**Deleting them removed them from CI. It did not revoke anything.** If the
+matching OAuth applications are still live in the Google Cloud and Discord
+developer consoles, those client secrets remain valid there and should be
+rotated or the applications deleted, which is a change to make in those
+consoles rather than here.
+
+To confirm the state at any time:
 
 ```bash
-gh secret list --repo vaoan/libra | grep SUPABASE_AUTH_EXTERNAL
-grep -rl SUPABASE_AUTH_EXTERNAL --include='*.yml' --include='*.mjs' --include='*.ts' .
-```
-
-**Deliberately not deleted.** Removing them is a one-line command and safe as far
-as this repository is concerned, but the values cannot be recovered afterwards,
-and whether the matching OAuth applications are still live in the Google and
-Discord consoles is not visible from here. If they are, these are real
-credentials and deleting them here removes them from CI without revoking
-anything -- which is worth doing, but is a decision about credentials rather
-than about code.
-
-```bash
-# When that call has been made:
-for s in SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET          SUPABASE_AUTH_EXTERNAL_DISCORD_CLIENT_ID SUPABASE_AUTH_EXTERNAL_DISCORD_SECRET          DEV_SUPABASE_AUTH_EXTERNAL_REDIRECT_URI; do
-  gh secret delete "$s" --repo vaoan/libra
-done
+gh secret list --repo vaoan/Libra | grep SUPABASE_AUTH_EXTERNAL   # expect no output
 ```
