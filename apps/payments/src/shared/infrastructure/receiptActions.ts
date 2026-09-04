@@ -9,7 +9,7 @@ import {
 } from "@/shared/domain/receipt";
 import { adminFetchJson } from "@/shared/infrastructure/adminRestClient";
 
-export type ReceiptUploadResult =
+type ReceiptUploadResult =
   | { ok: true; path: string }
   | {
       ok: false;

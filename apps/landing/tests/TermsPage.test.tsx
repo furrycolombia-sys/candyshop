@@ -9,10 +9,6 @@ vi.mock("next-intl", () => ({
     },
 }));
 
-vi.mock("@/shared/infrastructure/config/tid", () => ({
-  tid: (id: string) => ({ "data-testid": id }),
-}));
-
 import { TermsPage } from "@/features/legal/presentation/pages/TermsPage";
 
 describe("TermsPage", () => {

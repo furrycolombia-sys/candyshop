@@ -205,9 +205,16 @@ jobs:
       # — real source duplication is 3.95%, under the 5% threshold, so it is
       # enforced here too.
       #
-      # knip stays out. It reports 205 findings, but aeleos runs it with
-      # --no-exit-code and its own knip exits 1 as well: unused-export
-      # detection across barrel files is advisory in both repos, not a gate.
+      # knip is now enforced. It was previously excluded on the grounds that
+      # its 205 findings were advisory noise, which was wrong: they were three
+      # different things, and only one was fuzzy. Its config had `project`
+      # scoped to src/**, so it never saw e2e/ or tests/ and reported anything
+      # used only there as unused. With that fixed it found real defects --
+      # @clerk/backend imported by three e2e files and declared in no
+      # package.json, and packages/api declaring three export subpaths whose
+      # targets do not exist. The remaining 201 were dead barrel re-exports,
+      # dead destructured bindings, exports used only in their own file, and
+      # eight genuinely dead declarations. All resolved; it now exits 0.
       - name: Repo hygiene (workspace + structure checks)
         run: |
           set -euo pipefail
@@ -216,6 +223,7 @@ jobs:
           pnpm exec ls-lint
           pnpm exec cspell "**/*.{ts,tsx,md,json}" --no-progress
           pnpm exec jscpd .
+          pnpm exec knip
           node scripts/check-source-bytes.mjs
           node scripts/check-feature-boundaries.mjs
           node scripts/check-a11y-patterns.mjs

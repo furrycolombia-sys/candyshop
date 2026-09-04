@@ -2,7 +2,7 @@
  * Mock appUrls for unit tests.
  * Use in vi.mock('@/shared/infrastructure/config', () => mockStudioConfig).
  */
-export const mockAppUrls = {
+const mockAppUrls = {
   landing: "http://localhost:5004",
   store: "http://localhost:5001",
   admin: "http://localhost:5002",

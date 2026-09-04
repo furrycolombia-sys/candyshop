@@ -178,24 +178,3 @@ export async function revokePermission(
 
   if (error) throw error;
 }
-
-/** Replace all permissions for a user with the given template keys */
-export async function applyTemplate(
-  supabase: SupabaseClient,
-  userId: string,
-  permissionKeys: string[],
-  grantedBy: string,
-): Promise<void> {
-  const { error: deleteError } = await supabase
-    .from(USER_PERMISSIONS_TABLE)
-    .delete()
-    .eq("user_id", userId);
-
-  if (deleteError) throw deleteError;
-
-  await Promise.all(
-    permissionKeys.map((key) =>
-      grantPermission(supabase, userId, key, grantedBy),
-    ),
-  );
-}

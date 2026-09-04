@@ -7,8 +7,9 @@
         "docker/ci/playwright.config.ts",
         ".claude/tools/*.mjs",
         "vitest.config.integration.ts",
-        "vitest.config.scripts.js"
+        "tests/db/**/*.ts"
       ],
+      "project": ["scripts/**/*.mjs", "tests/**/*.ts", "docker/**/*.{mjs,ts}"],
       "ignore": ["tests/legacy/**"]
     },
     "apps/admin": {
@@ -16,101 +17,117 @@
         "src/app/**/*.{ts,tsx}",
         "src/shared/infrastructure/i18n/request.ts",
         "src/features/*/index.ts",
-        "src/features/*/*/index.ts",
-        "src/shared/domain/index.ts"
+        "tests/**/*.{ts,tsx}",
+        "e2e/**/*.ts"
       ],
-      "project": ["src/**/*.{ts,tsx,js,jsx}"],
-      "ignore": ["**/*.test.*", "**/*.spec.*"]
+      "project": [
+        "src/**/*.{ts,tsx,js,jsx}",
+        "tests/**/*.{ts,tsx}",
+        "e2e/**/*.ts"
+      ]
     },
     "apps/auth": {
       "entry": [
         "src/app/**/*.{ts,tsx}",
         "src/shared/infrastructure/i18n/request.ts",
         "src/features/*/index.ts",
-        "src/features/*/*/index.ts",
-        "src/shared/domain/index.ts"
+        "tests/**/*.{ts,tsx}",
+        "e2e/**/*.ts"
       ],
-      "project": ["src/**/*.{ts,tsx,js,jsx}"],
-      "ignore": ["**/*.test.*", "**/*.spec.*"]
+      "project": [
+        "src/**/*.{ts,tsx,js,jsx}",
+        "tests/**/*.{ts,tsx}",
+        "e2e/**/*.ts"
+      ]
     },
     "apps/landing": {
       "entry": [
         "src/app/**/*.{ts,tsx}",
         "src/shared/infrastructure/i18n/request.ts",
         "src/features/*/index.ts",
-        "src/features/*/*/index.ts",
-        "src/shared/domain/index.ts"
+        "tests/**/*.{ts,tsx}",
+        "e2e/**/*.ts"
       ],
-      "project": ["src/**/*.{ts,tsx,js,jsx}"],
-      "ignore": ["**/*.test.*", "**/*.spec.*"]
+      "project": [
+        "src/**/*.{ts,tsx,js,jsx}",
+        "tests/**/*.{ts,tsx}",
+        "e2e/**/*.ts"
+      ]
     },
     "apps/payments": {
       "entry": [
         "src/app/**/*.{ts,tsx}",
         "src/shared/infrastructure/i18n/request.ts",
         "src/features/*/index.ts",
-        "src/features/*/*/index.ts",
-        "src/shared/domain/index.ts"
+        "tests/**/*.{ts,tsx}",
+        "e2e/**/*.ts"
       ],
-      "project": ["src/**/*.{ts,tsx,js,jsx}"],
-      "ignore": ["**/*.test.*", "**/*.spec.*", "src/mocks/**", "src/test/**"]
+      "project": [
+        "src/**/*.{ts,tsx,js,jsx}",
+        "tests/**/*.{ts,tsx}",
+        "e2e/**/*.ts"
+      ]
     },
     "apps/playground": {
       "entry": [
         "src/app/**/*.{ts,tsx}",
         "src/shared/infrastructure/i18n/request.ts",
-        "src/features/*/index.ts",
-        "src/features/*/*/index.ts",
-        "src/shared/domain/index.ts"
+        "src/features/*/index.ts"
       ],
-      "project": ["src/**/*.{ts,tsx,js,jsx}"],
-      "ignore": ["**/*.test.*", "**/*.spec.*"]
+      "project": ["src/**/*.{ts,tsx,js,jsx}"]
     },
     "apps/store": {
       "entry": [
         "src/app/**/*.{ts,tsx}",
         "src/shared/infrastructure/i18n/request.ts",
         "src/features/*/index.ts",
-        "src/features/*/*/index.ts",
-        "src/shared/domain/index.ts"
+        "src/features/*/domain/index.ts",
+        "src/shared/domain/index.ts",
+        "tests/**/*.{ts,tsx}",
+        "e2e/**/*.ts"
       ],
-      "project": ["src/**/*.{ts,tsx,js,jsx}"],
-      "ignore": ["**/*.test.*", "**/*.spec.*", "src/mocks/**", "src/test/**"]
+      "project": [
+        "src/**/*.{ts,tsx,js,jsx}",
+        "tests/**/*.{ts,tsx}",
+        "e2e/**/*.ts"
+      ]
     },
     "apps/studio": {
       "entry": [
         "src/app/**/*.{ts,tsx}",
         "src/shared/infrastructure/i18n/request.ts",
         "src/features/*/index.ts",
-        "src/features/*/*/index.ts",
-        "src/shared/domain/index.ts"
+        "tests/**/*.{ts,tsx}"
       ],
-      "project": ["src/**/*.{ts,tsx,js,jsx}"],
-      "ignore": ["**/*.test.*", "**/*.spec.*", "src/mocks/**", "src/test/**"]
+      "project": ["src/**/*.{ts,tsx,js,jsx}", "tests/**/*.{ts,tsx}"]
     },
     "packages/api": {
-      "project": ["src/**/*.{ts,tsx}"],
-      "ignore": ["src/generated/**", "src/types/generated/**"]
+      "entry": ["tests/**/*.{ts,tsx}"],
+      "project": ["src/**/*.{ts,tsx}", "tests/**/*.{ts,tsx}"]
     },
     "packages/app-components": {
-      "project": ["src/**/*.{ts,tsx}"]
+      "entry": ["tests/**/*.{ts,tsx}"],
+      "project": ["src/**/*.{ts,tsx}", "tests/**/*.{ts,tsx}"]
     },
     "packages/auth": {
-      "project": ["src/**/*.{ts,tsx}"]
+      "entry": ["tests/**/*.{ts,tsx}"],
+      "project": ["src/**/*.{ts,tsx}", "tests/**/*.{ts,tsx}"]
     },
     "packages/shared": {
-      "project": ["src/**/*.{ts,tsx}"]
+      "entry": ["tests/**/*.{ts,tsx}"],
+      "project": ["src/**/*.{ts,tsx}", "tests/**/*.{ts,tsx}"]
     },
     "packages/ui": {
-      "project": ["src/**/*.{ts,tsx}"]
+      "entry": ["tests/**/*.{ts,tsx}"],
+      "project": ["src/**/*.{ts,tsx}", "tests/**/*.{ts,tsx}"]
     }
   },
-  "ignoreFiles": ["docker/e2e/**", "orval.config.ts"],
   "ignoreDependencies": [
     "@faker-js/faker",
-    "orval",
     "@secretlint/secretlint-rule-preset-recommend",
+    "tailwindcss",
     "tw-animate-css",
-    "tailwindcss"
-  ]
+    "ui"
+  ],
+  "ignoreBinaries": ["semgrep"]
 }

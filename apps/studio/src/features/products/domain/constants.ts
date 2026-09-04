@@ -27,7 +27,7 @@ export const PRODUCT_CATEGORIES: ProductCategory[] = [
   "deals",
 ];
 
-export interface BadgeTone {
+interface BadgeTone {
   backgroundColor: string;
   color: string;
 }

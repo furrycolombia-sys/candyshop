@@ -159,17 +159,18 @@ import { Button, Card, cn } from "ui";
 // packages/api/src/index.ts
 export { customFetch } from "./mutator/customFetch";
 export type { ApiError } from "./mutator/types";
-// Hooks and types are imported directly via subpath:
-// import { useGetX } from "api/generated/dashboard/dashboard";
-// import type { X } from "api/types/generated";
+// Supabase clients and types are imported via subpath:
+// import { createBrowserSupabaseClient } from "api/supabase/browser";
+// import type { Database } from "api/supabase/types";
 ```
 
 **Consumption:**
 
 ```typescript
 // In any app
-import { useGetGlobalMetricsTenantGlobalMetricsGet } from "api/generated/dashboard/dashboard";
-import type { GlobalMetrics } from "api/types/generated";
+import { createBrowserSupabaseClient } from "api/supabase/browser";
+import { createServerSupabaseClient } from "api/supabase/server";
+import type { Database } from "api/supabase/types";
 ```
 
 **Regenerate with:**

@@ -143,12 +143,75 @@ untested by CI.
 
 ## knip
 
-`knip` is configured but **not yet enforced in CI**: it still reports 202
-unused exports and 46 unused exported types, which need triage rather than
-configuration.
+`knip` is now **enforced in CI** and reports zero.
 
-Its _file_ report is now truthful — it went from 28 unused files to 0, and
-only four of the 28 were real:
+It was previously left advisory on the reasoning that its ~205 findings were
+unused-export noise, and that the sibling AeleOS repo runs it with
+`--no-exit-code` too. That reasoning was wrong twice over.
+
+First, "205 findings" was one number covering three unrelated things, and only
+one of them was fuzzy. Second, most of the count was an artefact of knip's own
+configuration: every workspace set `project` to `src/**`, so knip never saw
+`e2e/` or `tests/`, and anything consumed only there was reported as unused.
+A gate measuring the wrong file set is the failure this document is about,
+and it had been dismissed as noise rather than read.
+
+With the config corrected — `project` and `entry` extended to `tests/` and
+`e2e/`, dead entry patterns removed, `.mts` config names fixed — knip found
+two defects that had been invisible:
+
+- **`@clerk/backend` was imported by three e2e files and declared in no
+  `package.json` at all.** It resolved only as a transitive dependency of
+  `@clerk/nextjs`, so a minor bump of that package could have removed it with
+  no lockfile signal and no warning.
+- **`packages/api` declared three export subpaths whose targets do not
+  exist** — `./generated/*`, `./types/generated`, `./graphql/generated`. Worse,
+  `.claude/rules/architecture.md` instructed importing from exactly those
+  paths, so the repository's own AI instructions told the reader to write an
+  import that cannot resolve. No code had done it, which is why nothing broke.
+
+The remaining 201 sorted cleanly once classified:
+
+| what it was                                 | count | what it needed        |
+| ------------------------------------------- | ----: | --------------------- |
+| barrel re-exports nothing imports           |   134 | drop from the barrel  |
+| destructured bindings nothing uses          |    29 | drop from the pattern |
+| exports consumed only inside their own file |    27 | drop the `export`     |
+| declarations consumed nowhere               |     8 | delete                |
+
+Nine barrels emptied completely and were deleted. Five test files carried a
+`vi.mock` for one of them — a module the components never imported, so the
+mock had never once been consulted.
+
+One genuine knip false positive surfaced: a test declared a type through an
+inline `import("...").ActiveTemplate[]`, a form knip does not follow. That was
+fixed in the test rather than suppressed in the config; a normal `import type`
+is clearer and is also what knip can see.
+
+A second false positive cost a CI run and is worth recording, because the
+local checks could not have caught it. knip reported `ui` as an unused
+dependency of `apps/playground`, and a grep for `from "ui"` in that app agreed.
+Both were looking only at TypeScript. The app consumes the package from CSS:
+
+```css
+@import "ui/globals";
+```
+
+Removing the dependency still passed `lint`, `typecheck`, `test` and `build`
+locally, because pnpm's workspace links resolve `ui` whether or not the
+manifest asks for it. Docker builds from a clean install, and only there did it
+fail: `Can't resolve 'ui/globals'`. Every one of the seven apps imports `ui`
+this way, so it is never legitimately unused; it now sits in
+`ignoreDependencies` beside `tailwindcss` and `tw-animate-css`, which are in
+that list for exactly the same reason. `knip.json` is JSON and cannot hold the
+explanation, which is why it is here.
+
+The lesson generalises: a dependency check that reads only the import graph of
+one language will be wrong about a polyglot build, and a local build that
+resolves through workspace links cannot confirm a manifest is complete.
+
+Its _file_ report had already been made truthful earlier — it went from 28
+unused files to 0, and only four of the 28 were real:
 
 | Was reported                                                         | Why it was wrong                                                                                   |
 | -------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |

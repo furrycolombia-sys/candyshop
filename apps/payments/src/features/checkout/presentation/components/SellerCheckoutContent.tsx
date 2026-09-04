@@ -63,7 +63,7 @@ function resolveCheckoutError(
     : { message: t("errorOccurred"), detail: error };
 }
 
-export interface SellerCheckoutContentProps {
+interface SellerCheckoutContentProps {
   sellerId: string;
   items: CartItem[];
   subtotal: number;

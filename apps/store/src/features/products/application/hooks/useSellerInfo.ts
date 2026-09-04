@@ -3,7 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useSupabase } from "shared";
 
-export interface SellerInfo {
+interface SellerInfo {
   displayName: string;
   avatarUrl: string | null;
 }

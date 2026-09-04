@@ -6,9 +6,6 @@
   "types": "./src/index.ts",
   "exports": {
     ".": "./src/index.ts",
-    "./generated/*": "./src/rest/generated/*",
-    "./types/generated": "./src/rest/types/generated/index.ts",
-    "./graphql/generated": "./src/graphql/generated/index.ts",
     "./supabase": "./src/supabase/index.ts",
     "./supabase/browser": "./src/supabase/browser.ts",
     "./supabase/server": "./src/supabase/server.ts",

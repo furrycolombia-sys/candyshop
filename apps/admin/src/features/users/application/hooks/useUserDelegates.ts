@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { getApiBasePath } from "@/shared/application/utils/getApiBasePath";
 
-export const USER_DELEGATES_QUERY_KEY = "user-delegates";
+const USER_DELEGATES_QUERY_KEY = "user-delegates";
 
 const SAME_ORIGIN = "same-origin" as const;
 

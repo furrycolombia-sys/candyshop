@@ -57,6 +57,4 @@ export function removeCartCookie() {
     deleteCookie(CART_COOKIE_KEY, { path: "/" });
   }
 }
-
-export { getSharedCookieDomain } from "shared";
 export { CART_COOKIE_KEY as COOKIE_KEY } from "shared/constants/cart";

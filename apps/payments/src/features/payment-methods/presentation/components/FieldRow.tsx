@@ -12,7 +12,7 @@ import type { FormField } from "@/features/payment-methods/domain/types";
 const inputClass =
   "flex h-8 w-full border-strong border-foreground bg-background px-2 py-1 text-sm shadow-brutal-sm focus:outline-none focus:ring-2 focus:ring-brand";
 
-export interface FieldRowProps {
+interface FieldRowProps {
   field: FormField;
   onUpdate: (updated: FormField) => void;
   onRemove: (id: string) => void;
