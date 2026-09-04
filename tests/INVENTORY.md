@@ -6,7 +6,7 @@ Every test case in the repo, so a refactor can be checked for losses:
 regenerate and diff. Counting files or totals is not enough -- a rework
 can keep both and still drop the one assertion that mattered.
 
-**2680 cases across 371 files** (0 skipped, 9 parameterised).
+**2687 cases across 372 files** (0 skipped, 9 parameterised).
 
 Source-level cases: a `.each` case is one entry here and many in vitest
 output, so this total is deliberately not the runner total.
@@ -902,7 +902,7 @@ output, so this total is deliberately not the runner total.
 - TermsPage > renders a last-updated line
 - TermsPage > renders all 10 section headings
 
-## app:payments -- 557 cases
+## app:payments -- 564 cases
 
 ### `apps/payments/tests/ActionButtons.test.tsx`
 
@@ -1430,6 +1430,16 @@ output, so this total is deliberately not the runner total.
 - ResubmitEvidenceForm > removes the file when the remove button is clicked
 - ResubmitEvidenceForm > clicking the upload button triggers the file input click handler
 - ResubmitEvidenceForm > submits with the file when both transfer number and receipt are provided
+
+### `apps/payments/tests/seller-reports-orders-route.test.ts`
+
+- GET /api/seller/reports/orders > scopes the query to the signed-in seller
+- GET /api/seller/reports/orders > rejects requests with no signed-in session
+- GET /api/seller/reports/orders > rejects an invalid date
+- GET /api/seller/reports/orders > rejects an unknown status
+- GET /api/seller/reports/orders > applies a lone date bound
+- GET /api/seller/reports/orders > sends both date bounds as repeated created_at filters
+- GET /api/seller/reports/orders > sends both amount bounds as repeated total filters
 
 ### `apps/payments/tests/SellerCheckoutCard.test.tsx`
 
