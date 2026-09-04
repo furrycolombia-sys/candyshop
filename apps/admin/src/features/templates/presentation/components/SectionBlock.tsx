@@ -65,6 +65,7 @@ export function SectionBlock({
               {t("sectionType")}
             </label>
             <select
+              aria-label={t("sectionType")}
               value={section.type}
               onChange={(e) =>
                 onUpdate({ type: e.target.value as ProductSection["type"] })

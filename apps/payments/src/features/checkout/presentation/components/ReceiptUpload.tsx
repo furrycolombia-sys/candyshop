@@ -125,6 +125,10 @@ export function ReceiptUpload({
 
       <input
         ref={inputRef}
+        // Visually hidden and opened by the button above it, so a screen
+        // reader reaches it through that button rather than directly -- but a
+        // name costs nothing and the file dialog announces it.
+        aria-label={t("maxFileSize")}
         type="file"
         accept={ACCEPTED_RECEIPT_TYPES}
         onChange={handleSelect}

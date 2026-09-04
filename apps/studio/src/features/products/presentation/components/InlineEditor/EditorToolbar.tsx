@@ -115,6 +115,7 @@ export function EditorToolbar({
 
       {/* Category select */}
       <select
+        aria-label={t("products.category")}
         className="rounded-lg border-2 border-background/30 bg-transparent px-2 py-1 font-display text-ui-xs font-bold uppercase tracking-wider text-background outline-none"
         {...register("category")}
         {...tid("toolbar-category")}
@@ -146,6 +147,7 @@ export function EditorToolbar({
 
       {/* Refundable select */}
       <select
+        aria-label={t("products.refundable")}
         value={refundable === null ? "" : String(refundable)}
         onChange={(e) => {
           const val = e.target.value;
