@@ -38,6 +38,7 @@ export function AuditFilters({
     >
       {/* Table filter */}
       <select
+        aria-label={t("allTables")}
         value={tableName}
         onChange={(e) => onTableChange(e.target.value)}
         className="h-9 rounded-lg border-strong border-foreground bg-background px-3 font-display text-xs font-bold uppercase tracking-wider"
