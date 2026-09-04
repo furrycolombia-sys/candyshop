@@ -218,7 +218,23 @@ jobs:
           pnpm exec jscpd .
           node scripts/check-source-bytes.mjs
           node scripts/check-feature-boundaries.mjs
+          node scripts/check-a11y-patterns.mjs
+          node scripts/check-css-sync.mjs
+          node scripts/check-env-parity.mjs
           pnpm exec madge --circular --extensions ts,tsx,js,jsx apps/store/src apps/studio/src apps/landing/src apps/payments/src apps/admin/src apps/auth/src apps/playground/src packages/ui/src packages/shared/src packages/api/src packages/app-components/src packages/auth/src tests scripts docker
+
+      # Ported from aeleos with one change: a symbol undocumented on both
+      # sides is skipped. aeleos enforces jsdoc/require-jsdoc so every export
+      # there has a doc; Libra documents about a third of them, and without
+      # the skip this would fail on every undocumented export anyone edited --
+      # a coverage mandate wearing a freshness check's name.
+      #
+      # Measured against the 37 source-touching commits before it existed, it
+      # would have failed 10. That is the retroactive rate, not the steady-state
+      # one: the way past it is to touch the doc, so under the gate authors do,
+      # and the rate falls toward zero. Needs fetch-depth: 0, above.
+      - name: Check documentation moved with the code
+        run: node scripts/check-doc-freshness.mjs "origin/${{ github.base_ref || 'develop' }}"
 
       - name: Lint (scoped)
         run: |

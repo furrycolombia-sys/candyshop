@@ -207,13 +207,114 @@ Those violate a stated MUST, and they are the real finding.
   1  studio: products -> orders
 ```
 
-Three of those pairs import **each other**: assigned-orders and
+Three of those pairs imported **each other**: assigned-orders and
 received-orders, cart and products, products and seller-admins. A cycle at
-feature level usually means one feature wearing two names, and deciding that
-is a design call rather than an import fix.
+feature level usually means one feature wearing two names, and each of them
+turned out to be exactly that. All thirteen are now resolved, and none were
+resolved by moving an import until the check stopped counting:
 
-`scripts/check-feature-boundaries.mjs` holds the count at 13 and fails on a
-fourteenth. Lower the baseline as pairs are resolved; that is the ratchet.
+- `admin: users -> audit` — `insertAuditLog` was infrastructure both features
+  called, so it moved to `shared/infrastructure`.
+- `store: cart <-> products` — the cart's state, reducer, cookie persistence
+  and `useAddToCart` were never the drawer's business; they moved to
+  `shared/application/cart` and the cart feature became the drawer that reads
+  them.
+- `studio: products <-> seller-admins`, `products -> orders` — two pages were
+  composition roots that happened to live inside a feature; they moved to
+  `shared/presentation/pages`.
+- `payments: assigned-orders <-> received-orders` — counting the files settled
+  it. received-orders held fourteen; assigned-orders held six, none of which
+  was a component, a type, or a domain rule. It was a query and a page, so the
+  two were merged and assigned-orders was deleted.
+
+`scripts/check-feature-boundaries.mjs` now holds the count at **0** and fails
+on the first new one.
+
+---
+
+## Documentation that no longer describes its code
+
+`scripts/check-doc-freshness.mjs` reports an exported symbol whose
+implementation changed while its TSDoc did not. It is a heuristic and says so:
+nothing can see that prose went stale on its own. It catches the case that
+matters — a symbol whose behaviour moved under a comment that still confidently
+describes the old one.
+
+Two properties keep it from becoming noise people learn to ignore. It reports
+per **symbol**, so the message names `getSupabaseAccessToken` rather than a
+file. And it collapses whitespace runs, so re-indenting cannot trigger it.
+
+There is no suppression flag, deliberately: a suppression flag becomes the
+thing everyone types. The way past it is to touch the doc, and restating an
+invariant that still holds is itself worth writing. For the same reason,
+deleting the doc is reported too — otherwise deletion _is_ the suppression
+flag.
+
+It is ported from the sibling AeleOS repository with one change. AeleOS
+enforces `jsdoc/require-jsdoc`, so every export there carries a doc and an
+empty-to-empty comparison can only mean "the doc did not move". Libra
+documents 335 of its 1002 exported symbols. Without the change the same
+comparison would fire on every undocumented export anyone edited — a
+documentation-coverage mandate wearing a freshness check's name, and one
+nobody agreed to. So a symbol undocumented on both sides is skipped, which
+guards the docs that exist and widens on its own as coverage grows.
+
+It covers `.ts`, `.tsx` and `.mjs`. The last is not in the AeleOS original,
+and is here because this repo's tooling lives in `scripts/` and is among its
+most doc-dense code; leaving it out would be the same not-looking this
+document is about. Including it widened the sample by nine commits and
+produced no new findings.
+
+Measured against the 37 source-touching commits that preceded it, it would
+have failed 10. Spot-checking those: `getSupabaseAccessToken` grew a
+three-second Clerk hydration wait while its doc still described the old
+immediate-null behaviour — the exact failure the gate is for. Two others were
+a test-id prop and a deleted lint directive, where the doc had not gone stale
+and the author would have to touch it anyway. That is the accepted cost, and
+27% is the retroactive rate rather than the steady-state one: under the gate
+authors touch the doc, and the rate falls toward zero.
+
+---
+
+## A gate in package.json is not a gate
+
+`check:a11y-patterns` existed as a script and ran in **no workflow and no
+hook** — findable by anyone who went looking for it, enforced on nobody. It is
+the same failure this document catalogues elsewhere in a quieter form: not a
+check scoped to the files it already passes, but a check with no caller at
+all.
+
+Finding it by accident is not a method, so all 58 `package.json` scripts were
+then checked against `.github/` and `.husky/`. Two more were in the same
+state: **`check-css-sync`** and **`check-env-parity`**. Everything else
+unreferenced was a developer command — `tunnel`, `fix:all`, `supabase:reset`,
+`user:grant-role` — which is what an unreferenced script is supposed to look
+like. All three gates now run in the CI hygiene block.
+
+`check-css-sync` had a second, worse problem. Its header says it "ensures
+globals.css files are synchronized across **all apps**". It held a hardcoded
+list of five — store, studio, landing, payments, admin — and this repository
+has **seven** apps with a `globals.css`. `auth` and `playground` were absent,
+so the check printed "in sync across all apps" while declining to look at two
+of them. That is this document's central failure in its purest form, sitting
+inside a gate that was also not running.
+
+Both omitted files happened to be byte-identical to the reference. That is
+luck rather than evidence: the check could not have said otherwise, and it was
+not running anywhere to say it. The list is now derived from
+`git ls-files apps/*/src/app/globals.css`, which is the same reasoning that
+keeps the other gates honest — a hand-maintained list drifts from the
+repository the moment someone adds an app and does not think of this file.
+
+`check-env-parity` exited **0** when it found fewer than two env files,
+printing "nothing to compare". The politest form of the same thing: success
+reported from an empty comparison. All four `.env.*` files are tracked in git,
+so any checkout that can run the script has them, and their absence means the
+working tree is wrong rather than the comparison unnecessary. It now exits 1.
+
+Both were made to fail deliberately before being trusted to pass — a rule
+appended to `apps/auth/src/app/globals.css` for the first, a copy of the
+second run from a directory with no env files.
 
 ---
 
@@ -578,3 +679,43 @@ them is safe as far as this repository is concerned, but the values cannot be
 recovered and whether the matching OAuth applications are still live in the
 Google and Discord consoles is not visible from here. That is a decision about
 credentials rather than about code.
+
+---
+
+## One AeleOS gate that does not port: `check-agent-notes`
+
+AeleOS fails a build when a directory's agent note went unread while code under
+it changed. Every `CLAUDE.md` and `AGENTS.md` governs its directory; a change
+below one must be accompanied by a change to it. It is a good gate there. It
+does not transfer here, for two reasons that are worth writing down so nobody
+re-derives them.
+
+**Its central mechanism conflicts with a rule this repo already has.** The
+check walks up from a changed file to the nearest governing note and demands an
+edit. AeleOS's root `CLAUDE.md` is 118KB of running record, so that demand is
+normal there. Libra's root `CLAUDE.md` is a portable template, and
+[portability.md](../../.claude/rules/portability.md) requires it to stay
+project-agnostic — no project names, no dated content, no running record. A
+gate that demanded an edit to it on every commit would push exactly the
+project-specific churn that rule forbids into the file the rule protects. The
+gate would be fighting the codebase's own stated standard, not enforcing it.
+
+**With the root exempted, there is almost nothing left to guard.** Libra has
+two notes: the root template and `.claude/tools/CLAUDE.md`. Across the last 200
+commits on `develop`, exactly one changed something under `.claude/tools/`
+without also editing that note. Roughly 200 lines of script and tests to catch
+a drift that occurs half a percent of the time is ceremony, and this document
+argues elsewhere that a gate nobody's work meets becomes a gate everybody
+learns to satisfy hollowly.
+
+The precondition that would change the answer is real subtree notes — a
+`CLAUDE.md` per app or per package, each describing that subtree's actual
+invariants. With those in place the gate has bounded, meaningful subjects, the
+root exemption stops being load-bearing, and porting it is worth doing. Until
+then it would be a check scoped to a directory it already passes, which is the
+failure this whole document catalogues.
+
+`check-doc-freshness` covers the adjacent ground in the meantime: it is per
+symbol rather than per directory, so it cannot see a note whose subject is a
+different file, but it does guard the prose that sits directly above the code
+it describes.

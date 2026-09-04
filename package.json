@@ -59,7 +59,8 @@
     "check:migrations": "node scripts/check-migration-edits.mjs",
     "check:source-bytes": "node scripts/check-source-bytes.mjs",
     "check:a11y-patterns": "node scripts/check-a11y-patterns.mjs",
-    "check:boundaries": "node scripts/check-feature-boundaries.mjs"
+    "check:boundaries": "node scripts/check-feature-boundaries.mjs",
+    "check:docs": "node scripts/check-doc-freshness.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
