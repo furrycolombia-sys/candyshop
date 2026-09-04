@@ -6,7 +6,7 @@ Every test case in the repo, so a refactor can be checked for losses:
 regenerate and diff. Counting files or totals is not enough -- a rework
 can keep both and still drop the one assertion that mattered.
 
-**2673 cases across 370 files** (0 skipped, 9 parameterised).
+**2680 cases across 371 files** (0 skipped, 9 parameterised).
 
 Source-level cases: a `.each` case is one entry here and many in vitest
 output, so this total is deliberately not the runner total.
@@ -902,7 +902,7 @@ output, so this total is deliberately not the runner total.
 - TermsPage > renders a last-updated line
 - TermsPage > renders all 10 section headings
 
-## app:payments -- 550 cases
+## app:payments -- 557 cases
 
 ### `apps/payments/tests/ActionButtons.test.tsx`
 
@@ -965,6 +965,24 @@ output, so this total is deliberately not the runner total.
 - checkout domain constants > RECEIPTS_BUCKET is defined
 - checkout domain constants > ORDER_EXPIRY_HOURS is 48
 - checkout domain constants > time conversion constants are correct
+
+### `apps/payments/tests/checkout-orders-route.test.ts`
+
+- POST /api/checkout/orders > creates the order when the cart is within stock
+- POST /api/checkout/orders > rejects a single line that exceeds stock
+- POST /api/checkout/orders > rejects duplicate lines for one product that together exceed stock
+- POST /api/checkout/orders > merges duplicate lines for one product that stay within stock
+- POST /api/checkout/orders > rejects a product belonging to another seller
+- POST /api/checkout/orders > rejects requests with no signed-in session
+- POST /api/checkout/orders > rejects invalid payloads
+
+### `apps/payments/tests/checkout-payment-methods-route.test.ts`
+
+- POST /api/checkout/payment-methods > returns payment methods when the cart quantities are valid
+- POST /api/checkout/payment-methods > returns no payment methods when the cart exceeds stock
+- POST /api/checkout/payment-methods > rejects users without checkout permissions
+- POST /api/checkout/payment-methods > rejects requests with no signed-in Clerk session
+- POST /api/checkout/payment-methods > rejects invalid payloads
 
 ### `apps/payments/tests/CheckoutItemsSummary.test.tsx`
 
@@ -1412,14 +1430,6 @@ output, so this total is deliberately not the runner total.
 - ResubmitEvidenceForm > removes the file when the remove button is clicked
 - ResubmitEvidenceForm > clicking the upload button triggers the file input click handler
 - ResubmitEvidenceForm > submits with the file when both transfer number and receipt are provided
-
-### `apps/payments/tests/route.test.ts`
-
-- POST /api/checkout/payment-methods > returns payment methods when the cart quantities are valid
-- POST /api/checkout/payment-methods > returns no payment methods when the cart exceeds stock
-- POST /api/checkout/payment-methods > rejects users without checkout permissions
-- POST /api/checkout/payment-methods > rejects requests with no signed-in Clerk session
-- POST /api/checkout/payment-methods > rejects invalid payloads
 
 ### `apps/payments/tests/SellerCheckoutCard.test.tsx`
 

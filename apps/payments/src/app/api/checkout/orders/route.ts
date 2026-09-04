@@ -105,6 +105,37 @@ function isValidItem(item: unknown): item is { id: string; quantity: number } {
   return (obj.quantity as number) > 0;
 }
 
+/**
+ * Sums the quantities of repeated product ids into one line each.
+ *
+ * SEC-001 is checked per line, so without this a cart could name the same
+ * product twice with each line inside `max_quantity` and the total outside it:
+ * two lines of 5 against a stock of 8 both pass, and an order for 10 units is
+ * written. `/api/checkout/payment-methods` has always merged before comparing,
+ * which is why it reported a stock issue and withheld the seller's payment
+ * details for the same cart -- the two endpoints disagreed, and the one that
+ * writes was the permissive one.
+ *
+ * Merging rather than rejecting also fixes the order itself: `order_items` has
+ * no unique constraint on (order_id, product_id), so duplicate lines were
+ * written as separate rows for one product.
+ */
+function mergeByProduct(
+  items: Array<{ id: string; quantity: number }>,
+): Array<{ id: string; quantity: number }> {
+  const quantitiesById = new Map<string, number>();
+  for (const item of items) {
+    quantitiesById.set(
+      item.id,
+      (quantitiesById.get(item.id) ?? 0) + item.quantity,
+    );
+  }
+  return [...quantitiesById.entries()].map(([id, quantity]) => ({
+    id,
+    quantity,
+  }));
+}
+
 type ParsedPayload =
   | {
       ok: true;
@@ -164,7 +195,7 @@ function parseAndValidatePayload(body: {
     ok: true,
     paymentMethodId: payment_method_id,
     submission: buyer_submission as Record<string, string>,
-    cartItems: items,
+    cartItems: mergeByProduct(items),
   };
 }
 
