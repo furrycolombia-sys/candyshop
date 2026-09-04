@@ -552,3 +552,29 @@ attribution before debugging the accusation.**
 <!-- The four above are quoted on purpose: three are the deliberate typo
      used to prove the cspell gate fires, and one is the real typo it
      found. Spelling them correctly here would delete the evidence. -->
+
+## Four items that were waiting on someone, resolved
+
+They had been recorded as needing a decision or a credential. Three did not.
+
+**Docker Hub credentials for CI — not needed, and never were.** The
+`docker-build` job authenticates to `ghcr.io` with the built-in `GITHUB_TOKEN`
+via `docker/login-action`. There is no reference to Docker Hub anywhere in
+`.github/workflows/`, `docker/` or `scripts/`, and the job has succeeded in
+every recent run on `develop`. Nothing to provide.
+
+**The Clerk test sign-in flake — not reproducing.** It has not failed in the
+last six `develop` runs. The switch to `@clerk/testing`'s ticket-based
+`emailAddress` mode is the likely reason: the earlier password strategy
+silently established no session. Every playwright config also sets
+`retries: 2` under CI, so a transient failure of an external service does not
+fail the job on its own.
+
+**The feature barrel rule** — measured and settled; see the section above.
+
+**Five orphaned GitHub secrets** — still open, deliberately. They are unused and
+documented in `docs/environment.md` with the command to remove them. Deleting
+them is safe as far as this repository is concerned, but the values cannot be
+recovered and whether the matching OAuth applications are still live in the
+Google and Discord consoles is not visible from here. That is a decision about
+credentials rather than about code.
