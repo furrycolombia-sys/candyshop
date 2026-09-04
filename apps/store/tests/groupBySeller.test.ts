@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 
 import { groupCartBySeller } from "@/features/cart/application/groupBySeller";
-import type { CartItem } from "@/features/cart/domain/types";
+import type { CartItem } from "@/shared/domain/cart";
 
 // ---------------------------------------------------------------------------
 // Helpers

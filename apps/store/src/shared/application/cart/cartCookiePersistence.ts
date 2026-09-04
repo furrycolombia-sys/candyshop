@@ -8,7 +8,7 @@ import {
 } from "shared/constants/time";
 import type { CartCookieItem } from "shared/types";
 
-import type { CartItem } from "@/features/cart/domain/types";
+import type { CartItem } from "@/shared/domain/cart";
 
 const DAYS = 30;
 /** Cookie lives for 30 days */

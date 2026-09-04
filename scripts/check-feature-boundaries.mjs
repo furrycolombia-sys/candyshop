@@ -11,23 +11,22 @@
  * two pages that composed three features each moved out of the feature they
  * happened to live in.
  *
- * The remaining six are two pairs that import each other, and they need a
- * decision bigger than an import statement:
+ * store's pair is resolved, and how says something about the others. The fix
+ * suggested here was to invert one direction with a callback prop. That does
+ * not work: ProductGrid renders the cards and lives in features/products too,
+ * so the import moves up a level and stays a violation. What was actually
+ * wrong is that the cart's state was filed as a feature while being mounted
+ * app-wide in providers.tsx and used by two features -- so CartProvider,
+ * useCart and useAddToCart moved to shared/application/cart, and the cart
+ * feature is now the drawer that reads them.
  *
- *   payments  assigned-orders and received-orders, 4 imports. Assigned orders
- *             are received orders seen through a delegation lens: the same
- *             card, the same actions hook, the same SellerAction type, and
- *             assigned-orders' own query function even lives in
- *             received-orders' file. Resolving it means lifting the shared
- *             order-management domain into shared/ and leaving two thin
- *             features that differ only in which orders they list.
- *
- *   store     cart and products, 2 imports. A product card needs to add to the
- *             cart; the cart needs product records to render. Genuinely
- *             mutual, and the cheapest honest fix is probably to invert one
- *             direction with a callback prop.
- *
- * Neither is a lint fix, so neither was done by one.
+ * The remaining four are payments: assigned-orders and received-orders import
+ * each other. Assigned orders are received orders seen through a delegation
+ * lens -- the same card, the same actions hook, the same SellerAction type,
+ * and assigned-orders' own query function even lives in received-orders'
+ * file. Resolving it means lifting the shared order-management domain into
+ * shared/ and leaving two thin features that differ only in which orders they
+ * list. That is a design decision, not a lint fix.
  *
  * It also replaced a claim in docs/standards/quality-gates.md that the feature
  * barrel rule "is inconsistent with itself", evidenced by 126 deep imports
@@ -47,7 +46,7 @@ import { readFileSync } from "node:fs";
  * What the codebase had when this check was written. It may fall; it may not
  * rise. Lower it when a pair is resolved -- that is the ratchet.
  */
-const BASELINE = 6;
+const BASELINE = 4;
 
 const FEATURE_IMPORT = /from\s+"(@\/features\/([^/"]+)([^"]*))"/g;
 

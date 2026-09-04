@@ -3,7 +3,6 @@ export type { Product } from "./domain";
 export { PRODUCT_CATEGORIES, PRODUCT_TYPES } from "./domain";
 
 // Infrastructure
-export { fetchStoreProductsByIds } from "./infrastructure/productQueries";
 
 // Application hooks
 export {

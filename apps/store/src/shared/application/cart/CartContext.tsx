@@ -20,8 +20,8 @@ import {
 import { cartReducer, initialState } from "./cartReducer";
 import { isValidCartItems } from "./cartValidation";
 
-import type { CartItem, CartState } from "@/features/cart/domain/types";
-import { fetchStoreProductsByIds } from "@/features/products/infrastructure/productQueries";
+import type { CartItem, CartState } from "@/shared/domain/cart";
+import { fetchStoreProductsByIds } from "@/shared/infrastructure/productQueries";
 
 interface CartContextValue extends CartState {
   addItem: (

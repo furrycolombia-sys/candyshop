@@ -1,7 +1,7 @@
 import { renderHook, act } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-import { useFlyToCart } from "@/features/cart/application/hooks/useFlyToCart";
+import { useFlyToCart } from "@/shared/application/cart/useFlyToCart";
 
 describe("useFlyToCart", () => {
   beforeEach(() => {

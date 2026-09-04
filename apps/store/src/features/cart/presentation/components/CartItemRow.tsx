@@ -3,7 +3,7 @@
 import { Minus, Plus, X } from "lucide-react";
 import { formatPrice, getCoverImageUrl, i18nField, tid } from "shared";
 
-import type { CartItem } from "@/features/cart/domain/types";
+import type { CartItem } from "@/shared/domain/cart";
 import {
   getCategoryColor,
   getCategoryTheme,

@@ -4,7 +4,7 @@ import { describe, it, expect, vi } from "vitest";
 import {
   FlyToCartProvider,
   useFlyToCartContext,
-} from "@/features/cart/application/FlyToCartContext";
+} from "@/shared/application/cart/FlyToCartContext";
 
 vi.mock("@/features/cart/application/useFlyToCart", () => ({
   useFlyToCart: () => ({
