@@ -76,8 +76,13 @@ export function InlineHero({ control, errors }: InlineHeroProps) {
 
           {/* Right: Product Info */}
           <div className="flex flex-col flex-1 gap-4 min-w-0">
-            {/* 1. Tagline — theme-colored */}
-            <div style={{ color: theme.text }}>
+            {/* 1. Tagline.
+                Not theme-coloured: theme.text is the raw category accent, and
+                on the page background axe measured it below 4.5:1. The accent
+                is a fill and border colour here -- it does not survive being
+                used as text on white. The category still reads through the
+                badges, the gallery and the borders. */}
+            <div>
               <InlineTextField
                 control={control}
                 fieldNameEn="tagline_en"

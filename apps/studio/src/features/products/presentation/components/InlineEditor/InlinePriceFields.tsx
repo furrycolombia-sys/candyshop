@@ -41,6 +41,7 @@ export function InlinePriceFields({ control }: InlinePriceFieldsProps) {
             {t("currency")}
           </span>
           <select
+            aria-label={t("currency")}
             ref={currencyField.ref}
             value={currencyField.value}
             onChange={(e) => currencyField.onChange(e.target.value)}

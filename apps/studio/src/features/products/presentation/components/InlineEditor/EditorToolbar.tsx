@@ -10,6 +10,7 @@ import {
   Wrench,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { useId } from "react";
 import type {
   Control,
   UseFormRegister,
@@ -59,6 +60,7 @@ export function EditorToolbar({
   onReset,
   hasSections,
 }: EditorToolbarProps) {
+  const activeLabelId = useId();
   const t = useTranslations();
   const tEditor = useTranslations("form.inlineEditor");
 
@@ -115,6 +117,7 @@ export function EditorToolbar({
 
       {/* Category select */}
       <select
+        aria-label={t("products.category")}
         className="rounded-lg border-2 border-background/30 bg-transparent px-2 py-1 font-display text-ui-xs font-bold uppercase tracking-wider text-background outline-none"
         {...register("category")}
         {...tid("toolbar-category")}
@@ -146,6 +149,7 @@ export function EditorToolbar({
 
       {/* Refundable select */}
       <select
+        aria-label={t("products.refundable")}
         value={refundable === null ? "" : String(refundable)}
         onChange={(e) => {
           const val = e.target.value;
@@ -188,12 +192,20 @@ export function EditorToolbar({
       {/* Active switch */}
       <div className="flex items-center gap-1.5">
         <Switch
+          // Points at the visible text rather than repeating it. Nothing
+          // associated the two before, so axe reported the switch with no
+          // accessible name -- and duplicating the string would have made the
+          // label and its announcement two things to keep in step.
+          aria-labelledby={activeLabelId}
           checked={isActive ?? true}
           onCheckedChange={(checked) => setValue("is_active", checked)}
           className="data-[state=checked]:bg-background/30"
           {...tid("toolbar-active")}
         />
-        <span className="font-display text-ui-xs font-bold uppercase tracking-wider text-background/70">
+        <span
+          id={activeLabelId}
+          className="font-display text-ui-xs font-bold uppercase tracking-wider text-background/70"
+        >
           {t("products.active")}
         </span>
       </div>
