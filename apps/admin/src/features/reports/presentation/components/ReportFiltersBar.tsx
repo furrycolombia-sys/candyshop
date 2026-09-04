@@ -2,6 +2,7 @@
 
 import { X } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { useId } from "react";
 import { tid } from "shared";
 
 import { ORDER_STATUS_LIST } from "@/features/reports/domain/constants";
@@ -22,6 +23,10 @@ export function ReportFiltersBar({
   currencies,
 }: ReportFiltersBarProps) {
   const t = useTranslations("reports");
+  // Same defect as payments' SellerReportFiltersBar, which this file is a
+  // near-copy of: every label sat next to its control with no htmlFor/id
+  // pair, so a screen reader announced six unnamed fields.
+  const fieldPrefix = useId();
 
   const hasActiveFilters = Object.values(filters).some((v) => v != null);
 
@@ -46,10 +51,14 @@ export function ReportFiltersBar({
     >
       {/* Date range */}
       <div className="flex flex-col gap-1">
-        <label className="text-xs font-medium text-muted-foreground">
+        <label
+          htmlFor={`${fieldPrefix}-dateFrom`}
+          className="text-xs font-medium text-muted-foreground"
+        >
           {t("filters.dateFrom")}
         </label>
         <input
+          id={`${fieldPrefix}-dateFrom`}
           type="date"
           value={filters.dateFrom ?? ""}
           onChange={(e) =>
@@ -60,10 +69,14 @@ export function ReportFiltersBar({
         />
       </div>
       <div className="flex flex-col gap-1">
-        <label className="text-xs font-medium text-muted-foreground">
+        <label
+          htmlFor={`${fieldPrefix}-dateTo`}
+          className="text-xs font-medium text-muted-foreground"
+        >
           {t("filters.dateTo")}
         </label>
         <input
+          id={`${fieldPrefix}-dateTo`}
           type="date"
           value={filters.dateTo ?? ""}
           onChange={(e) => onFiltersChange({ dateTo: e.target.value || null })}
@@ -74,10 +87,14 @@ export function ReportFiltersBar({
 
       {/* Status */}
       <div className="flex flex-col gap-1">
-        <label className="text-xs font-medium text-muted-foreground">
+        <label
+          htmlFor={`${fieldPrefix}-status`}
+          className="text-xs font-medium text-muted-foreground"
+        >
           {t("filters.status")}
         </label>
         <select
+          id={`${fieldPrefix}-status`}
           value={filters.status ?? ""}
           onChange={(e) =>
             onFiltersChange({
@@ -99,10 +116,14 @@ export function ReportFiltersBar({
       {/* Currency */}
       {currencies.length > 0 && (
         <div className="flex flex-col gap-1">
-          <label className="text-xs font-medium text-muted-foreground">
+          <label
+            htmlFor={`${fieldPrefix}-currency`}
+            className="text-xs font-medium text-muted-foreground"
+          >
             {t("filters.currency")}
           </label>
           <select
+            id={`${fieldPrefix}-currency`}
             value={filters.currency ?? ""}
             onChange={(e) =>
               onFiltersChange({ currency: e.target.value || null })
@@ -122,10 +143,14 @@ export function ReportFiltersBar({
 
       {/* Amount range */}
       <div className="flex flex-col gap-1">
-        <label className="text-xs font-medium text-muted-foreground">
+        <label
+          htmlFor={`${fieldPrefix}-amountMin`}
+          className="text-xs font-medium text-muted-foreground"
+        >
           {t("filters.amountMin")}
         </label>
         <input
+          id={`${fieldPrefix}-amountMin`}
           type="number"
           min={0}
           value={filters.amountMin ?? ""}
@@ -139,10 +164,14 @@ export function ReportFiltersBar({
         />
       </div>
       <div className="flex flex-col gap-1">
-        <label className="text-xs font-medium text-muted-foreground">
+        <label
+          htmlFor={`${fieldPrefix}-amountMax`}
+          className="text-xs font-medium text-muted-foreground"
+        >
           {t("filters.amountMax")}
         </label>
         <input
+          id={`${fieldPrefix}-amountMax`}
           type="number"
           min={0}
           value={filters.amountMax ?? ""}

@@ -13,10 +13,19 @@ import { cn } from "ui";
 
 import type { ReceivedOrderStatus } from "@/features/received-orders/domain/types";
 
+/**
+ * Colour lives in the background tint; the text does not carry it.
+ *
+ * `bg-X/10 text-X` puts a colour on a 10% tint of itself. axe measured the
+ * equivalent on RoleBadge at 3.2:1 against a required 4.5:1, and which status
+ * happens to fail is only a question of what the data contains -- the shape
+ * fails for all of them. text-foreground on a near-white tint clears the
+ * threshold, and the fill still carries the status colour.
+ */
 function getWarningConfig(icon: typeof Clock) {
   return {
     icon,
-    className: "border-warning bg-warning/10 text-warning",
+    className: "border-warning bg-warning/10 text-foreground",
   };
 }
 
@@ -34,19 +43,19 @@ function getStatusConfig(status: ReceivedOrderStatus): {
     case "approved": {
       return {
         icon: CheckCircle,
-        className: "border-success bg-success/10 text-success",
+        className: "border-success bg-success/10 text-foreground",
       };
     }
     case "rejected": {
       return {
         icon: XCircle,
-        className: "border-destructive bg-destructive/10 text-destructive",
+        className: "border-destructive bg-destructive/10 text-foreground",
       };
     }
     case "expired": {
       return {
         icon: ShieldAlert,
-        className: "border-muted-foreground bg-muted text-muted-foreground",
+        className: "border-muted-foreground bg-muted text-foreground",
       };
     }
     default: {

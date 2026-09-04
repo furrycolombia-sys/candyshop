@@ -160,8 +160,6 @@
     "searchPlaceholder": "Filtrar por email o nombre...",
     "noResults": "No se encontraron usuarios",
     "loading": "Cargando...",
-    "accessDenied": "Acceso denegado",
-    "accessDeniedHint": "Esta seccion permanece oculta hasta que se otorgue el permiso requerido.",
     "profiles": "Perfiles",
     "templateBuyer": "Comprador",
     "templateSeller": "Vendedor",
@@ -186,7 +184,9 @@
       "allRoles": "Todos los Roles",
       "allItems": "Todos los Articulos",
       "hasItems": "Con Articulos",
-      "noItems": "Sin Articulos"
+      "noItems": "Sin Articulos",
+      "roleFilterLabel": "Filtrar por rol",
+      "itemFilterLabel": "Filtrar por artículos"
     },
     "exportCsv": "Exportar Seleccionados como CSV",
     "exportExcel": "Exportar Seleccionados como Excel",
@@ -215,7 +215,9 @@
     },
     "pagination": {
       "showing": "Mostrando {from}-{to}",
-      "of": "de {total}"
+      "of": "de {total}",
+      "previous": "Página anterior",
+      "next": "Página siguiente"
     },
     "detail": {
       "backToUsers": "Volver a Usuarios",
@@ -235,6 +237,10 @@
         "orders_approve": "Aprobar Ordenes",
         "orders_request_proof": "Solicitar Comprobante"
       }
+    },
+    "selection": {
+      "selectAll": "Seleccionar todos los usuarios de esta página",
+      "selectUser": "Seleccionar {name}"
     }
   },
   "permissions": {

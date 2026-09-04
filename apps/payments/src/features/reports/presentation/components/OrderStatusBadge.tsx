@@ -5,16 +5,25 @@ import { tid } from "shared";
 
 import type { OrderStatus } from "@/features/reports/domain/types";
 
+/**
+ * Colour lives in the background tint; the text does not carry it.
+ *
+ * `bg-X/10 text-X` puts a colour on a 10% tint of itself. axe measured the
+ * equivalent on admin's RoleBadge at 3.2:1 against a required 4.5:1, and which
+ * status happens to fail is only a question of what the data contains -- the
+ * shape fails for all of them. This file is a near-copy of admin's badge of
+ * the same name, so it carried the same defect.
+ */
 const STATUS_COLOR_MAP: Partial<Record<OrderStatus, string>> = {
-  approved: "bg-success/10 text-success",
-  rejected: "bg-destructive/10 text-destructive",
+  approved: "bg-success/10 text-foreground",
+  rejected: "bg-destructive/10 text-foreground",
   // eslint-disable-next-line sonarjs/no-duplicate-string -- Tailwind utility classes must stay inline (dry-principle.md)
-  expired: "bg-muted text-muted-foreground",
+  expired: "bg-muted text-foreground",
   // eslint-disable-next-line sonarjs/no-duplicate-string -- Tailwind utility classes must stay inline (dry-principle.md)
-  pending_verification: "bg-warning/10 text-warning",
-  evidence_requested: "bg-warning/10 text-warning",
-  awaiting_payment: "bg-info/10 text-info",
-  pending: "bg-muted text-muted-foreground",
+  pending_verification: "bg-warning/10 text-foreground",
+  evidence_requested: "bg-warning/10 text-foreground",
+  awaiting_payment: "bg-info/10 text-foreground",
+  pending: "bg-muted text-foreground",
 };
 
 interface OrderStatusBadgeProps {
@@ -23,8 +32,7 @@ interface OrderStatusBadgeProps {
 
 export function OrderStatusBadge({ status }: OrderStatusBadgeProps) {
   const t = useTranslations("sellerReports");
-  const colorClass =
-    STATUS_COLOR_MAP[status] ?? "bg-muted text-muted-foreground";
+  const colorClass = STATUS_COLOR_MAP[status] ?? "bg-muted text-foreground";
 
   return (
     <span

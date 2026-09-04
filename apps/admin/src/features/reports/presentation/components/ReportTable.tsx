@@ -99,7 +99,7 @@ export function ReportTable({ orders }: ReportTableProps) {
                     )}
                   </div>
                 ) : (
-                  <span className="text-muted-foreground/40">—</span>
+                  <span className="text-muted-foreground">—</span>
                 )}
               </td>
               <td className="px-3 py-2">
@@ -115,7 +115,7 @@ export function ReportTable({ orders }: ReportTableProps) {
                     ))}
                   </div>
                 ) : (
-                  <span className="text-muted-foreground/40">—</span>
+                  <span className="text-muted-foreground">—</span>
                 )}
               </td>
               <td className="px-3 py-2 text-right font-mono text-xs">
@@ -132,7 +132,7 @@ export function ReportTable({ orders }: ReportTableProps) {
                 {...tid(`report-row-transfer-${order.id}`)}
               >
                 {order.transfer_number ?? (
-                  <span className="text-muted-foreground/40">—</span>
+                  <span className="text-muted-foreground">—</span>
                 )}
               </td>
               <td
@@ -149,7 +149,7 @@ export function ReportTable({ orders }: ReportTableProps) {
                     {t("table.hasReceipt")}
                   </a>
                 ) : (
-                  <span className="text-muted-foreground/40">
+                  <span className="text-muted-foreground">
                     {t("table.noReceipt")}
                   </span>
                 )}

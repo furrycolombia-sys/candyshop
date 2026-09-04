@@ -37,7 +37,7 @@ export function DashboardPageContent({
           >
             {t("overview")}
           </h1>
-          <p className="font-mono text-sm text-muted-foreground/70">
+          <p className="font-mono text-sm text-muted-foreground">
             {t("welcome")}
           </p>
         </header>
@@ -112,7 +112,7 @@ export function DashboardPageContent({
 
               <div className="border-t-2 border-foreground/10 p-5">
                 <div className="flex flex-col gap-3">
-                  <span className="text-section-label font-mono text-muted-foreground/60">
+                  <span className="text-section-label font-mono text-muted-foreground">
                     {tSidebar("system")}
                   </span>
                   <div className="flex flex-col gap-2">

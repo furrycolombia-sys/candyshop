@@ -29,7 +29,7 @@ export function StatusRow({ label, status, statusLabel }: StatusRowProps) {
           className={cn("size-1.5 rounded-full", getDotClass(status))}
           data-status={status}
         />
-        <span className="font-mono text-ui-xs text-muted-foreground/60">
+        <span className="font-mono text-ui-xs text-muted-foreground">
           {statusLabel}
         </span>
       </div>

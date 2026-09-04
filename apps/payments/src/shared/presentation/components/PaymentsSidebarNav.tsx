@@ -139,7 +139,7 @@ export function PaymentsSidebarNav({
       {visibleSections.map((section) => (
         <div key={section.labelKey} className="mb-2">
           {!collapsed && (
-            <span className="text-section-label mb-1.5 block px-2 font-mono text-muted-foreground/60">
+            <span className="text-section-label mb-1.5 block px-2 font-mono text-muted-foreground">
               {t(section.labelKey)}
             </span>
           )}

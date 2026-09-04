@@ -139,7 +139,7 @@ export function AdminSidebar() {
             {/* Section label */}
             {!isCollapsed && (
               <span
-                className="text-section-label mb-1.5 block px-2 font-mono text-muted-foreground/60"
+                className="text-section-label mb-1.5 block px-2 font-mono text-muted-foreground"
                 {...tid(`sidebar-section-${section.labelKey}`)}
               >
                 {t(section.labelKey)}
@@ -208,11 +208,11 @@ export function AdminSidebar() {
                 <span className="absolute inline-flex size-full animate-ping rounded-full bg-success opacity-75" />
                 <span className="relative inline-flex size-2 rounded-full bg-success" />
               </span>
-              <span className="text-micro-label font-mono text-muted-foreground/70">
+              <span className="text-micro-label font-mono text-muted-foreground">
                 {t("status")}
               </span>
             </div>
-            <span className="px-4 font-mono text-ui-xs text-muted-foreground/40">
+            <span className="px-4 font-mono text-ui-xs text-muted-foreground">
               {process.env.NEXT_PUBLIC_APP_VERSION ?? t("version")}
             </span>
           </div>

@@ -286,4 +286,34 @@ describe("SellerReportFiltersBar", () => {
     });
     expect(onFiltersChange).toHaveBeenCalledWith({ amountMin: null });
   });
+
+  // Every control here had a label sitting next to it and no htmlFor/id pair,
+  // so a screen reader announced five unnamed fields. axe reported four
+  // `label` violations and one `select-name`, critical each, the first time a
+  // page-level check could see this page.
+  it.each([
+    "seller-reports-filter-date-from",
+    "seller-reports-filter-date-to",
+    "seller-reports-filter-status",
+    "seller-reports-filter-amount-min",
+    "seller-reports-filter-amount-max",
+  ])("%s is labelled", (testId) => {
+    render(
+      <SellerReportFiltersBar
+        filters={emptyFilters}
+        onFiltersChange={onFiltersChange}
+        currencies={["COP"]}
+      />,
+    );
+
+    // Asserted through the accessible name rather than by finding the <label>
+    // element: the name is what a screen reader announces, which is the thing
+    // that was missing, and it holds however the association is made.
+    const control = screen.getByTestId(testId);
+
+    expect(
+      control,
+      `${testId} has no accessible name -- check its label's htmlFor`,
+    ).toHaveAccessibleName();
+  });
 });
