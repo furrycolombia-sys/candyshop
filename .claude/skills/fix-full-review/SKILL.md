@@ -146,7 +146,7 @@ After all issues processed:
 Fixes complete!
 
 Recommended next steps:
-1. Run `pnpm type-check` to verify no type errors
+1. Run `pnpm typecheck` to verify no type errors
 2. Run `pnpm test` to ensure tests pass
 3. Run `/full-review` to verify issues are resolved
 ```

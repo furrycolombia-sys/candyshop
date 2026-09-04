@@ -60,6 +60,7 @@
     "check:source-bytes": "node scripts/check-source-bytes.mjs",
     "check:a11y-patterns": "node scripts/check-a11y-patterns.mjs",
     "check:boundaries": "node scripts/check-feature-boundaries.mjs",
+    "check:doc-refs": "node scripts/check-doc-references.mjs",
     "check:docs": "node scripts/check-doc-freshness.mjs"
   },
   "devDependencies": {
