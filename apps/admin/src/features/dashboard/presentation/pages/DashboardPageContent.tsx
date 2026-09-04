@@ -37,7 +37,7 @@ export function DashboardPageContent({
           >
             {t("overview")}
           </h1>
-          <p className="font-mono text-sm text-muted-foreground/70">
+          <p className="font-mono text-sm text-muted-foreground">
             {t("welcome")}
           </p>
         </header>

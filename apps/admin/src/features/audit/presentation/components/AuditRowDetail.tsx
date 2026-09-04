@@ -52,7 +52,7 @@ export function AuditRowDetail({ entry }: AuditRowDetailProps) {
                 className="size-5 rounded-full border border-foreground/20"
               />
             )}
-            <span className="font-display text-ui-xs font-bold uppercase tracking-widest text-muted-foreground/60">
+            <span className="font-display text-ui-xs font-bold uppercase tracking-widest text-muted-foreground">
               {t("user")}
             </span>
             <a
@@ -62,7 +62,7 @@ export function AuditRowDetail({ entry }: AuditRowDetailProps) {
               {entry.user_display_name ?? entry.user_email ?? entry.user_id}
             </a>
             {entry.user_email && entry.user_display_name && (
-              <span className="text-muted-foreground/60">
+              <span className="text-muted-foreground">
                 ({entry.user_email})
               </span>
             )}

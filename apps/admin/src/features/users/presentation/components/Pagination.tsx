@@ -40,6 +40,7 @@ export function Pagination({
           onClick={() => onPageChange(page - 1)}
           disabled={page <= 1}
           className="rounded-none border-2 border-foreground"
+          aria-label={t("previous")}
           {...tid("pagination-prev")}
         >
           <ChevronLeft className="size-4" />
@@ -88,6 +89,7 @@ export function Pagination({
           onClick={() => onPageChange(page + 1)}
           disabled={page >= totalPages}
           className="rounded-none border-2 border-foreground"
+          aria-label={t("next")}
           {...tid("pagination-next")}
         >
           <ChevronRight className="size-4" />

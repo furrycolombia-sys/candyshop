@@ -31,6 +31,7 @@ export function UserRow({
   onSelectToggle,
 }: UserRowProps) {
   const t = useTranslations("users.lastSeen");
+  const tSelection = useTranslations("users.selection");
   const avatarUrl = user.display_avatar_url ?? user.avatar_url;
   const lastSeen = formatLastSeen(user.last_seen_at);
 
@@ -43,6 +44,12 @@ export function UserRow({
       <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
         <input
           type="checkbox"
+          // Names the row it selects. Without this a screen reader announces
+          // one unnamed checkbox per user -- fifty on a full page, all
+          // identical -- so there is no way to tell which row is being ticked.
+          aria-label={tSelection("selectUser", {
+            name: user.display_name ?? user.email,
+          })}
           checked={isSelected}
           onChange={(e) => onSelectToggle?.(user.id, e.target.checked)}
           className="size-4 rounded-sm border-2 border-foreground"
