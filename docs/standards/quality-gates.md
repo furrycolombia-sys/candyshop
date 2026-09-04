@@ -207,13 +207,82 @@ Those violate a stated MUST, and they are the real finding.
   1  studio: products -> orders
 ```
 
-Three of those pairs import **each other**: assigned-orders and
+Three of those pairs imported **each other**: assigned-orders and
 received-orders, cart and products, products and seller-admins. A cycle at
-feature level usually means one feature wearing two names, and deciding that
-is a design call rather than an import fix.
+feature level usually means one feature wearing two names, and each of them
+turned out to be exactly that. All thirteen are now resolved, and none were
+resolved by moving an import until the check stopped counting:
 
-`scripts/check-feature-boundaries.mjs` holds the count at 13 and fails on a
-fourteenth. Lower the baseline as pairs are resolved; that is the ratchet.
+- `admin: users -> audit` — `insertAuditLog` was infrastructure both features
+  called, so it moved to `shared/infrastructure`.
+- `store: cart <-> products` — the cart's state, reducer, cookie persistence
+  and `useAddToCart` were never the drawer's business; they moved to
+  `shared/application/cart` and the cart feature became the drawer that reads
+  them.
+- `studio: products <-> seller-admins`, `products -> orders` — two pages were
+  composition roots that happened to live inside a feature; they moved to
+  `shared/presentation/pages`.
+- `payments: assigned-orders <-> received-orders` — counting the files settled
+  it. received-orders held fourteen; assigned-orders held six, none of which
+  was a component, a type, or a domain rule. It was a query and a page, so the
+  two were merged and assigned-orders was deleted.
+
+`scripts/check-feature-boundaries.mjs` now holds the count at **0** and fails
+on the first new one.
+
+---
+
+## Documentation that no longer describes its code
+
+`scripts/check-doc-freshness.mjs` reports an exported symbol whose
+implementation changed while its TSDoc did not. It is a heuristic and says so:
+nothing can see that prose went stale on its own. It catches the case that
+matters — a symbol whose behaviour moved under a comment that still confidently
+describes the old one.
+
+Two properties keep it from becoming noise people learn to ignore. It reports
+per **symbol**, so the message names `getSupabaseAccessToken` rather than a
+file. And it collapses whitespace runs, so re-indenting cannot trigger it.
+
+There is no suppression flag, deliberately: a suppression flag becomes the
+thing everyone types. The way past it is to touch the doc, and restating an
+invariant that still holds is itself worth writing. For the same reason,
+deleting the doc is reported too — otherwise deletion _is_ the suppression
+flag.
+
+It is ported from the sibling AeleOS repository with one change. AeleOS
+enforces `jsdoc/require-jsdoc`, so every export there carries a doc and an
+empty-to-empty comparison can only mean "the doc did not move". Libra
+documents 335 of its 1002 exported symbols. Without the change the same
+comparison would fire on every undocumented export anyone edited — a
+documentation-coverage mandate wearing a freshness check's name, and one
+nobody agreed to. So a symbol undocumented on both sides is skipped, which
+guards the docs that exist and widens on its own as coverage grows.
+
+It covers `.ts`, `.tsx` and `.mjs`. The last is not in the AeleOS original,
+and is here because this repo's tooling lives in `scripts/` and is among its
+most doc-dense code; leaving it out would be the same not-looking this
+document is about. Including it widened the sample by nine commits and
+produced no new findings.
+
+Measured against the 37 source-touching commits that preceded it, it would
+have failed 10. Spot-checking those: `getSupabaseAccessToken` grew a
+three-second Clerk hydration wait while its doc still described the old
+immediate-null behaviour — the exact failure the gate is for. Two others were
+a test-id prop and a deleted lint directive, where the doc had not gone stale
+and the author would have to touch it anyway. That is the accepted cost, and
+27% is the retroactive rate rather than the steady-state one: under the gate
+authors touch the doc, and the rate falls toward zero.
+
+---
+
+## A gate in package.json is not a gate
+
+`check:a11y-patterns` existed as a script and ran in **no workflow and no
+hook** — findable by anyone who went looking for it, enforced on nobody. It is
+the same failure this document catalogues elsewhere in a quieter form: not a
+check scoped to the files it already passes, but a check with no caller at
+all. It now runs in the CI hygiene block beside the others.
 
 ---
 
