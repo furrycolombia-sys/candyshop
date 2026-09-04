@@ -9,6 +9,7 @@
  * - Blocks wrapped in @css-sync-ignore-start / @css-sync-ignore-end markers
  */
 
+import { execFileSync } from "child_process";
 import { readFileSync, existsSync } from "fs";
 import { resolve, dirname } from "path";
 import { fileURLToPath } from "url";
@@ -16,9 +17,45 @@ import { fileURLToPath } from "url";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, "..");
 
-// Apps to check
-const APPS = ["store", "studio", "landing", "payments", "admin"];
 const CSS_PATH = "src/app/globals.css";
+
+/**
+ * Every app that actually has a `globals.css`, asked of git rather than
+ * listed here.
+ *
+ * This was a hardcoded array of five: store, studio, landing, payments,
+ * admin. `auth` and `playground` both have a `globals.css` and both were
+ * missing from it, so the checker reported "in sync across all apps" while
+ * declining to look at two of them. They happened to be byte-identical when
+ * this was found, which is luck rather than evidence -- the check could not
+ * have told anyone otherwise.
+ *
+ * A hand-maintained list drifts from the repository the moment somebody adds
+ * an app and does not think of this file. Deriving it means a new app is
+ * covered by existing, and there is no list to forget.
+ *
+ * @returns app directory names, sorted, each holding a globals.css.
+ */
+function discoverApps() {
+  const apps = execFileSync("git", ["ls-files", `apps/*/${CSS_PATH}`], {
+    cwd: ROOT,
+    encoding: "utf8",
+  })
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((file) => file.split("/")[1])
+    .sort();
+
+  if (apps.length === 0) {
+    throw new Error(
+      "no apps/*/src/app/globals.css matched -- refusing to report a clean result",
+    );
+  }
+  return apps;
+}
+
+const APPS = discoverApps();
 
 // Lines to ignore when comparing (regex patterns)
 const IGNORE_PATTERNS = [

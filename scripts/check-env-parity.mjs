@@ -38,11 +38,18 @@ const envFiles = readdirSync(rootDir)
   .filter((f) => /^\.env\.[a-z]+$/.test(f))
   .sort();
 
+// Exiting 0 here would be the failure this repo keeps finding in its own
+// gates: a check that reports success because it read nothing. The four
+// .env.* files are tracked in git, so any checkout that can run this has
+// them, and their absence means the working tree is wrong rather than the
+// comparison being unnecessary.
 if (envFiles.length < 2) {
-  console.log(
-    "check-env-parity: fewer than 2 env files found, nothing to compare.",
+  console.error(
+    `check-env-parity: found ${envFiles.length} env file(s) in ${rootDir}; ` +
+      "at least 2 are tracked in git. Refusing to report a clean result " +
+      "from an empty comparison.",
   );
-  process.exit(0);
+  process.exit(1);
 }
 
 console.log(`\n🔍 check-env-parity — comparing ${envFiles.length} env files:`);
