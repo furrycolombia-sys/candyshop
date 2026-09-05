@@ -2,7 +2,14 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 
 /**
  * Env Viewer — reads NEXT_PUBLIC_ENV_DEBUG set by load-env.mjs when ENV_DEBUG=true.
- * Sits behind admin's existing auth via the [locale] layout's ProtectedRoute.
+ *
+ * The [locale] layout's ProtectedRoute (BrowserProtectedRoute) is a client
+ * component, so its redirect only fires after hydration -- this page's
+ * output, a Server Component, is already in the RSC payload before that
+ * happens. The guard here is therefore not "behind auth": it's that
+ * NEXT_PUBLIC_ENV_DEBUG is a client-bundle var load-env.mjs refuses to set
+ * in production, so this page has nothing to show unless that flag was
+ * deliberately turned on for the current environment.
  */
 export default async function EnvPage({
   params,

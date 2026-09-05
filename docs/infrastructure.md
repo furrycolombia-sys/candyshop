@@ -141,7 +141,7 @@ Single-stage image based on `node:22-alpine`. Layer order is optimized for cache
 ```
 1. RUN apk add (nginx, supervisor, netcat)    — stable, rarely changes
 2. COPY nginx.conf, supervisord.conf,          — stable config files
-        watcher.mjs, boot-reporter.mjs         (placed BEFORE app layers)
+        boot-reporter.mjs, warmer.sh           (placed BEFORE app layers)
 3. COPY apps/*/standalone, static, public      — volatile (changes every deploy)
 4. RUN rm stub node_modules + chown           — always runs
 ```

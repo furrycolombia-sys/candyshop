@@ -763,6 +763,15 @@ jobs:
         # on its own failure; this is the second, independent layer in case
         # something else in the step (network setup, node itself) fails
         # first.
+        #
+        # --older-than-hours 2 is a deliberate anti-race window, not a bug:
+        # without it, this step could delete a user another concurrent PR run
+        # just created and hasn't drained yet. The tradeoff is that a leak
+        # from the job this step follows is never itself a candidate --
+        # `to delete (e2e): 0` here means "nothing old enough", not "nothing
+        # leaked". A genuine leak from this run only becomes visible (and
+        # gets swept) on the next run that's at least 2 hours later, so the
+        # invariant this step polices holds one run late, never immediately.
         if: always()
         continue-on-error: true
         run: node scripts/clerk-sweep-e2e-users.mjs --older-than-hours 2

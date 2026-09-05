@@ -442,7 +442,7 @@ push to main              │   GitHub Actions          │
 | `docker/prod/Dockerfile`                  | Production Docker image (uses pre-built .next/)                      |
 | `docker/ci/Dockerfile`                    | CI/local Docker image (builds inside container)                      |
 | `scripts/docker-health-check.sh`          | Pre-push hook — builds + health-checks Docker image                  |
-| `docker/watcher.mjs`                      | Host-side health monitor (runs via PM2 as libra-watcher)             |
+| `docker/compose.yml` (`healthcheck`)      | Container liveness — `GET /health`, `restart: unless-stopped`        |
 | `.npmrc`                                  | `node-linker=hoisted` — required for pnpm to survive ZIP round-trips |
 | `.dockerignore`                           | Must re-include `!apps/**/.next/standalone/node_modules/**`          |
 
