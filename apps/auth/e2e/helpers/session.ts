@@ -5,6 +5,8 @@ import { clerk, clerkSetup } from "@clerk/testing/playwright";
 import type { BrowserContext } from "@playwright/test";
 import { createClient } from "@supabase/supabase-js";
 
+import { registerTestUser } from "./userRegistry";
+
 // eslint-disable-next-line @typescript-eslint/no-require-imports -- shared Node helper
 const { resolveE2EAppUrls } = require(
   path.resolve(__dirname, "../../../../scripts/app-url-resolver.js"),
@@ -358,12 +360,14 @@ export async function createTestUser(
   });
   const token = await clerkClient.sessions.getToken(session.id);
 
-  return {
+  const testUser: TestUser = {
     userId: profileId,
     email,
     clerkUserId: clerkUser.id,
     accessToken: token.jwt,
   };
+  registerTestUser(testUser);
+  return testUser;
 }
 
 /**
