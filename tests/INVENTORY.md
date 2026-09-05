@@ -6,12 +6,12 @@ Every test case in the repo, so a refactor can be checked for losses:
 regenerate and diff. Counting files or totals is not enough -- a rework
 can keep both and still drop the one assertion that mattered.
 
-**2709 cases across 374 files** (0 skipped, 9 parameterised).
+**2718 cases across 375 files** (0 skipped, 9 parameterised).
 
 Source-level cases: a `.each` case is one entry here and many in vitest
 output, so this total is deliberately not the runner total.
 
-## app:admin -- 538 cases
+## app:admin -- 547 cases
 
 ### `apps/admin/tests/ActivityRow.test.tsx`
 
@@ -569,6 +569,18 @@ output, so this total is deliberately not the runner total.
 - UserDelegatesCard > renders both seller and delegate sections when both have data
 - UserDelegatesCard > does not show asSeller section when asSeller is empty
 - UserDelegatesCard > passes userId to useUserDelegates
+
+### `apps/admin/tests/userDelegatesRoute.test.ts`
+
+- admin users/[userId]/delegates > GET > refuses a caller without the read permission
+- admin users/[userId]/delegates > GET > returns both sides of the relationship
+- admin users/[userId]/delegates > GET > reports a non-uuid path id as a client error
+- admin users/[userId]/delegates > GET > refuses a caller without seller_admins.delete
+- admin users/[userId]/delegates > GET > rejects a payload with no delegateRowId
+- admin users/[userId]/delegates > GET > reports a non-uuid row id as a client error
+- admin users/[userId]/delegates > GET > removes the row and reports success
+- admin users/[userId]/delegates > GET > scopes the delete to the user in the path
+- admin users/[userId]/delegates > GET > reports a row that does not belong to the user as not removed
 
 ### `apps/admin/tests/UserDetailPage.test.tsx`
 

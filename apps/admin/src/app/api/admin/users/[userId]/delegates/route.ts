@@ -3,12 +3,13 @@ import { NextResponse } from "next/server";
 
 import {
   adminFetch,
+  ClientError,
+  errorResponse,
   FORBIDDEN_ERROR,
   getAuthorizedAdmin,
-  INTERNAL_SERVER_ERROR_STATUS,
   validateUuid,
 } from "@/app/api/admin/_shared/adminRest";
-import { SELLER_ADMINS_READ_PERMISSION } from "@/features/users";
+import { SELLER_ADMINS_READ_PERMISSION } from "@/features/users/domain/constants";
 
 const SELLER_ADMINS_DELETE = "seller_admins.delete";
 
@@ -51,6 +52,10 @@ interface RawAsDelegate extends DelegateRow {
  * Returns all delegate relationships for a user:
  * - asSeller: rows where the user is the seller (they delegated to someone)
  * - asDelegate: rows where the user is the delegate (someone delegated to them)
+ *
+ * A path id that is not a uuid answers 400. It used to reach a bare `catch`
+ * and come back as 500 "Failed to load delegates", which the caller cannot
+ * tell apart from an outage.
  */
 export async function GET(
   _request: Request,
@@ -78,11 +83,8 @@ export async function GET(
     const asDelegate = (await asDelegateRes.json()) as RawAsDelegate[];
 
     return NextResponse.json({ asSeller, asDelegate });
-  } catch {
-    return NextResponse.json(
-      { error: "Failed to load delegates" },
-      { status: INTERNAL_SERVER_ERROR_STATUS },
-    );
+  } catch (error) {
+    return errorResponse(error, "Failed to load delegates");
   }
 }
 
@@ -90,7 +92,16 @@ export async function GET(
  * DELETE /api/admin/users/:userId/delegates
  * Body: { delegateRowId: string }
  *
- * Removes a specific seller_admins row by ID.
+ * Removes one seller_admins row, and only if it belongs to the user in the
+ * path -- either as the seller who delegated or as the delegate.
+ *
+ * The row id alone used to be enough: `:userId` was awaited and thrown away,
+ * so the endpoint deleted any row whose id you named regardless of whose
+ * delegates the URL claimed to be addressing. That is not an escalation --
+ * the caller already holds seller_admins.delete, which covers every row -- but
+ * it means a stale row id deletes someone else's delegation while the request
+ * URL records it against the wrong user. Scoping the filter makes the address
+ * mean something.
  */
 export async function DELETE(
   request: Request,
@@ -102,7 +113,8 @@ export async function DELETE(
   }
 
   try {
-    await context.params;
+    const { userId } = await context.params;
+    const validUserId = validateUuid(userId);
     const body = (await request.json()) as Record<string, unknown>;
     const { delegateRowId } = body;
 
@@ -110,18 +122,25 @@ export async function DELETE(
       return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
     }
 
-    validateUuid(delegateRowId);
+    const validRowId = validateUuid(delegateRowId);
 
-    await adminFetch(`seller_admins?id=eq.${delegateRowId}`, {
-      method: "DELETE",
-      headers: { Prefer: "return=minimal" },
-    });
+    // One `or=(a,b)` group, not one per side: PostgREST answers `or=(a),(b)`
+    // with the first group alone and drops the rest without erroring.
+    const deleted = await adminFetch(
+      `seller_admins?id=eq.${validRowId}&or=(seller_id.eq.${validUserId},admin_user_id.eq.${validUserId})`,
+      {
+        method: "DELETE",
+        headers: { Prefer: "return=representation" },
+      },
+    );
+
+    const rows = (await deleted.json()) as unknown[];
+    if (rows.length === 0) {
+      throw new ClientError("Delegate row not found for this user");
+    }
 
     return NextResponse.json({ success: true });
-  } catch {
-    return NextResponse.json(
-      { error: "Failed to remove delegate" },
-      { status: INTERNAL_SERVER_ERROR_STATUS },
-    );
+  } catch (error) {
+    return errorResponse(error, "Failed to remove delegate");
   }
 }
