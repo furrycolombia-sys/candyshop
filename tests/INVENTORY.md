@@ -6,12 +6,12 @@ Every test case in the repo, so a refactor can be checked for losses:
 regenerate and diff. Counting files or totals is not enough -- a rework
 can keep both and still drop the one assertion that mattered.
 
-**2718 cases across 375 files** (0 skipped, 9 parameterised).
+**2733 cases across 377 files** (0 skipped, 9 parameterised).
 
 Source-level cases: a `.each` case is one entry here and many in vitest
 output, so this total is deliberately not the runner total.
 
-## app:admin -- 547 cases
+## app:admin -- 562 cases
 
 ### `apps/admin/tests/ActivityRow.test.tsx`
 
@@ -21,6 +21,15 @@ output, so this total is deliberately not the runner total.
 - ActivityRow > renders the time
 - ActivityRow > renders UPDATE action
 - ActivityRow > renders DELETE action
+
+### `apps/admin/tests/adminReportsRoutes.test.ts`
+
+- admin report routes > reports/orders > refuses a caller without admin.reports
+- admin report routes > reports/orders > refuses a caller with no session
+- admin report routes > reports/orders > returns an empty result without asking for order lines
+- admin report routes > reports/orders > passes validated filters through to the query
+- admin report routes > reports/export > refuses a caller without admin.reports
+- admin report routes > reports/export > returns a spreadsheet when there are no orders
 
 ### `apps/admin/tests/AdminSidebar.test.tsx`
 
@@ -330,6 +339,18 @@ output, so this total is deliberately not the runner total.
 - fetchReportOrders > returns parsed JSON on success
 - fetchReportOrders > throws when response is not ok
 - fetchReportOrders > builds URL with ? separator when query string is non-empty
+
+### `apps/admin/tests/reportsData.test.ts`
+
+- reports data fetching > batchIds > returns nothing for an empty list
+- reports data fetching > batchIds > keeps a short list in one batch
+- reports data fetching > batchIds > splits at the batch size and preserves order
+- reports data fetching > fetchOrderItems > uses one request for a small set of orders
+- reports data fetching > fetchOrderItems > splits a set too long for one URL, and merges the results
+- reports data fetching > fetchOrderItems > keeps every batch well under the length that returned 414
+- reports data fetching > fetchOrderItems > applies the product filter to every batch
+- reports data fetching > fetchProfileMap > makes no request for an empty list
+- reports data fetching > fetchProfileMap > splits and merges into one map keyed by id
 
 ### `apps/admin/tests/reportsFilters.test.ts`
 

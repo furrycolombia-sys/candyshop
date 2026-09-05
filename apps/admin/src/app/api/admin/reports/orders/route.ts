@@ -9,24 +9,17 @@ import {
   INTERNAL_SERVER_ERROR_STATUS,
 } from "@/app/api/admin/_shared/adminRest";
 import { signReceiptPath } from "@/app/api/admin/_shared/receiptSignedUrls";
+import {
+  fetchOrderItems,
+  fetchProfileMap,
+  type OrderItemRow,
+} from "@/app/api/admin/_shared/reportsData";
 import { buildAdminOrderFilters } from "@/app/api/admin/_shared/reportsFilters";
 
 const ADMIN_REPORTS = "admin.reports";
 const MAX_LIMIT = 10_000;
 const ORDERS_SELECT =
   "id,created_at,payment_status,total,currency,transfer_number,receipt_url,user_id,seller_id";
-const ITEMS_SELECT =
-  "id,order_id,product_id,quantity,unit_price,currency,products(name_en)";
-
-interface OrderItemRow {
-  id: string;
-  order_id: string;
-  product_id: string;
-  quantity: number;
-  unit_price: number;
-  currency: string;
-  products: { name_en: string } | null;
-}
 
 interface OrderRow {
   id: string;
@@ -38,41 +31,6 @@ interface OrderRow {
   receipt_url: string | null;
   user_id: string;
   seller_id: string | null;
-}
-
-interface UserProfileRow {
-  id: string;
-  email: string;
-  display_name: string | null;
-}
-
-async function fetchOrderItems(
-  orderIds: string[],
-  productId: string | null,
-): Promise<OrderItemRow[]> {
-  const itemsQuery: Record<string, string> = {
-    select: ITEMS_SELECT,
-    order_id: `in.(${orderIds.join(",")})`,
-  };
-  if (productId) {
-    itemsQuery["product_id"] = `eq.${productId}`;
-  }
-  const response = await adminFetch(createRestPath("order_items", itemsQuery));
-  return response.json() as Promise<OrderItemRow[]>;
-}
-
-async function fetchProfileMap(
-  userIds: string[],
-): Promise<Map<string, UserProfileRow>> {
-  if (userIds.length === 0) return new Map();
-  const response = await adminFetch(
-    createRestPath("user_profiles", {
-      select: "id,email,display_name",
-      id: `in.(${userIds.join(",")})`,
-    }),
-  );
-  const profiles = (await response.json()) as UserProfileRow[];
-  return new Map(profiles.map((p) => [p.id, p]));
 }
 
 export async function GET(request: Request) {
