@@ -91,11 +91,6 @@ const APPS = [
     directUrl: "http://127.0.0.1:5006/studio/health",
     nginxPath: "/studio/health",
   },
-  {
-    name: "playground",
-    directUrl: "http://127.0.0.1:5003/playground/health",
-    nginxPath: "/playground/health",
-  },
 ].map(({ name, directUrl, nginxPath }) => ({
   name,
   url: NGINX_PORT ? `http://127.0.0.1:${NGINX_PORT}${nginxPath}` : directUrl,

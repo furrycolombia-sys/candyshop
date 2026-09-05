@@ -6,7 +6,7 @@ set +x  # Never echo commands — prevents secrets leaking into CI log streams
 # Production Deployment Script for hestia.local
 # Runs ON the server via SSH from GitHub Actions.
 #
-# CI builds all 7 apps, rsyncs .next/ dirs to this server, then runs this
+# CI builds all 6 apps, rsyncs .next/ dirs to this server, then runs this
 # script. This script rebuilds the Docker image from those pre-built artifacts
 # and hot-swaps the running container.
 # =============================================================================
@@ -272,7 +272,7 @@ else
   IMAGE_TAG="libra-prod:$(git rev-parse --short HEAD 2>/dev/null || date +%s)"
 
   # Ensure every path the Dockerfile COPYs exists (artifacts may omit empty dirs).
-  for APP in store auth admin landing payments studio playground; do
+  for APP in store auth admin landing payments studio; do
     mkdir -p "$DEPLOY_DIR/apps/$APP/.next/static"
     mkdir -p "$DEPLOY_DIR/apps/$APP/public"
   done
@@ -308,11 +308,10 @@ if not (chat_id and bot_token):
     raise SystemExit(0)
 text = (
   '\U0001f504 <b>Container Boot</b>  •  <code>' + hostname + '</code>  •  ' + boot_now + '\n\n'
-  'Progress: 0/7  ░░░░░░░░░░░░░░░░  0%\n\n'
+  'Progress: 0/6  ░░░░░░░░░░░░░░░░  0%\n\n'
   '  ⏳ auth         ...\n'
   '  ⏳ store        ...\n'
   '  ⏳ admin        ...\n'
-  '  ⏳ playground   ...\n'
   '  ⏳ landing      ...\n'
   '  ⏳ payments     ...\n'
   '  ⏳ studio       ...\n'
@@ -418,7 +417,6 @@ APPS=(
   "store:/store/health"
   "auth:/auth/health"
   "admin:/admin/health"
-  "playground:/playground/health"
   "landing:/en"
   "payments:/payments/health"
   "studio:/studio/health"

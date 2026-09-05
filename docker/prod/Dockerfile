@@ -42,10 +42,6 @@ COPY apps/payments/.next/standalone   /app/payments/
 COPY apps/payments/.next/static       /app/payments/apps/payments/.next/static
 COPY apps/payments/public             /app/payments/apps/payments/public
 
-COPY apps/playground/.next/standalone /app/playground/
-COPY apps/playground/.next/static     /app/playground/apps/playground/.next/static
-COPY apps/playground/public           /app/playground/apps/playground/public
-
 COPY apps/studio/.next/standalone     /app/studio/
 COPY apps/studio/.next/static         /app/studio/apps/studio/.next/static
 COPY apps/studio/public               /app/studio/apps/studio/public
@@ -59,7 +55,6 @@ RUN rm -rf \
     /app/admin/apps/admin/node_modules \
     /app/landing/apps/landing/node_modules \
     /app/payments/apps/payments/node_modules \
-    /app/playground/apps/playground/node_modules \
     /app/studio/apps/studio/node_modules && \
     chown -R nextjs:nodejs /app && \
     chmod +x /app/warmer.sh
