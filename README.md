@@ -646,8 +646,8 @@ Manual / scheduled
 ### Production shape
 
 One image (`docker/prod/Dockerfile`, `node:22-alpine`), layered so the stable pieces —
-nginx config, supervisord config, the health watcher — sit *below* the volatile app
-layers and keep their hashes between builds. Inside:
+nginx config, supervisord config — sit *below* the volatile app layers and keep
+their hashes between builds. Inside:
 
 ```
 nginx :8080
@@ -659,8 +659,10 @@ nginx :8080
   ├─ /studio      → studio     :5006
   └─ /health      → container healthcheck
 supervisord → 6 × Next.js standalone servers
-watcher.mjs → route health polling, Telegram alerts
 ```
+
+Liveness is `docker compose`'s `healthcheck` (`GET /health`, `restart: unless-stopped`) —
+no in-container watcher process.
 
 The container runs hardened: `--cap-drop=ALL`, `--security-opt=no-new-privileges`,
 `--pids-limit=1024`, `--restart unless-stopped`.

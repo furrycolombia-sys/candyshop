@@ -17,7 +17,6 @@ RUN apk add --no-cache nginx supervisor netcat-openbsd curl && \
 # (--cache-from :latest) and the VM's local layer store.
 COPY docker/prod/nginx.conf           /etc/nginx/nginx.conf
 COPY docker/prod/supervisord.conf     /etc/supervisor/conf.d/supervisord.conf
-COPY docker/watcher.mjs               /app/watcher.mjs
 COPY docker/boot-reporter.mjs         /app/boot-reporter.mjs
 COPY docker/warmer.sh                 /app/warmer.sh
 
