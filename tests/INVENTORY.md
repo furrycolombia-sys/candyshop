@@ -6,12 +6,12 @@ Every test case in the repo, so a refactor can be checked for losses:
 regenerate and diff. Counting files or totals is not enough -- a rework
 can keep both and still drop the one assertion that mattered.
 
-**2687 cases across 372 files** (0 skipped, 9 parameterised).
+**2696 cases across 373 files** (0 skipped, 9 parameterised).
 
 Source-level cases: a `.each` case is one entry here and many in vitest
 output, so this total is deliberately not the runner total.
 
-## app:admin -- 517 cases
+## app:admin -- 525 cases
 
 ### `apps/admin/tests/ActivityRow.test.tsx`
 
@@ -163,6 +163,17 @@ output, so this total is deliberately not the runner total.
 - DashboardPage > renders activity rows from audit data
 - DashboardPage > renders quick actions section with audit log link
 - DashboardPage > renders system status rows
+
+### `apps/admin/tests/effectivePermissions.test.ts`
+
+- getEffectivePermissionKeys > returns granted keys
+- getEffectivePermissionKeys > drops an expired grant
+- getEffectivePermissionKeys > keeps a grant that has not expired yet
+- getEffectivePermissionKeys > a deny on one scope revokes a key granted on another
+- getEffectivePermissionKeys > an expired deny does not revoke anything
+- getEffectivePermissionKeys > a deny on one key leaves other keys alone
+- getEffectivePermissionKeys > deduplicates a key granted on several scopes
+- getEffectivePermissionKeys > returns nothing for a user with no rows
 
 ### `apps/admin/tests/exportCsv.test.ts`
 
@@ -902,7 +913,7 @@ output, so this total is deliberately not the runner total.
 - TermsPage > renders a last-updated line
 - TermsPage > renders all 10 section headings
 
-## app:payments -- 564 cases
+## app:payments -- 565 cases
 
 ### `apps/payments/tests/ActionButtons.test.tsx`
 
@@ -980,6 +991,7 @@ output, so this total is deliberately not the runner total.
 
 - POST /api/checkout/payment-methods > returns payment methods when the cart quantities are valid
 - POST /api/checkout/payment-methods > returns no payment methods when the cart exceeds stock
+- POST /api/checkout/payment-methods > refuses a buyer whose permission is denied on another scope
 - POST /api/checkout/payment-methods > rejects users without checkout permissions
 - POST /api/checkout/payment-methods > rejects requests with no signed-in Clerk session
 - POST /api/checkout/payment-methods > rejects invalid payloads
