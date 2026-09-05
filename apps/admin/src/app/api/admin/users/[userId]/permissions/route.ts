@@ -16,6 +16,46 @@ import {
   validateUuid,
 } from "@/app/api/admin/_shared/adminRest";
 
+/**
+ * An error caused by what the caller sent, not by a fault on our side.
+ *
+ * Unknown permission keys used to reach the generic catch and come back as
+ * 500 "Failed to update permission". That is wrong twice: the caller cannot
+ * tell a typo from an outage, and every typo shows up in monitoring as a
+ * server error.
+ */
+class ClientError extends Error {}
+
+/**
+ * The response a thrown error deserves.
+ *
+ * The three handlers had this logic copied out with only the fallback message
+ * differing, and each copy recognised exactly one client error --
+ * INVALID_PAYLOAD_ERROR from validateUuid -- so every other bad input became a
+ * 500.
+ *
+ * @param error - whatever was thrown.
+ * @param fallbackMessage - what to say when the fault is ours.
+ * @returns a 400 for anything the caller can fix, otherwise a 500.
+ */
+function errorResponse(error: unknown, fallbackMessage: string) {
+  const isClientError =
+    error instanceof ClientError ||
+    (error instanceof Error && error.message === INVALID_PAYLOAD_ERROR);
+
+  if (isClientError) {
+    return NextResponse.json(
+      { error: (error as Error).message },
+      { status: BAD_REQUEST_STATUS },
+    );
+  }
+
+  return NextResponse.json(
+    { error: fallbackMessage },
+    { status: INTERNAL_SERVER_ERROR_STATUS },
+  );
+}
+
 const USER_PERMISSIONS_READ = "user_permissions.read";
 const USER_PERMISSIONS_CREATE = "user_permissions.create";
 const USER_PERMISSIONS_DELETE = "user_permissions.delete";
@@ -35,7 +75,7 @@ async function findResourcePermissionId(
   const permissionId = permissions[0]?.id;
 
   if (!permissionId) {
-    throw new Error(`Unknown permission key: ${permissionKey}`);
+    throw new ClientError(`Unknown permission key: ${permissionKey}`);
   }
 
   const resourceResponse = await adminFetch(
@@ -51,7 +91,9 @@ async function findResourcePermissionId(
 
   const preferred = rows.find((row) => row.resource_id === null) ?? rows[0];
   if (!preferred) {
-    throw new Error(`No resource permission found for key: ${permissionKey}`);
+    throw new ClientError(
+      `No resource permission found for key: ${permissionKey}`,
+    );
   }
 
   return preferred.id;
@@ -227,20 +269,7 @@ export async function GET(
 
     return NextResponse.json({ grantedKeys });
   } catch (error) {
-    return NextResponse.json(
-      {
-        error:
-          error instanceof Error && error.message === INVALID_PAYLOAD_ERROR
-            ? INVALID_PAYLOAD_ERROR
-            : "Failed to load user permissions",
-      },
-      {
-        status:
-          error instanceof Error && error.message === INVALID_PAYLOAD_ERROR
-            ? BAD_REQUEST_STATUS
-            : INTERNAL_SERVER_ERROR_STATUS,
-      },
-    );
+    return errorResponse(error, "Failed to load user permissions");
   }
 }
 
@@ -278,20 +307,7 @@ export async function POST(
 
     return NextResponse.json({ ok: true });
   } catch (error) {
-    return NextResponse.json(
-      {
-        error:
-          error instanceof Error && error.message === INVALID_PAYLOAD_ERROR
-            ? INVALID_PAYLOAD_ERROR
-            : "Failed to update permission",
-      },
-      {
-        status:
-          error instanceof Error && error.message === INVALID_PAYLOAD_ERROR
-            ? BAD_REQUEST_STATUS
-            : INTERNAL_SERVER_ERROR_STATUS,
-      },
-    );
+    return errorResponse(error, "Failed to update permission");
   }
 }
 
@@ -321,19 +337,6 @@ export async function PUT(
 
     return NextResponse.json({ ok: true });
   } catch (error) {
-    return NextResponse.json(
-      {
-        error:
-          error instanceof Error && error.message === INVALID_PAYLOAD_ERROR
-            ? INVALID_PAYLOAD_ERROR
-            : "Failed to apply permission template",
-      },
-      {
-        status:
-          error instanceof Error && error.message === INVALID_PAYLOAD_ERROR
-            ? BAD_REQUEST_STATUS
-            : INTERNAL_SERVER_ERROR_STATUS,
-      },
-    );
+    return errorResponse(error, "Failed to apply permission template");
   }
 }

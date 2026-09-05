@@ -6,12 +6,12 @@ Every test case in the repo, so a refactor can be checked for losses:
 regenerate and diff. Counting files or totals is not enough -- a rework
 can keep both and still drop the one assertion that mattered.
 
-**2696 cases across 373 files** (0 skipped, 9 parameterised).
+**2708 cases across 374 files** (0 skipped, 9 parameterised).
 
 Source-level cases: a `.each` case is one entry here and many in vitest
 output, so this total is deliberately not the runner total.
 
-## app:admin -- 525 cases
+## app:admin -- 537 cases
 
 ### `apps/admin/tests/ActivityRow.test.tsx`
 
@@ -641,6 +641,21 @@ output, so this total is deliberately not the runner total.
 - grantPermission > throws when no resource permission rows exist
 - grantPermission > prefers null resource_id row over non-null when multiple rows
 - revokePermission > revokes permission successfully
+
+### `apps/admin/tests/userPermissionsRoute.test.ts`
+
+- refuses a caller without user_permissions.read
+- refuses a caller with no session
+- returns the target user's granted keys
+- rejects a target id that is not a uuid
+- rejects a payload with no permissionKey
+- rejects a payload whose grant is not a boolean
+- granting requires user_permissions.create
+- revoking requires user_permissions.delete
+- grants a permission
+- reports an unknown permission key as a client error
+- requires both create and delete
+- rejects a payload whose permissionKeys is not an array
 
 ### `apps/admin/tests/UserRow.test.tsx`
 
