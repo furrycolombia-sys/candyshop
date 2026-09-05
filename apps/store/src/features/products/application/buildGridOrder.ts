@@ -18,9 +18,10 @@ function createRegularPool(products: Product[]) {
     pull(): Product | null {
       while (ptr < indices.length) {
         const idx = indices[ptr++];
+        if (idx === undefined) continue;
         if (!consumed.has(idx)) {
           consumed.add(idx);
-          return products[idx];
+          return products[idx] ?? null;
         }
       }
       return null;

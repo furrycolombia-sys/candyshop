@@ -7,10 +7,30 @@ export type Json =
   | Json[];
 
 export type Database = {
-  // Allows to automatically instantiate createClient with right options
-  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
-  __InternalSupabase: {
-    PostgrestVersion: "14.5";
+  graphql_public: {
+    Tables: {
+      [_ in never]: never;
+    };
+    Views: {
+      [_ in never]: never;
+    };
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json;
+          operationName?: string;
+          query?: string;
+          variables?: Json;
+        };
+        Returns: Json;
+      };
+    };
+    Enums: {
+      [_ in never]: never;
+    };
+    CompositeTypes: {
+      [_ in never]: never;
+    };
   };
   public: {
     Tables: {
@@ -53,6 +73,13 @@ export type Database = {
             referencedRelation: "check_ins";
             referencedColumns: ["id"];
           },
+          {
+            foreignKeyName: "check_in_audit_performed_by_fkey";
+            columns: ["performed_by"];
+            isOneToOne: false;
+            referencedRelation: "user_profiles";
+            referencedColumns: ["id"];
+          },
         ];
       };
       check_ins: {
@@ -87,6 +114,13 @@ export type Database = {
           qr_code?: string;
         };
         Relationships: [
+          {
+            foreignKeyName: "check_ins_checked_in_by_fkey";
+            columns: ["checked_in_by"];
+            isOneToOne: false;
+            referencedRelation: "user_profiles";
+            referencedColumns: ["id"];
+          },
           {
             foreignKeyName: "check_ins_entitlement_id_fkey";
             columns: ["entitlement_id"];
@@ -256,6 +290,20 @@ export type Database = {
             referencedRelation: "seller_payment_methods";
             referencedColumns: ["id"];
           },
+          {
+            foreignKeyName: "orders_seller_id_fkey";
+            columns: ["seller_id"];
+            isOneToOne: false;
+            referencedRelation: "user_profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "orders_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "user_profiles";
+            referencedColumns: ["id"];
+          },
         ];
       };
       payment_settings: {
@@ -378,6 +426,13 @@ export type Database = {
             columns: ["product_id"];
             isOneToOne: false;
             referencedRelation: "products";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "product_reviews_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "user_profiles";
             referencedColumns: ["id"];
           },
         ];
@@ -523,6 +578,13 @@ export type Database = {
             referencedRelation: "events";
             referencedColumns: ["id"];
           },
+          {
+            foreignKeyName: "products_seller_id_fkey";
+            columns: ["seller_id"];
+            isOneToOne: false;
+            referencedRelation: "user_profiles";
+            referencedColumns: ["id"];
+          },
         ];
       };
       resource_permissions: {
@@ -618,6 +680,8 @@ export type Database = {
           is_active: boolean;
           name_en: string;
           name_es: string | null;
+          requires_receipt: boolean;
+          requires_transfer_number: boolean;
           seller_id: string;
           sort_order: number;
           updated_at: string;
@@ -630,6 +694,8 @@ export type Database = {
           is_active?: boolean;
           name_en: string;
           name_es?: string | null;
+          requires_receipt?: boolean;
+          requires_transfer_number?: boolean;
           seller_id: string;
           sort_order?: number;
           updated_at?: string;
@@ -642,11 +708,21 @@ export type Database = {
           is_active?: boolean;
           name_en?: string;
           name_es?: string | null;
+          requires_receipt?: boolean;
+          requires_transfer_number?: boolean;
           seller_id?: string;
           sort_order?: number;
           updated_at?: string;
         };
-        Relationships: [];
+        Relationships: [
+          {
+            foreignKeyName: "seller_payment_methods_seller_id_fkey";
+            columns: ["seller_id"];
+            isOneToOne: false;
+            referencedRelation: "user_profiles";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       ticket_transfers: {
         Row: {
@@ -684,10 +760,24 @@ export type Database = {
         };
         Relationships: [
           {
+            foreignKeyName: "ticket_transfers_from_user_id_fkey";
+            columns: ["from_user_id"];
+            isOneToOne: false;
+            referencedRelation: "user_profiles";
+            referencedColumns: ["id"];
+          },
+          {
             foreignKeyName: "ticket_transfers_order_item_id_fkey";
             columns: ["order_item_id"];
             isOneToOne: false;
             referencedRelation: "order_items";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "ticket_transfers_to_user_id_fkey";
+            columns: ["to_user_id"];
+            isOneToOne: false;
+            referencedRelation: "user_profiles";
             referencedColumns: ["id"];
           },
         ];
@@ -725,10 +815,24 @@ export type Database = {
         };
         Relationships: [
           {
+            foreignKeyName: "user_permissions_granted_by_fkey";
+            columns: ["granted_by"];
+            isOneToOne: false;
+            referencedRelation: "user_profiles";
+            referencedColumns: ["id"];
+          },
+          {
             foreignKeyName: "user_permissions_resource_permission_id_fkey";
             columns: ["resource_permission_id"];
             isOneToOne: false;
             referencedRelation: "resource_permissions";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "user_permissions_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "user_profiles";
             referencedColumns: ["id"];
           },
         ];
@@ -743,6 +847,7 @@ export type Database = {
           email: string;
           first_seen_at: string;
           id: string;
+          identity_sub: string | null;
           last_seen_at: string;
           provider: string | null;
           updated_at: string;
@@ -756,6 +861,7 @@ export type Database = {
           email: string;
           first_seen_at?: string;
           id: string;
+          identity_sub?: string | null;
           last_seen_at?: string;
           provider?: string | null;
           updated_at?: string;
@@ -769,17 +875,49 @@ export type Database = {
           email?: string;
           first_seen_at?: string;
           id?: string;
+          identity_sub?: string | null;
           last_seen_at?: string;
           provider?: string | null;
           updated_at?: string;
         };
         Relationships: [];
       };
+      v_count: {
+        Row: {
+          count: number | null;
+        };
+        Insert: {
+          count?: number | null;
+        };
+        Update: {
+          count?: number | null;
+        };
+        Relationships: [];
+      };
     };
     Views: {
-      [_ in never]: never;
+      logged_actions_with_user: {
+        Row: {
+          action_timestamp: string | null;
+          action_type: string | null;
+          changed_fields: Json | null;
+          client_ip: unknown;
+          db_user: string | null;
+          event_id: number | null;
+          row_data: Json | null;
+          schema_name: string | null;
+          table_name: string | null;
+          transaction_id: number | null;
+          user_avatar: string | null;
+          user_display_name: string | null;
+          user_email: string | null;
+          user_id: string | null;
+        };
+        Relationships: [];
+      };
     };
     Functions: {
+      current_user_id: { Args: never; Returns: string };
       grant_default_buyer_permissions: {
         Args: { p_granted_by: string; p_reason?: string; p_user_id: string };
         Returns: undefined;
@@ -789,6 +927,11 @@ export type Database = {
         Returns: boolean;
       };
       is_order_delegate: { Args: { p_order_id: string }; Returns: boolean };
+      is_receipt_delegate: { Args: { p_session_id: string }; Returns: boolean };
+      is_receipt_delegate_by_order_id: {
+        Args: { p_order_id: string };
+        Returns: boolean;
+      };
       release_stock: {
         Args: { p_product_id: string; p_quantity: number };
         Returns: undefined;
@@ -1023,6 +1166,9 @@ export type CompositeTypes<
     : never;
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {
       audit_action: ["check-in", "uncheck", "transfer"],

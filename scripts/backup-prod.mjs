@@ -34,17 +34,30 @@ import { resolve, dirname, join, basename, extname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { execSync, execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { hostname }   from "node:os";
+import { hostname } from "node:os";
+
+import {
+  buildTruncateStatement,
+  topologicalTableOrder,
+} from "./lib/restore-order.mjs";
+import { isRowReturningStatement } from "./lib/sql-statement.mjs";
 
 const TELEGRAM_SOURCE = process.env.SERVER_HOSTNAME || hostname();
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const rootDir = resolve(__dirname, "..");
-const PROJECT_ID = "olafyajipvsltohagiah";
-const SUPABASE_URL = "https://olafyajipvsltohagiah.supabase.co";
-const API_BASE = `https://api.supabase.com/v1/projects/${PROJECT_ID}/database/query`;
-const POSTGRES_HOST = "aws-1-us-east-2.pooler.supabase.com";
-const POSTGRES_USER = `postgres.${PROJECT_ID}`;
+// Overridable so a restore can target a rebuilt project instead of the one the
+// backup came from. The defaults are the original production project, which no
+// longer exists — a restore must set these.
+const PROJECT_ID = process.env.SUPABASE_PROJECT_ID || "olafyajipvsltohagiah";
+const SUPABASE_URL =
+  process.env.SUPABASE_URL || `https://${PROJECT_ID}.supabase.co`;
+const API_BASE =
+  process.env.SUPABASE_API_BASE ||
+  `https://api.supabase.com/v1/projects/${PROJECT_ID}/database/query`;
+const POSTGRES_HOST =
+  process.env.SUPABASE_DB_HOST || "aws-1-us-east-2.pooler.supabase.com";
+const POSTGRES_USER = process.env.SUPABASE_DB_USER || `postgres.${PROJECT_ID}`;
 const STORAGE_BUCKET = "receipts";
 const PAGE_SIZE = 1000;
 const STORAGE_LIST_LIMIT = 100;
@@ -88,12 +101,19 @@ function queryPostgres(sql) {
   }
 
   if (!directPostgresNoticeShown) {
-    console.log("  ℹ️  Supabase Management API unavailable — using direct Postgres fallback");
+    console.log(
+      "  ℹ️  Supabase Management API unavailable — using direct Postgres fallback",
+    );
     directPostgresNoticeShown = true;
   }
 
   const querySql = sql.trim().replace(/;\s*$/, "");
-  const jsonSql = `SELECT COALESCE(json_agg(_backup_query), '[]'::json) FROM (${querySql}) AS _backup_query`;
+  // Only a row-returning statement can be wrapped for JSON output. A TRUNCATE
+  // (the restore empties every table before inserting) is run as-is.
+  const returnsRows = isRowReturningStatement(querySql);
+  const jsonSql = returnsRows
+    ? `SELECT COALESCE(json_agg(_backup_query), '[]'::json) FROM (${querySql}) AS _backup_query`
+    : querySql;
 
   try {
     const stdout = execFileSync(
@@ -111,7 +131,7 @@ function queryPostgres(sql) {
         env: {
           ...process.env,
           PGHOST: POSTGRES_HOST,
-          PGPORT: "5432",
+          PGPORT: process.env.SUPABASE_DB_PORT || "5432",
           PGUSER: POSTGRES_USER,
           PGPASSWORD: password,
           PGDATABASE: "postgres",
@@ -121,10 +141,15 @@ function queryPostgres(sql) {
         maxBuffer: 512 * 1024 * 1024,
       },
     );
+    // A statement that returns no rows prints a command tag ("TRUNCATE TABLE"),
+    // which is not JSON and carries nothing the caller needs.
+    if (!returnsRows) return [];
     return JSON.parse(stdout.trim() || "[]");
   } catch (err) {
     if (err.code === "ENOENT") {
-      throw new Error("psql not found; install postgresql-client for direct Postgres backups");
+      throw new Error(
+        "psql not found; install postgresql-client for direct Postgres backups",
+      );
     }
     throw err;
   }
@@ -152,7 +177,7 @@ async function query(pat, sql) {
       }
       throw new Error(
         "Supabase Management API rejected PROD_SUPABASE_ACCESS_TOKEN (401 Unauthorized), " +
-        "and PROD_SUPABASE_DB_PASSWORD is unavailable for direct Postgres fallback.",
+          "and PROD_SUPABASE_DB_PASSWORD is unavailable for direct Postgres fallback.",
       );
     }
     throw new Error(`Query failed (${res.status}): ${JSON.stringify(body)}`);
@@ -174,7 +199,9 @@ async function storageRequest(serviceKey, method, path, body) {
   });
   if (!res.ok) {
     const text = await res.text();
-    throw new Error(`Storage ${method} ${path} failed (${res.status}): ${text}`);
+    throw new Error(
+      `Storage ${method} ${path} failed (${res.status}): ${text}`,
+    );
   }
   return res;
 }
@@ -188,7 +215,12 @@ async function listAllObjects(serviceKey, prefix = "") {
       serviceKey,
       "POST",
       `/object/list/${STORAGE_BUCKET}`,
-      { prefix, limit: STORAGE_LIST_LIMIT, offset, sortBy: { column: "name", order: "asc" } },
+      {
+        prefix,
+        limit: STORAGE_LIST_LIMIT,
+        offset,
+        sortBy: { column: "name", order: "asc" },
+      },
     );
     const items = await res.json();
     if (!Array.isArray(items) || items.length === 0) break;
@@ -264,7 +296,15 @@ async function uploadObject(serviceKey, storagePath, filePath) {
 
 // ─── Image compression ────────────────────────────────────────────────────────
 
-const IMAGE_EXTS = new Set([".jpg", ".jpeg", ".png", ".gif", ".tiff", ".tif", ".bmp"]);
+const IMAGE_EXTS = new Set([
+  ".jpg",
+  ".jpeg",
+  ".png",
+  ".gif",
+  ".tiff",
+  ".tif",
+  ".bmp",
+]);
 
 function* walkDir(dir) {
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
@@ -282,12 +322,14 @@ async function compressImagesToAvif(storageDir) {
   try {
     sharp = (await import("sharp")).default;
   } catch {
-    console.log("  ⚠️  sharp not installed — skipping image compression (run: pnpm install)");
+    console.log(
+      "  ⚠️  sharp not installed — skipping image compression (run: pnpm install)",
+    );
     return;
   }
 
-  const imageFiles = [...walkDir(storageDir)].filter(
-    (f) => IMAGE_EXTS.has(extname(f).toLowerCase()),
+  const imageFiles = [...walkDir(storageDir)].filter((f) =>
+    IMAGE_EXTS.has(extname(f).toLowerCase()),
   );
 
   if (imageFiles.length === 0) {
@@ -295,7 +337,9 @@ async function compressImagesToAvif(storageDir) {
     return;
   }
 
-  console.log(`  Compressing ${imageFiles.length} image(s) to AVIF (quality 30)...`);
+  console.log(
+    `  Compressing ${imageFiles.length} image(s) to AVIF (quality 30)...`,
+  );
   let compressed = 0;
   let skipped = 0;
   let savedBytes = 0;
@@ -303,7 +347,9 @@ async function compressImagesToAvif(storageDir) {
   for (let i = 0; i < imageFiles.length; i++) {
     const filePath = imageFiles[i];
     const originalSize = statSync(filePath).size;
-    process.stdout.write(`\r  [${i + 1}/${imageFiles.length}] ${basename(filePath).slice(0, 50)}...`);
+    process.stdout.write(
+      `\r  [${i + 1}/${imageFiles.length}] ${basename(filePath).slice(0, 50)}...`,
+    );
     try {
       const input = readFileSync(filePath); // nosemgrep: AIK_ts_generic_path_traversal
       const buf = await sharp(input).avif({ quality: 30 }).toBuffer();
@@ -321,7 +367,9 @@ async function compressImagesToAvif(storageDir) {
   }
 
   const savedMB = (savedBytes / 1024 / 1024).toFixed(1);
-  console.log(`\r  ✅ ${compressed} compressed (saved ${savedMB} MB), ${skipped} skipped          `);
+  console.log(
+    `\r  ✅ ${compressed} compressed (saved ${savedMB} MB), ${skipped} skipped          `,
+  );
 }
 
 // ─── Telegram upload ──────────────────────────────────────────────────────────
@@ -352,15 +400,31 @@ function splitZip(zipPath, chunkSize) {
 }
 
 async function sendTelegramMessage(botToken, chatId, threadId, text) {
-  const res = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ chat_id: chatId, message_thread_id: Number(threadId), text: `${text}\n\n📍 ${TELEGRAM_SOURCE}` }),
-  });
-  if (!res.ok) throw new Error(`Telegram sendMessage (${res.status}): ${await res.text()}`);
+  const res = await fetch(
+    `https://api.telegram.org/bot${botToken}/sendMessage`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        chat_id: chatId,
+        message_thread_id: Number(threadId),
+        text: `${text}\n\n📍 ${TELEGRAM_SOURCE}`,
+      }),
+    },
+  );
+  if (!res.ok)
+    throw new Error(
+      `Telegram sendMessage (${res.status}): ${await res.text()}`,
+    );
 }
 
-async function sendTelegramDocument(botToken, chatId, threadId, filePath, caption) {
+async function sendTelegramDocument(
+  botToken,
+  chatId,
+  threadId,
+  filePath,
+  caption,
+) {
   const bytes = readFileSync(filePath); // nosemgrep: AIK_ts_generic_path_traversal
   const form = new FormData();
   form.append("chat_id", chatId);
@@ -368,10 +432,13 @@ async function sendTelegramDocument(botToken, chatId, threadId, filePath, captio
   form.append("document", new Blob([bytes]), basename(filePath));
   if (caption) form.append("caption", `${caption}\n\n📍 ${TELEGRAM_SOURCE}`);
 
-  const res = await fetch(`https://api.telegram.org/bot${botToken}/sendDocument`, {
-    method: "POST",
-    body: form,
-  });
+  const res = await fetch(
+    `https://api.telegram.org/bot${botToken}/sendDocument`,
+    {
+      method: "POST",
+      body: form,
+    },
+  );
   if (!res.ok) throw new Error(`Telegram (${res.status}): ${await res.text()}`);
 }
 
@@ -393,14 +460,24 @@ async function uploadToTelegram(tg, zipPath, manifest) {
         ? `🗄️ Prod backup ${manifest.timestamp}\nTables: ${Object.keys(manifest.tables).length} | Rows: ${totalRows} | Files: ${manifest.storage.files.length}${isSplit ? `\nPart 1/${parts.length}` : ""}`
         : `Part ${i + 1}/${parts.length}`;
 
-    process.stdout.write(`  [${i + 1}/${parts.length}] Uploading ${basename(partPath)}...`);
-    await sendTelegramDocument(tg.botToken, tg.chatId, tg.threadId, partPath, caption);
+    process.stdout.write(
+      `  [${i + 1}/${parts.length}] Uploading ${basename(partPath)}...`,
+    );
+    await sendTelegramDocument(
+      tg.botToken,
+      tg.chatId,
+      tg.threadId,
+      partPath,
+      caption,
+    );
     console.log(" ✅");
 
     if (isTemp) rmSync(partPath);
   }
 
-  console.log(`  ✅ ${parts.length} file(s) uploaded to Telegram thread #${tg.threadId}`);
+  console.log(
+    `  ✅ ${parts.length} file(s) uploaded to Telegram thread #${tg.threadId}`,
+  );
 }
 
 // ─── Database export ──────────────────────────────────────────────────────────
@@ -411,6 +488,27 @@ async function uploadToTelegram(tg, zipPath, manifest) {
  * deterministic across runs even when PostgreSQL returns rows in different
  * physical orders (heap scan order varies after autovacuum, replication, etc.).
  */
+/**
+ * Reads `[child, parent]` foreign-key pairs between public tables.
+ *
+ * Read from the live schema rather than hardcoded, so adding a table or
+ * repointing a constraint cannot silently leave the restore order stale.
+ */
+async function fetchForeignKeyEdges(pat) {
+  const rows = await query(
+    pat,
+    `SELECT tc.table_name AS child, ccu.table_name AS parent
+     FROM information_schema.table_constraints tc
+     JOIN information_schema.constraint_column_usage ccu
+       ON tc.constraint_name = ccu.constraint_name
+       AND tc.table_schema  = ccu.table_schema
+     WHERE tc.constraint_type = 'FOREIGN KEY'
+       AND tc.table_schema    = 'public'
+       AND ccu.table_schema   = 'public'`,
+  );
+  return rows.map(({ child, parent }) => [child, parent]);
+}
+
 async function fetchPrimaryKeys(pat) {
   const rows = await query(
     pat,
@@ -433,9 +531,10 @@ async function fetchPrimaryKeys(pat) {
 // safeTable and each element of pkColumns must already be validated by
 // assertSafeIdentifier + SAFE_IDENTIFIER.exec() at the call site.
 async function exportTable(pat, safeTable, pkColumns) {
-  const orderBy = pkColumns.length > 0
-    ? pkColumns.map((c) => `"${c}"`).join(", ")
-    : "(SELECT NULL)";
+  const orderBy =
+    pkColumns.length > 0
+      ? pkColumns.map((c) => `"${c}"`).join(", ")
+      : "(SELECT NULL)";
   const rows = [];
   let offset = 0;
   while (true) {
@@ -478,8 +577,8 @@ async function restoreTable(pat, serviceKey, table, rows) {
     return;
   }
   assertSafeIdentifier(table);
-  // DDL via Management API (no user data in query)
-  await query(pat, `TRUNCATE "${table}" RESTART IDENTITY CASCADE`);
+  // Tables are emptied once, up front, by the caller. Truncating here would
+  // cascade away children already restored.
   // Inserts via PostgREST — data sent as JSON, no SQL string construction
   for (let i = 0; i < rows.length; i += 200) {
     const batch = rows.slice(i, i + 200);
@@ -539,10 +638,7 @@ function computeBackupHash(outDir) {
 // ─── Backup ───────────────────────────────────────────────────────────────────
 
 async function backup(pat, serviceKey) {
-  const timestamp = new Date()
-    .toISOString()
-    .replace(/[:.]/g, "-")
-    .slice(0, 19);
+  const timestamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
   const outDir = resolve(rootDir, `.ai-context/backups/prod_${timestamp}`);
   const storageDir = join(outDir, "storage");
   mkdirSync(outDir, { recursive: true });
@@ -578,12 +674,18 @@ async function backup(pat, serviceKey) {
       // SAFE_IDENTIFIER.exec() returns only the matched portion, breaking the
       // taint chain from the DB-sourced `table` variable.
       const safeTable = SAFE_IDENTIFIER.exec(table)?.[0] ?? "";
-      if (!safeTable) throw new Error(`Unsafe SQL identifier in backup data: "${table}"`);
+      if (!safeTable)
+        throw new Error(`Unsafe SQL identifier in backup data: "${table}"`);
       const outPath = join(outDir, `${safeTable}.json`); // nosemgrep: AIK_ts_generic_path_traversal
       assertPathInside(outDir, outPath);
-      const pkColumns = (primaryKeys[table] ?? []).filter((c) => SAFE_IDENTIFIER.test(c));
+      const pkColumns = (primaryKeys[table] ?? []).filter((c) =>
+        SAFE_IDENTIFIER.test(c),
+      );
       const rows = await exportTable(pat, safeTable, pkColumns);
-      writeFileSync(outPath, JSON.stringify({ table: safeTable, rows }, null, 2));
+      writeFileSync(
+        outPath,
+        JSON.stringify({ table: safeTable, rows }, null, 2),
+      );
       manifest.tables[table] = rows.length;
       console.log(`\r  ✅ ${table}: ${rows.length} rows            `);
     } catch (err) {
@@ -599,27 +701,39 @@ async function backup(pat, serviceKey) {
   // ── Change detection (DB-only hash — skip storage download if unchanged) ──
   const hashPath = resolve(rootDir, ".backup-hash");
   const currentHash = computeBackupHash(outDir);
-  const lastHash = existsSync(hashPath) ? readFileSync(hashPath, "utf-8").trim() : null;
+  const lastHash = existsSync(hashPath)
+    ? readFileSync(hashPath, "utf-8").trim()
+    : null;
 
   if (currentHash === lastHash) {
-    console.log("\n  ℹ️  DB content unchanged since last upload — skipping storage download and Telegram upload");
+    console.log(
+      "\n  ℹ️  DB content unchanged since last upload — skipping storage download and Telegram upload",
+    );
     rmSync(outDir, { recursive: true, force: true });
 
-    const { TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, TELEGRAM_THREAD_ID } = secrets;
+    const { TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, TELEGRAM_THREAD_ID } =
+      secrets;
     if (TELEGRAM_BOT_TOKEN && TELEGRAM_CHAT_ID && TELEGRAM_THREAD_ID) {
       const msg =
         `ℹ️ Backup skipped — no changes\n\n` +
         `DB content unchanged since the last upload. No new data to back up.\n` +
         `Tables: ${tables.length} | Rows: ${totalRows}`;
       try {
-        await sendTelegramMessage(TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, TELEGRAM_THREAD_ID, msg);
+        await sendTelegramMessage(
+          TELEGRAM_BOT_TOKEN,
+          TELEGRAM_CHAT_ID,
+          TELEGRAM_THREAD_ID,
+          msg,
+        );
         console.log("  ✅ Skip notification sent to Server Notifications");
       } catch (err) {
         console.error(`  ⚠️  Failed to send skip notification: ${err.message}`);
       }
     }
 
-    console.log(`\n✅ No changes detected. DB tables: ${tables.length}, rows: ${totalRows}\n`);
+    console.log(
+      `\n✅ No changes detected. DB tables: ${tables.length}, rows: ${totalRows}\n`,
+    );
     return;
   }
 
@@ -638,20 +752,27 @@ async function backup(pat, serviceKey) {
     );
     try {
       await downloadObject(serviceKey, obj.path, destPath);
-      manifest.storage.files.push({ path: obj.path, size: obj.metadata?.size ?? null });
+      manifest.storage.files.push({
+        path: obj.path,
+        size: obj.metadata?.size ?? null,
+      });
     } catch (err) {
       console.error(`\n  ❌ ${obj.path}: ${err.message}`);
       manifest.storage.files.push({ path: obj.path, error: err.message });
     }
   }
-  if (objects.length > 0) console.log(`\r  ✅ ${objects.length} files downloaded            `);
+  if (objects.length > 0)
+    console.log(`\r  ✅ ${objects.length} files downloaded            `);
 
   // ── Compress images to AVIF ──
   console.log("\n── Image compression ─────────────────────────");
   await compressImagesToAvif(storageDir);
 
   // ── Manifest ──
-  writeFileSync(resolve(outDir, "manifest.json"), JSON.stringify(manifest, null, 2));
+  writeFileSync(
+    resolve(outDir, "manifest.json"),
+    JSON.stringify(manifest, null, 2),
+  );
 
   // ── Zip and clean up ──
   const zipName = `prod_${timestamp}.zip`;
@@ -664,7 +785,9 @@ async function backup(pat, serviceKey) {
       `powershell -NoProfile -Command "Compress-Archive -LiteralPath '${safePSArg(outDir)}' -DestinationPath '${safePSArg(zipPath)}' -Force"`,
     );
   } else {
-    execFileSync("zip", ["-r", zipPath, basename(outDir)], { cwd: dirname(outDir) });
+    execFileSync("zip", ["-r", zipPath, basename(outDir)], {
+      cwd: dirname(outDir),
+    });
   }
   rmSync(outDir, { recursive: true, force: true });
   console.log(` done`);
@@ -673,19 +796,26 @@ async function backup(pat, serviceKey) {
   writeFileSync(hashPath, currentHash);
 
   // ── Upload to Telegram ──
-  const { TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, TELEGRAM_BACKUPS_THREAD_ID } = secrets;
+  const { TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, TELEGRAM_BACKUPS_THREAD_ID } =
+    secrets;
   if (TELEGRAM_BOT_TOKEN && TELEGRAM_CHAT_ID && TELEGRAM_BACKUPS_THREAD_ID) {
     await uploadToTelegram(
-      { botToken: TELEGRAM_BOT_TOKEN, chatId: TELEGRAM_CHAT_ID, threadId: TELEGRAM_BACKUPS_THREAD_ID },
+      {
+        botToken: TELEGRAM_BOT_TOKEN,
+        chatId: TELEGRAM_CHAT_ID,
+        threadId: TELEGRAM_BACKUPS_THREAD_ID,
+      },
       zipPath,
       manifest,
     );
   } else {
-    console.log("\n  ℹ️  Telegram credentials not configured — skipping upload");
+    console.log(
+      "\n  ℹ️  Telegram credentials not configured — skipping upload",
+    );
   }
 
   // ── Move to archive drive if available ──
-  const archiveDir = "P:\\FurryColombia\\CandyShop";
+  const archiveDir = "P:\\FurryColombia\\Libra";
   let finalPath = zipPath;
   if (existsSync(archiveDir)) {
     const dest = join(archiveDir, zipName);
@@ -694,13 +824,17 @@ async function backup(pat, serviceKey) {
     finalPath = dest;
     console.log(`  Moved to ${dest}`);
   } else {
-    console.log(`  P:\\FurryColombia\\CandyShop not found — zip kept locally at ${zipPath}`);
+    console.log(
+      `  P:\\FurryColombia\\Libra not found — zip kept locally at ${zipPath}`,
+    );
   }
 
   console.log(`\n✅ Backup complete: ${finalPath}`);
   console.log(`   DB tables: ${tables.length}, rows: ${totalRows}`);
   console.log(`   Storage files: ${objects.length}`);
-  console.log(`\nTo restore: node scripts/backup-prod.mjs --restore ${finalPath}\n`);
+  console.log(
+    `\nTo restore: node scripts/backup-prod.mjs --restore ${finalPath}\n`,
+  );
 }
 
 // ─── Restore ──────────────────────────────────────────────────────────────────
@@ -711,12 +845,15 @@ async function restore(pat, serviceKey, backupPath) {
   if (backupPath.endsWith(".zip")) {
     // realpathSync produces a new untainted canonical path, breaking the SAST
     // taint chain from the CLI argument into the execSync sink (CWE-78).
-    if (!existsSync(backupPath)) throw new Error(`Backup not found: ${backupPath}`);
+    if (!existsSync(backupPath))
+      throw new Error(`Backup not found: ${backupPath}`);
     const realBackupPath = realpathSync(backupPath);
     backupDir = realBackupPath.replace(/\.zip$/, "");
     console.log(`\n  Extracting ${backupPath}...`);
     if (process.platform === "win32") {
-      execSync(`powershell -NoProfile -Command "Expand-Archive -LiteralPath '${safePSArg(realBackupPath)}' -DestinationPath '${safePSArg(backupDir)}' -Force"`); // nosemgrep: detect-child-process
+      execSync(
+        `powershell -NoProfile -Command "Expand-Archive -LiteralPath '${safePSArg(realBackupPath)}' -DestinationPath '${safePSArg(backupDir)}' -Force"`,
+      ); // nosemgrep: detect-child-process
     } else {
       execFileSync("unzip", ["-o", realBackupPath, "-d", dirname(backupDir)]); // nosemgrep: detect-child-process
     }
@@ -728,27 +865,46 @@ async function restore(pat, serviceKey, backupPath) {
   const realBackupDir = realpathSync(backupDir);
 
   const manifestPath = join(realBackupDir, "manifest.json"); // nosemgrep: AIK_ts_generic_path_traversal
-  if (!existsSync(manifestPath)) throw new Error(`No manifest.json in ${backupDir}`);
+  if (!existsSync(manifestPath))
+    throw new Error(`No manifest.json in ${backupDir}`);
 
   const manifest = JSON.parse(readFileSync(manifestPath, "utf-8")); // nosemgrep: AIK_ts_generic_path_traversal
   console.log(`\n⚠️  Restoring production from backup: ${manifest.timestamp}`);
   console.log(`   Project: ${manifest.project}`);
   console.log(`   DB tables: ${Object.keys(manifest.tables).length}`);
   console.log(`   Storage files: ${manifest.storage.files.length}`);
-  console.log("\n   This will TRUNCATE all tables and re-upload all storage files.");
+  console.log(
+    "\n   This will TRUNCATE all tables and re-upload all storage files.",
+  );
   console.log("   Press Ctrl+C within 10 seconds to abort...\n");
   await new Promise((r) => setTimeout(r, 10_000));
 
   // Restore DB
   console.log("── Restoring database ────────────────────────");
-  for (const table of Object.keys(manifest.tables)) {
+
+  // The manifest lists tables alphabetically, which is not a valid insert
+  // order: a child row cannot reference a parent that has not been inserted.
+  const manifestTables = Object.keys(manifest.tables);
+  const edges = await fetchForeignKeyEdges(pat);
+  const restoreOrder = topologicalTableOrder(manifestTables, edges);
+  console.log(`  Insert order: ${restoreOrder.join(", ")}\n`);
+
+  // Empty everything in one statement before inserting anything, so no
+  // truncation can cascade away rows restored earlier in the run.
+  await query(pat, buildTruncateStatement(restoreOrder));
+
+  for (const table of restoreOrder) {
     assertSafeIdentifier(table);
     // Regex extraction breaks the taint chain from the manifest-sourced `table`
     // variable before it reaches the filesystem sink.
     const safeTable = SAFE_IDENTIFIER.exec(table)?.[0] ?? "";
-    if (!safeTable) throw new Error(`Unsafe SQL identifier in backup data: "${table}"`);
+    if (!safeTable)
+      throw new Error(`Unsafe SQL identifier in backup data: "${table}"`);
     const file = join(realBackupDir, `${safeTable}.json`); // nosemgrep: AIK_ts_generic_path_traversal
-    if (!existsSync(file)) { console.log(`  ⚠️  ${table}: missing, skipping`); continue; }
+    if (!existsSync(file)) {
+      console.log(`  ⚠️  ${table}: missing, skipping`);
+      continue;
+    }
     const { rows } = JSON.parse(readFileSync(file, "utf-8")); // nosemgrep: AIK_ts_generic_path_traversal
     await restoreTable(pat, serviceKey, table, rows);
   }
@@ -760,7 +916,9 @@ async function restore(pat, serviceKey, backupPath) {
     const { path: storagePath } = files[i];
     const localPath = join(backupDir, "storage", storagePath); // nosemgrep: AIK_ts_generic_path_traversal
     assertPathInside(join(backupDir, "storage"), localPath); // nosemgrep: AIK_ts_generic_path_traversal
-    process.stdout.write(`\r  [${i + 1}/${files.length}] ${storagePath.slice(0, 60)}...`);
+    process.stdout.write(
+      `\r  [${i + 1}/${files.length}] ${storagePath.slice(0, 60)}...`,
+    );
     if (!existsSync(localPath)) {
       console.log(`\n  ⚠️  ${storagePath}: local file missing, skipping`);
       continue;
@@ -771,7 +929,8 @@ async function restore(pat, serviceKey, backupPath) {
       console.error(`\n  ❌ ${storagePath}: ${err.message}`);
     }
   }
-  if (files.length > 0) console.log(`\r  ✅ ${files.length} files uploaded            `);
+  if (files.length > 0)
+    console.log(`\r  ✅ ${files.length} files uploaded            `);
 
   console.log("\n✅ Restore complete\n");
 }
@@ -781,8 +940,14 @@ async function restore(pat, serviceKey, backupPath) {
 const secrets = parseSecrets();
 const pat = secrets.PROD_SUPABASE_ACCESS_TOKEN;
 const serviceKey = secrets.PROD_SUPABASE_SERVICE_ROLE_KEY;
-if (!pat) throw new Error("PROD_SUPABASE_ACCESS_TOKEN not found in environment or .secrets");
-if (!serviceKey) throw new Error("PROD_SUPABASE_SERVICE_ROLE_KEY not found in environment or .secrets");
+if (!pat)
+  throw new Error(
+    "PROD_SUPABASE_ACCESS_TOKEN not found in environment or .secrets",
+  );
+if (!serviceKey)
+  throw new Error(
+    "PROD_SUPABASE_SERVICE_ROLE_KEY not found in environment or .secrets",
+  );
 
 const restoreIdx = process.argv.indexOf("--restore");
 try {
@@ -795,7 +960,8 @@ try {
   }
 } catch (err) {
   console.error(`\n❌ Backup failed: ${err.message}\n`);
-  const { TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, TELEGRAM_CRITICAL_THREAD_ID } = secrets;
+  const { TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, TELEGRAM_CRITICAL_THREAD_ID } =
+    secrets;
   if (TELEGRAM_BOT_TOKEN && TELEGRAM_CHAT_ID && TELEGRAM_CRITICAL_THREAD_ID) {
     try {
       // Sanitize before sending: strip bearer tokens and cap length so that

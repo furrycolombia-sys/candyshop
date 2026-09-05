@@ -1,5 +1,3 @@
-export type { OrderItem, OrderStatus } from "@/shared/domain/types";
-
 import type { OrderItem, OrderStatus } from "@/shared/domain/types";
 
 /** Statuses a received order can actually have — excludes legacy and pre-payment statuses */

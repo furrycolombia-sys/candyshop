@@ -21,9 +21,9 @@ set +x  # Never echo commands — prevents secrets leaking into CI log streams
 # keeps flowing. Even if SSH drops after this, the build continues on-server.
 # ─────────────────────────────────────────────────────────────────────────────
 if [ -z "${DEPLOY_DETACHED:-}" ]; then
-  DEPLOY_LOG=/tmp/deploy-candyshop.log
-  DEPLOY_DONE=/tmp/deploy-candyshop.done
-  DEPLOY_PIDFILE=/tmp/deploy-candyshop.pid
+  DEPLOY_LOG=/tmp/deploy-libra.log
+  DEPLOY_DONE=/tmp/deploy-libra.done
+  DEPLOY_PIDFILE=/tmp/deploy-libra.pid
 
   # Kill any previous deploy still running on this server.
   # GHA job timeouts leave detached nohup processes running; on the e2-micro
@@ -66,7 +66,7 @@ fi
 # CI passes DEPLOY_DETACHED=1 directly, bypassing the wrapper block above.
 # GHA job timeouts leave nohup'd deploy processes running on the e2-micro;
 # those zombies consume all CPU and make the new deploy hang from the start.
-_DEPLOY_PIDFILE=/tmp/deploy-candyshop.pid
+_DEPLOY_PIDFILE=/tmp/deploy-libra.pid
 if [ -f "$_DEPLOY_PIDFILE" ]; then
   _PREV_PID=$(cat "$_DEPLOY_PIDFILE" 2>/dev/null || true)
   if [ -n "$_PREV_PID" ] && [ "$_PREV_PID" != "$$" ] && kill -0 "$_PREV_PID" 2>/dev/null; then
@@ -82,7 +82,7 @@ echo "$$" > "$_DEPLOY_PIDFILE"
 # ─── Telegram deploy notifications ───────────────────────────────────────────
 # Extract Telegram vars early from the env file so we can notify before the full
 # env is sourced (which happens later, just before the build step).
-_tg_env="${ENV_FILE:-/tmp/.candyshop-build.env}"
+_tg_env="${ENV_FILE:-/tmp/.libra-build.env}"
 if [ -f "$_tg_env" ]; then
   TELEGRAM_BOT_TOKEN="${TELEGRAM_BOT_TOKEN:-$(grep '^TELEGRAM_BOT_TOKEN=' "$_tg_env" | cut -d= -f2- 2>/dev/null || true)}"
   TELEGRAM_CHAT_ID="${TELEGRAM_CHAT_ID:-$(grep '^TELEGRAM_CHAT_ID=' "$_tg_env" | cut -d= -f2- 2>/dev/null || true)}"
@@ -140,11 +140,11 @@ _dur() {
 DEPLOY_START=$(date +%s)
 _on_exit() {
   local code=$?
-  echo $code >/tmp/deploy-candyshop.done
-  rm -f /tmp/deploy-candyshop.pid 2>/dev/null || true
+  echo $code >/tmp/deploy-libra.done
+  rm -f /tmp/deploy-libra.pid 2>/dev/null || true
   # Ensure all ephemeral secrets files are removed on any exit path (early
   # failure, success, or signal) — don't rely solely on the CI cleanup step.
-  rm -f "${ENV_FILE:-/tmp/.candyshop-build.env}" 2>/dev/null || true
+  rm -f "${ENV_FILE:-/tmp/.libra-build.env}" 2>/dev/null || true
   rm -f "${_CONTAINER_ENV:-}" 2>/dev/null || true
   local dur
   dur="$(_dur $DEPLOY_START)"
@@ -162,10 +162,10 @@ _on_exit() {
 trap _on_exit EXIT
 # ─────────────────────────────────────────────────────────────────────────────
 
-DEPLOY_DIR="${DEPLOY_DIR:-/home/furrycolombia/candyshop}"
+DEPLOY_DIR="${DEPLOY_DIR:-/home/furrycolombia/libra}"
 REPO_URL="${REPO_URL:-}"
 BRANCH="${BRANCH:-main}"
-CONTAINER_NAME="${SITE_PROD_CONTAINER_NAME:-candyshop-prod}"
+CONTAINER_NAME="${SITE_PROD_CONTAINER_NAME:-libra-prod}"
 HOST_PORT="${HOST_PORT:-9090}"
 
 # Colors
@@ -224,7 +224,7 @@ rm -f "$DEPLOY_DIR/.secrets"
 # We source the env file so the container and watcher inherit runtime-only
 # secrets (SUPABASE_SERVICE_ROLE_KEY, Telegram tokens, etc.).
 # =============================================================================
-ENV_FILE="${ENV_FILE:-/tmp/.candyshop-build.env}"
+ENV_FILE="${ENV_FILE:-/tmp/.libra-build.env}"
 if [ -f "$ENV_FILE" ]; then
   log "Loading runtime env from $ENV_FILE"
   while IFS= read -r _line || [ -n "$_line" ]; do
@@ -269,7 +269,7 @@ if [ -n "${DOCKER_IMAGE:-}" ]; then
   notify_telegram "$(printf '🐳 <b>Image pulled</b> (%s)\n<code>%s</code>' "$(_dur $_STEP_START)" "$IMAGE_TAG")"
 else
   log "Building Docker image from pre-built artifacts..."
-  IMAGE_TAG="candyshop-prod:$(git rev-parse --short HEAD 2>/dev/null || date +%s)"
+  IMAGE_TAG="libra-prod:$(git rev-parse --short HEAD 2>/dev/null || date +%s)"
 
   # Ensure every path the Dockerfile COPYs exists (artifacts may omit empty dirs).
   for APP in store auth admin landing payments studio playground; do
@@ -338,7 +338,7 @@ except Exception:
 fi
 
 # Write runtime env to a temp file so secrets don't appear in /proc/PID/cmdline
-_CONTAINER_ENV=$(mktemp /tmp/.candyshop-run.XXXXXX)
+_CONTAINER_ENV=$(mktemp /tmp/.libra-run.XXXXXX)
 chmod 600 "$_CONTAINER_ENV"
 {
   printf 'SUPABASE_SERVICE_ROLE_KEY=%s\n'    "${SUPABASE_SERVICE_ROLE_KEY:-}"
@@ -366,7 +366,7 @@ rm -f "$_CONTAINER_ENV"
 
 log "Container started (took $(_dur $_STEP_START))"
 
-# Keep only the 2 most recent candyshop-prod images by creation time and
+# Keep only the 2 most recent libra-prod images by creation time and
 # prune everything older. Then sweep dangling layers + stopped containers.
 #
 # Bug fixed 2026-05-18: `.CreatedAt` renders as "YYYY-MM-DD HH:MM:SS ZZZ TZ"
@@ -376,7 +376,7 @@ log "Container started (took $(_dur $_STEP_START))"
 # Setting -F'\t' splits on the tab we emit in the format string, so $2 is
 # now the Repository:Tag we actually want to remove.
 docker images --format '{{.CreatedAt}}\t{{.Repository}}:{{.Tag}}' \
-  | grep 'candyshop-prod' \
+  | grep 'libra-prod' \
   | sort -rk1 \
   | awk -F'\t' 'NR>2{print $2}' \
   | xargs -r docker rmi 2>/dev/null || true
@@ -397,13 +397,13 @@ rm -f "$ENV_FILE"
 # rather than internal ports, so alerts reflect what users actually experience.
 # =============================================================================
 log "Starting health watcher..."
-pm2 delete candyshop-watcher 2>/dev/null || true
+pm2 delete libra-watcher 2>/dev/null || true
 WATCHER_NGINX_PORT=$HOST_PORT SERVER_HOSTNAME=$_safe_hostname pm2 start "$DEPLOY_DIR/docker/watcher.mjs" \
-  --name candyshop-watcher
+  --name libra-watcher
 
-pm2 delete candyshop-boot-notifier 2>/dev/null || true
+pm2 delete libra-boot-notifier 2>/dev/null || true
 WATCHER_NGINX_PORT=$HOST_PORT SERVER_HOSTNAME=$_safe_hostname pm2 start "$DEPLOY_DIR/scripts/server/boot-notifier.mjs" \
-  --name candyshop-boot-notifier || warn "boot-notifier failed to start (non-critical)"
+  --name libra-boot-notifier || warn "boot-notifier failed to start (non-critical)"
 
 # Persist both processes across reboots
 pm2 save
@@ -465,7 +465,7 @@ notify_telegram "$(printf '🏥 <b>All %d apps healthy</b>' "${#APPS[@]}")"
 # Signal CI now — all correctness checks passed. Warm-up is a best-effort
 # post-deploy optimisation and must not block the CI wait loop.
 log "Deployment complete — signalling CI..."
-echo 0 > /tmp/deploy-candyshop.done
+echo 0 > /tmp/deploy-libra.done
 docker ps --filter "name=${CONTAINER_NAME}" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" || true
 
 # --- phase 2: JIT warm-up ---

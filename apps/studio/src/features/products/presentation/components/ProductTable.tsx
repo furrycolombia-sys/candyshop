@@ -71,6 +71,9 @@ export function ProductTable({
       // Build new order
       const reordered = [...products];
       const [moved] = reordered.splice(source.index, 1);
+      // splice returns nothing if source.index is out of range; inserting
+      // `undefined` here would corrupt the order that is about to be persisted.
+      if (!moved) return;
       reordered.splice(destination.index, 0, moved);
 
       // Compute new sortOrder values (1-based sequential)

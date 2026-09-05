@@ -1,6 +1,6 @@
 # Architecture Rules
 
-> This document covers **application-level** Clean Architecture within each app (`apps/web`, `apps/admin`).
+> This document covers **application-level** Clean Architecture within each app (`apps/store`, `apps/admin`).
 > For **repository-level** architecture (packages, apps, dependencies), see [Monorepo Architecture](./monorepo-architecture.md).
 
 ---
@@ -169,9 +169,9 @@ For code shared across MULTIPLE APPS. See [Monorepo Architecture](./monorepo-arc
 ```typescript
 // Import from packages
 import { Button } from "ui";
-import { formatDate } from "shared";
-import { useGetAnomaliesTenantAnomaliesGet } from "api/generated/anomalies/anomalies";
-import type { GlobalMetrics } from "api/types/generated";
+import { formatDate, tid } from "shared";
+import { createBrowserSupabaseClient } from "api/supabase/browser";
+import type { Database } from "api/supabase/types";
 ```
 
 #### 2. App-Level Shared (`apps/[app]/src/shared/`)
@@ -226,11 +226,19 @@ packages/api/src/
 
 **Rules:**
 
-1. Generated types live in `packages/api/src/types/generated/`
-2. Generated hooks live in `packages/api/src/generated/`
-3. **NEVER edit generated files** - they are overwritten on regeneration
-4. Import types: `import type { GlobalMetrics } from 'api/types/generated'`
-5. Import hooks: `import { useGetAnomaliesTenantAnomaliesGet } from 'api/generated/anomalies/anomalies'`
+1. **NEVER edit generated files** - they are overwritten on regeneration
+2. Import the Supabase clients and types from the subpaths `packages/api`
+   actually exports: `api`, `api/supabase`, `api/supabase/browser`,
+   `api/supabase/server`, `api/supabase/types`
+
+> Earlier revisions of this file documented `api/types/generated` and
+> `api/generated/<tag>/<tag>` subpaths, with examples from a dashboard API this
+> project does not have. Those subpaths were declared in
+> `packages/api/package.json` but pointed at directories that were never
+> created, so following the instruction produced an import that could not
+> resolve. The declarations are removed and this section now describes what the
+> package exports. If Orval REST generation is reintroduced, add the export
+> subpath and the generated directory together, and update this list.
 
 **Regenerate with:**
 
@@ -240,7 +248,7 @@ pnpm codegen
 
 ### API Response Handling
 
-The custom Orval mutator (`packages/api/src/mutator/customFetch.ts`) handles API responses:
+The custom Orval mutator (`packages/api/src/rest/mutator/customFetch.ts`) handles API responses:
 
 1. **Response Envelope** - Extracts `data` from `{ success: true, data: T }` wrapper
 2. **No Case Transformation** - Returns data as-is to match generated TypeScript types

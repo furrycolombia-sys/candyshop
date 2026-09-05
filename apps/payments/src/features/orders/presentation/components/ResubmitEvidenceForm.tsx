@@ -81,7 +81,10 @@ export function ResubmitEvidenceForm({
     <div className="space-y-4" {...tid(`resubmit-form-${orderId}`)}>
       {/* Seller note */}
       {sellerNote && (
-        <div className="border-2 border-warning/40 bg-warning/10 p-3">
+        <div
+          className="border-2 border-warning/40 bg-warning/10 p-3"
+          {...tid("resubmit-seller-note")}
+        >
           <div className="flex items-start gap-2">
             <AlertCircle className="mt-0.5 size-4 shrink-0 text-warning" />
             <div>

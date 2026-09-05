@@ -1,6 +1,6 @@
 {
   "meta": {
-    "title": "Candy Shop - Admin",
+    "title": "Libra - Admin",
     "description": "Back-office management for inventory, orders, promos, and coupons"
   },
   "admin": {
@@ -8,7 +8,7 @@
     "subtitle": "Back-office operations & monitoring"
   },
   "nav": {
-    "brand": "Candy Shop",
+    "brand": "Libra",
     "landing": "Home",
     "store": "Store",
     "studio": "Studio",
@@ -184,7 +184,9 @@
       "allRoles": "All Roles",
       "allItems": "All Items",
       "hasItems": "Has Items",
-      "noItems": "No Items"
+      "noItems": "No Items",
+      "roleFilterLabel": "Filter by role",
+      "itemFilterLabel": "Filter by items"
     },
     "exportCsv": "Export Selected as CSV",
     "exportExcel": "Export Selected as Excel",
@@ -213,7 +215,9 @@
     },
     "pagination": {
       "showing": "Showing {from}-{to}",
-      "of": "of {total}"
+      "of": "of {total}",
+      "previous": "Previous page",
+      "next": "Next page"
     },
     "detail": {
       "backToUsers": "Back to Users",
@@ -233,6 +237,10 @@
         "orders_approve": "Approve Orders",
         "orders_request_proof": "Request Proof"
       }
+    },
+    "selection": {
+      "selectAll": "Select all users on this page",
+      "selectUser": "Select {name}"
     }
   },
   "permissions": {

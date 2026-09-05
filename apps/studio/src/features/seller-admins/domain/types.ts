@@ -1,8 +1,3 @@
-import type { Tables } from "api/supabase/types";
-
-/** Raw row from the seller_admins table */
-export type SellerAdminRow = Tables<"seller_admins">;
-
 /** Permission keys that can be delegated to admin users */
 export type DelegatePermission =
   | "orders.approve"

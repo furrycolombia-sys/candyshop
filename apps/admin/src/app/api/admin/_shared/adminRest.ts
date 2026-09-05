@@ -1,5 +1,7 @@
 /* eslint-disable i18next/no-literal-string */
+import { getCurrentUserId } from "api/supabase";
 import { createServerSupabaseClient } from "api/supabase/server";
+import { NextResponse } from "next/server";
 
 // Dynamic key access prevents Turbopack from inlining at build time.
 const supabaseUrl =
@@ -92,6 +94,57 @@ type GrantedPermissionRow = {
   resource_permissions: { permissions: { key: string } };
 };
 
+/** A row as stored, including which side of grant/deny it is on. */
+export type PermissionModeRow = GrantedPermissionRow & {
+  mode: "grant" | "deny";
+};
+
+/**
+ * The permission keys a user effectively holds, by the same rule the database
+ * uses.
+ *
+ * `public.has_permission()` is the authority -- every RLS policy calls it --
+ * and it reads:
+ *
+ *   exists(grant, unexpired)  AND  NOT exists(deny, unexpired)
+ *
+ * A deny revokes the key outright. The API layer used to ask only for
+ * `mode=eq.grant`, which reimplements that rule with its second half missing,
+ * so a denied user would be refused by RLS and admitted by these routes.
+ *
+ * `user_permissions` is unique on (user_id, resource_permission_id), so one
+ * scope cannot hold both. But `resource_permissions` is unique on
+ * (permission_id, resource_type, resource_id) -- the table exists to scope one
+ * permission across many resources -- so one KEY can be granted on one scope
+ * and denied on another. That is the case the missing clause got wrong.
+ *
+ * @param rows - the user's permission rows, both modes, as stored.
+ * @returns the keys that survive, deduplicated.
+ */
+export function getEffectivePermissionKeys(
+  rows: readonly PermissionModeRow[],
+): string[] {
+  const now = Date.now();
+  const active = rows.filter(
+    (row) => !row.expires_at || Date.parse(row.expires_at) > now,
+  );
+
+  const denied = new Set(
+    active
+      .filter((row) => row.mode === "deny")
+      .map((row) => row.resource_permissions.permissions.key),
+  );
+
+  return [
+    ...new Set(
+      active
+        .filter((row) => row.mode !== "deny")
+        .map((row) => row.resource_permissions.permissions.key)
+        .filter((key) => !denied.has(key)),
+    ),
+  ];
+}
+
 function getActiveGrantedPermissions(rows: GrantedPermissionRow[]) {
   const now = Date.now();
 
@@ -126,18 +179,79 @@ export async function fetchGrantedPermissionKeys(
   return (await fetchGrantedPermissions(userId)).map((row) => row.key);
 }
 
+/**
+ * Every permission row for a user, both modes, so denies can be honoured.
+ *
+ * Deliberately separate from {@link fetchGrantedPermissions}, which returns
+ * grant rows for the editor to revoke and must keep doing exactly that.
+ *
+ * @param userId - the user to read.
+ * @returns the keys the user effectively holds.
+ */
+async function fetchEffectivePermissionKeys(userId: string): Promise<string[]> {
+  const response = await adminFetch(
+    createRestPath("user_permissions", {
+      user_id: `eq.${validateUuid(userId)}`,
+      select:
+        "expires_at,mode,resource_permission_id,resource_permissions!inner(permissions!inner(key))",
+    }),
+  );
+
+  return getEffectivePermissionKeys(
+    (await response.json()) as PermissionModeRow[],
+  );
+}
+
 export async function getAuthorizedAdmin(
   requiredKeys: string[],
 ): Promise<string | null> {
   const sessionSupabase = await createServerSupabaseClient();
-  const {
-    data: { user },
-  } = await sessionSupabase.auth.getUser();
+  const userId = await getCurrentUserId(sessionSupabase);
 
-  if (!user) return null;
+  if (!userId) return null;
 
-  const grantedKeys = await fetchGrantedPermissionKeys(user.id);
+  const grantedKeys = await fetchEffectivePermissionKeys(userId);
   const authorized = requiredKeys.every((key) => grantedKeys.includes(key));
 
-  return authorized ? user.id : null;
+  return authorized ? userId : null;
+}
+
+/**
+ * An error caused by what the caller sent, not by a fault on our side.
+ *
+ * Unknown permission keys used to reach the generic catch and come back as
+ * 500 "Failed to update permission". That is wrong twice: the caller cannot
+ * tell a typo from an outage, and every typo shows up in monitoring as a
+ * server error.
+ */
+export class ClientError extends Error {}
+
+/**
+ * The response a thrown error deserves.
+ *
+ * The three handlers had this logic copied out with only the fallback message
+ * differing, and each copy recognised exactly one client error --
+ * INVALID_PAYLOAD_ERROR from validateUuid -- so every other bad input became a
+ * 500.
+ *
+ * @param error - whatever was thrown.
+ * @param fallbackMessage - what to say when the fault is ours.
+ * @returns a 400 for anything the caller can fix, otherwise a 500.
+ */
+export function errorResponse(error: unknown, fallbackMessage: string) {
+  const isClientError =
+    error instanceof ClientError ||
+    (error instanceof Error && error.message === INVALID_PAYLOAD_ERROR);
+
+  if (isClientError) {
+    return NextResponse.json(
+      { error: (error as Error).message },
+      { status: BAD_REQUEST_STATUS },
+    );
+  }
+
+  return NextResponse.json(
+    { error: fallbackMessage },
+    { status: INTERNAL_SERVER_ERROR_STATUS },
+  );
 }

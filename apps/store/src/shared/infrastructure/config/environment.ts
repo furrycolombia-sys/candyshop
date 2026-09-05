@@ -1,8 +1,1 @@
-export {
-  environment,
-  featureFlags,
-  getRuntimeEnv,
-  getMockApiBaseUrl,
-  getApiPrefix,
-  buildMswApiUrl,
-} from "shared/config/environment";
+export { getRuntimeEnv } from "shared/config/environment";

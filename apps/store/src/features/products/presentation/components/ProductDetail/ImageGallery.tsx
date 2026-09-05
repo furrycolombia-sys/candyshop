@@ -49,8 +49,6 @@ export function ImageGallery({ product, theme }: ImageGalleryProps) {
     () => getProductImages(product.images),
     [product.images],
   );
-  const hasImages = images.length > 0;
-
   const activeImage = images[activeIndex];
 
   const thumbInactive =
@@ -63,7 +61,9 @@ export function ImageGallery({ product, theme }: ImageGalleryProps) {
   );
 
   // Placeholder for products with no images
-  if (!hasImages) {
+  // No active image means there are no images at all, or the selected index is
+  // stale after a product change -- both render the same empty state.
+  if (!activeImage) {
     return (
       <div
         className="w-full max-w-full shrink-0 lg:w-3/5"
@@ -74,7 +74,26 @@ export function ImageGallery({ product, theme }: ImageGalleryProps) {
           style={{ backgroundColor: theme.bg }}
           {...tid(TID_GALLERY_MAIN)}
         >
-          <span className="font-display text-4xl font-extrabold uppercase tracking-widest text-foreground/10 select-none">
+          {/*
+            Decoration, not content: a watermark at 10% opacity over the
+            category colour, filling a box that would otherwise be empty.
+
+            aria-hidden keeps it out of the accessible name -- the product type
+            it repeats is already announced by the hero's type badge.
+
+            It does NOT satisfy axe, and axe is right: aria-hidden removes an
+            element from the accessibility tree but the text is still on screen,
+            so 1.22:1 is still 1.22:1 for a sighted reader with low vision.
+            WCAG 1.4.3 exempts pure decoration and this qualifies -- nothing is
+            conveyed here that is not conveyed elsewhere -- but that is a
+            judgement axe cannot make, so accessibility.spec.ts excludes this
+            one element by test id and says why.
+          */}
+          <span
+            aria-hidden="true"
+            className="font-display text-4xl font-extrabold uppercase tracking-widest text-foreground/10 select-none"
+            {...tid("gallery-placeholder-watermark")}
+          >
             {tTypes(product.type)}
           </span>
           {product.featured && (

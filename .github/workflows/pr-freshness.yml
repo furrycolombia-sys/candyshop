@@ -20,7 +20,7 @@ jobs:
     timeout-minutes: 5
     steps:
       - name: Checkout base branch
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
         with:
           ref: ${{ github.event.pull_request.base.ref }}
           fetch-depth: 0
@@ -135,7 +135,7 @@ jobs:
           fi
 
       - name: Post summary comment
-        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         env:
           FRESHNESS_STATUS: ${{ steps.freshness.outputs.status }}
           FRESHNESS_MESSAGE: ${{ steps.freshness.outputs.message }}
@@ -222,4 +222,3 @@ jobs:
           echo ""
           echo "Run: git merge origin/$BASE_REF"
           exit 1
-

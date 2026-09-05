@@ -226,7 +226,7 @@ git commit -m "feat(e2e-eval): cache Supabase startup in dev environment"
 
 - [ ] **Step 1: Replace the staging Phase 2 body**
 
-Find `#### Staging environment` under PHASE 2. Replace its entire body (the `Execute in this exact order:` line through the existing `docker logs candyshop-staging --tail 50` block) with:
+Find `#### Staging environment` under PHASE 2. Replace its entire body (the `Execute in this exact order:` line through the existing `docker logs libra-staging --tail 50` block) with:
 
 ````markdown
 Execute in this exact order. **Each step probes first, then starts only if not responding.** `--skip-infra` bypasses all probes; `--clean` forces a Supabase reset regardless of probe result.
@@ -299,7 +299,7 @@ curl -sI {tunnel_url} --max-time 5 | head -1
 Wait until port 7542 responds (the tunnel script does this internally). If it times out, check Docker container logs:
 
 ```bash
-docker logs candyshop-staging --tail 50
+docker logs libra-staging --tail 50
 ```
 ````
 

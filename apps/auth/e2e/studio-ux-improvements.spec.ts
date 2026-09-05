@@ -5,10 +5,8 @@ import { expect, test } from "@playwright/test";
 import { cleanupTestData } from "./helpers/cleanup";
 import {
   APP_URLS,
-  DEBOUNCE_WAIT_MS,
   ELEMENT_TIMEOUT_MS,
   LONG_OPERATION_TIMEOUT_MS,
-  MUTATION_WAIT_MS,
   NAVIGATION_TIMEOUT_MS,
 } from "./helpers/constants";
 import {
@@ -67,10 +65,8 @@ test.describe.serial("Studio UX Improvements", { tag: "@ux" }, () => {
       await cleanupTestData(seller.userId, "").catch(() => {});
     }
     if (delegate) {
-      const { supabaseAdmin } = await import("./helpers/session");
-      await supabaseAdmin.auth.admin
-        .deleteUser(delegate.userId)
-        .catch(() => {});
+      const { deleteTestUser } = await import("./helpers/session");
+      await deleteTestUser(delegate).catch(() => {});
     }
   });
 
@@ -82,15 +78,21 @@ test.describe.serial("Studio UX Improvements", { tag: "@ux" }, () => {
   }) => {
     await injectSession(context, seller);
     await page.goto(`${APP_URLS.STUDIO}/en`);
-    await page.waitForLoadState("networkidle");
+
+    // The screenshot below wants a rendered page, and the click after it wants
+    // this button, so waiting for the button covers both -- and unlike a
+    // settle wait it fails with a useful message when the page does not load.
+    await expect(page.getByTestId("new-product-button")).toBeVisible({
+      timeout: ELEMENT_TIMEOUT_MS,
+    });
     await snap(page, "studio-product-list");
 
     // Create a new product
     await page.getByTestId("new-product-button").click();
-    await page.waitForLoadState("networkidle");
 
     // Fill product name
     const nameField = page.getByTestId("inline-text-en-name_en");
+    await expect(nameField).toBeVisible({ timeout: ELEMENT_TIMEOUT_MS });
     await nameField.click();
     await nameField.fill("E2E Studio UX Product");
 
@@ -104,7 +106,6 @@ test.describe.serial("Studio UX Improvements", { tag: "@ux" }, () => {
     const desktopThumbs = page.getByTestId("image-gallery-thumbs");
     const addImageBtn = desktopThumbs.getByTestId("image-thumb-add");
     await addImageBtn.click();
-    await page.waitForTimeout(MUTATION_WAIT_MS);
 
     // Fill first image URL
     const urlInput = page.getByTestId("image-edit-url");
@@ -113,13 +114,12 @@ test.describe.serial("Studio UX Improvements", { tag: "@ux" }, () => {
       "https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=400",
     );
     const altInput = page.getByTestId("image-edit-alt");
-    await altInput.fill("Candy image 1");
+    await altInput.fill("Libra image 1");
     await page.getByTestId("image-edit-done").click();
     await snap(page, "first-image-added");
 
     // Add second image
     await addImageBtn.click();
-    await page.waitForTimeout(MUTATION_WAIT_MS);
 
     const urlInput2 = page.getByTestId("image-edit-url");
     await expect(urlInput2).toBeVisible({ timeout: ELEMENT_TIMEOUT_MS });
@@ -127,7 +127,7 @@ test.describe.serial("Studio UX Improvements", { tag: "@ux" }, () => {
       "https://images.unsplash.com/photo-1582058091505-f87a2e55a40f?w=400",
     );
     const altInput2 = page.getByTestId("image-edit-alt");
-    await altInput2.fill("Candy image 2");
+    await altInput2.fill("Libra image 2");
     await page.getByTestId("image-edit-done").click();
     await snap(page, "second-image-added");
 
@@ -158,7 +158,6 @@ test.describe.serial("Studio UX Improvements", { tag: "@ux" }, () => {
 
     // Navigate to edit the product
     await page.goto(`${APP_URLS.STUDIO}/en/products/${productId}`);
-    await page.waitForLoadState("networkidle");
     await expect(page.getByTestId("inline-image-carousel")).toBeVisible({
       timeout: ELEMENT_TIMEOUT_MS,
     });
@@ -179,7 +178,6 @@ test.describe.serial("Studio UX Improvements", { tag: "@ux" }, () => {
     const coverBtn1 = desktopThumbs.getByTestId("image-thumb-cover-1");
     await expect(coverBtn1).toBeVisible({ timeout: ELEMENT_TIMEOUT_MS });
     await coverBtn1.click();
-    await page.waitForTimeout(MUTATION_WAIT_MS);
     await snap(page, "cover-set-on-second-image");
 
     // Verify the star on the second thumbnail is filled (yellow)
@@ -204,6 +202,7 @@ test.describe.serial("Studio UX Improvements", { tag: "@ux" }, () => {
     // The cover image should be the second image URL (the one we set as cover)
     const imgSrc = await rowImage.getAttribute("src");
     // Next.js Image component uses /_next/image?url=... so we check the row has an image
+    // eslint-disable-next-line playwright/prefer-web-first-assertions -- compares two values captured at different times, which toHaveAttribute cannot express
     expect(imgSrc).toBeTruthy();
     await snap(page, "cover-image-in-table-row");
   });
@@ -216,7 +215,6 @@ test.describe.serial("Studio UX Improvements", { tag: "@ux" }, () => {
   }) => {
     await injectSession(context, seller);
     await page.goto(`${APP_URLS.STUDIO}/en`);
-    await page.waitForLoadState("networkidle");
     await expect(page.getByTestId("product-table")).toBeVisible({
       timeout: ELEMENT_TIMEOUT_MS,
     });
@@ -252,7 +250,6 @@ test.describe.serial("Studio UX Improvements", { tag: "@ux" }, () => {
     // Search for the delegate user by email
     const searchInput = page.getByTestId("delegate-search-input");
     await searchInput.fill(delegate.email);
-    await page.waitForTimeout(DEBOUNCE_WAIT_MS);
     await snap(page, "delegate-search");
 
     // Select the delegate from search results
@@ -268,7 +265,6 @@ test.describe.serial("Studio UX Improvements", { tag: "@ux" }, () => {
 
     // Submit
     await page.getByTestId("delegate-add-submit").click();
-    await page.waitForTimeout(MUTATION_WAIT_MS);
     await snap(page, "delegate-added");
 
     // Wait for the delegate to appear in the list (query invalidation)
@@ -280,7 +276,6 @@ test.describe.serial("Studio UX Improvements", { tag: "@ux" }, () => {
 
     // Navigate back to product table
     await page.goto(`${APP_URLS.STUDIO}/en`);
-    await page.waitForLoadState("networkidle");
     await expect(page.getByTestId("product-table")).toBeVisible({
       timeout: ELEMENT_TIMEOUT_MS,
     });
@@ -310,7 +305,6 @@ test.describe.serial("Studio UX Improvements", { tag: "@ux" }, () => {
 
     // Navigate to edit the product
     await page.goto(`${APP_URLS.STUDIO}/en/products/${productId}`);
-    await page.waitForLoadState("networkidle");
     await expect(page.getByTestId("inline-image-carousel")).toBeVisible({
       timeout: ELEMENT_TIMEOUT_MS,
     });
@@ -320,29 +314,31 @@ test.describe.serial("Studio UX Improvements", { tag: "@ux" }, () => {
     const thumbGallery = page.getByTestId("image-gallery-thumbs");
     await expect(thumbGallery).toBeVisible({ timeout: ELEMENT_TIMEOUT_MS });
 
-    // Verify GripVertical handles are visible on desktop thumbnails
-    // Each thumbnail wrapper has a GripVertical icon with aria-label for drag
-    // The drag handle has cursor-grab styling and contains the GripVertical SVG
-    const dragHandles = thumbGallery.locator("[aria-label]").filter({
-      has: page.locator("svg"),
-    });
+    // One drag handle per desktop thumbnail.
+    const dragHandles = thumbGallery.getByTestId("image-thumb-drag-handle");
 
     // We should have at least 2 drag handles (one per image)
     const handleCount = await dragHandles.count();
     expect(handleCount).toBeGreaterThanOrEqual(2);
     await snap(page, "grip-vertical-handles-visible");
 
-    // Verify the first drag handle has cursor-grab styling
+    // The handle is draggable. This used to assert toHaveClass(/cursor-grab/),
+    // which is a styling detail: it would fail on a Tailwind rename and pass
+    // on an element that merely looked grabbable without being wired up. The
+    // attribute below is set by @hello-pangea/dnd on real drag handles, so it
+    // checks the thing that matters.
     const firstHandle = dragHandles.first();
     await expect(firstHandle).toBeVisible();
-    await expect(firstHandle).toHaveClass(/cursor-grab/);
+    await expect(firstHandle).toHaveAttribute(
+      "data-rfd-drag-handle-draggable-id",
+    );
     await snap(page, "grip-handle-styling-verified");
 
     // Verify mobile thumbnails do NOT have drag handles
     // Mobile gallery uses a different test ID
     const mobileGallery = page.getByTestId("image-gallery-thumbs-mobile");
     // Mobile gallery is hidden on desktop (lg:hidden), so it should not be visible
-    await expect(mobileGallery).not.toBeVisible();
+    await expect(mobileGallery).toBeHidden();
     await snap(page, "mobile-no-drag-handles");
   });
 });

@@ -2,7 +2,7 @@
  * Checkout feature domain types.
  *
  * CartItem is the enriched checkout shape after resolving product IDs from
- * the "candystore-cart" cookie ({id, quantity}) against the backend.
+ * the "libra-cart" cookie ({id, quantity}) against the backend.
  */
 
 export interface CartItem {
@@ -45,13 +45,6 @@ export interface SellerPaymentMethodWithType {
   requires_transfer_number: boolean;
 }
 
-/** @deprecated Use SellerPaymentMethodWithType (new flat shape) */
-export interface BuyerFieldDescriptor {
-  key: string;
-  type: "text" | "email";
-  required: boolean;
-}
-
 export interface CheckoutPaymentMethodsResponse {
   methods: SellerPaymentMethodWithType[];
   hasStockIssues: boolean;
@@ -62,13 +55,3 @@ export type CheckoutSellerStatus =
   | "submitting"
   | "submitted"
   | "error";
-
-export interface SellerCheckoutState {
-  status: CheckoutSellerStatus;
-  selectedMethodId: string | null;
-  transferNumber: string;
-  receiptFile: File | null;
-  buyerInfo: Record<string, string>;
-  orderId: string | null;
-  error: string | null;
-}

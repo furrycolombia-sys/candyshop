@@ -2,6 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { useState } from "react";
+import { tid } from "shared";
 
 import type {
   DisplayBlock,
@@ -51,7 +52,11 @@ export function VideoBlockEditor({ block, onChange }: VideoBlockEditorProps) {
         onChange={(e) => handleChange(e.target.value)}
         className={inputClass}
       />
-      {urlError && <p className="text-xs text-destructive">{urlError}</p>}
+      {urlError && (
+        <p className="text-xs text-destructive" {...tid("video-url-error")}>
+          {urlError}
+        </p>
+      )}
     </div>
   );
 }

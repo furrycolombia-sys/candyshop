@@ -41,6 +41,16 @@ export default defineConfig({
     {
       name: "setup",
       testMatch: /auth\.setup\.ts/,
+      teardown: "cleanup",
+    },
+    // Cleanup: runs after every dependent project finishes (pass or fail) —
+    // deletes the throwaway Clerk user auth.setup.ts created. Clerk's dev
+    // instance is a shared external service, not ephemeral per-run
+    // infrastructure like the Docker Supabase stack, so without this every
+    // CI run leaks a user permanently.
+    {
+      name: "cleanup",
+      testMatch: /auth\.teardown\.ts/,
     },
     // Tests: run with authenticated session
     {

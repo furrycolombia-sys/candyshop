@@ -83,7 +83,7 @@ test.describe.serial("Checkout stock integrity", () => {
 
     await context.addCookies([
       {
-        name: "candystore-cart",
+        name: "libra-cart",
         value: JSON.stringify([
           {
             id: productId,
@@ -106,7 +106,6 @@ test.describe.serial("Checkout stock integrity", () => {
     ]);
 
     await page.goto(`${APP_URLS.PAYMENTS}/en/checkout`);
-    await page.waitForLoadState("networkidle");
 
     await expect(page.getByTestId(/^seller-checkout-/).first()).toBeVisible({
       timeout: ELEMENT_TIMEOUT_MS,
@@ -114,10 +113,10 @@ test.describe.serial("Checkout stock integrity", () => {
     await expect(
       page.getByTestId(/^seller-checkout-error-/).first(),
     ).toBeVisible({ timeout: ELEMENT_TIMEOUT_MS });
-    await expect(page.getByTestId("payment-method-select")).not.toBeVisible();
-    await expect(page.getByTestId(/^submit-payment-/)).not.toBeVisible();
-    await expect(page.getByTestId(/^display-block-/)).not.toBeVisible();
-    await expect(page.getByTestId(/^dynamic-field-/)).not.toBeVisible();
+    await expect(page.getByTestId("payment-method-select")).toBeHidden();
+    await expect(page.getByTestId(/^submit-payment-/)).toBeHidden();
+    await expect(page.getByTestId(/^display-block-/)).toBeHidden();
+    await expect(page.getByTestId(/^dynamic-field-/)).toBeHidden();
 
     const apiResponse = await page.evaluate(
       async (payload) => {

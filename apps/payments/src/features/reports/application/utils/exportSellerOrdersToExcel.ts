@@ -1,4 +1,6 @@
 /* eslint-disable i18next/no-literal-string */
+import { buildWorkbook, toCell, toNumberCell } from "shared";
+
 import type {
   SellerReportFilters,
   SellerReportOrder,
@@ -22,23 +24,6 @@ const ORDERS_HEADERS = [
 
 const ISO_DATE_LENGTH = 10;
 const ISO_DATETIME_LENGTH = 19;
-
-function escapeXml(value: string): string {
-  return value
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&apos;");
-}
-
-function toCell(value: string): string {
-  return `<Cell><Data ss:Type="String">${escapeXml(value)}</Data></Cell>`;
-}
-
-function toNumberCell(value: number): string {
-  return `<Cell><Data ss:Type="Number">${value}</Data></Cell>`;
-}
 
 function buildOrderRow(
   order: SellerReportOrder,
@@ -65,11 +50,11 @@ function buildOrderRow(
   return `<Row>${cells.join("")}</Row>`;
 }
 
-function buildFiltersSheet(
+function buildFiltersRows(
   filters: SellerReportFilters,
   generatedAt: string,
-): string {
-  const rows = [
+): string[] {
+  return [
     `<Row>${toCell("Generated at")}${toCell(generatedAt)}</Row>`,
     `<Row>${toCell("Date from")}${toCell(filters.dateFrom ?? "—")}</Row>`,
     `<Row>${toCell("Date to")}${toCell(filters.dateTo ?? "—")}</Row>`,
@@ -78,7 +63,6 @@ function buildFiltersSheet(
     `<Row>${toCell("Amount min")}${toCell(filters.amountMin === null ? "—" : String(filters.amountMin))}</Row>`,
     `<Row>${toCell("Amount max")}${toCell(filters.amountMax === null ? "—" : String(filters.amountMax))}</Row>`,
   ];
-  return `<Worksheet ss:Name="Filters"><Table>${rows.join("")}</Table></Worksheet>`;
 }
 
 export function buildExportFilename(): string {
@@ -116,34 +100,12 @@ export function exportSellerOrdersToExcel(
     })
     .join("");
 
-  const salesSheet = [
-    '<Worksheet ss:Name="My Sales Report"><Table>',
-    headerRow,
-    bodyRows,
-    "</Table></Worksheet>",
-  ].join("");
-
-  return [
-    '<?xml version="1.0"?>',
-    '<?mso-application progid="Excel.Sheet"?>',
-    '<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">',
-    salesSheet,
-    buildFiltersSheet(filters, generatedAt),
-    "</Workbook>",
-  ].join("");
+  return buildWorkbook([
+    { name: "My Sales Report", rows: [headerRow, bodyRows] },
+    { name: "Filters", rows: buildFiltersRows(filters, generatedAt) },
+  ]);
 }
 
-export function downloadExcel(content: string, filename: string) {
-  const blob = new Blob([content], {
-    type: "application/vnd.ms-excel;charset=utf-8;",
-  });
-  const link = document.createElement("a");
-  const url = URL.createObjectURL(blob);
-  link.setAttribute("href", url);
-  link.setAttribute("download", filename);
-  link.style.visibility = "hidden";
-  document.body.append(link);
-  link.click();
-  link.remove();
-  URL.revokeObjectURL(url);
-}
+// Re-exported so existing call sites (and the delegated exporter) keep
+// importing it from here.
+export { downloadExcel } from "shared";

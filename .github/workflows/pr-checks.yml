@@ -2,7 +2,13 @@ name: PR Checks
 
 on:
   pull_request:
-    types: [opened, synchronize, reopened]
+    # `edited` fires when the title, body or base branch changes. Without it the
+    # PR Title check validated the title once, at open, and a corrected title
+    # could never clear the failure -- the only way through was an unrelated
+    # commit. Branch Target has the same problem when the base is retargeted.
+    # The heavier jobs below opt out of `edited` so a typo fix does not re-run
+    # an audit.
+    types: [opened, synchronize, reopened, edited]
 
 permissions:
   contents: read
@@ -25,7 +31,7 @@ jobs:
     timeout-minutes: 5
     steps:
       - name: Validate branch can target base
-        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           script: |
             const baseBranch = context.payload.pull_request.base.ref;
@@ -67,7 +73,7 @@ jobs:
     timeout-minutes: 5
     steps:
       - name: Check PR title format
-        uses: amannn/action-semantic-pull-request@e32d7e603df1aa1ba07e981f2a23455dee596825 # v5
+        uses: amannn/action-semantic-pull-request@48f256284bd46cdaab1048c3721360e808335d50 # v6.1.1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
@@ -92,6 +98,8 @@ jobs:
   # ============================================
   changes:
     name: Detect Changes
+    # Not re-run when only the title or body changed.
+    if: github.event.action != 'edited'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     outputs:
@@ -108,10 +116,10 @@ jobs:
       docs-only: ${{ steps.check.outputs.docs-only }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
 
       - name: Detect file changes
-        uses: dorny/paths-filter@d1c1ffe0248fe513906c8e24db8ea791d46f8590 # v3
+        uses: dorny/paths-filter@7b450fff21473bca461d4b92ce414b9d0420d706 # v4.0.2
         id: changes
         with:
           filters: |
@@ -147,6 +155,13 @@ jobs:
               - 'packages/**'
               - 'package.json'
               - 'pnpm-lock.yaml'
+              # Not app code, but changing either can break production without
+              # touching apps/ at all — and docs-only skips the Security Audit
+              # job, which is where secretlint, semgrep and the sync-secrets
+              # workflow test run. A PR editing only .github/workflows/
+              # sync-secrets.yml was classified docs-only and skipped all four.
+              - 'scripts/**'
+              - '.github/workflows/**'
 
       - name: Check if docs-only
         id: check
@@ -165,22 +180,23 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     needs: changes
-    if: needs.changes.outputs.docs-only == 'false'
+    # Not re-run when only the title or body changed.
+    if: needs.changes.outputs.docs-only == 'false' && github.event.action != 'edited'
     steps:
       - name: Checkout code
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+        uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v4.4.0
 
       - name: Setup Node.js
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: "pnpm"
 
       - name: Setup Python
-        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
         with:
           python-version: "3.x"
 
@@ -188,11 +204,7 @@ jobs:
         run: python -m pip install --upgrade pip semgrep
 
       - name: Install dependencies
-        run: |
-          pnpm install --frozen-lockfile || {
-            echo "Frozen lockfile install failed, retrying without frozen lockfile"
-            pnpm install --no-frozen-lockfile
-          }
+        run: pnpm install --frozen-lockfile
 
       - name: Run security audit
         run: pnpm audit --audit-level=high || echo "::warning::Security vulnerabilities found"
@@ -203,143 +215,23 @@ jobs:
       - name: Run secretlint
         run: pnpm run secretlint
 
-  # ============================================
-  # Accessibility Check (on store/package changes)
-  # ============================================
-  accessibility:
-    name: Accessibility
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    needs: changes
-    if: needs.changes.outputs.store == 'true' || needs.changes.outputs.packages == 'true'
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: "pnpm"
-
-      - name: Install dependencies
-        run: |
-          pnpm install --frozen-lockfile || {
-            echo "Frozen lockfile install failed, retrying without frozen lockfile"
-            pnpm install --no-frozen-lockfile
-          }
-
-      - name: Get Playwright version
-        id: playwright-version
-        run: echo "version=$(pnpm --filter store list @playwright/test --json | jq -r '.[0].devDependencies["@playwright/test"].version')" >> $GITHUB_OUTPUT
-
-      - name: Cache Playwright browsers
-        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
-        id: playwright-cache
-        with:
-          path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ steps.playwright-version.outputs.version }}
-
-      - name: Install Playwright browsers
-        if: steps.playwright-cache.outputs.cache-hit != 'true'
-        run: pnpm --filter store exec playwright install --with-deps chromium
-
-      - name: Check accessibility script
-        id: has-a11y
-        run: |
-          if jq -e '.scripts["test:a11y"]' apps/store/package.json > /dev/null; then
-            echo "value=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "value=false" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Build store app for accessibility
-        if: steps.has-a11y.outputs.value == 'true'
-        run: pnpm --filter store build
-
-      - name: Run accessibility tests
-        if: steps.has-a11y.outputs.value == 'true'
-        run: pnpm --filter store run test:a11y
-
-      - name: Skip accessibility (script not configured)
-        if: steps.has-a11y.outputs.value != 'true'
-        run: 'echo "::notice::Skipping accessibility: apps/store/package.json has no test:a11y script"'
-
-  # ============================================
-  # Visual Regression (on store/package changes)
-  # ============================================
-  visual-regression:
-    name: Visual Regression
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    needs: changes
-    if: needs.changes.outputs.store == 'true' || needs.changes.outputs.packages == 'true'
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: "pnpm"
-
-      - name: Install dependencies
-        run: |
-          pnpm install --frozen-lockfile || {
-            echo "Frozen lockfile install failed, retrying without frozen lockfile"
-            pnpm install --no-frozen-lockfile
-          }
-
-      - name: Get Playwright version
-        id: playwright-version
-        run: echo "version=$(pnpm --filter store list @playwright/test --json | jq -r '.[0].devDependencies["@playwright/test"].version')" >> $GITHUB_OUTPUT
-
-      - name: Cache Playwright browsers
-        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
-        id: playwright-cache
-        with:
-          path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ steps.playwright-version.outputs.version }}
-
-      - name: Install Playwright browsers
-        if: steps.playwright-cache.outputs.cache-hit != 'true'
-        run: pnpm --filter store exec playwright install --with-deps chromium
-
-      - name: Check visual script
-        id: has-visual
-        run: |
-          if jq -e '.scripts["test:visual"]' apps/store/package.json > /dev/null; then
-            echo "value=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "value=false" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Build store app for visual regression
-        if: steps.has-visual.outputs.value == 'true'
-        run: pnpm --filter store build
-
-      - name: Run visual regression tests
-        if: steps.has-visual.outputs.value == 'true'
-        run: pnpm --filter store run test:visual
-
-      - name: Skip visual regression (script not configured)
-        if: steps.has-visual.outputs.value != 'true'
-        run: 'echo "::notice::Skipping visual regression: apps/store/package.json has no test:visual script"'
-
-      - name: Upload visual diff artifacts
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
-        if: failure()
-        with:
-          name: visual-diff
-          path: apps/store/test-results/
-          retention-days: 7
+      # Guards .github/workflows/sync-secrets.yml, which produces the only
+      # backup of secrets GitHub stores write-only. Both bugs it has had failed
+      # silently — the sync reported success while omitting secrets — so it is
+      # gated here rather than left to be noticed during a restore.
+      #
+      # Also runs the load-root-env.cjs / load-env.mjs equivalence test —
+      # load-root-env.cjs can't delegate to load-env.mjs (breaks Playwright's
+      # config loading), so it's a parallel implementation that needs this
+      # test to catch drift between the two.
+      #
+      # This used to name five files explicitly, because vitest.config.scripts.js
+      # also picks up load-env.test.js and that file was failing on a vite
+      # dynamic import -- so the gate ran the subset that passed and said so.
+      # The import is fixed (vi.resetModules, which needs no dynamic specifier),
+      # and the whole config runs now: 12 files, 124 tests.
+      - name: Run workflow config tests
+        run: pnpm run test:workflows
 
   # ============================================
   # PR Summary Comment
@@ -349,10 +241,12 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     needs: [changes]
-    if: always()
+    # always() so it still reports when an earlier job failed, but not for a
+    # title or body edit -- that would only rewrite the same comment.
+    if: always() && github.event.action != 'edited'
     steps:
       - name: Create or update PR comment
-        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           script: |
             const changes = {

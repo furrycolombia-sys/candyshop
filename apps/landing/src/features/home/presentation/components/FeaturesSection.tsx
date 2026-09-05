@@ -12,7 +12,7 @@ import { useTranslations } from "next-intl";
 import { tid } from "shared";
 import { cn } from "ui";
 
-const DEFAULT_CANDY_TEXT = "var(--candy-text)";
+const DEFAULT_LIBRA_TEXT = "var(--libra-text)";
 const SECTION_LABEL_KEY = "categories";
 const TILT_LEFT = "-rotate-[1deg]";
 const TILT_RIGHT = "rotate-[1deg]";
@@ -21,42 +21,42 @@ const CATEGORIES = [
   {
     key: "commissions",
     bg: "var(--pink)",
-    fg: DEFAULT_CANDY_TEXT,
+    fg: DEFAULT_LIBRA_TEXT,
     icon: Palette,
     tilt: TILT_LEFT,
   },
   {
     key: "fursuits",
     bg: "var(--mint)",
-    fg: DEFAULT_CANDY_TEXT,
+    fg: DEFAULT_LIBRA_TEXT,
     icon: BrushCleaning,
     tilt: TILT_RIGHT,
   },
   {
     key: "events",
     bg: "var(--lemon)",
-    fg: "var(--candy-text-on-lemon)",
+    fg: "var(--libra-text-on-lemon)",
     icon: Megaphone,
     tilt: "-rotate-[0.75deg]",
   },
   {
     key: "merch",
     bg: "var(--lilac)",
-    fg: DEFAULT_CANDY_TEXT,
+    fg: DEFAULT_LIBRA_TEXT,
     icon: Shirt,
     tilt: "rotate-[0.75deg]",
   },
   {
     key: "digital",
     bg: "var(--sky)",
-    fg: DEFAULT_CANDY_TEXT,
+    fg: DEFAULT_LIBRA_TEXT,
     icon: Gem,
     tilt: TILT_LEFT,
   },
   {
     key: "deals",
     bg: "var(--peach)",
-    fg: DEFAULT_CANDY_TEXT,
+    fg: DEFAULT_LIBRA_TEXT,
     icon: BadgePercent,
     tilt: TILT_RIGHT,
   },

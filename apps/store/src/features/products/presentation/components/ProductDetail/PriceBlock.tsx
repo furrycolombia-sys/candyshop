@@ -41,7 +41,10 @@ export function PriceBlock({ product, discountLabel }: PriceBlockProps) {
           </span>
 
           {hasDiscount && compare_at_price != null && (
-            <span className="font-display text-lg font-bold leading-none line-through text-muted-foreground">
+            <span
+              className="font-display text-lg font-bold leading-none line-through text-muted-foreground"
+              {...tid("hero-price-compare-at")}
+            >
               {formatAmount(compare_at_price)}
             </span>
           )}

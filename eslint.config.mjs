@@ -1,3 +1,4 @@
+import js from "@eslint/js";
 import { defineConfig, globalIgnores } from "eslint/config";
 import nextVitals from "eslint-config-next/core-web-vitals";
 import nextTs from "eslint-config-next/typescript";
@@ -13,15 +14,135 @@ import vitest from "@vitest/eslint-plugin";
 import tanstackQuery from "@tanstack/eslint-plugin-query";
 import unicorn from "eslint-plugin-unicorn";
 import betterTailwindcss from "eslint-plugin-better-tailwindcss";
+import playwright from "eslint-plugin-playwright";
 
 // Monorepo paths
 const APP_SRC = "apps/*/src";
 const PKG_SRC = "packages/*/src";
+// Unit tests live in a flat tests/ directory per workspace, not in src/.
+const APP_TESTS = "apps/*/tests";
+const PKG_TESTS = "packages/*/tests";
 
 const sonarRules = sonarjs.configs.recommended.rules;
 const unicornRules = unicorn.configs["flat/recommended"].rules;
 
+// ── Playwright E2E specs ─────────────────────────────────────────────────────
+// These files were previously linted by nothing at all: `pnpm lint` only covers
+// apps/*/src, so 26 spec files had no rules applied. The recommended set is
+// enabled here, with the two high-count timing rules staged as warnings so the
+// ratchet is visible rather than deferred.
+const playwrightConfig = {
+  files: ["apps/*/e2e/**/*.ts", "apps/*/test/e2e/**/*.ts"],
+  ...playwright.configs["flat/recommended"],
+  rules: {
+    ...playwright.configs["flat/recommended"].rules,
+    // Staged, not disabled. Every rule not listed below is an error, because
+    // the suite is already clean against it — including missing-playwright-await,
+    // which catches an assertion that never runs.
+    //
+    // Driven to zero and promoted to error (2026-08-30). Both fixes were
+    // applied by pattern rather than by `eslint --fix`, so the unsafe fixer
+    // below could not run alongside them, and all 25 rewrites were read in the
+    // diff. These need an explicit "error": the recommended set ships them as
+    // warnings, so dropping them from the staged list below is not enough --
+    // verified by planting a violation and watching it fail.
+    "playwright/no-useless-not": "error",
+    "playwright/no-conditional-expect": "error",
+    "playwright/no-force-option": "error",
+    "playwright/no-conditional-in-test": "error",
+    // prefer-web-first-assertions is an error, but every one of the suite's 15
+    // hits is exempted in place. All 15 compare a value captured earlier
+    // against one captured later -- "this block's testid now equals the one
+    // that block had before the drag" -- which toHaveAttribute cannot express.
+    // This is the rule whose --fix rewrote `const href = await
+    // link.getAttribute("href")` into `const href = link`, turning a string
+    // into a Locator and breaking three assertions in a shared helper. It stays
+    // armed so the genuine pattern, expect(await x.isVisible()).toBe(true),
+    // is still caught.
+    "playwright/prefer-web-first-assertions": "error",
+    "playwright/consistent-spacing-between-blocks": "error",
+    //
+    // The rules below have real violations today and are warnings with their
+    // counts recorded, to be driven to zero and promoted to error one at a time.
+    // Counts measured 2026-08-30. NOTE: several of these are auto-fixable, but
+    // `eslint --fix` must NOT be run blindly over them — prefer-web-first-assertions
+    // rewrote `const href = await link.getAttribute("href")` into
+    // `const href = link`, silently turning a string into a Locator and breaking
+    // the three assertions below it. Typecheck caught it; review every hunk.
+    // Both were "warn" with backlogs of 118 and 96. The backlog is gone: every
+    // site either waits on the condition it actually cared about, or carries a
+    // disable naming the third-party page it cannot anchor against.
+    // Set to match aeleos, which enforces these and Libra did not set at all.
+    // A rule nobody wrote down is not a rule the codebase is held to.
+    "playwright/no-focused-test": "error",
+    "playwright/no-element-handle": "error",
+    "playwright/no-page-pause": "error",
+    "playwright/no-standalone-expect": "error",
+    "playwright/no-useless-await": "error",
+    "playwright/valid-expect": "error",
+    "playwright/no-eval": "off",
+
+    "playwright/no-networkidle": "error",
+    "playwright/no-wait-for-timeout": "error",
+    // expect-expect is an ERROR, not a warning: a test that asserts nothing
+    // passes no matter how the product behaves, so it is the one defect a test
+    // suite cannot detect on its own. It reported 11 violations before this
+    // configuration and all 11 were false: 3 were Playwright setup/teardown
+    // projects (excluded below) and 8 were tests whose assertions live in a
+    // helper the rule cannot see through. Each helper named here was checked to
+    // contain real assertions. With the rule reading correctly it reports zero,
+    // so it can block CI and a genuinely assertion-free test gets caught.
+    "playwright/expect-expect": [
+      "error",
+      {
+        assertFunctionNames: [
+          "expectVisible",
+          "expectHidden",
+          "expectAuthenticatedAcrossApps",
+          "createProduct",
+          "createPaymentMethod",
+          "setPermissions",
+        ],
+      },
+    ],
+    // allowConditional matches aeleos. `test.skip(cond, reason)` is a runtime
+    // guard -- a suite that declines to run without live OAuth credentials, or
+    // without a seeded product -- not a disabled test. A bare test.skip() still
+    // fails, which is the case worth catching.
+    "playwright/no-skipped-test": ["error", { allowConditional: true }],
+  },
+};
+
+// Playwright "setup" and "teardown" projects use test() to run fixture work
+// (seeding a session, cleaning up users). They legitimately assert nothing, so
+// expect-expect does not apply to them.
+const playwrightSetupConfig = {
+  files: [
+    "apps/*/e2e/**/*.setup.ts",
+    "apps/*/e2e/**/*.teardown.ts",
+    "apps/*/e2e/**/setup-*.ts",
+  ],
+  rules: {
+    "playwright/expect-expect": "off",
+    // Fixture work is branchy by nature: skip the teardown when there is no
+    // state file, bail when a key is absent. Those are not a test taking
+    // different paths on different runs.
+    "playwright/no-conditional-in-test": "off",
+  },
+};
+
 const eslintConfig = defineConfig([
+  // ESLint's own core correctness rules. These were never composed here, so 41
+  // rules that catch real defects (no-unsafe-finally, no-dupe-keys,
+  // no-unreachable, ...) were simply absent. Scoped to source, matching how the
+  // other recommended sets below are scoped.
+  {
+    files: [
+      `${APP_SRC}/**/*.{ts,tsx,js,jsx}`,
+      `${PKG_SRC}/**/*.{ts,tsx,js,jsx}`,
+    ],
+    ...js.configs.recommended,
+  },
   ...nextVitals,
   ...nextTs,
   i18next.configs["flat/recommended"],
@@ -34,12 +155,24 @@ const eslintConfig = defineConfig([
   })),
   // Override default ignores of eslint-config-next.
   globalIgnores([
-    // Default ignores of eslint-config-next:
-    ".next/**",
-    "out/**",
-    "build/**",
-    "next-env.d.ts",
+    // Default ignores of eslint-config-next, re-globbed for a monorepo. These
+    // shipped as ".next/**", which only ever matched a .next at the repo root
+    // -- and the build output lives at apps/<app>/.next. `eslint .` was
+    // linting 212 files of minified output per app, ~28k messages each.
+    // `pnpm lint` never showed it because it lists src directories explicitly,
+    // so the gate passed by not looking. "**/node_modules/**" below was
+    // already correct, which is what the others should have looked like.
+    "**/.next/**",
+    "**/out/**",
+    "**/build/**",
+    "**/next-env.d.ts",
     "**/node_modules/**",
+    // Git-ignored agent scratch: throwaway probe scripts, not shipped code.
+    ".superpowers/**",
+    // Frozen snapshot of the pre-rework tests. Linting a read-only copy would
+    // only ever demand edits to a file that is meant to stay identical to what
+    // it is a copy of. Deleted when the rework is verified complete.
+    "tests/legacy/**",
     // Auto-generated files (Orval REST API clients and types)
     "packages/api/src/rest/generated/**",
     "packages/api/src/rest/types/generated/**",
@@ -86,8 +219,36 @@ const eslintConfig = defineConfig([
     rules: {
       // Playwright's `use()` function triggers react-hooks false positives
       "react-hooks/rules-of-hooks": "off",
+      // e2e-selectors.md's headline rule -- "never use Tailwind classes to
+      // select or assert state" -- had no lint rule behind it, so it was
+      // advice rather than a gate. Three specs were violating it: a drag
+      // handle checked by cursor-grab, which a class rename would have failed
+      // and an element that merely looked grabbable would have passed, and the
+      // theme suite reading the .dark class Tailwind happens to key off.
       "no-restricted-syntax": [
         "error",
+        {
+          selector: "CallExpression[callee.property.name='toHaveClass']",
+          message:
+            "Don't assert CSS classes in E2E tests -- they are styling details that rename freely. Assert an ARIA or data attribute instead (see .claude/rules/e2e-selectors.md).",
+        },
+        {
+          selector: "CallExpression[callee.property.name='toHaveCSS']",
+          message:
+            "Don't assert computed styles in E2E tests. Expose the state as an ARIA or data attribute and assert that (see .claude/rules/e2e-selectors.md).",
+        },
+        {
+          selector:
+            "CallExpression[callee.property.name='locator'][arguments.0.value=/^[.][a-zA-Z]/]",
+          message:
+            "Don't select by CSS class in E2E tests. Use getByTestId, or a role/attribute selector (see .claude/rules/e2e-selectors.md).",
+        },
+        {
+          selector:
+            "CallExpression[callee.property.name='locator'][arguments.0.value=/class/]",
+          message:
+            "Don't select by class attribute in E2E tests. Use getByTestId, or a role/attribute selector (see .claude/rules/e2e-selectors.md).",
+        },
         {
           selector:
             "CallExpression[callee.property.name=/^(getByRole|getAllByRole|queryByRole|queryAllByRole|findByRole|findAllByRole)$/]",
@@ -212,21 +373,35 @@ const eslintConfig = defineConfig([
       "react/no-multi-comp": ["error", { ignoreStateless: false }],
     },
   },
+  // Register the plugins the moved tests reference in inline disables, WITHOUT
+  // enabling their rule sets.
+  //
+  // An `eslint-disable-next-line sonarjs/no-hardcoded-ip` is itself an error
+  // when that plugin is not registered for the file, so the tests did not just
+  // lose coverage when they moved out of src/ -- they failed outright. Turning
+  // the full source rule sets on for them instead produced 1988 errors: these
+  // are tests, and were never written against rules meant for shipped code.
+  {
+    files: [
+      `${APP_TESTS}/**/*.{ts,tsx,js,jsx}`,
+      `${PKG_TESTS}/**/*.{ts,tsx,js,jsx}`,
+    ],
+    plugins: { sonarjs, unicorn, vitest },
+  },
   // Testing rules for Vitest + Testing Library (unit tests only)
   {
     files: [
-      `${APP_SRC}/**/*.test.{ts,tsx,js,jsx}`,
-      `${APP_SRC}/**/*.spec.{ts,tsx,js,jsx}`,
-      `${PKG_SRC}/**/*.test.{ts,tsx,js,jsx}`,
-      `${PKG_SRC}/**/*.spec.{ts,tsx,js,jsx}`,
+      `${APP_TESTS}/**/*.test.{ts,tsx,js,jsx}`,
+      `${PKG_TESTS}/**/*.test.{ts,tsx,js,jsx}`,
     ],
     // Exclude shadcn/ui component tests - they test generic UI primitives
     // using standard Testing Library queries (getByRole, getByText) which
     // is appropriate for testing component APIs, not business features
     ignores: [
-      `${APP_SRC}/**/components/ui/*.test.{ts,tsx,js,jsx}`,
-      `${PKG_SRC}/**/components/ui/*.test.{ts,tsx,js,jsx}`,
-      `${PKG_SRC}/components/*.test.{ts,tsx,js,jsx}`,
+      // Every test in packages/ui covers a shadcn/ui primitive, so the whole
+      // directory is the exclusion. The two apps/*/**/components/ui patterns
+      // this replaces never matched a file: no app has ever had one.
+      `${PKG_TESTS}/**/*.test.{ts,tsx,js,jsx}`,
     ],
     ...testingLibrary.configs["flat/react"],
     rules: {
@@ -326,21 +501,29 @@ const eslintConfig = defineConfig([
     },
   },
   // Enforce stable negative assertions with test IDs (no queryByText in unit tests)
+  //
+  // Staged as a warning with its count, not because the rule is wrong but
+  // because it has never actually run. It was declared for `apps/*/src/**`,
+  // where a later block redefining no-restricted-syntax overrode it, so the
+  // 37 violations below have been accumulating unreported. Moving the tests
+  // out of src/ is what made it live.
+  //
+  // 37 violations across 26 files as of this commit. Drive to zero and
+  // promote to "error", the same ratchet used for the Playwright rules.
   {
     files: [
-      `${APP_SRC}/**/*.test.{ts,tsx,js,jsx}`,
-      `${APP_SRC}/**/*.spec.{ts,tsx,js,jsx}`,
-      `${PKG_SRC}/**/*.test.{ts,tsx,js,jsx}`,
-      `${PKG_SRC}/**/*.spec.{ts,tsx,js,jsx}`,
+      `${APP_TESTS}/**/*.test.{ts,tsx,js,jsx}`,
+      `${PKG_TESTS}/**/*.test.{ts,tsx,js,jsx}`,
     ],
     ignores: [
-      `${APP_SRC}/**/components/ui/*.test.{ts,tsx,js,jsx}`,
-      `${PKG_SRC}/**/components/ui/*.test.{ts,tsx,js,jsx}`,
-      `${PKG_SRC}/components/*.test.{ts,tsx,js,jsx}`,
+      // Every test in packages/ui covers a shadcn/ui primitive, so the whole
+      // directory is the exclusion. The two apps/*/**/components/ui patterns
+      // this replaces never matched a file: no app has ever had one.
+      `${PKG_TESTS}/**/*.test.{ts,tsx,js,jsx}`,
     ],
     rules: {
       "no-restricted-syntax": [
-        "error",
+        "warn",
         {
           selector: "CallExpression[callee.property.name='queryByText']",
           message:
@@ -410,9 +593,22 @@ const eslintConfig = defineConfig([
       "react-hooks/refs": "off",
       "@tanstack/query/exhaustive-deps": "off",
       "unused-imports/no-unused-imports": "error",
-      "unused-imports/no-unused-vars": [
-        "warn",
-        { argsIgnorePattern: "^_", varsIgnorePattern: "^_" },
+      // Two rules covered this ground and disagreed. tseslint's recommended
+      // preset brings @typescript-eslint/no-unused-vars with no ignore
+      // pattern, so it reported `_obj` and `_url` -- deliberately-unused mock
+      // parameters written to the very convention the rule below declares one
+      // line away. The preset's copy won because it was never turned off, so
+      // the declared convention did nothing. One rule now, at error, honouring
+      // the underscore prefix.
+      "unused-imports/no-unused-vars": "off",
+      "@typescript-eslint/no-unused-vars": [
+        "error",
+        {
+          argsIgnorePattern: "^_",
+          varsIgnorePattern: "^_",
+          caughtErrorsIgnorePattern: "^_",
+          destructuredArrayIgnorePattern: "^_",
+        },
       ],
       "import/no-duplicates": "error",
       "import/order": [
@@ -1626,6 +1822,30 @@ const eslintConfig = defineConfig([
             "MemberExpression[computed=false][object.name='flags'][property.name=/^show/]",
           message:
             "Do not access flags.showXxx directly. Use hasFlag(FeatureFlag.X, flags) or useHasFlag(FeatureFlag.X). See: shared/application/utils/featureFlagChecks.ts",
+        },
+      ],
+    },
+  },
+  playwrightConfig,
+  playwrightSetupConfig,
+
+  // The unused-variable convention, applied everywhere rather than only under
+  // apps/*/src and packages/*/src. Tests, scripts and root config files were
+  // outside every block that set it, so they fell through to the preset's
+  // copy -- which has no underscore convention at all. That went unnoticed
+  // while `pnpm lint` only looked at a hand-listed set of source directories.
+  // Last in the array so it wins over the preset for every file.
+  {
+    files: ["**/*.{ts,tsx,js,jsx,mjs,cjs}"],
+    rules: {
+      "unused-imports/no-unused-vars": "off",
+      "@typescript-eslint/no-unused-vars": [
+        "error",
+        {
+          argsIgnorePattern: "^_",
+          varsIgnorePattern: "^_",
+          caughtErrorsIgnorePattern: "^_",
+          destructuredArrayIgnorePattern: "^_",
         },
       ],
     },

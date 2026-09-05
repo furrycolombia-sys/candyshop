@@ -1,6 +1,6 @@
 {
   "meta": {
-    "title": "Candy Shop - Playground",
+    "title": "Libra - Playground",
     "description": "Experiment with components and features"
   },
   "playground": {
@@ -8,7 +8,7 @@
     "subtitle": "Experiment with components and features"
   },
   "nav": {
-    "brand": "Candy Shop",
+    "brand": "Libra",
     "landing": "Home",
     "store": "Store",
     "studio": "Studio",

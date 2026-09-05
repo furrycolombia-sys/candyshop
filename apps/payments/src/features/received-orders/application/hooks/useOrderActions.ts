@@ -3,10 +3,12 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSupabase } from "shared";
 
-import { ASSIGNED_ORDERS_QUERY_KEY } from "@/features/assigned-orders/domain/constants";
-import { RECEIVED_ORDERS_QUERY_KEY } from "@/features/received-orders/domain/constants";
 import type { SellerAction } from "@/features/received-orders/domain/types";
 import { updateOrderStatus } from "@/features/received-orders/infrastructure/receivedOrderQueries";
+import {
+  ASSIGNED_ORDERS_QUERY_KEY,
+  RECEIVED_ORDERS_QUERY_KEY,
+} from "@/shared/domain/queryKeys";
 
 interface OrderActionParams {
   orderId: string;

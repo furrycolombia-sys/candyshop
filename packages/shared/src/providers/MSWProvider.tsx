@@ -18,7 +18,6 @@ interface MSWProviderProps {
  */
 export function MSWProvider({
   children,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   getWorker: _getWorker,
 }: MSWProviderProps) {
   return <>{children}</>;

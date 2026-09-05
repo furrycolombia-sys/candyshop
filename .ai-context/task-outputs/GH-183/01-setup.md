@@ -21,7 +21,7 @@ Clean — branched from `develop` at commit `949a9b9d` (chore(ci): purge Cloudfl
 
 ## Quick Links
 
-- [GitHub Issue](https://github.com/furrycolombia-sys/candyshop/issues/183)
+- [GitHub Issue](https://github.com/furrycolombia-sys/libra/issues/183)
 - [Task Artifacts](./)
 
 ## Next Steps

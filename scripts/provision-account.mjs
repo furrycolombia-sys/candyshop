@@ -188,14 +188,17 @@ async function upsertNequiMethod({
     return { id, action: "updated" };
   }
 
-  const created = await requestJson(`${supabaseUrl}/rest/v1/seller_payment_methods`, {
-    method: "POST",
-    headers: {
-      ...headers,
-      Prefer: "return=representation",
+  const created = await requestJson(
+    `${supabaseUrl}/rest/v1/seller_payment_methods`,
+    {
+      method: "POST",
+      headers: {
+        ...headers,
+        Prefer: "return=representation",
+      },
+      body: JSON.stringify(body),
     },
-    body: JSON.stringify(body),
-  });
+  );
 
   return { id: created[0]?.id, action: "created" };
 }
@@ -213,7 +216,9 @@ async function main() {
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
 
   if (!supabaseUrl || !serviceRoleKey) {
-    fail("NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are required.");
+    fail(
+      "NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are required.",
+    );
   }
 
   const childEnv = {
@@ -228,14 +233,7 @@ async function main() {
   // 1) Grant role via existing script
   runNodeScript(
     "./scripts/grant-user-role.mjs",
-    [
-      "--email",
-      args.email,
-      "--role",
-      args.role,
-      "--reason",
-      args.reason,
-    ],
+    ["--email", args.email, "--role", args.role, "--reason", args.reason],
     childEnv,
   );
 
@@ -243,7 +241,11 @@ async function main() {
   runNodeScript("./scripts/seed-moonfest.mjs", [], childEnv);
 
   // 3) Ensure Nequi payment method exists for seller
-  const sellerId = await getSellerId({ supabaseUrl, serviceRoleKey, email: args.email });
+  const sellerId = await getSellerId({
+    supabaseUrl,
+    serviceRoleKey,
+    email: args.email,
+  });
   const nequiResult = await upsertNequiMethod({
     supabaseUrl,
     serviceRoleKey,
@@ -260,4 +262,3 @@ async function main() {
 main().catch((error) => {
   fail(error.message);
 });
-

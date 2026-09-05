@@ -6,7 +6,6 @@
  * This re-export keeps internal payment-methods imports working unchanged.
  */
 export type {
-  BuyerSubmission,
   DisplayBlock,
   DisplayBlockType,
   FormField,
@@ -27,7 +26,7 @@ export interface CreatePaymentMethodParams {
   nameEs?: string;
 }
 
-export type UpdatePaymentMethodPatch = Partial<
+type UpdatePaymentMethodPatch = Partial<
   Pick<
     SellerPaymentMethod,
     | "name_en"

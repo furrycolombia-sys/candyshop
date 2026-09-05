@@ -1,6 +1,6 @@
 {
   "meta": {
-    "title": "Candy Shop - Estudio",
+    "title": "Libra - Estudio",
     "description": "Gestiona tus productos y catálogo"
   },
   "studio": {
@@ -8,7 +8,7 @@
     "subtitle": "Gestión de productos próximamente."
   },
   "nav": {
-    "brand": "Candy Shop",
+    "brand": "Libra",
     "landing": "Inicio",
     "store": "Tienda",
     "studio": "Estudio",

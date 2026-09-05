@@ -8,11 +8,11 @@ import { ImageGallery } from "./ImageGallery";
 import { PriceBlock } from "./PriceBlock";
 import { RatingStars } from "./RatingStars";
 
-import { useAddToCart } from "@/features/cart";
 import {
   isProductAvailable,
   type Product,
 } from "@/features/products/domain/types";
+import { useAddToCart } from "@/shared/application/cart";
 import type { CategoryTheme } from "@/shared/domain/categoryConstants";
 
 interface HeroSectionProps {
@@ -154,7 +154,10 @@ export function HeroSection({ product, theme }: HeroSectionProps) {
 
             {/* Tags */}
             {product.tags && product.tags.length > 0 && (
-              <div className="flex items-center gap-1.5 flex-wrap">
+              <div
+                className="flex items-center gap-1.5 flex-wrap"
+                {...tid("hero-tags")}
+              >
                 {product.tags.map((tag) => (
                   <span
                     key={tag}

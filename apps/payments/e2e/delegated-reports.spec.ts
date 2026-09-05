@@ -10,8 +10,8 @@ import {
   adminDelete,
   adminInsert,
   createTestUser,
+  deleteTestUser,
   injectSession,
-  supabaseAdmin,
   type TestUser,
 } from "../../auth/e2e/helpers/session";
 
@@ -126,13 +126,9 @@ test.describe.serial("Delegated Reports page", () => {
       () => {},
     );
     await adminDelete("products", `id=eq.${otherProductId}`).catch(() => {});
-    await supabaseAdmin.auth.admin.deleteUser(buyerUser.userId).catch(() => {});
-    await supabaseAdmin.auth.admin
-      .deleteUser(delegateUser.userId)
-      .catch(() => {});
-    await supabaseAdmin.auth.admin
-      .deleteUser(sellerUser.userId)
-      .catch(() => {});
+    await deleteTestUser(buyerUser).catch(() => {});
+    await deleteTestUser(delegateUser).catch(() => {});
+    await deleteTestUser(sellerUser).catch(() => {});
   });
 
   // ─── Menu + page ─────────────────────────────────────────────────
@@ -142,9 +138,7 @@ test.describe.serial("Delegated Reports page", () => {
     page,
   }) => {
     await injectSession(context, delegateUser);
-    await page.goto(`${getPaymentsBaseUrl()}/en/delegated-reports`, {
-      waitUntil: "networkidle",
-    });
+    await page.goto(`${getPaymentsBaseUrl()}/en/delegated-reports`);
     await expect(page.getByTestId("sidebar-delegatedReports")).toBeVisible({
       timeout: ELEMENT_TIMEOUT_MS,
     });
@@ -162,7 +156,6 @@ test.describe.serial("Delegated Reports page", () => {
     await injectSession(context, delegateUser);
     await page.goto(
       `${getPaymentsBaseUrl()}/en/delegated-reports?status=approved`,
-      { waitUntil: "networkidle" },
     );
 
     await expect(page.getByTestId("delegated-report-table")).toBeVisible({
@@ -191,7 +184,6 @@ test.describe.serial("Delegated Reports page", () => {
     await injectSession(context, delegateUser);
     await page.goto(
       `${getPaymentsBaseUrl()}/en/delegated-reports?status=approved`,
-      { waitUntil: "networkidle" },
     );
 
     const table = page.getByTestId("delegated-report-table");
@@ -218,7 +210,6 @@ test.describe.serial("Delegated Reports page", () => {
     await injectSession(context, delegateUser);
     await page.goto(
       `${getPaymentsBaseUrl()}/en/delegated-reports?status=approved`,
-      { waitUntil: "networkidle" },
     );
     await expect(page.getByTestId("delegated-report-table")).toBeVisible({
       timeout: ELEMENT_TIMEOUT_MS,
@@ -251,10 +242,16 @@ test.describe.serial("Delegated Reports page", () => {
     });
     try {
       await injectSession(context, noReportDelegate);
-      await page.goto(`${getPaymentsBaseUrl()}/en/delegated-reports`, {
-        waitUntil: "networkidle",
+      await page.goto(`${getPaymentsBaseUrl()}/en/delegated-reports`);
+
+      // This user is signed in, so the app shell renders for them -- the
+      // sidebar is there, just without the delegated-reports entry. Waiting
+      // for the shell is what makes the two absences below mean something:
+      // on a page that had not rendered they would both hold trivially.
+      await expect(page.getByTestId("sidebar-collapse-toggle")).toBeVisible({
+        timeout: ELEMENT_TIMEOUT_MS,
       });
-      await page.waitForTimeout(MUTATION_WAIT_MS);
+
       await expect(page.getByTestId("sidebar-delegatedReports")).toHaveCount(0);
       await expect(page.getByTestId("delegated-reports-page")).toHaveCount(0);
     } finally {
@@ -262,9 +259,7 @@ test.describe.serial("Delegated Reports page", () => {
         "seller_admins",
         `id=eq.${noReportDelegation.id}`,
       ).catch(() => {});
-      await supabaseAdmin.auth.admin
-        .deleteUser(noReportDelegate.userId)
-        .catch(() => {});
+      await deleteTestUser(noReportDelegate).catch(() => {});
     }
   });
 });

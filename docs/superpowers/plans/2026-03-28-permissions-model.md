@@ -171,7 +171,7 @@ The implementer must write the FULL migration covering ALL tables listed in the 
 - [ ] **Step 2: Apply the migration locally**
 
 ```bash
-docker exec -i supabase_db_candystore psql -U postgres -d postgres < supabase/migrations/20260328100000_crud_permissions.sql
+docker exec -i supabase_db_libra psql -U postgres -d postgres < supabase/migrations/20260328100000_crud_permissions.sql
 ```
 
 Expected: No errors. All policies recreated.
@@ -179,7 +179,7 @@ Expected: No errors. All policies recreated.
 - [ ] **Step 3: Verify has_permission() works**
 
 ```bash
-docker exec -i supabase_db_candystore psql -U postgres -d postgres -c "
+docker exec -i supabase_db_libra psql -U postgres -d postgres -c "
   select has_permission(
     (select id from auth.users limit 1),
     'products.create'
@@ -192,7 +192,7 @@ Expected: `t` (true) — because Section E granted all permissions to existing u
 - [ ] **Step 4: Verify permission catalog was seeded**
 
 ```bash
-docker exec -i supabase_db_candystore psql -U postgres -d postgres -c "
+docker exec -i supabase_db_libra psql -U postgres -d postgres -c "
   select count(*) from public.permissions;
   select count(*) from public.resource_permissions where resource_type = 'global';
 "
@@ -424,7 +424,7 @@ Expected: All 6 phases pass with the new permission-gated RLS.
 Quick manual test via psql:
 
 ```bash
-docker exec -i supabase_db_candystore psql -U postgres -d postgres -c "
+docker exec -i supabase_db_libra psql -U postgres -d postgres -c "
   -- Create a user with NO permissions and verify they can't insert products
   select has_permission('00000000-0000-0000-0000-000000000000', 'products.create');
 "

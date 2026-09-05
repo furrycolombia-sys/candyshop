@@ -252,7 +252,6 @@ cp .env.example .env.local
 # Start development server
 pnpm dev
 ```
-````
 
 Open [http://localhost:3000](http://localhost:3000)
 
@@ -334,26 +333,25 @@ Key skills:
 ## License
 
 [License type]
-
 ````
 
 ### AI Context Template (.ai-context/setup-guide.md)
 
-```markdown
+````markdown
 # Project Setup Guide (AI Context)
 
 > This document provides comprehensive context for AI assistants working on this project.
 
 ## Quick Context
 
-| Aspect | Details |
-|--------|---------|
-| Framework | Next.js X.X with App Router |
-| Language | TypeScript (strict mode) |
-| State | Zustand (client) + React Query (server) |
-| Styling | [MUI/Tailwind/etc.] |
-| Testing | Vitest + Playwright |
-| Package Manager | pnpm |
+| Aspect          | Details                                 |
+| --------------- | --------------------------------------- |
+| Framework       | Next.js X.X with App Router             |
+| Language        | TypeScript (strict mode)                |
+| State           | Zustand (client) + React Query (server) |
+| Styling         | [MUI/Tailwind/etc.]                     |
+| Testing         | Vitest + Playwright                     |
+| Package Manager | pnpm                                    |
 
 ## Architecture Summary
 
@@ -361,19 +359,19 @@ Key skills:
 
 ## Key Files to Know
 
-| File | Purpose |
-|------|---------|
-| `CLAUDE.md` | Main AI instructions |
-| `src/app/layout.tsx` | Root layout with providers |
-| `src/app/providers.tsx` | Client-side providers |
-| `src/features/` | All feature modules |
+| File                    | Purpose                    |
+| ----------------------- | -------------------------- |
+| `CLAUDE.md`             | Main AI instructions       |
+| `src/app/layout.tsx`    | Root layout with providers |
+| `src/app/providers.tsx` | Client-side providers      |
+| `src/features/`         | All feature modules        |
 
 ## Feature Inventory
 
-| Feature | Path | Description |
-|---------|------|-------------|
-| auth | `src/features/auth/` | Authentication & authorization |
-| [etc.] | | |
+| Feature | Path                 | Description                    |
+| ------- | -------------------- | ------------------------------ |
+| auth    | `src/features/auth/` | Authentication & authorization |
+| [etc.]  |                      |                                |
 
 ## Common Tasks
 
@@ -381,6 +379,7 @@ Key skills:
 
 ```bash
 /create-feature [name]
+```
 ````
 
 Creates: domain/, application/, infrastructure/, presentation/ structure.

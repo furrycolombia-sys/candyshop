@@ -3,7 +3,7 @@
 import { Minus, Plus, X } from "lucide-react";
 import { formatPrice, getCoverImageUrl, i18nField, tid } from "shared";
 
-import type { CartItem } from "@/features/cart/domain/types";
+import type { CartItem } from "@/shared/domain/cart";
 import {
   getCategoryColor,
   getCategoryTheme,
@@ -12,7 +12,7 @@ import {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- next-intl Translator type is complex; accepting any callable
 type TranslatorFn = (...args: any[]) => string;
 
-export interface CartItemTranslators {
+interface CartItemTranslators {
   t: TranslatorFn;
   tProducts: TranslatorFn;
   tTypes: TranslatorFn;

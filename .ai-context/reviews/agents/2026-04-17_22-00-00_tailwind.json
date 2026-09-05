@@ -54,8 +54,8 @@
       ]
     },
     {
-      "pattern": "Candy palette CSS variables used via var() in inline styles",
-      "description": "The landing FeaturesSection uses `style={{ backgroundColor: 'var(--pink)', color: 'var(--candy-text)' }}` for category cards. This correctly uses the CSS variable system rather than hardcoded colors or raw Tailwind palette classes. The variables are defined in the shared colors.css and mapped to Tailwind color utilities in theme.css.",
+      "pattern": "Libra palette CSS variables used via var() in inline styles",
+      "description": "The landing FeaturesSection uses `style={{ backgroundColor: 'var(--pink)', color: 'var(--libra-text)' }}` for category cards. This correctly uses the CSS variable system rather than hardcoded colors or raw Tailwind palette classes. The variables are defined in the shared colors.css and mapped to Tailwind color utilities in theme.css.",
       "files": [
         "apps/landing/src/features/home/presentation/components/FeaturesSection.tsx",
         "apps/landing/src/features/home/presentation/components/RolesSection.tsx"

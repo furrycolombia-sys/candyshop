@@ -64,8 +64,10 @@ export function TemplateEditor({
   const updateSection = useCallback(
     (index: number, partial: Partial<ProductSection>) => {
       setForm((prev) => {
+        const target = prev.sections[index];
+        if (!target) return prev;
         const sections = [...prev.sections];
-        sections[index] = { ...sections[index], ...partial };
+        sections[index] = { ...target, ...partial };
         return { ...prev, sections };
       });
     },
@@ -86,10 +88,13 @@ export function TemplateEditor({
       partial: Partial<ProductSectionItem>,
     ) => {
       setForm((prev) => {
+        const section = prev.sections[sectionIndex];
+        const target = section?.items[itemIndex];
+        if (!section || !target) return prev;
+        const items = [...section.items];
+        items[itemIndex] = { ...target, ...partial };
         const sections = [...prev.sections];
-        const items = [...sections[sectionIndex].items];
-        items[itemIndex] = { ...items[itemIndex], ...partial };
-        sections[sectionIndex] = { ...sections[sectionIndex], items };
+        sections[sectionIndex] = { ...section, items };
         return { ...prev, sections };
       });
     },
@@ -98,23 +103,25 @@ export function TemplateEditor({
 
   const addItem = useCallback((sectionIndex: number) => {
     setForm((prev) => {
-      const sections = [...prev.sections];
+      const section = prev.sections[sectionIndex];
+      if (!section) return prev;
       const items = [
-        ...sections[sectionIndex].items,
-        createEmptyItem(sections[sectionIndex].items.length + 1),
+        ...section.items,
+        createEmptyItem(section.items.length + 1),
       ];
-      sections[sectionIndex] = { ...sections[sectionIndex], items };
+      const sections = [...prev.sections];
+      sections[sectionIndex] = { ...section, items };
       return { ...prev, sections };
     });
   }, []);
 
   const removeItem = useCallback((sectionIndex: number, itemIndex: number) => {
     setForm((prev) => {
+      const section = prev.sections[sectionIndex];
+      if (!section) return prev;
+      const items = section.items.filter((_, i) => i !== itemIndex);
       const sections = [...prev.sections];
-      const items = sections[sectionIndex].items.filter(
-        (_, i) => i !== itemIndex,
-      );
-      sections[sectionIndex] = { ...sections[sectionIndex], items };
+      sections[sectionIndex] = { ...section, items };
       return { ...prev, sections };
     });
   }, []);

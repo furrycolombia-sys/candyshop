@@ -7,10 +7,8 @@ import { expect, test } from "@playwright/test";
 import { cleanupTestData } from "./helpers/cleanup";
 import {
   APP_URLS,
-  DEBOUNCE_WAIT_MS,
   ELEMENT_TIMEOUT_MS,
   LONG_OPERATION_TIMEOUT_MS,
-  MUTATION_WAIT_MS,
   NAVIGATION_TIMEOUT_MS,
 } from "./helpers/constants";
 import {
@@ -85,10 +83,8 @@ test.describe.serial("Delegate sees buyer receipt", () => {
       await cleanupTestData(seller.userId, buyer?.userId ?? "").catch(() => {});
     }
     if (delegate) {
-      const { supabaseAdmin } = await import("./helpers/session");
-      await supabaseAdmin.auth.admin
-        .deleteUser(delegate.userId)
-        .catch(() => {});
+      const { deleteTestUser } = await import("./helpers/session");
+      await deleteTestUser(delegate).catch(() => {});
     }
   });
 
@@ -100,13 +96,11 @@ test.describe.serial("Delegate sees buyer receipt", () => {
   }) => {
     await injectSession(context, seller);
     await page.goto(`${APP_URLS.STUDIO}/en`);
-    await page.waitForLoadState("networkidle");
 
     await expect(page.getByTestId("new-product-button")).toBeVisible({
       timeout: LONG_OPERATION_TIMEOUT_MS,
     });
     await page.getByTestId("new-product-button").click();
-    await page.waitForLoadState("networkidle");
 
     const nameField = page.getByTestId("inline-text-en-name_en");
     await nameField.click();
@@ -141,7 +135,6 @@ test.describe.serial("Delegate sees buyer receipt", () => {
   }) => {
     await injectSession(context, seller);
     await page.goto(`${APP_URLS.PAYMENTS}/en/payment-methods`);
-    await page.waitForLoadState("networkidle");
 
     await page.getByTestId("add-payment-method-button").click();
 
@@ -166,6 +159,10 @@ test.describe.serial("Delegate sees buyer receipt", () => {
       state: "visible",
       timeout: ELEMENT_TIMEOUT_MS,
     });
+    // Idempotent setup: the checkbox may already be on from a previous
+    // phase in this serial flow. Reaching a known state is not the test
+    // branching on behaviour.
+    // eslint-disable-next-line playwright/no-conditional-in-test -- see above
     if (!(await requiresReceiptCheckbox.isChecked())) {
       await requiresReceiptCheckbox.click();
     }
@@ -174,6 +171,10 @@ test.describe.serial("Delegate sees buyer receipt", () => {
     const requiresTransferCheckbox = page.getByTestId(
       "payment-method-requires-transfer-number",
     );
+    // Idempotent setup: the checkbox may already be on from a previous
+    // phase in this serial flow. Reaching a known state is not the test
+    // branching on behaviour.
+    // eslint-disable-next-line playwright/no-conditional-in-test -- see above
     if (!(await requiresTransferCheckbox.isChecked())) {
       await requiresTransferCheckbox.click();
     }
@@ -182,7 +183,6 @@ test.describe.serial("Delegate sees buyer receipt", () => {
     await snap(page, "seller-method-configured");
 
     await page.getByTestId("payment-method-save").click();
-    await page.waitForTimeout(MUTATION_WAIT_MS);
 
     await expect(page.getByTestId("payment-methods-page")).toBeVisible({
       timeout: ELEMENT_TIMEOUT_MS,
@@ -198,26 +198,33 @@ test.describe.serial("Delegate sees buyer receipt", () => {
   }) => {
     await injectSession(context, buyer);
     await page.goto(`${APP_URLS.STORE}/en`);
-    await page.waitForLoadState("networkidle");
 
     await expect(page.getByTestId("search-bar-input")).toBeVisible({
       timeout: ELEMENT_TIMEOUT_MS,
     });
     await page.getByTestId("search-bar-input").fill(PRODUCT_NAME);
-    await page.waitForTimeout(DEBOUNCE_WAIT_MS);
 
-    const productCard = page.getByTestId("product-card-link").first();
+    // Filter by the product just searched for rather than taking whatever is
+    // first. The search is debounced, so straight after fill() the grid can
+    // still be showing the previous results, and .first() would click a stale
+    // card. This bit full-purchase-flow, which added the same product twice
+    // and then found one seller group where it expected two.
+    const productCard = page
+      .getByTestId("product-card-link")
+      .filter({ hasText: PRODUCT_NAME })
+      .first();
     await expect(productCard).toBeVisible({ timeout: ELEMENT_TIMEOUT_MS });
     await productCard.click();
-    await page.waitForLoadState("networkidle");
 
     await page.getByTestId("hero-add-to-cart").click();
-    await page.waitForTimeout(MUTATION_WAIT_MS);
 
-    await page
-      .getByTestId("cart-drawer-trigger")
-      .first()
-      .click({ force: true });
+    // No `force: true` here. Forcing the click skips Playwright's actionability
+    // checks, so this passed even if the trigger were covered or disabled --
+    // i.e. even if a real buyer could not open their cart. Assert it is
+    // actually clickable, then click it normally.
+    const cartTrigger = page.getByTestId("cart-drawer-trigger").first();
+    await expect(cartTrigger).toBeVisible();
+    await cartTrigger.click();
     await expect(page.getByTestId("cart-drawer-items")).toBeVisible();
     await page.getByTestId("cart-checkout").click();
     await page.waitForURL(
@@ -239,7 +246,6 @@ test.describe.serial("Delegate sees buyer receipt", () => {
       )
       .toBeGreaterThan(1);
     await methodSelect.selectOption({ index: 1 });
-    await page.waitForTimeout(MUTATION_WAIT_MS);
 
     const transferInput = sellerCard.getByTestId("transfer-number-input");
     await expect(transferInput).toBeVisible({ timeout: ELEMENT_TIMEOUT_MS });
@@ -247,7 +253,6 @@ test.describe.serial("Delegate sees buyer receipt", () => {
 
     const fileInput = sellerCard.getByTestId("receipt-file-input");
     await fileInput.setInputFiles(RECEIPT_FIXTURE);
-    await page.waitForTimeout(MUTATION_WAIT_MS);
 
     const receiptPreview = sellerCard.getByTestId("receipt-preview");
     await expect(receiptPreview).toBeVisible({
@@ -273,7 +278,6 @@ test.describe.serial("Delegate sees buyer receipt", () => {
   }) => {
     await injectSession(context, seller);
     await page.goto(`${APP_URLS.STUDIO}/en/products/${productId}/delegates`);
-    await page.waitForLoadState("networkidle");
 
     await expect(page.getByTestId("product-delegates-page")).toBeVisible({
       timeout: ELEMENT_TIMEOUT_MS,
@@ -281,7 +285,6 @@ test.describe.serial("Delegate sees buyer receipt", () => {
 
     const searchInput = page.getByTestId("delegate-search-input");
     await searchInput.fill(delegate.email);
-    await page.waitForTimeout(DEBOUNCE_WAIT_MS);
 
     const searchResult = page.locator("ul li button").first();
     await expect(searchResult).toBeVisible({ timeout: ELEMENT_TIMEOUT_MS });
@@ -291,10 +294,17 @@ test.describe.serial("Delegate sees buyer receipt", () => {
     await snap(page, "seller-delegate-configured");
 
     await page.getByTestId("delegate-add-submit").click();
-    await page.waitForTimeout(MUTATION_WAIT_MS);
 
+    // The mutation invalidates the seller-admins query on success, so the new
+    // delegate shows up once the refetch lands. That is a real signal the
+    // server accepted the write, which is what the fixed sleep was standing in
+    // for -- the reload after it would otherwise have raced the commit.
+    await expect(
+      page.getByTestId(`delegate-item-${delegate.userId}`),
+    ).toBeVisible({ timeout: ELEMENT_TIMEOUT_MS });
+
+    // Reload to prove it persisted rather than merely leaving the cache.
     await page.reload();
-    await page.waitForLoadState("networkidle");
 
     await expect(
       page.getByTestId(`delegate-item-${delegate.userId}`),
@@ -310,7 +320,6 @@ test.describe.serial("Delegate sees buyer receipt", () => {
   }) => {
     await injectSession(context, delegate);
     await page.goto(`${APP_URLS.PAYMENTS}/en/assigned`);
-    await page.waitForLoadState("networkidle");
 
     await expect(page.getByTestId("assigned-orders-page")).toBeVisible({
       timeout: ELEMENT_TIMEOUT_MS,
@@ -335,13 +344,14 @@ test.describe.serial("Delegate sees buyer receipt", () => {
     // A receipt download link must be present — no "no receipt" placeholder.
     const receiptLink = page.getByTestId("receipt-view-link").first();
     await expect(receiptLink).toBeVisible({ timeout: ELEMENT_TIMEOUT_MS });
-    await expect(page.getByTestId("receipt-none")).not.toBeVisible();
+    await expect(page.getByTestId("receipt-none")).toBeHidden();
 
     await snap(page, "delegate-receipt-visible");
 
     // Verify the downloaded file is byte-for-byte the image the buyer uploaded.
     // The href is a Supabase signed URL serving the raw stored bytes.
     const receiptHref = await receiptLink.getAttribute("href");
+    // eslint-disable-next-line playwright/prefer-web-first-assertions -- compares two values captured at different times, which toHaveAttribute cannot express
     expect(receiptHref).toBeTruthy();
 
     const fixtureHash = createHash("sha256")
@@ -368,13 +378,21 @@ test.describe.serial("Delegate sees buyer receipt", () => {
     await expect(page.getByTestId("confirm-action-panel")).toBeVisible();
     await page.getByTestId("confirm-checkbox").check();
     await page.getByTestId("confirm-action-submit").click();
-    await page.waitForTimeout(MUTATION_WAIT_MS);
+
+    // Wait for the mutation's own refetch before reloading. The mutation
+    // invalidates its query on success, so this is the point at which the
+    // server is known to have accepted the write; reloading before it races
+    // the commit and reads stale data. This replaces a fixed sleep -- removing
+    // that sleep without putting this in its place is what broke the
+    // two-seller cart assertion in full-purchase-flow.
+    await expect(page.getByTestId("assigned-orders-empty")).toBeVisible({
+      timeout: ELEMENT_TIMEOUT_MS,
+    });
     await snap(page, "delegate-order-approved");
 
     // After approval the order leaves the assigned list (only pending/evidence
     // orders are shown there).
     await page.reload();
-    await page.waitForLoadState("networkidle");
 
     await expect(page.getByTestId("assigned-orders-empty")).toBeVisible({
       timeout: ELEMENT_TIMEOUT_MS,
@@ -387,7 +405,6 @@ test.describe.serial("Delegate sees buyer receipt", () => {
   test("Phase 6: buyer sees order approved", async ({ context, page }) => {
     await injectSession(context, buyer);
     await page.goto(`${APP_URLS.PAYMENTS}/en/purchases`);
-    await page.waitForLoadState("networkidle");
 
     await expect(page.getByTestId("order-status-approved").first()).toBeVisible(
       { timeout: ELEMENT_TIMEOUT_MS },

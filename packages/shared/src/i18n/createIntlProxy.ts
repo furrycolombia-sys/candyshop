@@ -1,6 +1,8 @@
 import { type NextRequest, NextResponse } from "next/server";
 import createMiddleware from "next-intl/middleware";
 
+import { shouldBypass } from "./shouldBypass";
+
 type IntlRouting = {
   defaultLocale: string;
   locales: readonly string[];
@@ -10,75 +12,26 @@ type IntlRouting = {
   domains?: unknown;
   alternateLinks?: boolean;
 };
-type ProxyResponse = Awaited<ReturnType<typeof NextResponse.next>>;
 
-interface ProxyBypassOptions {
-  extraBypassPrefixes?: string[];
-}
-
-interface SupabaseIntlProxyOptions extends ProxyBypassOptions {
-  routing: IntlRouting;
-  updateSession: (request: NextRequest) => Promise<ProxyResponse>;
-}
-
-function shouldBypass(
-  pathname: string,
-  extraBypassPrefixes: readonly string[] = [],
-) {
-  return (
-    pathname.startsWith("/_next") ||
-    pathname.startsWith("/api") ||
-    extraBypassPrefixes.some((prefix) => pathname.startsWith(prefix)) ||
-    pathname.includes(".")
-  );
-}
-
-export function createIntlProxy(
-  routing: IntlRouting,
-  options: ProxyBypassOptions = {},
-) {
+/**
+ * The locale-routing middleware every app wraps.
+ *
+ * Each app's `proxy.ts` composes this inside `clerkMiddleware()`, which is
+ * what populates the request context that `auth()` and `currentUser()` need.
+ *
+ * @param routing - the app's next-intl routing configuration.
+ * @returns a middleware function for `proxy.ts` to export.
+ */
+export function createIntlProxy(routing: IntlRouting) {
   const intlMiddleware = createMiddleware(
     routing as Parameters<typeof createMiddleware>[0],
   );
 
   return function proxy(request: NextRequest) {
-    if (shouldBypass(request.nextUrl.pathname, options.extraBypassPrefixes)) {
+    if (shouldBypass(request.nextUrl.pathname)) {
       return NextResponse.next();
     }
 
     return intlMiddleware(request);
-  };
-}
-
-export function createSupabaseIntlProxy({
-  routing,
-  updateSession,
-  extraBypassPrefixes,
-}: SupabaseIntlProxyOptions) {
-  const intlMiddleware = createMiddleware(
-    routing as Parameters<typeof createMiddleware>[0],
-  );
-
-  return async function proxy(request: NextRequest) {
-    if (shouldBypass(request.nextUrl.pathname, extraBypassPrefixes)) {
-      return NextResponse.next();
-    }
-
-    const supabaseResponse = await updateSession(request);
-    const intlResponse = intlMiddleware(request);
-
-    for (const cookie of supabaseResponse.cookies.getAll()) {
-      intlResponse.cookies.set(cookie.name, cookie.value, {
-        domain: cookie.domain,
-        expires: cookie.expires,
-        httpOnly: cookie.httpOnly,
-        maxAge: cookie.maxAge,
-        path: cookie.path,
-        sameSite: cookie.sameSite,
-        secure: cookie.secure,
-      });
-    }
-
-    return intlResponse;
   };
 }

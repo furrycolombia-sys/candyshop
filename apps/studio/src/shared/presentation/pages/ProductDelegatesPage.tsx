@@ -1,0 +1,108 @@
+"use client";
+
+import { useCurrentUserPermissions } from "auth/client";
+import { useTranslations } from "next-intl";
+import { useCallback } from "react";
+import { tid } from "shared";
+
+import { useProductById } from "@/features/products/application/hooks/useProductForm";
+import {
+  useAddDelegate,
+  useRemoveDelegate,
+} from "@/features/seller-admins/application/hooks/useDelegateMutations";
+import { useDelegates } from "@/features/seller-admins/application/hooks/useDelegates";
+import { SELLER_ADMINS_READ_PERMISSION } from "@/features/seller-admins/domain/constants";
+import type { DelegatePermission } from "@/features/seller-admins/domain/types";
+import { AddDelegateForm } from "@/features/seller-admins/presentation/components/AddDelegateForm";
+import { DelegateList } from "@/features/seller-admins/presentation/components/DelegateList";
+import { useCurrentUser } from "@/shared/application/hooks/useCurrentUser";
+import { AccessDeniedState } from "@/shared/presentation/components/AccessDeniedState";
+
+interface ProductDelegatesPageProps {
+  productId: string;
+}
+
+/**
+ * The delegates for one product.
+ *
+ * Shared rather than in features/seller-admins for the same reason as
+ * ProductListPage: it composes two features. It manages delegates and it needs
+ * the product's own record to title the page, and reaching into
+ * features/products for that from inside another feature is what the
+ * architecture rule forbids. A page that needs two features is a composition
+ * root; a feature is the wrong place for one.
+ */
+export function ProductDelegatesPage({ productId }: ProductDelegatesPageProps) {
+  const { hasPermission } = useCurrentUserPermissions();
+  const { user } = useCurrentUser();
+  const t = useTranslations("sellerAdmins");
+  const tCommon = useTranslations("common");
+
+  const sellerId = user?.id;
+  const { data: product, isLoading: productLoading } =
+    useProductById(productId);
+  const { data: delegates = [], isLoading: delegatesLoading } = useDelegates(
+    sellerId,
+    productId,
+  );
+  const addMutation = useAddDelegate();
+  const removeMutation = useRemoveDelegate();
+
+  const handleAdd = useCallback(
+    (adminUserId: string, permissions: DelegatePermission[]) => {
+      if (!sellerId) return;
+      addMutation.mutate({ sellerId, adminUserId, permissions, productId });
+    },
+    [sellerId, productId, addMutation],
+  );
+
+  const handleRemove = useCallback(
+    (adminUserId: string) => {
+      if (!sellerId) return;
+      removeMutation.mutate({ sellerId, adminUserId, productId });
+    },
+    [sellerId, productId, removeMutation],
+  );
+
+  if (delegatesLoading || productLoading) return null;
+
+  if (!hasPermission(SELLER_ADMINS_READ_PERMISSION)) {
+    return (
+      <AccessDeniedState
+        title={tCommon("accessDenied")}
+        hint={tCommon("accessDeniedHint")}
+      />
+    );
+  }
+
+  const productName = product?.name_en ?? "";
+
+  return (
+    <div
+      {...tid("product-delegates-page")}
+      className="mx-auto w-full max-w-2xl space-y-6 p-6"
+    >
+      <h1 className="text-xl font-semibold">
+        {t("title")} — {productName}
+      </h1>
+
+      <section>
+        <h2 className="mb-3 text-base font-medium">{t("currentDelegates")}</h2>
+        <DelegateList
+          delegates={delegates}
+          onRemove={handleRemove}
+          isRemoving={removeMutation.isPending}
+        />
+      </section>
+
+      <section>
+        <h2 className="mb-3 text-base font-medium">{t("addDelegate")}</h2>
+        <AddDelegateForm
+          onAdd={handleAdd}
+          isAdding={addMutation.isPending}
+          productId={productId}
+        />
+      </section>
+    </div>
+  );
+}

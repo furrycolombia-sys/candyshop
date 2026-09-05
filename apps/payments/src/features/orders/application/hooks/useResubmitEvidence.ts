@@ -3,8 +3,8 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSupabase } from "shared";
 
-import { MY_ORDERS_QUERY_KEY } from "@/features/orders/domain/constants";
 import { resubmitEvidence } from "@/features/orders/infrastructure/orderQueries";
+import { MY_ORDERS_QUERY_KEY } from "@/shared/domain/queryKeys";
 import { uploadOrderReceipt } from "@/shared/infrastructure/receiptActions";
 
 interface ResubmitParams {

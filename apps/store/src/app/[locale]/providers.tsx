@@ -1,11 +1,10 @@
 "use client";
 
 import { captureException } from "@sentry/nextjs";
-import { AuthSessionBootstrap } from "auth";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { Suspense, type ReactNode } from "react";
 
-import { CartProvider, FlyToCartProvider } from "@/features/cart";
+import { CartProvider, FlyToCartProvider } from "@/shared/application/cart";
 import { ErrorProvider } from "@/shared/application/context/ErrorContext";
 import { getRuntimeEnv } from "@/shared/infrastructure/config/environment";
 import {
@@ -29,7 +28,6 @@ export function Providers({ children }: ProvidersProps) {
       <NuqsAdapter>
         <QueryProvider onQueryError={captureException}>
           <MSWProvider>
-            <AuthSessionBootstrap authHostUrl={authHostUrl} />
             <ApiAuthBootstrap authHostUrl={authHostUrl} />
             <CartProvider>
               <FlyToCartProvider>

@@ -30,18 +30,16 @@ import type { BrowserContext, Page } from "@playwright/test";
 import { dragAndDrop } from "./helpers/drag";
 import {
   APP_URLS,
-  DEBOUNCE_WAIT_MS,
   ELEMENT_TIMEOUT_MS,
-  MUTATION_WAIT_MS,
   NAVIGATION_TIMEOUT_MS,
 } from "./helpers/constants";
 import {
   adminDelete,
   adminInsert,
   createTestUser,
+  deleteTestUser,
   injectSession,
   SELLER_PERMISSIONS,
-  supabaseAdmin,
   type TestUser,
 } from "./helpers/session";
 import { createSnapHelper } from "./helpers/snap";
@@ -209,7 +207,7 @@ test.describe.serial(
         await adminDelete("products", `seller_id=eq.${seller.userId}`);
       } catch {}
       try {
-        await supabaseAdmin.auth.admin.deleteUser(seller.userId);
+        await deleteTestUser(seller);
       } catch {}
     });
 
@@ -242,8 +240,6 @@ test.describe.serial(
 
       // Open the pre-seeded product in edit mode
       await page.goto(`${APP_URLS.STUDIO}/en/products/${productId}`);
-      await page.waitForLoadState("networkidle");
-      await page.waitForTimeout(MUTATION_WAIT_MS);
 
       // Verify the initial seeded section order: cards(0), accordion(1), two-column(2), gallery(3)
       await expect(page.getByTestId("section-type-0")).toHaveValue("cards");
@@ -261,7 +257,6 @@ test.describe.serial(
         .locator("[data-rfd-drag-handle-draggable-id]")
         .first();
       await dragAndDrop(page, sectionHandle0, "down", 1);
-      await page.waitForTimeout(MUTATION_WAIT_MS);
 
       await expect(page.getByTestId("section-type-0")).toHaveValue("accordion");
       await expect(page.getByTestId("section-type-1")).toHaveValue("cards");
@@ -276,8 +271,6 @@ test.describe.serial(
 
       // Re-open and verify the new order persisted
       await page.goto(`${APP_URLS.STUDIO}/en/products/${productId}`);
-      await page.waitForLoadState("networkidle");
-      await page.waitForTimeout(MUTATION_WAIT_MS);
 
       await snap(page, "sections-persistence-check");
 
@@ -302,8 +295,6 @@ test.describe.serial(
       await injectSession(context, seller);
 
       await page.goto(`${APP_URLS.STUDIO}/en/products/${productId}`);
-      await page.waitForLoadState("networkidle");
-      await page.waitForTimeout(MUTATION_WAIT_MS);
 
       // Scope to desktop gallery to avoid strict-mode collision with mobile gallery
       const gallery = page.getByTestId("image-gallery-thumbs");
@@ -327,7 +318,6 @@ test.describe.serial(
 
       // Change cover to image 1
       await gallery.getByTestId("image-thumb-cover-1").click();
-      await page.waitForTimeout(DEBOUNCE_WAIT_MS);
       await snap(page, "cover-changed-to-1");
 
       await expect(gallery.getByTestId("image-thumb-cover-1")).toHaveAttribute(
@@ -341,7 +331,6 @@ test.describe.serial(
 
       // Revert cover back to image 0
       await gallery.getByTestId("image-thumb-cover-0").click();
-      await page.waitForTimeout(DEBOUNCE_WAIT_MS);
       await snap(page, "cover-reverted-to-0");
 
       await expect(gallery.getByTestId("image-thumb-cover-0")).toHaveAttribute(
@@ -373,7 +362,6 @@ test.describe.serial(
       await injectSession(context, seller);
 
       await page.goto(`${APP_URLS.STUDIO}/en`);
-      await page.waitForLoadState("networkidle");
 
       const rows = page.locator(`[data-testid^="product-row-"]`);
       await rows
@@ -390,13 +378,14 @@ test.describe.serial(
         .locator("[data-rfd-drag-handle-draggable-id]")
         .first();
       await dragAndDrop(page, handle, "down", 1);
-      await page.waitForTimeout(MUTATION_WAIT_MS);
       await snap(page, "product-list-after-reorder");
 
       const newFirstRowId = await rows.first().getAttribute("data-testid");
       const newSecondRowId = await rows.nth(1).getAttribute("data-testid");
 
+      // eslint-disable-next-line playwright/prefer-web-first-assertions -- compares two values captured at different times, which toHaveAttribute cannot express
       expect(newFirstRowId).toBe(secondRowId);
+      // eslint-disable-next-line playwright/prefer-web-first-assertions -- compares two values captured at different times, which toHaveAttribute cannot express
       expect(newSecondRowId).toBe(firstRowId);
     });
 
@@ -427,8 +416,6 @@ test.describe.serial(
       // ── Phase 1: open editor, confirm current order, drag-reorder ─────────────
 
       await page.goto(`${APP_URLS.STUDIO}/en/products/${productId}`);
-      await page.waitForLoadState("networkidle");
-      await page.waitForTimeout(MUTATION_WAIT_MS);
 
       // Post-test-1 section layout: accordion(0), cards(1), two-column(2), gallery(3)
       await expect(page.getByTestId("section-item-title-0-0")).toHaveValue(
@@ -460,19 +447,15 @@ test.describe.serial(
 
       // Accordion (slot 0) — vertical droppable: move item 0 → position 1
       await dragAndDrop(page, itemDragHandle(page, 0, 0), "down", 1);
-      await page.waitForTimeout(MUTATION_WAIT_MS);
 
       // Cards (slot 1) — horizontal droppable: move item 0 → position 1
       await dragAndDrop(page, itemDragHandle(page, 1, 0), "right", 1);
-      await page.waitForTimeout(MUTATION_WAIT_MS);
 
       // Two-column (slot 2) — vertical droppable: move item 0 → position 1
       await dragAndDrop(page, itemDragHandle(page, 2, 0), "down", 1);
-      await page.waitForTimeout(MUTATION_WAIT_MS);
 
       // Gallery (slot 3) — vertical droppable: move item 0 → position 1
       await dragAndDrop(page, itemDragHandle(page, 3, 0), "down", 1);
-      await page.waitForTimeout(MUTATION_WAIT_MS);
 
       await snap(page, "section-items-after-reorder");
 
@@ -512,8 +495,6 @@ test.describe.serial(
       // ── Phase 2: re-open and verify the order persisted ───────────────────────
 
       await page.goto(`${APP_URLS.STUDIO}/en/products/${productId}`);
-      await page.waitForLoadState("networkidle");
-      await page.waitForTimeout(MUTATION_WAIT_MS);
 
       await snap(page, "section-items-persistence-check");
 
@@ -562,8 +543,6 @@ test.describe.serial(
       // ── Phase 1: open editor, capture initial srcs, drag-reorder ─────────────
 
       await page.goto(`${APP_URLS.STUDIO}/en/products/${productId}`);
-      await page.waitForLoadState("networkidle");
-      await page.waitForTimeout(MUTATION_WAIT_MS);
 
       const gallery = page.getByTestId("image-gallery-thumbs");
 
@@ -585,6 +564,7 @@ test.describe.serial(
         .locator("img")
         .first()
         .getAttribute("src");
+      // eslint-disable-next-line playwright/prefer-web-first-assertions -- compares two values captured at different times, which toHaveAttribute cannot express
       expect(srcBefore0).not.toBe(srcBefore1); // sanity: different images
 
       await snap(page, "carousel-before-reorder");
@@ -594,7 +574,6 @@ test.describe.serial(
         .locator("[data-rfd-drag-handle-draggable-id]")
         .first();
       await dragAndDrop(page, thumbHandle, "down", 1);
-      await page.waitForTimeout(MUTATION_WAIT_MS);
 
       await snap(page, "carousel-after-reorder");
 
@@ -609,7 +588,9 @@ test.describe.serial(
         .locator("img")
         .first()
         .getAttribute("src");
+      // eslint-disable-next-line playwright/prefer-web-first-assertions -- compares two values captured at different times, which toHaveAttribute cannot express
       expect(srcAfter0).toBe(srcBefore1);
+      // eslint-disable-next-line playwright/prefer-web-first-assertions -- compares two values captured at different times, which toHaveAttribute cannot express
       expect(srcAfter1).toBe(srcBefore0);
 
       // Save and return to list
@@ -622,10 +603,12 @@ test.describe.serial(
       // ── Phase 2: re-open and verify the order persisted ───────────────────────
 
       await page.goto(`${APP_URLS.STUDIO}/en/products/${productId}`);
-      await page.waitForLoadState("networkidle");
-      await page.waitForTimeout(MUTATION_WAIT_MS);
 
       const galleryReload = page.getByTestId("image-gallery-thumbs");
+      // Reading src attributes below is a one-shot read, so the gallery has to
+      // be there first. Waiting for it replaces both a settle wait and a fixed
+      // sleep, and says what it is waiting for.
+      await expect(galleryReload).toBeVisible({ timeout: ELEMENT_TIMEOUT_MS });
 
       await snap(page, "carousel-persistence-check");
 
@@ -641,7 +624,9 @@ test.describe.serial(
         .getAttribute("src");
 
       // After reload, position 0 should still show the image that was originally at position 1
+      // eslint-disable-next-line playwright/prefer-web-first-assertions -- compares two values captured at different times, which toHaveAttribute cannot express
       expect(srcReload0).toBe(srcBefore1);
+      // eslint-disable-next-line playwright/prefer-web-first-assertions -- compares two values captured at different times, which toHaveAttribute cannot express
       expect(srcReload1).toBe(srcBefore0);
     });
   },

@@ -1,6 +1,6 @@
 import { setRequestLocale } from "next-intl/server";
 
-import { LoginPage } from "@/features/auth/presentation/pages/LoginPage";
+import { LoginPage } from "@/features/auth";
 
 export default async function Page({
   params,

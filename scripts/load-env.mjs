@@ -44,14 +44,22 @@ function parseEnvContent(content) {
 // from the caller-supplied env name.
 function envFileName(env) {
   switch (env) {
-    case "dev":        return ".env.dev";
-    case "staging":    return ".env.staging";
-    case "e2e":        return ".env.e2e";
-    case "prod":       return ".env.prod";
-    case "production": return ".env.production";
-    case "test":       return ".env.test";
-    case "ci":         return ".env.ci";
-    default:           return null;
+    case "dev":
+      return ".env.dev";
+    case "staging":
+      return ".env.staging";
+    case "e2e":
+      return ".env.e2e";
+    case "prod":
+      return ".env.prod";
+    case "production":
+      return ".env.production";
+    case "test":
+      return ".env.test";
+    case "ci":
+      return ".env.ci";
+    default:
+      return null;
   }
 }
 
@@ -65,15 +73,41 @@ function readEnvFile(env) {
   return parseEnvContent(readFileSync(fullPath, "utf-8")); // nosemgrep: AIK_ts_generic_path_traversal
 }
 
-// Reads and parses the .secrets file. Path is fully hardcoded — no external
-// input flows into the file read.
+// Where the secrets file lives. Hardcoded to the repository root, with one
+// documented exception: LOAD_ENV_SECRETS_PATH.
+//
+// The exception exists for the test suite. These tests used to exercise the
+// local path by writing a placeholder .secrets at the repository root and
+// removing it afterwards, which is shared mutable state -- it failed roughly
+// one run in six, and a flaky gate teaches people to re-run rather than read.
+// Pointing the test at its own temp file removes the shared state instead of
+// retrying around it.
+//
+// It is read from the environment rather than passed as an argument because
+// loadEnv is called by scripts that must not know about it.
+function secretsFilePath() {
+  return process.env.LOAD_ENV_SECRETS_PATH
+    ? resolve(process.env.LOAD_ENV_SECRETS_PATH) // nosemgrep: AIK_ts_generic_path_traversal
+    : resolve(rootDir, ".secrets");
+}
+
+// Reads and parses the secrets file.
 function readSecretsFile() {
-  const fullPath = resolve(rootDir, ".secrets");
+  const fullPath = secretsFilePath();
   if (!existsSync(fullPath)) return {};
-  return parseEnvContent(readFileSync(fullPath, "utf-8"));
+  return parseEnvContent(readFileSync(fullPath, "utf-8")); // nosemgrep: AIK_ts_generic_path_traversal
 }
 
 const SECRET_RE = /(?<!\$)\$secret:([A-Z][A-Z0-9_]*)/g;
+
+// Explicit opt-out for a $secret: reference that is allowed to resolve to an
+// empty string in CI. Empty by design: every current $secret: reference is
+// expected to have a real value (see .env.ci's Sentry comment — a value that
+// is legitimately optional is left blank directly in the env file instead of
+// using $secret:, e.g. NEXT_PUBLIC_SENTRY_DSN=). Add a name here only with a
+// comment explaining why that specific secret may be empty in CI; do not use
+// this to silence a missing-secret error you haven't investigated.
+const CI_OPTIONAL_SECRETS = new Set([]);
 
 function resolveSecrets(vars, secrets) {
   for (const [key, val] of Object.entries(vars)) {
@@ -87,7 +121,15 @@ function resolveSecrets(vars, secrets) {
   return vars;
 }
 
-const ALLOWED_ENVS = ["dev", "staging", "e2e", "prod", "production", "test", "ci"];
+const ALLOWED_ENVS = [
+  "dev",
+  "staging",
+  "e2e",
+  "prod",
+  "production",
+  "test",
+  "ci",
+];
 
 export function loadEnv(targetEnv) {
   const env = targetEnv || process.env.TARGET_ENV || "dev";
@@ -98,7 +140,8 @@ export function loadEnv(targetEnv) {
   }
 
   const filename = envFileName(env);
-  if (!filename || !existsSync(resolve(rootDir, filename))) { // nosemgrep: AIK_ts_generic_path_traversal
+  if (!filename || !existsSync(resolve(rootDir, filename))) {
+    // nosemgrep: AIK_ts_generic_path_traversal
     throw new Error(`Env file not found: .env.${env}`);
   }
 
@@ -108,16 +151,33 @@ export function loadEnv(targetEnv) {
   const hasSecretRefs = Object.values(vars).some((v) => v.includes("$secret:"));
   if (hasSecretRefs) {
     if (process.env.CI === "true") {
-      // CI: secrets already in process.env — clear unresolved refs
+      // CI: secrets are injected into process.env by the workflow's `env:`
+      // block. A $secret:NAME reference that resolves to nothing here means
+      // the workflow forgot to pass NAME through — fail loudly and name the
+      // variable, instead of silently writing "" and letting the failure
+      // surface far away (e.g. a Playwright setup script erroring out over
+      // an env var whose name gives no hint that load-env is the culprit).
       for (const [key, val] of Object.entries(vars)) {
         if (val.includes("$secret:")) {
-          // Use the CI env var directly if available, otherwise empty string
           const match = val.match(/\$secret:([A-Z][A-Z0-9_]*)/);
-          vars[key] = match ? (process.env[match[1]] ?? "") : "";
+          const name = match?.[1];
+          const resolved = name ? process.env[name] : undefined;
+          if (!resolved) {
+            if (name && CI_OPTIONAL_SECRETS.has(name)) {
+              vars[key] = "";
+              continue;
+            }
+            throw new Error(
+              `Missing secret in CI: "${name}" (referenced by .env.${env}). ` +
+                `The workflow job running this must pass ${name} through its ` +
+                `env: block (the GitHub repo secret must already exist).`,
+            );
+          }
+          vars[key] = resolved;
         }
       }
     } else {
-      if (!existsSync(resolve(rootDir, ".secrets"))) {
+      if (!existsSync(secretsFilePath())) {
         throw new Error("Missing .secrets file. Run pnpm sync-secrets.");
       }
       resolveSecrets(vars, readSecretsFile());

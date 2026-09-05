@@ -1,5 +1,5 @@
 /** @type {import('stylelint').Config} */
-export default {
+const config = {
   extends: ["stylelint-config-standard", "stylelint-config-tailwindcss"],
   rules: {
     "at-rule-no-unknown": [
@@ -28,3 +28,5 @@ export default {
     ],
   },
 };
+
+export default config;

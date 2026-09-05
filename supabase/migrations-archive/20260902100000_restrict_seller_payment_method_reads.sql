@@ -1,0 +1,29 @@
+-- Remove the SELECT policy that let any client read every active seller's
+-- payment instructions.
+--
+-- `spm_buyer_select_active` qualified only on `is_active = true`, so it never
+-- asked who was calling. An anonymous request could read `display_blocks` for
+-- every active method, which is where the payment instructions live -- on the
+-- restored production data that is a seller's Nequi tag and phone number.
+--
+-- `.claude/rules/checkout-stock-integrity.md` already forbids this:
+--
+--   "Direct browser reads of seller_payment_methods must stay restricted to
+--    the owning seller's management flow, not the buyer checkout flow."
+--
+-- and asks, in its own review checklist, "Do database policies still prevent
+-- public reads of seller payment methods?" They did not. Nothing had checked;
+-- tests/db/seller-payment-methods.test.ts now does.
+--
+-- Nothing in the application depends on the dropped policy. Checkout reads
+-- these rows server-side through /api/checkout/payment-methods, which uses the
+-- service role and bypasses RLS entirely -- and which is also where the stock
+-- gate lives that decides whether payment details may be returned at all. The
+-- one client-side reader, fetchSellerPaymentMethods in payments' checkout
+-- infrastructure, has no callers: it is referenced only by its own test.
+--
+-- `spm_seller_select` is deliberately left alone. It also applies to PUBLIC,
+-- which is idiomatic here, but its qualifier is `current_user_id() = seller_id`
+-- so it only ever returns the caller's own rows.
+
+drop policy if exists spm_buyer_select_active on public.seller_payment_methods;

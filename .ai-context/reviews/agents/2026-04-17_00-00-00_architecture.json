@@ -77,7 +77,7 @@
       "title": "Hardcoded session storage key string in presentation layer",
       "file": "apps/payments/src/features/checkout/presentation/pages/CheckoutPageContent.tsx",
       "line": 17,
-      "description": "The constant `CHECKOUT_COMPLETED_SESSION_KEY = \"candystore-checkout-completed\"` is defined inline in the presentation file. Per the No Hardcoding rule, string keys that identify a domain concept (checkout completion state) should be defined as a constant in the feature's domain/constants.ts.",
+      "description": "The constant `CHECKOUT_COMPLETED_SESSION_KEY = \"libra-checkout-completed\"` is defined inline in the presentation file. Per the No Hardcoding rule, string keys that identify a domain concept (checkout completion state) should be defined as a constant in the feature's domain/constants.ts.",
       "rule": "no-hardcoding.md#1-magic-numbers--strings--constants",
       "fix": "Move the session storage key to `features/checkout/domain/constants.ts` and import it in CheckoutPageContent."
     }

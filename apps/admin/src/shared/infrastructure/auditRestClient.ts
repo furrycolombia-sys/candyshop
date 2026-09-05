@@ -1,5 +1,6 @@
 /* eslint-disable i18next/no-literal-string -- infrastructure file: HTTP headers and audit schema identifiers are not user-facing copy */
-import type { SupabaseClient } from "@/shared/domain/types";
+import { getSupabaseAccessToken } from "api/supabase/browser";
+
 import { supabaseUrl } from "@/shared/infrastructure/config/environment";
 
 const JSON_CONTENT_TYPE = "application/json";
@@ -18,24 +19,25 @@ export function getSupabaseConfig() {
   return { url, key };
 }
 
-/** Direct REST query to the audit schema using the user's session token */
+/**
+ * Direct REST query to the audit schema using the caller's Clerk session
+ * token.
+ *
+ * Used to be validated via `supabase.auth.getUser()`/`getSession()` — under
+ * Third-Party Auth there is no Supabase Auth session to read, so the caller
+ * no longer passes a Supabase client at all. `getSupabaseAccessToken()`
+ * (browser-only) is the direct replacement: `null` means signed out or
+ * `<ClerkProvider>` hasn't hydrated yet, either way "Unauthenticated" is the
+ * right response for a manual REST call that can't fall back to the anon key
+ * the way supabase-js's own client does.
+ */
 export async function auditRestQuery(
-  supabase: SupabaseClient,
   table: string,
   params: URLSearchParams,
 ): Promise<unknown[]> {
   const { url, key } = getSupabaseConfig();
 
-  // Validate user server-side via getUser() before using session token
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) throw new Error("Unauthenticated");
-
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-  const token = session?.access_token;
+  const token = await getSupabaseAccessToken();
   if (!token) throw new Error("Unauthenticated");
 
   const endpoint = `${url}/rest/v1/${table}?${params.toString()}`;

@@ -1,4 +1,6 @@
 /* eslint-disable i18next/no-literal-string -- infrastructure file: Supabase table/column names are SQL identifiers, not user-facing text */
+import { getCurrentUserId } from "api/supabase";
+
 import type {
   ReceivedOrder,
   SellerAction,
@@ -125,13 +127,11 @@ async function fetchDelegatedOrderRows(
 export async function fetchAssignedOrders(
   supabase: SupabaseClient,
 ): Promise<ReceivedOrder[]> {
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return [];
+  const userId = await getCurrentUserId(supabase);
+  if (!userId) return [];
 
   const { rows, sellerNameMap, sellerPermissionsMap } =
-    await fetchDelegatedOrderRows(supabase, user.id);
+    await fetchDelegatedOrderRows(supabase, userId);
 
   if (rows.length === 0) return [];
 
@@ -168,15 +168,13 @@ export async function fetchReceivedOrders(
   supabase: SupabaseClient,
   filter?: string,
 ): Promise<ReceivedOrder[]> {
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return [];
+  const userId = await getCurrentUserId(supabase);
+  if (!userId) return [];
 
   let query = supabase
     .from("orders")
     .select(ORDER_SELECT)
-    .eq("seller_id", user.id)
+    .eq("seller_id", userId)
     .order("created_at", { ascending: false });
 
   if (filter && filter !== "all") {
@@ -229,15 +227,13 @@ export async function updateOrderStatus(
 export async function fetchPendingOrderCount(
   supabase: SupabaseClient,
 ): Promise<number> {
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return 0;
+  const userId = await getCurrentUserId(supabase);
+  if (!userId) return 0;
 
   const { count, error } = await supabase
     .from("orders")
     .select("id", { count: "exact", head: true })
-    .eq("seller_id", user.id)
+    .eq("seller_id", userId)
     .in("payment_status", [
       "pending_verification" as const,
       "evidence_requested" as const,

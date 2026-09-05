@@ -1,3 +1,9 @@
+/* eslint-disable playwright/no-conditional-in-test -- Discord's hosted
+ * sign-in shows different screens depending on session state, and this spec
+ * has to walk whichever appears. It is a manual-only harness: the test is
+ * unconditionally skipped in CI because the provider blocks automated
+ * browsers, so these branches never run there. See
+ * docs/standards/quality-gates.md for what that leaves untested. */
 import { type BrowserContext, chromium, expect, test } from "@playwright/test";
 import * as path from "node:path";
 
@@ -56,7 +62,12 @@ test("Discord OAuth login flow", async () => {
     // 4. Handle Discord — could be login page OR authorize page
     //    Wait for either the login form or the authorize button
     const emailInput = page.locator('input[name="email"]');
-    // Discord's authorize button — use multiple strategies
+    // Discord's authorize button — use multiple strategies.
+    // Class-based selection, which the e2e-selectors rule bans, because this
+    // is Discord's own markup: there is no test id to add and their class
+    // names are the only stable-ish handle. Disabled rather than left to
+    // report, so the ban stays meaningful for pages we do control.
+    // eslint-disable-next-line no-restricted-syntax -- third-party markup
     const authorizeBtn = page
       .locator(
         'button:has-text("Authorize"), button:has-text("Autorizar"), button:has-text("Allow"), button[class*="colorBrand"], button[class*="lookFilled"]:not(:has-text("Cancel"))',
@@ -64,6 +75,12 @@ test("Discord OAuth login flow", async () => {
       .first();
 
     console.log("[e2e] Waiting for Discord page to load...");
+    // Discord's page can settle into any of three states (login form,
+    // authorize prompt, or straight back to the app), and the branch below
+    // reads the URL to find out which. There is no single element to wait for
+    // without first knowing the answer, and the markup belongs to a third
+    // party.
+    // eslint-disable-next-line playwright/no-wait-for-timeout -- see above
     await page.waitForTimeout(5000);
 
     // Determine what Discord is showing
@@ -77,8 +94,8 @@ test("Discord OAuth login flow", async () => {
       // On authorize page — scroll down to reveal the accept button
       console.log("[e2e] On authorize page, scrolling to reveal button...");
       await page.mouse.wheel(0, 500);
-      await page.waitForTimeout(1000);
       // Also try scrolling inside the modal
+      // eslint-disable-next-line no-restricted-syntax -- third-party markup, see above
       const modal = page
         .locator('[class*="modal"], [class*="oauth2"], [role="dialog"]')
         .first();
@@ -86,7 +103,6 @@ test("Discord OAuth login flow", async () => {
         await modal.evaluate((el) => el.scrollTo(0, el.scrollHeight));
       }
       await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
-      await page.waitForTimeout(1000);
       await page.screenshot({ path: "e2e/screenshots/discord-scrolled.png" });
       await authorizeBtn.waitFor({ state: "visible", timeout: 15000 });
       firstVisible = "authorize";
@@ -128,9 +144,8 @@ test("Discord OAuth login flow", async () => {
 
     console.log("[e2e] ✓ Back on app:", page.url());
 
-    // 5. Wait for page to settle
-    await page.waitForLoadState("networkidle", { timeout: 15000 });
-    await page.waitForTimeout(2000);
+    // The account-card check below waits on its own (isVisible has a
+    // timeout), so settling here was redundant.
     await page.screenshot({ path: "e2e/screenshots/final-page.png" });
     console.log("[e2e] Final URL:", page.url());
 

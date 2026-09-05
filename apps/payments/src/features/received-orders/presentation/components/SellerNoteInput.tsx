@@ -46,7 +46,10 @@ export function SellerNoteInput({
         {...tid("seller-note-textarea")}
       />
       {hasError && (
-        <p className="text-xs font-bold text-destructive">
+        <p
+          className="text-xs font-bold text-destructive"
+          {...tid("seller-note-error")}
+        >
           {t("noteRequired")}
         </p>
       )}

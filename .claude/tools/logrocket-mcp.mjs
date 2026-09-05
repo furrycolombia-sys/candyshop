@@ -34,8 +34,10 @@ function loadEnvFile(filePath) {
     const match = trimmed.match(/^(LOGROCKET_[A-Z_]+)=(.+)$/);
     if (match) {
       let value = match[2].trim();
-      if ((value.startsWith('"') && value.endsWith('"')) ||
-          (value.startsWith("'") && value.endsWith("'"))) {
+      if (
+        (value.startsWith('"') && value.endsWith('"')) ||
+        (value.startsWith("'") && value.endsWith("'"))
+      ) {
         value = value.slice(1, -1);
       }
       process.env[match[1]] = value;
@@ -48,18 +50,21 @@ loadEnvFile(join(__toolsDir, ".env.local"));
 
 // Configuration
 const API_KEY = process.env.LOGROCKET_API_KEY;
-const API_BASE_URL = process.env.LOGROCKET_API_BASE_URL || "https://api.logrocket.com";
+const API_BASE_URL =
+  process.env.LOGROCKET_API_BASE_URL || "https://api.logrocket.com";
 
 if (!API_KEY) {
   console.error("Error: Missing LOGROCKET_API_KEY");
-  console.error("Please set LOGROCKET_API_KEY in .env.local or .claude/tools/.env.local");
+  console.error(
+    "Please set LOGROCKET_API_KEY in .env.local or .claude/tools/.env.local",
+  );
   console.error("Format: LOGROCKET_API_KEY=org_id:app_id:secret_key");
   process.exit(1);
 }
 
 // Parse ORG_ID and APP_ID from API key (format: org_id:app_id:secret_key)
 let ORG_ID, APP_ID;
-const keyParts = API_KEY.split(':');
+const keyParts = API_KEY.split(":");
 if (keyParts.length === 3) {
   [ORG_ID, APP_ID] = keyParts;
 } else {
@@ -98,9 +103,9 @@ async function logRocketFetch(method, endpoint, body = null) {
   const text = await response.text();
 
   if (!text || text.length === 0) {
-    if (endpoint.includes('/data-export/')) {
+    if (endpoint.includes("/data-export/")) {
       throw new Error(
-        `Data Export API returned empty response. This API is deprecated for SaaS customers.`
+        `Data Export API returned empty response. This API is deprecated for SaaS customers.`,
       );
     }
     return {};
@@ -113,25 +118,30 @@ async function logRocketFetch(method, endpoint, body = null) {
 const TOOLS = [
   {
     name: "logrocket_get_session_highlights",
-    description: "Get AI-generated summaries of user sessions including errors and key interactions. Returns a request ID - the actual highlights will be delivered to the webhook URL you provide.",
+    description:
+      "Get AI-generated summaries of user sessions including errors and key interactions. Returns a request ID - the actual highlights will be delivered to the webhook URL you provide.",
     inputSchema: {
       type: "object",
       properties: {
         userID: {
           type: "string",
-          description: "User identifier from LogRocket.identify() calls (provide either userID or userEmail)",
+          description:
+            "User identifier from LogRocket.identify() calls (provide either userID or userEmail)",
         },
         userEmail: {
           type: "string",
-          description: "User email from LogRocket.identify() calls (provide either userID or userEmail)",
+          description:
+            "User email from LogRocket.identify() calls (provide either userID or userEmail)",
         },
         startMs: {
           type: "number",
-          description: "Start time in milliseconds (Unix epoch) for session time range (optional)",
+          description:
+            "Start time in milliseconds (Unix epoch) for session time range (optional)",
         },
         endMs: {
           type: "number",
-          description: "End time in milliseconds (Unix epoch) for session time range (optional)",
+          description:
+            "End time in milliseconds (Unix epoch) for session time range (optional)",
         },
         webhookURL: {
           type: "string",
@@ -143,13 +153,15 @@ const TOOLS = [
   },
   {
     name: "logrocket_export_sessions",
-    description: "Export raw session data including events, errors, network requests, and metadata. WARNING: This API is deprecated for SaaS customers and may return empty results. Requires Data Export to be manually configured in LogRocket dashboard. Consider using the Streaming Data Export service instead. If available, returns URLs to JSON Lines files containing session data.",
+    description:
+      "Export raw session data including events, errors, network requests, and metadata. WARNING: This API is deprecated for SaaS customers and may return empty results. Requires Data Export to be manually configured in LogRocket dashboard. Consider using the Streaming Data Export service instead. If available, returns URLs to JSON Lines files containing session data.",
     inputSchema: {
       type: "object",
       properties: {
         cursor: {
           type: "string",
-          description: "Pagination cursor for retrieving newer sessions (from previous response)",
+          description:
+            "Pagination cursor for retrieving newer sessions (from previous response)",
         },
         limit: {
           type: "number",
@@ -157,14 +169,16 @@ const TOOLS = [
         },
         date: {
           type: "number",
-          description: "Unix timestamp in milliseconds to filter sessions from this date onwards",
+          description:
+            "Unix timestamp in milliseconds to filter sessions from this date onwards",
         },
       },
     },
   },
   {
     name: "logrocket_update_user",
-    description: "Update user information and custom traits in LogRocket. Useful for adding context about users that can help with debugging and support.",
+    description:
+      "Update user information and custom traits in LogRocket. Useful for adding context about users that can help with debugging and support.",
     inputSchema: {
       type: "object",
       properties: {
@@ -182,11 +196,13 @@ const TOOLS = [
         },
         timestamp: {
           type: "number",
-          description: "Unix timestamp in milliseconds for when data was recorded",
+          description:
+            "Unix timestamp in milliseconds for when data was recorded",
         },
         traits: {
           type: "object",
-          description: "Custom key-value pairs describing the user (e.g., subscription tier, account type)",
+          description:
+            "Custom key-value pairs describing the user (e.g., subscription tier, account type)",
         },
       },
       required: ["userId"],
@@ -214,7 +230,7 @@ async function handleTool(name, args) {
       return await logRocketFetch(
         "POST",
         `/v1/orgs/${ORG_ID}/apps/${APP_ID}/highlights/`,
-        requestBody
+        requestBody,
       );
     }
 
@@ -246,7 +262,7 @@ async function handleTool(name, args) {
       return await logRocketFetch(
         "PUT",
         `/v1/orgs/${ORG_ID}/apps/${APP_ID}/users/${userId}`,
-        requestBody
+        requestBody,
       );
     }
 

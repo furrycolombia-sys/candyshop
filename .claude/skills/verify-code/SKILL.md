@@ -138,14 +138,30 @@ pnpm test
 pnpm test:coverage
 ```
 
-This runs all app/package test suites with coverage enabled. Each workspace has 85% thresholds for statements, branches, functions, and lines.
+This runs all app/package test suites with coverage enabled. **85% is the
+target**, and most workspaces meet it on all four metrics. Two do not, and
+their thresholds are pinned just under measured coverage rather than at the
+target, so the gap can only close:
+
+| workspace         | statements | branches | functions | lines |
+| ----------------- | ---------: | -------: | --------: | ----: |
+| `packages/api`    |         81 |       78 |        71 |    86 |
+| `packages/shared` |         87 |       78 |        92 |    90 |
+
+`apps/playground` has no thresholds at all — it is a sandbox and runs with
+`passWithNoTests`.
+
+Pinning to measured coverage rather than to the target cuts both ways: it is
+below 85 where coverage is, and **above** 85 where coverage is better, so the
+slack cannot be spent without the gate noticing.
 
 **If failures:**
 
-1. Check which workspace failed and which metric is below 85%
+1. Check which workspace failed and which metric is below its threshold
 2. Write meaningful tests to cover the gap — see [Testing Rules](../../rules/testing.md)
 3. If a file is legitimately untestable (type-only, re-export shim, complex RHF internal), add it to the workspace's `vitest.config.ts` coverage exclusions with a comment explaining WHY
-4. Do NOT lower thresholds below 85%
+4. Do NOT lower a threshold to make a failure go away. They are ratchets: raise
+   them when coverage improves, and treat a drop as a missing test
 
 ### Step 7: Production Build
 
@@ -257,17 +273,17 @@ None.
 
 When checking coverage, verify each workspace individually:
 
-| Workspace         | Command                       | Threshold |
-| ----------------- | ----------------------------- | --------- |
-| `apps/admin`      | `pnpm test:coverage:admin`    | 85%       |
-| `apps/auth`       | `pnpm test:coverage:auth`     | 85%       |
-| `apps/store`      | `pnpm test:coverage:store`    | 85%       |
-| `apps/studio`     | `pnpm test:coverage:studio`   | 85%       |
-| `apps/payments`   | `pnpm test:coverage:payments` | 85%       |
-| `apps/landing`    | N/A (passWithNoTests)         | —         |
-| `apps/playground` | N/A (passWithNoTests)         | —         |
-| `packages/shared` | Part of `pnpm test:coverage`  | 85%       |
-| `packages/ui`     | Part of `pnpm test:coverage`  | 85%       |
+| Workspace         | Command                                | Threshold |
+| ----------------- | -------------------------------------- | --------- |
+| `apps/admin`      | `pnpm --filter admin test:coverage`    | 85%       |
+| `apps/auth`       | `pnpm --filter auth-app test:coverage` | 85%       |
+| `apps/store`      | `pnpm --filter store test:coverage`    | 85%       |
+| `apps/studio`     | `pnpm --filter studio test:coverage`   | 85%       |
+| `apps/payments`   | `pnpm --filter payments test:coverage` | 85%       |
+| `apps/landing`    | N/A (passWithNoTests)                  | —         |
+| `apps/playground` | N/A (passWithNoTests)                  | —         |
+| `packages/shared` | Part of `pnpm test:coverage`           | 85%       |
+| `packages/ui`     | Part of `pnpm test:coverage`           | 85%       |
 
 ---
 

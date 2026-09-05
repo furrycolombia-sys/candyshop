@@ -4,10 +4,19 @@ import { ELEMENT_TIMEOUT_MS } from "../../../auth/e2e/helpers/constants";
 import {
   ADMIN_PERMISSIONS,
   createTestUser,
+  deleteTestUser,
   injectSession,
-  supabaseAdmin,
   type TestUser,
 } from "../../../auth/e2e/helpers/session";
+
+// Read at module scope, not inside the test. A missing base URL is a broken
+// run configuration, not a case the test is meant to branch on -- hoisting it
+// makes the whole file fail at collection instead of part-way through a test,
+// and keeps the test body free of the conditional the linter objects to.
+const ADMIN_BASE_URL = process.env.NEXT_PUBLIC_ADMIN_URL;
+if (!ADMIN_BASE_URL) {
+  throw new Error("NEXT_PUBLIC_ADMIN_URL is required for this e2e test.");
+}
 
 test.describe("Users Page", () => {
   let adminUser: TestUser;
@@ -20,21 +29,18 @@ test.describe("Users Page", () => {
   });
 
   test.afterAll(async () => {
-    await supabaseAdmin.auth.admin.deleteUser(adminUser.userId);
+    await deleteTestUser(adminUser);
   });
 
   test("should display users table and export button", async ({
     context,
     page,
   }) => {
-    const adminBaseUrl = process.env.NEXT_PUBLIC_ADMIN_URL;
-    if (!adminBaseUrl) {
-      throw new Error("NEXT_PUBLIC_ADMIN_URL is required for this e2e test.");
-    }
-
     await injectSession(context, adminUser);
 
-    await page.goto(`${adminBaseUrl}/en/users`, { waitUntil: "networkidle" });
+    // No wait needed: the next assertion is positive and retrying, so it
+    // already waits for the page to render.
+    await page.goto(`${ADMIN_BASE_URL}/en/users`);
 
     await expect(page.getByTestId("users-page")).toBeVisible({
       timeout: ELEMENT_TIMEOUT_MS,

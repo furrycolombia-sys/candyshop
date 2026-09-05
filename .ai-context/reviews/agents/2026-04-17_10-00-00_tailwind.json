@@ -71,7 +71,7 @@
     },
     {
       "type": "positive",
-      "description": "candy-safelist.txt is used correctly to force-generate dynamic candy palette classes (bg-pink, bg-mint, etc.) that are composed programmatically — proper Tailwind v4 safelist pattern.",
+      "description": "libra-safelist.txt is used correctly to force-generate dynamic libra palette classes (bg-pink, bg-mint, etc.) that are composed programmatically — proper Tailwind v4 safelist pattern.",
       "files": "packages/ui/src/styles/globals.css"
     }
   ]

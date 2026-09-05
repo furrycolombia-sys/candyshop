@@ -14,13 +14,15 @@
 import { createServer } from "node:http";
 import { createHmac } from "node:crypto";
 import { execFile } from "node:child_process";
-import { readFileSync } from "node:fs";
 
 const PORT = process.env.WEBHOOK_PORT || 9091;
 const SECRET = process.env.WEBHOOK_SECRET || "";
 const DEPLOY_SCRIPT =
   process.env.DEPLOY_SCRIPT || "/home/furrycolombia/deploy.sh";
 const BRANCH = process.env.DEPLOY_BRANCH || "main";
+// Overridable so ownership or naming can change without a code redeploy: set
+// REPO_URL in the PM2 environment, then drop it once the default matches again.
+const REPO_URL = process.env.REPO_URL || "https://github.com/vaoan/libra.git";
 
 let deploying = false;
 
@@ -52,7 +54,7 @@ function runDeploy() {
       env: {
         ...process.env,
         BRANCH,
-        REPO_URL: "https://github.com/furrycolombia-sys/candyshop.git",
+        REPO_URL,
         ENV_FILE: process.env.ENV_FILE || "/home/furrycolombia/.env.prod",
       },
       timeout: 15 * 60 * 1000, // 15 min max

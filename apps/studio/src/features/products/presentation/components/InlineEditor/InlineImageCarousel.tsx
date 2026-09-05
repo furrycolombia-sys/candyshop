@@ -253,8 +253,11 @@ export function InlineImageCarousel({ control }: InlineImageCarouselProps) {
         style={{ backgroundColor: theme.bg }}
         {...tid("image-gallery-main-empty")}
       >
-        <Plus className="size-8 text-foreground/30" />
-        <span className="font-display text-sm font-bold uppercase tracking-wider text-foreground/40">
+        {/* Full strength, not a tint: this is the call to action on an empty
+            gallery, and axe measured the label below the 4.5:1 threshold
+            against the category colour behind it. */}
+        <Plus className="size-8 text-foreground" />
+        <span className="font-display text-sm font-bold uppercase tracking-wider text-foreground">
           {t("addFirstImage")}
         </span>
       </button>
@@ -356,6 +359,7 @@ export function InlineImageCarousel({ control }: InlineImageCarouselProps) {
                           {...dragProvided.dragHandleProps}
                           className="cursor-grab text-muted-foreground hover:text-foreground"
                           aria-label={t("dragToReorder")}
+                          {...tid("image-thumb-drag-handle")}
                         >
                           <GripVertical className="size-3" />
                         </div>

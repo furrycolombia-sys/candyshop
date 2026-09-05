@@ -78,6 +78,9 @@ export function DisplaySectionEditor({
 
       const reordered = [...blocks];
       const [moved] = reordered.splice(source.index, 1);
+      // splice yields nothing for an out-of-range index; inserting `undefined`
+      // would corrupt the order about to be saved.
+      if (!moved) return;
       reordered.splice(destination.index, 0, moved);
       onChange(reordered);
     },

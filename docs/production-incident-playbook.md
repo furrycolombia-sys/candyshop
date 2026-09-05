@@ -1,5 +1,17 @@
 # Production Incident Playbook
 
+> ## ⛔ No production to have incidents on, as of 2026-08-09
+>
+> The GCP VM is gone (billing off, permanently) and the LAN fallback box no
+> longer exists, so there is nothing serving and nothing to page about. The
+> deploy workflows this playbook refers to were deleted.
+>
+> Kept because the diagnostics and the April 2026 post-mortem are still worth
+> having the day something is hosted again. Every host and container name below
+> is historical.
+>
+> Current state and restore path: [production-status.md](./production-status.md).
+
 > **Quick reference for production outages.** This document captures what went wrong in April 2026, how we fixed it, and what to do if it happens again.
 
 ---
@@ -27,10 +39,10 @@ curl -sf https://store.furrycolombia.com/health
 
 # 2. Is the container running?
 ssh furrycolombia@192.168.2.71
-docker ps --filter name=candyshop-prod
+docker ps --filter name=libra-prod
 
 # 3. What does the container say?
-docker logs candyshop-prod --tail 50
+docker logs libra-prod --tail 50
 
 # 4. Is Cloudflare tunnel up?
 sudo systemctl status cloudflared
@@ -103,13 +115,13 @@ Run these on the server after SSH-ing in:
 
 ```bash
 # Container status
-docker ps -a --filter name=candyshop
+docker ps -a --filter name=libra
 
 # Live logs
-docker logs candyshop-prod -f
+docker logs libra-prod -f
 
 # Last 100 lines of logs
-docker logs candyshop-prod --tail 100
+docker logs libra-prod --tail 100
 
 # Is port 9090 actually open?
 curl -sf http://localhost:9090/health
@@ -120,19 +132,19 @@ df -h
 docker system df
 
 # What's inside the running container?
-docker exec candyshop-prod ls /app/apps/store/.next/standalone/
-docker exec candyshop-prod ls /app/apps/store/.next/standalone/node_modules/next/
+docker exec libra-prod ls /app/apps/store/.next/standalone/
+docker exec libra-prod ls /app/apps/store/.next/standalone/node_modules/next/
 
 # Check if next module is real or broken symlink
-docker exec candyshop-prod ls -la /app/apps/store/.next/standalone/node_modules/ | head -20
+docker exec libra-prod ls -la /app/apps/store/.next/standalone/node_modules/ | head -20
 
 # PM2 health watcher
 pm2 status
-pm2 logs candyshop-watcher
+pm2 logs libra-watcher
 
 # Deploy log from last CI deploy
-cat /tmp/deploy-candyshop.log
-cat /tmp/deploy-candyshop.done   # 0 = success, non-0 = failed
+cat /tmp/deploy-libra.log
+cat /tmp/deploy-libra.done   # 0 = success, non-0 = failed
 
 # Cloudflare tunnel
 sudo systemctl status cloudflared
@@ -149,7 +161,7 @@ If the container is stopped but the image is still there:
 
 ```bash
 ssh furrycolombia@192.168.2.71
-docker start candyshop-prod
+docker start libra-prod
 sleep 30
 curl -sf http://localhost:9090/health
 ```
@@ -160,7 +172,7 @@ If the image is bad or missing but CI artifacts are already rsynced:
 
 ```bash
 ssh furrycolombia@192.168.2.71
-cd ~/candyshop
+cd ~/libra
 
 # Ensure dirs exist (they might be empty after a bad sync)
 for APP in store admin auth landing payments studio playground; do
@@ -169,16 +181,16 @@ for APP in store admin auth landing payments studio playground; do
 done
 
 # Build the image (uses docker/prod/Dockerfile + pre-built .next/ dirs)
-docker build -f docker/prod/Dockerfile -t candyshop-prod:emergency .
+docker build -f docker/prod/Dockerfile -t libra-prod:emergency .
 
 # Stop old container and start new one
-docker rm -f candyshop-prod 2>/dev/null || true
+docker rm -f libra-prod 2>/dev/null || true
 docker run -d \
-  --name candyshop-prod \
+  --name libra-prod \
   --restart unless-stopped \
   -p 9090:80 \
   --env-file ~/.env.prod \
-  candyshop-prod:emergency
+  libra-prod:emergency
 
 sleep 60
 curl -sf http://localhost:9090/health && echo "HEALTHY"
@@ -202,15 +214,15 @@ Docker keeps the 2 most recent images:
 
 ```bash
 ssh furrycolombia@192.168.2.71
-docker images | grep candyshop-prod
+docker images | grep libra-prod
 
 # Find the previous image tag (not the current one)
 PREV_TAG=$(docker images --format '{{.Repository}}:{{.Tag}}' \
-  | grep '^candyshop-prod:' | sort -r | sed -n '2p')
+  | grep '^libra-prod:' | sort -r | sed -n '2p')
 
-docker rm -f candyshop-prod 2>/dev/null || true
+docker rm -f libra-prod 2>/dev/null || true
 docker run -d \
-  --name candyshop-prod \
+  --name libra-prod \
   --restart unless-stopped \
   -p 9090:80 \
   --env-file ~/.env.prod \
@@ -397,24 +409,24 @@ push to main              │   GitHub Actions          │
                     │  5. rsync .next/ dirs to server       │
                     │  6. copy deploy-production.sh         │
                     │  7. SSH: nohup deploy.sh &            │
-                    │  8. poll /tmp/deploy-candyshop.done   │
+                    │  8. poll /tmp/deploy-libra.done   │
                     └──────────────────┬──────────────────┘
                                        │
                     ┌──────────────────▼──────────────────┐
                     │  Server: deploy-production.sh         │
                     │                                       │
                     │  1. git pull origin main              │
-                    │  2. source /tmp/.candyshop-build.env  │
+                    │  2. source /tmp/.libra-build.env  │
                     │  3. docker build -f docker/prod/...   │
                     │  4. docker rm + docker run            │
-                    │  5. pm2 start candyshop-watcher       │
+                    │  5. pm2 start libra-watcher       │
                     │  6. health check (curl × 7 apps)      │
                     │  7. JIT warm-up (all routes × 3)      │
-                    │  8. echo 0 > /tmp/deploy-candyshop.done│
+                    │  8. echo 0 > /tmp/deploy-libra.done│
                     └──────────────────┬──────────────────┘
                                        │
                     ┌──────────────────▼──────────────────┐
-                    │  Cloudflare Tunnel (candyshop-prod)   │
+                    │  Cloudflare Tunnel (libra-prod)   │
                     │  store.furrycolombia.com → :9090      │
                     │  deploy.furrycolombia.com → :9091     │
                     │  ssh.furrycolombia.com → :22          │
@@ -430,19 +442,19 @@ push to main              │   GitHub Actions          │
 | `docker/prod/Dockerfile`                  | Production Docker image (uses pre-built .next/)                      |
 | `docker/ci/Dockerfile`                    | CI/local Docker image (builds inside container)                      |
 | `scripts/docker-health-check.sh`          | Pre-push hook — builds + health-checks Docker image                  |
-| `docker/watcher.mjs`                      | Host-side health monitor (runs via PM2 as candyshop-watcher)         |
+| `docker/watcher.mjs`                      | Host-side health monitor (runs via PM2 as libra-watcher)             |
 | `.npmrc`                                  | `node-linker=hoisted` — required for pnpm to survive ZIP round-trips |
 | `.dockerignore`                           | Must re-include `!apps/**/.next/standalone/node_modules/**`          |
 
 ### Where secrets live
 
-| Secret                    | Location                                               | Used by                                        |
-| ------------------------- | ------------------------------------------------------ | ---------------------------------------------- |
-| Supabase anon key         | GitHub secret + `.env.prod` on server                  | Build (baked into NEXT_PUBLIC) + runtime       |
-| Supabase service role key | GitHub secret → written to `/tmp/.candyshop-build.env` | Server runtime only (injected at `docker run`) |
-| Telegram bot token        | GitHub secret + `.secrets` locally                     | Deploy script (Telegram notifications)         |
-| Prod SSH key              | GitHub secret `PROD_SERVER_SSH_KEY`                    | CI → server SSH                                |
-| `.env.prod` on server     | `~/.env.prod` (chmod 600, outside repo)                | `docker run --env-file`                        |
+| Secret                    | Location                                           | Used by                                        |
+| ------------------------- | -------------------------------------------------- | ---------------------------------------------- |
+| Supabase anon key         | GitHub secret + `.env.prod` on server              | Build (baked into NEXT_PUBLIC) + runtime       |
+| Supabase service role key | GitHub secret → written to `/tmp/.libra-build.env` | Server runtime only (injected at `docker run`) |
+| Telegram bot token        | GitHub secret + `.secrets` locally                 | Deploy script (Telegram notifications)         |
+| Prod SSH key              | GitHub secret `PROD_SERVER_SSH_KEY`                | CI → server SSH                                |
+| `.env.prod` on server     | `~/.env.prod` (chmod 600, outside repo)            | `docker run --env-file`                        |
 
 ---
 

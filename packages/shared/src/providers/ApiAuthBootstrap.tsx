@@ -8,10 +8,9 @@ import {
 import {
   AUTH_COOKIE_NAMES,
   AUTH_REFRESH_ENDPOINT,
-  getAccessTokenFromCookie,
   TOKEN_TTL_SECONDS,
 } from "auth";
-import { setCookie } from "cookies-next";
+import { getCookie, setCookie } from "cookies-next";
 import { useEffect } from "react";
 
 import { stripTrailingSlash } from "@shared/utils/url";
@@ -55,7 +54,10 @@ export function ApiAuthBootstrap({
   locale?: string;
 }) {
   useEffect(() => {
-    setAccessTokenGetter(() => getAccessTokenFromCookie());
+    setAccessTokenGetter(async () => {
+      const cookie = await getCookie(AUTH_COOKIE_NAMES.accessToken);
+      return typeof cookie === "string" ? cookie : null;
+    });
     setRefreshTokenCallback(() => doRefresh(authHostUrl));
 
     setOnUnauthorized(() => {

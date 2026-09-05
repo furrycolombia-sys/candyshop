@@ -36,7 +36,7 @@ const supabaseUrl =
   process.env["SUPABASE_URL_INTERNAL"] || process.env.NEXT_PUBLIC_SUPABASE_URL;
 const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-export function getAdminRestHeaders(extra?: HeadersInit): HeadersInit {
+function getAdminRestHeaders(extra?: HeadersInit): HeadersInit {
   if (!supabaseUrl || !serviceRoleKey) {
     throw new Error("Supabase admin REST client is not configured");
   }
@@ -48,7 +48,7 @@ export function getAdminRestHeaders(extra?: HeadersInit): HeadersInit {
   };
 }
 
-export function getAdminRestUrl(path: string): string {
+function getAdminRestUrl(path: string): string {
   if (!supabaseUrl) {
     throw new Error("Supabase URL is not configured");
   }

@@ -9,12 +9,6 @@ import {
   type FormFieldType,
 } from "@/shared/domain/PaymentMethodTypes";
 
-// Re-export shared utils so existing internal imports keep working.
-export {
-  validateBuyerSubmission,
-  validateFileSize,
-} from "@/shared/domain/paymentMethodUtils";
-
 // Derived from the SSOT type-defining arrays — the two stay exhaustive
 // together because the type IS the array.
 const VALID_BLOCK_TYPES: readonly DisplayBlockType[] = DISPLAY_BLOCK_TYPES;

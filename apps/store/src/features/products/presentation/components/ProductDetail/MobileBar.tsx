@@ -41,7 +41,10 @@ export function MobileBar({
           </span>
         </span>
         {quantityInCart > 0 && (
-          <span className="flex items-center gap-1 text-label-xs font-bold uppercase tracking-widest sm:text-xs">
+          <span
+            className="flex items-center gap-1 text-label-xs font-bold uppercase tracking-widest sm:text-xs"
+            {...tid("product-detail-mobile-in-cart")}
+          >
             <ShoppingCart className="size-3" />
             {t("inCart", { count: quantityInCart })}
           </span>

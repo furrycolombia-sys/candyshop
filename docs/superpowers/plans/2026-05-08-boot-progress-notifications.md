@@ -186,7 +186,7 @@ async function runBootSequence(label) {
     .map((a) => a.name)
     .join(", ");
   await tgPost(
-    `❌ <b>${failed} failed to start after 180s</b>\n   Check: <code>docker logs candyshop-prod</code>`,
+    `❌ <b>${failed} failed to start after 180s</b>\n   Check: <code>docker logs libra-prod</code>`,
     CRITICAL_THREAD_ID,
   );
 }
@@ -379,7 +379,7 @@ async function main() {
     .map((a) => a.name)
     .join(", ");
   await tgCritical(
-    `❌ <b>${failed} failed to start after 120s</b>\n   Check: <code>docker logs candyshop-prod</code>`,
+    `❌ <b>${failed} failed to start after 120s</b>\n   Check: <code>docker logs libra-prod</code>`,
   );
   process.exit(1);
 }
@@ -503,12 +503,12 @@ Delete the `notify_telegram "$(printf '🔄 <b>Container restarted</b>..."` line
 
 - [ ] **Step 4: Add boot-notifier PM2 start before pm2 save**
 
-After `pm2 start candyshop-watcher` and before `pm2 save`:
+After `pm2 start libra-watcher` and before `pm2 save`:
 
 ```bash
-pm2 delete candyshop-boot-notifier 2>/dev/null || true
+pm2 delete libra-boot-notifier 2>/dev/null || true
 WATCHER_NGINX_PORT=$HOST_PORT pm2 start "$DEPLOY_DIR/scripts/server/boot-notifier.mjs" \
-  --name candyshop-boot-notifier
+  --name libra-boot-notifier
 ```
 
 - [ ] **Step 5: Move APPS definition before sleep 60 and replace sleep with poll loop**

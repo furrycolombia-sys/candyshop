@@ -67,6 +67,8 @@ export function usePaymentMethodsManager(
       if (!methods || index === 0) return;
       const current = methods[index];
       const prev = methods[index - 1];
+      // An out-of-range index would make these undefined and throw on .id.
+      if (!current || !prev) return;
       updateMutation.mutate({
         id: current.id,
         patch: { sort_order: prev.sort_order },
@@ -84,6 +86,8 @@ export function usePaymentMethodsManager(
       if (!methods || index === methods.length - 1) return;
       const current = methods[index];
       const next = methods[index + 1];
+      // An out-of-range index would make these undefined and throw on .id.
+      if (!current || !next) return;
       updateMutation.mutate({
         id: current.id,
         patch: { sort_order: next.sort_order },

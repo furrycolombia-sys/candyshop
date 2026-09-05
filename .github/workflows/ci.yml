@@ -3,6 +3,11 @@ name: CI
 on:
   pull_request:
     branches: [main, develop]
+  # Also run on the merged result. Without this, CI only ever saw the PR head:
+  # two PRs that each passed alone could break develop together, and nobody
+  # would find out until the next pull request opened.
+  push:
+    branches: [main, develop]
 
 permissions:
   contents: read
@@ -37,10 +42,10 @@ jobs:
       docs-only: ${{ steps.check.outputs.docs-only }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
 
       - name: Detect file changes
-        uses: dorny/paths-filter@d1c1ffe0248fe513906c8e24db8ea791d46f8590 # v3
+        uses: dorny/paths-filter@7b450fff21473bca461d4b92ce414b9d0420d706 # v4.0.2
         id: filter
         with:
           filters: |
@@ -66,6 +71,31 @@ jobs:
               - 'tsconfig*.json'
               - 'eslint.config.*'
               - 'prettier.config.*'
+              - 'turbo.json'
+              - '.madgerc'
+              - '.ls-lint.yml'
+              - 'cspell.json'
+              - 'knip.json'
+              - 'stylelint.config.*'
+              - 'vitest.config.*'
+              # Each of these changes how the code is built, checked or resolved,
+              # and each was previously treated as docs-only. This PR is the
+              # proof: it edits .jscpd.json, and CI skipped the quality,
+              # unit-test, build and E2E jobs entirely.
+              - '.jscpd.json'
+              - '.secretlintrc.*'
+              - '.secretlintignore'
+              - '.syncpackrc.*'
+              - 'pnpm-workspace.yaml'
+              - '.npmrc'
+              - '.nvmrc'
+              - 'orval.config.*'
+              - '.prettierrc*'
+              - '.prettierignore'
+              - '.gitattributes'
+              - '.env.ci'
+              - '.husky/**'
+              - 'config/**'
             code:
               - 'apps/**'
               - 'packages/**'
@@ -74,6 +104,38 @@ jobs:
               - 'tsconfig*.json'
               - 'eslint.config.*'
               - 'prettier.config.*'
+              - 'turbo.json'
+              - '.madgerc'
+              - '.ls-lint.yml'
+              - 'cspell.json'
+              - 'knip.json'
+              - 'stylelint.config.*'
+              - 'vitest.config.*'
+              # Each of these changes how the code is built, checked or resolved,
+              # and each was previously treated as docs-only. This PR is the
+              # proof: it edits .jscpd.json, and CI skipped the quality,
+              # unit-test, build and E2E jobs entirely.
+              - '.jscpd.json'
+              - '.secretlintrc.*'
+              - '.secretlintignore'
+              - '.syncpackrc.*'
+              - 'pnpm-workspace.yaml'
+              - '.npmrc'
+              - '.nvmrc'
+              - 'orval.config.*'
+              - '.prettierrc*'
+              - '.prettierignore'
+              - '.gitattributes'
+              - '.env.ci'
+              - '.husky/**'
+              - 'config/**'
+              # CI could not previously validate changes to itself: a workflow
+              # edit counted as docs-only, so every quality/test/build job
+              # skipped. Same for schema and container changes.
+              - '.github/workflows/**'
+              - 'supabase/**'
+              - 'docker/**'
+              - 'scripts/**'
       - name: Check if docs-only
         id: check
         run: |
@@ -96,29 +158,137 @@ jobs:
     if: needs.changes.outputs.docs-only == 'false'
     steps:
       - name: Checkout code
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          # Full history: the migration-edit check diffs against the
+          # base branch, which a shallow clone does not contain.
+          fetch-depth: 0
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+        uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v4.4.0
 
       - name: Setup Node.js
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: "pnpm"
 
       - name: Install dependencies
-        run: |
-          pnpm install --frozen-lockfile || {
-            echo "Frozen lockfile install failed, retrying without frozen lockfile"
-            pnpm install --no-frozen-lockfile
-          }
+        run: pnpm install --frozen-lockfile
 
       - name: Check app registry
         run: bash scripts/check-app-registry.sh
 
       - name: Check formatting
         run: pnpm run format:check
+
+      # The migration set is squashed, so "change the function" looks like an
+      # edit to the file that already defines it. Supabase never re-runs an
+      # applied migration, so such an edit reaches the file and no database.
+      # Needs the base branch present, hence fetch-depth: 0 is required on the
+      # checkout above for this job.
+      - name: Check no applied migration was edited
+        # Skipped on a release PR. These three compare the head against the
+        # PR's base, which is the right question for a feature branch and the
+        # wrong one for `develop` -> `main`: the base is the last release, so
+        # the diff is every change since it, and each of those changes already
+        # answered this check when it merged to develop. Asking again at
+        # release time re-reports settled work -- the v2026.09.05.1 release PR
+        # failed on the migration squash that #386 had already justified and
+        # merged. Skipping is stated in the log; pointing the check at develop
+        # instead would pass vacuously, since develop IS the head.
+        if: github.base_ref != 'main'
+        run: node scripts/check-migration-edits.mjs "origin/${{ github.base_ref || 'develop' }}"
+
+      # These ran in no workflow — only in the husky precommit hook, which any
+      # `--no-verify` commit bypasses.
+      #
+      # cspell was previously scoped to apps/*/src and packages/*/src, which is
+      # how it passed: the issues it had were all outside that scope. It now
+      # runs over the whole repo, as aeleos does.
+      #
+      # jscpd was reported as not passing at 9.36%. Most of that was not source
+      # duplication: MSW's generated service worker (349 identical lines in
+      # three apps), the test files this repo moved into tests/ directories,
+      # and per-app next.config/vitest.config, which the frameworks require
+      # each app to own. With those excluded — the same exclusions aeleos uses
+      # — real source duplication is 3.95%, under the 5% threshold, so it is
+      # enforced here too.
+      #
+      # knip is now enforced. It was previously excluded on the grounds that
+      # its 205 findings were advisory noise, which was wrong: they were three
+      # different things, and only one was fuzzy. Its config had `project`
+      # scoped to src/**, so it never saw e2e/ or tests/ and reported anything
+      # used only there as unused. With that fixed it found real defects --
+      # @clerk/backend imported by three e2e files and declared in no
+      # package.json, and packages/api declaring three export subpaths whose
+      # targets do not exist. The remaining 201 were dead barrel re-exports,
+      # dead destructured bindings, exports used only in their own file, and
+      # eight genuinely dead declarations. All resolved; it now exits 0.
+      - name: Repo hygiene (workspace + structure checks)
+        run: |
+          set -euo pipefail
+          pnpm run sherif
+          pnpm run syncpack:lint
+          pnpm exec ls-lint
+          pnpm exec cspell "**/*.{ts,tsx,md,json}" --no-progress
+          pnpm exec jscpd .
+          pnpm exec knip
+          node scripts/check-source-bytes.mjs
+          node scripts/check-feature-boundaries.mjs
+          node scripts/check-a11y-patterns.mjs
+          node scripts/check-doc-references.mjs
+          node scripts/check-css-sync.mjs
+          node scripts/check-env-parity.mjs
+          pnpm exec madge --circular --extensions ts,tsx,js,jsx apps/store/src apps/studio/src apps/landing/src apps/payments/src apps/admin/src apps/auth/src apps/playground/src packages/ui/src packages/shared/src packages/api/src packages/app-components/src packages/auth/src tests scripts docker
+
+      # Ported from aeleos with one change: a symbol undocumented on both
+      # sides is skipped. aeleos enforces jsdoc/require-jsdoc so every export
+      # there has a doc; Libra documents about a third of them, and without
+      # the skip this would fail on every undocumented export anyone edited --
+      # a coverage mandate wearing a freshness check's name.
+      #
+      # Measured against the 37 source-touching commits before it existed, it
+      # would have failed 10. That is the retroactive rate, not the steady-state
+      # one: the way past it is to touch the doc, so under the gate authors do,
+      # and the rate falls toward zero. Needs fetch-depth: 0, above.
+      - name: Check documentation moved with the code
+        # Skipped on a release PR. These three compare the head against the
+        # PR's base, which is the right question for a feature branch and the
+        # wrong one for `develop` -> `main`: the base is the last release, so
+        # the diff is every change since it, and each of those changes already
+        # answered this check when it merged to develop. Asking again at
+        # release time re-reports settled work -- the v2026.09.05.1 release PR
+        # failed on the migration squash that #386 had already justified and
+        # merged. Skipping is stated in the log; pointing the check at develop
+        # instead would pass vacuously, since develop IS the head.
+        if: github.base_ref != 'main'
+        run: node scripts/check-doc-freshness.mjs "origin/${{ github.base_ref || 'develop' }}"
+
+      # The fourth gate in this series found running in no workflow and no hook.
+      # It answers the one question a test-count cannot: did a rework drop a
+      # case? Neither file counts nor totals catch that -- both can hold while
+      # an assertion disappears. It compares the committed inventory at the
+      # merge base against one regenerated from the working tree, and fails on
+      # any case name present before and absent now. Needs fetch-depth: 0,
+      # above, for the merge base to exist.
+      #
+      # If it fails, the fix is to restore the case. Regenerating
+      # tests/INVENTORY.md makes the failure disappear without answering it,
+      # which is how a real loss gets buried -- only regenerate after checking
+      # each reported name against the live tree, and say what you checked.
+      - name: Check no test case was dropped
+        # Skipped on a release PR. These three compare the head against the
+        # PR's base, which is the right question for a feature branch and the
+        # wrong one for `develop` -> `main`: the base is the last release, so
+        # the diff is every change since it, and each of those changes already
+        # answered this check when it merged to develop. Asking again at
+        # release time re-reports settled work -- the v2026.09.05.1 release PR
+        # failed on the migration squash that #386 had already justified and
+        # merged. Skipping is stated in the log; pointing the check at develop
+        # instead would pass vacuously, since develop IS the head.
+        if: github.base_ref != 'main'
+        run: bash scripts/test-inventory-diff.sh "origin/${{ github.base_ref || 'develop' }}"
 
       - name: Lint (scoped)
         run: |
@@ -198,23 +368,19 @@ jobs:
     if: needs.changes.outputs.docs-only == 'false'
     steps:
       - name: Checkout code
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+        uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v4.4.0
 
       - name: Setup Node.js
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: "pnpm"
 
       - name: Install dependencies
-        run: |
-          pnpm install --frozen-lockfile || {
-            echo "Frozen lockfile install failed, retrying without frozen lockfile"
-            pnpm install --no-frozen-lockfile
-          }
+        run: pnpm install --frozen-lockfile
 
       - name: Run unit tests (scoped)
         run: |
@@ -246,7 +412,7 @@ jobs:
           done
 
       - name: Upload store coverage report
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         if: always() && (needs.changes.outputs.store == 'true' || needs.changes.outputs.packages == 'true' || needs.changes.outputs.tooling == 'true')
         with:
           name: coverage-report-store
@@ -254,7 +420,7 @@ jobs:
           retention-days: 7
 
       - name: Upload admin coverage report
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         if: always() && (needs.changes.outputs.admin == 'true' || needs.changes.outputs.packages == 'true' || needs.changes.outputs.tooling == 'true')
         with:
           name: coverage-report-admin
@@ -262,7 +428,7 @@ jobs:
           retention-days: 7
 
       - name: Upload auth coverage report
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         if: always() && (needs.changes.outputs.auth == 'true' || needs.changes.outputs.packages == 'true' || needs.changes.outputs.tooling == 'true')
         with:
           name: coverage-report-auth
@@ -270,7 +436,7 @@ jobs:
           retention-days: 7
 
       - name: Upload landing coverage report
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         if: always() && (needs.changes.outputs.landing == 'true' || needs.changes.outputs.packages == 'true' || needs.changes.outputs.tooling == 'true')
         with:
           name: coverage-report-landing
@@ -278,7 +444,7 @@ jobs:
           retention-days: 7
 
       - name: Upload payments coverage report
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         if: always() && (needs.changes.outputs.payments == 'true' || needs.changes.outputs.packages == 'true' || needs.changes.outputs.tooling == 'true')
         with:
           name: coverage-report-payments
@@ -301,7 +467,7 @@ jobs:
       image: ${{ steps.image.outputs.name }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
 
       - name: Set image name
         id: image
@@ -309,17 +475,17 @@ jobs:
           echo "name=ghcr.io/$(echo '${{ github.repository }}' | tr '[:upper:]' '[:lower:]'):${{ github.sha }}" >> $GITHUB_OUTPUT
 
       - name: Log in to GitHub Container Registry
-        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
+        uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4.2.0
 
       - name: Build and push Docker image
-        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
         with:
           context: .
           file: docker/ci/Dockerfile
@@ -340,10 +506,81 @@ jobs:
             NEXT_PUBLIC_STUDIO_URL=http://localhost:5050/studio
             NEXT_PUBLIC_BUILD_HASH=ci
             NEXT_PUBLIC_ENABLE_TEST_IDS=true
+            NEXT_PUBLIC_ENV_DEBUG=false
+            NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=${{ secrets.CLERK_PUBLISHABLE_KEY }}
+            NEXT_PUBLIC_CLERK_DOMAIN=${{ secrets.CLERK_DOMAIN }}
 
   # ============================================
   # E2E Tests (Playwright)
   # ============================================
+  # ============================================
+  # Database Invariants
+  # ============================================
+  db-tests:
+    name: Database Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: changes
+    if: needs.changes.outputs.docs-only == 'false'
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v4.4.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # Applies every migration from scratch, so the suite asserts against the
+      # schema the migrations produce rather than whatever a previous run left.
+      - name: Start Supabase
+        # The env loader validates every $secret: reference in .env.ci, not just
+        # the ones this job reads, so the full set has to be present or it
+        # refuses to load. Mirrors the e2e-tests block.
+        env:
+          CI_SUPABASE_ANON_KEY: ${{ secrets.CI_SUPABASE_ANON_KEY }}
+          CI_SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.CI_SUPABASE_SERVICE_ROLE_KEY }}
+          CI_SUPABASE_JWT_SECRET: ${{ secrets.CI_SUPABASE_JWT_SECRET }}
+          CI_SUPABASE_DB_PASSWORD: ${{ secrets.CI_SUPABASE_DB_PASSWORD }}
+          CLERK_DOMAIN: ${{ secrets.CLERK_DOMAIN }}
+          CLERK_PUBLISHABLE_KEY: ${{ secrets.CLERK_PUBLISHABLE_KEY }}
+          CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
+          GOOGLE_TEST_EMAIL: ${{ secrets.GOOGLE_TEST_EMAIL }}
+          GOOGLE_TEST_PASSWORD: ${{ secrets.GOOGLE_TEST_PASSWORD }}
+          TALLY_FORM_ID: ${{ secrets.TALLY_FORM_ID }}
+        run: pnpm supabase:docker start --env ci
+
+      - name: Run database invariant tests
+        # The env loader validates every $secret: reference in .env.ci, not just
+        # the ones this job reads, so the full set has to be present or it
+        # refuses to load. Mirrors the e2e-tests block.
+        env:
+          CI_SUPABASE_ANON_KEY: ${{ secrets.CI_SUPABASE_ANON_KEY }}
+          CI_SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.CI_SUPABASE_SERVICE_ROLE_KEY }}
+          CI_SUPABASE_JWT_SECRET: ${{ secrets.CI_SUPABASE_JWT_SECRET }}
+          CI_SUPABASE_DB_PASSWORD: ${{ secrets.CI_SUPABASE_DB_PASSWORD }}
+          CLERK_DOMAIN: ${{ secrets.CLERK_DOMAIN }}
+          CLERK_PUBLISHABLE_KEY: ${{ secrets.CLERK_PUBLISHABLE_KEY }}
+          CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
+          GOOGLE_TEST_EMAIL: ${{ secrets.GOOGLE_TEST_EMAIL }}
+          GOOGLE_TEST_PASSWORD: ${{ secrets.GOOGLE_TEST_PASSWORD }}
+          TALLY_FORM_ID: ${{ secrets.TALLY_FORM_ID }}
+        run: pnpm test:db --env ci
+
+      - name: Stop Supabase
+        if: always()
+        run: pnpm supabase:docker stop --env ci || true
+
   e2e-tests:
     name: E2E Tests
     runs-on: ubuntu-latest
@@ -357,26 +594,22 @@ jobs:
         shell: bash
     steps:
       - name: Checkout code
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+        uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v4.4.0
 
       - name: Setup Node.js
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: "pnpm"
 
       - name: Install dependencies
-        run: |
-          pnpm install --frozen-lockfile || {
-            echo "Frozen lockfile install failed, retrying without frozen lockfile"
-            pnpm install --no-frozen-lockfile
-          }
+        run: pnpm install --frozen-lockfile
 
       - name: Log in to GitHub Container Registry
-        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -385,14 +618,14 @@ jobs:
       - name: Pull and tag pre-built app image
         run: |
           docker pull ${{ needs.docker-build.outputs.image }}
-          docker tag ${{ needs.docker-build.outputs.image }} candyshop-ci
+          docker tag ${{ needs.docker-build.outputs.image }} libra-ci
 
       - name: Get Playwright version
         id: playwright-version
         run: echo "version=$(pnpm --filter auth-app list @playwright/test --json | jq -r '.[0].devDependencies["@playwright/test"].version')" >> $GITHUB_OUTPUT
 
       - name: Cache Playwright browsers
-        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5.1.0
         id: playwright-cache
         with:
           path: ~/.cache/ms-playwright
@@ -415,10 +648,9 @@ jobs:
           CI_SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.CI_SUPABASE_SERVICE_ROLE_KEY }}
           CI_SUPABASE_JWT_SECRET: ${{ secrets.CI_SUPABASE_JWT_SECRET }}
           CI_SUPABASE_DB_PASSWORD: ${{ secrets.CI_SUPABASE_DB_PASSWORD }}
-          SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID: ${{ secrets.SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID }}
-          SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET: ${{ secrets.SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET }}
-          SUPABASE_AUTH_EXTERNAL_DISCORD_CLIENT_ID: ${{ secrets.SUPABASE_AUTH_EXTERNAL_DISCORD_CLIENT_ID }}
-          SUPABASE_AUTH_EXTERNAL_DISCORD_SECRET: ${{ secrets.SUPABASE_AUTH_EXTERNAL_DISCORD_SECRET }}
+          CLERK_PUBLISHABLE_KEY: ${{ secrets.CLERK_PUBLISHABLE_KEY }}
+          CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
+          CLERK_DOMAIN: ${{ secrets.CLERK_DOMAIN }}
           TALLY_FORM_ID: ${{ secrets.TALLY_FORM_ID }}
           GOOGLE_TEST_EMAIL: ${{ secrets.GOOGLE_TEST_EMAIL }}
           GOOGLE_TEST_PASSWORD: ${{ secrets.GOOGLE_TEST_PASSWORD }}
@@ -447,14 +679,40 @@ jobs:
               auth-app) E2E_APP="auth"  ;;
               store)    E2E_APP="store" ;;
               admin)    E2E_APP="admin" ;;
+              payments) E2E_APP="payments" ;;
+              # landing has had a playwright config and a spec all along, but no
+              # entry here -- so its E2E suite had never run.
+              landing)  E2E_APP="landing" ;;
               *)        echo "No E2E suite for ${APP}, skipping."; continue ;;
             esac
             echo "Running E2E for ${E2E_APP} (env=ci)"
             node scripts/e2e.mjs --env ci --app "${E2E_APP}"
           done
 
+      - name: Capture app container logs (on failure)
+        # A container-side crash (e.g. a crash-looping supervisord program)
+        # shows up to Playwright only as a generic connection error, with
+        # nothing in the CI step output explaining why. Dump the app
+        # container's own logs so that reason is visible without a local
+        # repro next time.
+        if: failure()
+        run: |
+          set -uo pipefail
+          docker ps -a > docker-ps.log 2>&1 || true
+          docker logs libra-ci > libra-ci-container.log 2>&1 || echo "no libra-ci container found" > libra-ci-container.log
+
+      - name: Upload app container logs
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        if: failure()
+        with:
+          name: libra-ci-container-logs
+          path: |
+            libra-ci-container.log
+            docker-ps.log
+          retention-days: 7
+
       - name: Upload store Playwright report
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         if: always() && (needs.changes.outputs.store == 'true' || needs.changes.outputs.packages == 'true' || needs.changes.outputs.tooling == 'true')
         with:
           name: playwright-report-store
@@ -462,7 +720,7 @@ jobs:
           retention-days: 7
 
       - name: Upload admin Playwright report
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         if: always() && (needs.changes.outputs.admin == 'true' || needs.changes.outputs.packages == 'true' || needs.changes.outputs.tooling == 'true')
         with:
           name: playwright-report-admin
@@ -470,7 +728,7 @@ jobs:
           retention-days: 7
 
       - name: Upload auth Playwright report
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         if: always() && (needs.changes.outputs.auth == 'true' || needs.changes.outputs.packages == 'true' || needs.changes.outputs.tooling == 'true')
         with:
           name: playwright-report-auth
@@ -478,7 +736,7 @@ jobs:
           retention-days: 7
 
       - name: Upload landing Playwright report
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         if: always() && (needs.changes.outputs.landing == 'true' || needs.changes.outputs.packages == 'true' || needs.changes.outputs.tooling == 'true')
         with:
           name: playwright-report-landing
@@ -486,7 +744,7 @@ jobs:
           retention-days: 7
 
       - name: Upload payments Playwright report
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         if: always() && (needs.changes.outputs.payments == 'true' || needs.changes.outputs.packages == 'true' || needs.changes.outputs.tooling == 'true')
         with:
           name: playwright-report-payments
@@ -504,29 +762,25 @@ jobs:
     if: needs.changes.outputs.docs-only == 'false' && github.event_name == 'pull_request'
     steps:
       - name: Checkout code
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+        uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v4.4.0
 
       - name: Setup Node.js
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: "pnpm"
 
       - name: Install dependencies
-        run: |
-          pnpm install --frozen-lockfile || {
-            echo "Frozen lockfile install failed, retrying without frozen lockfile"
-            pnpm install --no-frozen-lockfile
-          }
+        run: pnpm install --frozen-lockfile
 
       - name: Analyze store bundle
         run: cd apps/store && ANALYZE=true pnpm run build || true
 
       - name: Upload bundle analysis
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         if: always()
         with:
           name: bundle-analysis

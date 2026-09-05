@@ -136,6 +136,7 @@ export function UserTable({
             />
           </div>
           <select
+            aria-label={t("filters.roleFilterLabel")}
             value={roleFilter}
             onChange={(e) => onRoleFilterChange(e.target.value)}
             className="h-10 rounded-none border-2 border-foreground bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
@@ -145,6 +146,7 @@ export function UserTable({
             <option value="seller">{t("roles.seller")}</option>
           </select>
           <select
+            aria-label={t("filters.itemFilterLabel")}
             value={itemFilter}
             onChange={(e) => onItemFilterChange(e.target.value)}
             className="h-10 rounded-none border-2 border-foreground bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
@@ -177,6 +179,7 @@ export function UserTable({
               <th className="px-4 py-3">
                 <input
                   type="checkbox"
+                  aria-label={t("selection.selectAll")}
                   checked={
                     users.length > 0 && selectedUsers.size === users.length
                   }

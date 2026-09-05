@@ -7,8 +7,8 @@ import {
   adminInsert,
   createTestUser,
   SELLER_PERMISSIONS,
+  deleteTestUser,
   injectSession,
-  supabaseAdmin,
 } from "./helpers/session";
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -70,7 +70,7 @@ test(
       await injectSession(context, buyer);
 
       // Verify session landed (not redirected to login)
-      await page.goto(`${STORE_URL}/en`, { waitUntil: "networkidle" });
+      await page.goto(`${STORE_URL}/en`);
       expect(page.url(), "Store should not redirect to login").not.toContain(
         "/login",
       );
@@ -96,7 +96,6 @@ test(
       });
 
       await page.getByTestId("product-card-link").first().click();
-      await page.waitForLoadState("networkidle");
       await expect(page.getByTestId("product-detail-page")).toBeVisible();
       await expect(page.getByTestId("hero-section")).toBeVisible();
 
@@ -119,21 +118,42 @@ test(
       });
 
       await page.getByTestId("product-detail-mobile-add-to-cart").click();
-      await page.waitForTimeout(500);
 
-      await page.goto(`${PAYMENTS_URL}/en/checkout`, {
-        waitUntil: "networkidle",
-      });
+      // Rendered state first: the bar's in-cart indicator renders once
+      // quantityInCart > 0. Unlike the button's "added" state it does not time
+      // out after a moment, so it is safe to assert against. It had no test id
+      // until now, which is why this was a fixed 500ms sleep.
+      await expect(
+        page.getByTestId("product-detail-mobile-in-cart"),
+      ).toBeVisible();
 
-      // Verify we landed on checkout, not redirected to login
-      expect(page.url(), "Checkout should not redirect to login").not.toContain(
-        "/login",
-      );
+      // Then persisted state, which is what the navigation below actually
+      // needs. The cart writes its cookie from a useEffect, so the write lands
+      // a tick after React has already rendered the indicator above -- and it
+      // is the cookie, not the DOM, that survives the goto.
+      //
+      // Kept as a presence check rather than a count. full-purchase-flow tried
+      // asserting an exact item count here and CI rejected it, so the count is
+      // not what I assumed; presence is the part I can stand behind without
+      // running the suite.
+      await expect
+        .poll(
+          async () =>
+            (await context.cookies()).some((c) => c.name === "libra-cart"),
+          { message: "cart cookie was never written" },
+        )
+        .toBe(true);
+
+      await page.goto(`${PAYMENTS_URL}/en/checkout`);
+
+      // Verify we landed on checkout, not redirected to login. toHaveURL
+      // retries, so it waits and asserts in one step.
+      await expect(page).not.toHaveURL(/\/login/);
 
       await expect(
         page.getByTestId("payments-mobile-sidebar-trigger"),
       ).toBeVisible();
-      await expect(page.getByTestId("payments-sidebar")).not.toBeVisible();
+      await expect(page.getByTestId("payments-sidebar")).toBeHidden();
 
       const checkoutViewportMetrics = await page.evaluate(() => ({
         doc: document.documentElement.scrollWidth,
@@ -171,8 +191,8 @@ test(
         "user_permissions",
         `user_id=eq.${seller.userId}`,
       ).catch(() => {});
-      await supabaseAdmin.auth.admin.deleteUser(buyer.userId).catch(() => {});
-      await supabaseAdmin.auth.admin.deleteUser(seller.userId).catch(() => {});
+      await deleteTestUser(buyer).catch(() => {});
+      await deleteTestUser(seller).catch(() => {});
     }
   },
 );

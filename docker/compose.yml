@@ -1,4 +1,4 @@
-# Docker Compose for the candyshop app container.
+# Docker Compose for the libra app container.
 # All values are sourced from the active env file — no hardcoded values.
 #
 # Usage (via docker-build.mjs):
@@ -23,6 +23,10 @@ services:
       retries: 3
       start_period: 60s
     environment:
+      # Clerk's server-side secret. Never a --build-arg (must not be baked
+      # into the client bundle) — the container's Clerk middleware reads it
+      # from its runtime environment, so it must be injected here.
+      - CLERK_SECRET_KEY=${CLERK_SECRET_KEY:-}
       # Runtime overrides — allow the container to reach a local Supabase
       # instance (e.g. during e2e) without a full image rebuild.
       # These are only injected when the variables are set in the host env.
@@ -32,7 +36,7 @@ services:
       # Set both variables to enable; leave empty to keep alerts disabled.
       - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN:-}
       - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID:-}
-      - SERVER_HOSTNAME=${HOSTNAME:-candyshop-prod}
+      - SERVER_HOSTNAME=${HOSTNAME:-libra-prod}
     extra_hosts:
       # Allow the container to reach host-local services (e.g. Supabase on
       # localhost:64321) via host.docker.internal on Linux/Windows/Mac.

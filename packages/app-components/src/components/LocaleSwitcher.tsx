@@ -41,7 +41,10 @@ export function LocaleSwitcher({ locales }: LocaleSwitcherProps) {
 
     // Replace the locale segment in the pathname
     const segments = pathname.split("/");
-    if (segments.length > 1 && locales.includes(segments[1])) {
+    // Read the segment into a local first: a length check does not narrow an
+    // indexed access, which is `string | undefined` under noUncheckedIndexedAccess.
+    const currentSegment = segments[1];
+    if (currentSegment !== undefined && locales.includes(currentSegment)) {
       segments[1] = nextLocale;
     }
     const newPath = segments.join("/") || `/${nextLocale}`;

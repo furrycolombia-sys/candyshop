@@ -46,25 +46,6 @@ function createSectionSchema(t: ValidationT) {
     });
 }
 
-/** Section item type (matches the Zod schema shape without needing runtime schema) */
-export interface SectionItem {
-  title_en: string;
-  title_es: string;
-  description_en: string;
-  description_es: string;
-  icon: string;
-  image_url: string;
-  sort_order: number;
-}
-
-export type Section = {
-  name_en: string;
-  name_es: string;
-  type: (typeof SECTION_TYPES)[number];
-  sort_order: number;
-  items: SectionItem[];
-};
-
 /** Product image schema */
 export const productImageSchema = z.object({
   url: z.string().url(),
@@ -74,8 +55,6 @@ export const productImageSchema = z.object({
   is_store_cover: z.boolean().optional().default(false),
   fit: z.enum(["cover", "contain"]).optional().default("cover"),
 });
-
-export type ProductImage = z.infer<typeof productImageSchema>;
 
 /**
  * Create the product form schema with translated validation messages.
@@ -127,6 +106,9 @@ export function createProductFormSchema(t: ValidationT) {
 }
 
 /** Static schema for type inference only (no translated messages) */
-export const productFormSchema = createProductFormSchema((key) => key);
-
-export type ProductFormValues = z.infer<typeof productFormSchema>;
+// Derived from the factory's return type rather than from a module-level
+// instance: the schema was only ever built at import time to feed z.infer,
+// so nothing needs to construct one.
+export type ProductFormValues = z.infer<
+  ReturnType<typeof createProductFormSchema>
+>;

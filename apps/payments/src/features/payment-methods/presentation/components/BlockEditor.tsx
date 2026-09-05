@@ -18,7 +18,7 @@ import type {
 
 // ─── Neobrutalist input class ─────────────────────────────────────────────────
 
-export const inputClass =
+const inputClass =
   "flex h-9 w-full border-strong border-foreground bg-background px-3 py-1 text-sm shadow-brutal-sm focus:outline-none focus:ring-2 focus:ring-brand";
 
 // ─── Block Editor ─────────────────────────────────────────────────────────────

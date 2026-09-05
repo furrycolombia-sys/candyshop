@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Candyshop - Infrastructure Setup Script
+# Libra - Infrastructure Setup Script
 # TODO: Configure for your deployment infrastructure
 
 set -e

@@ -192,7 +192,10 @@ export function SectionItemsGallery({
       </Droppable>
 
       {fields.length === 0 && (
-        <p className="py-4 text-center text-xs text-muted-foreground">
+        <p
+          className="py-4 text-center text-xs text-muted-foreground"
+          {...tid("section-items-gallery-empty")}
+        >
           {t("emptySection")}
         </p>
       )}

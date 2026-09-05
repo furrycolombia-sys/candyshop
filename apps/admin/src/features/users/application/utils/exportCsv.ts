@@ -1,7 +1,7 @@
 /* eslint-disable i18next/no-literal-string */
 import type { UserProfileSummary } from "@/features/users/domain/types";
 
-export type UserPermissionsById = Record<string, string[]>;
+type UserPermissionsById = Record<string, string[]>;
 export interface ReceiptBackup {
   userId: string;
   orderId: string;

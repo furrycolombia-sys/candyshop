@@ -21,7 +21,7 @@ The `scripts/supabase-docker.mjs` script:
 This ensures:
 
 - No hardcoded credentials in config files
-- Each environment uses its own Supabase URL, keys, and OAuth settings
+- Each environment uses its own Supabase URL and keys
 - The generated config is never committed to git
 
 ## Running Supabase
@@ -66,10 +66,7 @@ NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321
 NEXT_PUBLIC_SUPABASE_ANON_KEY=$secret:DEV_SUPABASE_ANON_KEY
 SUPABASE_SERVICE_ROLE_KEY=$secret:DEV_SUPABASE_SERVICE_ROLE_KEY
 
-# OAuth configuration
-SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID=$secret:...
-SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET=$secret:...
-SUPABASE_AUTH_EXTERNAL_REDIRECT_URI=http://127.0.0.1:54321/auth/v1/callback
+# Auth callback base URL (OAuth itself is owned by Clerk, not Supabase Auth)
 SUPABASE_AUTH_SITE_URL=http://localhost:7001/auth/callback
 ```
 

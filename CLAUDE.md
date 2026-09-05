@@ -22,7 +22,7 @@ This is a **pnpm workspace monorepo** — a store and payment platform for selli
 ### Structure
 
 ```
-candyshop/
+libra/
 ├── apps/                          # Applications
 │   ├── store/                     # Main storefront (REFERENCE STANDARD)
 │   ├── landing/                   # Public landing page
@@ -154,11 +154,16 @@ This project strictly follows **DRY**, **SOLID**, and **KISS** principles.
 
 ### SOLID Principles
 
-| Principle                 | Application                                         |
-| ------------------------- | --------------------------------------------------- |
-| **S**ingle Responsibility | One component/hook = one purpose                    |
-| **O**pen/Closed           | Extend via props/composition, not modification      |
-| **D**ependency Inversion  | Depend on abstractions (hooks), not implementations |
+| Principle                 | Application                                    |
+| ------------------------- | ---------------------------------------------- |
+| **S**ingle Responsibility | One component/hook = one purpose               |
+| **O**pen/Closed           | Extend via props/composition, not modification |
+
+<!-- cspell:ignore ependency -- the bold marker in **D**ependency splits the
+     word, and "ependency" is the half that is left. **S**ingle and **O**pen
+     survive the same treatment only because "ingle" and "pen" are words. -->
+
+| **D**ependency Inversion | Depend on abstractions (hooks), not implementations |
 
 ### KISS - Keep It Simple
 
@@ -274,6 +279,7 @@ If any fail, keep in app's `shared/` folder instead.
 - [Testing](.claude/rules/testing.md)
 - [Checkout Stock Integrity](.claude/rules/checkout-stock-integrity.md)
 - [Checkout Stock Integrity Standard](docs/standards/checkout-stock-integrity.md)
+- [Quality Gates](docs/standards/quality-gates.md) — what the checks verify, what is staged, and the gates that were found not to work
 - [E2E Selectors](.claude/rules/e2e-selectors.md)
 - [Build Checks](.claude/rules/build-checks.md)
 - [Code Review Standards](.claude/rules/code-review-standards.md)

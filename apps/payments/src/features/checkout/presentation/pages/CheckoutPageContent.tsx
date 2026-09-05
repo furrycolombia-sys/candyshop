@@ -1,6 +1,6 @@
 "use client";
 
-import { useSupabaseAuth } from "auth/client";
+import { useCurrentUser } from "auth/client";
 import { ArrowLeft, PartyPopper, ShoppingBag } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -58,7 +58,7 @@ function getCompletedCheckoutState(allSubmitted: boolean): boolean {
 
 export function CheckoutPageContent() {
   const t = useTranslations("checkout");
-  const { user } = useSupabaseAuth();
+  const { user } = useCurrentUser();
   const { groups, isEmpty, isLoading, getItemName } = useCartFromCookie();
   const submitPayment = useSubmitPayment();
   const clearCartCookie = useClearCartCookie();

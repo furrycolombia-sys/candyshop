@@ -9,6 +9,7 @@ import {
   adminQuery,
   adminInsert,
   createTestUser,
+  deleteTestUser,
   injectSession,
   supabaseAdmin,
   type TestUser,
@@ -163,8 +164,8 @@ test.describe.serial("admin users export with receipts backup", () => {
   test.afterAll(async () => {
     await adminDelete("orders", `id=eq.${orderId}`).catch(() => {});
     await supabaseAdmin.storage.from("receipts").remove([storagePath]);
-    await supabaseAdmin.auth.admin.deleteUser(adminUser.userId);
-    await supabaseAdmin.auth.admin.deleteUser(buyerUser.userId);
+    await deleteTestUser(adminUser);
+    await deleteTestUser(buyerUser);
   });
 
   test("downloads excel export with receipt file backup row", async ({
@@ -173,9 +174,7 @@ test.describe.serial("admin users export with receipts backup", () => {
   }) => {
     await injectSession(context, adminUser);
 
-    await page.goto(resolveAdminUsersUrl(), {
-      waitUntil: "networkidle",
-    });
+    await page.goto(resolveAdminUsersUrl());
     await expect(page.getByTestId("users-page")).toBeVisible({
       timeout: ELEMENT_TIMEOUT_MS,
     });
@@ -200,10 +199,11 @@ test.describe.serial("admin users export with receipts backup", () => {
 
     const stream = await download.createReadStream();
     expect(stream).not.toBeNull();
-    if (!stream) return;
 
     const chunks: DownloadChunk[] = [];
-    for await (const chunk of stream) {
+    // The assertion above already failed the test if the stream is null; the
+    // `!` only tells the compiler that, and is erased at build.
+    for await (const chunk of stream!) {
       chunks.push(chunk as DownloadChunk);
     }
 

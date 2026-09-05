@@ -62,7 +62,14 @@ export function DynamicFormField({
     <div className="flex flex-col gap-1" {...tid(`dynamic-field-${field.id}`)}>
       <label htmlFor={inputId} className="text-sm font-semibold">
         {label}
-        {field.required && <span className="ml-1 text-destructive">*</span>}
+        {field.required && (
+          <span
+            className="ml-1 text-destructive"
+            {...tid("dynamic-field-required")}
+          >
+            *
+          </span>
+        )}
       </label>
 
       {renderInput()}

@@ -2,7 +2,7 @@ export type { OrderStatus } from "@/shared/domain/types";
 
 import type { OrderStatus } from "@/shared/domain/types";
 
-export interface SellerReportOrderItem {
+interface SellerReportOrderItem {
   id: string;
   product_id: string;
   product_name: string;

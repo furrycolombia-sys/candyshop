@@ -5,15 +5,16 @@
     "privacy": "Privacy"
   },
   "meta": {
-    "title": "Candy Shop - Sign In",
-    "description": "Sign in to your Candy Shop account"
+    "title": "Libra - Sign In",
+    "description": "Sign in to your Libra account"
   },
   "auth": {
     "login": {
       "title": "Sign in",
       "subtitle": "Choose your preferred sign-in method",
       "google": "Continue with Google",
-      "discord": "Continue with Discord"
+      "discord": "Continue with Discord",
+      "signInError": "Sign-in didn't start. Please try again, or contact support if this keeps happening."
     },
     "signOut": "Sign out",
     "account": {
@@ -52,7 +53,7 @@
     }
   },
   "nav": {
-    "brand": "Candy Shop",
+    "brand": "Libra",
     "landing": "Home",
     "store": "Store",
     "studio": "Studio",

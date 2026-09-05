@@ -69,7 +69,7 @@
     "arbitrary_values": "PASS - No arbitrary values detected. All classes use design system values from the theme.",
     "responsive_design": "PASS - All responsive classes follow mobile-first convention (base → sm: → md: → lg: → xl:).",
     "class_ordering": "PASS - Classes are properly ordered by category:\n1. Layout (flex, grid, etc.)\n2. Positioning (relative, absolute, etc.)\n3. Sizing (w-*, h-*, etc.)\n4. Spacing (p-*, m-*, gap-*, etc.)\n5. Typography (text-*, font-*, etc.)\n6. Colors (bg-*, text-*, border-*, etc.)\n7. Effects (shadow-*, opacity-*, etc.)\n8. Transitions (transition-*, etc.)\n9. States (hover:*, focus:*, etc.)",
-    "design_system_alignment": "PASS - All components align with the candy shop design system using semantic tokens defined in theme.css and colors.css."
+    "design_system_alignment": "PASS - All components align with the Libra design system using semantic tokens defined in theme.css and colors.css."
   },
   "statistics": {
     "total_files": 4,

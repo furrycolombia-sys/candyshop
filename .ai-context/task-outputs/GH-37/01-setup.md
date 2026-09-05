@@ -22,7 +22,7 @@ nothing to commit, working tree clean
 
 ## Quick Links
 
-- [GitHub Issue](https://github.com/furrycolombia-sys/candyshop/issues/37)
+- [GitHub Issue](https://github.com/furrycolombia-sys/libra/issues/37)
 - [Task Artifacts](./)
 
 ## Next Steps

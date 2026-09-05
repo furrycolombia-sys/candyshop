@@ -18,7 +18,7 @@ All MCP servers live in:
 
 - `.claude/tools/github-unified-mcp.mjs`
 - `.claude/tools/git-mcp.mjs`
-- `.claude/tools/skillsmp-mcp.mjs`
+- `.claude/tools/linear-mcp.mjs`
 
 ---
 

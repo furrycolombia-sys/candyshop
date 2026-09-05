@@ -8,13 +8,13 @@
 
 This project uses a comprehensive testing approach:
 
-| Test Type             | Framework                      | Purpose                                    | Location                      |
-| --------------------- | ------------------------------ | ------------------------------------------ | ----------------------------- |
-| **Unit Tests**        | Vitest + React Testing Library | Test components, hooks, utils in isolation | `*.test.ts(x)` next to source |
-| **E2E Tests**         | Playwright                     | Test user flows in real browser            | `e2e/**/*.spec.ts`            |
-| **API Mocking**       | MSW (Mock Service Worker)      | Mock API responses for testing             | `src/mocks/`                  |
-| **Accessibility**     | axe-core + Playwright          | WCAG compliance testing                    | Integrated in E2E             |
-| **Visual Regression** | Playwright Screenshots         | Catch unintended UI changes                | `e2e/visual/`                 |
+| Test Type             | Framework                      | Purpose                                    | Location             |
+| --------------------- | ------------------------------ | ------------------------------------------ | -------------------- |
+| **Unit Tests**        | Vitest + React Testing Library | Test components, hooks, utils in isolation | `<workspace>/tests/` |
+| **E2E Tests**         | Playwright                     | Test user flows in real browser            | `e2e/**/*.spec.ts`   |
+| **API Mocking**       | MSW (Mock Service Worker)      | Mock API responses for testing             | `src/mocks/`         |
+| **Accessibility**     | axe-core + Playwright          | WCAG compliance testing                    | Integrated in E2E    |
+| **Visual Regression** | Playwright Screenshots         | Catch unintended UI changes                | `e2e/visual/`        |
 
 ---
 
@@ -129,14 +129,44 @@ describe("UserCard", () => {
 
 ### File Structure
 
+Unit tests live in a flat `tests/` directory per workspace, not beside the
+source. The source tree then contains only shipped code.
+
 ```
-features/auth/presentation/components/
-└── LoginForm/
-    ├── LoginForm.tsx
-    ├── LoginForm.test.tsx    # Co-located test
-    ├── LoginForm.types.ts
-    └── index.ts
+apps/store/
+├── src/features/auth/presentation/components/
+│   └── LoginForm/
+│       ├── LoginForm.tsx
+│       ├── LoginForm.types.ts
+│       └── index.ts
+└── tests/
+    └── LoginForm.test.tsx
 ```
+
+Because the directories are flat, two tests cannot share a basename. Where the
+source names collide -- `constants.test.ts` existed five times in `payments`
+alone -- prefix with the feature: `checkout-constants.test.ts`.
+
+**Import the code under test by its alias, never relatively.** A test in
+`tests/` is no longer a sibling of its subject, so `./LoginForm` does not
+resolve. Apps use `@/`, packages use their own (`@ui`, `@shared`, `@auth`,
+`@api`, `@app-components`). This is what the architecture rules already asked
+for.
+
+Two things that bite when a package is involved:
+
+- vitest resolves aliases separately from TypeScript. A `paths` entry in
+  `tsconfig.json` is not enough; the alias must also be in the vitest config's
+  `resolve.alias`, and in **each project** if the config uses `projects` --
+  they do not inherit the top-level one.
+- A test that reads a file relative to `__dirname` breaks on the move.
+  `packages/ui/tests/contrast.test.ts` reads `colors.css` and now reaches for
+  it through `../src/styles/`.
+
+Where a workspace splits suites by environment, split the directory too:
+`packages/auth/tests/node/` and `packages/auth/tests/client/`, each named by
+its vitest project. Flattening them into one directory silently ran the
+node-environment tests under jsdom.
 
 ### Test Template
 
@@ -403,7 +433,20 @@ if (process.env.NEXT_PUBLIC_API_MOCKING === "enabled") {
 
 ## Accessibility Testing
 
-Automated accessibility testing using axe-core ensures WCAG compliance.
+Automated accessibility testing using axe-core.
+
+> **What actually exists today:** `vitest-axe` runs against the shared
+> components in `packages/ui` and `packages/app-components`. Those suites are
+> part of the normal unit-test run, so CI enforces them — there is no separate
+> accessibility job. The Playwright/`@axe-core/playwright` setup described
+> further down is **not** installed; treat it as the shape to follow when
+> adding page-level coverage, not as something already running. Same for the
+> visual regression section below it.
+>
+> When adding a component to either shared package, add it to that package's
+> `accessibility.test.tsx`. Both files include a test that deliberately fails
+> — an unlabelled input, an icon-only button — so the suite proves it can
+> still catch something.
 
 ### Unit Test Integration
 

@@ -41,13 +41,18 @@ test.describe("Theme persistence across apps", () => {
     await page.goto(`${STORE_URL}/en`);
 
     // Start in light mode
-    await expect(page.locator("html")).not.toHaveClass(/dark/);
+    // The theme is asserted through data-theme, not the .dark class. The class
+    // is Tailwind's dark-variant mechanism and still set -- but a class is a
+    // styling detail, and asserting it means the test breaks the day the
+    // strategy changes even though the behaviour has not. data-theme also says
+    // "light" out loud, where the old assertion could only say "not dark".
+    await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
 
     // Click theme toggle
     await page.getByTestId("theme-toggle").click();
 
     // Dark mode applied
-    await expect(page.locator("html")).toHaveClass(/dark/);
+    await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
 
     // Cookie set
     const cookies = await page.context().cookies();
@@ -59,7 +64,7 @@ test.describe("Theme persistence across apps", () => {
     await page.goto(`${LANDING_URL}/en`);
 
     // Dark mode persists
-    await expect(page.locator("html")).toHaveClass(/dark/);
+    await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
   });
 
   test("light theme persists after toggling back", async ({ page }) => {
@@ -67,11 +72,11 @@ test.describe("Theme persistence across apps", () => {
 
     // Go dark
     await page.getByTestId("theme-toggle").click();
-    await expect(page.locator("html")).toHaveClass(/dark/);
+    await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
 
     // Go light
     await page.getByTestId("theme-toggle").click();
-    await expect(page.locator("html")).not.toHaveClass(/dark/);
+    await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
 
     // Cookie updated
     const cookies = await page.context().cookies();
@@ -80,7 +85,7 @@ test.describe("Theme persistence across apps", () => {
 
     // Persists on landing
     await page.goto(`${LANDING_URL}/en`);
-    await expect(page.locator("html")).not.toHaveClass(/dark/);
+    await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
   });
 });
 
@@ -142,7 +147,7 @@ test.describe("Theme + Language combined", () => {
 
     // Dark theme
     await page.getByTestId("theme-toggle").click();
-    await expect(page.locator("html")).toHaveClass(/dark/);
+    await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
 
     // Spanish
     await page.getByTestId("locale-switch-es").click();
@@ -152,7 +157,7 @@ test.describe("Theme + Language combined", () => {
     await page.goto(`${LANDING_URL}/es`);
 
     // Both persist
-    await expect(page.locator("html")).toHaveClass(/dark/);
+    await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
     await expect(page.getByTestId("nav-link-landing")).toBeVisible();
   });
 });

@@ -1,11 +1,12 @@
 /* eslint-disable i18next/no-literal-string -- route uses internal table names and API keys */
+import { getCurrentUserId } from "api/supabase";
 import { createServerSupabaseClient } from "api/supabase/server";
 import { NextResponse } from "next/server";
 
 import type {
   CheckoutPaymentMethodsResponse,
   SellerPaymentMethodWithType,
-} from "@/features/checkout/domain/types";
+} from "@/features/checkout";
 import {
   adminFetchJson,
   createRestPath,
@@ -35,6 +36,7 @@ type ProductStockRow = {
 
 type PermissionRow = {
   expires_at: string | null;
+  mode: "grant" | "deny";
   resource_permissions: {
     permissions: {
       key: string;
@@ -99,13 +101,36 @@ function mapPaymentMethod(row: PaymentMethodRow): SellerPaymentMethodWithType {
   };
 }
 
+/**
+ * Whether the caller holds every required key, by the same rule the database
+ * uses.
+ *
+ * `public.has_permission()` is `exists(grant, unexpired) AND NOT exists(deny,
+ * unexpired)`, so a deny revokes the key. Asking only for `mode=eq.grant`
+ * reimplements that rule with its second half missing, which would let a
+ * denied buyer past a check RLS refuses.
+ */
 function hasRequiredPermissions(rows: PermissionRow[]) {
   const now = Date.now();
-  const grantedKeys = new Set(
-    rows
-      .filter((row) => !row.expires_at || Date.parse(row.expires_at) > now)
-      .map((row) => row.resource_permissions?.permissions?.key)
+  const active = rows.filter(
+    (row) => !row.expires_at || Date.parse(row.expires_at) > now,
+  );
+  const keyOf = (row: PermissionRow) =>
+    row.resource_permissions?.permissions?.key;
+
+  const denied = new Set(
+    active
+      .filter((row) => row.mode === "deny")
+      .map((row) => keyOf(row))
       .filter((key): key is string => typeof key === "string"),
+  );
+
+  const grantedKeys = new Set(
+    active
+      .filter((row) => row.mode !== "deny")
+      .map((row) => keyOf(row))
+      .filter((key): key is string => typeof key === "string")
+      .filter((key) => !denied.has(key)),
   );
 
   return REQUIRED_PERMISSION_KEYS.every((key) => grantedKeys.has(key));
@@ -115,8 +140,8 @@ async function fetchGrantedPermissions(userId: string) {
   return adminFetchJson<PermissionRow[]>(
     createRestPath("user_permissions", {
       user_id: `eq.${validateUuid(userId)}`,
-      mode: "eq.grant",
-      select: "expires_at,resource_permissions!inner(permissions!inner(key))",
+      select:
+        "expires_at,mode,resource_permissions!inner(permissions!inner(key))",
     }),
   );
 }
@@ -176,11 +201,9 @@ async function validateStock(
 export async function POST(request: Request) {
   try {
     const sessionSupabase = await createServerSupabaseClient();
-    const {
-      data: { user },
-    } = await sessionSupabase.auth.getUser();
+    const userId = await getCurrentUserId(sessionSupabase);
 
-    if (!user) {
+    if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -199,7 +222,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
     }
 
-    const permissions = await fetchGrantedPermissions(user.id);
+    const permissions = await fetchGrantedPermissions(userId);
     if (!hasRequiredPermissions(permissions)) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }

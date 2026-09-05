@@ -1,5 +1,5 @@
 {
-  "name": "candyshop",
+  "name": "libra",
   "version": "2026.04.22.2",
   "private": true,
   "scripts": {
@@ -10,13 +10,14 @@
     "tunnel:stop": "node scripts/cloudflared-stop.mjs",
     "tunnel:switch": "node scripts/tunnel-switch.mjs",
     "lint:env": "node scripts/check-env-parity.mjs",
-    "lint": "eslint apps/store/src apps/studio/src apps/landing/src apps/payments/src apps/admin/src apps/auth/src apps/playground/src packages/ui/src packages/shared/src packages/api/src packages/app-components/src packages/auth/src",
+    "lint": "eslint . --max-warnings=0",
     "typecheck": "turbo typecheck",
     "test": "turbo test",
     "test:watch": "vitest",
     "test:coverage": "turbo test:coverage",
-    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,css,md}\"",
-    "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,css,md}\"",
+    "test:workflows": "vitest run -c vitest.config.scripts.js",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,mjs,cjs,json,css,md,yml,yaml}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,mjs,cjs,json,css,md,yml,yaml}\"",
     "fix:staged": "lint-staged --concurrent false",
     "fix:all": "pnpm format && pnpm lint --fix",
     "check:style": "stylelint \"apps/*/src/**/*.css\" \"packages/*/src/**/*.css\" && node scripts/check-css-sync.mjs",
@@ -46,31 +47,40 @@
     "docker:teardown": "node scripts/docker-teardown.mjs",
     "supabase:docker": "node scripts/supabase-docker.mjs",
     "backup:prod": "node scripts/backup-prod.mjs",
-    "supabase:start": "docker rm -f supabase_vector_candystore 2>nul & node scripts/supabase-cmd.mjs start",
+    "supabase:start": "docker rm -f supabase_vector_libra 2>nul & node scripts/supabase-cmd.mjs start",
     "supabase:stop": "node scripts/supabase-cmd.mjs stop",
     "supabase:reset": "node scripts/supabase-cmd.mjs db reset",
     "prepare": "husky",
     "clean:builds": "find . -not -path '*/node_modules/*' -not -path '*/.git/*' \\( -name '.next' -o -name '.turbo' -o -name 'test-results' -o -name 'playwright-report' -o -name 'coverage' \\) -type d -prune -exec rm -rf '{}' + ; find . -not -path '*/node_modules/*' -not -path '*/.git/*' \\( -name 'tsconfig.tsbuildinfo' -o -name 'next-env.d.ts' \\) -delete",
-    "clean": "pnpm clean:builds && find . -name 'node_modules' -type d -prune -exec rm -rf '{}' +"
+    "clean": "pnpm clean:builds && find . -name 'node_modules' -type d -prune -exec rm -rf '{}' +",
+    "test:db": "node scripts/test-db.mjs",
+    "test:inventory": "node scripts/test-inventory.mjs",
+    "test:inventory:diff": "bash scripts/test-inventory-diff.sh",
+    "check:migrations": "node scripts/check-migration-edits.mjs",
+    "check:source-bytes": "node scripts/check-source-bytes.mjs",
+    "check:a11y-patterns": "node scripts/check-a11y-patterns.mjs",
+    "check:boundaries": "node scripts/check-feature-boundaries.mjs",
+    "check:doc-refs": "node scripts/check-doc-references.mjs",
+    "check:docs": "node scripts/check-doc-freshness.mjs"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@ls-lint/ls-lint": "^2.3.1",
     "@playwright/test": "^1.59.1",
     "@secretlint/secretlint-rule-preset-recommend": "^12.3.1",
     "@tailwindcss/typography": "^0.5.19",
     "@tanstack/eslint-plugin-query": "^5.100.5",
+    "@types/pg": "^8.23.1",
     "@typescript-eslint/eslint-plugin": "^8.59.0",
     "@typescript-eslint/parser": "^8.59.0",
     "@vitest/eslint-plugin": "^1.6.16",
-    "concurrently": "^9.2.1",
     "cspell": "^10.0.0",
     "eslint": "^9.39.4",
     "eslint-config-next": "16.2.4",
     "eslint-plugin-better-tailwindcss": "^4.4.1",
     "eslint-plugin-boundaries": "^6.0.2",
     "eslint-plugin-i18next": "^6.1.4",
-    "eslint-plugin-import": "^2.32.0",
-    "eslint-plugin-jsx-a11y": "^6.10.2",
+    "eslint-plugin-playwright": "^2.11.0",
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-security": "^4.0.0",
     "eslint-plugin-sonarjs": "^4.0.3",
@@ -84,6 +94,7 @@
     "lint-staged": "^16.4.0",
     "madge": "^8.0.0",
     "orval": "^8.9.0",
+    "pg": "^8.23.0",
     "prettier": "^3.8.3",
     "secretlint": "^12.3.1",
     "sharp": "^0.34.5",
@@ -100,30 +111,13 @@
     "vitest": "^4.1.5"
   },
   "lint-staged": {
-    "*.{ts,tsx,js,jsx}": [
+    "*.{ts,tsx,js,jsx,mjs,cjs}": [
       "prettier --check",
-      "eslint --no-warn-ignored --max-warnings=0",
+      "eslint --max-warnings=0 --no-warn-ignored",
       "secretlint"
     ],
-    "*.{json,md,css}": [
+    "*.{json,md,css,yml,yaml}": [
       "prettier --check"
-    ]
-  },
-  "pnpm": {
-    "overrides": {
-      "vite": ">=7.3.2",
-      "uuid": ">=14.0.0",
-      "postcss": "^8.5.12"
-    },
-    "onlyBuiltDependencies": [
-      "@parcel/watcher",
-      "@sentry/cli",
-      "@swc/core",
-      "esbuild",
-      "msw",
-      "sharp",
-      "supabase",
-      "unrs-resolver"
     ]
   },
   "packageManager": "pnpm@10.32.1+sha512.a706938f0e89ac1456b6563eab4edf1d1faf3368d1191fc5c59790e96dc918e4456ab2e67d613de1043d2e8c81f87303e6b40d4ffeca9df15ef1ad567348f2be",

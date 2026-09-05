@@ -4,7 +4,7 @@
 
 **Goal:** Cache granted permission keys in a cookie so the AppNavigation renders immediately on cross-app hard navigation instead of flashing blank while Supabase is queried.
 
-**Architecture:** Seed `useCurrentUserPermissions` initial state from a `candystore-nav-perm` cookie written on every successful fetch. Pass a new `hasCachedPermissions` flag from the hook into `AppNavigation`, which uses it to skip the loading-hide only when cached data is available. Fresh permissions are always fetched and the cookie is updated or unchanged accordingly.
+**Architecture:** Seed `useCurrentUserPermissions` initial state from a `libra-nav-perm` cookie written on every successful fetch. Pass a new `hasCachedPermissions` flag from the hook into `AppNavigation`, which uses it to skip the loading-hide only when cached data is available. Fresh permissions are always fetched and the cookie is updated or unchanged accordingly.
 
 **Tech Stack:** `cookies-next` (already a monorepo dep), `getSharedCookieDomain` from `packages/shared`, Vitest + React Testing Library for unit tests, Playwright for E2E targeting staging.
 
@@ -41,7 +41,7 @@
 
 ```typescript
 /** Cookie key used to cache nav permission keys across cross-app navigations */
-export const NAV_PERM_COOKIE_KEY = "candystore-nav-perm";
+export const NAV_PERM_COOKIE_KEY = "libra-nav-perm";
 ```
 
 - [ ] **Step 2: Export from the constants barrel**
@@ -189,7 +189,7 @@ describe("writeNavPermCache", () => {
     writeNavPermCache(keys);
 
     expect(mockSetCookie).toHaveBeenCalledWith(
-      "candystore-nav-perm",
+      "libra-nav-perm",
       JSON.stringify(keys),
       expect.objectContaining({ maxAge: 3600 }),
     );
@@ -206,11 +206,11 @@ describe("writeNavPermCache", () => {
     mockGetSharedDomain.mockReturnValue(".example.com");
     writeNavPermCache(["products.create"]);
 
-    expect(mockDeleteCookie).toHaveBeenCalledWith("candystore-nav-perm", {
+    expect(mockDeleteCookie).toHaveBeenCalledWith("libra-nav-perm", {
       path: "/",
     });
     expect(mockSetCookie).toHaveBeenCalledWith(
-      "candystore-nav-perm",
+      "libra-nav-perm",
       expect.any(String),
       expect.objectContaining({ domain: ".example.com" }),
     );
@@ -228,7 +228,7 @@ describe("clearNavPermCache", () => {
 
     expect(mockDeleteCookie).toHaveBeenCalledTimes(1);
     expect(mockDeleteCookie).toHaveBeenCalledWith(
-      "candystore-nav-perm",
+      "libra-nav-perm",
       expect.objectContaining({ path: "/" }),
     );
   });
@@ -240,10 +240,10 @@ describe("clearNavPermCache", () => {
     expect(mockDeleteCookie).toHaveBeenCalledTimes(2);
     expect(mockDeleteCookie).toHaveBeenNthCalledWith(
       1,
-      "candystore-nav-perm",
+      "libra-nav-perm",
       expect.objectContaining({ domain: ".example.com" }),
     );
-    expect(mockDeleteCookie).toHaveBeenNthCalledWith(2, "candystore-nav-perm", {
+    expect(mockDeleteCookie).toHaveBeenNthCalledWith(2, "libra-nav-perm", {
       path: "/",
     });
   });
@@ -1027,7 +1027,7 @@ test.describe("Navbar persistence across cross-app navigations", () => {
     page,
   }) => {
     const cookies = await page.context().cookies();
-    const navCookie = cookies.find((c) => c.name === "candystore-nav-perm");
+    const navCookie = cookies.find((c) => c.name === "libra-nav-perm");
     expect(navCookie).toBeDefined();
     expect(navCookie!.value).not.toBe("");
   });
@@ -1046,7 +1046,7 @@ test.describe("Navbar persistence across cross-app navigations", () => {
     await page.waitForTimeout(1500);
 
     const remaining = await context.cookies();
-    const navCookie = remaining.find((c) => c.name === "candystore-nav-perm");
+    const navCookie = remaining.find((c) => c.name === "libra-nav-perm");
     expect(navCookie).toBeUndefined();
   });
 });

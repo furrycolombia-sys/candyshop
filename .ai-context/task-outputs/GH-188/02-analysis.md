@@ -66,7 +66,7 @@ deploy-production.yml
    - Receive the standalone dir via rsync
    - Copy static assets (`apps/<app>/.next/static → standalone/apps/<app>/.next/static`)
    - Copy public dirs (`apps/<app>/public → standalone/apps/<app>/public`)
-   - `pm2 restart candyshop-<app>` (or `pm2 reload`)
+   - `pm2 restart libra-<app>` (or `pm2 reload`)
 
 3. **Runtime env vars** — `NEXT_PUBLIC_*` are baked at build time (done in CI). Non-public vars (`SUPABASE_SERVICE_ROLE_KEY`, Telegram tokens) must be passed to PM2 at runtime. Currently the deploy script sources the env file before building — with artifact transfer, we write these to a `.env.production.local` on the server and configure PM2 to read them.
 
@@ -202,5 +202,5 @@ The `e2e-tests` job currently has only:
 ## Questions/Blockers
 
 - [ ] Does the `studio` app need to be included in the artifact transfer? (It is built in deploy.sh but not in ci.yml artifact uploads — check if studio has E2E tests or just needs the build)
-- [ ] What is the rsync path on the VPS? (`/home/furrycolombia/candyshop` = `DEPLOY_DIR`)
+- [ ] What is the rsync path on the VPS? (`/home/furrycolombia/libra` = `DEPLOY_DIR`)
 - [ ] Should PM2 use `reload` (zero-downtime) or `restart` for the new binaries? (Standalone server.js is a new process start, so `pm2 delete + start` as currently done)

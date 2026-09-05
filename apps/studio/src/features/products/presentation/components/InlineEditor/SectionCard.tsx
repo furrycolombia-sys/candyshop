@@ -166,6 +166,7 @@ export function SectionCard({
 
         {/* Type selector */}
         <select
+          aria-label={t("sectionType")}
           value={typeValue}
           onChange={(e) => typeField.field.onChange(e.target.value)}
           className="h-7 w-32 rounded-sm border-2 border-foreground/30 bg-background px-2 text-xs text-foreground"

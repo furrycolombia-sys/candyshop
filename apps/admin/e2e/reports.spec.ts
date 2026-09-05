@@ -1,7 +1,6 @@
 import { expect, test } from "@playwright/test";
 
 import {
-  DEBOUNCE_WAIT_MS,
   ELEMENT_TIMEOUT_MS,
   MUTATION_WAIT_MS,
 } from "../../auth/e2e/helpers/constants";
@@ -10,6 +9,7 @@ import {
   adminDelete,
   adminInsert,
   createTestUser,
+  deleteTestUser,
   injectSession,
   supabaseAdmin,
   type TestUser,
@@ -116,8 +116,8 @@ test.describe.serial("Reports page", () => {
         .remove([receiptStoragePath])
         .catch(() => {});
     }
-    await supabaseAdmin.auth.admin.deleteUser(buyerUser.userId).catch(() => {});
-    await supabaseAdmin.auth.admin.deleteUser(adminUser.userId).catch(() => {});
+    await deleteTestUser(buyerUser).catch(() => {});
+    await deleteTestUser(adminUser).catch(() => {});
   });
 
   // ─── Page structure ─────────────────────────────────────────────
@@ -127,9 +127,7 @@ test.describe.serial("Reports page", () => {
     page,
   }) => {
     await injectSession(context, adminUser);
-    await page.goto(`${getAdminBaseUrl()}/en/reports`, {
-      waitUntil: "networkidle",
-    });
+    await page.goto(`${getAdminBaseUrl()}/en/reports`);
 
     await expect(page.getByTestId("reports-page")).toBeVisible({
       timeout: ELEMENT_TIMEOUT_MS,
@@ -144,9 +142,7 @@ test.describe.serial("Reports page", () => {
 
   test("shows the orders table once data loads", async ({ context, page }) => {
     await injectSession(context, adminUser);
-    await page.goto(`${getAdminBaseUrl()}/en/reports`, {
-      waitUntil: "networkidle",
-    });
+    await page.goto(`${getAdminBaseUrl()}/en/reports`);
 
     await expect(page.getByTestId("report-table")).toBeVisible({
       timeout: ELEMENT_TIMEOUT_MS,
@@ -165,9 +161,7 @@ test.describe.serial("Reports page", () => {
     page,
   }) => {
     await injectSession(context, adminUser);
-    await page.goto(`${getAdminBaseUrl()}/en/reports`, {
-      waitUntil: "networkidle",
-    });
+    await page.goto(`${getAdminBaseUrl()}/en/reports`);
 
     await expect(page.getByTestId("reports-filters-bar")).toBeVisible({
       timeout: ELEMENT_TIMEOUT_MS,
@@ -176,10 +170,10 @@ test.describe.serial("Reports page", () => {
     const statusSelect = page.getByTestId("reports-filter-status");
     await statusSelect.selectOption("approved");
 
-    await page.waitForTimeout(DEBOUNCE_WAIT_MS);
-
-    const url = new URL(page.url());
-    expect(url.searchParams.get("status")).toBe("approved");
+    // toHaveURL retries; reading page.url() once does not. The filter is
+    // debounced, so a one-shot read raced the update as soon as the sleep that
+    // used to precede it was removed.
+    await expect(page).toHaveURL(/[?&]status=approved(&|$)/);
   });
 
   test("date range filters update URL query params", async ({
@@ -187,9 +181,7 @@ test.describe.serial("Reports page", () => {
     page,
   }) => {
     await injectSession(context, adminUser);
-    await page.goto(`${getAdminBaseUrl()}/en/reports`, {
-      waitUntil: "networkidle",
-    });
+    await page.goto(`${getAdminBaseUrl()}/en/reports`);
 
     await expect(page.getByTestId("reports-filters-bar")).toBeVisible({
       timeout: ELEMENT_TIMEOUT_MS,
@@ -198,11 +190,8 @@ test.describe.serial("Reports page", () => {
     await page.getByTestId("reports-filter-date-from").fill("2024-01-01");
     await page.getByTestId("reports-filter-date-to").fill("2099-12-31");
 
-    await page.waitForTimeout(DEBOUNCE_WAIT_MS);
-
-    const url = new URL(page.url());
-    expect(url.searchParams.get("dateFrom")).toBe("2024-01-01");
-    expect(url.searchParams.get("dateTo")).toBe("2099-12-31");
+    await expect(page).toHaveURL(/[?&]dateFrom=2024-01-01(&|$)/);
+    await expect(page).toHaveURL(/[?&]dateTo=2099-12-31(&|$)/);
   });
 
   test("amount min/max filters update URL query params", async ({
@@ -210,9 +199,7 @@ test.describe.serial("Reports page", () => {
     page,
   }) => {
     await injectSession(context, adminUser);
-    await page.goto(`${getAdminBaseUrl()}/en/reports`, {
-      waitUntil: "networkidle",
-    });
+    await page.goto(`${getAdminBaseUrl()}/en/reports`);
 
     await expect(page.getByTestId("reports-filters-bar")).toBeVisible({
       timeout: ELEMENT_TIMEOUT_MS,
@@ -221,18 +208,14 @@ test.describe.serial("Reports page", () => {
     await page.getByTestId("reports-filter-amount-min").fill("1000");
     await page.getByTestId("reports-filter-amount-max").fill("999999");
 
-    await page.waitForTimeout(DEBOUNCE_WAIT_MS);
-
-    const url = new URL(page.url());
-    expect(url.searchParams.get("amountMin")).toBe("1000");
-    expect(url.searchParams.get("amountMax")).toBe("999999");
+    await expect(page).toHaveURL(/[?&]amountMin=1000(&|$)/);
+    await expect(page).toHaveURL(/[?&]amountMax=999999(&|$)/);
   });
 
   test("clear button removes all active filters", async ({ context, page }) => {
     await injectSession(context, adminUser);
     await page.goto(
       `${getAdminBaseUrl()}/en/reports?status=approved&amountMin=100`,
-      { waitUntil: "networkidle" },
     );
 
     await expect(page.getByTestId("reports-filters-bar")).toBeVisible({
@@ -244,11 +227,11 @@ test.describe.serial("Reports page", () => {
     });
 
     await page.getByTestId("reports-filter-clear").click();
-    await page.waitForTimeout(DEBOUNCE_WAIT_MS);
 
-    const url = new URL(page.url());
-    expect(url.searchParams.get("status")).toBeNull();
-    expect(url.searchParams.get("amountMin")).toBeNull();
+    // Both params must be gone. toHaveURL retries, so this waits for the
+    // clear to land rather than sampling the URL once.
+    await expect(page).not.toHaveURL(/[?&]status=/);
+    await expect(page).not.toHaveURL(/[?&]amountMin=/);
   });
 
   test("URL filter params are respected on page load", async ({
@@ -256,9 +239,7 @@ test.describe.serial("Reports page", () => {
     page,
   }) => {
     await injectSession(context, adminUser);
-    await page.goto(`${getAdminBaseUrl()}/en/reports?status=approved`, {
-      waitUntil: "networkidle",
-    });
+    await page.goto(`${getAdminBaseUrl()}/en/reports?status=approved`);
 
     await expect(page.getByTestId("reports-filters-bar")).toBeVisible({
       timeout: ELEMENT_TIMEOUT_MS,
@@ -272,9 +253,7 @@ test.describe.serial("Reports page", () => {
 
   test("shows the seeded order in the table", async ({ context, page }) => {
     await injectSession(context, adminUser);
-    await page.goto(`${getAdminBaseUrl()}/en/reports?status=approved`, {
-      waitUntil: "networkidle",
-    });
+    await page.goto(`${getAdminBaseUrl()}/en/reports?status=approved`);
 
     await expect(page.getByTestId("report-table")).toBeVisible({
       timeout: ELEMENT_TIMEOUT_MS,
@@ -293,9 +272,7 @@ test.describe.serial("Reports page", () => {
     page,
   }) => {
     await injectSession(context, adminUser);
-    await page.goto(`${getAdminBaseUrl()}/en/reports?status=approved`, {
-      waitUntil: "networkidle",
-    });
+    await page.goto(`${getAdminBaseUrl()}/en/reports?status=approved`);
 
     await expect(page.getByTestId("report-table")).toBeVisible({
       timeout: ELEMENT_TIMEOUT_MS,
@@ -312,18 +289,14 @@ test.describe.serial("Reports page", () => {
     page,
   }) => {
     await injectSession(context, adminUser);
-    await page.goto(`${getAdminBaseUrl()}/en/reports?status=pending`, {
-      waitUntil: "networkidle",
-    });
-
-    await page.waitForTimeout(MUTATION_WAIT_MS);
+    await page.goto(`${getAdminBaseUrl()}/en/reports?status=pending`);
 
     // Transfer number should not be visible under pending filter
     await expect(
       page.locator(`[data-testid^="report-row-transfer-"]`).filter({
         hasText: TEST_ORDER.transfer_number,
       }),
-    ).not.toBeVisible();
+    ).toBeHidden();
   });
 
   // ─── Export ───────────────────────────────────────────────────────
@@ -336,10 +309,7 @@ test.describe.serial("Reports page", () => {
     // Use a filter that will return no results
     await page.goto(
       `${getAdminBaseUrl()}/en/reports?status=pending&amountMin=9999999`,
-      { waitUntil: "networkidle" },
     );
-
-    await page.waitForTimeout(MUTATION_WAIT_MS);
 
     const exportButton = page.getByTestId("reports-export-button");
     await expect(exportButton).toBeVisible({ timeout: ELEMENT_TIMEOUT_MS });
@@ -348,9 +318,7 @@ test.describe.serial("Reports page", () => {
 
   test("export button downloads an XLS file", async ({ context, page }) => {
     await injectSession(context, adminUser);
-    await page.goto(`${getAdminBaseUrl()}/en/reports?status=approved`, {
-      waitUntil: "networkidle",
-    });
+    await page.goto(`${getAdminBaseUrl()}/en/reports?status=approved`);
 
     await expect(page.getByTestId("report-table")).toBeVisible({
       timeout: ELEMENT_TIMEOUT_MS,
@@ -379,28 +347,29 @@ test.describe.serial("Reports page", () => {
 
     try {
       await injectSession(context, limitedUser);
-      const response = await page.goto(`${getAdminBaseUrl()}/en/reports`, {
-        waitUntil: "networkidle",
+      await page.goto(`${getAdminBaseUrl()}/en/reports`);
+
+      // Anchor on something positive before asserting an absence. The page
+      // shell renders for any signed-in user and the data layer is what
+      // refuses, so `reports-page` is the normal outcome; `access-denied`
+      // covers a guard that short-circuits instead. Waiting for either means
+      // the absence below is measured against a rendered page rather than
+      // against a page that had not started.
+      await expect(
+        page.getByTestId("reports-page").or(page.getByTestId("access-denied")),
+      ).toBeVisible({ timeout: ELEMENT_TIMEOUT_MS });
+
+      // The app may enforce this by redirecting or by returning 403 and
+      // rendering an error state. Either is fine; the invariant is the same
+      // and holds in both cases, so assert it directly rather than branching.
+      // Branching meant that if isOnReportsPage were ever computed wrongly the
+      // test would assert something unrelated and still pass -- on an access
+      // control check.
+      await expect(page.getByTestId("report-table")).toBeHidden({
+        timeout: ELEMENT_TIMEOUT_MS,
       });
-
-      // Either gets redirected away from reports or the API returns 403
-      // The page should NOT show the reports table with real data
-      const isOnReportsPage = page.url().includes("/reports");
-
-      if (isOnReportsPage) {
-        // If still on the page, the table should show an error state (API 403)
-        await page.waitForTimeout(MUTATION_WAIT_MS);
-        await expect(page.getByTestId("report-table")).not.toBeVisible({
-          timeout: ELEMENT_TIMEOUT_MS,
-        });
-      } else {
-        // Redirected — acceptable outcome
-        expect(response?.status()).not.toBe(200);
-      }
     } finally {
-      await supabaseAdmin.auth.admin
-        .deleteUser(limitedUser.userId)
-        .catch(() => {});
+      await deleteTestUser(limitedUser).catch(() => {});
     }
   });
 });

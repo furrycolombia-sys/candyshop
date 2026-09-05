@@ -1,6 +1,6 @@
 import { setRequestLocale } from "next-intl/server";
 
-import { ProductDelegatesPage } from "@/features/seller-admins/presentation/pages/ProductDelegatesPage";
+import { ProductDelegatesPage } from "@/shared/presentation/pages/ProductDelegatesPage";
 
 export default async function ProductDelegatesRoute({
   params,

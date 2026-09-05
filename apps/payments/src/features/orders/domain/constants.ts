@@ -1,5 +1,3 @@
-export const MY_ORDERS_QUERY_KEY = "my-orders";
-
 export {
   ACCEPTED_RECEIPT_TYPES,
   MAX_RECEIPT_SIZE_BYTES,

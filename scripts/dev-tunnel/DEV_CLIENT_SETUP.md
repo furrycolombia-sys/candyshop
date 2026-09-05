@@ -98,7 +98,7 @@ DEV_SSH_PUBLIC_KEY_<YOURNAME>=ssh-ed25519 AAAA... you@host
 2. Press `Ctrl+Shift+P` (or `Cmd+Shift+P` on Mac)
 3. Select **Remote-SSH: Connect to Host...**
 4. Choose `dev-windows`
-5. Open folder: `Z:\Github\candystore` (type the path when prompted)
+5. Open folder: `Z:\Github\libra` (type the path when prompted)
 
 ---
 

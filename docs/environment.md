@@ -50,12 +50,12 @@ APPS_MODE=local|docker          # how apps run
 SUPABASE_MODE=local|docker|cloud # how Supabase runs
 
 # ─── Container identity ───────────────────────────────────────────
-SITE_PROD_IMAGE_NAME=candyshop-staging
-SITE_PROD_CONTAINER_NAME=candyshop-staging
+SITE_PROD_IMAGE_NAME=libra-staging
+SITE_PROD_CONTAINER_NAME=libra-staging
 
 # ─── App origins ──────────────────────────────────────────────────
 HOST_PORT=3000   # host port for Docker container
-APP_INTERNAL_ORIGIN=http://candyshop-staging:8080  # internal nginx address
+APP_INTERNAL_ORIGIN=http://libra-staging:8080  # internal nginx address
 
 # ─── Supabase ─────────────────────────────────────────────────────
 NEXT_PUBLIC_SUPABASE_URL=http://localhost:3030   # or https://... for cloud
@@ -350,16 +350,15 @@ pnpm lint:env
 
 ### Supabase keys
 
-| Key                                   | Purpose                                        |
-| ------------------------------------- | ---------------------------------------------- |
-| `SUPABASE_PORT`                       | Base port — all other ports derived from this  |
-| `NEXT_PUBLIC_SUPABASE_URL`            | Supabase API URL seen by the browser           |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY`       | Public anon key (baked into Docker build)      |
-| `SUPABASE_SERVICE_ROLE_KEY`           | Server-side admin key (never baked into build) |
-| `STAGING_JWT_SECRET`                  | JWT signing secret for self-hosted Supabase    |
-| `STAGING_POSTGRES_PASSWORD`           | Postgres password for self-hosted Supabase     |
-| `SUPABASE_AUTH_SITE_URL`              | Auth callback base URL                         |
-| `SUPABASE_AUTH_EXTERNAL_REDIRECT_URI` | OAuth provider redirect URI                    |
+| Key                             | Purpose                                        |
+| ------------------------------- | ---------------------------------------------- |
+| `SUPABASE_PORT`                 | Base port — all other ports derived from this  |
+| `NEXT_PUBLIC_SUPABASE_URL`      | Supabase API URL seen by the browser           |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Public anon key (baked into Docker build)      |
+| `SUPABASE_SERVICE_ROLE_KEY`     | Server-side admin key (never baked into build) |
+| `STAGING_JWT_SECRET`            | JWT signing secret for self-hosted Supabase    |
+| `STAGING_POSTGRES_PASSWORD`     | Postgres password for self-hosted Supabase     |
+| `SUPABASE_AUTH_SITE_URL`        | Auth callback base URL                         |
 
 ### Cloudflare tunnel keys
 
@@ -377,3 +376,33 @@ pnpm lint:env
 | `NEXT_PUBLIC_ENABLE_TEST_IDS` | Enables `data-testid` attributes for E2E |
 | `ENV_DEBUG`                   | Enables env debug viewer at `/en/env`    |
 | `NEXT_PUBLIC_ENV_DEBUG`       | Serialized env snapshot (set by loadEnv) |
+
+## Five GitHub secrets that were deleted
+
+`SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID`, `SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET`,
+`SUPABASE_AUTH_EXTERNAL_DISCORD_CLIENT_ID`, `SUPABASE_AUTH_EXTERNAL_DISCORD_SECRET`
+and `DEV_SUPABASE_AUTH_EXTERNAL_REDIRECT_URI` existed as repository secrets,
+dated 14 and 19 April 2026. They configured Supabase Auth's own Google and
+Discord providers, which Clerk replaced.
+
+Nothing read them: no workflow, no script, no env file. They were not in the
+local `.secrets` either, so `pnpm sync-secrets` never pulled them, and they were
+not in the `env:` block of `sync-secrets.yml`, so nothing broke by their going
+away. The only occurrence of the string left in the repository is a comment in
+`scripts/load-root-env.cjs` recounting a past bug about empty
+`SUPABASE_AUTH_EXTERNAL_*` values — prose, not a reference.
+
+They were deleted on the owner's instruction after that was re-verified. The
+repository went from 61 repository secrets to 56.
+
+**Deleting them removed them from CI. It did not revoke anything.** If the
+matching OAuth applications are still live in the Google Cloud and Discord
+developer consoles, those client secrets remain valid there and should be
+rotated or the applications deleted, which is a change to make in those
+consoles rather than here.
+
+To confirm the state at any time:
+
+```bash
+gh secret list --repo vaoan/Libra | grep SUPABASE_AUTH_EXTERNAL   # expect no output
+```

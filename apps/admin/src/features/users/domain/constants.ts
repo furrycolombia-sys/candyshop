@@ -116,7 +116,7 @@ export const ALL_PERMISSION_KEYS: string[] = PERMISSION_GROUPS.flatMap(
   (group) => group.permissions,
 );
 
-export const PERMISSION_TEMPLATES: Record<string, string[]> = {
+export const PERMISSION_TEMPLATES = {
   buyer: [
     "products.read",
     "product_reviews.create",
@@ -159,10 +159,7 @@ export const PERMISSION_TEMPLATES: Record<string, string[]> = {
     "check_ins.update",
   ],
   none: [],
-};
-
-/** @deprecated Import from `@/shared/domain/constants` instead */
-export { ADMIN_APP_ACCESS_KEYS } from "@/shared/domain/constants";
+} satisfies Record<string, string[]>;
 
 export const SELLER_ADMINS_READ_PERMISSION = "seller_admins.read";
 

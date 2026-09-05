@@ -247,7 +247,7 @@ foreach ($port in $ports) {
 # Redirect both stdout and stderr to a log file
 $proc = Start-Process -FilePath "cmd.exe" `
     -ArgumentList "/c pnpm dev > C:\Temp\devserver.log 2>&1" `
-    -WorkingDirectory "Z:\Github\candystore" `
+    -WorkingDirectory "Z:\Github\libra" `
     -WindowStyle Hidden -PassThru
 Write-Host "Dev server started, PID $($proc.Id)"
 ```
@@ -361,7 +361,7 @@ curl -sI {tunnel_url} --max-time 5 | head -1
 Wait until port 7542 responds (the tunnel script does this internally). If it times out, check Docker container logs:
 
 ```bash
-docker logs candyshop-staging --tail 50
+docker logs libra-staging --tail 50
 ```
 
 ---

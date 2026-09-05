@@ -3,7 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useSupabase } from "shared";
 
-export interface SellerInfo {
+interface SellerInfo {
   displayName: string;
   avatarUrl: string | null;
 }
@@ -23,7 +23,8 @@ export function useSellerInfo(sellerId: string | null) {
       if (error) throw new Error(error.message);
 
       return {
-        displayName: data.display_name ?? data.email.split("@")[0],
+        displayName:
+          data.display_name ?? data.email.split("@")[0] ?? data.email,
         avatarUrl: data.display_avatar_url ?? data.avatar_url ?? null,
       };
     },

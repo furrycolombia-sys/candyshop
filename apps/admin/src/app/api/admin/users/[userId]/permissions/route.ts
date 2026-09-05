@@ -3,13 +3,13 @@ import { NextResponse } from "next/server";
 
 import {
   adminFetch,
-  BAD_REQUEST_STATUS,
+  ClientError,
+  errorResponse,
   createRestPath,
   fetchGrantedPermissionKeys,
   fetchGrantedPermissions,
   FORBIDDEN_ERROR,
   getAuthorizedAdmin,
-  INTERNAL_SERVER_ERROR_STATUS,
   INVALID_PAYLOAD_ERROR,
   MERGE_DUPLICATES_RETURN_MINIMAL,
   RETURN_MINIMAL,
@@ -35,7 +35,7 @@ async function findResourcePermissionId(
   const permissionId = permissions[0]?.id;
 
   if (!permissionId) {
-    throw new Error(`Unknown permission key: ${permissionKey}`);
+    throw new ClientError(`Unknown permission key: ${permissionKey}`);
   }
 
   const resourceResponse = await adminFetch(
@@ -51,7 +51,9 @@ async function findResourcePermissionId(
 
   const preferred = rows.find((row) => row.resource_id === null) ?? rows[0];
   if (!preferred) {
-    throw new Error(`No resource permission found for key: ${permissionKey}`);
+    throw new ClientError(
+      `No resource permission found for key: ${permissionKey}`,
+    );
   }
 
   return preferred.id;
@@ -227,20 +229,7 @@ export async function GET(
 
     return NextResponse.json({ grantedKeys });
   } catch (error) {
-    return NextResponse.json(
-      {
-        error:
-          error instanceof Error && error.message === INVALID_PAYLOAD_ERROR
-            ? INVALID_PAYLOAD_ERROR
-            : "Failed to load user permissions",
-      },
-      {
-        status:
-          error instanceof Error && error.message === INVALID_PAYLOAD_ERROR
-            ? BAD_REQUEST_STATUS
-            : INTERNAL_SERVER_ERROR_STATUS,
-      },
-    );
+    return errorResponse(error, "Failed to load user permissions");
   }
 }
 
@@ -278,20 +267,7 @@ export async function POST(
 
     return NextResponse.json({ ok: true });
   } catch (error) {
-    return NextResponse.json(
-      {
-        error:
-          error instanceof Error && error.message === INVALID_PAYLOAD_ERROR
-            ? INVALID_PAYLOAD_ERROR
-            : "Failed to update permission",
-      },
-      {
-        status:
-          error instanceof Error && error.message === INVALID_PAYLOAD_ERROR
-            ? BAD_REQUEST_STATUS
-            : INTERNAL_SERVER_ERROR_STATUS,
-      },
-    );
+    return errorResponse(error, "Failed to update permission");
   }
 }
 
@@ -321,19 +297,6 @@ export async function PUT(
 
     return NextResponse.json({ ok: true });
   } catch (error) {
-    return NextResponse.json(
-      {
-        error:
-          error instanceof Error && error.message === INVALID_PAYLOAD_ERROR
-            ? INVALID_PAYLOAD_ERROR
-            : "Failed to apply permission template",
-      },
-      {
-        status:
-          error instanceof Error && error.message === INVALID_PAYLOAD_ERROR
-            ? BAD_REQUEST_STATUS
-            : INTERNAL_SERVER_ERROR_STATUS,
-      },
-    );
+    return errorResponse(error, "Failed to apply permission template");
   }
 }

@@ -5,15 +5,16 @@
     "privacy": "Privacidad"
   },
   "meta": {
-    "title": "Candy Shop - Iniciar Sesion",
-    "description": "Inicia sesion en tu cuenta de Candy Shop"
+    "title": "Libra - Iniciar Sesion",
+    "description": "Inicia sesion en tu cuenta de Libra"
   },
   "auth": {
     "login": {
       "title": "Iniciar sesion",
       "subtitle": "Elige tu metodo de inicio de sesion preferido",
       "google": "Continuar con Google",
-      "discord": "Continuar con Discord"
+      "discord": "Continuar con Discord",
+      "signInError": "El inicio de sesion no comenzo. Intenta de nuevo, o contacta a soporte si esto sigue pasando."
     },
     "signOut": "Cerrar sesion",
     "account": {
@@ -52,7 +53,7 @@
     }
   },
   "nav": {
-    "brand": "Candy Shop",
+    "brand": "Libra",
     "landing": "Inicio",
     "store": "Tienda",
     "studio": "Estudio",
