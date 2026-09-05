@@ -63,6 +63,12 @@ function addAmountFilters(
  * - sellerId / buyerId pass through unchanged — they're UUIDs from the
  *   admin's own select boxes, not free-form input.
  *
+ * - a second upper bound cannot reuse the column key an object already holds,
+ *   so date and amount ceilings go into a single `and=(a,b)` group. One group,
+ *   not one per bound: PostgREST answers `and=(a),(b)` with the first group
+ *   alone and drops the rest without erroring, which silently ignored the
+ *   amount ceiling whenever a date range was also set.
+ *
  * Used by both `/api/admin/reports/orders` (returns JSON) and
  * `/api/admin/reports/export` (returns XLSX). The filter shape is identical.
  */
