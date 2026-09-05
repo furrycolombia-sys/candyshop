@@ -1,6 +1,7 @@
 /* eslint-disable i18next/no-literal-string */
 import { getCurrentUserId } from "api/supabase";
 import { createServerSupabaseClient } from "api/supabase/server";
+import { NextResponse } from "next/server";
 
 // Dynamic key access prevents Turbopack from inlining at build time.
 const supabaseUrl =
@@ -213,4 +214,44 @@ export async function getAuthorizedAdmin(
   const authorized = requiredKeys.every((key) => grantedKeys.includes(key));
 
   return authorized ? userId : null;
+}
+
+/**
+ * An error caused by what the caller sent, not by a fault on our side.
+ *
+ * Unknown permission keys used to reach the generic catch and come back as
+ * 500 "Failed to update permission". That is wrong twice: the caller cannot
+ * tell a typo from an outage, and every typo shows up in monitoring as a
+ * server error.
+ */
+export class ClientError extends Error {}
+
+/**
+ * The response a thrown error deserves.
+ *
+ * The three handlers had this logic copied out with only the fallback message
+ * differing, and each copy recognised exactly one client error --
+ * INVALID_PAYLOAD_ERROR from validateUuid -- so every other bad input became a
+ * 500.
+ *
+ * @param error - whatever was thrown.
+ * @param fallbackMessage - what to say when the fault is ours.
+ * @returns a 400 for anything the caller can fix, otherwise a 500.
+ */
+export function errorResponse(error: unknown, fallbackMessage: string) {
+  const isClientError =
+    error instanceof ClientError ||
+    (error instanceof Error && error.message === INVALID_PAYLOAD_ERROR);
+
+  if (isClientError) {
+    return NextResponse.json(
+      { error: (error as Error).message },
+      { status: BAD_REQUEST_STATUS },
+    );
+  }
+
+  return NextResponse.json(
+    { error: fallbackMessage },
+    { status: INTERNAL_SERVER_ERROR_STATUS },
+  );
 }
