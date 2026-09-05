@@ -757,7 +757,14 @@ jobs:
         # one this step cares about -- so all of .env.dev's Clerk/Tally/Google
         # secrets must be present here or load-env.mjs fails loudly on the
         # first one that isn't (see .env.dev and load-env.mjs's CI branch).
+        #
+        # continue-on-error: a fail-safe must never be able to fail the
+        # build. The listing loop inside the script already logs and exits 0
+        # on its own failure; this is the second, independent layer in case
+        # something else in the step (network setup, node itself) fails
+        # first.
         if: always()
+        continue-on-error: true
         run: node scripts/clerk-sweep-e2e-users.mjs --older-than-hours 2
         env:
           CLERK_PUBLISHABLE_KEY: ${{ secrets.CLERK_PUBLISHABLE_KEY }}

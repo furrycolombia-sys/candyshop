@@ -39,6 +39,13 @@ loadEnv(process.env.TARGET_ENV ?? "dev");
 
 const secretKey = process.env.CLERK_SECRET_KEY;
 if (!secretKey) throw new Error("CLERK_SECRET_KEY not resolved");
+// Deliberately duplicated rather than importing
+// apps/auth/e2e/helpers/guardEnv.ts: this is a plain .mjs script run
+// standalone (including from CI, outside any app's build), and guardEnv.ts
+// is a TypeScript module that lives inside one app's e2e folder -- importing
+// it cleanly from a root-level .mjs script isn't a clean dependency, so the
+// one-line sk_live_ check is kept local instead. Keep both in sync if the
+// check ever changes.
 if (secretKey.startsWith("sk_live_")) {
   throw new Error("refusing to sweep a production Clerk instance");
 }
@@ -64,14 +71,27 @@ function primaryEmail(user) {
 }
 
 const users = [];
-for (let offset = 0; ; offset += CLERK_LIST_PAGE_SIZE) {
-  const page = await call(
-    "GET",
-    `/users?limit=${CLERK_LIST_PAGE_SIZE}&offset=${offset}`,
+try {
+  for (let offset = 0; ; offset += CLERK_LIST_PAGE_SIZE) {
+    const page = await call(
+      "GET",
+      `/users?limit=${CLERK_LIST_PAGE_SIZE}&offset=${offset}`,
+    );
+    if (!page?.length) break;
+    users.push(...page);
+    if (page.length < CLERK_LIST_PAGE_SIZE) break;
+  }
+} catch (error) {
+  // A fail-safe must never be able to fail the build: a transient Clerk
+  // error or rate-limit here would otherwise throw uncaught and red a CI
+  // job whose entire purpose is to be a safety net, not a gate (the DELETE
+  // loop below already handles its own failures per-user). Log and exit 0 --
+  // the CI step also carries continue-on-error as a second, independent
+  // layer against exactly this.
+  console.warn(
+    `[sweeper] failed to list users, skipping this sweep: ${error.message}`,
   );
-  if (!page?.length) break;
-  users.push(...page);
-  if (page.length < CLERK_LIST_PAGE_SIZE) break;
+  process.exit(0);
 }
 
 const cutoff = olderThanHours
