@@ -743,6 +743,30 @@ jobs:
           path: apps/payments/playwright-report/
           retention-days: 7
 
+      - name: Sweep leaked Clerk test users (fail-safe)
+        # This is NOT the cleanup mechanism -- createTestUser registers users
+        # and a worker-scoped Playwright fixture drains them on every normal
+        # run. This step exists only for what that in-process teardown cannot
+        # cover: a killed runner, an OOM, a hard cancellation. `if: always()`
+        # so it still runs when the job above failed or was cancelled. In
+        # normal operation it must find nothing to delete.
+        #
+        # The sweeper only reads CLERK_SECRET_KEY, but it loads via
+        # scripts/load-env.mjs (TARGET_ENV defaults to "dev"), which resolves
+        # every $secret: reference in .env.dev under CI=true -- not just the
+        # one this step cares about -- so all of .env.dev's Clerk/Tally/Google
+        # secrets must be present here or load-env.mjs fails loudly on the
+        # first one that isn't (see .env.dev and load-env.mjs's CI branch).
+        if: always()
+        run: node scripts/clerk-sweep-e2e-users.mjs --older-than-hours 2
+        env:
+          CLERK_PUBLISHABLE_KEY: ${{ secrets.CLERK_PUBLISHABLE_KEY }}
+          CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
+          CLERK_DOMAIN: ${{ secrets.CLERK_DOMAIN }}
+          TALLY_FORM_ID: ${{ secrets.TALLY_FORM_ID }}
+          GOOGLE_TEST_EMAIL: ${{ secrets.GOOGLE_TEST_EMAIL }}
+          GOOGLE_TEST_PASSWORD: ${{ secrets.GOOGLE_TEST_PASSWORD }}
+
   # ============================================
   # Bundle Analysis
   # ============================================
