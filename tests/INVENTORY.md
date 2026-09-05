@@ -6,7 +6,7 @@ Every test case in the repo, so a refactor can be checked for losses:
 regenerate and diff. Counting files or totals is not enough -- a rework
 can keep both and still drop the one assertion that mattered.
 
-**2741 cases across 378 files** (0 skipped, 9 parameterised).
+**2749 cases across 379 files** (0 skipped, 9 parameterised).
 
 Source-level cases: a `.each` case is one entry here and many in vitest
 output, so this total is deliberately not the runner total.
@@ -962,7 +962,7 @@ output, so this total is deliberately not the runner total.
 - TermsPage > renders a last-updated line
 - TermsPage > renders all 10 section headings
 
-## app:payments -- 565 cases
+## app:payments -- 573 cases
 
 ### `apps/payments/tests/ActionButtons.test.tsx`
 
@@ -1372,6 +1372,17 @@ output, so this total is deliberately not the runner total.
 - receipt helpers > toSafeStoragePath returns reconstructed path for valid input
 - receipt helpers > toSafeStoragePath throws for path traversal
 - receipt helpers > only allows safe receipt hrefs
+
+### `apps/payments/tests/receiptActions.test.ts`
+
+- receipt upload actions > uploadCheckoutReceipt > refuses a caller with no session, before touching storage
+- receipt upload actions > uploadCheckoutReceipt > uploads for a signed-in caller
+- receipt upload actions > uploadCheckoutReceipt > rejects a file of the wrong type without uploading
+- receipt upload actions > uploadCheckoutReceipt > reports a storage failure as upload_failed
+- receipt upload actions > uploadOrderReceipt > refuses a caller with no session
+- receipt upload actions > uploadOrderReceipt > scopes the order lookup to the caller
+- receipt upload actions > uploadOrderReceipt > refuses an order that is not the caller's
+- receipt upload actions > uploadOrderReceipt > uploads under the order's checkout session
 
 ### `apps/payments/tests/receiptStorage.test.ts`
 
