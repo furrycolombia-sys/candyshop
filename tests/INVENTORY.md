@@ -6,7 +6,7 @@ Every test case in the repo, so a refactor can be checked for losses:
 regenerate and diff. Counting files or totals is not enough -- a rework
 can keep both and still drop the one assertion that mattered.
 
-**2733 cases across 377 files** (0 skipped, 9 parameterised).
+**2741 cases across 378 files** (0 skipped, 9 parameterised).
 
 Source-level cases: a `.each` case is one entry here and many in vitest
 output, so this total is deliberately not the runner total.
@@ -3348,7 +3348,7 @@ output, so this total is deliberately not the runner total.
 - isTokenActive with standard JWT format > prefers internal token format over JWT when decodable
 - encodeAuthToken / decodeAuthToken roundtrip > roundtrips a valid payload
 
-## package:shared -- 191 cases
+## package:shared -- 199 cases
 
 ### `packages/shared/tests/api.test.ts`
 
@@ -3517,6 +3517,17 @@ output, so this total is deliberately not the runner total.
 - SECTION_TYPES > includes 'accordion'
 - SECTION_TYPES > includes 'two-column'
 - SECTION_TYPES > includes 'gallery'
+
+### `packages/shared/tests/shouldBypass.test.ts`
+
+- shouldBypass > stands aside for Next's own assets
+- shouldBypass > stands aside for API routes
+- shouldBypass > does not stand aside for a route that merely starts with api
+- shouldBypass > stands aside for static files
+- shouldBypass > handles locale-prefixed pages
+- shouldBypass > handles an unprefixed page, which is what needs the redirect
+- shouldBypass > stands aside for a dotted path, which no generated link produces
+- shouldBypass > does not stand aside for a slugified product path
 
 ### `packages/shared/tests/slugify.test.ts`
 
