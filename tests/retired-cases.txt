@@ -1,0 +1,13 @@
+# Test cases deliberately removed, so scripts/test-inventory-diff.sh can tell
+# an intentional retirement from a lost assertion.
+#
+# One case name per line, then a reason after `#`. The name must match the
+# case exactly as it appeared, which is what makes an entry hard to add
+# casually: you have to name the assertion you are dropping and say why.
+#
+# This is NOT a way to make a failure go away. If a case is gone because the
+# behaviour it checked still matters, restore the case. Retire it only when
+# the assertion itself became wrong or was replaced by a better one, and name
+# the replacement here.
+
+appends to an existing and= clause when dates are also present  # asserted the broken `and=(a),(b)` output, which PostgREST silently truncates; replaced by "puts both upper bounds in one and= group" and "never emits more than one and= group"

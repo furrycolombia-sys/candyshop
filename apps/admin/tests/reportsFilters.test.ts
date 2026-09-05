@@ -113,7 +113,13 @@ describe("buildAdminOrderFilters — amount filters", () => {
     });
   });
 
-  it("appends to an existing and= clause when dates are also present", () => {
+  // Both upper bounds must land in ONE and= group. This previously emitted
+  // `(created_at.lt.X),(total.lte.Y)`, which PostgREST does not reject: it
+  // parses the first group and silently drops the rest, so the amount ceiling
+  // was ignored whenever a date range was also chosen. Verified against a real
+  // PostgREST -- `permissions?and=(key.like.orders*),(key.like.receipts*)`
+  // returns the five orders.* keys, while the single group returns none.
+  it("puts both upper bounds in one and= group", () => {
     expect(
       build({
         dateFrom: "2026-01-01",
@@ -123,9 +129,23 @@ describe("buildAdminOrderFilters — amount filters", () => {
       }),
     ).toEqual({
       created_at: "gte.2026-01-01",
-      and: "(created_at.lt.2026-02-01),(total.lte.100)",
+      and: "(created_at.lt.2026-02-01,total.lte.100)",
       total: "gte.10",
     });
+  });
+
+  it("never emits more than one and= group", () => {
+    const and = build({
+      dateFrom: "2026-01-01",
+      dateTo: "2026-01-31",
+      amountMin: "10",
+      amountMax: "100",
+    })["and"];
+
+    expect(and?.startsWith("(")).toBe(true);
+    expect(and?.endsWith(")")).toBe(true);
+    // A second group would show up as a ")" before the end.
+    expect(and?.slice(0, -1).includes(")")).toBe(false);
   });
 
   it("ignores negative or non-numeric amounts", () => {

@@ -16,6 +16,7 @@ function isValidAmount(value: string): boolean {
 
 function addDateFilters(
   filters: Record<string, string>,
+  and: string[],
   dateFrom: string | null,
   dateTo: string | null,
 ): void {
@@ -25,8 +26,7 @@ function addDateFilters(
     const end = new Date(validTo);
     end.setDate(end.getDate() + 1);
     filters["created_at"] = `gte.${validFrom}`;
-    filters["and"] =
-      `(created_at.lt.${end.toISOString().slice(0, ISO_DATE_LENGTH)})`;
+    and.push(`created_at.lt.${end.toISOString().slice(0, ISO_DATE_LENGTH)}`);
   } else if (validFrom) {
     filters["created_at"] = `gte.${validFrom}`;
   } else if (validTo) {
@@ -38,6 +38,7 @@ function addDateFilters(
 
 function addAmountFilters(
   filters: Record<string, string>,
+  and: string[],
   amountMin: string | null,
   amountMax: string | null,
 ): void {
@@ -45,10 +46,7 @@ function addAmountFilters(
   const validMax = amountMax && isValidAmount(amountMax) ? amountMax : null;
   if (validMin && validMax) {
     filters["total"] = `gte.${validMin}`;
-    const existing = filters["and"] ?? "";
-    filters["and"] = existing
-      ? `${existing},(total.lte.${validMax})`
-      : `(total.lte.${validMax})`;
+    and.push(`total.lte.${validMax}`);
   } else if (validMin) {
     filters["total"] = `gte.${validMin}`;
   } else if (validMax) {
@@ -72,17 +70,31 @@ export function buildAdminOrderFilters(
   searchParams: URLSearchParams,
 ): Record<string, string> {
   const filters: Record<string, string> = {};
+  // Every extra upper bound goes in ONE `and=(...)` group. Emitting a group
+  // each -- `and=(a),(b)` -- does not fail: PostgREST parses the first group
+  // and SILENTLY DROPS the rest. Verified against the local PostgREST, where
+  // `permissions?and=(key.like.orders*),(key.like.receipts*)` returns the five
+  // orders.* keys while the single group `and=(key.like.orders*,key.like.
+  // receipts*)` correctly returns none. So a report filtered by both a date
+  // range and an amount range silently ignored the amount ceiling.
+  const and: string[] = [];
 
   addDateFilters(
     filters,
+    and,
     searchParams.get("dateFrom"),
     searchParams.get("dateTo"),
   );
   addAmountFilters(
     filters,
+    and,
     searchParams.get("amountMin"),
     searchParams.get("amountMax"),
   );
+
+  if (and.length > 0) {
+    filters["and"] = `(${and.join(",")})`;
+  }
 
   const status = searchParams.get("status");
   const sellerId = searchParams.get("sellerId");

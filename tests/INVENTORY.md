@@ -6,12 +6,12 @@ Every test case in the repo, so a refactor can be checked for losses:
 regenerate and diff. Counting files or totals is not enough -- a rework
 can keep both and still drop the one assertion that mattered.
 
-**2708 cases across 374 files** (0 skipped, 9 parameterised).
+**2709 cases across 374 files** (0 skipped, 9 parameterised).
 
 Source-level cases: a `.each` case is one entry here and many in vitest
 output, so this total is deliberately not the runner total.
 
-## app:admin -- 537 cases
+## app:admin -- 538 cases
 
 ### `apps/admin/tests/ActivityRow.test.tsx`
 
@@ -348,7 +348,8 @@ output, so this total is deliberately not the runner total.
 - buildAdminOrderFilters — amount filters > builds a single-bound filter for amountMin alone
 - buildAdminOrderFilters — amount filters > builds a single-bound filter for amountMax alone
 - buildAdminOrderFilters — amount filters > builds a combined range using the and= clause
-- buildAdminOrderFilters — amount filters > appends to an existing and= clause when dates are also present
+- buildAdminOrderFilters — amount filters > puts both upper bounds in one and= group
+- buildAdminOrderFilters — amount filters > never emits more than one and= group
 - buildAdminOrderFilters — amount filters > ignores negative or non-numeric amounts
 - buildAdminOrderFilters — empty input > returns an empty object when no params are given
 
