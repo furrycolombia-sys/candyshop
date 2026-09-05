@@ -188,6 +188,16 @@ jobs:
       # Needs the base branch present, hence fetch-depth: 0 is required on the
       # checkout above for this job.
       - name: Check no applied migration was edited
+        # Skipped on a release PR. These three compare the head against the
+        # PR's base, which is the right question for a feature branch and the
+        # wrong one for `develop` -> `main`: the base is the last release, so
+        # the diff is every change since it, and each of those changes already
+        # answered this check when it merged to develop. Asking again at
+        # release time re-reports settled work -- the v2026.09.05.1 release PR
+        # failed on the migration squash that #386 had already justified and
+        # merged. Skipping is stated in the log; pointing the check at develop
+        # instead would pass vacuously, since develop IS the head.
+        if: github.base_ref != 'main'
         run: node scripts/check-migration-edits.mjs "origin/${{ github.base_ref || 'develop' }}"
 
       # These ran in no workflow — only in the husky precommit hook, which any
@@ -243,6 +253,16 @@ jobs:
       # one: the way past it is to touch the doc, so under the gate authors do,
       # and the rate falls toward zero. Needs fetch-depth: 0, above.
       - name: Check documentation moved with the code
+        # Skipped on a release PR. These three compare the head against the
+        # PR's base, which is the right question for a feature branch and the
+        # wrong one for `develop` -> `main`: the base is the last release, so
+        # the diff is every change since it, and each of those changes already
+        # answered this check when it merged to develop. Asking again at
+        # release time re-reports settled work -- the v2026.09.05.1 release PR
+        # failed on the migration squash that #386 had already justified and
+        # merged. Skipping is stated in the log; pointing the check at develop
+        # instead would pass vacuously, since develop IS the head.
+        if: github.base_ref != 'main'
         run: node scripts/check-doc-freshness.mjs "origin/${{ github.base_ref || 'develop' }}"
 
       # The fourth gate in this series found running in no workflow and no hook.
@@ -258,6 +278,16 @@ jobs:
       # which is how a real loss gets buried -- only regenerate after checking
       # each reported name against the live tree, and say what you checked.
       - name: Check no test case was dropped
+        # Skipped on a release PR. These three compare the head against the
+        # PR's base, which is the right question for a feature branch and the
+        # wrong one for `develop` -> `main`: the base is the last release, so
+        # the diff is every change since it, and each of those changes already
+        # answered this check when it merged to develop. Asking again at
+        # release time re-reports settled work -- the v2026.09.05.1 release PR
+        # failed on the migration squash that #386 had already justified and
+        # merged. Skipping is stated in the log; pointing the check at develop
+        # instead would pass vacuously, since develop IS the head.
+        if: github.base_ref != 'main'
         run: bash scripts/test-inventory-diff.sh "origin/${{ github.base_ref || 'develop' }}"
 
       - name: Lint (scoped)
