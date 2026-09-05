@@ -789,6 +789,28 @@ secrets remain valid there. See
 
 ---
 
+## Three gates that ask the wrong question on a release PR
+
+`check-migration-edits`, `check-doc-freshness` and `test-inventory-diff` all
+compare the head against the **PR's base**. For a feature branch that is
+exactly right. For `develop` → `main` it is exactly wrong: the base is the last
+release, so the diff is everything merged since it, and each of those changes
+already answered the check when it went into `develop`.
+
+The v2026.09.05.1 release PR is where this surfaced. `check-migration-edits`
+failed on thirteen deleted migration files — the squash into
+`20260902120000_baseline.sql`, which had been justified, reviewed and merged
+weeks earlier. The gate was not wrong about what it saw; it was answering a
+question that had already been settled, and answering it as though it were new.
+
+All three now skip when `github.base_ref` is `main`. Pointing them at `develop`
+instead would have been worse: on a release PR `develop` **is** the head, so
+every one of them would pass while comparing a branch to itself — a vacuous
+pass, which is the failure this whole document is about. A skip says so in the
+log.
+
+---
+
 ## Instructions that point at things that are not there
 
 `.claude/**` and `CLAUDE.md` are loaded into every session. A wrong instruction
