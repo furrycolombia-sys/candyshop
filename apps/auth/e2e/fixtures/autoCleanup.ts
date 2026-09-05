@@ -7,7 +7,7 @@ import { drainTestUsers } from "../helpers/userRegistry";
  * worker shuts down — including after a failed test, a timeout, or a throw
  * inside `beforeAll`, which is exactly where the old afterAll pattern leaked.
  */
-export const test = base.extend<Record<string, never>, { cleanupUsers: void }>({
+export const test = base.extend<object, { cleanupUsers: void }>({
   cleanupUsers: [
     async ({}, use) => {
       await use();
