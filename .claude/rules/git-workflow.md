@@ -248,6 +248,26 @@ chore(deps): update React to v19 [GH-88]
 3. Link to GitHub issue with `Closes #XXX` or `Fixes #XXX`
 4. Include summary of changes
 
+#### The title length the CI check actually enforces
+
+The **subject** — everything after `type(scope): `, including the `[GH-XXX]`
+suffix — must be **80 characters or fewer**. The `PR Title` job enforces it with
+`subjectPattern: ^.{1,80}$` and fails with "PR title must be less than 80
+characters".
+
+The scope and type are not counted, so the whole title can exceed 80 while
+still passing, and a title well under 100 can still fail. Count from the space
+after the colon:
+
+```
+fix(payments): report range filters used a column that does not exist [GH-000]
+               ^------------------------ 63 characters -------------------^
+```
+
+The job runs on `edited`, so correcting the title clears the failure without
+pushing a commit — see [The PR Title check could not see a corrected
+title](../../docs/standards/quality-gates.md).
+
 ### PR Template
 
 ```markdown

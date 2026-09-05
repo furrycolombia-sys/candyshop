@@ -56,46 +56,67 @@ type BuildQueryResult =
   | { ok: true; query: Record<string, string | readonly string[]> }
   | { ok: false; error: string };
 
+/**
+ * Adds a filter, keeping any filter already set on the same column.
+ *
+ * PostgREST expresses a range by repeating the column -- `created_at=gte.X`
+ * AND `created_at=lte.Y` -- and `createRestPath` appends an array as repeated
+ * keys for exactly that. A plain object cannot hold the key twice, which this
+ * route previously worked around with a `created_at_lte` key: a column
+ * `orders` does not have, so the second bound was never applied.
+ */
+function addFilter(
+  query: Record<string, string | readonly string[]>,
+  column: string,
+  clause: string,
+): void {
+  const existing = query[column];
+  if (existing === undefined) {
+    query[column] = clause;
+    return;
+  }
+  query[column] = [
+    ...(Array.isArray(existing) ? existing : [existing]),
+    clause,
+  ];
+}
+
 function applyDateFilters(
-  query: Record<string, string>,
+  query: Record<string, string | readonly string[]>,
   params: URLSearchParams,
 ): string | null {
   const dateFrom = params.get("dateFrom");
   if (dateFrom) {
     if (!isValidIsoDate(dateFrom)) return "Invalid dateFrom";
-    query["created_at"] = `gte.${dateFrom}`;
+    addFilter(query, "created_at", `gte.${dateFrom}`);
   }
   const dateTo = params.get("dateTo");
   if (dateTo) {
     if (!isValidIsoDate(dateTo)) return "Invalid dateTo";
-    if (query["created_at"]) {
-      query["created_at_lte"] = `lte.${dateTo}T23:59:59`;
-    } else {
-      query["created_at"] = `lte.${dateTo}T23:59:59`;
-    }
+    addFilter(query, "created_at", `lte.${dateTo}T23:59:59`);
   }
   return null;
 }
 
 function applyAmountFilters(
-  query: Record<string, string>,
+  query: Record<string, string | readonly string[]>,
   params: URLSearchParams,
 ): string | null {
   const amountMin = params.get("amountMin");
   if (amountMin) {
     if (!isValidAmount(amountMin)) return "Invalid amountMin";
-    query["total"] = `gte.${amountMin}`;
+    addFilter(query, "total", `gte.${amountMin}`);
   }
   const amountMax = params.get("amountMax");
   if (amountMax) {
     if (!isValidAmount(amountMax)) return "Invalid amountMax";
-    query[query["total"] ? "total_lte" : "total"] = `lte.${amountMax}`;
+    addFilter(query, "total", `lte.${amountMax}`);
   }
   return null;
 }
 
 function applyScalarFilters(
-  query: Record<string, string>,
+  query: Record<string, string | readonly string[]>,
   params: URLSearchParams,
 ): string | null {
   const status = params.get("status");
@@ -121,7 +142,7 @@ function buildQuery(
   sellerId: string,
   params: URLSearchParams,
 ): BuildQueryResult {
-  const query: Record<string, string> = {
+  const query: Record<string, string | readonly string[]> = {
     seller_id: `eq.${sellerId}`,
     select:
       "id,created_at,payment_status,total,currency,transfer_number,receipt_url,user_id,order_items(id,product_id,quantity,unit_price,currency,products(name_en))",
