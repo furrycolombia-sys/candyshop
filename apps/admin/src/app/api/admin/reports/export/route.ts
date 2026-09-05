@@ -5,9 +5,7 @@ import { NextResponse } from "next/server";
 import {
   buildSalesWorkbook,
   CONTENT_TYPE_XLSX,
-  type OrderItemRow,
   type OrderRow,
-  type UserProfileRow,
 } from "./buildSalesWorkbook";
 
 import {
@@ -17,6 +15,11 @@ import {
   getAuthorizedAdmin,
   INTERNAL_SERVER_ERROR_STATUS,
 } from "@/app/api/admin/_shared/adminRest";
+import {
+  fetchOrderItems,
+  fetchProfileMap,
+  type OrderItemRow,
+} from "@/app/api/admin/_shared/reportsData";
 import { buildAdminOrderFilters } from "@/app/api/admin/_shared/reportsFilters";
 
 const ADMIN_REPORTS = "admin.reports";
@@ -24,35 +27,6 @@ const MAX_LIMIT = 10_000;
 const ISO_DATE_LENGTH = 10;
 const ORDERS_SELECT =
   "id,created_at,payment_status,total,currency,transfer_number,receipt_url,user_id,seller_id,buyer_info";
-const ITEMS_SELECT =
-  "id,order_id,product_id,quantity,unit_price,currency,products(name_en)";
-
-async function fetchOrderItems(
-  orderIds: string[],
-  productId: string | null,
-): Promise<OrderItemRow[]> {
-  const itemsQuery: Record<string, string> = {
-    select: ITEMS_SELECT,
-    order_id: `in.(${orderIds.join(",")})`,
-  };
-  if (productId) itemsQuery["product_id"] = `eq.${productId}`;
-  const response = await adminFetch(createRestPath("order_items", itemsQuery));
-  return response.json() as Promise<OrderItemRow[]>;
-}
-
-async function fetchProfileMap(
-  userIds: string[],
-): Promise<Map<string, UserProfileRow>> {
-  if (userIds.length === 0) return new Map();
-  const response = await adminFetch(
-    createRestPath("user_profiles", {
-      select: "id,email,display_name",
-      id: `in.(${userIds.join(",")})`,
-    }),
-  );
-  const profiles = (await response.json()) as UserProfileRow[];
-  return new Map(profiles.map((p) => [p.id, p]));
-}
 
 function buildXlsxResponse(buffer: ExcelJS.Buffer, date: string): Response {
   return new Response(buffer, {
