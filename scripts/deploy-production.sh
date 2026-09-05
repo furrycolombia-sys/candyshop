@@ -390,6 +390,13 @@ docker container prune -f >/dev/null 2>&1 || true
 rm -f "$ENV_FILE"
 
 # =============================================================================
+# STALE as of the watcher removal [GH-000]: docker/watcher.mjs was deleted
+# (it duplicated the container healthcheck and cost 50 MB inside the image).
+# This block still references that file and will fail `pm2 start` on any
+# deploy run before Task C6 lands. C6 replaces this whole script and deploy
+# pipeline; that rewrite is expected to remove this block rather than
+# restore the file.
+# =============================================================================
 # Start host-side health watcher
 # WATCHER_NGINX_PORT makes it check apps via Docker nginx (the real traffic path:
 #   Cloudflare → Hestia nginx → Docker nginx → apps)
