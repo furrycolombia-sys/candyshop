@@ -188,6 +188,47 @@ describe("POST /api/checkout/payment-methods", () => {
     expect(fetch).toHaveBeenCalledTimes(2);
   });
 
+  // public.has_permission() is exists(grant) AND NOT exists(deny), and every
+  // RLS policy uses it. This route asked only for mode=eq.grant, so a buyer
+  // denied the permission would have been admitted here while the database
+  // refused them. resource_permissions is scoped per resource, so one key can
+  // be granted on one scope and denied on another.
+  it("refuses a buyer whose permission is denied on another scope", async () => {
+    const { POST } = await loadRouteModule();
+
+    vi.mocked(fetch).mockResolvedValueOnce({
+      ok: true,
+      json: async () => [
+        {
+          expires_at: null,
+          mode: "grant",
+          resource_permissions: { permissions: { key: "orders.create" } },
+        },
+        {
+          expires_at: null,
+          mode: "grant",
+          resource_permissions: { permissions: { key: "receipts.create" } },
+        },
+        {
+          expires_at: null,
+          mode: "deny",
+          resource_permissions: { permissions: { key: "orders.create" } },
+        },
+      ],
+    } as Response);
+
+    const response = await POST(
+      makeRequest({
+        sellerId: SELLER_ID,
+        items: [{ id: PRODUCT_ID, quantity: 1 }],
+      }),
+    );
+
+    expect(response.status).toBe(403);
+    // Refused before any product or payment-method lookup.
+    expect(fetch).toHaveBeenCalledTimes(1);
+  });
+
   it("rejects users without checkout permissions", async () => {
     const { POST } = await loadRouteModule();
 
