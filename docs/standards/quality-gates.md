@@ -367,6 +367,25 @@ tree and listed those names twice; the diff compares sorted lists with `comm`,
 which is duplicate-sensitive, so a name appearing twice before and once now
 produced a line of output. The report was surplus, not loss.
 
+A rename trips it too, and that needed an answer. The gate compares case
+NAMES, so replacing a test with a better-named one reads as a loss, and the
+comparison is against the base branch — regenerating `tests/INVENTORY.md` on
+the branch does not change what CI compares. Without a way through, the gate
+blocks ordinary work, and a gate that blocks ordinary work is one somebody
+deletes.
+
+`tests/retired-cases.txt` is that way through, and it is deliberately
+awkward: one line per case, the name exactly as it appeared, and a reason
+after `#`. You have to name the assertion you are dropping and say what
+replaced it, in a tracked file a reviewer sees in the diff. Retired names are
+subtracted from the losses rather than from the baseline, so a case that comes
+back stops being reported as retired instead of staying hidden.
+
+It is not a suppression flag in the sense this document warns about elsewhere.
+A flag is one token that silences everything; this silences exactly one named
+case and leaves the reasoning in the repository. Verified: with the file in
+place, deleting an unrelated case still fails with exit 1.
+
 That episode is the reason the CI step carries a warning in its comment.
 Regenerating `tests/INVENTORY.md` makes any failure disappear without
 answering it, which is precisely how a real loss would be buried. The rule is
