@@ -70,7 +70,7 @@ describe("receipt upload actions", () => {
 
       const result = await uploadCheckoutReceipt(
         SESSION_ID,
-        new File(["x"], "notes.exe", { type: "application/x-msdownload" }),
+        new File(["x"], "notes.txt", { type: "text/plain" }),
       );
 
       expect(result).toEqual({ ok: false, code: "invalid_receipt_type" });
