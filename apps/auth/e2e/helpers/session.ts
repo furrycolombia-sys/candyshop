@@ -5,7 +5,7 @@ import { clerk, clerkSetup } from "@clerk/testing/playwright";
 import type { BrowserContext } from "@playwright/test";
 import { createClient } from "@supabase/supabase-js";
 
-import { registerTestUser } from "./userRegistry";
+import { attachProfileId, registerClerkUser } from "./userRegistry";
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports -- shared Node helper
 const { resolveE2EAppUrls } = require(
@@ -333,6 +333,12 @@ export async function createTestUser(
     emailAddress: [email],
     skipPasswordRequirement: true,
   });
+  // Register the instant the Clerk user exists -- before the profile RPC,
+  // permission grants, or session/token minting below get a chance to throw
+  // and orphan it against the Clerk dev instance's 100-user cap. This is the
+  // exact "throws inside beforeAll" gap the old afterAll convention leaked
+  // on; see userRegistry.ts's RegisteredUser doc comment.
+  registerClerkUser({ clerkUserId: clerkUser.id, email });
 
   const { data: profile, error } = await supabaseAdmin.rpc(
     "create_profile_with_default_permissions",
@@ -349,6 +355,11 @@ export async function createTestUser(
     );
   }
   const profileId = (profile as { id: string }).id;
+  // Enrich the registry entry as soon as the profile exists, so a later
+  // failure (grantPermissions, session/token minting) still lets drain use
+  // the full deleteTestUser (profile row + Clerk user) instead of the
+  // Clerk-only fallback.
+  attachProfileId(clerkUser.id, profileId);
 
   if (permissions.length > 0) {
     await grantPermissions(profileId, permissions);
@@ -360,14 +371,12 @@ export async function createTestUser(
   });
   const token = await clerkClient.sessions.getToken(session.id);
 
-  const testUser: TestUser = {
+  return {
     userId: profileId,
     email,
     clerkUserId: clerkUser.id,
     accessToken: token.jwt,
   };
-  registerTestUser(testUser);
-  return testUser;
 }
 
 /**
