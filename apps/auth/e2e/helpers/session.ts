@@ -308,6 +308,18 @@ export async function deleteClerkUserBySub(clerkUserId: string): Promise<void> {
  * `user_profiles` row, default buyer permissions, and any additional
  * `permissions` requested.
  *
+ * As a side effect, registers the Clerk user into the module-level cleanup
+ * registry (`userRegistry.ts`) the instant it is created — before the
+ * profile RPC, `grantPermissions`, or session/token minting below get a
+ * chance to throw. This ordering is the correctness argument for the whole
+ * auto-cleanup mechanism: if any later step throws, the Clerk user is
+ * already registered and `drainTestUsers` can still delete it, instead of
+ * orphaning it against the Clerk dev instance's 100-user cap. Once the
+ * profile row exists, the registry entry is enriched with the profile id
+ * (`attachProfileId`) so a later failure still lets drain use the full
+ * `deleteTestUser` (profile row + Clerk user) rather than the Clerk-only
+ * fallback.
+ *
  * Profile creation calls the exact RPC `resolveProfile()`'s "created" branch
  * uses in production (`create_profile_with_default_permissions` — see
  * supabase/migrations/20260829170000_profile_create_with_permissions.sql)
